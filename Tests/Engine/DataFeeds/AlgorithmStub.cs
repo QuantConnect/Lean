@@ -27,7 +27,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     {
         public AlgorithmStub(Resolution resolution = Resolution.Second, List<string> equities = null, List<string> forex = null)
         {
-            Securities.SetLimits(1000, 1000, 1000);
             foreach (var ticker in equities ?? new List<string>())
             {
                 AddSecurity(SecurityType.Equity, ticker, resolution);

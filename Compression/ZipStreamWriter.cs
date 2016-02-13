@@ -13,9 +13,11 @@
  * limitations under the License.
 */
 
+using System;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
+using QuantConnect.Logging;
 
 namespace QuantConnect
 {
@@ -25,9 +27,10 @@ namespace QuantConnect
     public class ZipStreamWriter : TextWriter
     {
         private readonly string _filename;
+        private readonly string _zipEntry;
         private readonly string _tempFilename;
-        private readonly ZipArchive _archive;
-        private readonly StreamWriter _writer;
+        private ZipArchive _archive;
+        private StreamWriter _writer;
 
         /// <summary>
         /// When overridden in a derived class, returns the character encoding in which the output is written.
@@ -49,6 +52,7 @@ namespace QuantConnect
         public ZipStreamWriter(string filename, string zipEntry)
         {
             _filename = filename;
+            _zipEntry = zipEntry;
             _tempFilename = _filename + ".tmp";
             File.Delete(_tempFilename);
             if (!File.Exists(filename))
@@ -91,6 +95,23 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Clears all buffers for the current writer and causes any buffered data to be written to the underlying device.
+        /// </summary>
+        public override void Flush()
+        {
+            _writer.Flush();
+            _writer.Dispose();
+            _archive.Dispose();
+            
+            CopyTempFile(5, throwOnFailure: false);
+
+            _archive = ZipFile.Open(_tempFilename, ZipArchiveMode.Update);
+            var entry = _archive.GetEntry(_zipEntry) ?? _archive.CreateEntry(_zipEntry);
+            _writer = new StreamWriter(entry.Open());
+            _writer.BaseStream.Seek(0L, SeekOrigin.End);
+        }
+
+        /// <summary>
         /// Releases the unmanaged resources used by the <see cref="T:System.IO.TextWriter"/> and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources. </param>
@@ -102,11 +123,35 @@ namespace QuantConnect
             _writer.Close();
             _writer.Dispose();
             _archive.Dispose();
+
+            CopyTempFile(50, throwOnFailure: true);
             if (File.Exists(_tempFilename))
             {
-                File.Delete(_filename);
-                File.Copy(_tempFilename, _filename);
                 File.Delete(_tempFilename);
+            }
+        }
+
+        private void CopyTempFile(int attempts, bool throwOnFailure)
+        {
+            if (!File.Exists(_tempFilename)) return;
+
+            do
+            {
+                try
+                {
+                    File.Copy(_tempFilename, _filename, true);
+                    return;
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err);
+                }
+            }
+            while (--attempts > 0);
+
+            if (throwOnFailure)
+            {
+                throw new Exception(string.Format("Unable to save file: {0} after {1} attempts.", _filename, attempts));
             }
         }
     }

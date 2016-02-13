@@ -20,7 +20,6 @@ using System.Linq;
 using System.Threading;
 using Fasterflect;
 using QuantConnect.Algorithm;
-using QuantConnect.Commands;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -201,7 +200,7 @@ namespace QuantConnect.Lean.Engine
                 //Check this backtest is still running:
                 if (_algorithm.Status != AlgorithmStatus.Running)
                 {
-                    Log.Error(string.Format("AlgorithmManager.Run(): Algorthm state changed to {0} at {1}", _algorithm.Status, timeSlice.Time));
+                    Log.Error(string.Format("AlgorithmManager.Run(): Algorithm state changed to {0} at {1}", _algorithm.Status, timeSlice.Time));
                     break;
                 }
 
@@ -217,7 +216,17 @@ namespace QuantConnect.Lean.Engine
                 {
                     if (command == null) continue;
                     Log.Trace("AlgorithmManager.Run(): Executing {0}", command);
-                    var result = command.Run(algorithm);
+                    CommandResultPacket result;
+                    try
+                    {
+                        result = command.Run(algorithm);
+                    }
+                    catch (Exception err)
+                    {
+                        Log.Error(err);
+                        algorithm.Error(string.Format("{0} Error: {1}", command.GetType().Name, err.Message));
+                        result = new CommandResultPacket(command, false);
+                    }
 
                     // send the result of the command off to the result handler
                     results.Messages.Enqueue(result);
@@ -342,7 +351,7 @@ namespace QuantConnect.Lean.Engine
                 }
 
                 // perform margin calls, in live mode we can also use realtime to emit these
-                if (time >= nextMarginCallTime || (_liveMode && nextMarginCallTime > DateTime.Now))
+                if (time >= nextMarginCallTime || (_liveMode && nextMarginCallTime > DateTime.UtcNow))
                 {
                     // determine if there are possible margin call orders to be executed
                     bool issueMarginCallWarning;
@@ -393,7 +402,7 @@ namespace QuantConnect.Lean.Engine
                 }
 
                 // perform check for settlement of unsettled funds
-                if (time >= nextSettlementScanTime || (_liveMode && nextSettlementScanTime > DateTime.Now))
+                if (time >= nextSettlementScanTime || (_liveMode && nextSettlementScanTime > DateTime.UtcNow))
                 {
                     algorithm.Portfolio.ScanForCashSettlement(algorithm.UtcTime);
 
@@ -593,7 +602,7 @@ namespace QuantConnect.Lean.Engine
                 Log.Trace("AlgorithmManager.Run(): Liquidating algorithm holdings...");
                 algorithm.Liquidate();
                 results.LogMessage("Algorithm Liquidated");
-                results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Liquidated);
+                results.SendStatusUpdate(AlgorithmStatus.Liquidated);
             }
 
             //Manually stopped the algorithm
@@ -601,7 +610,7 @@ namespace QuantConnect.Lean.Engine
             {
                 Log.Trace("AlgorithmManager.Run(): Stopping algorithm...");
                 results.LogMessage("Algorithm Stopped");
-                results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Stopped);
+                results.SendStatusUpdate(AlgorithmStatus.Stopped);
             }
 
             //Backtest deleted.
@@ -609,11 +618,11 @@ namespace QuantConnect.Lean.Engine
             {
                 Log.Trace("AlgorithmManager.Run(): Deleting algorithm...");
                 results.DebugMessage("Algorithm Id:(" + job.AlgorithmId + ") Deleted by request.");
-                results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Deleted);
+                results.SendStatusUpdate(AlgorithmStatus.Deleted);
             }
 
             //Algorithm finished, send regardless of commands:
-            results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Completed);
+            results.SendStatusUpdate(AlgorithmStatus.Completed);
 
             //Take final samples:
             results.SampleRange(algorithm.GetChartUpdates());
@@ -651,13 +660,18 @@ namespace QuantConnect.Lean.Engine
             // initialize variables for progress computation
             var start = DateTime.UtcNow.Ticks;
             var nextStatusTime = DateTime.UtcNow.AddSeconds(1);
-            var minimumIncrement = algorithm.Securities.Min(x => x.Value.SubscriptionDataConfig.Increment);
-            minimumIncrement = (minimumIncrement == TimeSpan.Zero ? Time.OneSecond : minimumIncrement);
+            var minimumIncrement = algorithm.UniverseManager
+                .Select(x => x.Value.Configuration.Resolution.ToTimeSpan())
+                .DefaultIfEmpty(Time.OneSecond)
+                .Min();
+
+            minimumIncrement = minimumIncrement == TimeSpan.Zero ? Time.OneSecond : minimumIncrement;
 
             if (historyRequests.Count != 0)
             {
                 // rewrite internal feed requests
-                var minResolution = algorithm.SubscriptionManager.Subscriptions.Where(x => !x.IsInternalFeed).Min(x => x.Resolution);
+                var subscriptions = algorithm.SubscriptionManager.Subscriptions.Where(x => !x.IsInternalFeed).ToList();
+                var minResolution = subscriptions.Count > 0 ? subscriptions.Min(x => x.Resolution) : Resolution.Second;
                 foreach (var request in historyRequests)
                 {
                     Security security;
@@ -728,7 +742,7 @@ namespace QuantConnect.Lean.Engine
                             // catching up to real time data
                             nextStatusTime = DateTime.UtcNow.AddSeconds(1);
                             var percent = (int)(100 * (timeSlice.Time.Ticks - start) / (double)(DateTime.UtcNow.Ticks - start));
-                            results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.History, string.Format("Catching up to realtime {0}%...", percent));
+                            results.SendStatusUpdate(AlgorithmStatus.History, string.Format("Catching up to realtime {0}%...", percent));
                         }
                         yield return timeSlice;
                         lastHistoryTimeUtc = timeSlice.Time;
@@ -740,7 +754,7 @@ namespace QuantConnect.Lean.Engine
             if (!algorithm.LiveMode || historyRequests.Count == 0)
             {
                 algorithm.SetFinishedWarmingUp();
-                results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Running);
+                results.SendStatusUpdate(AlgorithmStatus.Running);
                 if (historyRequests.Count != 0)
                 {
                     algorithm.Debug("Algorithm finished warming up.");
@@ -786,7 +800,7 @@ namespace QuantConnect.Lean.Engine
                     if (timeSlice.Time > DateTime.UtcNow.Subtract(minimumIncrement))
                     {
                         algorithm.SetFinishedWarmingUp();
-                        results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Running);
+                        results.SendStatusUpdate(AlgorithmStatus.Running);
                         algorithm.Debug("Algorithm finished warming up.");
                         Log.Trace("AlgorithmManager.Stream(): Finished warmup");
                     }
@@ -796,7 +810,7 @@ namespace QuantConnect.Lean.Engine
                         // catching up to real time data
                         nextStatusTime = DateTime.UtcNow.AddSeconds(1);
                         var percent = (int) (100*(timeSlice.Time.Ticks - start)/(double) (DateTime.UtcNow.Ticks - start));
-                        results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.History, string.Format("Catching up to realtime {0}%...", percent));   
+                        results.SendStatusUpdate(AlgorithmStatus.History, string.Format("Catching up to realtime {0}%...", percent));   
                     }
                 }
                 yield return timeSlice;
@@ -837,6 +851,7 @@ namespace QuantConnect.Lean.Engine
                 {
                     Log.Trace("AlgorithmManager.Run(): Security delisting warning: " + delisting.Symbol.ToString());
                     var security = algorithm.Securities[delisting.Symbol];
+                    if (security.Holdings.Quantity == 0) continue;
                     var submitOrderRequest = new SubmitOrderRequest(OrderType.MarketOnClose, security.Type, security.Symbol,
                         -security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Liquidate from delisting");
                     var ticket = algorithm.Transactions.ProcessRequest(submitOrderRequest);

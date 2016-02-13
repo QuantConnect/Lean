@@ -56,7 +56,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Gets the collection of universes for the algorithm
         /// </summary>
-        UniverseManager Universes
+        UniverseManager UniverseManager
         {
             get;
         }
@@ -208,7 +208,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Gets the subscription settings to be used when adding securities via universe selection
         /// </summary>
-        SubscriptionSettings UniverseSettings
+        UniverseSettings UniverseSettings
         {
             get;
         }
@@ -264,17 +264,17 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
-        /// Gets the Trade Builder to generate trades from executions
+        /// Gets an instance that is to be used to initialize newly created securities.
         /// </summary>
-        TradeBuilder TradeBuilder
+        ISecurityInitializer SecurityInitializer
         {
             get;
         }
 
         /// <summary>
-        /// The account type determines which settlement model will be used (Cash or Margin).
+        /// Gets the Trade Builder to generate trades from executions
         /// </summary>
-        AccountType AccountType
+        TradeBuilder TradeBuilder
         {
             get;
         }
@@ -305,19 +305,12 @@ namespace QuantConnect.Interfaces
         void SetParameters(Dictionary<string, string> parameters);
 
         /// <summary>
-        /// Sets the default markets to be used by the algorithm
-        /// </summary>
-        /// <param name="defaultMarkets">A security typ to market string dictionary containing the default values</param>
-        void SetDefaultMarkets(Dictionary<SecurityType, string> defaultMarkets);
-
-        /// <summary>
         /// Sets the brokerage model used to resolve transaction models, settlement models,
         /// and brokerage specified ordering behaviors.
         /// </summary>
         /// <param name="brokerageModel">The brokerage model used to emulate the real
         /// brokerage</param>
-        /// <param name="accountType">Specifies if this is a margin or cash account</param>
-        void SetBrokerageModel(IBrokerageModel brokerageModel, AccountType accountType = AccountType.Margin);
+        void SetBrokerageModel(IBrokerageModel brokerageModel);
 
         // <summary>
         // v1.0 Handler for Tick Events [DEPRECATED June-2014]
@@ -499,14 +492,5 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="max">Maximum order count int</param>
         void SetMaximumOrders(int max);
-
-        /// <summary>
-        /// Set the maximum number of assets allowable to ensure good memory usage / avoid linux killing job.
-        /// </summary>
-        /// <param name="minuteLimit">Maximum number of minute level assets the live mode can support with selected server</param>
-        /// <param name="secondLimit">Maximum number of second level assets the live mode can support with selected server</param>
-        /// /// <param name="tickLimit">Maximum number of tick level assets the live mode can support with selected server</param>
-        /// <remarks>Sets the live behaviour of the algorithm including the selected server (ram) limits.</remarks>
-        void SetAssetLimits(int minuteLimit = 50, int secondLimit = 10, int tickLimit = 5);
     }
 }

@@ -56,5 +56,13 @@ namespace QuantConnect.Tests.Indicators
             double epsilon = 1e-3;
             TestHelper.TestIndicator(logr, "spy_logr14.txt", "LOGR14", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, epsilon));
         }
+
+        [Test]
+        public void ResetsProperly()
+        {
+            var logr = new LogReturn(14);
+
+            TestHelper.TestIndicatorReset(logr, "spy_logr14.txt");
+        }
     }
 }

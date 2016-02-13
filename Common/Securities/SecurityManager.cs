@@ -22,7 +22,6 @@ using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Logging;
 
 namespace QuantConnect.Securities 
 {
@@ -41,13 +40,6 @@ namespace QuantConnect.Securities
 
         //Internal dictionary implementation:
         private readonly ConcurrentDictionary<Symbol, Security> _securityManager;
-        private int _minuteLimit = 500;
-        private int _minuteMemory = 2;
-        private int _secondLimit = 100;
-        private int _secondMemory = 10;
-        private int _tickLimit = 30;
-        private int _tickMemory = 34;
-        private decimal _maxRamEstimate = 1024;
 
         /// <summary>
         /// Gets the most recent time this manager was updated
@@ -68,30 +60,6 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets the maximum number of minute symbols allowed in the algorithm
-        /// </summary>
-        public int MinuteLimit
-        {
-            get { return _minuteLimit; }
-        }
-
-        /// <summary>
-        /// Gets the maximum number of second symbols allowed in the algorithm
-        /// </summary>
-        public int SecondLimit
-        {
-            get { return _secondLimit; }
-        }
-
-        /// <summary>
-        /// Gets the maximum number of tick symbols allowed in the algorithm
-        /// </summary>
-        public int TickLimit
-        {
-            get { return _tickLimit; }
-        }
-
-        /// <summary>
         /// Add a new security with this symbol to the collection.
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
@@ -100,7 +68,6 @@ namespace QuantConnect.Securities
         /// <seealso cref="Add(Security)"/>
         public void Add(Symbol symbol, Security security)
         {
-            CheckResolutionCounts(security.Resolution);
             if (_securityManager.TryAdd(symbol, security))
             {
                 security.SetLocalTimeKeeper(_timeKeeper.GetLocalTimeKeeper(security.Exchange.TimeZone));
@@ -124,7 +91,6 @@ namespace QuantConnect.Securities
         /// <param name="pair"></param>
         public void Add(KeyValuePair<Symbol, Security> pair)
         {
-            CheckResolutionCounts(pair.Value.Resolution);
             Add(pair.Key, pair.Value);
         }
 
@@ -326,43 +292,6 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Get the number of securities that have this resolution.
-        /// </summary>
-        /// <param name="resolution">Search resolution value.</param>
-        /// <returns>Count of the securities</returns>
-        public int  GetResolutionCount(Resolution resolution) 
-        {
-            var count = 0;
-            try
-            {
-                count = (from security in _securityManager.Values
-                         where security.Resolution == resolution
-                         // don't count feeds we auto add
-                         where !security.SubscriptionDataConfig.IsInternalFeed
-                         select security.Resolution).Count();
-            } 
-            catch (Exception err) 
-            {
-                Log.Error(err);
-            }
-            return count;
-        }
-
-        /// <summary>
-        /// Limits on the number of minute, second and tick assets due to memory constraints.
-        /// </summary>
-        /// <param name="minute">Minute asset allowance</param>
-        /// <param name="second">Second asset allowance</param>
-        /// <param name="tick">Tick asset allowance</param>
-        public void SetLimits(int minute, int second, int tick)
-        {
-            _minuteLimit = minute;  //Limit the number and combination of symbols
-            _secondLimit = second;
-            _tickLimit = tick;
-            _maxRamEstimate = Math.Max(Math.Max(MinuteLimit * _minuteMemory, SecondLimit * _secondMemory), TickLimit * _tickMemory);
-        }
-
-        /// <summary>
         /// Event invocator for the <see cref="CollectionChanged"/> event
         /// </summary>
         /// <param name="changedEventArgs">Event arguments for the <see cref="CollectionChanged"/> event</param>
@@ -370,49 +299,6 @@ namespace QuantConnect.Securities
         {
             var handler = CollectionChanged;
             if (handler != null) handler(this, changedEventArgs);
-        }
-
-        /// <summary>
-        /// Verifies that we can add more securities
-        /// </summary>
-        /// <param name="resolution">The new resolution to be added</param>
-        private void CheckResolutionCounts(Resolution resolution)
-        {
-            //Maximum Data Usage: mainly RAM constraints but this has never been fully tested.
-            if (GetResolutionCount(Resolution.Tick) >= TickLimit && resolution == Resolution.Tick)
-            {
-                throw new Exception("We currently only support " + TickLimit + " tick assets at a time due to physical memory limitations.");
-            }
-            if (GetResolutionCount(Resolution.Second) >= SecondLimit && resolution == Resolution.Second)
-            {
-                throw new Exception("We currently only support  " + SecondLimit + "  second resolution securities at a time due to physical memory limitations.");
-            }
-            if (GetResolutionCount(Resolution.Minute) >= MinuteLimit && resolution == Resolution.Minute)
-            {
-                throw new Exception("We currently only support  " + MinuteLimit + "  minute assets at a time due to physical memory limitations.");
-            }
-
-            //Current ram usage: this especially applies during live trading where micro servers have limited resources:
-            var currentEstimatedRam = GetRamEstimate(GetResolutionCount(Resolution.Minute), GetResolutionCount(Resolution.Second),
-                GetResolutionCount(Resolution.Tick));
-
-            if (currentEstimatedRam > _maxRamEstimate)
-            {
-                throw new Exception("We estimate you will run out of memory (" + currentEstimatedRam + "mb of " + _maxRamEstimate
-                    + "mb physically available). Please reduce the number of symbols you're analysing or if in live trading upgrade your server to allow more memory.");
-            }
-        }
-
-        /// <summary>
-        /// Estimated ram usage with this symbol combination:
-        /// </summary>
-        /// <param name="minute"></param>
-        /// <param name="second"></param>
-        /// <param name="tick"></param>
-        /// <returns>Decimal estimate of the number of MB ram the requested assets would consume</returns>
-        private decimal GetRamEstimate(int minute, int second, int tick)
-        {
-            return _minuteMemory * minute + _secondMemory * second + _tickMemory * tick;
         }
 
         /// <summary>
@@ -425,6 +311,8 @@ namespace QuantConnect.Securities
             SubscriptionManager subscriptionManager,
             SecurityExchangeHours exchangeHours,
             DateTimeZone dataTimeZone,
+            SymbolProperties symbolProperties,
+            ISecurityInitializer securityInitializer,
             Symbol symbol,
             Resolution resolution,
             bool fillDataForward,
@@ -435,15 +323,6 @@ namespace QuantConnect.Securities
             bool addToSymbolCache = true)
         {
             var sid = symbol.ID;
-
-            //If it hasn't been set, use some defaults based on the security type
-            if (leverage <= 0)
-            {
-                if (sid.SecurityType == SecurityType.Equity) leverage = 2;
-                else if (sid.SecurityType == SecurityType.Forex) leverage = 50;
-                // default to 1 for everything else
-                else leverage = 1m;
-            }
 
             // add the symbol to our cache
             if (addToSymbolCache) SymbolCache.Set(symbol.Value, symbol);
@@ -456,32 +335,58 @@ namespace QuantConnect.Securities
             switch (config.SecurityType)
             {
                 case SecurityType.Equity:
-                    security = new Equity.Equity(exchangeHours, config, leverage);
+                    security = new Equity.Equity(exchangeHours, config);
                     break;
 
                 case SecurityType.Forex:
-                    // decompose the symbol into each currency pair
-                    string baseCurrency, quoteCurrency;
-                    Forex.Forex.DecomposeCurrencyPair(symbol.Value, out baseCurrency, out quoteCurrency);
+                    {
+                        // decompose the symbol into each currency pair
+                        string baseCurrency, quoteCurrency;
+                        Forex.Forex.DecomposeCurrencyPair(symbol.Value, out baseCurrency, out quoteCurrency);
 
-                    if (!securityPortfolioManager.CashBook.ContainsKey(baseCurrency))
-                    {
-                        // since we have none it's safe to say the conversion is zero
-                        securityPortfolioManager.CashBook.Add(baseCurrency, 0, 0);
+                        if (!securityPortfolioManager.CashBook.ContainsKey(baseCurrency))
+                        {
+                            // since we have none it's safe to say the conversion is zero
+                            securityPortfolioManager.CashBook.Add(baseCurrency, 0, 0);
+                        }
+                        if (!securityPortfolioManager.CashBook.ContainsKey(quoteCurrency))
+                        {
+                            // since we have none it's safe to say the conversion is zero
+                            securityPortfolioManager.CashBook.Add(quoteCurrency, 0, 0);
+                        }
+                        security = new Forex.Forex(exchangeHours, securityPortfolioManager.CashBook[quoteCurrency], config);
                     }
-                    if (!securityPortfolioManager.CashBook.ContainsKey(quoteCurrency))
+                    break;
+
+                case SecurityType.Cfd:
                     {
-                        // since we have none it's safe to say the conversion is zero
-                        securityPortfolioManager.CashBook.Add(quoteCurrency, 0, 0);
+                        var quoteCurrency = symbolProperties.QuoteCurrency;
+
+                        if (!securityPortfolioManager.CashBook.ContainsKey(quoteCurrency))
+                        {
+                            // since we have none it's safe to say the conversion is zero
+                            securityPortfolioManager.CashBook.Add(quoteCurrency, 0, 0);
+                        }
+                        security = new Cfd.Cfd(exchangeHours, securityPortfolioManager.CashBook[quoteCurrency], config, symbolProperties);
                     }
-                    security = new Forex.Forex(exchangeHours, securityPortfolioManager.CashBook[quoteCurrency], config, leverage);
                     break;
 
                 default:
                 case SecurityType.Base:
-                    security = new Security(exchangeHours, config, leverage);
+                    security = new Security(exchangeHours, config);
                     break;
             }
+
+            // invoke the security initializer
+            securityInitializer.Initialize(security);
+
+            // if leverage was specified then apply to security after the initializer has run, parameters of this
+            // method take precedence over the intializer
+            if (leverage > 0)
+            {
+                security.SetLeverage(leverage);
+            }
+
             return security;
         }
 
@@ -493,6 +398,8 @@ namespace QuantConnect.Securities
         public static Security CreateSecurity(SecurityPortfolioManager securityPortfolioManager,
             SubscriptionManager subscriptionManager,
             MarketHoursDatabase marketHoursDatabase,
+            SymbolPropertiesDatabase symbolPropertiesDatabase,
+            ISecurityInitializer securityInitializer,
             Symbol symbol,
             Resolution resolution,
             bool fillDataForward,
@@ -504,10 +411,14 @@ namespace QuantConnect.Securities
         {
             var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType);
             var exchangeHours = marketHoursDbEntry.ExchangeHours;
+
+            // only used in CFD security type, for now
+            var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType);
+
             var tradeBarType = typeof(TradeBar);
             var type = resolution == Resolution.Tick ? typeof(Tick) : tradeBarType;
-            return CreateSecurity(type, securityPortfolioManager, subscriptionManager, exchangeHours, marketHoursDbEntry.DataTimeZone, symbol, resolution,
-                fillDataForward, leverage, extendedMarketHours, isInternalFeed, isCustomData);
+            return CreateSecurity(type, securityPortfolioManager, subscriptionManager, exchangeHours, marketHoursDbEntry.DataTimeZone, symbolProperties, securityInitializer, symbol, resolution,
+                fillDataForward, leverage, extendedMarketHours, isInternalFeed, isCustomData, addToSymbolCache);
         }
     }
 }

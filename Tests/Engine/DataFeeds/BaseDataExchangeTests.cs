@@ -18,11 +18,13 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
@@ -194,9 +196,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void RespectsShouldMoveNext()
         {
-            var exchange = new BaseDataExchange();
+            var exchange = new BaseDataExchange("test");
             exchange.SetErrorHandler(exception => true);
-            exchange.AddEnumerator(new List<BaseData> {new Tick()}.GetEnumerator(), () => false);
+            exchange.AddEnumerator(Symbol.Empty, new List<BaseData> {new Tick()}.GetEnumerator(), () => false);
 
             var isFaultedEvent = new ManualResetEvent(false);
             var isCompletedEvent = new ManualResetEvent(false);
@@ -213,14 +215,26 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void FiresOnEnumeratorFinishedEvents()
         {
-            var exchange = new BaseDataExchange();
+            var exchange = new BaseDataExchange("test");
             IEnumerator<BaseData> enumerator = new List<BaseData>().GetEnumerator();
 
             var isCompletedEvent = new ManualResetEvent(false);
-            exchange.AddEnumerator(enumerator, () => true, handler => isCompletedEvent.Set());
+            exchange.AddEnumerator(Symbol.Empty, enumerator, () => true, handler => isCompletedEvent.Set());
             Task.Run(() => exchange.Start(new CancellationTokenSource(50).Token));
 
             isCompletedEvent.WaitOne();
+        }
+
+        [Test]
+        public void RemovesBySymbol()
+        {
+            var exchange = new BaseDataExchange("test");
+            var enumerator = new List<BaseData> {new Tick {Symbol = Symbols.SPY}}.GetEnumerator();
+            exchange.AddEnumerator(Symbols.SPY, enumerator);
+            var removed = exchange.RemoveEnumerator(Symbols.AAPL);
+            Assert.IsNull(removed);
+            removed = exchange.RemoveEnumerator(Symbols.SPY);
+            Assert.AreEqual(Symbols.SPY, removed.Symbol);
         }
 
         private sealed class ExceptionEnumerator<T> : IEnumerator<T>
@@ -242,9 +256,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 while (++count < 10 && dataQueue.TryDequeue(out data)) list.Add(data);
                 return list;
             });
-            var exchange = new BaseDataExchange();
+            var exchange = new BaseDataExchange("test");
             IEnumerator<BaseData> enumerator = GetNextTicksEnumerator(dataQueueHandler);
-            exchange.AddEnumerator(enumerator, null, null);
+            var sym = Symbol.Create("data-queue-handler-symbol", SecurityType.Base, Market.USA);
+            exchange.AddEnumerator(sym, enumerator, null, null);
             return exchange;
         }
 

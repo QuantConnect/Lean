@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Commands;
@@ -25,7 +26,7 @@ namespace QuantConnect.Interfaces
     /// for external messages to act upon the running algorithm instance.
     /// </summary>
     [InheritedExport(typeof(ICommandQueueHandler))]
-    public interface ICommandQueueHandler
+    public interface ICommandQueueHandler : IDisposable
     {
         /// <summary>
         /// Initializes this command queue for the specified job

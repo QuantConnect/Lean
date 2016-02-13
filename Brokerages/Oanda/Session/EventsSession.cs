@@ -19,7 +19,6 @@
 
 using System.Collections.Generic;
 using System.Net;
-using System.Threading.Tasks;
 using QuantConnect.Brokerages.Oanda.DataType;
 
 namespace QuantConnect.Brokerages.Oanda.Session
@@ -38,9 +37,9 @@ namespace QuantConnect.Brokerages.Oanda.Session
             _brokerage = brokerage;
         }
 
-        protected override async Task<WebResponse> GetSession()
+        protected override WebResponse GetSession()
         {
-            return await _brokerage.StartEventsSession(new List<int> {_accountId});
+            return _brokerage.StartEventsSession(new List<int> {_accountId});
         }
     }
 #pragma warning restore 1591

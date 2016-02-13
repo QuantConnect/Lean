@@ -19,7 +19,6 @@ using System.Linq;
 using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.RealTime;
@@ -27,7 +26,6 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
-using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Setup
@@ -108,6 +106,29 @@ namespace QuantConnect.Lean.Engine.Setup
         }
 
         /// <summary>
+        /// Creates the brokerage as specified by the job packet
+        /// </summary>
+        /// <param name="algorithmNodePacket">Job packet</param>
+        /// <param name="uninitializedAlgorithm">The algorithm instance before Initialize has been called</param>
+        /// <returns>The brokerage instance, or throws if error creating instance</returns>
+        public IBrokerage CreateBrokerage(AlgorithmNodePacket algorithmNodePacket, IAlgorithm uninitializedAlgorithm)
+        {
+            var liveJob = algorithmNodePacket as LiveNodePacket;
+            if (liveJob == null)
+            {
+                throw new ArgumentException("BrokerageSetupHandler.CreateBrokerage requires a live node packet");
+            }
+
+            // find the correct brokerage factory based on the specified brokerage in the live job packet
+            _factory = Composer.Instance.Single<IBrokerageFactory>(factory => factory.BrokerageType.MatchesTypeName(liveJob.Brokerage));
+
+            // initialize the correct brokerage using the resolved factory
+            var brokerage = _factory.CreateBrokerage(liveJob, uninitializedAlgorithm);
+
+            return brokerage;
+        }
+
+        /// <summary>
         /// Primary entry point to setup a new algorithm
         /// </summary>
         /// <param name="algorithm">Algorithm instance</param>
@@ -117,10 +138,9 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="transactionHandler">The configurated transaction handler</param>
         /// <param name="realTimeHandler">The configured real time handler</param>
         /// <returns>True on successfully setting up the algorithm state, or false on error.</returns>
-        public bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket job, IResultHandler resultHandler, ITransactionHandler transactionHandler, IRealTimeHandler realTimeHandler)
+        public bool Setup(IAlgorithm algorithm, IBrokerage brokerage, AlgorithmNodePacket job, IResultHandler resultHandler, ITransactionHandler transactionHandler, IRealTimeHandler realTimeHandler)
         {
             _algorithm = algorithm;
-            brokerage = default(IBrokerage);
 
             // verify we were given the correct job packet type
             var liveJob = job as LiveNodePacket;
@@ -151,46 +171,17 @@ namespace QuantConnect.Lean.Engine.Setup
             {
                 Log.Trace("BrokerageSetupHandler.Setup(): Initializing algorithm...");
 
-                resultHandler.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Initializing, "Initializing algorithm...");
-
-                try
-                {
-                    // find the correct brokerage factory based on the specified brokerage in the live job packet
-                    _factory = Composer.Instance.Single<IBrokerageFactory>(factory => factory.BrokerageType.MatchesTypeName(liveJob.Brokerage));
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err, "Error resolving brokerage factory for " + liveJob.Brokerage + ":");
-                    AddInitializationError("Unable to locate factory for brokerage: " + liveJob.Brokerage);
-                    return false;
-                }
+                resultHandler.SendStatusUpdate(AlgorithmStatus.Initializing, "Initializing algorithm...");
 
                 //Execute the initialize code:
+                var controls = job.Controls;
                 var isolator = new Isolator();
                 var initializeComplete = isolator.ExecuteWithTimeLimit(TimeSpan.FromSeconds(300), () =>
                 {
                     try
                     {
-                        //Set the live trading level asset/ram allocation limits. 
-                        //Protects algorithm from linux killing the job by excess memory:
-                        switch (job.ServerType)
-                        {
-                            case ServerType.Server1024:
-                                algorithm.SetAssetLimits(100, 20, 10);
-                                break;
-
-                            case ServerType.Server2048:
-                                algorithm.SetAssetLimits(400, 50, 30);
-                                break;
-
-                            default: //512
-                                algorithm.SetAssetLimits(50, 25, 15);
-                                break;
-                        }
                         //Set the default brokerage model before initialize
                         algorithm.SetBrokerageModel(_factory.BrokerageModel);
-                        //Set our default markets
-                        algorithm.SetDefaultMarkets(_factory.DefaultMarkets.ToDictionary());
                         //Set our parameters
                         algorithm.SetParameters(job.Parameters);
                         //Algorithm is live, not backtesting:
@@ -201,10 +192,13 @@ namespace QuantConnect.Lean.Engine.Setup
                         algorithm.Schedule.SetEventSchedule(realTimeHandler);
                         //Initialise the algorithm, get the required data:
                         algorithm.Initialize();
-                        //Zero the CashBook - we'll populate directly from brokerage
-                        foreach (var kvp in algorithm.Portfolio.CashBook)
+                        if (liveJob.Brokerage != "PaperBrokerage")
                         {
-                            kvp.Value.SetAmount(0);
+                            //Zero the CashBook - we'll populate directly from brokerage
+                            foreach (var kvp in algorithm.Portfolio.CashBook)
+                            {
+                                kvp.Value.SetAmount(0);
+                            }
                         }
                     }
                     catch (Exception err)
@@ -220,21 +214,10 @@ namespace QuantConnect.Lean.Engine.Setup
                 }
 
                 // let the world know what we're doing since logging in can take a minute
-                resultHandler.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.LoggingIn, "Logging into brokerage...");
-
-                // initialize the correct brokerage using the resolved factory
-                brokerage = _factory.CreateBrokerage(liveJob, algorithm);
-
-                if (brokerage == null)
-                {
-                    AddInitializationError("Failed to create instance of brokerage: " + liveJob.Brokerage);
-                    return false;
-                }
+                resultHandler.SendStatusUpdate(AlgorithmStatus.LoggingIn, "Logging into brokerage...");
 
                 brokerage.Message += brokerageOnMessage;
 
-                // set the transaction and settlement models based on the brokerage properties
-                SetupHandler.UpdateModels(algorithm, algorithm.BrokerageModel);
                 algorithm.Transactions.SetOrderProcessor(transactionHandler);
                 algorithm.PostInitialize();
 
@@ -302,8 +285,8 @@ namespace QuantConnect.Lean.Engine.Setup
                 {
                     // populate the algorithm with the account's current holdings
                     var holdings = brokerage.GetAccountHoldings();
-                    var supportedSecurityTypes = new HashSet<SecurityType> {SecurityType.Equity, SecurityType.Forex};
-                    var minResolution = new Lazy<Resolution>(() => algorithm.Securities.Min(x => x.Value.Resolution));
+                    var supportedSecurityTypes = new HashSet<SecurityType> { SecurityType.Equity, SecurityType.Forex, SecurityType.Cfd };
+                    var minResolution = new Lazy<Resolution>(() => algorithm.Securities.Select(x => x.Value.Resolution).DefaultIfEmpty(Resolution.Second).Min());
                     foreach (var holding in holdings)
                     {
                         Log.Trace("BrokerageSetupHandler.Setup(): Has existing holding: " + holding);
@@ -345,11 +328,6 @@ namespace QuantConnect.Lean.Engine.Setup
                     AddInitializationError("Error getting account holdings from brokerage: " + err.Message);
                     return false;
                 }
-
-                Log.Trace("BrokerageSetupHandler.Setup(): Ensuring currency data feeds present...");
-
-                // call this after we've initialized everything from the brokerage since we may have added some holdings/currencies
-                algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(algorithm.Securities, algorithm.SubscriptionManager, MarketHoursDatabase.FromDataFolder());
 
                 //Set the starting portfolio value for the strategy to calculate performance:
                 StartingPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;

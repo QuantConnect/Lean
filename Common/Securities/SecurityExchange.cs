@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NodaTime;
 using QuantConnect.Util;
@@ -42,38 +43,6 @@ namespace QuantConnect.Securities
         public DateTimeZone TimeZone 
         {
             get { return _exchangeHours.TimeZone; }
-        }
-
-        /// <summary>
-        /// Gets the market open time for the current day
-        /// </summary>
-        public TimeSpan MarketOpen
-        {
-            get { return _exchangeHours.GetMarketHours(_localFrontier).MarketOpen; }
-        }
-
-        /// <summary>
-        /// Gets the market close time for the current day
-        /// </summary>
-        public TimeSpan MarketClose
-        {
-            get { return _exchangeHours.GetMarketHours(_localFrontier).MarketClose; }
-        }
-
-        /// <summary>
-        /// Gets the extended market open time for the current day
-        /// </summary>
-        public TimeSpan ExtendedMarketOpen
-        {
-            get { return _exchangeHours.GetMarketHours(_localFrontier).ExtendedMarketOpen; }
-        }
-
-        /// <summary>
-        /// Gets the extended market close time for the current day
-        /// </summary>
-        public TimeSpan ExtendedMarketClose
-        {
-            get { return _exchangeHours.GetMarketHours(_localFrontier).ExtendedMarketClose; }
         }
 
         /// <summary>
@@ -132,26 +101,6 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets the date time the market opens on the specified day
-        /// </summary>
-        /// <param name="time">DateTime object for this date</param>
-        /// <returns>DateTime the market is considered open</returns>
-        public DateTime TimeOfDayOpen(DateTime time)
-        {
-            return time.Date + _exchangeHours.GetMarketHours(time).MarketOpen;
-        }
-
-        /// <summary>
-        /// Gets the date time the market closes on the specified day
-        /// </summary>
-        /// <param name="time">DateTime object for this date</param>
-        /// <returns>DateTime the market day is considered closed</returns>
-        public DateTime TimeOfDayClosed(DateTime time)
-        {
-            return time.Date + _exchangeHours.GetMarketHours(time).MarketClose;
-        }
-
-        /// <summary>
         /// Check if this DateTime is open.
         /// </summary>
         /// <param name="dateTime">DateTime to check</param>
@@ -159,16 +108,6 @@ namespace QuantConnect.Securities
         public bool DateTimeIsOpen(DateTime dateTime)
         {
             return _exchangeHours.IsOpen(dateTime, false);
-        }
-
-        /// <summary>
-        /// Check if the object is open including the *Extended* market hours
-        /// </summary>
-        /// <param name="time">Current time of day</param>
-        /// <returns>True if we are in extended or primary marketing hours.</returns>
-        public bool DateTimeIsExtendedOpen(DateTime time)
-        {
-            return _exchangeHours.IsOpen(time, true);
         }
 
         /// <summary>
@@ -180,62 +119,20 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Sets the regular market hours for the specified days. Extended market hours are
-        /// set to the same as the regular market hours. If no days are specified then
-        /// all days will be updated. 
-        /// <para>Specify <see cref="TimeSpan.Zero"/> for both <paramref name="marketOpen"/>
-        /// and <paramref name="marketClose"/> to close the exchange for the specified days.</para>
-        /// <para>Specify
-        /// <see cref="TimeSpan.Zero"/> for <paramref name="marketOpen"/> and <see cref="QuantConnect.Time.OneDay"/>
-        /// for open all day</para>
-        /// </summary>
-        /// <param name="marketOpen">The time of day the market opens</param>
-        /// <param name="marketClose">The time of day the market closes</param>
-        /// <param name="days">The days of the week to set these times for</param>
-        public void SetMarketHours(TimeSpan marketOpen, TimeSpan marketClose, params DayOfWeek[] days)
-        {
-            SetMarketHours(marketOpen, marketOpen, marketClose, marketClose, days);
-        }
-
-        /// <summary>
         /// Sets the regular market hours for the specified days If no days are specified then
         /// all days will be updated.
         /// </summary>
-        /// <param name="extendedMarketOpen">The time of day the pre market opens</param>
-        /// <param name="marketOpen">The time of day the market opens</param>
-        /// <param name="marketClose">The time of day the market closes</param>
-        /// <param name="extendedMarketClose">The time of day the post market opens</param>
+        /// <param name="marketHoursSegments">Specifies each segment of the market hours, such as premarket/market/postmark</param>
         /// <param name="days">The days of the week to set these times for</param>
-        public void SetMarketHours(TimeSpan extendedMarketOpen, TimeSpan marketOpen, TimeSpan marketClose, TimeSpan extendedMarketClose, params DayOfWeek[] days)
+        public void SetMarketHours(IEnumerable<MarketHoursSegment> marketHoursSegments, params DayOfWeek[] days)
         {
             if (days.IsNullOrEmpty()) days = Enum.GetValues(typeof(DayOfWeek)).OfType<DayOfWeek>().ToArray();
-
-            // if we specify close as 1 tick before the day rolls over, the exchange is still
-            // considered to be open all day,so set it to one day and this impl will make it OpenAllDay
-            if (extendedMarketOpen == marketOpen && marketOpen == TimeSpan.Zero && extendedMarketClose == marketClose && marketClose.Ticks == Time.OneDay.Ticks - 1)
-            {
-                marketClose = Time.OneDay;
-            }
             
-            // make sure extended hours are outside of regular hours
-            extendedMarketOpen = TimeSpan.FromTicks(Math.Min(extendedMarketOpen.Ticks, marketOpen.Ticks));
-            extendedMarketClose = TimeSpan.FromTicks(Math.Max(extendedMarketClose.Ticks, marketClose.Ticks));
-
             var marketHours = _exchangeHours.MarketHours.ToDictionary();
+            marketHoursSegments = marketHoursSegments as IList<MarketHoursSegment> ?? marketHoursSegments.ToList();
             foreach (var day in days)
             {
-                if (marketOpen == TimeSpan.Zero && marketClose == TimeSpan.Zero)
-                {
-                    marketHours[day] = LocalMarketHours.ClosedAllDay(day);
-                }
-                else if (marketOpen == TimeSpan.Zero && marketClose == Time.OneDay)
-                {
-                    marketHours[day] = LocalMarketHours.OpenAllDay(day);
-                }
-                else
-                {
-                    marketHours[day] = new LocalMarketHours(day, extendedMarketOpen, marketOpen, marketClose, extendedMarketClose);
-                }
+                marketHours[day] = new LocalMarketHours(day, marketHoursSegments);
             }
 
             // create a new exchange hours instance for the new hours

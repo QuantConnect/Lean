@@ -31,6 +31,7 @@ namespace QuantConnect.Securities
         private readonly SecurityManager _securities;
         private const decimal _minimumOrderSize = 0;
         private const int _minimumOrderQuantity = 1;
+        private TimeSpan _marketOrderFillTimeout = TimeSpan.FromSeconds(5);
 
         private IOrderProcessor _orderProcessor;
         private Dictionary<DateTime, decimal> _transactionRecord;
@@ -51,7 +52,7 @@ namespace QuantConnect.Securities
             //Private reference for processing transactions
             _securities = security;
 
-            //Interal storage for transaction records:
+            //Internal storage for transaction records:
             _transactionRecord = new Dictionary<DateTime, decimal>();
         }
 
@@ -102,6 +103,22 @@ namespace QuantConnect.Securities
             get
             {
                 return _orderId;
+            }
+        }
+
+        /// <summary>
+        /// Configurable timeout for market order fills
+        /// </summary>
+        /// <remarks>Default value is 5 seconds</remarks>
+        public TimeSpan MarketOrderFillTimeout
+        {
+            get
+            {
+                return _marketOrderFillTimeout;
+            }
+            set
+            {
+                _marketOrderFillTimeout = value;
             }
         }
 
@@ -191,7 +208,7 @@ namespace QuantConnect.Securities
         /// <returns>The order ticket with the specified id, or null if not found</returns>
         public OrderTicket GetOrderTicket(int orderId)
         {
-            return GetOrderTickets(x => x.OrderId == orderId).FirstOrDefault();
+            return _orderProcessor.GetOrderTicket(orderId);
         }
 
         /// <summary>
@@ -210,9 +227,9 @@ namespace QuantConnect.Securities
                 return false;
             }
 
-            if (!orderTicket.OrderFilled.WaitOne(Time.OneSecond))
+            if (!orderTicket.OrderClosed.WaitOne(_marketOrderFillTimeout))
             {
-                Log.Error("SecurityTransactionManager.WaitForOrder(): Order did not fill within 1 second.");
+                Log.Error("SecurityTransactionManager.WaitForOrder(): Order did not fill within {0} seconds.", _marketOrderFillTimeout.TotalSeconds);
                 return false;
             }
 
@@ -225,7 +242,17 @@ namespace QuantConnect.Securities
         /// <returns>List of open orders.</returns>
         public List<Order> GetOpenOrders()
         {
-            return _orderProcessor.GetOrders(x => x.Status == OrderStatus.Submitted || x.Status == OrderStatus.New).ToList();
+            return _orderProcessor.GetOrders(x => x.Status.IsOpen()).ToList();
+        }
+
+        /// <summary>
+        /// Get a list of all open orders for a symbol.
+        /// </summary>
+        /// <param name="symbol">The symbol for which to return the orders</param>
+        /// <returns>List of open orders.</returns>
+        public List<Order> GetOpenOrders(Symbol symbol)
+        {
+            return _orderProcessor.GetOrders(x => x.Symbol == symbol && x.Status.IsOpen()).ToList();
         }
 
         /// <summary>
@@ -251,7 +278,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="brokerageId">The brokerage id to fetch</param>
         /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
-        public Order GetOrderByBrokerageId(long brokerageId)
+        public Order GetOrderByBrokerageId(string brokerageId)
         {
             return _orderProcessor.GetOrderByBrokerageId(brokerageId);
         }
@@ -274,13 +301,28 @@ namespace QuantConnect.Securities
         /// <returns>True if suficient capital.</returns>
         public bool GetSufficientCapitalForOrder(SecurityPortfolioManager portfolio, Order order)
         {
+            // short circuit the div 0 case
+            if (order.Quantity == 0) return true;
+
             var security = _securities[order.Symbol];
-            
+
+            var ticket = GetOrderTicket(order.Id);
+            if (ticket == null)
+            {
+                Log.Error("SecurityTransactionManager.GetSufficientCapitalForOrder(): Null order ticket for id: " + order.Id);
+                return false;
+            }
+
             var freeMargin = security.MarginModel.GetMarginRemaining(portfolio, security, order.Direction);
             var initialMarginRequiredForOrder = security.MarginModel.GetInitialMarginRequiredForOrder(security, order);
-            if (Math.Abs(initialMarginRequiredForOrder) > freeMargin)
+
+            // pro-rate the initial margin required for order based on how much has already been filled
+            var percentUnfilled = (Math.Abs(order.Quantity) - Math.Abs(ticket.QuantityFilled))/Math.Abs(order.Quantity);
+            var initialMarginRequiredForRemainderOfOrder = percentUnfilled*initialMarginRequiredForOrder;
+
+            if (Math.Abs(initialMarginRequiredForRemainderOfOrder) > freeMargin)
             {
-                Log.Error(string.Format("Transactions.GetSufficientCapitalForOrder(): Id: {0}, Initial Margin: {1}, Free Margin: {2}", order.Id, initialMarginRequiredForOrder, freeMargin));
+                Log.Error(string.Format("SecurityTransactionManager.GetSufficientCapitalForOrder(): Id: {0}, Initial Margin: {1}, Free Margin: {2}", order.Id, initialMarginRequiredForOrder, freeMargin));
                 return false;
             }
             return true;

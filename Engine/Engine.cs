@@ -95,7 +95,7 @@ namespace QuantConnect.Lean.Engine
                 Thread threadRealTime = null;
 
                 //-> Initialize messaging system
-                _systemHandlers.Notify.SetChannel(job.Channel);
+                _systemHandlers.Notify.SetAuthentication(job);
 
                 //-> Set the result handler type for this algorithm job, and launch the associated result thread.
                 _algorithmHandlers.Results.Initialize(job, _systemHandlers.Notify, _systemHandlers.Api, _algorithmHandlers.DataFeed, _algorithmHandlers.Setup, _algorithmHandlers.Transactions);
@@ -109,19 +109,22 @@ namespace QuantConnect.Lean.Engine
                     // Save algorithm to cache, load algorithm instance:
                     algorithm = _algorithmHandlers.Setup.CreateAlgorithmInstance(assemblyPath, job.Language);
 
+                    // Initialize the brokerage
+                    brokerage = _algorithmHandlers.Setup.CreateBrokerage(job, algorithm);
+
                     // Initialize the data feed before we initialize so he can intercept added securities/universes via events
-                    _algorithmHandlers.DataFeed.Initialize(algorithm, job, _algorithmHandlers.Results, _algorithmHandlers.MapFileProvider);
+                    _algorithmHandlers.DataFeed.Initialize(algorithm, job, _algorithmHandlers.Results, _algorithmHandlers.MapFileProvider, _algorithmHandlers.FactorFileProvider);
 
                     // initialize command queue system
                     _algorithmHandlers.CommandQueue.Initialize(job, algorithm);
 
                     // set the history provider before setting up the algorithm
-                    _algorithmHandlers.HistoryProvider.Initialize(job, _algorithmHandlers.MapFileProvider, progress =>
+                    _algorithmHandlers.HistoryProvider.Initialize(job, _algorithmHandlers.MapFileProvider, _algorithmHandlers.FactorFileProvider, progress =>
                     {
                         // send progress updates to the result handler only during initialization
                         if (!algorithm.GetLocked() || algorithm.IsWarmingUp)
                         {
-                            _algorithmHandlers.Results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.History, 
+                            _algorithmHandlers.Results.SendStatusUpdate(AlgorithmStatus.History, 
                                 string.Format("Processing history {0}%...", progress));
                         }
                     });
@@ -131,7 +134,7 @@ namespace QuantConnect.Lean.Engine
                     algorithm.BrokerageMessageHandler = new DefaultBrokerageMessageHandler(algorithm, job, _algorithmHandlers.Results, _systemHandlers.Api);
 
                     //Initialize the internal state of algorithm and job: executes the algorithm.Initialize() method.
-                    initializeComplete = _algorithmHandlers.Setup.Setup(algorithm, out brokerage, job, _algorithmHandlers.Results, _algorithmHandlers.Transactions, _algorithmHandlers.RealTime);
+                    initializeComplete = _algorithmHandlers.Setup.Setup(algorithm, brokerage, job, _algorithmHandlers.Results, _algorithmHandlers.Transactions, _algorithmHandlers.RealTime);
 
                     // set this again now that we've actually added securities
                     _algorithmHandlers.Results.SetAlgorithm(algorithm);
@@ -189,7 +192,7 @@ namespace QuantConnect.Lean.Engine
                     };
 
                     //Send status to user the algorithm is now executing.
-                    _algorithmHandlers.Results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Running);
+                    _algorithmHandlers.Results.SendStatusUpdate(AlgorithmStatus.Running);
 
                     //Launch the data, transaction and realtime handlers into dedicated threads
                     threadFeed = new Thread(_algorithmHandlers.DataFeed.Run) {Name = "DataFeed Thread"};
@@ -259,12 +262,6 @@ namespace QuantConnect.Lean.Engine
                             _systemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, message + " Stack Trace: " + err.StackTrace);
                         }
                     }
-
-                    //Send result data back: this entire code block could be rewritten.
-                    // todo: - Split up statistics class, its enormous. 
-                    // todo: - Make a dedicated Statistics.Benchmark class.
-                    // todo: - Move all creation and transmission of statistics out of primary engine loop.
-                    // todo: - Statistics.Generate(algorithm, resulthandler, transactionhandler);
 
                     try
                     {
@@ -348,10 +345,12 @@ namespace QuantConnect.Lean.Engine
 
                 if (brokerage != null)
                 {
+                    Log.Trace("Engine.Run(): Disconnecting from brokerage...");
                     brokerage.Disconnect();
                 }
                 if (_algorithmHandlers.Setup != null)
                 {
+                    Log.Trace("Engine.Run(): Disposing of setup handler...");
                     _algorithmHandlers.Setup.Dispose();
                 }
                 Log.Trace("Engine.Main(): Analysis Completed and Results Posted.");

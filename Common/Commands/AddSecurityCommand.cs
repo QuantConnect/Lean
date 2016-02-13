@@ -78,17 +78,8 @@ namespace QuantConnect.Commands
         /// <param name="algorithm">The algorithm to run this command against</param>
         public CommandResultPacket Run(IAlgorithm algorithm)
         {
-            try
-            {
-                var security = algorithm.AddSecurity(SecurityType, Symbol, Resolution, Market, FillDataForward, Leverage, ExtendedMarketHours);
-                return new Result(this, true, security.Symbol);
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
-                algorithm.Error("AddSecuityCommand Error: " + err.Message);
-                return new Result(this, false, QuantConnect.Symbol.Empty);
-            }
+            var security = algorithm.AddSecurity(SecurityType, Symbol, Resolution, Market, FillDataForward, Leverage, ExtendedMarketHours);
+            return new Result(this, true, security.Symbol);
         }
 
         /// <summary>

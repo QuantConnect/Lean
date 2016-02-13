@@ -44,7 +44,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // job is used to send into DataQueueHandler
             var job = new LiveNodePacket();
             // result handler is used due to dependency in SubscriptionDataReader
-            var resultHandler = new ConsoleResultHandler();
+            var resultHandler = new BacktestingResultHandler();
 
             var lastTime = DateTime.MinValue;
             var timeProvider = new RealTimeProvider();
@@ -57,7 +57,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             });
 
             var feed = new TestableLiveTradingDataFeed(dataQueueHandler, timeProvider);
-            feed.Initialize(algorithm, job, resultHandler, new LocalDiskMapFileProvider());
+            var mapFileProvider = new LocalDiskMapFileProvider();
+            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider));
 
             var feedThreadStarted = new ManualResetEvent(false);
             Task.Factory.StartNew(() =>
@@ -338,7 +339,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Symbol symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA);
             algorithm.AddUniverse(new FuncUniverse(
                 new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false),
-                new SubscriptionSettings(Resolution.Second, 1, true, false),
+                new UniverseSettings(Resolution.Second, 1, true, false, TimeSpan.Zero),
                 coarse => coarse.Take(10).Select(x => x.Symbol) 
                 ));
 
@@ -409,12 +410,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // job is used to send into DataQueueHandler
             var job = new LiveNodePacket();
             // result handler is used due to dependency in SubscriptionDataReader
-            var resultHandler = new ConsoleResultHandler(); // new ResultHandlerStub();
+            var resultHandler = new BacktestingResultHandler(); // new ResultHandlerStub();
 
             dataQueueHandler = new FuncDataQueueHandler(getNextTicksFunction);
 
             var feed = new TestableLiveTradingDataFeed(dataQueueHandler, timeProvider);
-            feed.Initialize(algorithm, job, resultHandler, new LocalDiskMapFileProvider());
+            var mapFileProvider = new LocalDiskMapFileProvider();
+            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider));
 
             var feedThreadStarted = new ManualResetEvent(false);
             Task.Factory.StartNew(() =>
@@ -441,6 +443,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         private static void ConsumeBridge(IDataFeed feed, TimeSpan timeout, bool alwaysInvoke, Action<TimeSlice> handler, bool noOutput = false)
         {
+            Task.Delay(timeout).ContinueWith(_ => feed.Exit());
             bool startedReceivingata = false;
             foreach (var timeSlice in feed)
             {

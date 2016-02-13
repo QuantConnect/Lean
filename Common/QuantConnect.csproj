@@ -16,6 +16,7 @@
     </TargetFrameworkProfile>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
+    <LangVersion>5</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -131,13 +132,17 @@
     <Compile Include="Brokerages\TradierBrokerageModel.cs" />
     <Compile Include="Commands\AddSecurityCommand.cs" />
     <Compile Include="Commands\AlgorithmStatusCommand.cs" />
+    <Compile Include="Commands\CancelOrderCommand.cs" />
     <Compile Include="Commands\ICommand.cs" />
     <Compile Include="Commands\LiquidateCommand.cs" />
     <Compile Include="Commands\OrderCommand.cs" />
     <Compile Include="Commands\QuitCommand.cs" />
+    <Compile Include="Commands\UpdateOrderCommand.cs" />
     <Compile Include="Constants.cs" />
+    <Compile Include="Currencies.cs" />
     <Compile Include="Data\Auxiliary\FactorFile.cs" />
     <Compile Include="Data\Auxiliary\FactorFileRow.cs" />
+    <Compile Include="Data\Auxiliary\LocalDiskFactorFileProvider.cs" />
     <Compile Include="Data\Auxiliary\MapFile.cs" />
     <Compile Include="Data\Auxiliary\LocalDiskMapFileProvider.cs" />
     <Compile Include="Data\Auxiliary\MapFileResolver.cs" />
@@ -173,7 +178,7 @@
     <Compile Include="Data\UniverseSelection\FuncUniverse.cs" />
     <Compile Include="Data\UniverseSelection\Universe.cs" />
     <Compile Include="Data\UniverseSelection\SecurityChanges.cs" />
-    <Compile Include="Data\UniverseSelection\SubscriptionSettings.cs" />
+    <Compile Include="Data\UniverseSelection\UniverseSettings.cs" />
     <Compile Include="Field.cs" />
     <Compile Include="Interfaces\IAlgorithm.cs" />
     <Compile Include="Interfaces\IApi.cs" />
@@ -181,6 +186,7 @@
     <Compile Include="Interfaces\IBrokerageFactory.cs" />
     <Compile Include="Interfaces\ICommandQueueHandler.cs" />
     <Compile Include="Interfaces\IDataQueueHandler.cs" />
+    <Compile Include="Interfaces\IFactorFileProvider.cs" />
     <Compile Include="Interfaces\IHistoryProvider.cs" />
     <Compile Include="Interfaces\IJobQueueHandler.cs" />
     <Compile Include="Interfaces\IMapFileProvider.cs" />
@@ -190,6 +196,12 @@
     <Compile Include="Notifications\Notification.cs" />
     <Compile Include="Notifications\NotificationManager.cs" />
     <Compile Include="Orders\CancelOrderRequest.cs" />
+    <Compile Include="Orders\Fees\ConstantFeeModel.cs" />
+    <Compile Include="Orders\Fees\InteractiveBrokersFeeModel.cs" />
+    <Compile Include="Orders\Fees\FxcmFeeModel.cs" />
+    <Compile Include="Orders\Fees\IFeeModel.cs" />
+    <Compile Include="Orders\Fills\ImmediateFillModel.cs" />
+    <Compile Include="Orders\Fills\IFillModel.cs" />
     <Compile Include="Orders\MarketOnCloseOrder.cs" />
     <Compile Include="Orders\MarketOnOpenOrder.cs" />
     <Compile Include="Orders\OrderField.cs" />
@@ -201,6 +213,9 @@
     <Compile Include="Orders\OrderResponseErrorCode.cs" />
     <Compile Include="Orders\OrderExtensions.cs" />
     <Compile Include="Orders\OrderTicket.cs" />
+    <Compile Include="Orders\Slippage\ConstantSlippageModel.cs" />
+    <Compile Include="Orders\Slippage\SpreadSlippageModel.cs" />
+    <Compile Include="Orders\Slippage\ISlippageModel.cs" />
     <Compile Include="Orders\StopLimitOrder.cs" />
     <Compile Include="Orders\StopMarketOrder.cs" />
     <Compile Include="Orders\LimitOrder.cs" />
@@ -211,6 +226,7 @@
     <Compile Include="Orders\UpdateOrderFields.cs" />
     <Compile Include="Orders\UpdateOrderRequest.cs" />
     <Compile Include="Packets\CommandResultPacket.cs" />
+    <Compile Include="Packets\Controls.cs" />
     <Compile Include="Packets\HandledErrorPacket.cs" />
     <Compile Include="Packets\HistoryPacket.cs" />
     <Compile Include="Parameters\ParameterAttribute.cs" />
@@ -226,19 +242,33 @@
     <Compile Include="Scheduling\ScheduleManager.cs" />
     <Compile Include="Scheduling\FuncTimeRule.cs" />
     <Compile Include="Scheduling\TimeRules.cs" />
+    <Compile Include="Securities\BrokerageModelSecurityInitializer.cs" />
     <Compile Include="Securities\Cash.cs" />
     <Compile Include="Securities\CashBook.cs" />
+    <Compile Include="Securities\Cfd\Cfd.cs" />
+    <Compile Include="Securities\Cfd\CfdCache.cs" />
+    <Compile Include="Securities\Cfd\CfdDataFilter.cs" />
+    <Compile Include="Securities\Cfd\CfdExchange.cs" />
+    <Compile Include="Securities\Cfd\CfdHolding.cs" />
+    <Compile Include="Securities\Cfd\CfdMarginModel.cs" />
+    <Compile Include="Securities\Cfd\CfdPortfolioModel.cs" />
     <Compile Include="Securities\ConstantFeeTransactionModel.cs" />
     <Compile Include="Securities\Equity\EquityMarginModel.cs" />
     <Compile Include="Securities\Equity\EquityPortfolioModel.cs" />
     <Compile Include="Securities\DelayedSettlementModel.cs" />
+    <Compile Include="Securities\FuncSecurityInitializer.cs" />
+    <Compile Include="Securities\ISecurityInitializer.cs" />
     <Compile Include="Securities\ISettlementModel.cs" />
     <Compile Include="Securities\LocalMarketHours.cs" />
+    <Compile Include="Securities\MarketHoursSegment.cs" />
+    <Compile Include="Securities\MarketHoursState.cs" />
+    <Compile Include="Securities\PatternDayTradingMarginModel.cs" />
+    <Compile Include="Securities\SecurityDatabaseKey.cs" />
     <Compile Include="Securities\SecurityExchangeHours.cs" />
     <Compile Include="Securities\MarketHoursDatabase.cs" />
     <Compile Include="Securities\Forex\ForexMarginModel.cs" />
     <Compile Include="Securities\Forex\ForexPortfolioModel.cs" />
-    <Compile Include="Securities\IHoldingsProvider.cs" />
+    <Compile Include="Securities\ISecurityProvider.cs" />
     <Compile Include="Securities\IOrderProcessor.cs" />
     <Compile Include="Securities\ISecurityMarginModel.cs" />
     <Compile Include="Securities\IOrderProvider.cs" />
@@ -247,6 +277,8 @@
     <Compile Include="Securities\SecurityPortfolioModel.cs" />
     <Compile Include="Securities\SecurityMarginModel.cs" />
     <Compile Include="Securities\ImmediateSettlementModel.cs" />
+    <Compile Include="Securities\SymbolProperties.cs" />
+    <Compile Include="Securities\SymbolPropertiesDatabase.cs" />
     <Compile Include="Securities\UniverseManager.cs" />
     <Compile Include="Securities\UnsettledCashAmount.cs" />
     <Compile Include="SecurityIdentifier.cs" />
@@ -331,6 +363,7 @@
     <Compile Include="TimeZoneOffsetProvider.cs" />
     <Compile Include="TimeZones.cs" />
     <Compile Include="Util\BusyBlockingCollection.cs" />
+    <Compile Include="Util\CircularQueue.cs" />
     <Compile Include="Util\Composer.cs" />
     <Compile Include="Util\ExpressionBuilder.cs" />
     <Compile Include="Util\FixedSizeQueue.cs" />
@@ -338,8 +371,11 @@
     <Compile Include="Util\FuncParallelRunnerWorkItem.cs" />
     <Compile Include="Util\FuncTextWriter.cs" />
     <Compile Include="Util\IParallelRunnerWorkItem.cs" />
+    <Compile Include="Util\LeanData.cs" />
+    <Compile Include="Util\MarketHoursDatabaseJsonConverter.cs" />
     <Compile Include="Util\ParallelRunner.cs" />
     <Compile Include="Util\ParallelRunnerWorker.cs" />
+    <Compile Include="Util\ColorJsonConverter.cs" />
     <Compile Include="Util\SecurityIdentifierJsonConverter.cs" />
     <Compile Include="Util\TypeChangeJsonConverter.cs" />
     <Compile Include="Util\LinqExtensions.cs" />

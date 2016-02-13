@@ -40,8 +40,10 @@ namespace QuantConnect
         /// <param name="ticker">The string ticker symbol</param>
         /// <param name="securityType">The security type of the ticker</param>
         /// <param name="market">The market the ticker resides in</param>
+        /// <param name="alias">An alias to be used for the symbol cache. Required when
+        /// adding the same security from different markets</param>
         /// <returns>A new Symbol object for the specified ticker</returns>
-        public static Symbol Create(string ticker, SecurityType securityType, string market)
+        public static Symbol Create(string ticker, SecurityType securityType, string market, string alias = null)
         {
             SecurityIdentifier sid;
             switch (securityType)
@@ -65,7 +67,7 @@ namespace QuantConnect
                     throw new NotImplementedException("The security type has not been implemented yet: " + securityType);
             }
 
-            return new Symbol(sid, ticker);
+            return new Symbol(sid, alias ?? ticker);
         }
 
         #region Properties

@@ -39,7 +39,7 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public FactorFile(string permtick, IEnumerable<FactorFileRow> data)
         {
-            Permtick = permtick;
+            Permtick = permtick.ToUpper();
             _data = new SortedList<DateTime, FactorFileRow>(data.ToDictionary(x => x.Date));
         }
 

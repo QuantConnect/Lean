@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
@@ -57,6 +58,13 @@ namespace QuantConnect.Tests.Queues
             Assert.IsInstanceOf(typeof (LiquidateCommand), list[0]);
             Assert.IsInstanceOf(typeof (SpecialCommand), list[1]);
             Assert.IsEmpty(queue.GetCommands());
+        }
+
+        [Test]
+        public void thingus()
+        {
+            var color = Color.FromArgb(123, 231, 067);
+            var serialzied = JsonConvert.SerializeObject(color);
         }
 
         private sealed class SpecialCommand : ICommand

@@ -14,11 +14,13 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
 using NUnit.Framework;
+using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -78,7 +80,8 @@ namespace QuantConnect.Tests.Common.Securities
             // we're going to process fills and very our equity after each fill
             var subscriptions = new SubscriptionManager(TimeKeeper);
             var securities = new SecurityManager(TimeKeeper);
-            var security = new Security(SecurityExchangeHours, subscriptions.Add(CASH, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork), leverage: 10);
+            var security = new Security(SecurityExchangeHours, subscriptions.Add(CASH, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork));
+            security.SetLeverage(10m);
             securities.Add(CASH, security);
             var transactions = new SecurityTransactionManager(securities);
             var portfolio = new SecurityPortfolioManager(securities, transactions);
@@ -150,9 +153,12 @@ namespace QuantConnect.Tests.Common.Securities
             var mchCash = portfolio.CashBook["MCH"];
             var usdCash = portfolio.CashBook["USD"];
 
-            var mchJwbSecurity = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, jwbCash, subscriptions.Add(MCHJWB, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork), leverage: 10);
-            var mchUsdSecurity = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, usdCash, subscriptions.Add(MCHUSD, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork), leverage: 10);
-            var usdJwbSecurity = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, mchCash, subscriptions.Add(USDJWB, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork), leverage: 10);
+            var mchJwbSecurity = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, jwbCash, subscriptions.Add(MCHJWB, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork));
+            mchJwbSecurity.SetLeverage(10m);
+            var mchUsdSecurity = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, usdCash, subscriptions.Add(MCHUSD, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork));
+            mchUsdSecurity.SetLeverage(10m);
+            var usdJwbSecurity = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, mchCash, subscriptions.Add(USDJWB, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork));
+            usdJwbSecurity.SetLeverage(10m);
             
             // no fee model
             mchJwbSecurity.TransactionModel = new SecurityTransactionModel();
@@ -163,7 +169,7 @@ namespace QuantConnect.Tests.Common.Securities
             securities.Add(usdJwbSecurity);
             securities.Add(mchUsdSecurity);
 
-            portfolio.CashBook.EnsureCurrencyDataFeeds(securities, subscriptions, MarketHoursDatabase.FromDataFolder());
+            portfolio.CashBook.EnsureCurrencyDataFeeds(securities, subscriptions, MarketHoursDatabase.FromDataFolder(), SymbolPropertiesDatabase.FromDataFolder(), DefaultBrokerageModel.DefaultMarketMap);
 
             for (int i = 0; i < fills.Count; i++)
             {
@@ -224,20 +230,26 @@ namespace QuantConnect.Tests.Common.Securities
             const int quantity = (int) (1000*leverage);
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(securities);
+            var orderProcessor = new OrderProcessor();
+            transactions.SetOrderProcessor(orderProcessor);
             var portfolio = new SecurityPortfolioManager(securities, transactions);
             portfolio.CashBook["USD"].SetAmount(quantity);
 
             var config = CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL);
-            securities.Add(new Security(SecurityExchangeHours, config, leverage));
+            securities.Add(new Security(SecurityExchangeHours, config));
+            var security = securities[Symbols.AAPL];
+            security.SetLeverage(leverage);
 
             var time = DateTime.Now;
             const decimal buyPrice = 1m;
-            var security = securities[Symbols.AAPL];
             security.SetMarketPrice(new TradeBar(time, Symbols.AAPL, buyPrice, buyPrice, buyPrice, buyPrice, 1));
 
             var order = new MarketOrder(Symbols.AAPL, quantity, time) {Price = buyPrice};
             var fill = new OrderEvent(order, DateTime.UtcNow, 0) { FillPrice = buyPrice, FillQuantity = quantity };
-
+            orderProcessor.AddOrder(order);
+            var request = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, order.Quantity, 0, 0, order.Time, null);
+            request.SetOrderId(0);
+            orderProcessor.AddTicket(new OrderTicket(null, request));
             Assert.AreEqual(portfolio.CashBook["USD"].Amount, fill.FillPrice*fill.FillQuantity);
 
             portfolio.ProcessFill(fill);
@@ -303,6 +315,8 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(securities);
+            var orderProcessor = new OrderProcessor();
+            transactions.SetOrderProcessor(orderProcessor);
             var portfolio = new SecurityPortfolioManager(securities, transactions);
             portfolio.CashBook["USD"].SetAmount(1000);
             portfolio.CashBook.Add("EUR",  1000, 1.1m);
@@ -314,7 +328,8 @@ namespace QuantConnect.Tests.Common.Securities
 
             var time = DateTime.Now;
             var config1 = CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL);
-            securities.Add(new Security(SecurityExchangeHours, config1, 2));
+            securities.Add(new Security(SecurityExchangeHours, config1));
+            securities[Symbols.AAPL].SetLeverage(2m);
             securities[Symbols.AAPL].Holdings.SetHoldings(100, 100);
             securities[Symbols.AAPL].SetMarketPrice(new TradeBar{Time = time, Value = 100});
             //Console.WriteLine("AAPL TMU: " + securities[Symbols.AAPL].MarginModel.GetMaintenanceMargin(securities[Symbols.AAPL]));
@@ -323,7 +338,8 @@ namespace QuantConnect.Tests.Common.Securities
             //Console.WriteLine();
 
             var config2 = CreateTradeBarDataConfig(SecurityType.Forex, Symbols.EURUSD);
-            securities.Add(new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, usdCash, config2, 100));
+            securities.Add(new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, usdCash, config2));
+            securities[Symbols.EURUSD].SetLeverage(100m);
             securities[Symbols.EURUSD].Holdings.SetHoldings(1.1m, 1000);
             securities[Symbols.EURUSD].SetMarketPrice(new TradeBar { Time = time, Value = 1.1m });
             //Console.WriteLine("EURUSD TMU: " + securities[Symbols.EURUSD].MarginModel.GetMaintenanceMargin(securities[Symbols.EURUSD]));
@@ -332,7 +348,8 @@ namespace QuantConnect.Tests.Common.Securities
             //Console.WriteLine();
 
             var config3 = CreateTradeBarDataConfig(SecurityType.Forex, Symbols.EURGBP);
-            securities.Add(new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, gbpCash, config3, 100));
+            securities.Add(new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, gbpCash, config3));
+            securities[Symbols.EURGBP].SetLeverage(100m);
             securities[Symbols.EURGBP].Holdings.SetHoldings(1m, 1000);
             securities[Symbols.EURGBP].SetMarketPrice(new TradeBar { Time = time, Value = 1m });
             //Console.WriteLine("EURGBP TMU: " + securities[Symbols.EURGBP].MarginModel.GetMaintenanceMargin(securities[Symbols.EURGBP]));
@@ -352,7 +369,11 @@ namespace QuantConnect.Tests.Common.Securities
             //Console.WriteLine("Total Portfolio Value: " + portfolio.TotalPortfolioValue);
 
 
-            var acceptedOrder = new MarketOrder(Symbols.AAPL, 101, DateTime.Now) {Price = 100};
+            var acceptedOrder = new MarketOrder(Symbols.AAPL, 101, DateTime.Now) { Price = 100 };
+            orderProcessor.AddOrder(acceptedOrder);
+            var request = new SubmitOrderRequest(OrderType.Market, acceptedOrder.SecurityType, acceptedOrder.Symbol, acceptedOrder.Quantity, 0, 0, acceptedOrder.Time, null);
+            request.SetOrderId(0);
+            orderProcessor.AddTicket(new OrderTicket(null, request));
             var sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, acceptedOrder);
             Assert.IsTrue(sufficientCapital);
 
@@ -369,7 +390,7 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = new SecurityPortfolioManager(securities, transactions);
             portfolio.SetCash(0);
 
-            securities.Add(Symbols.AAPL, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL), 1));
+            securities.Add(Symbols.AAPL, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL)));
 
             var fill = new OrderEvent(1, Symbols.AAPL, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Sell,  100, -100, 0);
             portfolio.ProcessFill(fill);
@@ -386,7 +407,7 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = new SecurityPortfolioManager(securities, transactions);
             portfolio.SetCash(0);
 
-            securities.Add(Symbols.AAPL, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL), 1));
+            securities.Add(Symbols.AAPL, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL)));
             securities[Symbols.AAPL].Holdings.SetHoldings(100, 100);
 
             var fill = new OrderEvent(1, Symbols.AAPL, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Sell,  100, -100, 0);
@@ -404,7 +425,7 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = new SecurityPortfolioManager(securities, transactions);
             portfolio.SetCash(0);
 
-            securities.Add(Symbols.AAPL, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL), 1));
+            securities.Add(Symbols.AAPL, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL)));
             securities[Symbols.AAPL].Holdings.SetHoldings(100, -100);
 
             var fill = new OrderEvent(1, Symbols.AAPL, DateTime.MinValue,  OrderStatus.Filled, OrderDirection.Sell,  100, -100, 0);
@@ -424,13 +445,15 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.SetCash(1000);
             portfolio.CashBook.Add("EUR", 0, 1.1000m);
 
-            securities.Add(Symbols.EURUSD, new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, portfolio.CashBook["USD"], CreateTradeBarDataConfig(SecurityType.Forex, Symbols.EURUSD), 1));
-            Assert.AreEqual(0, securities[Symbols.EURUSD].Holdings.Quantity);
+            securities.Add(Symbols.EURUSD, new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, portfolio.CashBook["USD"], CreateTradeBarDataConfig(SecurityType.Forex, Symbols.EURUSD)));
+            var security = securities[Symbols.EURUSD];
+            Assert.AreEqual(0, security.Holdings.Quantity);
             Assert.AreEqual(1000, portfolio.Cash);
 
-            var fill = new OrderEvent(1, Symbols.EURUSD, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Buy, 1.1000m, 100, 0);
+            var orderFee = security.FeeModel.GetOrderFee(security, new MarketOrder(Symbols.EURUSD, 100, DateTime.MinValue));
+            var fill = new OrderEvent(1, Symbols.EURUSD, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Buy, 1.1000m, 100, orderFee);
             portfolio.ProcessFill(fill);
-            Assert.AreEqual(100, securities[Symbols.EURUSD].Holdings.Quantity);
+            Assert.AreEqual(100, security.Holdings.Quantity);
             Assert.AreEqual(998, portfolio.Cash);
             Assert.AreEqual(100, portfolio.CashBook["EUR"].Amount);
             Assert.AreEqual(888, portfolio.CashBook["USD"].Amount);
@@ -444,25 +467,28 @@ namespace QuantConnect.Tests.Common.Securities
             var transactions = new SecurityTransactionManager(securities);
             var portfolio = new SecurityPortfolioManager(securities, transactions);
             portfolio.SetCash(1000);
-            securities.Add(Symbols.AAPL, new QuantConnect.Securities.Equity.Equity(securityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL), 1));
-            securities[Symbols.AAPL].SettlementModel = new DelayedSettlementModel(3, TimeSpan.FromHours(8));
-            Assert.AreEqual(0, securities[Symbols.AAPL].Holdings.Quantity);
+            securities.Add(Symbols.AAPL, new QuantConnect.Securities.Equity.Equity(securityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL)));
+            var security = securities[Symbols.AAPL];
+            security.SettlementModel = new DelayedSettlementModel(3, TimeSpan.FromHours(8));
+            Assert.AreEqual(0, security.Holdings.Quantity);
             Assert.AreEqual(1000, portfolio.Cash);
             Assert.AreEqual(0, portfolio.UnsettledCash);
 
             // Buy on Monday
             var timeUtc = new DateTime(2015, 10, 26, 15, 30, 0);
-            var fill = new OrderEvent(1, Symbols.AAPL, timeUtc, OrderStatus.Filled, OrderDirection.Buy, 100, 10, 0);
+            var orderFee = security.FeeModel.GetOrderFee(security,new MarketOrder(Symbols.AAPL, 10, timeUtc));
+            var fill = new OrderEvent(1, Symbols.AAPL, timeUtc, OrderStatus.Filled, OrderDirection.Buy, 100, 10, orderFee);
             portfolio.ProcessFill(fill);
-            Assert.AreEqual(10, securities[Symbols.AAPL].Holdings.Quantity);
+            Assert.AreEqual(10, security.Holdings.Quantity);
             Assert.AreEqual(-1, portfolio.Cash);
             Assert.AreEqual(0, portfolio.UnsettledCash);
 
             // Sell on Tuesday, cash unsettled
             timeUtc = timeUtc.AddDays(1);
-            fill = new OrderEvent(2, Symbols.AAPL, timeUtc, OrderStatus.Filled, OrderDirection.Sell, 100, -10, 0);
+            orderFee = security.FeeModel.GetOrderFee(security, new MarketOrder(Symbols.AAPL, 10, timeUtc));
+            fill = new OrderEvent(2, Symbols.AAPL, timeUtc, OrderStatus.Filled, OrderDirection.Sell, 100, -10, orderFee);
             portfolio.ProcessFill(fill);
-            Assert.AreEqual(0, securities[Symbols.AAPL].Holdings.Quantity);
+            Assert.AreEqual(0, security.Holdings.Quantity);
             Assert.AreEqual(-2, portfolio.Cash);
             Assert.AreEqual(1000, portfolio.UnsettledCash);
 
@@ -473,7 +499,9 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(1000, portfolio.UnsettledCash);
 
             // Friday at open, cash settled
-            timeUtc = timeUtc.AddDays(1).Date.Add(securityExchangeHours.MarketHours[timeUtc.DayOfWeek].MarketOpen).ConvertToUtc(securityExchangeHours.TimeZone);
+            var marketOpen = securityExchangeHours.MarketHours[timeUtc.DayOfWeek].GetMarketOpen(TimeSpan.Zero, false);
+            Assert.IsTrue(marketOpen.HasValue);
+            timeUtc = timeUtc.AddDays(1).Date.Add(marketOpen.Value).ConvertToUtc(securityExchangeHours.TimeZone);
             portfolio.ScanForCashSettlement(timeUtc);
             Assert.AreEqual(998, portfolio.Cash);
             Assert.AreEqual(0, portfolio.UnsettledCash);
@@ -491,6 +519,55 @@ namespace QuantConnect.Tests.Common.Securities
         private static TimeKeeper TimeKeeper
         {
             get { return new TimeKeeper(DateTime.Now, new[] { TimeZones.NewYork }); }
+        }
+
+        class OrderProcessor : IOrderProcessor
+        {
+            private readonly ConcurrentDictionary<int, Order> _orders = new ConcurrentDictionary<int, Order>();
+            private readonly ConcurrentDictionary<int, OrderTicket> _tickets = new ConcurrentDictionary<int, OrderTicket>();
+            public void AddOrder(Order order)
+            {
+                _orders[order.Id] = order;
+            }
+
+            public void AddTicket(OrderTicket ticket)
+            {
+                _tickets[ticket.OrderId] = ticket;
+            }
+            public int OrdersCount { get; private set; }
+            public Order GetOrderById(int orderId)
+            {
+                Order order;
+                _orders.TryGetValue(orderId, out order);
+                return order;
+            }
+
+            public Order GetOrderByBrokerageId(string brokerageId)
+            {
+                return _orders.Values.FirstOrDefault(x => x.BrokerId.Contains(brokerageId));
+            }
+
+            public IEnumerable<OrderTicket> GetOrderTickets(Func<OrderTicket, bool> filter = null)
+            {
+                return _tickets.Values.Where(filter ?? (x => true));
+            }
+
+            public OrderTicket GetOrderTicket(int orderId)
+            {
+                OrderTicket ticket;
+                _tickets.TryGetValue(orderId, out ticket);
+                return ticket;
+            }
+
+            public IEnumerable<Order> GetOrders(Func<Order, bool> filter = null)
+            {
+                return _orders.Values.Where(filter ?? (x => true));
+            }
+
+            public OrderTicket Process(OrderRequest request)
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }

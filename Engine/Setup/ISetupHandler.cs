@@ -81,6 +81,14 @@ namespace QuantConnect.Lean.Engine.Setup
         IAlgorithm CreateAlgorithmInstance(string assemblyPath, Language language);
 
         /// <summary>
+        /// Creates the brokerage as specified by the job packet
+        /// </summary>
+        /// <param name="algorithmNodePacket">Job packet</param>
+        /// <param name="uninitializedAlgorithm">The algorithm instance before Initialize has been called</param>
+        /// <returns>The brokerage instance, or throws if error creating instance</returns>
+        IBrokerage CreateBrokerage(AlgorithmNodePacket algorithmNodePacket, IAlgorithm uninitializedAlgorithm);
+
+        /// <summary>
         /// Primary entry point to setup a new algorithm
         /// </summary>
         /// <param name="algorithm">Algorithm instance</param>
@@ -90,6 +98,6 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="transactionHandler">The configurated transaction handler</param>
         /// <param name="realTimeHandler">The configured real time handler</param>
         /// <returns>True on successfully setting up the algorithm state, or false on error.</returns>
-        bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket job, IResultHandler resultHandler, ITransactionHandler transactionHandler, IRealTimeHandler realTimeHandler);
+        bool Setup(IAlgorithm algorithm, IBrokerage brokerage, AlgorithmNodePacket job, IResultHandler resultHandler, ITransactionHandler transactionHandler, IRealTimeHandler realTimeHandler);
     }
 }

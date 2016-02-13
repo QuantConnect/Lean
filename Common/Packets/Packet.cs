@@ -123,6 +123,9 @@ namespace QuantConnect.Packets
         History,
 
         /// Result from a command
-        CommandResult
+        CommandResult,
+
+        /// Hook from git hub
+        GitHubHook
     }
 }

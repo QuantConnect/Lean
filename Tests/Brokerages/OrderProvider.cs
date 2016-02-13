@@ -56,12 +56,17 @@ namespace QuantConnect.Tests.Brokerages
             return _orders.FirstOrDefault(x => x.Id == orderId);
         }
 
-        public Order GetOrderByBrokerageId(long brokerageId)
+        public Order GetOrderByBrokerageId(string brokerageId)
         {
             return _orders.FirstOrDefault(x => x.BrokerId.Contains(brokerageId));
         }
 
         public IEnumerable<OrderTicket> GetOrderTickets(Func<OrderTicket, bool> filter = null)
+        {
+            throw new NotImplementedException("This method has not been implemented");
+        }
+
+        public OrderTicket GetOrderTicket(int orderId)
         {
             throw new NotImplementedException("This method has not been implemented");
         }

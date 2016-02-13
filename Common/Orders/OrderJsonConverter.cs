@@ -87,8 +87,8 @@ namespace QuantConnect.Orders
             order.Tag = jObject["Tag"].Value<string>();
             order.Quantity = jObject["Quantity"].Value<int>();
             order.Price = jObject["Price"].Value<decimal>();
-            order.SecurityType = (SecurityType)jObject["SecurityType"].Value<int>();
-            order.BrokerId = jObject["BrokerId"].Select(x => x.Value<long>()).ToList();
+            var securityType = (SecurityType)jObject["SecurityType"].Value<int>();
+            order.BrokerId = jObject["BrokerId"].Select(x => x.Value<string>()).ToList();
             order.ContingentId = jObject["ContingentId"].Value<int>();
 
             if (jObject.SelectTokens("Symbol.ID").Any())
@@ -103,9 +103,9 @@ namespace QuantConnect.Orders
                 var ticker = jObject.SelectTokens("Symbol.Value").Single().Value<string>();
 
                 var market = Market.USA;
-                if (order.SecurityType == SecurityType.Forex) market = Market.FXCM;
+                if (securityType == SecurityType.Forex) market = Market.FXCM;
 
-                order.Symbol = Symbol.Create(ticker, order.SecurityType, market);
+                order.Symbol = Symbol.Create(ticker, securityType, market);
             }
 
             return order;

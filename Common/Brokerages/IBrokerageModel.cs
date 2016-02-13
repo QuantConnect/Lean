@@ -14,11 +14,14 @@
  *
 */
 
+using System;
 using System.Collections.Generic;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Interfaces;
 
 namespace QuantConnect.Brokerages
 {
@@ -27,6 +30,19 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public interface IBrokerageModel
     {
+        /// <summary>
+        /// Gets or sets the account type used by this model
+        /// </summary>
+        AccountType AccountType
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Gets a map of the default markets to be used for each security type
+        /// </summary>
+        IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; }
+
         /// <summary>
         /// Returns true if the brokerage could accept this order. This takes into account
         /// order type, security type, and order size limits.
@@ -39,6 +55,16 @@ namespace QuantConnect.Brokerages
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
         bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message);
+
+        /// <summary>
+        /// Returns true if the brokerage would allow updating the order as specified by the request
+        /// </summary>
+        /// <param name="security">The security of the order</param>
+        /// <param name="order">The order to be updated</param>
+        /// <param name="request">The requested updated to be made to the order</param>
+        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be updated</param>
+        /// <returns>True if the brokerage would allow updating the order, false otherwise</returns>
+        bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message);
 
         /// <summary>
         /// Returns true if the brokerage would be able to execute this order at this time assuming
@@ -60,11 +86,32 @@ namespace QuantConnect.Brokerages
         void ApplySplit(List<OrderTicket> tickets, Split split);
 
         /// <summary>
-        /// Gets a new transaction model the represents this brokerage's fee structure and fill behavior
+        /// Gets the brokerage's leverage for the specified security
         /// </summary>
-        /// <param name="security">The security to get a transaction model for</param>
-        /// <returns>The transaction model for this brokerage</returns>
-        ISecurityTransactionModel GetTransactionModel(Security security);
+        /// <param name="security">The security's whose leverage we seek</param>
+        /// <returns>The leverage for the specified security</returns>
+        decimal GetLeverage(Security security);
+
+        /// <summary>
+        /// Gets a new fill model that represents this brokerage's fill behavior
+        /// </summary>
+        /// <param name="security">The security to get fill model for</param>
+        /// <returns>The new fill model for this brokerage</returns>
+        IFillModel GetFillModel(Security security);
+
+        /// <summary>
+        /// Gets a new fee model that represents this brokerage's fee structure
+        /// </summary>
+        /// <param name="security">The security to get a fee model for</param>
+        /// <returns>The new fee model for this brokerage</returns>
+        IFeeModel GetFeeModel(Security security);
+
+        /// <summary>
+        /// Gets a new slippage model that represents this brokerage's fill slippage behavior
+        /// </summary>
+        /// <param name="security">The security to get a slippage model for</param>
+        /// <returns>The new slippage model for this brokerage</returns>
+        ISlippageModel GetSlippageModel(Security security);
 
         /// <summary>
         /// Gets a new settlement model for the security
@@ -73,5 +120,41 @@ namespace QuantConnect.Brokerages
         /// <param name="accountType">The account type</param>
         /// <returns>The settlement model for this brokerage</returns>
         ISettlementModel GetSettlementModel(Security security, AccountType accountType);
+    }
+
+    /// <summary>
+    /// Provides factory method for creating an <see cref="IBrokerageModel"/> from the <see cref="BrokerageName"/> enum
+    /// </summary>
+    public static class BrokerageModel
+    {
+        /// <summary>
+        /// Creates a new <see cref="IBrokerageModel"/> for the specified <see cref="BrokerageName"/>
+        /// </summary>
+        /// <param name="brokerage">The name of the brokerage</param>
+        /// <param name="accountType">The account type</param>
+        /// <returns>The model for the specified brokerage</returns>
+        public static IBrokerageModel Create(BrokerageName brokerage, AccountType accountType)
+        {
+            switch (brokerage)
+            {
+                case BrokerageName.Default:
+                    return new DefaultBrokerageModel(accountType);
+
+                case BrokerageName.InteractiveBrokersBrokerage:
+                    return new InteractiveBrokersBrokerageModel(accountType);
+
+                case BrokerageName.TradierBrokerage:
+                    return new TradierBrokerageModel(accountType);
+                    
+                case BrokerageName.OandaBrokerage:
+                    return new OandaBrokerageModel(accountType);
+                    
+                case BrokerageName.FxcmBrokerage:
+                    return new FxcmBrokerageModel(accountType);
+                    
+                default:
+                    throw new ArgumentOutOfRangeException("brokerage", brokerage, null);
+            }
+        }
     }
 }

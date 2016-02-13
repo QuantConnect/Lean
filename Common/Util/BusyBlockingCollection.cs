@@ -50,6 +50,20 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Returns true if processing, false otherwise
+        /// </summary>
+        public bool IsBusy
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return _collection.Count > 0 || !_processingCompletedEvent.IsSet;
+                }
+            }
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="BusyBlockingCollection{T}"/> class
         /// with a bounded capacity of <see cref="int.MaxValue"/>
         /// </summary>

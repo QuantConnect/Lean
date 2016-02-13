@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -45,7 +46,7 @@ namespace QuantConnect.Configuration
                     {"queue-handler", "QuantConnect.Queues.Queues"},
                     {"api-handler", "QuantConnect.Api.Api"},
                     {"setup-handler", "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler"},
-                    {"result-handler", "QuantConnect.Lean.Engine.Results.ConsoleResultHandler"},
+                    {"result-handler", "QuantConnect.Lean.Engine.Results.BacktestingResultHandler"},
                     {"data-feed-handler", "QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed"},
                     {"real-time-handler", "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler"},
                     {"transaction-handler", "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"}
@@ -122,7 +123,12 @@ namespace QuantConnect.Configuration
             {
                 var envName = key.Substring(0, key.IndexOf("."));
                 key = key.Substring(key.IndexOf(".") + 1);
-                environment = environment["environments"][envName];
+                var environments = environment["environments"];
+                if (environments == null)
+                {
+                    environment["environments"] = environments = new JObject();
+                }
+                environment = environments[envName];
             }
             environment[key] = value;
         }
@@ -181,7 +187,16 @@ namespace QuantConnect.Configuration
             }
 
             var type = typeof(T);
-            var value = token.Value<string>();
+            string value;
+            try
+            {
+                value = token.Value<string>();
+            }
+            catch (Exception err)
+            {
+                value = token.ToString();
+            }
+
             if (type.IsEnum)
             {
                 return (T) Enum.Parse(type, value);
@@ -255,6 +270,80 @@ namespace QuantConnect.Configuration
                 value = defaultValue;
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Write the contents of the serialized configuration back to the disk.
+        /// </summary>
+        public static void Write()
+        {
+            if (!Settings.IsValueCreated) return;
+            var serialized = JsonConvert.SerializeObject(Settings.Value, Formatting.Indented);
+            File.WriteAllText("config.json", serialized);
+        }
+
+        /// <summary>
+        /// Flattens the jobject with respect to the selected environment and then
+        /// removes the 'environments' node
+        /// </summary>
+        /// <param name="overrideEnvironment">The environment to use</param>
+        /// <returns>The flattened JObject</returns>
+        public static JObject Flatten(string overrideEnvironment)
+        {
+            return Flatten(Settings.Value, overrideEnvironment);
+        }
+
+        /// <summary>
+        /// Flattens the jobject with respect to the selected environment and then
+        /// removes the 'environments' node
+        /// </summary>
+        /// <param name="config">The configuration represented as a JObject</param>
+        /// <param name="overrideEnvironment">The environment to use</param>
+        /// <returns>The flattened JObject</returns>
+        public static JObject Flatten(JObject config, string overrideEnvironment)
+        {
+            var clone = (JObject)config.DeepClone();
+
+            // remove the environment declaration
+            var environmentProperty = clone.Property("environment");
+            if (environmentProperty != null) environmentProperty.Remove();
+
+            if (!string.IsNullOrEmpty(overrideEnvironment))
+            {
+                var environmentSections = overrideEnvironment.Split('.');
+
+                for (int i = 0; i < environmentSections.Length; i++)
+                {
+                    var env = string.Join(".environments.", environmentSections.Where((x, j) => j <= i));
+
+                    var environments = config["environments"];
+                    if (!(environments is JObject)) continue;
+
+                    var settings = ((JObject) environments).SelectToken(env);
+                    if (settings == null) continue;
+
+                    // copy values for the selected environment to the root
+                    foreach (var token in settings)
+                    {
+                        var path = Path.GetExtension(token.Path);
+                        var dot = path.IndexOf(".", StringComparison.InvariantCulture);
+                        if (dot != -1) path = path.Substring(dot + 1);
+
+                        // remove if already exists on clone
+                        var jProperty = clone.Property(path);
+                        if (jProperty != null) jProperty.Remove();
+
+                        var value = (token is JProperty ? ((JProperty) token).Value : token).ToString();
+                        clone.Add(path, value);
+                    }
+                }
+            }
+
+            // remove all environments
+            var environmentsProperty = clone.Property("environments");
+            if (environmentsProperty != null) environmentsProperty.Remove();
+
+            return clone;
         }
 
         private static JToken GetToken(JToken settings, string key)

@@ -30,7 +30,7 @@ namespace QuantConnect.Tests
                 {"Average Win", "0%"},
                 {"Average Loss", "0%"},
                 {"Compounding Annual Return", "264.956%"},
-                {"Drawdown", "1.500%"},
+                {"Drawdown", "2.200%"},
                 {"Expectancy", "0"},
                 {"Net Profit", "0%"},
                 {"Sharpe Ratio", "4.411"},
@@ -53,14 +53,14 @@ namespace QuantConnect.Tests
         {
             AlgorithmRunner.RunLocalBacktest("LimitFillRegressionAlgorithm", new Dictionary<string, string>
             {
-                {"Total Trades", "35"},
+                {"Total Trades", "34"},
                 {"Average Win", "0.02%"},
                 {"Average Loss", "-0.02%"},
-                {"Compounding Annual Return", "8.265%"},
-                {"Drawdown", "0.200%"},
+                {"Compounding Annual Return", "8.350%"},
+                {"Drawdown", "0.400%"},
                 {"Expectancy", "0.447"},
-                {"Net Profit", "0.102%"},
-                {"Sharpe Ratio", "1.729"},
+                {"Net Profit", "0.103%"},
+                {"Sharpe Ratio", "1.747"},
                 {"Loss Rate", "31%"},
                 {"Win Rate", "69%"},
                 {"Profit-Loss Ratio", "1.10"},
@@ -68,10 +68,10 @@ namespace QuantConnect.Tests
                 {"Beta", "0.002"},
                 {"Annual Standard Deviation", "0.03"},
                 {"Annual Variance", "0.001"},
-                {"Information Ratio", "-2.454"},
+                {"Information Ratio", "-2.451"},
                 {"Tracking Error", "0.194"},
-                {"Treynor Ratio", "28.639"},
-                {"Total Fees", "$35.00"}
+                {"Treynor Ratio", "29.506"},
+                {"Total Fees", "$34.00"}
             });
         }
 
@@ -164,7 +164,7 @@ namespace QuantConnect.Tests
                 {"Total Trades", "1"},
                 {"Average Win", "0%"},
                 {"Average Loss", "0%"},
-                {"Compounding Annual Return", "155.355%"},
+                {"Compounding Annual Return", "155.210%"},
                 {"Drawdown", "99.900%"},
                 {"Expectancy", "0"},
                 {"Net Profit", "0%"},
@@ -172,13 +172,13 @@ namespace QuantConnect.Tests
                 {"Loss Rate", "0%"},
                 {"Win Rate", "0%"},
                 {"Profit-Loss Ratio", "0"},
-                {"Alpha", "0"},
-                {"Beta", "0"},
-                {"Annual Standard Deviation", "118.961"},
-                {"Annual Variance", "14151.646"},
-                {"Information Ratio", "0"},
-                {"Tracking Error", "0"},
-                {"Treynor Ratio", "0"},
+                {"Alpha", "48.714"},
+                {"Beta", "50.259"},
+                {"Annual Standard Deviation", "118.922"},
+                {"Annual Variance", "14142.47"},
+                {"Information Ratio", "0.452"},
+                {"Tracking Error", "118.917"},
+                {"Treynor Ratio", "1.072"},
                 {"Total Fees", "$0.00"}
             });
         }
@@ -192,7 +192,7 @@ namespace QuantConnect.Tests
                 {"Average Win", "0.49%"},
                 {"Average Loss", "0%"},
                 {"Compounding Annual Return", "307.953%"},
-                {"Drawdown", "0.800%"},
+                {"Drawdown", "1.400%"},
                 {"Expectancy", "0"},
                 {"Net Profit", "1.814%"},
                 {"Sharpe Ratio", "6.475"},
@@ -222,17 +222,17 @@ namespace QuantConnect.Tests
                 {"Drawdown", "5.100%"},
                 {"Expectancy", "0.776"},
                 {"Net Profit", "17.697%"},
-                {"Sharpe Ratio", "1.516"},
+                {"Sharpe Ratio", "1.379"},
                 {"Loss Rate", "30%"},
                 {"Win Rate", "70%"},
                 {"Profit-Loss Ratio", "1.55"},
-                {"Alpha", "0.175"},
-                {"Beta", "-0.042"},
-                {"Annual Standard Deviation", "0.108"},
-                {"Annual Variance", "0.012"},
-                {"Information Ratio", "-0.566"},
-                {"Tracking Error", "0.158"},
-                {"Treynor Ratio", "-3.962"},
+                {"Alpha", "0.151"},
+                {"Beta", "-0.073"},
+                {"Annual Standard Deviation", "0.099"},
+                {"Annual Variance", "0.01"},
+                {"Information Ratio", "-0.507"},
+                {"Tracking Error", "0.146"},
+                {"Treynor Ratio", "-1.871"},
                 {"Total Fees", "$300.29"}
             });
         }
@@ -273,7 +273,7 @@ namespace QuantConnect.Tests
                 {"Average Win", "0%"},
                 {"Average Loss", "0%"},
                 {"Compounding Annual Return", "278.616%"},
-                {"Drawdown", "0.200%"},
+                {"Drawdown", "0.300%"},
                 {"Expectancy", "0"},
                 {"Net Profit", "0%"},
                 {"Sharpe Ratio", "11.017"},
@@ -287,7 +287,7 @@ namespace QuantConnect.Tests
                 {"Information Ratio", "1.957"},
                 {"Tracking Error", "0.171"},
                 {"Treynor Ratio", "4.634"},
-                {"Total Fees", "$3.09"}
+                {"Total Fees", "$3.09"},
             });
         }
     }

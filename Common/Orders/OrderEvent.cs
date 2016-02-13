@@ -102,7 +102,7 @@ namespace QuantConnect.Orders
             Direction = direction;
             FillPrice = fillPrice;
             FillQuantity = fillQuantity;
-            OrderFee = orderFee;
+            OrderFee = Math.Abs(orderFee);
             Message = message;
         }
 
@@ -125,7 +125,7 @@ namespace QuantConnect.Orders
             FillPrice = 0;
 
             UtcTime = utcTime;
-            OrderFee = orderFee;
+            OrderFee = Math.Abs(orderFee);
             Message = message;
         }
 
@@ -138,9 +138,14 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return FillQuantity == 0 
+            var message = FillQuantity == 0 
                 ? string.Format("OrderID: {0} Symbol: {1} Status: {2}", OrderId, Symbol, Status) 
-                : string.Format("OrderID: {0} Symbol: {1} Status: {2} Quantity: {3} FillPrice: {4}", OrderId, Symbol, Status, FillQuantity, FillPrice);
+                : string.Format("OrderID: {0} Symbol: {1} Status: {2} Quantity: {3} FillPrice: {4}", OrderId, Symbol, Status, FillQuantity, FillPrice, OrderFee);
+
+            // attach the order fee so it ends up in logs properly
+            if (OrderFee != 0m) message += message + " OrderFee: " + OrderFee;
+            
+            return message;
         }
 
         /// <summary>

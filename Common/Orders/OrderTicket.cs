@@ -41,7 +41,7 @@ namespace QuantConnect.Orders
         private readonly int _orderId;
         private readonly List<OrderEvent> _orderEvents; 
         private readonly SubmitOrderRequest _submitRequest;
-        private readonly ManualResetEvent _orderFilledEvent;
+        private readonly ManualResetEvent _orderStatusClosedEvent;
         private readonly List<UpdateOrderRequest> _updateRequests;
 
         // we pull this in to provide some behavior/simplicity to the ticket API
@@ -182,9 +182,9 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Gets a wait handle that can be used to wait until this order has filled
         /// </summary>
-        public WaitHandle OrderFilled
+        public WaitHandle OrderClosed
         {
-            get { return _orderFilledEvent; }
+            get { return _orderStatusClosedEvent; }
         }
 
         /// <summary>
@@ -200,7 +200,7 @@ namespace QuantConnect.Orders
 
             _orderEvents = new List<OrderEvent>();
             _updateRequests = new List<UpdateOrderRequest>();
-            _orderFilledEvent = new ManualResetEvent(false);
+            _orderStatusClosedEvent = new ManualResetEvent(false);
         }
 
         /// <summary>
@@ -309,10 +309,10 @@ namespace QuantConnect.Orders
                 }
             }
 
-            // fire the wait handle indicating this order is filled
-            if (orderEvent.Status == OrderStatus.Filled)
+            // fire the wait handle indicating this order is closed
+            if (orderEvent.Status.IsClosed())
             {
-                _orderFilledEvent.Set();
+                _orderStatusClosedEvent.Set();
             }
         }
 

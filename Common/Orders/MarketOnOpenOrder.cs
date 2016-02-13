@@ -14,6 +14,7 @@
 */
 
 using System;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Orders
 {
@@ -41,23 +42,21 @@ namespace QuantConnect.Orders
         /// Intiializes a new instance of the <see cref="MarketOnOpenOrder"/> class.
         /// </summary>
         /// <param name="symbol">The security's symbol being ordered</param>
-        /// <param name="type">The security type of the symbol</param>
         /// <param name="quantity">The number of units to order</param>
         /// <param name="time">The current time</param>
         /// <param name="tag">A user defined tag for the order</param>
-        public MarketOnOpenOrder(Symbol symbol, SecurityType type, int quantity, DateTime time, string tag = "")
-            : base(symbol, quantity, time, tag, type)
+        public MarketOnOpenOrder(Symbol symbol, int quantity, DateTime time, string tag = "")
+            : base(symbol, quantity, time, tag)
         {
         }
 
         /// <summary>
-        /// Gets the value of this order at the given market price.
+        /// Gets the order value in units of the security's quote currency
         /// </summary>
-        /// <param name="currentMarketPrice">The current market price of the security</param>
-        /// <returns>The value of this order given the current market price</returns>
-        public override decimal GetValue(decimal currentMarketPrice)
+        /// <param name="security">The security matching this order's symbol</param>
+        protected override decimal GetValueImpl(Security security)
         {
-            return Quantity*currentMarketPrice;
+            return Quantity*security.Price;
         }
 
         /// <summary>

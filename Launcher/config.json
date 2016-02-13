@@ -35,6 +35,7 @@
     // used by the FileComandQueueHandler, serialize a ICommand and it will be run against algorithm
     "command-json-file": "command.json",
     "map-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskMapFileProvider",
+    "factor-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskFactorFileProvider",
 
     // if one uses "true" as string in following token, market hours
     // will remain open all hours and all days.
@@ -86,7 +87,7 @@
             "live-mode": false,
 
             "setup-handler": "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler",
-            "result-handler": "QuantConnect.Lean.Engine.Results.ConsoleResultHandler",
+            "result-handler": "QuantConnect.Lean.Engine.Results.BacktestingResultHandler",
             "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed",
             "real-time-handler": "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler",
             "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"
@@ -110,7 +111,7 @@
             "live-mode-brokerage": "PaperBrokerage",
 
             "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
-            "result-handler": "QuantConnect.Lean.Engine.Results.ConsoleResultHandler",
+            "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
             "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
             "data-queue-handler": "QuantConnect.Lean.Engine.DataFeeds.Queues.LiveDataQueue",
             "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
@@ -129,7 +130,7 @@
             "live-mode-brokerage": "TradierBrokerage",
 
             "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
-            "result-handler": "QuantConnect.Lean.Engine.Results.ConsoleResultHandler",
+            "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
             "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
             "data-queue-handler": "QuantConnect.Lean.Engine.DataFeeds.Queues.LiveDataQueue",
             "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
@@ -144,7 +145,7 @@
             "live-mode-brokerage": "InteractiveBrokersBrokerage",
 
             "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
-            "result-handler": "QuantConnect.Lean.Engine.Results.ConsoleResultHandler",
+            "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
             "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
             "data-queue-handler": "QuantConnect.Lean.Engine.DataFeeds.Queues.LiveDataQueue",
             "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",

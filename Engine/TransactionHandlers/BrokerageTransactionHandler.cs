@@ -25,6 +25,7 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Cfd;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Util;
 
@@ -104,6 +105,15 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _brokerage = brokerage;
             _brokerage.OrderStatusChanged += (sender, fill) =>
             {
+                // log every fill in live mode
+                if (algorithm.LiveMode)
+                {
+                    var brokerIds = string.Empty;
+                    var order = GetOrderById(fill.OrderId);
+                    if (order != null && order.BrokerId.Count > 0) brokerIds = string.Join(", ", order.BrokerId);
+                    Log.Trace("BrokerageTransactionHandler.OrderStatusChanged(): " + fill + " BrokerId: " + brokerIds);
+                }
+
                 HandleOrderEvent(fill);
             };
 
@@ -306,6 +316,18 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             return _orderTickets.Select(x => x.Value).Where(filter ?? (x => true));
         }
 
+        /// <summary>
+        /// Gets the order ticket for the specified order id. Returns null if not found
+        /// </summary>
+        /// <param name="orderId">The order's id</param>
+        /// <returns>The order ticket with the specified id, or null if not found</returns>
+        public OrderTicket GetOrderTicket(int orderId)
+        {
+            OrderTicket ticket;
+            _orderTickets.TryGetValue(orderId, out ticket);
+            return ticket;
+        }
+
         #endregion
 
         /// <summary>
@@ -333,7 +355,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         /// <param name="brokerageId">The brokerage id to fetch</param>
         /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
-        public Order GetOrderByBrokerageId(long brokerageId)
+        public Order GetOrderByBrokerageId(string brokerageId)
         {
             // this function can be invoked by brokerages when getting open orders, guard against null ref
             if (_orders == null) return null;
@@ -425,7 +447,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // in backtesting we need to wait for orders to be removed from the queue and finished processing
             if (!_algorithm.LiveMode)
             {
-                if (!_orderRequestQueue.WaitHandle.WaitOne(Time.OneSecond, _cancellationTokenSource.Token))
+                if (_orderRequestQueue.IsBusy && !_orderRequestQueue.WaitHandle.WaitOne(Time.OneSecond, _cancellationTokenSource.Token))
                 {
                     Log.Error("BrokerageTransactionHandler.ProcessSynchronousEvents(): Timed out waiting for request queue to finish processing.");
                 }
@@ -558,6 +580,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         public void Exit()
         {
+            var timeout = TimeSpan.FromSeconds(60);
+            if (!_orderRequestQueue.WaitHandle.WaitOne(timeout))
+            {
+                Log.Error("BrokerageTransactionHandler.Exit(): Exceed timeout: " + (int)(timeout.TotalSeconds) + " seconds.");
+            }
             _cancellationTokenSource.Cancel();
         }
 
@@ -593,6 +620,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 Log.Error(err);
                 _algorithm.Error(string.Format("Order Error: id: {0}, Error executing margin models: {1}", order.Id, err.Message));
+                HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m, "Error executing margin models"));
                 return OrderResponse.Error(request, OrderResponseErrorCode.ProcessingError, "Error in GetSufficientCapitalForOrder");
             }
 
@@ -600,8 +628,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 order.Status = OrderStatus.Invalid;
                 var security = _algorithm.Securities[order.Symbol];
-                var response = OrderResponse.Error(request, OrderResponseErrorCode.InsufficientBuyingPower, string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id, order.GetValue(security.Price).SmartRounding()));
+                var response = OrderResponse.Error(request, OrderResponseErrorCode.InsufficientBuyingPower, string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id, order.GetValue(security).SmartRounding()));
                 _algorithm.Error(response.ErrorMessage);
+                HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m, "Insufficient buying power to complete order"));
                 return response;
             }
 
@@ -614,6 +643,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 if (message == null) message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidOrder", "BrokerageModel declared unable to submit order: " + order.Id);
                 var response = OrderResponse.Error(request, OrderResponseErrorCode.BrokerageModelRefusedToSubmitOrder, "OrderID: " + order.Id + " " + message);
                 _algorithm.Error(response.ErrorMessage);
+                HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m, "BrokerageModel declared unable to submit order"));
                 return response;
             }
 
@@ -629,15 +659,14 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 orderPlaced = false;
              }
 
-            if (orderPlaced)
+            if (!orderPlaced)
             {
-                order.Status = OrderStatus.Submitted;
-            }
-            else
-            {
+                // we failed to submit the order, invalidate it
                 order.Status = OrderStatus.Invalid;
-                var response = OrderResponse.Error(request, OrderResponseErrorCode.BrokerageFailedToSubmitOrder, "Brokerage failed to place order: " + order.Id);
+                var errorMessage = "Brokerage failed to place order: " + order.Id;
+                var response = OrderResponse.Error(request, OrderResponseErrorCode.BrokerageFailedToSubmitOrder, errorMessage);
                 _algorithm.Error(response.ErrorMessage);
+                HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m, "Brokerage failed to place order"));
                 return response;
             }
             
@@ -663,6 +692,19 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return OrderResponse.InvalidStatus(request, order);
             }
 
+            // verify that our current brokerage can actually update the order
+            BrokerageMessageEvent message;
+            if (!_algorithm.LiveMode && !_algorithm.BrokerageModel.CanUpdateOrder(_algorithm.Securities[order.Symbol], order, request, out message))
+            {
+                // if we couldn't actually process the order, mark it as invalid and bail
+                order.Status = OrderStatus.Invalid;
+                if (message == null) message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidOrder", "BrokerageModel declared unable to update order: " + order.Id);
+                var response = OrderResponse.Error(request, OrderResponseErrorCode.BrokerageModelRefusedToUpdateOrder, "OrderID: " + order.Id + " " + message);
+                _algorithm.Error(response.ErrorMessage);
+                HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m, "BrokerageModel declared unable to update order"));
+                return response;
+            }
+
             // modify the values of the order object
             order.ApplyUpdateOrderRequest(request);
             ticket.SetOrder(order);
@@ -681,8 +723,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             if (!orderUpdated)
             {
                 // we failed to update the order for some reason
-                order.Status = OrderStatus.Invalid;
-                return OrderResponse.Error(request, OrderResponseErrorCode.BrokerageFailedToUpdateOrder, "Brokerage failed to update order with id " + request.OrderId);
+                var errorMessage = "Brokerage failed to update order with id " + request.OrderId;
+                _algorithm.Error(errorMessage);
+                HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m, "Brokerage failed to update order"));
+                return OrderResponse.Error(request, OrderResponseErrorCode.BrokerageFailedToUpdateOrder, errorMessage);
             }
 
             return OrderResponse.Success(request);
@@ -713,7 +757,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 Log.Error("BrokerageTransactionHandler.HandleCancelOrderRequest(): Unable to cancel order with ID " + request.OrderId + ".");
                 return OrderResponse.UnableToFindOrder(request);
             }
-            
+
             if (order.Status.IsClosed())
             {
                 return OrderResponse.InvalidStatus(request, order);
@@ -734,14 +778,15 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             if (!orderCanceled)
             {
-                // we failed to cancel the order for some reason
-                order.Status = OrderStatus.Invalid;
+                // failed to cancel the order
+                var message = "Brokerage failed to cancel order with id " + order.Id;
+                _algorithm.Error(message);
+                HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m, "Brokerage failed to cancel order"));
+                return OrderResponse.Error(request, OrderResponseErrorCode.BrokerageFailedToCancelOrder, message);
             }
-            else
-            {
-                // we succeeded to cancel the order
-                order.Status = OrderStatus.Canceled;
-            }
+
+            // we succeeded to cancel the order
+            order.Status = OrderStatus.Canceled;
 
             if (request.Tag != null)
             {
@@ -784,6 +829,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     {
                         string baseCurrency, quoteCurrency;
                         Forex.DecomposeCurrencyPair(fill.Symbol.Value, out baseCurrency, out quoteCurrency);
+                        conversionRate = _algorithm.Portfolio.CashBook[quoteCurrency].ConversionRate;
+                    }
+                    else if (order.SecurityType == SecurityType.Cfd)
+                    {
+                        var cfd = (Cfd)_algorithm.Securities[fill.Symbol];
+                        var quoteCurrency = cfd.QuoteCurrencySymbol;
                         conversionRate = _algorithm.Portfolio.CashBook[quoteCurrency].ConversionRate;
                     }
 

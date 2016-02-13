@@ -30,7 +30,9 @@ namespace QuantConnect.Tests.Common.Securities
             var exchangeHours = CreateForexSecurityExchangeHours();
 
             var date = new DateTime(2015, 6, 21);
-            var time = (date + exchangeHours.MarketHours[DayOfWeek.Sunday].MarketOpen).AddTicks(-1);
+            var marketOpen = exchangeHours.MarketHours[DayOfWeek.Sunday].GetMarketOpen(TimeSpan.Zero, false);
+            Assert.IsTrue(marketOpen.HasValue);
+            var time = (date + marketOpen.Value).AddTicks(-1);
             Assert.IsFalse(exchangeHours.IsOpen(time, false));
 
             time = time + TimeSpan.FromTicks(1);
@@ -43,7 +45,10 @@ namespace QuantConnect.Tests.Common.Securities
             var exchangeHours = CreateForexSecurityExchangeHours();
 
             var date = new DateTime(2015, 6, 19);
-            var time = (date + exchangeHours.MarketHours[DayOfWeek.Friday].MarketClose).AddTicks(-1);
+            var localMarketHours = exchangeHours.MarketHours[DayOfWeek.Friday];
+            var marketClose = localMarketHours.GetMarketClose(TimeSpan.Zero, false);
+            Assert.IsTrue(marketClose.HasValue);
+            var time = (date + marketClose.Value).AddTicks(-1);
             Assert.IsTrue(exchangeHours.IsOpen(time, false));
 
             time = time + TimeSpan.FromTicks(1);
@@ -56,7 +61,9 @@ namespace QuantConnect.Tests.Common.Securities
             var exchangeHours = CreateForexSecurityExchangeHours();
 
             var date = new DateTime(2015, 6, 21);
-            var startTime = (date + exchangeHours.MarketHours[DayOfWeek.Sunday].MarketOpen).AddMinutes(-1);
+            var marketOpen = exchangeHours.MarketHours[DayOfWeek.Sunday].GetMarketOpen(TimeSpan.Zero, false);
+            Assert.IsTrue(marketOpen.HasValue);
+            var startTime = (date + marketOpen.Value).AddMinutes(-1);
 
             Assert.IsFalse(exchangeHours.IsOpen(startTime, startTime.AddMinutes(1), false));
 
@@ -71,7 +78,9 @@ namespace QuantConnect.Tests.Common.Securities
             var exchangeHours = CreateForexSecurityExchangeHours();
 
             var date = new DateTime(2015, 6, 19);
-            var startTime = (date + exchangeHours.MarketHours[DayOfWeek.Friday].MarketClose).AddMinutes(-1);
+            var marketClose = exchangeHours.MarketHours[DayOfWeek.Friday].GetMarketClose(TimeSpan.Zero, false);
+            Assert.IsTrue(marketClose.HasValue);
+            var startTime = (date + marketClose.Value).AddMinutes(-1);
 
             Assert.IsTrue(exchangeHours.IsOpen(startTime, startTime.AddMinutes(1), false));
 
@@ -86,7 +95,9 @@ namespace QuantConnect.Tests.Common.Securities
             var exchangeHours = CreateForexSecurityExchangeHours();
 
             var date = new DateTime(2015, 6, 19);
-            var startTime = date + exchangeHours.MarketHours[DayOfWeek.Friday].MarketClose;
+            var marketClose = exchangeHours.MarketHours[DayOfWeek.Friday].GetMarketClose(TimeSpan.Zero, false);
+            Assert.IsTrue(marketClose.HasValue);
+            var startTime = date + marketClose.Value;
 
             Assert.IsFalse(exchangeHours.IsOpen(startTime, startTime.AddDays(2), false));
 

@@ -13,32 +13,32 @@
  * limitations under the License.
 */
 
-using QuantConnect.Brokerages;
-using QuantConnect.Interfaces;
+using QuantConnect.Data.Market;
+using QuantConnect.Securities;
 
-namespace QuantConnect.Lean.Engine.Setup
+namespace QuantConnect.Orders.Slippage
 {
     /// <summary>
-    /// Provides helper methods for setup handlers
+    /// A slippage model that uses half of the bid/ask spread if available,
+    /// if not available, zero slippage is assumed.
     /// </summary>
-    public static class SetupHandler
+    public class SpreadSlippageModel : ISlippageModel
     {
         /// <summary>
-        /// Sets the transaction and settlement models in the algorithm based on the selected brokerage properties
+        /// Slippage Model. Return a decimal cash slippage approximation on the order.
         /// </summary>
-        public static void UpdateModels(IAlgorithm algorithm, IBrokerageModel model)
+        public virtual decimal GetSlippageApproximation(Security asset, Order order)
         {
-            if (model.GetType() == typeof (DefaultBrokerageModel))
+            var lastData = asset.GetLastData();
+            var lastTick = lastData as Tick;
+
+            // if we have tick data use the spread
+            if (lastTick != null)
             {
-                // if we're using the default don't do anything
-                return;
+                return (lastTick.AskPrice - lastTick.BidPrice) / 2;
             }
 
-            foreach (var security in algorithm.Securities.Values)
-            {
-                security.TransactionModel = model.GetTransactionModel(security);
-                security.SettlementModel = model.GetSettlementModel(security, algorithm.AccountType);
-            }
+            return 0m;
         }
     }
 }

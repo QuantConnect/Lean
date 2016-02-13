@@ -16,6 +16,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Securities;
+using QuantConnect.Securities.Cfd;
+using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Orders
 {
@@ -37,7 +40,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Brokerage Id for this order for when the brokerage splits orders into multiple pieces
         /// </summary>
-        public List<long> BrokerId { get; internal set; }
+        public List<string> BrokerId { get; internal set; }
 
         /// <summary>
         /// Symbol of the Asset
@@ -82,7 +85,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// The symbol's security type
         /// </summary>
-        public SecurityType SecurityType { get; internal set; }
+        public SecurityType SecurityType { get { return Symbol.ID.SecurityType; } }
 
         /// <summary>
         /// Order Direction Property based off Quantity.
@@ -131,9 +134,8 @@ namespace QuantConnect.Orders
             Symbol = Symbol.Empty;
             Status = OrderStatus.None;
             Tag = "";
-            SecurityType = SecurityType.Base;
             Duration = OrderDuration.GTC;
-            BrokerId = new List<long>();
+            BrokerId = new List<string>();
             ContingentId = 0;
             DurationValue = DateTime.MaxValue;
         }
@@ -142,11 +144,10 @@ namespace QuantConnect.Orders
         /// New order constructor
         /// </summary>
         /// <param name="symbol">Symbol asset we're seeking to trade</param>
-        /// <param name="type">Type of the security order</param>
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
         /// <param name="time">Time the order was placed</param>
         /// <param name="tag">User defined data tag for this order</param>
-        protected Order(Symbol symbol, int quantity, DateTime time, string tag = "", SecurityType type = SecurityType.Base)
+        protected Order(Symbol symbol, int quantity, DateTime time, string tag = "")
         {
             Time = time;
             Price = 0;
@@ -154,43 +155,41 @@ namespace QuantConnect.Orders
             Symbol = symbol;
             Status = OrderStatus.None;
             Tag = tag;
-            SecurityType = type;
             Duration = OrderDuration.GTC;
-            BrokerId = new List<long>();
+            BrokerId = new List<string>();
             ContingentId = 0;
             DurationValue = DateTime.MaxValue;
         }
 
         /// <summary>
-        /// New order constructor
-        /// </summary>
-        /// <param name="symbol">Symbol asset we're seeking to trade</param>
-        /// <param name="type"></param>
-        /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
-        /// <param name="time">Time the order was placed</param>
-        /// <param name="tag">User defined data tag for this order</param>
-        protected Order(Symbol symbol, SecurityType type, int quantity, DateTime time, string tag = "") 
-        {
-            Time = time;
-            Price = 0;
-            Quantity = quantity;
-            Symbol = symbol;
-            Status = OrderStatus.None;
-            Tag = tag;
-            SecurityType = type;
-            Duration = OrderDuration.GTC;
-            BrokerId = new List<long>();
-            ContingentId = 0;
-            DurationValue = DateTime.MaxValue;
-        }
-
-        /// <summary>
-        /// Gets the value of this order at the given market price.
+        /// Gets the value of this order at the given market price in units of the account currency
         /// NOTE: Some order types derive value from other parameters, such as limit prices
         /// </summary>
-        /// <param name="currentMarketPrice">The current market price of the security</param>
+        /// <param name="security">The security matching this order's symbol</param>
         /// <returns>The value of this order given the current market price</returns>
-        public abstract decimal GetValue(decimal currentMarketPrice);
+        public decimal GetValue(Security security)
+        {
+            var value = GetValueImpl(security);
+            switch (security.Type)
+            {
+                // this is here until QuoteCurrency is on the base Security
+                case SecurityType.Forex:
+                    var forex = (Forex) security;
+                    value = value*forex.QuoteCurrency.ConversionRate;
+                    break;
+                case SecurityType.Cfd:
+                    var cfd = (Cfd) security;
+                    value = value*cfd.ContractMultiplier*cfd.QuoteCurrency.ConversionRate;
+                    break;
+            }
+            return value;
+        }
+
+        /// <summary>
+        /// Gets the order value in units of the security's quote currency
+        /// </summary>
+        /// <param name="security">The security matching this order's symbol</param>
+        protected abstract decimal GetValueImpl(Security security);
 
         /// <summary>
         /// Modifies the state of this order to match the update request
@@ -243,7 +242,6 @@ namespace QuantConnect.Orders
             order.Duration = Duration;
             order.Price = Price;
             order.Quantity = Quantity;
-            order.SecurityType = SecurityType;
             order.Status = Status;
             order.Symbol = Symbol;
             order.Tag = Tag;
@@ -260,22 +258,22 @@ namespace QuantConnect.Orders
             switch (request.OrderType)
             {
                 case OrderType.Market:
-                    order = new MarketOrder(request.Symbol, request.Quantity, request.Time, request.Tag, request.SecurityType);
+                    order = new MarketOrder(request.Symbol, request.Quantity, request.Time, request.Tag);
                     break;
                 case OrderType.Limit:
-                    order = new LimitOrder(request.Symbol, request.Quantity, request.LimitPrice, request.Time, request.Tag, request.SecurityType);
+                    order = new LimitOrder(request.Symbol, request.Quantity, request.LimitPrice, request.Time, request.Tag);
                     break;
                 case OrderType.StopMarket:
-                    order = new StopMarketOrder(request.Symbol, request.Quantity, request.StopPrice, request.Time, request.Tag, request.SecurityType);
+                    order = new StopMarketOrder(request.Symbol, request.Quantity, request.StopPrice, request.Time, request.Tag);
                     break;
                 case OrderType.StopLimit:
-                    order = new StopLimitOrder(request.Symbol, request.Quantity, request.StopPrice, request.LimitPrice, request.Time, request.Tag, request.SecurityType);
+                    order = new StopLimitOrder(request.Symbol, request.Quantity, request.StopPrice, request.LimitPrice, request.Time, request.Tag);
                     break;
                 case OrderType.MarketOnOpen:
-                    order = new MarketOnOpenOrder(request.Symbol, request.SecurityType, request.Quantity, request.Time, request.Tag);
+                    order = new MarketOnOpenOrder(request.Symbol, request.Quantity, request.Time, request.Tag);
                     break;
                 case OrderType.MarketOnClose:
-                    order = new MarketOnCloseOrder(request.Symbol, request.SecurityType, request.Quantity, request.Time, request.Tag);
+                    order = new MarketOnCloseOrder(request.Symbol, request.Quantity, request.Time, request.Tag);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -288,6 +286,7 @@ namespace QuantConnect.Orders
             }
             return order;
         }
+
         /// <summary>
         /// Order Expiry on a specific UTC time.
         /// </summary>

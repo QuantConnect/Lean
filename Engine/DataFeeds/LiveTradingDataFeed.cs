@@ -45,6 +45,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class LiveTradingDataFeed : IDataFeed
     {
         private SecurityChanges _changes = SecurityChanges.None;
+        private static readonly Symbol DataQueueHandlerSymbol = Symbol.Create("data-queue-handler-symbol", SecurityType.Base, Market.USA);
 
         private LiveNodePacket _job;
         private IAlgorithm _algorithm;
@@ -83,7 +84,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes the data feed for the specified job and algorithm
         /// </summary>
-        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IMapFileProvider mapFileProvider)
+        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider)
         {
             if (!(job is LiveNodePacket))
             {
@@ -101,11 +102,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _frontierTimeProvider = new ManualTimeProvider(_timeProvider.GetUtcNow());
             _customExchange = new BaseDataExchange("CustomDataExchange") {SleepInterval = 10};
             // sleep is controlled on this exchange via the GetNextTicksEnumerator
-            _exchange = new BaseDataExchange("DataQueueExchange", GetNextTicksEnumerator()){SleepInterval = 0};
+            _exchange = new BaseDataExchange("DataQueueExchange"){SleepInterval = 0};
+            _exchange.AddEnumerator(DataQueueHandlerSymbol, GetNextTicksEnumerator());
             _subscriptions = new ConcurrentDictionary<Symbol, Subscription>();
 
             _bridge = new BusyBlockingCollection<TimeSlice>();
-            _universeSelection = new UniverseSelection(this, algorithm);
+            _universeSelection = new UniverseSelection(this, algorithm, job.Controls);
 
             // run the exchanges
             Task.Run(() => _exchange.Start(_cancellationTokenSource.Token));
@@ -119,7 +121,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // wire ourselves up to receive notifications when universes are added/removed
             var start = _timeProvider.GetUtcNow();
-            algorithm.Universes.CollectionChanged += (sender, args) =>
+            algorithm.UniverseManager.CollectionChanged += (sender, args) =>
             {
                 switch (args.Action)
                 {
@@ -197,12 +199,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             var security = subscription.Security;
 
-            _exchange.RemoveDataHandler(security.Symbol);
-
-            // request to unsubscribe from the subscription
-            if (!security.SubscriptionDataConfig.IsCustomData)
+            // remove the subscriptions
+            if (subscription.Configuration.IsCustomData)
+            {
+                _customExchange.RemoveEnumerator(security.Symbol);
+                _customExchange.RemoveDataHandler(security.Symbol);
+            }
+            else
             {
                 _dataQueueHandler.Unsubscribe(_job, new[] {security.Symbol});
+                _exchange.RemoveDataHandler(security.Symbol);
             }
 
             // remove the subscription from our collection
@@ -307,6 +313,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Log.Error(err);
                 _algorithm.RunTimeError = err;
             }
+
+            Log.Trace("LiveTradingDataFeed.Run(): Exited thread.");
             IsActive = false;
         }
 
@@ -330,15 +338,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                 }
             }
-            
+
             if (_exchange != null) _exchange.Stop();
             if (_customExchange != null) _customExchange.Stop();
 
-            if (_cancellationTokenSource != null && !_cancellationTokenSource.IsCancellationRequested)
-            {
-                _cancellationTokenSource.Cancel();
-                if (_bridge != null) _bridge.Dispose();
-            }
+            Log.Trace("LiveTradingDataFeed.Exit(): Setting cancellation token...");
+            _cancellationTokenSource.Cancel();
+            
+            if (_bridge != null) _bridge.Dispose();
         }
 
         /// <summary>
@@ -392,9 +399,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var refresher = new RefreshEnumerator<BaseData>(() =>
                     {
                         var sourceProvider = (BaseData)Activator.CreateInstance(config.Type);
-                        var currentLocalDate = DateTime.UtcNow.ConvertFromUtc(security.Exchange.TimeZone).Date;
-                        var factory = new BaseDataSubscriptionFactory(config, currentLocalDate, true);
-                        var source = sourceProvider.GetSource(config, currentLocalDate, true);
+                        var dateInDataTimeZone = DateTime.UtcNow.ConvertFromUtc(config.DataTimeZone).Date;
+                        var factory = new BaseDataSubscriptionFactory(config, dateInDataTimeZone, true);
+                        var source = sourceProvider.GetSource(config, dateInDataTimeZone, true);
                         var factoryReadEnumerator = factory.Read(source).GetEnumerator();
                         var maximumDataAge = TimeSpan.FromTicks(Math.Max(config.Increment.Ticks, TimeSpan.FromSeconds(5).Ticks));
                         var fastForward = new FastForwardEnumerator(factoryReadEnumerator, _timeProvider, security.Exchange.TimeZone, maximumDataAge);
@@ -404,7 +411,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // rate limit the refreshing of the stack to the requested interval
                     var minimumTimeBetweenCalls = Math.Min(config.Increment.Ticks, TimeSpan.FromMinutes(30).Ticks);
                     var rateLimit = new RateLimitEnumerator(refresher, _timeProvider, TimeSpan.FromTicks(minimumTimeBetweenCalls));
-                    _customExchange.AddEnumerator(rateLimit);
+                    _customExchange.AddEnumerator(config.Symbol, rateLimit);
 
                     var enqueable = new EnqueueableEnumerator<BaseData>();
                     _customExchange.SetDataHandler(config.Symbol, data =>
@@ -478,26 +485,29 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var exchangeHours = marketHoursDatabase.GetExchangeHours(config);
 
             // create a canonical security object
-            var security = new Security(exchangeHours, config, universe.SubscriptionSettings.Leverage);
+            var security = new Security(exchangeHours, config);
+            var tzOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, startTimeUtc, endTimeUtc);
 
             IEnumerator<BaseData> enumerator;
             
             var userDefined = universe as UserDefinedUniverse;
             if (userDefined != null)
             {
-                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating user defined universe: " + config.Symbol);
+                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating user defined universe: " + config.Symbol.ToString());
 
                 // spoof a tick on the requested interval to trigger the universe selection function
                 enumerator = userDefined.GetTriggerTimes(startTimeUtc, endTimeUtc, marketHoursDatabase)
                     .Select(dt => new Tick { Time = dt }).GetEnumerator();
 
+                enumerator = new FrontierAwareEnumerator(enumerator, _timeProvider, tzOffsetProvider);
+
                 var enqueueable = new EnqueueableEnumerator<BaseData>();
-                _customExchange.AddEnumerator(new EnumeratorHandler(enumerator, enqueueable));
+                _customExchange.AddEnumerator(new EnumeratorHandler(config.Symbol, enumerator, enqueueable));
                 enumerator = enqueueable;
             }
             else if (config.Type == typeof (CoarseFundamental))
             {
-                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating coarse universe: " + config.Symbol);
+                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating coarse universe: " + config.Symbol.ToString());
 
                 // since we're binding to the data queue exchange we'll need to let him
                 // know that we expect this data
@@ -512,18 +522,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             else
             {
-                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating custom universe: " + config.Symbol);
+                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating custom universe: " + config.Symbol.ToString());
 
                 // each time we exhaust we'll new up this enumerator stack
                 var refresher = new RefreshEnumerator<BaseDataCollection>(() =>
                 {
                     var sourceProvider = (BaseData)Activator.CreateInstance(config.Type);
-                    var currentLocalDate = DateTime.UtcNow.ConvertFromUtc(security.Exchange.TimeZone).Date;
-                    var factory = new BaseDataSubscriptionFactory(config, currentLocalDate, true);
-                    var source = sourceProvider.GetSource(config, currentLocalDate, true);
+                    var dateInDataTimeZone = DateTime.UtcNow.ConvertFromUtc(config.DataTimeZone).Date;
+                    var factory = new BaseDataSubscriptionFactory(config, dateInDataTimeZone, true);
+                    var source = sourceProvider.GetSource(config, dateInDataTimeZone, true);
                     var factorEnumerator = factory.Read(source).GetEnumerator();
                     var fastForward = new FastForwardEnumerator(factorEnumerator, _timeProvider, security.Exchange.TimeZone, config.Increment);
-                    var tzOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, startTimeUtc, endTimeUtc);
                     var frontierAware = new FrontierAwareEnumerator(fastForward, _frontierTimeProvider, tzOffsetProvider);
                     return new BaseDataCollectionAggregatorEnumerator(frontierAware, config.Symbol);
                 });
@@ -532,13 +541,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var minimumTimeBetweenCalls = Math.Min(config.Increment.Ticks, TimeSpan.FromMinutes(30).Ticks);
                 var rateLimit = new RateLimitEnumerator(refresher, _timeProvider, TimeSpan.FromTicks(minimumTimeBetweenCalls));
                 var enqueueable = new EnqueueableEnumerator<BaseData>();
-                _customExchange.AddEnumerator(new EnumeratorHandler(rateLimit, enqueueable));
+                _customExchange.AddEnumerator(new EnumeratorHandler(config.Symbol, rateLimit, enqueueable));
                 enumerator = enqueueable;
             }
 
             // create the subscription
-            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, startTimeUtc, endTimeUtc);
-            var subscription = new Subscription(universe, security, enumerator, timeZoneOffsetProvider, startTimeUtc, endTimeUtc, true);
+            var subscription = new Subscription(universe, security, enumerator, tzOffsetProvider, startTimeUtc, endTimeUtc, true);
 
             return subscription;
         }
@@ -560,6 +568,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 if (ticks == 0) Thread.Sleep(1);
             }
+
+            Log.Trace("LiveTradingDataFeed.GetNextTicksEnumerator(): Exiting enumerator thread...");
         }
 
         private static TimeSpan ResolveFillForwardResolution(IAlgorithm algorithm)
@@ -567,7 +577,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return algorithm.SubscriptionManager.Subscriptions
                 .Where(x => !x.IsInternalFeed)
                 .Select(x => x.Resolution)
-                .Union(algorithm.Universes.Select(x => x.Value.SubscriptionSettings.Resolution))
+                .Union(algorithm.UniverseManager.Select(x => x.Value.UniverseSettings.Resolution))
                 .Where(x => x != Resolution.Tick)
                 .DefaultIfEmpty(Resolution.Second)
                 .Min().ToTimeSpan();
@@ -604,8 +614,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         class EnumeratorHandler : BaseDataExchange.EnumeratorHandler
         {
             private readonly EnqueueableEnumerator<BaseData> _enqueueable;
-            public EnumeratorHandler(IEnumerator<BaseData> enumerator, EnqueueableEnumerator<BaseData> enqueueable)
-                : base(enumerator, true)
+            public EnumeratorHandler(Symbol symbol, IEnumerator<BaseData> enumerator, EnqueueableEnumerator<BaseData> enqueueable)
+                : base(symbol, enumerator, true)
             {
                 _enqueueable = enqueueable;
             }

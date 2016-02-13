@@ -47,7 +47,14 @@ namespace QuantConnect.Packets
         /// </summary>
         public LiveNodePacket() 
             : base(PacketType.LiveNode)
-        { }
+        {
+            Controls = new Controls
+            {
+                MinuteLimit = 50,
+                SecondLimit = 25,
+                TickLimit = 15
+            };
+        }
 
     } // End Work Packet:
 

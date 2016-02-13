@@ -254,19 +254,6 @@ namespace QuantConnect.Brokerages.Fxcm
 
                 _mapRequestsToAutoResetEvents[_currentRequest].Set();
                 _mapRequestsToAutoResetEvents.Remove(_currentRequest);
-
-                // unsubscribe all instruments (only at first logon)
-                if (_subscribedSymbols.Count == 0)
-                {
-                    var request = new MarketDataRequest();
-                    foreach (var fxcmSymbol in _fxcmInstruments.Keys)
-                    {
-                        request.addRelatedSymbol(_fxcmInstruments[fxcmSymbol]);
-                    }
-                    request.setSubscriptionRequestType(SubscriptionRequestTypeFactory.UNSUBSCRIBE);
-                    request.setMDEntryTypeSet(MarketDataRequest.MDENTRYTYPESET_ALL);
-                    _gateway.sendMessage(request);
-                }
             }
         }
 
@@ -357,13 +344,20 @@ namespace QuantConnect.Brokerages.Fxcm
                             FillQuantity = Convert.ToInt32(message.getSide() == SideFactory.BUY ? message.getLastQty() : -message.getLastQty())
                         };
 
+                        // we're catching the first fill so we apply the fees only once
+                        if ((int)message.getCumQty() == (int)message.getLastQty() && message.getLastQty() > 0)
+                        {
+                            var security = _securityProvider.GetSecurity(order.Symbol);
+                            orderEvent.OrderFee = security.FeeModel.GetOrderFee(security, order);
+                        }
+
                         _orderEventQueue.Enqueue(orderEvent);
                     }
                 }
                 else if (_mapRequestsToOrders.TryGetValue(message.getRequestID(), out order))
                 {
                     _mapFxcmOrderIdsToOrders[orderId] = order;
-                    order.BrokerId.Add(Convert.ToInt64(orderId));
+                    order.BrokerId.Add(orderId);
 
                     // new order
                     var orderEvent = new OrderEvent(order, DateTime.UtcNow, 0)

@@ -72,6 +72,15 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         [Test]
+        public void ExchangeRoundDownHandlesMarketOpenTime()
+        {
+            var time = new DateTime(2016, 1, 25, 9, 31, 0);
+            var expected = time.Date;
+            var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, null, SecurityType.Equity);
+            var exchangeRounded = time.ExchangeRoundDown(Time.OneDay, hours, false);
+        }
+
+        [Test]
         public void ConvertsInt32FromString()
         {
             const string input = "12345678";

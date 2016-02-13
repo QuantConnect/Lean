@@ -52,15 +52,7 @@ namespace QuantConnect.Brokerages.Paper
         /// </summary>
         public IBrokerageModel BrokerageModel
         {
-            get { return new InteractiveBrokersBrokerageModel(); }
-        }
-
-        /// <summary>
-        /// Gets a map of the default markets to be used for each security type
-        /// </summary>
-        public IReadOnlyDictionary<SecurityType, string> DefaultMarkets
-        {
-            get { return BacktestingBrokerageFactory.DefaultMarketMap; }
+            get { return new DefaultBrokerageModel(); }
         }
 
         /// <summary>
@@ -71,14 +63,7 @@ namespace QuantConnect.Brokerages.Paper
         /// <returns>A new brokerage instance</returns>
         public IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm)
         {
-            //Try and use the live job packet cash if exists, otherwise resort to the user algo cash:
-            if (job.BrokerageData.ContainsKey("project-paper-equity"))
-            {
-                var consistentCash = Convert.ToDecimal(job.BrokerageData["project-paper-equity"], CultureInfo.InvariantCulture);
-                algorithm.Portfolio.SetCash(consistentCash);
-            }
-
-            return new PaperBrokerage(algorithm);
+            return new PaperBrokerage(algorithm, job);
         }
 
         /// <summary>

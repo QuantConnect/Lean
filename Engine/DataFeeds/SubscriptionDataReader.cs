@@ -23,6 +23,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -115,7 +116,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="periodFinish">Finish date for the data request/backtest</param>
         /// <param name="resultHandler">Result handler used to push error messages and perform sampling on skipped days</param>
         /// <param name="mapFileResolver">Used for resolving the correct map files</param>
-        /// <param name="tradeableDates">Defines the dates for which we'll request data, in order</param>
+        /// <param name="factorFileProvider">Used for getting factor files</param>
+        /// <param name="tradeableDates">Defines the dates for which we'll request data, in order, in the security's exchange time zone</param>
         /// <param name="isLiveMode">True if we're in live mode, false otherwise</param>
         /// <param name="includeAuxilliaryData">True if we want to emit aux data, false to only emit price data</param>
         public SubscriptionDataReader(SubscriptionDataConfig config,
@@ -123,10 +125,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             DateTime periodFinish,
             IResultHandler resultHandler,
             MapFileResolver mapFileResolver,
+            IFactorFileProvider factorFileProvider,
             IEnumerable<DateTime> tradeableDates,
             bool isLiveMode,
-            bool includeAuxilliaryData = true
-            )
+            bool includeAuxilliaryData = true)
         {
             //Save configuration of data-subscription:
             _config = config;
@@ -156,7 +158,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             //Create an instance of the "Type":
-            var userObj = objectActivator.Invoke(new object[] { });
+            var userObj = objectActivator.Invoke(new object[] {});
             _dataFactory = userObj as BaseData;
 
             //If its quandl set the access token in data factory:
@@ -182,10 +184,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // only take the resolved map file if it has data, otherwise we'll use the empty one we defined above
                     if (mapFile.Any()) _mapFile = mapFile;
 
-                    _hasScaleFactors = FactorFile.HasScalingFactors(_mapFile.Permtick, config.Market);
+                    var factorFile = factorFileProvider.Get(_config.Symbol);
+                    _hasScaleFactors = factorFile != null;
                     if (_hasScaleFactors)
                     {
-                        _factorFile = FactorFile.Read(_mapFile.Permtick, config.Market);
+                        _factorFile = factorFile;
                     }
                 }
                 catch (Exception err)
@@ -258,6 +261,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         // keep reading until we get valid data
                         continue;
+                    }
+
+                    // prevent emitting past data, this can happen when switching symbols on daily data
+                    if (_previous != null && _config.Resolution != Resolution.Tick)
+                    {
+                        if (_config.Resolution == Resolution.Tick)
+                        {
+                            // allow duplicate times for tick data
+                            if (instance.EndTime < _previous.EndTime) continue;
+                        }
+                        else
+                        {
+                            // all other resolutions don't allow duplicate end times
+                            if (instance.EndTime <= _previous.EndTime) continue;
+                        }
                     }
 
                     if (instance.EndTime < _periodStart)
@@ -344,8 +362,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     return null;
                 }
 
-                // fetch the new source
-                var newSource = _dataFactory.GetSource(_config, date, _isLiveMode);
+                // fetch the new source, using the data time zone for the date
+                var dateInDataTimeZone = date.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone);
+                var newSource = _dataFactory.GetSource(_config, dateInDataTimeZone, _isLiveMode);
 
                 // check if we should create a new subscription factory
                 var sourceChanged = _source != newSource && newSource.Source != "";
@@ -361,12 +380,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // save off for comparison next time
                     _source = newSource;
                     var subscriptionFactory = CreateSubscriptionFactory(newSource);
-
-                    var previousTime = _previous == null ? DateTime.MinValue : _previous.EndTime;
-                    return subscriptionFactory.Read(newSource)
-                        // prevent the enumerator from emitting data before the last emitted time
-                        .Where(instance => instance != null && previousTime < instance.EndTime)
-                        .GetEnumerator();
+                    return subscriptionFactory.Read(newSource).GetEnumerator();
                 }
 
                 // if there's still more in the enumerator and we received the same source from the GetSource call
@@ -400,7 +414,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private ISubscriptionFactory HandleCsvFileFormat(SubscriptionDataSource source)
         {
-            var factory = new BaseDataSubscriptionFactory(_config, _tradeableDates.Current, _isLiveMode);
+            // convert the date to the data time zone 
+            var dateInDataTimeZone = _tradeableDates.Current.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date;
+            var factory = new BaseDataSubscriptionFactory(_config, dateInDataTimeZone, _isLiveMode);
 
             // handle missing files
             factory.InvalidSource += (sender, args) =>

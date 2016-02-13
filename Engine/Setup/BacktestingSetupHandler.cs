@@ -20,6 +20,7 @@ using System.Linq;
 using System.Timers;
 using QuantConnect.Algorithm;
 using QuantConnect.AlgorithmFactory;
+using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.RealTime;
@@ -129,6 +130,17 @@ namespace QuantConnect.Lean.Engine.Setup
         }
 
         /// <summary>
+        /// Creates a new <see cref="BacktestingBrokerage"/> instance
+        /// </summary>
+        /// <param name="algorithmNodePacket">Job packet</param>
+        /// <param name="uninitializedAlgorithm">The algorithm instance before Initialize has been called</param>
+        /// <returns>The brokerage instance, or throws if error creating instance</returns>
+        public IBrokerage CreateBrokerage(AlgorithmNodePacket algorithmNodePacket, IAlgorithm uninitializedAlgorithm)
+        {
+            return new BacktestingBrokerage(uninitializedAlgorithm);
+        }
+
+        /// <summary>
         /// Setup the algorithm cash, dates and data subscriptions as desired.
         /// </summary>
         /// <param name="algorithm">Algorithm instance</param>
@@ -138,7 +150,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="transactionHandler">The configurated transaction handler</param>
         /// <param name="realTimeHandler">The configured real time handler</param>
         /// <returns>Boolean true on successfully initializing the algorithm</returns>
-        public bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket baseJob, IResultHandler resultHandler, ITransactionHandler transactionHandler, IRealTimeHandler realTimeHandler)
+        public bool Setup(IAlgorithm algorithm, IBrokerage brokerage, AlgorithmNodePacket baseJob, IResultHandler resultHandler, ITransactionHandler transactionHandler, IRealTimeHandler realTimeHandler)
         {
             var job = baseJob as BacktestNodePacket;
             if (job == null)
@@ -147,8 +159,6 @@ namespace QuantConnect.Lean.Engine.Setup
             }
 
             Log.Trace(string.Format("BacktestingSetupHandler.Setup(): Setting up job: Plan: {0}, UID: {1}, PID: {2}, Version: {3}, Source: {4}", job.UserPlan, job.UserId, job.ProjectId, job.Version, job.RequestSource));
-
-            brokerage = null;
 
             if (algorithm == null)
             {
@@ -163,27 +173,22 @@ namespace QuantConnect.Lean.Engine.Setup
                 return false;
             }
 
+            var controls = job.Controls;
             var isolator = new Isolator();
             var initializeComplete = isolator.ExecuteWithTimeLimit(TimeSpan.FromMinutes(5), () =>
             {
                 try
                 {
-                    //Set our default markets
-                    algorithm.SetDefaultMarkets(BacktestingBrokerageFactory.DefaultMarketMap.ToDictionary());
                     //Set our parameters
                     algorithm.SetParameters(job.Parameters);
                     //Algorithm is backtesting, not live:
                     algorithm.SetLiveMode(false);
-                    //Set the backtest level asset ram allocation limits
-                    algorithm.SetAssetLimits(500, 100, 30);
                     //Set the algorithm time before we even initialize:
                     algorithm.SetDateTime(job.PeriodStart.ConvertToUtc(algorithm.TimeZone));
                     //Set the source impl for the event scheduling
                     algorithm.Schedule.SetEventSchedule(realTimeHandler);
                     //Initialise the algorithm, get the required data:
                     algorithm.Initialize();
-                    //Add currency data feeds that weren't explicity added in Initialize
-                    algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(algorithm.Securities, algorithm.SubscriptionManager, MarketHoursDatabase.FromDataFolder());
                 }
                 catch (Exception err)
                 {
@@ -194,11 +199,6 @@ namespace QuantConnect.Lean.Engine.Setup
             //Before continuing, detect if this is ready:
             if (!initializeComplete) return false;
 
-            // this needs to be done after algorithm initialization
-            brokerage = new BacktestingBrokerage(algorithm);
-
-            // set the transaction and settlement models based on the brokerage properties
-            SetupHandler.UpdateModels(algorithm, algorithm.BrokerageModel);
             algorithm.Transactions.SetOrderProcessor(transactionHandler);
             algorithm.PostInitialize();
 

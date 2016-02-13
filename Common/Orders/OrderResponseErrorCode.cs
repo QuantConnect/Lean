@@ -143,7 +143,22 @@ namespace QuantConnect.Orders
         /// <summary>
         /// All orders are invalidated while algorithm is warming up
         /// </summary>
-        AlgorithmWarmingUp = -24
+        AlgorithmWarmingUp = -24,
+
+        /// <summary>
+        /// Internal logic invalidated update order
+        /// </summary>
+        BrokerageModelRefusedToUpdateOrder = -25,
+
+        /// <summary>
+        /// Need quote currency in cashbook to trade a CFD
+        /// </summary>
+        CfdQuoteCurrencyRequired = -26,
+
+        /// <summary>
+        /// Need conversion rate to account currency
+        /// </summary>
+        CfdConversionRateZero = -27,
 
     }
 }

@@ -69,11 +69,11 @@ namespace QuantConnect.Brokerages.Tradier
         //Endpoints:
         private const string RequestEndpoint = @"https://api.tradier.com/v1/";
         private readonly IOrderProvider _orderProvider;
-        private readonly IHoldingsProvider _holdingsProvider;
+        private readonly ISecurityProvider _securityProvider;
 
         private readonly object _fillLock = new object();
         private readonly DateTime _initializationDateTime = DateTime.Now;
-        private readonly ConcurrentDictionary<long, TradierOrder> _cachedOpenOrdersByTradierOrderID;
+        private readonly ConcurrentDictionary<long, TradierCachedOpenOrder> _cachedOpenOrdersByTradierOrderID;
         // this is used to block reentrance when doing look ups for orders with IDs we don't have cached
         private readonly HashSet<long> _reentranceGuardByTradierOrderID = new HashSet<long>();
         private readonly FixedSizeHashQueue<long> _filledTradierOrderIDs = new FixedSizeHashQueue<long>(10000); 
@@ -124,14 +124,14 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Create a new Tradier Object:
         /// </summary>
-        public TradierBrokerage(IOrderProvider orderProvider, IHoldingsProvider holdingsProvider, long accountID)
+        public TradierBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, long accountID)
             : base("Tradier Brokerage")
         {
             _orderProvider = orderProvider;
-            _holdingsProvider = holdingsProvider;
+            _securityProvider = securityProvider;
             _accountID = accountID;
 
-            _cachedOpenOrdersByTradierOrderID = new ConcurrentDictionary<long, TradierOrder>();
+            _cachedOpenOrdersByTradierOrderID = new ConcurrentDictionary<long, TradierCachedOpenOrder>();
 
             //Tradier Specific Initialization:
             _rateLimitPeriod = new Dictionary<TradierApiRequestType, TimeSpan>();
@@ -261,6 +261,17 @@ namespace QuantConnect.Brokerages.Tradier
                         // this happens when we try to cancel a filled order
                         if (raw.Content.Contains("order already in finalized state: filled"))
                         {
+                            if (request.Method == Method.DELETE)
+                            {
+                                string orderId = "[unknown]";
+                                var parameter = request.Parameters.FirstOrDefault(x => x.Name == "orderId");
+                                if (parameter != null) orderId = parameter.Value.ToString();
+                                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "OrderAlreadyFilled",
+                                    "Unable to cancel the order because it has already been filled. TradierOrderId: " + orderId
+                                    ));
+
+                                
+                            }
                             return new T();
                         }
                         // Text Errors:
@@ -870,7 +881,7 @@ namespace QuantConnect.Brokerages.Tradier
             foreach (var openOrder in openOrders)
             {
                 // make sure our internal collection is up to date as well
-                _cachedOpenOrdersByTradierOrderID[openOrder.Id] = openOrder;
+                UpdateCachedOpenOrder(openOrder.Id, openOrder);
                 orders.Add(ConvertOrder(openOrder));
             }
 
@@ -925,16 +936,16 @@ namespace QuantConnect.Brokerages.Tradier
             }
 
             // before doing anything, verify only one outstanding order per symbol
-            var cachedOpenOrder = _cachedOpenOrdersByTradierOrderID.FirstOrDefault(x => x.Value.Symbol == order.Symbol.Value).Value;
+            var cachedOpenOrder = _cachedOpenOrdersByTradierOrderID.FirstOrDefault(x => x.Value.Order.Symbol == order.Symbol.Value).Value;
             if (cachedOpenOrder != null)
             {
-                var qcOrder = _orderProvider.GetOrderByBrokerageId(cachedOpenOrder.Id);
+                var qcOrder = _orderProvider.GetOrderByBrokerageId(cachedOpenOrder.Order.Id);
                 if (qcOrder == null)
                 {
                     // clean up our mess, this should never be encountered.
-                    TradierOrder tradierOrder;
+                    TradierCachedOpenOrder tradierOrder;
                     Log.Error("TradierBrokerage.PlaceOrder(): Unable to locate existing QC Order when verifying single outstanding order per symbol.");
-                    _cachedOpenOrdersByTradierOrderID.TryRemove(cachedOpenOrder.Id, out tradierOrder);
+                    _cachedOpenOrdersByTradierOrderID.TryRemove(cachedOpenOrder.Order.Id, out tradierOrder);
                 }
                 // if the qc order is still listed as open, then we have an issue, attempt to cancel it before placing this new order
                 else if (qcOrder.Status.IsOpen())
@@ -979,7 +990,7 @@ namespace QuantConnect.Brokerages.Tradier
                 // even though 't' goes out of scope here, the internal scheduler (TimerQueue) maintains a reference
             }
 
-            var holdingQuantity = _holdingsProvider.GetHoldingsQuantity(order.Symbol);
+            var holdingQuantity = _securityProvider.GetHoldingsQuantity(order.Symbol);
 
             var orderRequest = new TradierPlaceOrderRequest(order, TradierOrderClass.Equity,  holdingQuantity);
 
@@ -1013,7 +1024,7 @@ namespace QuantConnect.Brokerages.Tradier
                 }
 
                 var closingOrderID = response.Order.Id;
-                order.BrokerId.Add(closingOrderID);
+                order.BrokerId.Add(closingOrderID.ToString());
                 return true;
             }
             else
@@ -1023,7 +1034,7 @@ namespace QuantConnect.Brokerages.Tradier
                 {
                     return false;
                 }
-                order.BrokerId.Add(response.Order.Id);
+                order.BrokerId.Add(response.Order.Id.ToString());
                 return true;
             }
         }
@@ -1043,16 +1054,22 @@ namespace QuantConnect.Brokerages.Tradier
                 Log.Trace("TradierBrokerage.UpdateOrder(): Unable to update order without BrokerId.");
                 return false;
             }
-            
+
             // there's only one active tradier order per qc order, find it
-            var activeOrder = order.BrokerId.Where(x => _cachedOpenOrdersByTradierOrderID.ContainsKey(x)).Select(x => _cachedOpenOrdersByTradierOrderID[x]).SingleOrDefault();
+            var activeOrder = (
+                from brokerId in order.BrokerId
+                let id = long.Parse(brokerId)
+                where _cachedOpenOrdersByTradierOrderID.ContainsKey(id)
+                select _cachedOpenOrdersByTradierOrderID[id]
+                ).SingleOrDefault();
+            
             if (activeOrder == null)
             {
                 Log.Trace("Unable to locate active Tradier order for QC order id: " + order.Id + " with Tradier ids: " + string.Join(", ", order.BrokerId));
                 return false;
             }
 
-            decimal quantity = activeOrder.Quantity;
+            decimal quantity = activeOrder.Order.Quantity;
 
             // also sum up the contingent orders
             ContingentOrderQueue contingent;
@@ -1074,7 +1091,7 @@ namespace QuantConnect.Brokerages.Tradier
             var orderDuration = GetOrderDuration(order.Duration);
             var limitPrice = GetLimitPrice(order);
             var stopPrice = GetStopPrice(order);
-            var response = ChangeOrder(_accountID, activeOrder.Id,
+            var response = ChangeOrder(_accountID, activeOrder.Order.Id,
                 orderType,
                 orderDuration,
                 limitPrice,
@@ -1084,9 +1101,12 @@ namespace QuantConnect.Brokerages.Tradier
             if (!response.Errors.Errors.IsNullOrEmpty())
             {
                 string errors = string.Join(", ", response.Errors.Errors);
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "UpdateFailed", "Failed to update Tradier order id: " + activeOrder.Id + ". " + errors));
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "UpdateFailed", "Failed to update Tradier order id: " + activeOrder.Order.Id + ". " + errors));
                 return false;
             }
+            
+            // success
+            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0) {Status = OrderStatus.Submitted});
 
             // if we have contingents, update them as well
             if (contingent != null)
@@ -1129,7 +1149,8 @@ namespace QuantConnect.Brokerages.Tradier
 
             foreach (var orderID in order.BrokerId)
             {
-                var response = CancelOrder(_accountID, orderID);
+                var id = long.Parse(orderID);
+                var response = CancelOrder(_accountID, id);
                 if (response == null)
                 {
                     // this can happen if the order has already been filled
@@ -1137,8 +1158,8 @@ namespace QuantConnect.Brokerages.Tradier
                 }
                 if (response.Errors.Errors.IsNullOrEmpty() && response.Order.Status == "ok")
                 {
-                    TradierOrder tradierOrder;
-                    _cachedOpenOrdersByTradierOrderID.TryRemove(orderID, out tradierOrder);
+                    TradierCachedOpenOrder tradierOrder;
+                    _cachedOpenOrdersByTradierOrderID.TryRemove(id, out tradierOrder);
                     const int orderFee = 0;
                     OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Tradier Fill Event") { Status = OrderStatus.Canceled });
                 }
@@ -1216,7 +1237,7 @@ namespace QuantConnect.Brokerages.Tradier
                 OnOrderEvent(new OrderEvent(order.QCOrder, DateTime.UtcNow, orderFee) { Status = OrderStatus.Submitted });
 
                 // mark this in our open orders before we submit so it's gauranteed to be there when we poll for updates
-                _cachedOpenOrdersByTradierOrderID.AddOrUpdate(response.Order.Id, new TradierOrderDetailed
+                UpdateCachedOpenOrder(response.Order.Id, new TradierOrderDetailed
                 {
                     Id = response.Order.Id,
                     Quantity = order.Quantity,
@@ -1275,7 +1296,7 @@ namespace QuantConnect.Brokerages.Tradier
                             return;
                         }
 
-                        order.QCOrder.BrokerId.Add(recentOrder.Id);
+                        order.QCOrder.BrokerId.Add(recentOrder.Id.ToString());
                         Log.Trace("TradierBrokerage.TradierPlaceOrder(): Successfully resolved missing order ID: " + recentOrder.Id);
                     });
                 }
@@ -1314,8 +1335,10 @@ namespace QuantConnect.Brokerages.Tradier
                     if (hasUpdatedOrder)
                     {
                         // determine if the order has been updated and produce fills accordingly
-                        _cachedOpenOrdersByTradierOrderID[cachedOrder.Key] = updatedOrder;
                         ProcessPotentiallyUpdatedOrder(cachedOrder.Value, updatedOrder);
+
+                        // if the order is still open, update the cached value
+                        if (!OrderIsClosed(updatedOrder)) UpdateCachedOpenOrder(cachedOrder.Key, updatedOrder);
                         continue;
                     }
 
@@ -1339,7 +1362,7 @@ namespace QuantConnect.Brokerages.Tradier
                                 throw new Exception("TradierBrokerage.CheckForFills(): GetOrder() return null response");
                             }
 
-                            _cachedOpenOrdersByTradierOrderID[cachedOrderLocal.Key] = updatedOrderLocal;
+                            UpdateCachedOpenOrder(cachedOrderLocal.Key, updatedOrderLocal);
                             ProcessPotentiallyUpdatedOrder(cachedOrderLocal.Value, updatedOrderLocal);
                         }
                         catch (Exception err)
@@ -1377,7 +1400,7 @@ namespace QuantConnect.Brokerages.Tradier
                             // verify we don't have them in the order provider
                             Log.Trace("TradierBrokerage.CheckForFills(): Verifying missing brokerage IDs: " + string.Join(",", localUnknownTradierOrderIDs));
                             var orders = localUnknownTradierOrderIDs.Select(x => _orderProvider.GetOrderByBrokerageId(x)).Where(x => x != null);
-                            var stillUnknownOrderIDs = localUnknownTradierOrderIDs.Where(x => !orders.Any(y => y.BrokerId.Contains(x))).ToList();
+                            var stillUnknownOrderIDs = localUnknownTradierOrderIDs.Where(x => !orders.Any(y => y.BrokerId.Contains(x.ToString()))).ToList();
                             if (stillUnknownOrderIDs.Count > 0)
                             {
                                 // fetch all rejected intraday orders within the last minute, we're going to exclude rejected orders from the error condition
@@ -1435,11 +1458,11 @@ namespace QuantConnect.Brokerages.Tradier
                 && !_filledTradierOrderIDs.Contains(x.Key);
         }
 
-        private void ProcessPotentiallyUpdatedOrder(TradierOrder cachedOrder, TradierOrder updatedOrder)
+        private void ProcessPotentiallyUpdatedOrder(TradierCachedOpenOrder cachedOrder, TradierOrder updatedOrder)
         {
             // check for fills or status changes, for either fire a fill event
-            if (updatedOrder.RemainingQuantity != cachedOrder.RemainingQuantity 
-             || ConvertStatus(updatedOrder.Status) != ConvertStatus(cachedOrder.Status))
+            if (updatedOrder.RemainingQuantity != cachedOrder.Order.RemainingQuantity
+             || ConvertStatus(updatedOrder.Status) != ConvertStatus(cachedOrder.Order.Status))
             {
                 var qcOrder = _orderProvider.GetOrderByBrokerageId(updatedOrder.Id);
                 const int orderFee = 0;
@@ -1451,13 +1474,20 @@ namespace QuantConnect.Brokerages.Tradier
                     // but the fill price will always be the most recent fill, so if we have two fills with 1/10 of a second
                     // we'll get the latter fill price, so for large orders this can lead to inconsistent state
                     FillPrice = updatedOrder.LastFillPrice,
-                    FillQuantity = (int)(updatedOrder.QuantityExecuted - cachedOrder.QuantityExecuted)
+                    FillQuantity = (int)(updatedOrder.QuantityExecuted - cachedOrder.Order.QuantityExecuted)
                 };
 
                 // flip the quantity on sell actions
                 if (IsShort(updatedOrder.Direction))
                 {
                     fill.FillQuantity *= -1;
+                }
+
+                if (!cachedOrder.EmittedOrderFee)
+                {
+                    cachedOrder.EmittedOrderFee = true;
+                    var security = _securityProvider.GetSecurity(qcOrder.Symbol);
+                    fill.OrderFee = security.FeeModel.GetOrderFee(security, qcOrder);
                 }
 
                 // if we filled the order and have another contingent order waiting, submit it
@@ -1490,7 +1520,7 @@ namespace QuantConnect.Brokerages.Tradier
                                     if (response.Errors.Errors.IsNullOrEmpty())
                                     {
                                         // add the new brokerage id for retrieval later
-                                        qcOrder.BrokerId.Add(response.Order.Id);
+                                        qcOrder.BrokerId.Add(response.Order.Id.ToString());
                                     }
                                     else
                                     {
@@ -1525,6 +1555,19 @@ namespace QuantConnect.Brokerages.Tradier
             {
                 _filledTradierOrderIDs.Add(updatedOrder.Id);
                 _cachedOpenOrdersByTradierOrderID.TryRemove(updatedOrder.Id, out cachedOrder);
+            }
+        }
+
+        private void UpdateCachedOpenOrder(long key, TradierOrder updatedOrder)
+        {
+            TradierCachedOpenOrder cachedOpenOrder;
+            if (_cachedOpenOrdersByTradierOrderID.TryGetValue(key, out cachedOpenOrder))
+            {
+                cachedOpenOrder.Order = updatedOrder;
+            }
+            else
+            {
+                _cachedOpenOrdersByTradierOrderID[key] = new TradierCachedOpenOrder(updatedOrder);
             }
         }
 
@@ -1604,9 +1647,8 @@ namespace QuantConnect.Brokerages.Tradier
             }
             qcOrder.Symbol = Symbol.Create(order.Symbol, SecurityType.Equity, Market.USA);
             qcOrder.Quantity = ConvertQuantity(order);
-            qcOrder.SecurityType = SecurityType.Equity; // tradier only support equities? but also options??
             qcOrder.Status = ConvertStatus(order.Status);
-            qcOrder.BrokerId.Add(order.Id);
+            qcOrder.BrokerId.Add(order.Id.ToString());
             //qcOrder.ContingentId =
             qcOrder.Duration = ConvertDuration(order.Duration);
             var orderByBrokerageId = _orderProvider.GetOrderByBrokerageId(order.Id);
@@ -1824,7 +1866,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// </summary>
         protected bool OrderCrossesZero(Order order)
         {
-            var holdingQuantity = _holdingsProvider.GetHoldingsQuantity(order.Symbol);
+            var holdingQuantity = _securityProvider.GetHoldingsQuantity(order.Symbol);
 
             //We're reducing position or flipping:
             if (holdingQuantity > 0 && order.Quantity < 0)
@@ -1952,6 +1994,17 @@ namespace QuantConnect.Brokerages.Tradier
                     return null;
                 }
                 return Contingents.Dequeue();
+            }
+        }
+
+        class TradierCachedOpenOrder
+        {
+            public bool EmittedOrderFee;
+            public TradierOrder Order;
+
+            public TradierCachedOpenOrder(TradierOrder order)
+            {
+                Order = order;
             }
         }
 

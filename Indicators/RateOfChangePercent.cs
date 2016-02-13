@@ -56,7 +56,7 @@ namespace QuantConnect.Indicators
                 return 0;
             }
 
-            return 100*(input - denominator)/denominator;
+            return 100 * (input - denominator) / denominator;
         }
     }
 }

@@ -16,15 +16,16 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
-using Ionic.Zip;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using ZipEntry = ICSharpCode.SharpZipLib.Zip.ZipEntry;
+using ZipFile = Ionic.Zip.ZipFile;
 using ZipInputStream = ICSharpCode.SharpZipLib.Zip.ZipInputStream;
 using ZipOutputStream = ICSharpCode.SharpZipLib.Zip.ZipOutputStream;
 
@@ -211,6 +212,25 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Performs an in memory zip of the specified bytes
+        /// </summary>
+        /// <param name="bytes">The file contents in bytes to be zipped</param>
+        /// <param name="zipEntryName">The zip entry name</param>
+        /// <returns>The zipped file as a byte array</returns>
+        public static byte[] ZipBytes(byte[] bytes, string zipEntryName)
+        {
+            using (var memoryStream = new MemoryStream())
+            using (var stream = new ZipOutputStream(memoryStream))
+            {
+                var entry = new ZipEntry(zipEntryName);
+                stream.PutNextEntry(entry);
+                var buffer = new byte[16*1024];
+                StreamUtils.Copy(new MemoryStream(bytes), stream, buffer);
+                return memoryStream.GetBuffer();
+            }
+        }
+
+        /// <summary>
         /// Compress a given file and delete the original file. Automatically rename the file to name.zip.
         /// </summary>
         /// <param name="textPath">Path of the original file</param>
@@ -285,6 +305,73 @@ namespace QuantConnect
                     }
                     while (sourceBytes > 0);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Zips the specified directory, preserving folder structure
+        /// </summary>
+        /// <param name="directory">The directory to be zipped</param>
+        /// <param name="destination">The output zip file destination</param>
+        /// <param name="includeRootInZip">True to include the root 'directory' in the zip, false otherwise</param>
+        /// <returns>True on a successful zip, false otherwise</returns>
+        public static bool ZipDirectory(string directory, string destination, bool includeRootInZip = true)
+        {
+            try
+            {
+                if (File.Exists(destination)) File.Delete(destination);
+                System.IO.Compression.ZipFile.CreateFromDirectory(directory, destination, CompressionLevel.Fastest, includeRootInZip);
+                return true;
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Unzips the specified zip file to the specified directory
+        /// </summary>
+        /// <param name="zip">The zip to be unzipped</param>
+        /// <param name="directory">The directory to place the unzipped files</param>
+        /// <param name="overwrite">Flag specifying whether or not to overwrite existing files</param>
+        public static bool Unzip(string zip, string directory, bool overwrite = false)
+        {
+            if (!File.Exists(zip)) return false;
+
+            try
+            {
+                if (!overwrite)
+                {
+                    System.IO.Compression.ZipFile.ExtractToDirectory(zip, directory);
+                }
+                else
+                {
+                    using (var archive = new ZipArchive(File.OpenRead(zip)))
+                    {
+                        foreach (var file in archive.Entries)
+                        {
+                            // skip directories
+                            if (file.Name == "") continue;
+                            var filepath = Path.Combine(directory, file.FullName);
+                            if (OS.IsLinux) filepath = filepath.Replace(@"\", "/");
+                            var outputFile = new FileInfo(filepath);
+                            if (!outputFile.Directory.Exists)
+                            {
+                                outputFile.Directory.Create();
+                            }
+                            file.ExtractToFile(outputFile.FullName, true);
+                        }
+                    }
+                }
+
+                return true;
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+                return false;
             }
         }
 
@@ -368,6 +455,9 @@ namespace QuantConnect
         /// closed rendering all key value pair Value properties unaccessible. Ideally this
         /// would be enumerated depth first.
         /// </summary>
+        /// <remarks>
+        /// This method has the potential for a memory leak if each kvp.Value enumerable is not disposed
+        /// </remarks>
         /// <param name="filename">The zip file to stream</param>
         /// <returns>The stream zip contents</returns>
         public static IEnumerable<KeyValuePair<string, IEnumerable<string>>> Unzip(string filename)
@@ -639,41 +729,5 @@ namespace QuantConnect
                 tarIn.Close();
             }
         }
-
-        /// <summary>
-        /// Creates the entry name for a QC zip data file
-        /// </summary>
-        public static string CreateZipEntryName(string symbol, SecurityType securityType, DateTime date, Resolution resolution, TickType dataType = TickType.Trade)
-        {
-            symbol = symbol.ToLower();
-
-            if (resolution == Resolution.Hour || resolution == Resolution.Daily)
-            {
-                return symbol + ".csv";
-            }
-
-            //All fx is quote data.
-            if (securityType == SecurityType.Forex) dataType = TickType.Quote;
-
-            return String.Format("{0}_{1}_{2}_{3}.csv", date.ToString(DateFormat.EightCharacter), symbol, resolution.ToString().ToLower(), dataType.ToString().ToLower());
-        }
-
-        /// <summary>
-        /// Creates the zip file name for a QC zip data file
-        /// </summary>
-        public static string CreateZipFileName(string symbol, SecurityType securityType, DateTime date, Resolution resolution)
-        {
-            if (resolution == Resolution.Hour || resolution == Resolution.Daily)
-            {
-                return symbol.ToLower() + ".zip";
-            }
-
-            var zipFileName = date.ToString(DateFormat.EightCharacter);
-            if (securityType == SecurityType.Forex)
-            {
-                return zipFileName + "_quote.zip";
-            }
-            return zipFileName + "_trade.zip";
-        }
-    } // End OS Class
-} // End QC Namespace
+    }
+}

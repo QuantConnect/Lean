@@ -89,7 +89,9 @@ namespace QuantConnect.Brokerages.Backtesting
         public override List<Holding> GetAccountHoldings()
         {
             // grab everything from the portfolio with a non-zero absolute quantity
-            return Algorithm.Portfolio.Values.Where(x => x.AbsoluteQuantity > 0).OrderBy(x => x.Symbol).Select(holding => new Holding(holding)).ToList();
+            return (from security in Algorithm.Portfolio.Securities.Values.OrderBy(x => x.Symbol) 
+                    where security.Holdings.AbsoluteQuantity > 0 
+                    select new Holding(security)).ToList();
         }
 
         /// <summary>
@@ -116,7 +118,8 @@ namespace QuantConnect.Brokerages.Backtesting
                     SetPendingOrder(order);
                 }
 
-                if (!order.BrokerId.Contains(order.Id)) order.BrokerId.Add(order.Id);
+                var orderId = order.Id.ToString();
+                if (!order.BrokerId.Contains(orderId)) order.BrokerId.Add(orderId);
 
                 // fire off the event that says this order has been submitted
                 const int orderFee = 0;
@@ -150,7 +153,8 @@ namespace QuantConnect.Brokerages.Backtesting
                     SetPendingOrder(order);
                 }
 
-                if (!order.BrokerId.Contains(order.Id)) order.BrokerId.Add(order.Id);
+                var orderId = order.Id.ToString();
+                if (!order.BrokerId.Contains(orderId)) order.BrokerId.Add(orderId);
 
                 // fire off the event that says this order has been updated
                 const int orderFee = 0;
@@ -175,7 +179,8 @@ namespace QuantConnect.Brokerages.Backtesting
                 return false;
             }
 
-            if (!order.BrokerId.Contains(order.Id)) order.BrokerId.Add(order.Id);
+            var orderId = order.Id.ToString();
+            if (!order.BrokerId.Contains(orderId)) order.BrokerId.Add(order.Id.ToString());
 
             // fire off the event that says this order has been canceled
             const int orderFee = 0;
@@ -204,12 +209,22 @@ namespace QuantConnect.Brokerages.Backtesting
                 foreach (var kvp in _pending)
                 {
                     var order = kvp.Value;
+
                     if (order.Status.IsClosed())
                     {
                         // this should never actually happen as we always remove closed orders as they happen
                         _pending.TryRemove(order.Id, out order);
                         continue;
                     }
+
+                    // all order fills are processed on the next bar (except for market orders)
+                    if (order.Time == Algorithm.UtcTime && order.Type != OrderType.Market)
+                    {
+                        stillNeedsScan = true;
+                        continue;
+                    }
+
+                    var fill = new OrderEvent(order, Algorithm.UtcTime, 0);
 
                     Security security;
                     if (!Algorithm.Securities.TryGetValue(order.Symbol, out security))
@@ -227,9 +242,6 @@ namespace QuantConnect.Brokerages.Backtesting
                         continue;
                     }
 
-                    var orderFee = security.TransactionModel.GetOrderFee(security, order);
-                    var fill = new OrderEvent(order, Algorithm.UtcTime, orderFee);
-
                     // verify sure we have enough cash to perform the fill
                     bool sufficientBuyingPower;
                     try
@@ -242,7 +254,7 @@ namespace QuantConnect.Brokerages.Backtesting
                         Order pending;
                         _pending.TryRemove(order.Id, out pending);
                         order.Status = OrderStatus.Invalid;
-                        OnOrderEvent(new OrderEvent(order, Algorithm.UtcTime, orderFee, "Error in GetSufficientCapitalForOrder"));
+                        OnOrderEvent(new OrderEvent(order, Algorithm.UtcTime, 0, "Error in GetSufficientCapitalForOrder"));
 
                         Log.Error(err);
                         Algorithm.Error(string.Format("Order Error: id: {0}, Error executing margin models: {1}", order.Id, err.Message));
@@ -253,7 +265,7 @@ namespace QuantConnect.Brokerages.Backtesting
                     if (sufficientBuyingPower)
                     {
                         //Model:
-                        var model = security.TransactionModel;
+                        var model = security.FillModel;
 
                         //Based on the order type: refresh its model to get fill price and quantity
                         try
@@ -297,7 +309,7 @@ namespace QuantConnect.Brokerages.Backtesting
                         //Flag order as invalid and push off queue:
                         order.Status = OrderStatus.Invalid;
                         Algorithm.Error(string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id,
-                            order.GetValue(security.Price).SmartRounding()));
+                            order.GetValue(security).SmartRounding()));
                     }
 
                     // change in status or a new fill

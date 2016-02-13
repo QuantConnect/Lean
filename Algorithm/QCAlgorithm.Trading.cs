@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Cfd;
 using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Algorithm
@@ -122,7 +123,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Issue an order/trade for asset: Alias wrapper for Order(string, int);
         /// </summary>
-        /// <seealso cref="Order(Symbol, double)"/>
+        /// <seealso cref="Order(Symbol, decimal)"/>
         public OrderTicket Order(Symbol symbol, double quantity)
         {
             return Order(symbol, (int) quantity);
@@ -177,7 +178,7 @@ namespace QuantConnect.Algorithm
 
             var request = CreateSubmitOrderRequest(OrderType.Market, security, quantity, tag);
 
-            //Initalize the Market order parameters:
+            //Initialize the Market order parameters:
             var preOrderCheckResponse = PreOrderChecks(request);
             if (preOrderCheckResponse.IsError)
             {
@@ -187,7 +188,7 @@ namespace QuantConnect.Algorithm
             //Add the order and create a new order Id.
             var ticket = Transactions.AddOrder(request);
 
-            //Wait for the order event to process, only if the exchange is open
+            // Wait for the order event to process, only if the exchange is open
             if (!asynchronous)
             {
                 Transactions.WaitForOrder(ticket.OrderId);
@@ -370,6 +371,24 @@ namespace QuantConnect.Algorithm
                     return OrderResponse.Error(request, OrderResponseErrorCode.ForexConversionRateZero, request.Symbol.Value + ": requires " + baseCurrency + " and " + quoteCurrency + " to have non-zero conversion rates. This can be caused by lack of data.");
                 }
             }
+            else if (security.Type == SecurityType.Cfd)
+            {
+                // for CFD we need to verify that the conversion to USD has a value as well
+                var cfd = (Cfd) security;
+                var quoteCurrency = cfd.QuoteCurrencySymbol;
+
+                // verify it's in the portfolio
+                Cash quoteCash;
+                if (!Portfolio.CashBook.TryGetValue(quoteCurrency, out quoteCash))
+                {
+                    return OrderResponse.Error(request, OrderResponseErrorCode.CfdQuoteCurrencyRequired, request.Symbol.Value + ": requires " + quoteCurrency + " in the cashbook to trade.");
+                }
+                // verify we have a conversion rate back into the account currency
+                if (quoteCash.ConversionRate == 0m)
+                {
+                    return OrderResponse.Error(request, OrderResponseErrorCode.CfdConversionRateZero, request.Symbol.Value + ": requires " + quoteCurrency + " to have a non-zero conversion rate. This can be caused by lack of data.");
+                }
+            }
             
             //Make sure the security has some data:
             if (!security.HasData)
@@ -386,9 +405,10 @@ namespace QuantConnect.Algorithm
             
             if (request.OrderType == OrderType.MarketOnClose)
             {
+                var nextMarketClose = security.Exchange.Hours.GetNextMarketClose(security.LocalTime, false);
                 // must be submitted with at least 10 minutes in trading day, add buffer allow order submission
-                var latestSubmissionTime = (Time.Date + security.Exchange.MarketClose).AddMinutes(-10.75);
-                if (Time > latestSubmissionTime)
+                var latestSubmissionTime = nextMarketClose.AddMinutes(-10.75);
+                if (!security.Exchange.ExchangeOpen || Time > latestSubmissionTime)
                 {
                     // tell the user we require an 11 minute buffer, on minute data in live a user will receive the 3:49->3:50 bar at 3:50,
                     // this is already too late to submit one of these orders, so make the user do it at the 3:48->3:49 bar so it's submitted
@@ -402,7 +422,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Liquidate all holdings. Called at the end of day for tick-strategies.
+        /// Liquidate all holdings and cancel open orders. Called at the end of day for tick-strategies.
         /// </summary>
         /// <param name="symbolToLiquidate">Symbols we wish to liquidate</param>
         /// <returns>Array of order ids for liquidated symbols</returns>
@@ -414,24 +434,49 @@ namespace QuantConnect.Algorithm
 
             foreach (var symbol in Securities.Keys)
             {
-                //Send market order to liquidate if 1, we have stock, 2, symbol matches.
-                if (!Portfolio[symbol].HoldStock || (symbol != symbolToLiquidate && symbolToLiquidate != QuantConnect.Symbol.Empty)) continue;
+                // symbol not matching, do nothing
+                if (symbol != symbolToLiquidate && symbolToLiquidate != QuantConnect.Symbol.Empty) 
+                    continue;
 
-                var quantity = 0;
-                if (Portfolio[symbol].IsLong)
+                // get open orders
+                var orders = Transactions.GetOpenOrders(symbol);
+
+                // get quantity in portfolio
+                var quantity = Portfolio[symbol].Quantity;
+
+                // if there is only one open market order that would close the position, do nothing
+                if (orders.Count == 1 && quantity != 0 && orders[0].Quantity == -quantity && orders[0].Type == OrderType.Market)
+                    continue;
+
+                // cancel all open orders
+                var marketOrdersQuantity = 0m;
+                foreach (var order in orders)
                 {
-                    quantity = -Portfolio[symbol].Quantity;
-                }
-                else
-                {
-                    quantity = Math.Abs(Portfolio[symbol].Quantity);
+                    if (order.Type == OrderType.Market)
+                    {
+                        // pending market order
+                        var ticket = Transactions.GetOrderTicket(order.Id);
+                        if (ticket != null)
+                        {
+                            // get remaining quantity
+                            marketOrdersQuantity += ticket.Quantity - ticket.QuantityFilled;
+                        }
+                    }
+                    else
+                    {
+                        Transactions.CancelOrder(order.Id);
+                    }
                 }
 
-                //Liquidate at market price.
-                var ticket = Order(symbol, quantity);
-                if (ticket.Status == OrderStatus.Filled)
+                // Liquidate at market price
+                if (quantity != 0)
                 {
-                    orderIdList.Add(ticket.OrderId);
+                    // calculate quantity for closing market order
+                    var ticket = Order(symbol, -quantity - marketOrdersQuantity);
+                    if (ticket.Status == OrderStatus.Filled)
+                    {
+                        orderIdList.Add(ticket.OrderId);
+                    }
                 }
             }
 
@@ -567,10 +612,12 @@ namespace QuantConnect.Algorithm
             var targetOrderValue = Math.Abs(targetPortfolioValue - currentHoldingsValue);
             var direction = targetPortfolioValue > currentHoldingsValue ? OrderDirection.Buy : OrderDirection.Sell;
 
+            // determine the unit price in terms of the account currency
+            var unitPrice = new MarketOrder(symbol, 1, UtcTime).GetValue(security);
 
             // define lower and upper thresholds for the iteration
-            var lowerThreshold = targetOrderValue - price/2;
-            var upperThreshold = targetOrderValue + price/2;
+            var lowerThreshold = targetOrderValue - unitPrice / 2;
+            var upperThreshold = targetOrderValue + unitPrice / 2;
 
             // continue iterating while  we're still not within the specified thresholds
             var iterations = 0;
@@ -581,15 +628,15 @@ namespace QuantConnect.Algorithm
                 // find delta from where we are to where we want to be
                 var delta = targetOrderValue - orderValue;
                 // use delta value to compute a change in quantity required
-                var deltaQuantity = (int)(delta / price);
+                var deltaQuantity = (int)(delta / unitPrice);
 
                 orderQuantity += deltaQuantity;
 
                 // recompute order fees
-                var order = new MarketOrder(security.Symbol, orderQuantity, UtcTime, type: security.Type);
-                var fee = security.TransactionModel.GetOrderFee(security, order);
+                var order = new MarketOrder(security.Symbol, orderQuantity, UtcTime);
+                var fee = security.FeeModel.GetOrderFee(security, order);
 
-                orderValue = Math.Abs(order.GetValue(price)) + fee;
+                orderValue = Math.Abs(order.GetValue(security)) + fee;
 
                 // we need to add the fee in as well, even though it's not value, it's still a cost for the transaction
                 // and we need to account for it to be sure we can make the trade produced by this method, imagine

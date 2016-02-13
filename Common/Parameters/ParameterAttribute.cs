@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using QuantConnect.Logging;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Parameters
@@ -28,8 +29,14 @@ namespace QuantConnect.Parameters
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     public class ParameterAttribute : Attribute
     {
-        private const BindingFlags BindingFlags = System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Instance;
+        /// <summary>
+        /// Specifies the binding flags used by this implementation to resolve parameter attributes
+        /// </summary>
+        public const BindingFlags BindingFlags = System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Instance;
 
+        private static readonly string ParameterAttributeNameProperty = "Name";
+        private static readonly string ParameterAttributeFullName = typeof (ParameterAttribute).FullName;
+        
         /// <summary>
         /// Gets the name of this parameter
         /// </summary>
@@ -104,6 +111,41 @@ namespace QuantConnect.Parameters
                     propertyInfo.SetValue(instance, value);
                 }
             }
+        }
+
+        /// <summary>
+        /// Resolves all parameter attributes from the specified compiled assembly path
+        /// </summary>
+        /// <param name="assembly">The assembly to inspect</param>
+        /// <returns>Parameters dictionary keyed by parameter name with a value of the member type</returns>
+        public static Dictionary<string, string> GetParametersFromAssembly(Assembly assembly)
+        {
+            var parameters = new Dictionary<string, string>();
+            foreach (var type in assembly.GetTypes())
+            {
+                Log.Debug("ParameterAttribute.GetParametersFromAssembly(): Checking type " + type.Name);
+                foreach (var field in type.GetFields(BindingFlags))
+                {
+                    var attribute = field.GetCustomAttribute<ParameterAttribute>();
+                    if (attribute != null)
+                    {
+                        var parameterName = attribute.Name ?? field.Name;
+                        parameters[parameterName] = field.FieldType.GetBetterTypeName();
+                    }
+                }
+                foreach (var property in type.GetProperties(BindingFlags))
+                {
+                    // ignore non-writeable properties
+                    if (!property.CanWrite) continue;
+                    var attribute = property.GetCustomAttribute<ParameterAttribute>();
+                    if (attribute != null)
+                    {
+                        var parameterName = attribute.Name ?? property.Name;
+                        parameters[parameterName] = property.PropertyType.Name;
+                    }
+                }
+            }
+            return parameters;
         }
     }
 }

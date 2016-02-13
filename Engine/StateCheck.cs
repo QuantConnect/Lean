@@ -84,6 +84,8 @@ namespace QuantConnect.Lean.Engine
                         Log.Error(err);
                     }
                 }
+
+                Log.Trace("StateCheck.Ping.Run(): Exited thread.");
             }
 
             /// <summary>

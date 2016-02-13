@@ -33,7 +33,12 @@ namespace QuantConnect.Queues
         // The type name of the QuantConnect.Brokerages.Paper.PaperBrokerage
         private const string PaperBrokerageTypeName = "PaperBrokerage";
         private bool _liveMode = Config.GetBool("live-mode");
-        
+        private static readonly string Channel = Config.Get("job-channel");
+        private static readonly int UserId = Config.GetInt("job-user-id", int.MaxValue);
+        private static readonly int ProjectId = Config.GetInt("job-project-id", int.MaxValue);
+        private static readonly string AlgorithmTypeName = Config.Get("algorithm-type-name");
+        private static readonly Language Language = (Language)Enum.Parse(typeof(Language), Config.Get("algorithm-language"));
+
         /// <summary>
         /// Physical location of Algorithm DLL.
         /// </summary>
@@ -79,12 +84,14 @@ namespace QuantConnect.Queues
                     Type = PacketType.LiveNode,
                     Algorithm = File.ReadAllBytes(AlgorithmLocation),
                     Brokerage = Config.Get("live-mode-brokerage", PaperBrokerageTypeName),
-                    Channel = Config.Get("job-channel"),
-                    UserId = Config.GetInt("job-user-id"),
+                    Channel = Channel,
+                    UserId = UserId,
+                    ProjectId = ProjectId,
                     Version = Constants.Version,
-                    DeployId = Config.Get("algorithm-type-name"),
+                    DeployId = AlgorithmTypeName,
                     RamAllocation = int.MaxValue,
-                    Parameters = parameters
+                    Parameters = parameters,
+                    Language = Language,
                 };
 
                 try
@@ -106,10 +113,13 @@ namespace QuantConnect.Queues
             {
                 Type = PacketType.BacktestNode,
                 Algorithm = File.ReadAllBytes(AlgorithmLocation),
+                Channel = Channel,
+                UserId = UserId,
+                ProjectId = ProjectId,
                 Version = Constants.Version,
-                BacktestId = Config.Get("algorithm-type-name"),
+                BacktestId = AlgorithmTypeName,
                 RamAllocation = int.MaxValue,
-                Language = (Language)Enum.Parse(typeof(Language), Config.Get("algorithm-language")),
+                Language = Language,
                 Parameters = parameters
             };
 

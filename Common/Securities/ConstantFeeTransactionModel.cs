@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Securities
@@ -30,7 +31,7 @@ namespace QuantConnect.Securities
         /// <param name="fee">The constant order fee used by the model</param>
         public ConstantFeeTransactionModel(decimal fee)
         {
-            _fee = fee;
+            _fee = Math.Abs(fee);
         }
 
         /// <summary>
@@ -40,14 +41,6 @@ namespace QuantConnect.Securities
         /// <param name="order">The order to compute fees for</param>
         /// <returns>The cost of the order in units of the account currency</returns>
         public override decimal GetOrderFee(Security security, Order order)
-        {
-            return _fee;
-        }
-
-        /// <summary>
-        /// Returns the constant fee for the model
-        /// </summary>
-        public override decimal GetOrderFee(decimal quantity, decimal price)
         {
             return _fee;
         }

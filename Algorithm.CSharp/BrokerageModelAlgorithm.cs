@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Brokerages;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
@@ -99,16 +100,15 @@ namespace QuantConnect.Algorithm.Examples
                 message = null;
                 
                 // we want to model brokerage requirement of _minimumAccountBalance cash value in account
-
-                var price = order.Status.IsFill() ? order.Price : security.Price;
-                var orderCost = order.GetValue(price);
+                
+                var orderCost = order.GetValue(security);
                 var cash = _algorithm.Portfolio.Cash;
                 var cashAfterOrder = cash - orderCost;
                 if (cashAfterOrder < _minimumAccountBalance)
                 {
                     // return a message describing why we're not allowing this order
                     message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "InsufficientRemainingCapital", 
-                        "Account must maintain a minimum of $500 USD at all times. Order ID: " + order.Id
+                        string.Format("Account must maintain a minimum of ${0} USD at all times. Order ID: {1}", _minimumAccountBalance, order.Id)
                         );
                     return false;
                 }

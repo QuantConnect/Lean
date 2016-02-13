@@ -47,6 +47,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private Ref<TimeSpan> _fillForwardResolution;
         private SecurityChanges _changes = SecurityChanges.None;
         private IMapFileProvider _mapFileProvider;
+        private IFactorFileProvider _factorFileProvider;
         private ConcurrentDictionary<Symbol, Subscription> _subscriptions;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private UniverseSelection _universeSelection;
@@ -68,13 +69,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes the data feed for the specified job and algorithm
         /// </summary>
-        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IMapFileProvider mapFileProvider)
+        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider)
         {
             _algorithm = algorithm;
             _resultHandler = resultHandler;
             _mapFileProvider = mapFileProvider;
+            _factorFileProvider = factorFileProvider;
             _subscriptions = new ConcurrentDictionary<Symbol, Subscription>();
-            _universeSelection = new UniverseSelection(this, algorithm);
+            _universeSelection = new UniverseSelection(this, algorithm, job.Controls);
             _cancellationTokenSource = new CancellationTokenSource();
 
             IsActive = true;
@@ -89,7 +91,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             ffres = ResolveFillForwardResolution(algorithm);
 
             // wire ourselves up to receive notifications when universes are added/removed
-            algorithm.Universes.CollectionChanged += (sender, args) =>
+            algorithm.UniverseManager.CollectionChanged += (sender, args) =>
             {
                 switch (args.Action)
                 {
@@ -138,7 +140,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (config.SecurityType == SecurityType.Equity) mapFileResolver = _mapFileProvider.Get(config.Market);
 
             // ReSharper disable once PossibleMultipleEnumeration
-            IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, resultHandler, mapFileResolver, tradeableDates, false);
+            IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, resultHandler, mapFileResolver, _factorFileProvider, tradeableDates, false);
 
             // optionally apply fill forward logic, but never for tick data
             if (config.FillDataForward && config.Resolution != Resolution.Tick)
@@ -209,6 +211,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="utcEndTime">The end time of the subscription</param>
         public bool AddSubscription(Universe universe, Security security, DateTime utcStartTime, DateTime utcEndTime)
         {
+            _fillForwardResolution.Value = ResolveFillForwardResolution(_algorithm);
+
             var subscription = CreateSubscription(universe, _resultHandler, security, utcStartTime, utcEndTime, _fillForwardResolution);
             if (subscription == null)
             {
@@ -328,7 +332,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var exchangeHours = marketHoursDatabase.GetExchangeHours(config);
 
             // create a canonical security object
-            var security = new Security(exchangeHours, config, universe.SubscriptionSettings.Leverage);
+            var security = new Security(exchangeHours, config);
 
             var localStartTime = startTimeUtc.ConvertFromUtc(security.Exchange.TimeZone);
             var localEndTime = endTimeUtc.ConvertFromUtc(security.Exchange.TimeZone);
@@ -361,8 +365,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 // load coarse data day by day
                 var coarse = from date in Time.EachTradeableDay(security, _algorithm.StartDate, _algorithm.EndDate)
-                             let factory = new BaseDataSubscriptionFactory(config, date, false)
-                             let source = cf.GetSource(config, date, false)
+                             let dateInDataTimeZone = date.ConvertTo(config.ExchangeTimeZone, config.DataTimeZone).Date
+                             let factory = new BaseDataSubscriptionFactory(config, dateInDataTimeZone, false)
+                             let source = cf.GetSource(config, dateInDataTimeZone, false)
                              let coarseFundamentalForDate = factory.Read(source)
                              select new BaseDataCollection(date, config.Symbol, coarseFundamentalForDate);
 
@@ -374,7 +379,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             else
             {
                 // normal reader for all others
-                enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, MapFileResolver.Empty, tradeableDates, false);
+                enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, MapFileResolver.Empty, _factorFileProvider, tradeableDates, false);
 
                 // route these custom subscriptions through the exchange for buffering
                 var enqueueable = new EnqueueableEnumerator<BaseData>(true);
@@ -405,7 +410,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return algorithm.SubscriptionManager.Subscriptions
                 .Where(x => !x.IsInternalFeed)
                 .Select(x => x.Resolution)
-                .Union(algorithm.Universes.Select(x => x.Value.SubscriptionSettings.Resolution))
+                .Union(algorithm.UniverseManager.Select(x => x.Value.UniverseSettings.Resolution))
                 .Where(x => x != Resolution.Tick)
                 .DefaultIfEmpty(Resolution.Second)
                 .Min().ToTimeSpan();

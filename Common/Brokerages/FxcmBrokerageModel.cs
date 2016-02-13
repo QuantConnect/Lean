@@ -13,11 +13,13 @@
  * limitations under the License.
 */
 
-using System;
+using System.Collections.Generic;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Forex;
-using QuantConnect.Securities.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages
 {
@@ -26,6 +28,36 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class FxcmBrokerageModel : DefaultBrokerageModel
     {
+        /// <summary>
+        /// The default markets for the fxcm brokerage
+        /// </summary>
+        public new static readonly IReadOnlyDictionary<SecurityType, string> DefaultMarketMap = new Dictionary<SecurityType, string>
+        {
+            {SecurityType.Base, Market.USA},
+            {SecurityType.Equity, Market.USA},
+            {SecurityType.Option, Market.USA},
+            {SecurityType.Forex, Market.FXCM},
+            {SecurityType.Cfd, Market.FXCM}
+        }.ToReadOnlyDictionary();
+
+        /// <summary>
+        /// Gets a map of the default markets to be used for each security type
+        /// </summary>
+        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets
+        {
+            get { return DefaultMarketMap; }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DefaultBrokerageModel"/> class
+        /// </summary>
+        /// <param name="accountType">The type of account to be modelled, defaults to 
+        /// <see cref="QuantConnect.AccountType.Margin"/></param>
+        public FxcmBrokerageModel(AccountType accountType = AccountType.Margin)
+            : base(accountType)
+        {
+        }
+
         /// <summary>
         /// Returns true if the brokerage could accept this order. This takes into account
         /// order type, security type, and order size limits.
@@ -71,38 +103,112 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            // validate order price
-            var invalidPrice = order.Type == OrderType.Limit && order.Direction == OrderDirection.Buy && ((LimitOrder)order).LimitPrice > security.Price ||
-                               order.Type == OrderType.Limit && order.Direction == OrderDirection.Sell && ((LimitOrder)order).LimitPrice < security.Price ||
-                               order.Type == OrderType.StopMarket && order.Direction == OrderDirection.Buy && ((StopMarketOrder)order).StopPrice < security.Price ||
-                               order.Type == OrderType.StopMarket && order.Direction == OrderDirection.Sell && ((StopMarketOrder)order).StopPrice > security.Price;
-            if (invalidPrice)
+            // validate stop/limit orders= prices
+            var limit = order as LimitOrder;
+            if (limit != null)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    "Limit Buy orders and Stop Sell orders must be below market, Limit Sell orders and Stop Buy orders must be above market."
-                    );
+                return IsValidOrderPrices(security, OrderType.Limit, limit.Direction, security.Price, limit.LimitPrice, ref message);
+            }
+
+            var stopMarket = order as StopMarketOrder;
+            if (stopMarket != null)
+            {
+                return IsValidOrderPrices(security, OrderType.StopMarket, stopMarket.Direction, stopMarket.StopPrice, security.Price, ref message);
+            }
+
+            var stopLimit = order as StopLimitOrder;
+            if (stopLimit != null)
+            {
+                return IsValidOrderPrices(security, OrderType.StopLimit, stopLimit.Direction, stopLimit.StopPrice, stopLimit.LimitPrice, ref message);
             }
 
             return true;
         }
 
         /// <summary>
-        /// Gets a new transaction model that represents this brokerage's fee structure and fill behavior
+        /// Returns true if the brokerage would allow updating the order as specified by the request
         /// </summary>
-        /// <param name="security">The security to get a transaction model for</param>
-        /// <returns>The transaction model for this brokerage</returns>
-        public override ISecurityTransactionModel GetTransactionModel(Security security)
+        /// <param name="security">The security of the order</param>
+        /// <param name="order">The order to be updated</param>
+        /// <param name="request">The requested update to be made to the order</param>
+        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be updated</param>
+        /// <returns>True if the brokerage would allow updating the order, false otherwise</returns>
+        public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
-            switch (security.Type)
-            {
-                case SecurityType.Forex:
-                case SecurityType.Cfd:
-                    return new FxcmTransactionModel();
+            message = null;
 
-                default:
-                    throw new ArgumentOutOfRangeException("securityType", security.Type, null);
+            // validate order quantity
+            if (request.Quantity != null && request.Quantity % 1000 != 0)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    "The order quantity must be a multiple of 1000."
+                    );
+
+                return false;
             }
+            
+            // determine direction via the new, updated quantity
+            var newQuantity = request.Quantity ?? order.Quantity;
+            var direction = newQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
+
+            // use security.Price if null, allows to pass checks
+            var stopPrice = request.StopPrice ?? security.Price;
+            var limitPrice = request.LimitPrice ?? security.Price;
+
+            return IsValidOrderPrices(security, order.Type, direction, stopPrice, limitPrice, ref message);
         }
 
+        /// <summary>
+        /// Gets a new fill model that represents this brokerage's fill behavior
+        /// </summary>
+        /// <param name="security">The security to get fill model for</param>
+        /// <returns>The new fill model for this brokerage</returns>
+        public override IFillModel GetFillModel(Security security)
+        {
+            return new ImmediateFillModel();
+        }
+
+        /// <summary>
+        /// Gets a new fee model that represents this brokerage's fee structure
+        /// </summary>
+        /// <param name="security">The security to get a fee model for</param>
+        /// <returns>The new fee model for this brokerage</returns>
+        public override IFeeModel GetFeeModel(Security security)
+        {
+            return new FxcmFeeModel();
+        }
+
+        /// <summary>
+        /// Gets a new slippage model that represents this brokerage's fill slippage behavior
+        /// </summary>
+        /// <param name="security">The security to get a slippage model for</param>
+        /// <returns>The new slippage model for this brokerage</returns>
+        public override ISlippageModel GetSlippageModel(Security security)
+        {
+            return new SpreadSlippageModel();
+        }
+
+        /// <summary>
+        /// Validates limit/stopmarket order prices, pass security.Price for limit/stop if n/a
+        /// </summary>
+        private static bool IsValidOrderPrices(Security security, OrderType orderType, OrderDirection orderDirection, decimal stopPrice, decimal limitPrice, ref BrokerageMessageEvent message)
+        {
+            // validate order price
+            var invalidPrice = orderType == OrderType.Limit && orderDirection == OrderDirection.Buy && limitPrice > security.Price ||
+                orderType == OrderType.Limit && orderDirection == OrderDirection.Sell && limitPrice < security.Price ||
+                orderType == OrderType.StopMarket && orderDirection == OrderDirection.Buy && stopPrice < security.Price ||
+                orderType == OrderType.StopMarket && orderDirection == OrderDirection.Sell && stopPrice > security.Price;
+
+            if (invalidPrice)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    "Limit Buy orders and Stop Sell orders must be below market, Limit Sell orders and Stop Buy orders must be above market."
+                    );
+
+                return false;
+            }
+
+            return true;
+        }
     }
 }

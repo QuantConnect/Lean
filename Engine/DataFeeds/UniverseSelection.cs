@@ -16,10 +16,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 
@@ -32,17 +33,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private readonly IDataFeed _dataFeed;
         private readonly IAlgorithm _algorithm;
+        private readonly SubscriptionLimiter _limiter;
         private readonly MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+        private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UniverseSelection"/> class
         /// </summary>
         /// <param name="dataFeed">The data feed to add/remove subscriptions from</param>
         /// <param name="algorithm">The algorithm to add securities to</param>
-        public UniverseSelection(IDataFeed dataFeed, IAlgorithm algorithm)
+        /// <param name="controls">Specifies limits on the algorithm's memory usage</param>
+        public UniverseSelection(IDataFeed dataFeed, IAlgorithm algorithm, Controls controls)
         {
             _dataFeed = dataFeed;
             _algorithm = algorithm;
+            _limiter = new SubscriptionLimiter(() => dataFeed.Subscriptions, controls.TickLimit, controls.SecondLimit, controls.MinuteLimit);
         }
 
         /// <summary>
@@ -53,32 +58,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="universeData">The data provided to perform selection with</param>
         public SecurityChanges ApplyUniverseSelection(Universe universe, DateTime dateTimeUtc, BaseDataCollection universeData)
         {
-            var settings = universe.SubscriptionSettings;
-
-            var limit = 1000; //daily/hourly limit
-            var resolution = settings.Resolution;
-            switch (resolution)
-            {
-                case Resolution.Tick:
-                    limit = _algorithm.Securities.TickLimit;
-                    break;
-                case Resolution.Second:
-                    limit = _algorithm.Securities.SecondLimit;
-                    break;
-                case Resolution.Minute:
-                    limit = _algorithm.Securities.MinuteLimit;
-                    break;
-            }
-
-            // subtract current subscriptions that can't be removed
-            limit -= _algorithm.Securities.Count(x => x.Value.Resolution == resolution && x.Value.HoldStock);
-
-            if (limit < 1)
-            {
-                // if we don't have room for more securities then we can't really do anything here.
-                _algorithm.Error("Unable to add  more securities from universe selection due to holding stock.");
-                return SecurityChanges.None;
-            }
+            var settings = universe.UniverseSettings;
 
             // perform initial filtering and limit the result
             var selectSymbolsResult = universe.SelectSymbols(dateTimeUtc, universeData.Data);
@@ -89,7 +69,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return SecurityChanges.None;
             }
 
-            var selections = selectSymbolsResult.Take(limit).ToHashSet();
+            // materialize the enumerable into a set for processing
+            var selections = selectSymbolsResult.ToHashSet();
 
             // create a hash set of our existing subscriptions by sid
             var existingSubscriptions = _dataFeed.Subscriptions.ToHashSet(x => x.Security.Symbol);
@@ -114,6 +95,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // if we've selected this subscription again, keep it
                 if (selections.Contains(config.Symbol)) continue;
 
+                // don't remove if the universe wants to keep him in
+                if (!universe.CanRemoveMember(dateTimeUtc, subscription.Security)) continue;
+
                 // let the algorithm know this security has been removed from the universe
                 removals.Add(subscription.Security);
 
@@ -128,7 +112,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     if (_dataFeed.RemoveSubscription(subscription))
                     {
-                        universe.RemoveMember(subscription.Security);
+                        universe.RemoveMember(dateTimeUtc, subscription.Security);
                     }
                 }
             }
@@ -138,12 +122,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 // we already have a subscription for this symbol so don't re-add it
                 if (existingSubscriptions.Contains(symbol)) continue;
+
+                // ask the limiter if we can add another subscription at that resolution
+                string reason;
+                if (!_limiter.CanAddSubscription(settings.Resolution, out reason))
+                {
+                    _algorithm.Error(reason);
+                    Log.Trace("UniverseSelection.ApplyUniverseSelection(): Skipping adding subscriptions: " + reason);
+                    break;
+                }
                 
                 // create the new security, the algorithm thread will add this at the appropriate time
                 Security security;
                 if (!_algorithm.Securities.TryGetValue(symbol, out security))
                 {
-                    security = SecurityManager.CreateSecurity(_algorithm.Portfolio, _algorithm.SubscriptionManager, _marketHoursDatabase,
+                    security = SecurityManager.CreateSecurity(_algorithm.Portfolio, _algorithm.SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, _algorithm.SecurityInitializer,
                         symbol,
                         settings.Resolution,
                         settings.FillForward,
@@ -159,7 +152,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // add the new subscriptions to the data feed
                 if (_dataFeed.AddSubscription(universe, security, dateTimeUtc, _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone)))
                 {
-                    universe.AddMember(security);
+                    universe.AddMember(dateTimeUtc, security);
+                }
+            }
+
+            // Add currency data feeds that weren't explicitly added in Initialize
+            if (additions.Count > 0)
+            {
+                var addedSecurities = _algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(_algorithm.Securities, _algorithm.SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, _algorithm.BrokerageModel.DefaultMarkets);
+                foreach (var security in addedSecurities)
+                {
+                    _dataFeed.AddSubscription(universe, security, dateTimeUtc, _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone));
                 }
             }
 

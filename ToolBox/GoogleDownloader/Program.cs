@@ -60,7 +60,7 @@ namespace QuantConnect.ToolBox.GoogleDownloader
                     var data = downloader.Get(symbolObject, resolution, startDate, endDate);
 
                     // Save the data
-                    var writer = new LeanDataWriter(SecurityType.Equity, resolution, symbolObject, dataDirectory, market);
+                    var writer = new LeanDataWriter(resolution, symbolObject, dataDirectory);
                     writer.Write(data);
                 }
             }

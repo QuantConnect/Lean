@@ -254,7 +254,7 @@ namespace QuantConnect
         /// Helper overload that will search the mapfiles to resolve the first date. This implementation
         /// uses the configured <see cref="IMapFileProvider"/> via the <see cref="Composer.Instance"/>
         /// </summary>
-        /// <param name="symbol">The symbol a it is known today</param>
+        /// <param name="symbol">The symbol as it is known today</param>
         /// <param name="market">The market</param>
         /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified symbol today</returns>
         public static SecurityIdentifier GenerateEquity(string symbol, string market)

@@ -13,12 +13,15 @@
  * limitations under the License.
 */
 
+using System;
+using QuantConnect.Securities;
+
 namespace QuantConnect.Data.UniverseSelection
 {
     /// <summary>
     /// Defines settings required when adding a subscription
     /// </summary>
-    public class SubscriptionSettings
+    public class UniverseSettings
     {
         /// <summary>
         /// The resolution to be used
@@ -41,18 +44,26 @@ namespace QuantConnect.Data.UniverseSelection
         public bool ExtendedMarketHours;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SubscriptionSettings"/> class
+        /// Defines the minimum amount of time a security must be in
+        /// the universe before being removed.
+        /// </summary>
+        public TimeSpan MinimumTimeInUniverse;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UniverseSettings"/> class
         /// </summary>
         /// <param name="resolution">The resolution</param>
         /// <param name="leverage">The leverage to be used</param>
         /// <param name="fillForward">True to fill data forward, false otherwise</param>
         /// <param name="extendedMarketHours">True to allow exended market hours data, false otherwise</param>
-        public SubscriptionSettings(Resolution resolution, decimal leverage, bool fillForward, bool extendedMarketHours)
+        /// <param name="minimumTimeInUniverse">Defines the minimum amount of time a security must remain in the universe before being removed</param>
+        public UniverseSettings(Resolution resolution, decimal leverage, bool fillForward, bool extendedMarketHours, TimeSpan minimumTimeInUniverse)
         {
             Resolution = resolution;
             Leverage = leverage;
             FillForward = fillForward;
             ExtendedMarketHours = extendedMarketHours;
+            MinimumTimeInUniverse = minimumTimeInUniverse;
         }
     }
 }

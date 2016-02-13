@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using QuantConnect.Brokerages.Oanda.DataType;
 using QuantConnect.Brokerages.Oanda.Framework;
 using QuantConnect.Brokerages.Oanda.Session;
@@ -33,7 +34,7 @@ namespace QuantConnect.Brokerages.Oanda
     public partial class OandaBrokerage : Brokerage, IDataQueueHandler
     {
         private readonly IOrderProvider _orderProvider;
-        private readonly IHoldingsProvider _holdingsProvider;
+        private readonly ISecurityProvider _securityProvider;
         private readonly Environment _environment;
         private readonly string _accessToken;
         private readonly int _accountId;
@@ -42,21 +43,27 @@ namespace QuantConnect.Brokerages.Oanda
         private Dictionary<string, Instrument> _oandaInstruments; 
         private readonly OandaSymbolMapper _symbolMapper = new OandaSymbolMapper();
 
-        private bool _isConnected = false;
+        private bool _isConnected;
+
+        private DateTime _lastHeartbeatUtcTime;
+        private Thread _connectionMonitorThread;
+        private readonly object _lockerConnectionMonitor = new object();
+        private volatile bool _connectionLost;
+        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OandaBrokerage"/> class.
         /// </summary>
         /// <param name="orderProvider">The order provider.</param>
-        /// <param name="holdingsProvider">The holdings provider.</param>
+        /// <param name="securityProvider">The holdings provider.</param>
         /// <param name="environment">The Oanda environment (Trade or Practice)</param>
         /// <param name="accessToken">The Oanda access token (can be the user's personal access token or the access token obtained with OAuth by QC on behalf of the user)</param>
         /// <param name="accountId">The account identifier.</param>
-        public OandaBrokerage(IOrderProvider orderProvider, IHoldingsProvider holdingsProvider, Environment environment, string accessToken, int accountId)
+        public OandaBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, int accountId)
             : base("Oanda Brokerage")
         {
             _orderProvider = orderProvider;
-            _holdingsProvider = holdingsProvider;
+            _securityProvider = securityProvider;
 
             if (environment != Environment.Trade && environment != Environment.Practice)
                 throw new NotSupportedException("Oanda Environment not supported: " + environment);
@@ -73,7 +80,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         public override bool IsConnected
         {
-            get { return _isConnected; }
+            get { return _isConnected && !_connectionLost; }
         }
 
         /// <summary>
@@ -92,6 +99,103 @@ namespace QuantConnect.Brokerages.Oanda
             _eventsSession.StartSession();
 
             _isConnected = true;
+
+            // create new thread to manage disconnections and reconnections
+            _cancellationTokenSource = new CancellationTokenSource();
+            _connectionMonitorThread = new Thread(() =>
+            {
+                var nextReconnectionAttemptUtcTime = DateTime.UtcNow;
+                double nextReconnectionAttemptSeconds = 1;
+
+                lock (_lockerConnectionMonitor)
+                {
+                    _lastHeartbeatUtcTime = DateTime.UtcNow;
+                }
+
+                try
+                {
+                    while (!_cancellationTokenSource.IsCancellationRequested)
+                    {
+                        TimeSpan elapsed;
+                        lock (_lockerConnectionMonitor)
+                        {
+                            elapsed = DateTime.UtcNow - _lastHeartbeatUtcTime;
+                        }
+
+                        if (!_connectionLost && elapsed > TimeSpan.FromSeconds(20))
+                        {
+                            _connectionLost = true;
+                            nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
+
+                            OnMessage(BrokerageMessageEvent.Disconnected("Connection with Oanda server lost. " +
+                                                                         "This could be because of internet connectivity issues. "));
+                        }
+                        else if (_connectionLost)
+                        {
+                            try
+                            {
+                                if (elapsed <= TimeSpan.FromSeconds(20))
+                                {
+                                    _connectionLost = false;
+                                    nextReconnectionAttemptSeconds = 1;
+
+                                    OnMessage(BrokerageMessageEvent.Reconnected("Connection with Oanda server restored."));
+                                }
+                                else
+                                {
+                                    if (DateTime.UtcNow > nextReconnectionAttemptUtcTime)
+                                    {
+                                        try
+                                        {
+                                            // check if we have a connection
+                                            GetInstruments();
+
+                                            // restore events session
+                                            if (_eventsSession != null)
+                                            {
+                                                _eventsSession.DataReceived -= OnEventReceived;
+                                                _eventsSession.StopSession();
+                                            }
+                                            _eventsSession = new EventsSession(this, _accountId);
+                                            _eventsSession.DataReceived += OnEventReceived;
+                                            _eventsSession.StartSession();
+
+                                            // restore rates session
+                                            List<Symbol> symbolsToSubscribe;
+                                            lock (_lockerSubscriptions)
+                                            {
+                                                symbolsToSubscribe = _subscribedSymbols.ToList();
+                                            }
+                                            SubscribeSymbols(symbolsToSubscribe);
+                                        }
+                                        catch (Exception)
+                                        {
+                                            // double the interval between attempts (capped to 1 minute)
+                                            nextReconnectionAttemptSeconds = Math.Min(nextReconnectionAttemptSeconds * 2, 60);
+                                            nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
+                                        }
+                                    }
+                                }
+                            }
+                            catch (Exception exception)
+                            {
+                                Log.Error(exception);
+                            }
+                        }
+
+                        Thread.Sleep(1000);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    Log.Error(exception);
+                }
+            });
+            _connectionMonitorThread.Start();
+            while (!_connectionMonitorThread.IsAlive)
+            {
+                Thread.Sleep(1);
+            }
         }
 
         /// <summary>
@@ -99,8 +203,21 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         public override void Disconnect()
         {
-            _eventsSession.StopSession();
-            _ratesSession.StopSession();
+            if (_eventsSession != null)
+            {
+                _eventsSession.DataReceived -= OnEventReceived;
+                _eventsSession.StopSession();
+            }
+
+            if (_ratesSession != null)
+            {
+                _ratesSession.DataReceived -= OnDataReceived;
+                _ratesSession.StopSession();
+            }
+
+            // request and wait for thread to stop
+            _cancellationTokenSource.Cancel();
+            _connectionMonitorThread.Join();
 
             _isConnected = false;
         }
@@ -124,7 +241,27 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>The current holdings from the account</returns>
         public override List<Holding> GetAccountHoldings()
         {
-            var holdings = GetPositions(_accountId).Select(ConvertHolding).ToList();
+            var holdings = GetPositions(_accountId).Select(ConvertHolding).Where(x => x.Quantity != 0).ToList();
+
+            // Set MarketPrice in each Holding
+            var oandaSymbols = holdings
+                .Select(x => _symbolMapper.GetBrokerageSymbol(x.Symbol))
+                .ToList();
+
+            if (oandaSymbols.Count > 0)
+            {
+                var quotes = GetRates(oandaSymbols).ToDictionary(x => x.instrument);
+                foreach (var holding in holdings)
+                {
+                    var oandaSymbol = _symbolMapper.GetBrokerageSymbol(holding.Symbol);
+                    Price quote;
+                    if (quotes.TryGetValue(oandaSymbol, out quote))
+                    {
+                        holding.MarketPrice = Convert.ToDecimal((quote.bid + quote.ask) / 2);
+                    }
+                }
+            }
+
             return holdings;
         }
 
@@ -179,7 +316,7 @@ namespace QuantConnect.Brokerages.Oanda
                 }
                 else
                 {
-                    order.BrokerId.Add(postOrderResponse.tradeOpened.id);
+                    order.BrokerId.Add(postOrderResponse.tradeOpened.id.ToString());
                 }
             }
 
@@ -191,7 +328,7 @@ namespace QuantConnect.Brokerages.Oanda
                 }
                 else
                 {
-                    order.BrokerId.Add(postOrderResponse.tradeReduced.id);
+                    order.BrokerId.Add(postOrderResponse.tradeReduced.id.ToString());
                 }
             }
 
@@ -199,7 +336,7 @@ namespace QuantConnect.Brokerages.Oanda
             {
                 if (order.Type != OrderType.Market)
                 {
-                    order.BrokerId.Add(postOrderResponse.orderOpened.id);
+                    order.BrokerId.Add(postOrderResponse.orderOpened.id.ToString());
                 }
             }
 
@@ -254,7 +391,7 @@ namespace QuantConnect.Brokerages.Oanda
             // we need the brokerage order id in order to perform an update
             PopulateOrderRequestParameters(order, requestParams);
 
-            UpdateOrder(order.BrokerId.First(), requestParams);
+            UpdateOrder(long.Parse(order.BrokerId.First()), requestParams);
 
             return true;
         }
@@ -276,7 +413,7 @@ namespace QuantConnect.Brokerages.Oanda
 
             foreach (var orderId in order.BrokerId)
             {
-                CancelOrder(orderId);
+                CancelOrder(long.Parse(orderId));
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Oanda Cancel Order Event") { Status = OrderStatus.Canceled });
             }
 

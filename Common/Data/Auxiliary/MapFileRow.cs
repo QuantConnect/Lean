@@ -136,5 +136,10 @@ namespace QuantConnect.Data.Auxiliary
         }
 
         #endregion
+
+        public override string ToString()
+        {
+            return Date.ToShortDateString() + ": " + MappedSymbol;
+        }
     }
 }
