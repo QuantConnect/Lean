@@ -102,6 +102,42 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Icons\application-exit-16.png" />
+    <Content Include="Icons\applications-utilities-128.png" />
+    <Content Include="Icons\dialog-cancel-32.png" />
+    <Content Include="Icons\dialog-close-32.png" />
+    <Content Include="Icons\dialog-ok-apply-32.png" />
+    <Content Include="Icons\document-new-16.png" />
+    <Content Include="Icons\document-open-16.png" />
+    <Content Include="Icons\document-open-32.png" />
+    <Content Include="Icons\document-open-folder-32.png" />
+    <Content Include="Icons\documentation-16.png" />
+    <Content Include="Icons\download.png" />
+    <Content Include="Icons\folder-open-16.ico" />
+    <Content Include="Icons\folder-open-16.png" />
+    <Content Include="Icons\help-about-16.png" />
+    <Content Include="Icons\icon_128x128.png" />
+    <Content Include="Icons\kformula-16.ico" />
+    <Content Include="Icons\kformula-16.png" />
+    <Content Include="Icons\kformula-32.png" />
+    <Content Include="Icons\lean.ico" />
+    <Content Include="Icons\office-chart-area-16.png" />
+    <Content Include="Icons\preferences-other.png" />
+    <Content Include="Icons\server-database.png" />
+    <Content Include="Icons\window-cascade.png" />
+    <Content Include="Icons\window-new-16.png" />
+    <Content Include="Icons\window-tile-horizontal.png" />
+    <Content Include="Icons\window-tile-vertical.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="WinForms\LeanEngineWinForm.resx">
+      <DependentUpon>LeanEngineWinForm.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
