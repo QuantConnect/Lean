@@ -39,7 +39,7 @@ namespace QuantConnect.Securities.Forex
                 symbolProperties,
                 new ForexExchange(exchangeHours),
                 new ForexCache(),
-                new ForexPortfolioModel(),
+                new SecurityPortfolioModel(),
                 new ImmediateFillModel(),
                 new InteractiveBrokersFeeModel(),
                 new SpreadSlippageModel(),

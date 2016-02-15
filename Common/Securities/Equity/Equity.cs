@@ -47,7 +47,7 @@ namespace QuantConnect.Securities.Equity
                 symbolProperties,
                 new EquityExchange(exchangeHours),
                 new EquityCache(),
-                new EquityPortfolioModel(),
+                new SecurityPortfolioModel(),
                 new ImmediateFillModel(),
                 new InteractiveBrokersFeeModel(),
                 new ConstantSlippageModel(0m),

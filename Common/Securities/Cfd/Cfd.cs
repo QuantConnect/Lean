@@ -40,7 +40,7 @@ namespace QuantConnect.Securities.Cfd
                 symbolProperties,
                 new CfdExchange(exchangeHours),
                 new CfdCache(),
-                new CfdPortfolioModel(),
+                new SecurityPortfolioModel(),
                 new ImmediateFillModel(),
                 new ConstantFeeModel(0),
                 new SpreadSlippageModel(),
