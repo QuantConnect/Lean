@@ -35,36 +35,15 @@ namespace QuantConnect.Views.WinForms
     {
         private readonly Engine _engine;
         //Form Controls:
-        private RichTextBox _console;
+        private readonly RichTextBox _console;
         #region FormElementDeclarations
 
         //Menu Form elements:
         private GroupBox _logGroupBox;
         private MenuStrip _menu;
         private ToolStripMenuItem _menuFile;
-        private ToolStripMenuItem _menuFileOpen;
-        private ToolStripSeparator _menuFileSeparator;
-        private ToolStripMenuItem _menuFileNewBacktest;
         private ToolStripMenuItem _menuFileExit;
-        private ToolStripMenuItem _menuView;
-        private ToolStripMenuItem _menuViewToolBar;
-        private ToolStripMenuItem _menuViewStatusBar;
-        private ToolStripMenuItem _menuData;
-        private ToolStripMenuItem _menuDataOpenFolder;
-        private ToolStripMenuItem _menuDataDownloadData;
-        private ToolStripMenuItem _menuTools;
-        private ToolStripMenuItem _menuToolsSettings;
-        private ToolStripMenuItem _menuWindows;
-        private ToolStripMenuItem _menuWindowsCascade;
-        private ToolStripMenuItem _menuWindowsTileVertical;
-        private ToolStripMenuItem _menuWindowsTileHorizontal;
-        private ToolStripMenuItem _menuHelp;
-        private ToolStripMenuItem _menuHelpAbout;
-        //Toolstrip form elements:
-        private ToolStrip _toolStrip;
-        private ToolStripButton _toolStripOpen;
-        private ToolStripSeparator _toolStripSeparator;
-        private ToolStripButton _toolStripNewBacktest;
+
         //Status Stripe Elements:
         private StatusStrip _statusStrip;
         private ToolStripStatusLabel _statusStripLabel;
@@ -81,7 +60,6 @@ namespace QuantConnect.Views.WinForms
         private IResultHandler _resultsHandler;
         private bool _isComplete = false;
         private static Thread _leanEngineThread;
-        private GroupBox groupBox1;
 
         //Setup Configuration:
         public static string IconPath = "../../Icons/";
@@ -103,32 +81,38 @@ namespace QuantConnect.Views.WinForms
             CenterToScreen();
             WindowState = FormWindowState.Maximized;
             Icon = new Icon("../../../lean.ico");
-            var openIcon = Image.FromFile(Path.Combine(IconPath, "folder-open-16.png"));
+            var exitIcon = Image.FromFile(Path.Combine(IconPath, "application-exit-16.png"));
+            
+            _logGroupBox = new GroupBox
+            {
+                Parent = this,
+                Location = new Point(10, 40),
+                Size = new Size(989, 662),
+                AutoSize = true,
+                Text = "Log",
+                Anchor = (AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top | AnchorStyles.Bottom)
+            };
 
             //Setup Console Log Area:
-            _console = new RichTextBox();
-            _console.Parent = this;
-            _console.ReadOnly = true;
-            _console.Multiline = true;
-            _console.Location = new Point(0, 384);
-            _console.Size = new Size(1024,322);
-            _console.AutoSize = true;
-            _console.Anchor = (AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top | AnchorStyles.Bottom);
-            _console.Parent = this;
+            _console = new RichTextBox
+            {
+                Parent = _logGroupBox,
+                ReadOnly = true,
+                Multiline = true,
+                Location = new Point(10, 20),
+                Size = new Size(965, 632),
+                AutoSize = true,
+                Anchor = (AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top | AnchorStyles.Bottom)
+            };
             _console.KeyUp += ConsoleOnKeyUp;
-            _toolStrip = new ToolStrip();
-            _toolStripOpen = new ToolStripButton("Open Algorithm", openIcon);
-            _toolStripSeparator = new ToolStripSeparator();
-
-            var newBacktestIcon = Image.FromFile(Path.Combine(IconPath, "office-chart-area-16.png"));
-
-            _toolStripNewBacktest = new ToolStripButton("Launch Backtest", newBacktestIcon) { Enabled = false };
-            _toolStrip.Items.AddRange(new ToolStripItem[] { _toolStripOpen, _toolStripSeparator, _toolStripNewBacktest });
             
             //Add the menu items to the tool strip
             _menu = new MenuStrip();
             _menuFile = new ToolStripMenuItem("&File");
+            _menuFileExit = new ToolStripMenuItem("E&xit", exitIcon, MenuFileExitOnClick);
+            _menuFile.DropDownItems.AddRange(new ToolStripItem[] { _menuFileExit });
             _menu.Items.AddRange(new ToolStripItem[] { _menuFile });
+
             Controls.Add(_menu);
             MainMenuStrip = _menu;
 
@@ -159,7 +143,31 @@ namespace QuantConnect.Views.WinForms
             //Setup Container Events:
             Load += OnLoad;
         }
-        
+
+        /// <summary>
+        /// Gets or sets the minimum size the form can be resized to.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="T:System.Drawing.Size"/> that represents the minimum size for the form.
+        /// </returns>
+        /// <exception cref="T:System.ArgumentOutOfRangeException">The values of the height or width within the <see cref="T:System.Drawing.Size"/> object are less than zero. </exception><PermissionSet><IPermission class="System.Security.Permissions.EnvironmentPermission, mscorlib, Version=2.0.3600.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" version="1" Unrestricted="true"/><IPermission class="System.Security.Permissions.FileIOPermission, mscorlib, Version=2.0.3600.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" version="1" Unrestricted="true"/><IPermission class="System.Security.Permissions.SecurityPermission, mscorlib, Version=2.0.3600.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" version="1" Flags="UnmanagedCode, ControlEvidence"/><IPermission class="System.Diagnostics.PerformanceCounterPermission, System, Version=2.0.3600.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" version="1" Unrestricted="true"/></PermissionSet>
+        public override sealed Size MinimumSize
+        {
+            get { return base.MinimumSize; }
+            set { base.MinimumSize = value; }
+        }
+
+
+        /// <summary>
+        /// Cancel any running backtest, dispose of the forms and exit the application.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="eventArgs"></param>
+        private void MenuFileExitOnClick(object sender, EventArgs eventArgs)
+        {
+            Application.Exit();
+        }
+
         /// <summary>
         /// Initialization events on loading the container
         /// </summary>
@@ -182,7 +190,7 @@ namespace QuantConnect.Views.WinForms
         /// </remarks>
         static public void Main()
         {
-            string algorithm = "BasicTemplateAlgorithm";
+            const string algorithm = "BasicTemplateAlgorithm";
 
             Console.WriteLine("Running " + algorithm + "...");
 
@@ -306,29 +314,5 @@ namespace QuantConnect.Views.WinForms
             _console.AppendText(message, color);
             _console.Refresh();
         }
-
-        private void InitializeComponent()
-        {
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.SuspendLayout();
-            // 
-            // groupBox1
-            // 
-            this.groupBox1.Location = new System.Drawing.Point(52, 133);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(200, 100);
-            this.groupBox1.TabIndex = 0;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Log";
-            // 
-            // LeanEngineWinForm
-            // 
-            this.ClientSize = new System.Drawing.Size(284, 261);
-            this.Controls.Add(this.groupBox1);
-            this.Name = "LeanEngineWinForm";
-            this.ResumeLayout(false);
-
-        }
-
     }
 }
