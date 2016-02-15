@@ -22,8 +22,10 @@ using System.Windows.Forms;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Lean.Engine.Results;
-using QuantConnect.Packets;
 using QuantConnect.Util;
+using QuantConnect.Views.Model;
+using QuantConnect.Views.Presenter;
+using QuantConnect.Views.View;
 using Timer = System.Windows.Forms.Timer;
 
 namespace QuantConnect.Views.WinForms
@@ -31,11 +33,14 @@ namespace QuantConnect.Views.WinForms
     /// <summary>
     /// Primary Form for use with LEAN:
     /// </summary>
-    public partial class LeanEngineWinForm : Form
+    public partial class LeanEngineWinForm : Form, ILeanEngineWinFormView
     {
-        private readonly Engine _engine;
+        public Engine Engine { get; private set;}
         //Form Controls:
-        private readonly RichTextBox _console;
+        public RichTextBox Log { get; private set; }
+
+        public IResultHandler ResultsHandler { get; private set; }
+
         #region FormElementDeclarations
 
         //Menu Form elements:
@@ -49,6 +54,7 @@ namespace QuantConnect.Views.WinForms
         private ToolStripStatusLabel _statusStripLabel;
         private ToolStripStatusLabel _statusStripStatistics;
         private ToolStripProgressBar _statusStripProgress;
+        private ToolStripStatusLabel _statusStripSpring;
         
         //Timer;
         private Timer _timer;
@@ -57,9 +63,9 @@ namespace QuantConnect.Views.WinForms
 
         //Form Business Logic:
         private Timer _polling;
-        private IResultHandler _resultsHandler;
         private bool _isComplete = false;
         private static Thread _leanEngineThread;
+        private LeanEngineWinFormPresenter _presenter;
 
         //Setup Configuration:
         public static string IconPath = "../../Icons/";
@@ -70,9 +76,11 @@ namespace QuantConnect.Views.WinForms
         /// <param name="engine">Accept the engine instance we just launched</param>
         public LeanEngineWinForm(Engine engine)
         {
-            _engine = engine;
-            //Setup the State:
-            _resultsHandler = engine.AlgorithmHandlers.Results;
+            var model = new LeanEngineWinFormModel();
+            _presenter = new LeanEngineWinFormPresenter(this, model);
+            Engine = engine;
+            ResultsHandler = engine.AlgorithmHandlers.Results;
+            //_presenter.ShowView();
 
             //Create Form:
             Text = "QuantConnect Lean Algorithmic Trading Engine: v" + Constants.Version;
@@ -94,7 +102,7 @@ namespace QuantConnect.Views.WinForms
             };
 
             //Setup Console Log Area:
-            _console = new RichTextBox
+            Log = new RichTextBox
             {
                 Parent = _logGroupBox,
                 ReadOnly = true,
@@ -104,12 +112,13 @@ namespace QuantConnect.Views.WinForms
                 AutoSize = true,
                 Anchor = (AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top | AnchorStyles.Bottom)
             };
-            _console.KeyUp += ConsoleOnKeyUp;
+
+            Log.KeyUp += ConsoleOnKeyUp;
             
             //Add the menu items to the tool strip
             _menu = new MenuStrip();
             _menuFile = new ToolStripMenuItem("&File");
-            _menuFileExit = new ToolStripMenuItem("E&xit", exitIcon, MenuFileExitOnClick);
+            _menuFileExit = new ToolStripMenuItem("E&xit", exitIcon, ExitApplication);
             _menuFile.DropDownItems.AddRange(new ToolStripItem[] { _menuFileExit });
             _menu.Items.AddRange(new ToolStripItem[] { _menuFile });
 
@@ -120,54 +129,32 @@ namespace QuantConnect.Views.WinForms
             _statusStrip = new StatusStrip();
             _statusStripLabel = new ToolStripStatusLabel("Loading Complete");
             _statusStripProgress = new ToolStripProgressBar();
+            _statusStripSpring = new ToolStripStatusLabel { Spring = true };
             _statusStripStatistics = new ToolStripStatusLabel("Statistics: CPU:    Ram:    ");
-            _statusStrip.Items.AddRange(new ToolStripItem[] { _statusStripLabel, _statusStripStatistics, _statusStripProgress });
+            _statusStrip.Items.AddRange(new ToolStripItem[] { _statusStripLabel, _statusStripSpring, _statusStripStatistics, _statusStripProgress });
+            
             Controls.Add(_statusStrip);
             
             Name = "LeanEngineWinForm";
             ResumeLayout(false);
 
             //Form Events:
-            Closed += OnClosed;
+            Closed += ExitApplication;
 
             //Setup Polling Events:
             _polling = new Timer { Interval = 1000 };
-            _polling.Tick += PollingOnTick;
+            _polling.Tick += PollingTick;
             _polling.Start();
 
             //Trigger a timer event.
             _timer = new Timer { Interval = 1000 };
-            _timer.Tick += TimerOnTick;
+            _timer.Tick += TickerTick;
 
 
             //Setup Container Events:
             Load += OnLoad;
         }
-
-        /// <summary>
-        /// Gets or sets the minimum size the form can be resized to.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="T:System.Drawing.Size"/> that represents the minimum size for the form.
-        /// </returns>
-        /// <exception cref="T:System.ArgumentOutOfRangeException">The values of the height or width within the <see cref="T:System.Drawing.Size"/> object are less than zero. </exception><PermissionSet><IPermission class="System.Security.Permissions.EnvironmentPermission, mscorlib, Version=2.0.3600.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" version="1" Unrestricted="true"/><IPermission class="System.Security.Permissions.FileIOPermission, mscorlib, Version=2.0.3600.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" version="1" Unrestricted="true"/><IPermission class="System.Security.Permissions.SecurityPermission, mscorlib, Version=2.0.3600.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" version="1" Flags="UnmanagedCode, ControlEvidence"/><IPermission class="System.Diagnostics.PerformanceCounterPermission, System, Version=2.0.3600.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" version="1" Unrestricted="true"/></PermissionSet>
-        public override sealed Size MinimumSize
-        {
-            get { return base.MinimumSize; }
-            set { base.MinimumSize = value; }
-        }
-
-
-        /// <summary>
-        /// Cancel any running backtest, dispose of the forms and exit the application.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="eventArgs"></param>
-        private void MenuFileExitOnClick(object sender, EventArgs eventArgs)
-        {
-            Application.Exit();
-        }
-
+        
         /// <summary>
         /// Initialization events on loading the container
         /// </summary>
@@ -209,7 +196,6 @@ namespace QuantConnect.Views.WinForms
             var engine = LaunchLean();
 
             //Start GUI
-            // steal the desktop result handler from the composer's instance
             Application.Run(new LeanEngineWinForm(engine));
         }
 
@@ -227,92 +213,23 @@ namespace QuantConnect.Views.WinForms
             //_leanEngineThread = new Thread(() =>
             //{
             //    string algorithmPath;
-            //    //var job = systemHandlers.JobQueue.NextJob(out algorithmPath);
-            //    //engine.Run(job, algorithmPath);
-            //    //systemHandlers.JobQueue.AcknowledgeJob(job);
+            //    var job = systemHandlers.JobQueue.NextJob(out algorithmPath);
+            //    engine.Run(job, algorithmPath);
+            //    systemHandlers.JobQueue.AcknowledgeJob(job);
             //});
-            ////_leanEngineThread.Start();
+            //_leanEngineThread.Start();
 
             return engine;
         }
 
+        public event EventHandler TickerTick;
+        public event EventHandler PollingTick;
+        public event EventHandler ExitApplication;
+        public event KeyEventHandler ConsoleOnKeyUp;
 
-        /// <summary>
-        /// Update performance counters
-        /// </summary>
-        private void TimerOnTick(object sender, EventArgs eventArgs)
+        public void OnPropertyChanged(LeanEngineWinFormModel model)
         {
-            _statusStripStatistics.Text = "Performance: CPU: " + OS.CpuUsage.CounterName + " Ram: " + OS.TotalPhysicalMemoryUsed + " Mb";
-        }
-
-        /// <summary>
-        /// Primary polling thread for the logging and chart display.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="eventArgs"></param>
-        private void PollingOnTick(object sender, EventArgs eventArgs)
-        {
-            Packet message;
-            if (_resultsHandler == null) return;
-            while (_resultsHandler.Messages.TryDequeue(out message))
-            {
-                //Process the packet request:
-                switch (message.Type)
-                {
-                    case PacketType.BacktestResult:
-                        //Draw chart
-                        break;
-
-                    case PacketType.LiveResult:
-                        //Draw streaming chart
-                        break;
-
-                    case PacketType.AlgorithmStatus:
-                        //Algorithm status update
-                        break;
-
-                    case PacketType.RuntimeError:
-                        var runError = message as RuntimeErrorPacket;
-                        if (runError != null) AppendConsole(runError.Message, Color.Red);
-                        break;
-
-                    case PacketType.HandledError:
-                        var handledError = message as HandledErrorPacket;
-                        if (handledError != null) AppendConsole(handledError.Message, Color.Red);
-                        break;
-
-                    case PacketType.Log:
-                        var log = message as LogPacket;
-                        if (log != null) AppendConsole(log.Message);
-                        break;
-
-                    case PacketType.Debug:
-                        var debug = message as DebugPacket;
-                        if (debug != null) AppendConsole(debug.Message);
-                        break;
-
-                    case PacketType.OrderEvent:
-                        //New order event.
-                        break;
-
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-            }
-        }
-
-
-        /// <summary>
-        /// Write to the console in specific font color.
-        /// </summary>
-        /// <param name="message">String to append</param>
-        /// <param name="color">Defaults to black</param>
-        private void AppendConsole(string message, Color color = default(Color))
-        {
-            message = DateTime.Now.ToString("u") + " " + message + Environment.NewLine;
-            //Add to console:
-            _console.AppendText(message, color);
-            _console.Refresh();
+            _statusStripStatistics.Text = model.StatusStripStatisticsText;
         }
     }
 }

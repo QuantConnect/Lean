@@ -45,9 +45,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="WinForms\LeanEngineWinForm.Events.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Include="Model\IModel.cs" />
+    <Compile Include="Model\LeanEngineWinFormModel.cs" />
+    <Compile Include="Presenter\IPresenter.cs" />
+    <Compile Include="Presenter\LeanEngineWinFormPresenter.cs" />
+    <Compile Include="View\ILeanEngineWinFormView.cs" />
     <Compile Include="WinForms\LeanEngineWinForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -139,6 +141,7 @@
       <DependentUpon>LeanEngineWinForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
