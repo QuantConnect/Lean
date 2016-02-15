@@ -250,10 +250,8 @@
     <Compile Include="Securities\Cfd\CfdDataFilter.cs" />
     <Compile Include="Securities\Cfd\CfdExchange.cs" />
     <Compile Include="Securities\Cfd\CfdHolding.cs" />
-    <Compile Include="Securities\Cfd\CfdMarginModel.cs" />
     <Compile Include="Securities\Cfd\CfdPortfolioModel.cs" />
     <Compile Include="Securities\ConstantFeeTransactionModel.cs" />
-    <Compile Include="Securities\Equity\EquityMarginModel.cs" />
     <Compile Include="Securities\Equity\EquityPortfolioModel.cs" />
     <Compile Include="Securities\DelayedSettlementModel.cs" />
     <Compile Include="Securities\FuncSecurityInitializer.cs" />
@@ -266,7 +264,6 @@
     <Compile Include="Securities\SecurityDatabaseKey.cs" />
     <Compile Include="Securities\SecurityExchangeHours.cs" />
     <Compile Include="Securities\MarketHoursDatabase.cs" />
-    <Compile Include="Securities\Forex\ForexMarginModel.cs" />
     <Compile Include="Securities\Forex\ForexPortfolioModel.cs" />
     <Compile Include="Securities\ISecurityProvider.cs" />
     <Compile Include="Securities\IOrderProcessor.cs" />

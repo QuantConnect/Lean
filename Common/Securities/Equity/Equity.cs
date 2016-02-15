@@ -52,7 +52,7 @@ namespace QuantConnect.Securities.Equity
                 new InteractiveBrokersFeeModel(),
                 new ConstantSlippageModel(0m),
                 new ImmediateSettlementModel(),
-                new EquityMarginModel(2m),
+                new SecurityMarginModel(2m),
                 new EquityDataFilter()
                 )
         {
