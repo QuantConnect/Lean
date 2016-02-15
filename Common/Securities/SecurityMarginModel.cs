@@ -185,6 +185,12 @@ namespace QuantConnect.Securities
                 return null;
             }
 
+            if (security.QuoteCurrency.ConversionRate == 0m)
+            {
+                // check for div 0 - there's no conv rate, so we can't place an order
+                return null;
+            }
+
             // compute the amount of quote currency we need to liquidate in order to get within margin requirements
             var deltaInQuoteCurrency = (totalMargin - netLiquidationValue)/security.QuoteCurrency.ConversionRate;
 
