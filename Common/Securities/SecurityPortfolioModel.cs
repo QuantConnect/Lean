@@ -20,8 +20,9 @@ using QuantConnect.Orders;
 namespace QuantConnect.Securities
 {
     /// <summary>
-    /// Provides a default implementation of the <see cref="ISecurityPortfolioModel"/> interface.
-    /// This implementation should be sufficient for <see cref="SecurityType.Base"/> and <see cref="SecurityType.Equity"/>
+    /// Provides a default implementation of <see cref="ISecurityPortfolioModel"/> that simply
+    /// applies the fills to the algorithm's portfolio. This implementation is intended to 
+    /// handle all security types.
     /// </summary>
     public class SecurityPortfolioModel : ISecurityPortfolioModel
     {
@@ -33,6 +34,8 @@ namespace QuantConnect.Securities
         /// <param name="fill">The order event fill object to be applied</param>
         public virtual void ProcessFill(SecurityPortfolioManager portfolio, Security security, OrderEvent fill)
         {
+            var quoteCash = security.QuoteCurrency;
+
             //Get the required information from the vehicle this order will affect
             var isLong = security.Holdings.IsLong;
             var isShort = security.Holdings.IsShort;
@@ -46,28 +49,38 @@ namespace QuantConnect.Securities
 
             try
             {
-                //Update the Vehicle approximate total sales volume.
-                security.Holdings.AddNewSale(fill.FillPrice * Convert.ToDecimal(fill.AbsoluteFillQuantity));
+                // apply sales value to holdings in the account currency
+                var saleValueInQuoteCurrency = fill.FillPrice * Convert.ToDecimal(fill.AbsoluteFillQuantity) * security.SymbolProperties.ContractMultiplier;
+                var saleValue = saleValueInQuoteCurrency * quoteCash.ConversionRate;
+                security.Holdings.AddNewSale(saleValue);
 
-                //Get the Fee for this Order - Update the Portfolio Cash Balance: Remove Transacion Fees.
+                // subtract transaction fees from the portfolio (assumes in account currency)
                 var feeThisOrder = Math.Abs(fill.OrderFee);
                 security.Holdings.AddNewFee(feeThisOrder);
                 portfolio.CashBook[CashBook.AccountCurrency].AddAmount(-feeThisOrder);
 
+                // apply the funds using the current settlement model
+                security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, quoteCash.Symbol, -fill.FillQuantity * fill.FillPrice * security.SymbolProperties.ContractMultiplier);
+                if (security.Type == SecurityType.Forex)
+                {
+                    // model forex fills as currency swaps
+                    var forex = (Forex.Forex) security;
+                    security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, forex.BaseCurrencySymbol, fill.FillQuantity);
+                }
 
-                //Calculate & Update the Last Trade Profit
+                //Calculate & Update the Last Trade Profit;
                 if (isLong && fill.Direction == OrderDirection.Sell)
                 {
                     //Closing up a long position
                     if (quantityHoldings >= fill.AbsoluteFillQuantity)
                     {
-                        //Closing up towards Zero.
-                        lastTradeProfit = (fill.FillPrice - averageHoldingsPrice) * fill.AbsoluteFillQuantity;
+                        //Closing up towards Zero
+                        lastTradeProfit = (fill.FillPrice - averageHoldingsPrice) * fill.AbsoluteFillQuantity * security.SymbolProperties.ContractMultiplier;
                     }
                     else
                     {
                         //Closing up to Neg/Short Position (selling more than we have) - Only calc profit on the stock we have to sell.
-                        lastTradeProfit = (fill.FillPrice - averageHoldingsPrice) * quantityHoldings;
+                        lastTradeProfit = (fill.FillPrice - averageHoldingsPrice) * quantityHoldings * security.SymbolProperties.ContractMultiplier;
                     }
                     closedPosition = true;
                 }
@@ -77,12 +90,12 @@ namespace QuantConnect.Securities
                     if (absoluteHoldingsQuantity >= fill.FillQuantity)
                     {
                         //Reducing the stock we have, and enough stock on hand to process order.
-                        lastTradeProfit = (averageHoldingsPrice - fill.FillPrice) * fill.AbsoluteFillQuantity;
+                        lastTradeProfit = (averageHoldingsPrice - fill.FillPrice) * fill.AbsoluteFillQuantity * security.SymbolProperties.ContractMultiplier;
                     }
                     else
                     {
                         //Increasing stock holdings, short to positive through zero, but only calc profit on stock we Buy.
-                        lastTradeProfit = (averageHoldingsPrice - fill.FillPrice) * absoluteHoldingsQuantity;
+                        lastTradeProfit = (averageHoldingsPrice - fill.FillPrice) * absoluteHoldingsQuantity * security.SymbolProperties.ContractMultiplier;
                     }
                     closedPosition = true;
                 }
@@ -90,15 +103,15 @@ namespace QuantConnect.Securities
 
                 if (closedPosition)
                 {
+                    // convert the computed profit into the account currency
+                    lastTradeProfit *= quoteCash.ConversionRate;
+
                     //Update Vehicle Profit Tracking:
                     security.Holdings.AddNewProfit(lastTradeProfit);
                     security.Holdings.SetLastTradeProfit(lastTradeProfit);
                     portfolio.AddTransactionRecord(security.LocalTime.ConvertToUtc(security.Exchange.TimeZone), lastTradeProfit - 2 * feeThisOrder);
                 }
 
-                // Apply the funds using the current settlement model
-                var amount = fill.FillPrice * Convert.ToDecimal(fill.FillQuantity);
-                security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, CashBook.AccountCurrency, -amount);
 
                 //UPDATE HOLDINGS QUANTITY, AVG PRICE:
                 //Currently NO holdings. The order is ALL our holdings.
@@ -115,10 +128,9 @@ namespace QuantConnect.Securities
                     {
                         case OrderDirection.Buy:
                             //Update the Holding Average Price: Total Value / Total Quantity:
-                            averageHoldingsPrice = ((averageHoldingsPrice * quantityHoldings) + (fill.FillQuantity * fill.FillPrice)) / (quantityHoldings + (decimal)fill.FillQuantity);
+                            averageHoldingsPrice = ((averageHoldingsPrice * quantityHoldings) + (fill.FillQuantity * fill.FillPrice)) / (quantityHoldings + fill.FillQuantity);
                             //Add the new quantity:
                             quantityHoldings += fill.FillQuantity;
-                            //Subtract this order from cash:
                             break;
 
                         case OrderDirection.Sell:
@@ -158,7 +170,7 @@ namespace QuantConnect.Securities
                             //We are increasing a Short position:
                             //E.g.  -100 @ $5, adding -100 @ $10: Avg: $7.5
                             //      dAvg = (-500 + -1000) / -200 = 7.5
-                            averageHoldingsPrice = ((averageHoldingsPrice * quantityHoldings) + (Convert.ToDecimal(fill.FillQuantity) * fill.FillPrice)) / (quantityHoldings + (decimal)fill.FillQuantity);
+                            averageHoldingsPrice = ((averageHoldingsPrice * quantityHoldings) + (fill.FillQuantity * fill.FillPrice)) / (quantityHoldings + fill.FillQuantity);
                             quantityHoldings += fill.FillQuantity;
                             break;
                     }
