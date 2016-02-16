@@ -89,7 +89,8 @@ namespace QuantConnect.Views.WinForms
             CenterToScreen();
             WindowState = FormWindowState.Maximized;
             Icon = new Icon("../../../lean.ico");
-            var exitIcon = Image.FromFile(Path.Combine(IconPath, "application-exit-16.png"));
+
+            var exitIcon = Image.FromStream(System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("QuantConnect.Views.Icons.application-exit-16.png"));
             
             _logGroupBox = new GroupBox
             {
@@ -202,7 +203,7 @@ namespace QuantConnect.Views.WinForms
         /// <summary>
         /// Launch the LEAN Engine in a separate thread.
         /// </summary>
-        private static Engine LaunchLean()
+        public static Engine LaunchLean()
         {
             //Launch the Lean Engine in another thread: this will run the algorithm specified above.
             // TODO > This should only be launched when clicking a backtest/trade live button provided in the UX.
@@ -210,14 +211,14 @@ namespace QuantConnect.Views.WinForms
             var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(Composer.Instance);
             var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance);
             var engine = new Engine(systemHandlers, algorithmHandlers, Config.GetBool("live-mode"));
-            //_leanEngineThread = new Thread(() =>
-            //{
-            //    string algorithmPath;
-            //    var job = systemHandlers.JobQueue.NextJob(out algorithmPath);
-            //    engine.Run(job, algorithmPath);
-            //    systemHandlers.JobQueue.AcknowledgeJob(job);
-            //});
-            //_leanEngineThread.Start();
+            _leanEngineThread = new Thread(() =>
+            {
+                string algorithmPath;
+                var job = systemHandlers.JobQueue.NextJob(out algorithmPath);
+                engine.Run(job, algorithmPath);
+                systemHandlers.JobQueue.AcknowledgeJob(job);
+            });
+            _leanEngineThread.Start();
 
             return engine;
         }

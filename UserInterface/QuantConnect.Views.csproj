@@ -109,7 +109,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Icons\application-exit-16.png" />
+    <EmbeddedResource Include="Icons\application-exit-16.png" />
     <Content Include="Icons\applications-utilities-128.png" />
     <Content Include="Icons\dialog-cancel-32.png" />
     <Content Include="Icons\dialog-close-32.png" />

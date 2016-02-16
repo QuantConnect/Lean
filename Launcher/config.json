@@ -36,6 +36,7 @@
     "command-json-file": "command.json",
     "map-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskMapFileProvider",
     "factor-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskFactorFileProvider",
+    "output-environment" : "gui",
 
     // if one uses "true" as string in following token, market hours
     // will remain open all hours and all days.
