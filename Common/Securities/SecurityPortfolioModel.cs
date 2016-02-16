@@ -45,8 +45,6 @@ namespace QuantConnect.Securities
             var absoluteHoldingsQuantity = security.Holdings.AbsoluteQuantity;
             var averageHoldingsPrice = security.Holdings.AveragePrice;
 
-            var lastTradeProfit = 0m;
-
             try
             {
                 // apply sales value to holdings in the account currency
@@ -67,51 +65,28 @@ namespace QuantConnect.Securities
                     var forex = (Forex.Forex) security;
                     security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, forex.BaseCurrencySymbol, fill.FillQuantity);
                 }
+                
+                // did we close or open a position further?
+                closedPosition = isLong && fill.Direction == OrderDirection.Sell
+                             || isShort && fill.Direction == OrderDirection.Buy;
 
-                //Calculate & Update the Last Trade Profit;
-                if (isLong && fill.Direction == OrderDirection.Sell)
-                {
-                    //Closing up a long position
-                    if (quantityHoldings >= fill.AbsoluteFillQuantity)
-                    {
-                        //Closing up towards Zero
-                        lastTradeProfit = (fill.FillPrice - averageHoldingsPrice) * fill.AbsoluteFillQuantity * security.SymbolProperties.ContractMultiplier;
-                    }
-                    else
-                    {
-                        //Closing up to Neg/Short Position (selling more than we have) - Only calc profit on the stock we have to sell.
-                        lastTradeProfit = (fill.FillPrice - averageHoldingsPrice) * quantityHoldings * security.SymbolProperties.ContractMultiplier;
-                    }
-                    closedPosition = true;
-                }
-                else if (isShort && fill.Direction == OrderDirection.Buy)
-                {
-                    //Closing up a short position.
-                    if (absoluteHoldingsQuantity >= fill.FillQuantity)
-                    {
-                        //Reducing the stock we have, and enough stock on hand to process order.
-                        lastTradeProfit = (averageHoldingsPrice - fill.FillPrice) * fill.AbsoluteFillQuantity * security.SymbolProperties.ContractMultiplier;
-                    }
-                    else
-                    {
-                        //Increasing stock holdings, short to positive through zero, but only calc profit on stock we Buy.
-                        lastTradeProfit = (averageHoldingsPrice - fill.FillPrice) * absoluteHoldingsQuantity * security.SymbolProperties.ContractMultiplier;
-                    }
-                    closedPosition = true;
-                }
-
-
+                // calculate the last trade profit
                 if (closedPosition)
                 {
-                    // convert the computed profit into the account currency
-                    lastTradeProfit *= quoteCash.ConversionRate;
+                    // profit = (closed sale value - cost)*conversion to account currency
+                    // closed sale value = quantity closed * fill price       BUYs are deemed negative cash flow
+                    // cost = quantity closed * average holdings price        SELLS are deemed positive cash flow
+                    var absoluteQuantityClosed = Math.Min(fill.AbsoluteFillQuantity, absoluteHoldingsQuantity);
+                    var closedSaleValueInQuoteCurrency = Math.Sign(-fill.FillQuantity)*fill.FillPrice*absoluteQuantityClosed;
+                    var closedCost = Math.Sign(-fill.FillQuantity)*absoluteQuantityClosed*averageHoldingsPrice;
+                    var conversionFactor = security.QuoteCurrency.ConversionRate*security.SymbolProperties.ContractMultiplier;
+                    var lastTradeProfit = (closedSaleValueInQuoteCurrency - closedCost)*conversionFactor;
 
                     //Update Vehicle Profit Tracking:
                     security.Holdings.AddNewProfit(lastTradeProfit);
                     security.Holdings.SetLastTradeProfit(lastTradeProfit);
-                    portfolio.AddTransactionRecord(security.LocalTime.ConvertToUtc(security.Exchange.TimeZone), lastTradeProfit - 2 * feeThisOrder);
+                    portfolio.AddTransactionRecord(security.LocalTime.ConvertToUtc(security.Exchange.TimeZone), lastTradeProfit - 2*feeThisOrder);
                 }
-
 
                 //UPDATE HOLDINGS QUANTITY, AVG PRICE:
                 //Currently NO holdings. The order is ALL our holdings.
@@ -128,7 +103,7 @@ namespace QuantConnect.Securities
                     {
                         case OrderDirection.Buy:
                             //Update the Holding Average Price: Total Value / Total Quantity:
-                            averageHoldingsPrice = ((averageHoldingsPrice * quantityHoldings) + (fill.FillQuantity * fill.FillPrice)) / (quantityHoldings + fill.FillQuantity);
+                            averageHoldingsPrice = ((averageHoldingsPrice*quantityHoldings) + (fill.FillQuantity*fill.FillPrice))/(quantityHoldings + fill.FillQuantity);
                             //Add the new quantity:
                             quantityHoldings += fill.FillQuantity;
                             break;
@@ -170,7 +145,7 @@ namespace QuantConnect.Securities
                             //We are increasing a Short position:
                             //E.g.  -100 @ $5, adding -100 @ $10: Avg: $7.5
                             //      dAvg = (-500 + -1000) / -200 = 7.5
-                            averageHoldingsPrice = ((averageHoldingsPrice * quantityHoldings) + (fill.FillQuantity * fill.FillPrice)) / (quantityHoldings + fill.FillQuantity);
+                            averageHoldingsPrice = ((averageHoldingsPrice*quantityHoldings) + (fill.FillQuantity*fill.FillPrice))/(quantityHoldings + fill.FillQuantity);
                             quantityHoldings += fill.FillQuantity;
                             break;
                     }
