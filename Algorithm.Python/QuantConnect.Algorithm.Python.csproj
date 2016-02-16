@@ -103,7 +103,10 @@
     <None Include="readme.md" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="AddRemoveSecurityRegressionAlgorithm.py" />
     <Content Include="BasicTemplateAlgorithm.py" />
+    <Content Include="CustomBenchmarkAlgorithm.py" />
+    <Content Include="CustomBrokerageErrorHandlerAlgorithm.py" />
     <Content Include="Lib\abc.py" />
     <Content Include="Lib\aifc.py" />
     <Content Include="Lib\antigravity.py" />
@@ -613,6 +616,7 @@
     <Content Include="Lib\_weakrefset.py" />
     <Content Include="Lib\__future__.py" />
     <Content Include="Lib\__phello__.foo.py" />
+    <Content Include="MovingAverageCrossAlgorithm.py" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
