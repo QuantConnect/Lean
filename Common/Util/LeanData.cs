@@ -337,7 +337,7 @@ namespace QuantConnect.Util
         /// <summary>
         /// Creates the zip file name for a QC zip data file
         /// </summary>
-        public static string GenerateZipFileName(string symbol, SecurityType securityType, DateTime date, Resolution resolution)
+        public static string GenerateZipFileName(string symbol, SecurityType securityType, DateTime date, Resolution resolution, TickType? tickType = null)
         {
             if (resolution == Resolution.Hour || resolution == Resolution.Daily)
             {
@@ -345,11 +345,9 @@ namespace QuantConnect.Util
             }
 
             var zipFileName = date.ToString(DateFormat.EightCharacter);
-            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
-            {
-                return zipFileName + "_quote.zip";
-            }
-            return zipFileName + "_trade.zip";
+            tickType = tickType ?? (securityType == SecurityType.Forex || securityType == SecurityType.Cfd ? TickType.Quote : TickType.Trade);
+            var suffix = string.Format("_{0}.zip", tickType);
+            return zipFileName + suffix;
         }
 
         /// <summary>
