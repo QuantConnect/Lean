@@ -210,14 +210,14 @@ namespace QuantConnect.Views.WinForms
             var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(Composer.Instance);
             var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance);
             var engine = new Engine(systemHandlers, algorithmHandlers, Config.GetBool("live-mode"));
-            //_leanEngineThread = new Thread(() =>
-            //{
-            //    string algorithmPath;
-            //    var job = systemHandlers.JobQueue.NextJob(out algorithmPath);
-            //    engine.Run(job, algorithmPath);
-            //    systemHandlers.JobQueue.AcknowledgeJob(job);
-            //});
-            //_leanEngineThread.Start();
+            _leanEngineThread = new Thread(() =>
+            {
+                string algorithmPath;
+                var job = systemHandlers.JobQueue.NextJob(out algorithmPath);
+                engine.Run(job, algorithmPath);
+                systemHandlers.JobQueue.AcknowledgeJob(job);
+            });
+            _leanEngineThread.Start();
 
             return engine;
         }
