@@ -33,6 +33,7 @@ namespace QuantConnect.Securities.Forex
         /// <param name="exchangeHours">Defines the hours this exchange is open</param>
         /// <param name="quoteCurrency">The cash object that represent the quote currency</param>
         /// <param name="config">The subscription configuration for this security</param>
+        /// <param name="symbolProperties">The symbol properties for this security</param>
         public Forex(SecurityExchangeHours exchangeHours, Cash quoteCurrency, SubscriptionDataConfig config, SymbolProperties symbolProperties)
             : base(config,
                 quoteCurrency,
