@@ -14,42 +14,27 @@
 */
 
 using NUnit.Framework;
+using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class AccumulationDistributionOscillatorTests
+    public class AccumulationDistributionOscillatorTests : CommonIndicatorTests<TradeBar>
     {
-        [Test]
-        public void ComparesAgainstExternalData()
+        protected override IndicatorBase<TradeBar> CreateIndicator()
         {
-            var adOsc = new AccumulationDistributionOscillator("ADOSC", 3, 10);
-
-            RunTestIndicator(adOsc);
+            return new AccumulationDistributionOscillator(3, 10);
         }
 
-        [Test]
-        public void ComparesAgainstExternalDataAfterReset()
+        protected override string TestFileName
         {
-            var adOsc = new AccumulationDistributionOscillator("ADOSC", 3, 10);
-
-            RunTestIndicator(adOsc);
-            adOsc.Reset();
-            RunTestIndicator(adOsc);
+            get { return "spy_ad_osc.txt"; }
         }
 
-        [Test]
-        public void ResetsProperly()
+        protected override string TestColumnName
         {
-            var adOsc = new AccumulationDistributionOscillator("ADOSC", 3, 10);
-
-            TestHelper.TestIndicatorReset(adOsc, "spy_ad_osc.txt");
-        }
-
-        private static void RunTestIndicator(AccumulationDistributionOscillator adOsc)
-        {
-            TestHelper.TestIndicator(adOsc, "spy_ad_osc.txt", "AdOsc_3_10", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-3));
+            get { return "AdOsc_3_10"; }
         }
     }
 }

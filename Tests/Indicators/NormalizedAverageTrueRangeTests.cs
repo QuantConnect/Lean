@@ -19,37 +19,37 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class ChandeMomentumOscillatorTests
+    public class NormalizedAverageTrueRangeTests
     {
         [Test]
         public void ComparesAgainstExternalData()
         {
-            var cmo = new ChandeMomentumOscillator("CMO", 5);
+            var indicator = new NormalizedAverageTrueRange(5);
 
-            TestIndicator(cmo);
+            RunTestIndicator(indicator);
         }
 
         [Test]
         public void ComparesAgainstExternalDataAfterReset()
         {
-            var cmo = new ChandeMomentumOscillator("CMO", 5);
+            var indicator = new NormalizedAverageTrueRange(5);
 
-            TestIndicator(cmo);
-            cmo.Reset();
-            TestIndicator(cmo);
+            RunTestIndicator(indicator);
+            indicator.Reset();
+            RunTestIndicator(indicator);
         }
 
         [Test]
         public void ResetsProperly()
         {
-            var cmo = new ChandeMomentumOscillator("CMO", 5);
+            var indicator = new NormalizedAverageTrueRange(5);
 
-            TestHelper.TestIndicatorReset(cmo, "spy_cmo.txt");
+            TestHelper.TestIndicatorReset(indicator, "spy_natr.txt");
         }
 
-        private static void TestIndicator(ChandeMomentumOscillator cmo)
+        private static void RunTestIndicator(TradeBarIndicator indicator)
         {
-            TestHelper.TestIndicator(cmo, "spy_cmo.txt", "CMO_5", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-3));
+            TestHelper.TestIndicator(indicator, "spy_natr.txt", "NATR_5", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-3));
         }
     }
 }

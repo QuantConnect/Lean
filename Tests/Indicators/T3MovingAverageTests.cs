@@ -14,27 +14,42 @@
 */
 
 using NUnit.Framework;
-using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class AccumulationDistributionTests : CommonIndicatorTests<TradeBar>
+    public class T3MovingAverageTests
     {
-        protected override IndicatorBase<TradeBar> CreateIndicator()
+        [Test]
+        public void ComparesAgainstExternalData()
         {
-            return new AccumulationDistribution("AD");
+            var indicator = new T3MovingAverage(5);
+
+            RunTestIndicator(indicator);
         }
 
-        protected override string TestFileName
+        [Test]
+        public void ComparesAgainstExternalDataAfterReset()
         {
-            get { return "spy_ad.txt"; }
+            var indicator = new T3MovingAverage(5);
+
+            RunTestIndicator(indicator);
+            indicator.Reset();
+            RunTestIndicator(indicator);
         }
 
-        protected override string TestColumnName
+        [Test]
+        public void ResetsProperly()
         {
-            get { return "AD"; }
+            var indicator = new T3MovingAverage(5, 1);
+
+            TestHelper.TestIndicatorReset(indicator, "spy_t3.txt");
+        }
+
+        private static void RunTestIndicator(IndicatorBase<IndicatorDataPoint> indicator)
+        {
+            TestHelper.TestIndicator(indicator, "spy_t3.txt", "T3_5", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 2e-2));
         }
     }
 }

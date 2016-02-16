@@ -93,5 +93,16 @@ namespace QuantConnect.Indicators
             var sum = _prevGain + _prevLoss;
             return sum != 0 ? 100m * ((_prevGain - _prevLoss) / sum) : 0m;
         }
+
+        /// <summary>
+        /// Resets this indicator to its initial state
+        /// </summary>
+        public override void Reset()
+        {
+            _prevValue = 0;
+            _prevGain = 0;
+            _prevLoss = 0;
+            base.Reset();
+        }
     }
 }

@@ -19,37 +19,21 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class VarianceTests
+    public class VarianceTests : CommonIndicatorTests<IndicatorDataPoint>
     {
-        [Test]
-        public void ComparesAgainstExternalData()
+        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
-            var variance = new Variance("VAR", 10);
-
-            RunTestIndicator(variance);
+            return new Variance(10);
         }
 
-        [Test]
-        public void ComparesAgainstExternalDataAfterReset()
+        protected override string TestFileName
         {
-            var variance = new Variance("VAR", 10);
-
-            RunTestIndicator(variance);
-            variance.Reset();
-            RunTestIndicator(variance);
+            get { return "spy_var.txt"; }
         }
 
-        [Test]
-        public void ResetsProperly()
+        protected override string TestColumnName
         {
-            var variance = new Variance("VAR", 10);
-
-            TestHelper.TestIndicatorReset(variance, "spy_var.txt");
-        }
-
-        private static void RunTestIndicator(Variance var)
-        {
-            TestHelper.TestIndicator(var, "spy_var.txt", "Var", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-3));
+            get { return "Var"; }
         }
     }
 }

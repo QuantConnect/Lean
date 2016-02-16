@@ -814,6 +814,39 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new T3MovingAverage indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose T3 we want</param>
+        /// <param name="period">The period over which to compute the T3</param>
+        /// <param name="volumeFactor">The volume factor to be used for the T3 (value must be in the [0,1] range, defaults to 0.7)</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The T3MovingAverage indicator for the requested symbol over the specified period</returns>
+        public T3MovingAverage T3(Symbol symbol, int period, decimal volumeFactor = 0.7m, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, string.Format("T3({0},{1})", period, volumeFactor), resolution);
+            var t3 = new T3MovingAverage(name, period, volumeFactor);
+            RegisterIndicator(symbol, t3, resolution, selector);
+            return t3;
+        }
+
+        /// <summary>
+        /// Creates a new NormalizedAverageTrueRange indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose NATR we want</param>
+        /// <param name="period">The period over which to compute the NATR</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The NormalizedAverageTrueRange indicator for the requested symbol over the specified period</returns>
+        public NormalizedAverageTrueRange NATR(Symbol symbol, int period, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "NATR" + period, resolution);
+            var natr = new NormalizedAverageTrueRange(name, period);
+            RegisterIndicator(symbol, natr, resolution, selector);
+            return natr;
+        }
+
+        /// <summary>
         /// Creates and registers a new consolidator to receive automatic updates at the specified resolution as well as configures
         /// the indicator to receive updates from the consolidator.
         /// </summary>

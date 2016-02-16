@@ -14,42 +14,27 @@
 */
 
 using NUnit.Framework;
+using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class BalanceOfPowerTests
+    public class BalanceOfPowerTests : CommonIndicatorTests<TradeBar>
     {
-        [Test]
-        public void ComparesAgainstExternalData()
+        protected override IndicatorBase<TradeBar> CreateIndicator()
         {
-            var bop = new BalanceOfPower("BOP");
-
-            RunTestIndicator(bop);
+            return new BalanceOfPower("BOP");
         }
 
-        [Test]
-        public void ComparesAgainstExternalDataAfterReset()
+        protected override string TestFileName
         {
-            var bop = new BalanceOfPower("BOP");
-
-            RunTestIndicator(bop);
-            bop.Reset();
-            RunTestIndicator(bop);
+            get { return "spy_bop.txt"; }
         }
 
-        [Test]
-        public void ResetsProperly()
+        protected override string TestColumnName
         {
-            var bop = new BalanceOfPower("BOP");
-
-            TestHelper.TestIndicatorReset(bop, "spy_bop.txt");
-        }
-
-        private static void RunTestIndicator(BalanceOfPower bop)
-        {
-            TestHelper.TestIndicator(bop, "spy_bop.txt", "BOP", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-3));
+            get { return "BOP"; }
         }
     }
 }
