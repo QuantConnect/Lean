@@ -109,7 +109,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 request.IsCustomData
                 );
 
-            var security = new Security(request.ExchangeHours, config, 1.0m);
+            var security = new Security(request.ExchangeHours, config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
 
             IEnumerator<BaseData> reader = new SubscriptionDataReader(config, 
                 start, 
@@ -250,7 +250,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             public void SetAlgorithm(IAlgorithm algorithm) { }
             public void StoreResult(Packet packet, bool async = false) { }
             public void SendFinalResult(AlgorithmNodePacket job, Dictionary<int, Order> orders, Dictionary<DateTime, decimal> profitLoss, Dictionary<string, Holding> holdings, StatisticsResults statisticsResults, Dictionary<string, string> banner) { }
-            public void SendStatusUpdate(string algorithmId, AlgorithmStatus status, string message = "") { }
+            public void SendStatusUpdate(AlgorithmStatus status, string message = "") { }
             public void SetChartSubscription(string symbol) { }
             public void RuntimeStatistic(string key, string value) { }
             public void OrderEvent(OrderEvent newEvent) { }

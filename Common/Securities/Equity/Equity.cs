@@ -15,6 +15,9 @@
 
 using System;
 using QuantConnect.Data;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.Slippage;
 
 namespace QuantConnect.Securities.Equity 
 {
@@ -37,30 +40,23 @@ namespace QuantConnect.Securities.Equity
         /// <summary>
         /// Construct the Equity Object
         /// </summary>
-        public Equity(SubscriptionDataConfig config, decimal leverage)
-            : this(MarketHoursDatabase.FromDataFolder().GetExchangeHours(config), config, leverage)
+        public Equity(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, Cash quoteCurrency, SymbolProperties symbolProperties)
+            : base(
+                config,
+                quoteCurrency,
+                symbolProperties,
+                new EquityExchange(exchangeHours),
+                new EquityCache(),
+                new SecurityPortfolioModel(),
+                new ImmediateFillModel(),
+                new InteractiveBrokersFeeModel(),
+                new ConstantSlippageModel(0m),
+                new ImmediateSettlementModel(),
+                new SecurityMarginModel(2m),
+                new EquityDataFilter()
+                )
         {
-            // this constructor is provided for backward compatibility
-
-            // should we even keep this?
-        }
-
-        /// <summary>
-        /// Construct the Equity Object
-        /// </summary>
-        public Equity(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, decimal leverage) 
-            : base(exchangeHours, config, leverage) 
-        {
-            //Holdings for new Vehicle:
-            Cache = new EquityCache();
-            Exchange = new EquityExchange(exchangeHours);
-            DataFilter = new EquityDataFilter();
-            //Set the Equity Transaction Model
-            TransactionModel = new EquityTransactionModel();
-            PortfolioModel = new EquityPortfolioModel();
-            MarginModel = new EquityMarginModel(leverage);
-            SettlementModel = new ImmediateSettlementModel();
-            Holdings = new EquityHolding(this, TransactionModel, MarginModel);
+            Holdings = new EquityHolding(this);
         }
     }
 }

@@ -13,12 +13,28 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Securities.Equity
+using NUnit.Framework;
+using QuantConnect.Data.Market;
+using QuantConnect.Indicators;
+
+namespace QuantConnect.Tests.Indicators
 {
-    /// <summary>
-    /// The equity portfolio model implementation is the same as the default
-    /// </summary>
-    public class EquityPortfolioModel : SecurityPortfolioModel
+    [TestFixture]
+    public class AccumulationDistributionTests : CommonIndicatorTests<TradeBar>
     {
+        protected override IndicatorBase<TradeBar> CreateIndicator()
+        {
+            return new AccumulationDistribution("AD");
+        }
+
+        protected override string TestFileName
+        {
+            get { return "spy_ad.txt"; }
+        }
+
+        protected override string TestColumnName
+        {
+            get { return "AD"; }
+        }
     }
 }

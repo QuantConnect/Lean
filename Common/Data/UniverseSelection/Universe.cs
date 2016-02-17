@@ -67,6 +67,14 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
+        /// Gets the instance responsible for initializing newly added securities
+        /// </summary>
+        public ISecurityInitializer SecurityInitializer
+        {
+            get; private set;
+        }
+
+        /// <summary>
         /// Gets the current listing of members in this universe. Modifications
         /// to this dictionary do not change universe membership.
         /// </summary>
@@ -79,11 +87,13 @@ namespace QuantConnect.Data.UniverseSelection
         /// Initializes a new instance of the <see cref="Universe"/> class
         /// </summary>
         /// <param name="config">The configuration used to source data for this universe</param>
-        protected Universe(SubscriptionDataConfig config)
+        /// <param name="securityInitializer">Initializes securities when they're added to the universe</param>
+        protected Universe(SubscriptionDataConfig config, ISecurityInitializer securityInitializer = null)
         {
             _securities = new ConcurrentDictionary<Symbol, Member>();
 
             Configuration = config;
+            SecurityInitializer = securityInitializer ?? Securities.SecurityInitializer.Null;
         }
 
         /// <summary>

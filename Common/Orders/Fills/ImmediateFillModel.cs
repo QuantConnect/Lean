@@ -241,7 +241,7 @@ namespace QuantConnect.Orders.Fills
                         fill.Status = OrderStatus.Filled;
                         // fill at the worse price this bar or the limit price, this allows far out of the money limits
                         // to be executed properly
-                        fill.FillPrice = Math.Min(maximumPrice, order.LimitPrice); 
+                        fill.FillPrice = Math.Min(maximumPrice, order.LimitPrice);
                     }
                     break;
                 case OrderDirection.Sell:

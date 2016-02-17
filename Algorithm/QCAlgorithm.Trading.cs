@@ -15,9 +15,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Cfd;
 using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Algorithm
@@ -123,7 +123,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Issue an order/trade for asset: Alias wrapper for Order(string, int);
         /// </summary>
-        /// <seealso cref="Order(Symbol, double)"/>
+        /// <seealso cref="Order(Symbol, decimal)"/>
         public OrderTicket Order(Symbol symbol, double quantity)
         {
             return Order(symbol, (int) quantity);
@@ -178,7 +178,7 @@ namespace QuantConnect.Algorithm
 
             var request = CreateSubmitOrderRequest(OrderType.Market, security, quantity, tag);
 
-            //Initalize the Market order parameters:
+            //Initialize the Market order parameters:
             var preOrderCheckResponse = PreOrderChecks(request);
             if (preOrderCheckResponse.IsError)
             {
@@ -188,7 +188,7 @@ namespace QuantConnect.Algorithm
             //Add the order and create a new order Id.
             var ticket = Transactions.AddOrder(request);
 
-            //Wait for the order event to process, only if the exchange is open
+            // Wait for the order event to process, only if the exchange is open
             if (!asynchronous)
             {
                 Transactions.WaitForOrder(ticket.OrderId);
@@ -342,7 +342,6 @@ namespace QuantConnect.Algorithm
             var price = security.Price;
 
             //Check the exchange is open before sending a market on close orders
-            //Allow market orders, they'll just execute when the exchange reopens
             if (request.OrderType == OrderType.MarketOnClose && !security.Exchange.ExchangeOpen)
             {
                 return OrderResponse.Error(request, OrderResponseErrorCode.ExchangeNotOpen, request.OrderType + " order and exchange not open.");
@@ -352,21 +351,29 @@ namespace QuantConnect.Algorithm
             {
                 return OrderResponse.Error(request, OrderResponseErrorCode.SecurityPriceZero, request.Symbol.ToString() + ": asset price is $0. If using custom data make sure you've set the 'Value' property.");
             }
+
+            // check quote currency existence/conversion rate on all orders
+            Cash quoteCash;
+            var quoteCurrency = security.QuoteCurrency.Symbol;
+            if (!Portfolio.CashBook.TryGetValue(quoteCurrency, out quoteCash))
+            {
+                return OrderResponse.Error(request, OrderResponseErrorCode.QuoteCurrencyRequired, request.Symbol.Value + ": requires " + quoteCurrency + " in the cashbook to trade.");
+            }
+            if (security.QuoteCurrency.ConversionRate == 0m)
+            {
+                return OrderResponse.Error(request, OrderResponseErrorCode.ConversionRateZero, request.Symbol.Value + ": requires " + quoteCurrency + " to have a non-zero conversion rate. This can be caused by lack of data.");
+            }
             
+            // need to also check base currency existence/conversion rate on forex orders
             if (security.Type == SecurityType.Forex)
             {
-                // for forex pairs we need to verify that the conversions to USD have values as well
-                string baseCurrency, quoteCurrency;
-                Forex.DecomposeCurrencyPair(security.Symbol.Value, out baseCurrency, out quoteCurrency);
-
-                // verify they're in the portfolio
-                Cash baseCash, quoteCash;
-                if (!Portfolio.CashBook.TryGetValue(baseCurrency, out baseCash) || !Portfolio.CashBook.TryGetValue(quoteCurrency, out quoteCash))
+                Cash baseCash;
+                var baseCurrency = ((Forex) security).BaseCurrencySymbol;
+                if (!Portfolio.CashBook.TryGetValue(baseCurrency, out baseCash))
                 {
                     return OrderResponse.Error(request, OrderResponseErrorCode.ForexBaseAndQuoteCurrenciesRequired, request.Symbol.Value + ": requires " + baseCurrency + " and " + quoteCurrency + " in the cashbook to trade.");
                 }
-                // verify we have conversion rates for each leg of the pair back into the account currency
-                if (baseCash.ConversionRate == 0m || quoteCash.ConversionRate == 0m)
+                if (baseCash.ConversionRate == 0m)
                 {
                     return OrderResponse.Error(request, OrderResponseErrorCode.ForexConversionRateZero, request.Symbol.Value + ": requires " + baseCurrency + " and " + quoteCurrency + " to have non-zero conversion rates. This can be caused by lack of data.");
                 }
@@ -387,9 +394,10 @@ namespace QuantConnect.Algorithm
             
             if (request.OrderType == OrderType.MarketOnClose)
             {
+                var nextMarketClose = security.Exchange.Hours.GetNextMarketClose(security.LocalTime, false);
                 // must be submitted with at least 10 minutes in trading day, add buffer allow order submission
-                var latestSubmissionTime = (Time.Date + security.Exchange.MarketClose).AddMinutes(-10.75);
-                if (Time > latestSubmissionTime)
+                var latestSubmissionTime = nextMarketClose.AddMinutes(-10.75);
+                if (!security.Exchange.ExchangeOpen || Time > latestSubmissionTime)
                 {
                     // tell the user we require an 11 minute buffer, on minute data in live a user will receive the 3:49->3:50 bar at 3:50,
                     // this is already too late to submit one of these orders, so make the user do it at the 3:48->3:49 bar so it's submitted
@@ -593,10 +601,12 @@ namespace QuantConnect.Algorithm
             var targetOrderValue = Math.Abs(targetPortfolioValue - currentHoldingsValue);
             var direction = targetPortfolioValue > currentHoldingsValue ? OrderDirection.Buy : OrderDirection.Sell;
 
+            // determine the unit price in terms of the account currency
+            var unitPrice = new MarketOrder(symbol, 1, UtcTime).GetValue(security);
 
             // define lower and upper thresholds for the iteration
-            var lowerThreshold = targetOrderValue - price/2;
-            var upperThreshold = targetOrderValue + price/2;
+            var lowerThreshold = targetOrderValue - unitPrice / 2;
+            var upperThreshold = targetOrderValue + unitPrice / 2;
 
             // continue iterating while  we're still not within the specified thresholds
             var iterations = 0;
@@ -607,15 +617,15 @@ namespace QuantConnect.Algorithm
                 // find delta from where we are to where we want to be
                 var delta = targetOrderValue - orderValue;
                 // use delta value to compute a change in quantity required
-                var deltaQuantity = (int)(delta / price);
+                var deltaQuantity = (int)(delta / unitPrice);
 
                 orderQuantity += deltaQuantity;
 
                 // recompute order fees
-                var order = new MarketOrder(security.Symbol, orderQuantity, UtcTime, type: security.Type);
-                var fee = security.TransactionModel.GetOrderFee(security, order);
+                var order = new MarketOrder(security.Symbol, orderQuantity, UtcTime);
+                var fee = security.FeeModel.GetOrderFee(security, order);
 
-                orderValue = Math.Abs(order.GetValue(price)) + fee;
+                orderValue = Math.Abs(order.GetValue(security)) + fee;
 
                 // we need to add the fee in as well, even though it's not value, it's still a cost for the transaction
                 // and we need to account for it to be sure we can make the trade produced by this method, imagine

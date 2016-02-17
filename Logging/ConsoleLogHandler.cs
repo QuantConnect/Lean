@@ -24,7 +24,8 @@ namespace QuantConnect.Logging
     public class ConsoleLogHandler : ILogHandler
     {
         private const string DateFormat = "yyyyMMdd HH:mm:ss";
-        private readonly TextWriter _console;
+        private readonly TextWriter _trace;
+        private readonly TextWriter _error;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="QuantConnect.Logging.ConsoleLogHandler"/> class.
@@ -33,7 +34,8 @@ namespace QuantConnect.Logging
         {
             // saves references to the real console text writer since in a deployed state we may overwrite this in order
             // to redirect messages from algorithm to result handler
-            _console = Console.Out;
+            _trace = Console.Out;
+            _error = Console.Error;
         }
 
         /// <summary>
@@ -42,10 +44,9 @@ namespace QuantConnect.Logging
         /// <param name="text">The error text to log</param>
         public void Error(string text)
         {
-            var original = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.Red;
-            _console.WriteLine(DateTime.Now.ToString(DateFormat) + " ERROR:: " + text);
-            Console.ForegroundColor = original;
+            _error.WriteLine(DateTime.Now.ToString(DateFormat) + " ERROR:: " + text);
+            Console.ResetColor();
         }
 
         /// <summary>
@@ -54,7 +55,7 @@ namespace QuantConnect.Logging
         /// <param name="text">The debug text to log</param>
         public void Debug(string text)
         {
-            _console.WriteLine(DateTime.Now.ToString(DateFormat) + " DEBUGGING :: " + text);
+            _trace.WriteLine(DateTime.Now.ToString(DateFormat) + " DEBUG:: " + text);
         }
 
         /// <summary>
@@ -63,7 +64,7 @@ namespace QuantConnect.Logging
         /// <param name="text">The trace text to log</param>
         public void Trace(string text)
         {
-            _console.WriteLine(DateTime.Now.ToString(DateFormat) + " Trace:: " + text);
+            _trace.WriteLine(DateTime.Now.ToString(DateFormat) + " Trace:: " + text);
         }
 
         /// <summary>

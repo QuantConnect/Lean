@@ -13,7 +13,10 @@
  * limitations under the License.
 */
 
+using System;
+using System.IO;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Notifications;
 using QuantConnect.Packets;
 
@@ -24,8 +27,14 @@ namespace QuantConnect.Messaging
     /// </summary>
     public class Messaging : IMessagingHandler
     {
+        // used to aid in generating regression tests via Cosole.WriteLine(...)
+        private static readonly TextWriter Console = System.Console.Out;
+
+        private AlgorithmNodePacket _job;
+
         /// <summary>
-        /// The default implementation doesn't send messages, so this does nothing.
+        /// This implementation ignores the <seealso cref="HasSubscribers"/> flag and
+        /// instead will always write to the log.
         /// </summary>
         public bool HasSubscribers
         {
@@ -44,9 +53,9 @@ namespace QuantConnect.Messaging
         /// <summary>
         /// Set the messaging channel
         /// </summary>
-        public void SetChannel(string channelId)
+        public void SetAuthentication(AlgorithmNodePacket job)
         {
-            //
+            _job = job;
         }
 
         /// <summary>
@@ -54,90 +63,74 @@ namespace QuantConnect.Messaging
         /// </summary>
         public void Send(Packet packet)
         {
-            //
+            switch (packet.Type)
+            {
+                case PacketType.Debug:
+                    var debug = (DebugPacket) packet;
+                    Log.Trace("Debug: " + debug.Message);
+                    break;
+
+                case PacketType.Log:
+                    var log = (LogPacket) packet;
+                    Log.Trace("Log: " + log.Message);
+                    break;
+
+                case PacketType.RuntimeError:
+                    var runtime = (RuntimeErrorPacket) packet;
+                    var rstack = (!string.IsNullOrEmpty(runtime.StackTrace) ? (Environment.NewLine + " " + runtime.StackTrace) : string.Empty);
+                    Log.Error(runtime.Message + rstack);
+                    break;
+
+                case PacketType.HandledError:
+                    var handled = (HandledErrorPacket) packet;
+                    var hstack = (!string.IsNullOrEmpty(handled.StackTrace) ? (Environment.NewLine + " " + handled.StackTrace) : string.Empty);
+                    Log.Error(handled.Message + hstack);
+                    break;
+
+                case PacketType.BacktestResult:
+                    var result = (BacktestResultPacket) packet;
+
+                    if (result.Progress == 1)
+                    {
+                        // uncomment these code traces to help write regression tests
+                        //Console.WriteLine("new Dictionary<string, string>");
+                        //Console.WriteLine("\t\t\t{");
+                        foreach (var pair in result.Results.Statistics)
+                        {
+                            Log.Trace("STATISTICS:: " + pair.Key + " " + pair.Value);
+                            //Console.WriteLine("\t\t\t\t{{\"{0}\",\"{1}\"}},", pair.Key, pair.Value);
+                        }
+                        //Console.WriteLine("\t\t\t});");
+
+                        //foreach (var pair in statisticsResults.RollingPerformances)
+                        //{
+                        //    Log.Trace("ROLLINGSTATS:: " + pair.Key + " SharpeRatio: " + Math.Round(pair.Value.PortfolioStatistics.SharpeRatio, 3));
+                        //}
+                    }
+                    break;
+            }
+
+
+            if (StreamingApi.IsEnabled)
+            {
+                StreamingApi.Transmit(_job.UserId, _job.Channel, packet);
+            }
         }
 
         /// <summary>
-        /// Send a debug message packet
+        /// Send any notification with a base type of Notification.
         /// </summary>
-        public void DebugMessage(string line, int projectId, string algorithmId = "", string compileId = "")
+        public void SendNotification(Notification notification)
         {
-            //
-        }
-
-        /// <summary>
-        /// Send a security types in algorithm information packet
-        /// </summary>
-        public void SecurityTypes(SecurityTypesPacket types)
-        {
-            //
-        }
-
-        /// <summary>
-        /// Send a log message packet
-        /// </summary>
-        public void LogMessage(string algorithmId, string message)
-        {
-            //
-        }
-
-        /// <summary>
-        /// Send a runtime error packet:
-        /// </summary>
-        public void RuntimeError(string algorithmId, string error, string stacktrace)
-        {
-            //
-        }
-
-        /// <summary>
-        /// Send an algorithm status update
-        /// </summary>
-        public void AlgorithmStatus(string algorithmId, AlgorithmStatus status, string message = "")
-        {
-            //
-        }
-
-        /// <summary>
-        /// Send a backtest result packet
-        /// </summary>
-        public void BacktestResult(BacktestResultPacket packet, bool finalPacket = false)
-        {
-            //
-        }
-
-        /// <summary>
-        /// Send a live trading packet result.
-        /// </summary>
-        public void LiveTradingResult(LiveResultPacket packet)
-        {
-            //
-        }
-
-        /// <summary>
-        /// Send a rate limited email notification triggered during live trading from a user algorithm
-        /// </summary>
-        /// <param name="notification"></param>
-        public void Email(NotificationEmail notification)
-        {
-            //
-        }
-
-        /// <summary>
-        /// Send a rate limited SMS notification triggered duing live trading from a user algorithm.
-        /// </summary>
-        /// <param name="notification"></param>
-        public void Sms(NotificationSms notification)
-        {
-            //
-        }
-
-        /// <summary>
-        /// Send a web REST request notification triggered during live trading from a user algorithm.
-        /// </summary>
-        /// <param name="notification"></param>
-        public void Web(NotificationWeb notification)
-        {
-            //
+            var type = notification.GetType();
+            if (type == typeof (NotificationEmail)
+             || type == typeof (NotificationWeb)
+             || type == typeof (NotificationSms))
+            {
+                Log.Error("Messaging.SendNotification(): Send not implemented for notification of type: " + type.Name);
+                return;
+            }
+            notification.Send();
         }
     }
 }

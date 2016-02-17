@@ -77,7 +77,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
                         var bars = data.Cast<TradeBar>().ToList();
 
                         // Save the data (second resolution)
-                        var writer = new LeanDataWriter(securityType, resolution, symbol, dataDirectory, market);
+                        var writer = new LeanDataWriter(resolution, symbol, dataDirectory);
                         writer.Write(bars);
 
                         // Save the data (other resolutions)
@@ -85,14 +85,14 @@ namespace QuantConnect.ToolBox.OandaDownloader
                         {
                             var resData = AggregateBars(symbol, bars, res.ToTimeSpan());
 
-                            writer = new LeanDataWriter(securityType, res, symbol, dataDirectory, market);
+                            writer = new LeanDataWriter(res, symbol, dataDirectory);
                             writer.Write(resData);
                         }
                     }
                     else
                     {
                         // Save the data (single resolution)
-                        var writer = new LeanDataWriter(securityType, resolution, symbol, dataDirectory, market);
+                        var writer = new LeanDataWriter(resolution, symbol, dataDirectory);
                         writer.Write(data);
                     }
                 }

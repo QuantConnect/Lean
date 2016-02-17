@@ -32,7 +32,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
     [TestFixture]
     public class PartialMarketFillModelTests
     {
-        [Test]
+        [Test, Category("TravisExclude")]
         public void CreatesSpecificNumberOfFills()
         {
             Security security;
@@ -99,7 +99,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             algorithm.Transactions.SetOrderProcessor(transactionHandler);
 
             var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
-            security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), config, 1);
+            security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
 
             model = new PartialMarketFillModel(algorithm.Transactions, 2);
 

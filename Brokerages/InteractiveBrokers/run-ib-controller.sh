@@ -11,8 +11,9 @@ DATE=`date +%Y%m%d%H%M`
 LOGFILE=/tmp/ibg_running_${DATE}.log
 
 # Clean Process Space:
-kill -9 $(pidof xvfb-run)
-kill -9 $(pidof java)
+kill -9 `pidof xvfb-run`
+kill -9 `pidof java`
+kill -9 `pidof Xvfb`
 
 # The IBController ini file:
 IBCINI=$IBCDIR/IBController.ini

@@ -110,7 +110,7 @@ namespace QuantConnect.Securities
         {
             get 
             {
-                return AveragePrice * Convert.ToDecimal(Quantity);
+                return AveragePrice * Convert.ToDecimal(Quantity) * _security.QuoteCurrency.ConversionRate * _security.SymbolProperties.ContractMultiplier;
             }
         }
 
@@ -161,7 +161,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual decimal HoldingsValue
         {
-            get { return _price*Convert.ToDecimal(Quantity); }
+            get { return _price*Convert.ToDecimal(Quantity)*_security.QuoteCurrency.ConversionRate*_security.SymbolProperties.ContractMultiplier; }
         }
 
         /// <summary>
@@ -368,10 +368,10 @@ namespace QuantConnect.Securities
             }
 
             // this is in the account currency
-            var marketOrder = new MarketOrder(_security.Symbol, -Quantity, _security.LocalTime.ConvertToUtc(_security.Exchange.TimeZone), type: _security.Type);
-            var orderFee = _security.TransactionModel.GetOrderFee(_security, marketOrder);
+            var marketOrder = new MarketOrder(_security.Symbol, -Quantity, _security.LocalTime.ConvertToUtc(_security.Exchange.TimeZone));
+            var orderFee = _security.FeeModel.GetOrderFee(_security, marketOrder);
 
-            return (Price - AveragePrice) * Quantity - orderFee;
+            return (Price - AveragePrice)*Quantity*_security.QuoteCurrency.ConversionRate*_security.SymbolProperties.ContractMultiplier - orderFee;
         }
     }
-} //End Namespace
+}

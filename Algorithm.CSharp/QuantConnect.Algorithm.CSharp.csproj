@@ -11,6 +11,7 @@
     <AssemblyName>QuantConnect.Algorithm.CSharp</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <LangVersion>5</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -40,6 +41,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -56,6 +58,10 @@
     <Compile Include="CustomBrokerageMessageHandlerAlgorithm.cs" />
     <Compile Include="CustomDataRegressionAlgorithm.cs" />
     <Compile Include="CustomDataUniverseAlgorithm.cs" />
+    <Compile Include="CustomModelsAlgorithm.cs" />
+    <Compile Include="CustomSecurityInitializerAlgorithm.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="DelistingEventsAlgorithm.cs" />
     <Compile Include="DropboxBaseDataUniverseSelectionAlgorithm.cs" />
     <Compile Include="EquitiesLabAlgorithm.cs" />

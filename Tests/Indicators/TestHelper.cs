@@ -147,11 +147,11 @@ namespace QuantConnect.Tests.Indicators
         }
 
         /// <summary>
-        /// Compare the specified indicator against external data using the specificied comma delimited text file.
+        /// Compare the specified indicator against external data using the specified comma delimited text file.
         /// The 'Close' column will be fed to the indicator as input
         /// </summary>
         /// <param name="indicator">The indicator under test</param>
-        /// <param name="externalDataFilename"></param>
+        /// <param name="externalDataFilename">The external CSV file name</param>
         /// <param name="targetColumn">The column with the correct answers</param>
         /// <param name="customAssertion">Sets custom assertion logic, parameter is the indicator, expected value from the file</param>
         public static void TestIndicator(IndicatorBase<TradeBar> indicator, string externalDataFilename, string targetColumn, Action<IndicatorBase<TradeBar>, double> customAssertion)
@@ -199,6 +199,48 @@ namespace QuantConnect.Tests.Indicators
             }
         }
 
+        /// <summary>
+        /// Tests a reset of the specified indicator after processing external data using the specified comma delimited text file.
+        /// The 'Close' column will be fed to the indicator as input
+        /// </summary>
+        /// <param name="indicator">The indicator under test</param>
+        /// <param name="externalDataFilename">The external CSV file name</param>
+        public static void TestIndicatorReset(IndicatorBase<TradeBar> indicator, string externalDataFilename)
+        {
+            foreach (var data in GetTradeBarStream(externalDataFilename, false))
+            {
+                indicator.Update(data);
+            }
+
+            Assert.IsTrue(indicator.IsReady);
+
+            indicator.Reset();
+
+            AssertIndicatorIsInDefaultState(indicator);
+        }
+
+        /// <summary>
+        /// Tests a reset of the specified indicator after processing external data using the specified comma delimited text file.
+        /// The 'Close' column will be fed to the indicator as input
+        /// </summary>
+        /// <param name="indicator">The indicator under test</param>
+        /// <param name="externalDataFilename">The external CSV file name</param>
+        public static void TestIndicatorReset(IndicatorBase<IndicatorDataPoint> indicator, string externalDataFilename)
+        {
+            var date = DateTime.Today;
+
+            foreach (var data in GetTradeBarStream(externalDataFilename, false))
+            {
+                indicator.Update(date, data.Close);
+            }
+
+            Assert.IsTrue(indicator.IsReady);
+
+            indicator.Reset();
+
+            AssertIndicatorIsInDefaultState(indicator);
+        }
+
         public static IEnumerable<IReadOnlyDictionary<string, string>> GetCsvFileStream(string externalDataFilename)
         {
             var enumerator = File.ReadLines(Path.Combine("TestData", externalDataFilename)).GetEnumerator();
@@ -244,6 +286,34 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(DateTime.MinValue, indicator.Current.Time);
             Assert.AreEqual(0, indicator.Samples);
             Assert.IsFalse(indicator.IsReady);
+
+            var fields = indicator.GetType().GetProperties()
+                .Where(x => x.PropertyType.IsSubclassOfGeneric(typeof(IndicatorBase<T>)) ||
+                            x.PropertyType.IsSubclassOfGeneric(typeof(IndicatorBase<TradeBar>)) ||
+                            x.PropertyType.IsSubclassOfGeneric(typeof(IndicatorBase<IndicatorDataPoint>)));
+            foreach (var field in fields)
+            {
+                var subIndicator = field.GetValue(indicator);
+
+                if (subIndicator == null || 
+                    subIndicator is ConstantIndicator<T> || 
+                    subIndicator is ConstantIndicator<TradeBar> ||
+                    subIndicator is ConstantIndicator<IndicatorDataPoint>) 
+                    continue;
+
+                if (field.PropertyType.IsSubclassOfGeneric(typeof (IndicatorBase<T>)))
+                {
+                    AssertIndicatorIsInDefaultState(subIndicator as IndicatorBase<T>);
+                }
+                else if (field.PropertyType.IsSubclassOfGeneric(typeof(IndicatorBase<TradeBar>)))
+                {
+                    AssertIndicatorIsInDefaultState(subIndicator as IndicatorBase<TradeBar>);
+                }
+                else if (field.PropertyType.IsSubclassOfGeneric(typeof(IndicatorBase<IndicatorDataPoint>)))
+                {
+                    AssertIndicatorIsInDefaultState(subIndicator as IndicatorBase<IndicatorDataPoint>);
+                }
+            }
         }
 
         /// <summary>

@@ -211,6 +211,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="utcEndTime">The end time of the subscription</param>
         public bool AddSubscription(Universe universe, Security security, DateTime utcStartTime, DateTime utcEndTime)
         {
+            _fillForwardResolution.Value = ResolveFillForwardResolution(_algorithm);
+
             var subscription = CreateSubscription(universe, _resultHandler, security, utcStartTime, utcEndTime, _fillForwardResolution);
             if (subscription == null)
             {
@@ -330,7 +332,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var exchangeHours = marketHoursDatabase.GetExchangeHours(config);
 
             // create a canonical security object
-            var security = new Security(exchangeHours, config, universe.UniverseSettings.Leverage);
+            var security = new Security(exchangeHours, config, _algorithm.Portfolio.CashBook[CashBook.AccountCurrency], SymbolProperties.GetDefault(CashBook.AccountCurrency));
 
             var localStartTime = startTimeUtc.ConvertFromUtc(security.Exchange.TimeZone);
             var localEndTime = endTimeUtc.ConvertFromUtc(security.Exchange.TimeZone);
@@ -363,8 +365,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 // load coarse data day by day
                 var coarse = from date in Time.EachTradeableDay(security, _algorithm.StartDate, _algorithm.EndDate)
-                             let factory = new BaseDataSubscriptionFactory(config, date, false)
-                             let source = cf.GetSource(config, date, false)
+                             let dateInDataTimeZone = date.ConvertTo(config.ExchangeTimeZone, config.DataTimeZone).Date
+                             let factory = new BaseDataSubscriptionFactory(config, dateInDataTimeZone, false)
+                             let source = cf.GetSource(config, dateInDataTimeZone, false)
                              let coarseFundamentalForDate = factory.Read(source)
                              select new BaseDataCollection(date, config.Symbol, coarseFundamentalForDate);
 

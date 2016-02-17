@@ -46,7 +46,7 @@ namespace QuantConnect.Configuration
                     {"queue-handler", "QuantConnect.Queues.Queues"},
                     {"api-handler", "QuantConnect.Api.Api"},
                     {"setup-handler", "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler"},
-                    {"result-handler", "QuantConnect.Lean.Engine.Results.ConsoleResultHandler"},
+                    {"result-handler", "QuantConnect.Lean.Engine.Results.BacktestingResultHandler"},
                     {"data-feed-handler", "QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed"},
                     {"real-time-handler", "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler"},
                     {"transaction-handler", "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"}
@@ -187,7 +187,16 @@ namespace QuantConnect.Configuration
             }
 
             var type = typeof(T);
-            var value = token.Value<string>();
+            string value;
+            try
+            {
+                value = token.Value<string>();
+            }
+            catch (Exception err)
+            {
+                value = token.ToString();
+            }
+
             if (type.IsEnum)
             {
                 return (T) Enum.Parse(type, value);
@@ -263,6 +272,15 @@ namespace QuantConnect.Configuration
             }
         }
 
+        /// <summary>
+        /// Write the contents of the serialized configuration back to the disk.
+        /// </summary>
+        public static void Write()
+        {
+            if (!Settings.IsValueCreated) return;
+            var serialized = JsonConvert.SerializeObject(Settings.Value, Formatting.Indented);
+            File.WriteAllText("config.json", serialized);
+        }
 
         /// <summary>
         /// Flattens the jobject with respect to the selected environment and then

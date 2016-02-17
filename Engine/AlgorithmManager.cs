@@ -602,7 +602,7 @@ namespace QuantConnect.Lean.Engine
                 Log.Trace("AlgorithmManager.Run(): Liquidating algorithm holdings...");
                 algorithm.Liquidate();
                 results.LogMessage("Algorithm Liquidated");
-                results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Liquidated);
+                results.SendStatusUpdate(AlgorithmStatus.Liquidated);
             }
 
             //Manually stopped the algorithm
@@ -610,7 +610,7 @@ namespace QuantConnect.Lean.Engine
             {
                 Log.Trace("AlgorithmManager.Run(): Stopping algorithm...");
                 results.LogMessage("Algorithm Stopped");
-                results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Stopped);
+                results.SendStatusUpdate(AlgorithmStatus.Stopped);
             }
 
             //Backtest deleted.
@@ -618,11 +618,11 @@ namespace QuantConnect.Lean.Engine
             {
                 Log.Trace("AlgorithmManager.Run(): Deleting algorithm...");
                 results.DebugMessage("Algorithm Id:(" + job.AlgorithmId + ") Deleted by request.");
-                results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Deleted);
+                results.SendStatusUpdate(AlgorithmStatus.Deleted);
             }
 
             //Algorithm finished, send regardless of commands:
-            results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Completed);
+            results.SendStatusUpdate(AlgorithmStatus.Completed);
 
             //Take final samples:
             results.SampleRange(algorithm.GetChartUpdates());
@@ -742,7 +742,7 @@ namespace QuantConnect.Lean.Engine
                             // catching up to real time data
                             nextStatusTime = DateTime.UtcNow.AddSeconds(1);
                             var percent = (int)(100 * (timeSlice.Time.Ticks - start) / (double)(DateTime.UtcNow.Ticks - start));
-                            results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.History, string.Format("Catching up to realtime {0}%...", percent));
+                            results.SendStatusUpdate(AlgorithmStatus.History, string.Format("Catching up to realtime {0}%...", percent));
                         }
                         yield return timeSlice;
                         lastHistoryTimeUtc = timeSlice.Time;
@@ -754,7 +754,7 @@ namespace QuantConnect.Lean.Engine
             if (!algorithm.LiveMode || historyRequests.Count == 0)
             {
                 algorithm.SetFinishedWarmingUp();
-                results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Running);
+                results.SendStatusUpdate(AlgorithmStatus.Running);
                 if (historyRequests.Count != 0)
                 {
                     algorithm.Debug("Algorithm finished warming up.");
@@ -800,7 +800,7 @@ namespace QuantConnect.Lean.Engine
                     if (timeSlice.Time > DateTime.UtcNow.Subtract(minimumIncrement))
                     {
                         algorithm.SetFinishedWarmingUp();
-                        results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Running);
+                        results.SendStatusUpdate(AlgorithmStatus.Running);
                         algorithm.Debug("Algorithm finished warming up.");
                         Log.Trace("AlgorithmManager.Stream(): Finished warmup");
                     }
@@ -810,7 +810,7 @@ namespace QuantConnect.Lean.Engine
                         // catching up to real time data
                         nextStatusTime = DateTime.UtcNow.AddSeconds(1);
                         var percent = (int) (100*(timeSlice.Time.Ticks - start)/(double) (DateTime.UtcNow.Ticks - start));
-                        results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.History, string.Format("Catching up to realtime {0}%...", percent));   
+                        results.SendStatusUpdate(AlgorithmStatus.History, string.Format("Catching up to realtime {0}%...", percent));   
                     }
                 }
                 yield return timeSlice;

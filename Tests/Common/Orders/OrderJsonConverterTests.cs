@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Common.Orders
         [Test]
         public void DeserializesMarketOrder()
         {
-            var expected = new MarketOrder(Symbols.SPY, 100, new DateTime(2015, 11, 23, 17, 15, 37), "now", SecurityType.Equity)
+            var expected = new MarketOrder(Symbols.SPY, 100, new DateTime(2015, 11, 23, 17, 15, 37), "now")
             {
                 Id = 12345,
                 Price = 209.03m,
@@ -42,7 +42,7 @@ namespace QuantConnect.Tests.Common.Orders
         [Test]
         public void DeserializesMarketOnOpenOrder()
         {
-            var expected = new MarketOnOpenOrder(Symbols.SPY, SecurityType.Equity, 100, new DateTime(2015, 11, 23, 17, 15, 37), "now")
+            var expected = new MarketOnOpenOrder(Symbols.SPY, 100, new DateTime(2015, 11, 23, 17, 15, 37), "now")
             {
                 Id = 12345,
                 Price = 209.03m,
@@ -56,7 +56,7 @@ namespace QuantConnect.Tests.Common.Orders
         [Test]
         public void DeserializesMarketOnCloseOrder()
         {
-            var expected = new MarketOnCloseOrder(Symbols.SPY, SecurityType.Equity, 100, new DateTime(2015, 11, 23, 17, 15, 37), "now")
+            var expected = new MarketOnCloseOrder(Symbols.SPY, 100, new DateTime(2015, 11, 23, 17, 15, 37), "now")
             {
                 Id = 12345,
                 Price = 209.03m,
@@ -70,7 +70,7 @@ namespace QuantConnect.Tests.Common.Orders
         [Test]
         public void DeserializesLimitOrder()
         {
-            var expected = new LimitOrder(Symbols.SPY, 100, 210.10m, new DateTime(2015, 11, 23, 17, 15, 37), "now", SecurityType.Equity)
+            var expected = new LimitOrder(Symbols.SPY, 100, 210.10m, new DateTime(2015, 11, 23, 17, 15, 37), "now")
             {
                 Id = 12345,
                 Price = 209.03m,
@@ -86,7 +86,7 @@ namespace QuantConnect.Tests.Common.Orders
         [Test]
         public void DeserializesStopMarketOrder()
         {
-            var expected = new StopMarketOrder(Symbols.SPY, 100, 210.10m, new DateTime(2015, 11, 23, 17, 15, 37), "now", SecurityType.Equity)
+            var expected = new StopMarketOrder(Symbols.SPY, 100, 210.10m, new DateTime(2015, 11, 23, 17, 15, 37), "now")
             {
                 Id = 12345,
                 Price = 209.03m,
@@ -102,7 +102,7 @@ namespace QuantConnect.Tests.Common.Orders
         [Test]
         public void DeserializesStopLimitOrder()
         {
-            var expected = new StopLimitOrder(Symbols.SPY, 100, 210.10m, 200.23m, new DateTime(2015, 11, 23, 17, 15, 37), "now", SecurityType.Equity)
+            var expected = new StopLimitOrder(Symbols.SPY, 100, 210.10m, 200.23m, new DateTime(2015, 11, 23, 17, 15, 37), "now")
             {
                 Id = 12345,
                 Price = 209.03m,

@@ -209,10 +209,9 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Send a algorithm status update to the user of the algorithms running state.
         /// </summary>
-        /// <param name="algorithmId">String Id of the algorithm.</param>
         /// <param name="status">Status enum of the algorithm.</param>
         /// <param name="message">Optional string message describing reason for status change.</param>
-        void SendStatusUpdate(string algorithmId, AlgorithmStatus status, string message = "");
+        void SendStatusUpdate(AlgorithmStatus status, string message = "");
 
         /// <summary>
         /// Set the chart name:

@@ -13,11 +13,13 @@
  * limitations under the License.
 */
 
-using System;
+using System.Collections.Generic;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Forex;
-using QuantConnect.Securities.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages
 {
@@ -26,6 +28,36 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class FxcmBrokerageModel : DefaultBrokerageModel
     {
+        /// <summary>
+        /// The default markets for the fxcm brokerage
+        /// </summary>
+        public new static readonly IReadOnlyDictionary<SecurityType, string> DefaultMarketMap = new Dictionary<SecurityType, string>
+        {
+            {SecurityType.Base, Market.USA},
+            {SecurityType.Equity, Market.USA},
+            {SecurityType.Option, Market.USA},
+            {SecurityType.Forex, Market.FXCM},
+            {SecurityType.Cfd, Market.FXCM}
+        }.ToReadOnlyDictionary();
+
+        /// <summary>
+        /// Gets a map of the default markets to be used for each security type
+        /// </summary>
+        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets
+        {
+            get { return DefaultMarketMap; }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DefaultBrokerageModel"/> class
+        /// </summary>
+        /// <param name="accountType">The type of account to be modelled, defaults to 
+        /// <see cref="QuantConnect.AccountType.Margin"/></param>
+        public FxcmBrokerageModel(AccountType accountType = AccountType.Margin)
+            : base(accountType)
+        {
+        }
+
         /// <summary>
         /// Returns true if the brokerage could accept this order. This takes into account
         /// order type, security type, and order size limits.
@@ -127,22 +159,33 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Gets a new transaction model that represents this brokerage's fee structure and fill behavior
+        /// Gets a new fill model that represents this brokerage's fill behavior
         /// </summary>
-        /// <param name="security">The security to get a transaction model for</param>
-        /// <returns>The transaction model for this brokerage</returns>
-        public override ISecurityTransactionModel GetTransactionModel(Security security)
+        /// <param name="security">The security to get fill model for</param>
+        /// <returns>The new fill model for this brokerage</returns>
+        public override IFillModel GetFillModel(Security security)
         {
-            switch (security.Type)
-            {
-                case SecurityType.Forex:
-                    return new FxcmTransactionModel();
+            return new ImmediateFillModel();
+        }
 
-                case SecurityType.Cfd:
-                default:
-                    throw new Exception("FXCM does not support the asset type " + security.Type + ". " +
-                                        "Please ensure your algorithm only uses Forex (CFD assets are not currently supported).");
-            }
+        /// <summary>
+        /// Gets a new fee model that represents this brokerage's fee structure
+        /// </summary>
+        /// <param name="security">The security to get a fee model for</param>
+        /// <returns>The new fee model for this brokerage</returns>
+        public override IFeeModel GetFeeModel(Security security)
+        {
+            return new FxcmFeeModel();
+        }
+
+        /// <summary>
+        /// Gets a new slippage model that represents this brokerage's fill slippage behavior
+        /// </summary>
+        /// <param name="security">The security to get a slippage model for</param>
+        /// <returns>The new slippage model for this brokerage</returns>
+        public override ISlippageModel GetSlippageModel(Security security)
+        {
+            return new SpreadSlippageModel();
         }
 
         /// <summary>

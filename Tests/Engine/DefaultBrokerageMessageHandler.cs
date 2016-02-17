@@ -31,33 +31,12 @@ namespace QuantConnect.Tests.Engine
     public class DefaultBrokerageMessageHandlerTests
     {
         [Test]
-        public void SetsAlgorithmRunTimeErrorOnDisconnectIfNonCustomSecurityIsOpen()
-        {
-            var algorithm = new AlgorithmStub(equities: new List<string> { "SPY" });
-            algorithm.Securities[Symbols.SPY].Exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
-            var job = new LiveNodePacket();
-            var results = new TestResultHandler();//packet => Console.WriteLine(FieldsToString(packet)));
-            var api = new Api.Api();
-            var handler = new DefaultBrokerageMessageHandler(algorithm, job, results, api, TimeSpan.Zero, TimeSpan.Zero);
-
-            Assert.IsNull(algorithm.RunTimeError);
-
-            handler.Handle(BrokerageMessageEvent.Disconnected("Disconnection!"));
-
-            Thread.Sleep(100);
-
-            Assert.IsNotNull(algorithm.RunTimeError);
-
-            results.Exit();
-        }
-
-        [Test]
         public void DoesNotSetAlgorithmRunTimeErrorOnDisconnectIfAllSecuritiesClosed()
         {
             var referenceTime = DateTime.UtcNow;
             var algorithm = new AlgorithmStub(equities: new List<string> { "SPY" });
             algorithm.SetDateTime(referenceTime);
-            algorithm.Securities[Symbols.SPY].Exchange.SetMarketHours(TimeSpan.Zero, TimeSpan.Zero, referenceTime.ConvertFromUtc(TimeZones.NewYork).DayOfWeek);
+            algorithm.Securities[Symbols.SPY].Exchange.SetMarketHours(Enumerable.Empty<MarketHoursSegment>(), referenceTime.ConvertFromUtc(TimeZones.NewYork).DayOfWeek);
             var job = new LiveNodePacket();
             var results = new TestResultHandler();//packet => Console.WriteLine(FieldsToString(packet)));
             var api = new Api.Api();
@@ -73,37 +52,16 @@ namespace QuantConnect.Tests.Engine
         }
 
         [Test]
-        public void SetsRunTimeErrorBeforeNextMarketOpen()
-        {
-            var algorithm = new AlgorithmStub(equities: new List<string> { "SPY" });
-            var referenceTime = DateTime.UtcNow;
-            algorithm.SetDateTime(referenceTime);
-            var localReferenceTime = referenceTime.ConvertFromUtc(TimeZones.NewYork);
-            algorithm.Securities[Symbols.SPY].Exchange.SetMarketHours(localReferenceTime.AddSeconds(1).TimeOfDay, TimeSpan.FromDays(1), localReferenceTime.DayOfWeek);
-            var job = new LiveNodePacket();
-            var results = new TestResultHandler();//packet => Console.WriteLine(FieldsToString(packet)));
-            var api = new Api.Api();
-            var handler = new DefaultBrokerageMessageHandler(algorithm, job, results, api, TimeSpan.Zero, TimeSpan.FromSeconds(.75));
-
-            Assert.IsNull(algorithm.RunTimeError);
-
-            handler.Handle(BrokerageMessageEvent.Disconnected("Disconnection!"));
-
-            Thread.Sleep(1000);
-
-            Assert.IsNotNull(algorithm.RunTimeError);
-
-            results.Exit();
-        }
-
-        [Test]
         public void DoesNotSetRunTimeErrorWhenReconnectMessageComesThrough()
         {
             var algorithm = new AlgorithmStub(equities: new List<string> { "SPY" });
             var referenceTime = DateTime.UtcNow;
             algorithm.SetDateTime(referenceTime);
             var localReferencTime = referenceTime.ConvertFromUtc(TimeZones.NewYork);
-            algorithm.Securities[Symbols.SPY].Exchange.SetMarketHours(localReferencTime.AddSeconds(1).TimeOfDay, TimeSpan.FromDays(1), localReferencTime.DayOfWeek);
+            var open = localReferencTime.AddSeconds(1).TimeOfDay;
+            var closed = TimeSpan.FromDays(1);
+            var marketHours = new MarketHoursSegment(MarketHoursState.Market, open, closed);
+            algorithm.Securities[Symbols.SPY].Exchange.SetMarketHours(new [] {marketHours}, localReferencTime.DayOfWeek);
             var job = new LiveNodePacket();
             var results = new TestResultHandler();//packet => Console.WriteLine(FieldsToString(packet)));
             var api = new Api.Api();
@@ -122,19 +80,6 @@ namespace QuantConnect.Tests.Engine
             Assert.IsNull(algorithm.RunTimeError);
 
             results.Exit();
-        }
-
-        private static string FieldsToString(object obj)
-        {
-            var sb = new StringBuilder();
-            var fields = obj.GetType().GetFields();
-            var length = fields.Select(x => x.Name.Length).DefaultIfEmpty(0).Max() + 1;
-            foreach (var field in fields)
-            {
-                var value = field.GetValue(obj);
-                sb.AppendLine((field.Name.PadRight(length) + ": ") + value);
-            }
-            return sb.ToString();
         }
     }
 }

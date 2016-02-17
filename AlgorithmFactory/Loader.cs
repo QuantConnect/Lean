@@ -162,7 +162,8 @@ namespace QuantConnect.AlgorithmFactory
                 try
                 {
                     Log.Trace("Loader.TryCreatePythonAlgorithm(): Importing python module...");
-                    var scope = engine.Runtime.ImportModule("main");
+                    var algorithmName = Config.Get("algorithm-type-name");
+                    var scope = engine.Runtime.ImportModule(algorithmName);
                     items = (List<KeyValuePair<string, dynamic>>)scope.GetItems();
                 }
                 catch (Exception err)
@@ -316,15 +317,6 @@ namespace QuantConnect.AlgorithmFactory
         }
 
         /// <summary>
-        /// Shim method - Gets the types derived from the 'baseClassName' type
-        /// </summary>
-        [Obsolete("Use the other overload, it's this types job to produce IAlgorithm instances")]
-        public static List<string> GetExtendedTypeNames(Assembly assembly, string baseClassName)
-        {
-            return GetExtendedTypeNames(assembly);
-        }
-
-        /// <summary>
         /// Get a list of all the matching type names in this DLL assembly:
         /// </summary>
         /// <param name="assembly">Assembly dll we're loading.</param>
@@ -396,27 +388,6 @@ namespace QuantConnect.AlgorithmFactory
             }
 
             return complete && success && algorithmInstance != null;
-        }
-
-        /// <summary>
-        /// Create a safe application domain with a random name. 
-        /// </summary>
-        /// <remarks>Not used in lean engine. Running the library in an app domain is 10x slower.</remarks>
-        /// <param name="appDomainName">Set the name if required</param>
-        /// <returns>True on successful creation.</returns>
-        private AppDomain CreateAppDomain(string appDomainName = "") {
-
-            //Create new domain name if not supplied:
-            if (string.IsNullOrEmpty(appDomainName)) {
-                appDomainName = "qclibrary" + Guid.NewGuid().ToString().GetHashCode().ToString("x");
-            }
-
-            //Setup the new domain
-            var domainSetup = new AppDomainSetup();
-
-            //Create the domain: set to class variable; return reference.
-            appDomain = AppDomain.CreateDomain(appDomainName, null, domainSetup);
-            return appDomain;
         }
 
 

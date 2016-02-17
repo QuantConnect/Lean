@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -126,8 +127,11 @@ namespace QuantConnect.Securities
         /// <param name="securities">The security manager</param>
         /// <param name="subscriptions">The subscription manager used for searching and adding subscriptions</param>
         /// <param name="marketHoursDatabase">A security exchange hours provider instance used to resolve exchange hours for new subscriptions</param>
+        /// <param name="symbolPropertiesDatabase">A symbol properties database instance</param>
+        /// <param name="marketMap">The market map that decides which market the new security should be in</param>
+        /// <param name="cashBook">The cash book - used for resolving quote currencies for created conversion securities</param>
         /// <returns>Returns the added currency security if needed, otherwise null</returns>
-        public Security EnsureCurrencyDataFeed(SecurityManager securities, SubscriptionManager subscriptions, MarketHoursDatabase marketHoursDatabase)
+        public Security EnsureCurrencyDataFeed(SecurityManager securities, SubscriptionManager subscriptions, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase, IReadOnlyDictionary<SecurityType, string> marketMap, CashBook cashBook)
         {
             if (Symbol == CashBook.AccountCurrency)
             {
@@ -145,7 +149,7 @@ namespace QuantConnect.Securities
             // we require a subscription that converts this into the base currency
             string normal = Symbol + CashBook.AccountCurrency;
             string invert = CashBook.AccountCurrency + Symbol;
-            foreach (var config in subscriptions.Subscriptions.Where(config => config.SecurityType == SecurityType.Forex))
+            foreach (var config in subscriptions.Subscriptions.Where(config => config.SecurityType == SecurityType.Forex || config.SecurityType == SecurityType.Cfd))
             {
                 if (config.Symbol.Value == normal)
                 {
@@ -159,14 +163,14 @@ namespace QuantConnect.Securities
                     return null;
                 }
             }
-
-            // get the market from the first Forex subscription
-            string market = (from config in subscriptions.Subscriptions
-                             where config.SecurityType == SecurityType.Forex
-                             select config.Market).FirstOrDefault() ?? Market.FXCM;
-
             // if we've made it here we didn't find a subscription, so we'll need to add one
-            var currencyPairs = Forex.Forex.CurrencyPairs.Select(x => QuantConnect.Symbol.Create(x, SecurityType.Forex, market));
+            var currencyPairs = Currencies.CurrencyPairs.Select(x =>
+            {
+                // allow XAU or XAG to be used as quote currencies, but pairs including them are CFDs
+                var securityType = Symbol.StartsWith("X") ? SecurityType.Cfd : SecurityType.Forex;
+                var market = marketMap[securityType];
+                return QuantConnect.Symbol.Create(x, securityType, market);
+            });
             var minimumResolution = subscriptions.Subscriptions.Select(x => x.Resolution).DefaultIfEmpty(Resolution.Minute).Min();
             var objectType = minimumResolution == Resolution.Tick ? typeof (Tick) : typeof (TradeBar);
             foreach (var symbol in currencyPairs)
@@ -174,12 +178,28 @@ namespace QuantConnect.Securities
                 if (symbol.Value == normal || symbol.Value == invert)
                 {
                     _invertRealTimePrice = symbol.Value == invert;
-                    var marketHoursDbEntry = marketHoursDatabase.GetEntry(market, symbol.Value, SecurityType.Forex);
+                    var securityType = symbol.ID.SecurityType;
+                    var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol.Value, securityType, Symbol);
+                    Cash quoteCash;
+                    if (!cashBook.TryGetValue(symbolProperties.QuoteCurrency, out quoteCash))
+                    {
+                        throw new Exception("Unable to resolve quote cash: " + symbolProperties.QuoteCurrency + ". This is required to add conversion feed: " + symbol.ToString());
+                    }
+                    var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType);
                     var exchangeHours = marketHoursDbEntry.ExchangeHours;
                     // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
                     var config = subscriptions.Add(objectType, symbol, minimumResolution, marketHoursDbEntry.DataTimeZone, exchangeHours.TimeZone, false, true, false, true);
-                    var security = new Forex.Forex(exchangeHours, this, config, 1m);
                     SecuritySymbol = config.Symbol;
+
+                    Security security;
+                    if (securityType == SecurityType.Cfd)
+                    {
+                        security = new Cfd.Cfd(exchangeHours, quoteCash, config, symbolProperties);
+                    }
+                    else
+                    {
+                        security = new Forex.Forex(exchangeHours, this, config, symbolProperties);
+                    }
                     securities.Add(config.Symbol, security);
                     Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding " + symbol.Value + " for cash " + Symbol + " currency feed");
                     return security;

@@ -28,11 +28,8 @@ using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
-using QuantConnect.Orders.Fees;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Equity;
-using QuantConnect.Securities.Forex;
 using QuantConnect.Util;
 using IB = Krs.Ats.IBNet;
 
@@ -400,11 +397,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _accountProperties.Clear();
 
             int attempt = 1;
+            const int maxAttempts = 65;
             while (true)
             {
                 try
                 {
-                    Log.Trace("InteractiveBrokersBrokerage.Connect(): Attempting to connect (" + attempt + "/10) ...");
+                    Log.Trace("InteractiveBrokersBrokerage.Connect(): Attempting to connect ({0}/{1}) ...", attempt, maxAttempts);
 
                     // we're going to try and connect several times, if successful break
                     _client.Connect(_host, _port, _clientID);
@@ -414,8 +412,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 }
                 catch (Exception err)
                 {
-                    // max out at 60 attempts to connect ~1 minute
-                    if (attempt++ < 60)
+                    // max out at 65 attempts to connect ~1 minute
+                    if (attempt++ < maxAttempts)
                     {
                         Thread.Sleep(1000);
                         continue;
@@ -632,7 +630,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // determine the correct symbol to choose
             string invertedSymbol = "USD" + currency;
             string normalSymbol = currency + "USD";
-            var currencyPair = Forex.CurrencyPairs.FirstOrDefault(x => x == invertedSymbol || x == normalSymbol);
+            var currencyPair = Currencies.CurrencyPairs.FirstOrDefault(x => x == invertedSymbol || x == normalSymbol);
             if (currencyPair == null)
             {
                 throw new Exception("Unable to resolve currency conversion pair for currency: " + currency);
@@ -912,7 +910,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             _accountHoldingsResetEvent.Reset();
             var holding = CreateHolding(e);
-            _accountHoldings[holding.Symbol] = holding;
+            _accountHoldings[holding.Symbol.Value] = holding;
         }
 
         /// <summary>
@@ -972,7 +970,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             Order order;
             var mappedSymbol = MapSymbol(contract);
-            var securityType = ConvertSecurityType(contract.SecurityType);
             var orderType = ConvertOrderType(ibOrder);
             switch (orderType)
             {
@@ -985,14 +982,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 case OrderType.MarketOnOpen:
                     order = new MarketOnOpenOrder(mappedSymbol, 
-                        securityType, 
                         ibOrder.TotalQuantity,
                         new DateTime());
                     break;
 
                 case OrderType.MarketOnClose:
                     order = new MarketOnCloseOrder(mappedSymbol,
-                        securityType,
                         ibOrder.TotalQuantity,
                         new DateTime()
                         );
@@ -1027,7 +1022,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     throw new InvalidEnumArgumentException("orderType", (int) orderType, typeof (OrderType));
             }
 
-            order.SecurityType = ConvertSecurityType(contract.SecurityType);
             order.BrokerId.Add(ibOrder.OrderId.ToString());
 
             return order;
@@ -1230,7 +1224,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private Holding CreateHolding(IB.UpdatePortfolioEventArgs e)
         {
             string currencySymbol;
-            if (!Securities.Forex.Forex.CurrencySymbols.TryGetValue(e.Contract.Currency, out currencySymbol))
+            if (!Currencies.CurrencySymbols.TryGetValue(e.Contract.Currency, out currencySymbol))
             {
                 currencySymbol = "$";
             }

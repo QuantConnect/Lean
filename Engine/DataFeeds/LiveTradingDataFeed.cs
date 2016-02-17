@@ -313,6 +313,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Log.Error(err);
                 _algorithm.RunTimeError = err;
             }
+
+            Log.Trace("LiveTradingDataFeed.Run(): Exited thread.");
             IsActive = false;
         }
 
@@ -336,15 +338,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                 }
             }
-            
+
             if (_exchange != null) _exchange.Stop();
             if (_customExchange != null) _customExchange.Stop();
 
-            if (_cancellationTokenSource != null && !_cancellationTokenSource.IsCancellationRequested)
-            {
-                _cancellationTokenSource.Cancel();
-                if (_bridge != null) _bridge.Dispose();
-            }
+            Log.Trace("LiveTradingDataFeed.Exit(): Setting cancellation token...");
+            _cancellationTokenSource.Cancel();
+            
+            if (_bridge != null) _bridge.Dispose();
         }
 
         /// <summary>
@@ -398,9 +399,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var refresher = new RefreshEnumerator<BaseData>(() =>
                     {
                         var sourceProvider = (BaseData)Activator.CreateInstance(config.Type);
-                        var currentLocalDate = DateTime.UtcNow.ConvertFromUtc(security.Exchange.TimeZone).Date;
-                        var factory = new BaseDataSubscriptionFactory(config, currentLocalDate, true);
-                        var source = sourceProvider.GetSource(config, currentLocalDate, true);
+                        var dateInDataTimeZone = DateTime.UtcNow.ConvertFromUtc(config.DataTimeZone).Date;
+                        var factory = new BaseDataSubscriptionFactory(config, dateInDataTimeZone, true);
+                        var source = sourceProvider.GetSource(config, dateInDataTimeZone, true);
                         var factoryReadEnumerator = factory.Read(source).GetEnumerator();
                         var maximumDataAge = TimeSpan.FromTicks(Math.Max(config.Increment.Ticks, TimeSpan.FromSeconds(5).Ticks));
                         var fastForward = new FastForwardEnumerator(factoryReadEnumerator, _timeProvider, security.Exchange.TimeZone, maximumDataAge);
@@ -484,7 +485,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var exchangeHours = marketHoursDatabase.GetExchangeHours(config);
 
             // create a canonical security object
-            var security = new Security(exchangeHours, config, universe.UniverseSettings.Leverage);
+            var security = new Security(exchangeHours, config, _algorithm.Portfolio.CashBook[CashBook.AccountCurrency], SymbolProperties.GetDefault(CashBook.AccountCurrency));
             var tzOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, startTimeUtc, endTimeUtc);
 
             IEnumerator<BaseData> enumerator;
@@ -492,7 +493,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var userDefined = universe as UserDefinedUniverse;
             if (userDefined != null)
             {
-                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating user defined universe: " + config.Symbol);
+                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating user defined universe: " + config.Symbol.ToString());
 
                 // spoof a tick on the requested interval to trigger the universe selection function
                 enumerator = userDefined.GetTriggerTimes(startTimeUtc, endTimeUtc, marketHoursDatabase)
@@ -506,7 +507,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             else if (config.Type == typeof (CoarseFundamental))
             {
-                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating coarse universe: " + config.Symbol);
+                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating coarse universe: " + config.Symbol.ToString());
 
                 // since we're binding to the data queue exchange we'll need to let him
                 // know that we expect this data
@@ -521,15 +522,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             else
             {
-                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating custom universe: " + config.Symbol);
+                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating custom universe: " + config.Symbol.ToString());
 
                 // each time we exhaust we'll new up this enumerator stack
                 var refresher = new RefreshEnumerator<BaseDataCollection>(() =>
                 {
                     var sourceProvider = (BaseData)Activator.CreateInstance(config.Type);
-                    var currentLocalDate = DateTime.UtcNow.ConvertFromUtc(security.Exchange.TimeZone).Date;
-                    var factory = new BaseDataSubscriptionFactory(config, currentLocalDate, true);
-                    var source = sourceProvider.GetSource(config, currentLocalDate, true);
+                    var dateInDataTimeZone = DateTime.UtcNow.ConvertFromUtc(config.DataTimeZone).Date;
+                    var factory = new BaseDataSubscriptionFactory(config, dateInDataTimeZone, true);
+                    var source = sourceProvider.GetSource(config, dateInDataTimeZone, true);
                     var factorEnumerator = factory.Read(source).GetEnumerator();
                     var fastForward = new FastForwardEnumerator(factorEnumerator, _timeProvider, security.Exchange.TimeZone, config.Increment);
                     var frontierAware = new FrontierAwareEnumerator(fastForward, _frontierTimeProvider, tzOffsetProvider);
@@ -567,6 +568,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 if (ticks == 0) Thread.Sleep(1);
             }
+
+            Log.Trace("LiveTradingDataFeed.GetNextTicksEnumerator(): Exiting enumerator thread...");
         }
 
         private static TimeSpan ResolveFillForwardResolution(IAlgorithm algorithm)

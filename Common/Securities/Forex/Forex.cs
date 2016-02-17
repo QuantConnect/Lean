@@ -14,8 +14,10 @@
 */
 
 using System;
-using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.Slippage;
 
 namespace QuantConnect.Securities.Forex 
 {
@@ -28,49 +30,32 @@ namespace QuantConnect.Securities.Forex
         /// <summary>
         /// Constructor for the forex security
         /// </summary>
-        /// <param name="quoteCurrency">The cash object that represent the quote currency</param>
-        /// <param name="config">The subscription configuration for this security</param>
-        /// <param name="leverage">The leverage used for this security</param>
-        public Forex(Cash quoteCurrency, SubscriptionDataConfig config, decimal leverage)
-            : this(MarketHoursDatabase.FromDataFolder().GetExchangeHours(config), quoteCurrency, config, leverage)
-        {
-            // this constructor is provided for backward compatibility
-
-            // should we even keep this?
-        }
-
-        /// <summary>
-        /// Constructor for the forex security
-        /// </summary>
         /// <param name="exchangeHours">Defines the hours this exchange is open</param>
         /// <param name="quoteCurrency">The cash object that represent the quote currency</param>
         /// <param name="config">The subscription configuration for this security</param>
-        /// <param name="leverage">The leverage used for this security</param>
-        public Forex(SecurityExchangeHours exchangeHours, Cash quoteCurrency, SubscriptionDataConfig config, decimal leverage)
-            : base(exchangeHours, config, leverage)
+        /// <param name="symbolProperties">The symbol properties for this security</param>
+        public Forex(SecurityExchangeHours exchangeHours, Cash quoteCurrency, SubscriptionDataConfig config, SymbolProperties symbolProperties)
+            : base(config,
+                quoteCurrency,
+                symbolProperties,
+                new ForexExchange(exchangeHours),
+                new ForexCache(),
+                new SecurityPortfolioModel(),
+                new ImmediateFillModel(),
+                new InteractiveBrokersFeeModel(),
+                new SpreadSlippageModel(),
+                new ImmediateSettlementModel(),
+                new SecurityMarginModel(50m),
+                new ForexDataFilter()
+                )
         {
-            QuoteCurrency = quoteCurrency;
-            //Holdings for new Vehicle:
-            Cache = new ForexCache();
-            Exchange = new ForexExchange(exchangeHours); 
-            DataFilter = new ForexDataFilter();
-            TransactionModel = new ForexTransactionModel();
-            PortfolioModel = new ForexPortfolioModel();
-            MarginModel = new ForexMarginModel(leverage);
-            SettlementModel = new ImmediateSettlementModel();
             Holdings = new ForexHolding(this);
 
             // decompose the symbol into each currency pair
             string baseCurrencySymbol, quoteCurrencySymbol;
             DecomposeCurrencyPair(config.Symbol.Value, out baseCurrencySymbol, out quoteCurrencySymbol);
             BaseCurrencySymbol = baseCurrencySymbol;
-            QuoteCurrencySymbol = quoteCurrencySymbol;
         }
-
-        /// <summary>
-        /// Gets the Cash object used for converting the quote currency to the account currency
-        /// </summary>
-        public Cash QuoteCurrency { get; private set; }
 
         /// <summary>
         /// Gets the currency acquired by going long this currency pair
@@ -80,15 +65,6 @@ namespace QuantConnect.Securities.Forex
         /// of going long the EUR/USD a trader is acquiring euros in exchange for US dollars
         /// </remarks>
         public string BaseCurrencySymbol { get; private set; }
-
-        /// <summary>
-        /// Gets the currency spent by going long this currency pair
-        /// </summary>
-        /// <remarks>
-        /// For example, the EUR/USD has a quote currency of US dollars, and as a result of
-        /// going long the EUR/USD a trader is spending US dollars in order to acquire euros.
-        /// </remarks>
-        public string QuoteCurrencySymbol { get; private set; }
 
         /// <summary>
         /// Decomposes the specified currency pair into a base and quote currency provided as out parameters
@@ -105,31 +81,5 @@ namespace QuantConnect.Securities.Forex
             baseCurrency = currencyPair.Substring(0, 3);
             quoteCurrency = currencyPair.Substring(3);
         }
-
-        /// <summary>
-        /// Gets the listing of currently supported currency pairs.
-        /// </summary>
-        /// <remarks>
-        /// This listing should be in sync with the data available at: https://www.quantconnect.com/data/FOREX#2.1.1
-        /// </remarks>
-        public static readonly IReadOnlyList<string> CurrencyPairs = new []
-        {
-            "AUDJPY", "AUDUSD", "EURCHF", "EURGBP", "EURJPY", "EURUSD", "GBPAUD", "GBPJPY", "GBPUSD", "NZDUSD", "USDCAD", "USDCHF", "USDJPY"
-        };
-
-        /// <summary>
-        /// A mapping of currency codes to their display symbols
-        /// </summary>
-        public static readonly IReadOnlyDictionary<string, string> CurrencySymbols = new Dictionary<string, string>
-        {
-            {"USD", "$"},
-            {"GBP", "₤"},
-            {"JPY", "¥"},
-            {"EUR", "€"},
-            {"NZD", "$"},
-            {"AUD", "$"},
-            {"CAD", "$"},
-            {"CHF", "Fr"}
-        };
     }
 }

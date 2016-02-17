@@ -25,36 +25,16 @@ namespace QuantConnect.Orders.Fees
     /// </summary>
     public class InteractiveBrokersFeeModel : IFeeModel
     {
-        private readonly decimal _commissionRate;
-        private readonly decimal _minimumOrderFee;
+        private readonly decimal _forexCommissionRate;
+        private readonly decimal _forexMinimumOrderFee;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ImmediateFillModel"/>
         /// </summary>
-        /// <param name="monthlyTradeAmountInUSDollars">Monthly dollar volume traded</param>
-        public InteractiveBrokersFeeModel(decimal monthlyTradeAmountInUSDollars = 0)
+        /// <param name="monthlyForexTradeAmountInUSDollars">Monthly dollar volume traded</param>
+        public InteractiveBrokersFeeModel(decimal monthlyForexTradeAmountInUSDollars = 0)
         {
-            const decimal bp = 0.0001m;
-            if (monthlyTradeAmountInUSDollars <= 1000000000) // 1 billion
-            {
-                _commissionRate = 0.20m * bp;
-                _minimumOrderFee = 2.00m;
-            }
-            else if (monthlyTradeAmountInUSDollars <= 2000000000) // 2 billion
-            {
-                _commissionRate = 0.15m * bp;
-                _minimumOrderFee = 1.50m;
-            }
-            else if (monthlyTradeAmountInUSDollars <= 5000000000) // 5 billion
-            {
-                _commissionRate = 0.10m * bp;
-                _minimumOrderFee = 1.25m;
-            }
-            else
-            {
-                _commissionRate = 0.08m * bp;
-                _minimumOrderFee = 1.00m;
-            }
+            ProcessForexRateSchedule(monthlyForexTradeAmountInUSDollars, out _forexCommissionRate, out _forexMinimumOrderFee);
         }
 
         /// <summary>
@@ -66,43 +46,66 @@ namespace QuantConnect.Orders.Fees
         /// <returns>The cost of the order in units of the account currency</returns>
         public decimal GetOrderFee(Security security, Order order)
         {
-            if (security.Type == SecurityType.Forex)
+            switch (security.Type)
             {
-                var forex = (Forex)security;
+                case SecurityType.Forex:
+                    // get the total order value in the account currency
+                    var totalOrderValue = order.GetValue(security);
+                    var fee = Math.Abs(_forexCommissionRate*totalOrderValue);
+                    return Math.Max(_forexMinimumOrderFee, fee);
 
-                // get the total order value in the account currency
-                var price = order.Status.IsFill() ? order.Price : security.Price;
-                var totalOrderValue = order.GetValue(price) * forex.QuoteCurrency.ConversionRate;
-                var fee = Math.Abs(_commissionRate*totalOrderValue);
-                return Math.Max(_minimumOrderFee, fee);
-            }
+                case SecurityType.Equity:
+                    var tradeValue = Math.Abs(order.GetValue(security));
 
-            if (security.Type == SecurityType.Equity)
-            {
-                var price = order.Status.IsFill() ? order.Price : security.Price;
-                var tradeValue = Math.Abs(order.GetValue(price));
+                    //Per share fees
+                    var tradeFee = 0.005m * order.AbsoluteQuantity;
 
-                //Per share fees
-                var tradeFee = 0.005m * order.AbsoluteQuantity;
+                    //Maximum Per Order: 0.5%
+                    //Minimum per order. $1.0
+                    var maximumPerOrder = 0.005m * tradeValue;
+                    if (tradeFee < 1)
+                    {
+                        tradeFee = 1;
+                    }
+                    else if (tradeFee > maximumPerOrder)
+                    {
+                        tradeFee = maximumPerOrder;
+                    }
 
-                //Maximum Per Order: 0.5%
-                //Minimum per order. $1.0
-                var maximumPerOrder = 0.005m * tradeValue;
-                if (tradeFee < 1)
-                {
-                    tradeFee = 1;
-                }
-                else if (tradeFee > maximumPerOrder)
-                {
-                    tradeFee = maximumPerOrder;
-                }
-
-                //Always return a positive fee.
-                return Math.Abs(tradeFee);
+                    //Always return a positive fee.
+                    return Math.Abs(tradeFee);
             }
 
             // all other types default to zero fees
             return 0m;
+        }
+
+        /// <summary>
+        /// Determines which tier an account falls into based on the monthly trading volume
+        /// </summary>
+        private static void ProcessForexRateSchedule(decimal monthlyForexTradeAmountInUSDollars, out decimal commissionRate, out decimal minimumOrderFee)
+        {
+            const decimal bp = 0.0001m;
+            if (monthlyForexTradeAmountInUSDollars <= 1000000000)      // 1 billion
+            {
+                commissionRate = 0.20m * bp;
+                minimumOrderFee = 2.00m;
+            }
+            else if (monthlyForexTradeAmountInUSDollars <= 2000000000) // 2 billion
+            {
+                commissionRate = 0.15m * bp;
+                minimumOrderFee = 1.50m;
+            }
+            else if (monthlyForexTradeAmountInUSDollars <= 5000000000) // 5 billion
+            {
+                commissionRate = 0.10m * bp;
+                minimumOrderFee = 1.25m;
+            }
+            else
+            {
+                commissionRate = 0.08m * bp;
+                minimumOrderFee = 1.00m;
+            }
         }
     }
 }

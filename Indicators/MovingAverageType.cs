@@ -35,6 +35,22 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// A weighted moving average type
         /// </summary>
-        LinearWeightedMovingAverage
+        LinearWeightedMovingAverage,
+        /// <summary>
+        /// The double exponential moving average
+        /// </summary>
+        DoubleExponential,
+        /// <summary>
+        /// The triple exponential moving average
+        /// </summary>
+        TripleExponential,
+        /// <summary>
+        /// The triangular moving average
+        /// </summary>
+        Triangular,
+        /// <summary>
+        /// The T3 moving average
+        /// </summary>
+        T3
     }
 }

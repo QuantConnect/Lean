@@ -38,6 +38,15 @@ namespace QuantConnect.Tests
 
             try
             {
+                // set the configuration up
+                Config.Set("algorithm-type-name", algorithm);
+                Config.Set("live-mode", "false");
+                Config.Set("environment", "");
+                Config.Set("messaging-handler", "QuantConnect.Messaging.Messaging");
+                Config.Set("job-queue-handler", "QuantConnect.Queues.JobQueue");
+                Config.Set("api-handler", "QuantConnect.Api.Api");
+                Config.Set("result-handler", "QuantConnect.Lean.Engine.Results.BacktestingResultHandler");
+
                 using (Log.LogHandler = new CompositeLogHandler(new ILogHandler[]
                 {
                     new ConsoleLogHandler(),
@@ -46,17 +55,7 @@ namespace QuantConnect.Tests
                 using (var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance))
                 using (var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(Composer.Instance))
                 {
-
-
                     Console.WriteLine("Running " + algorithm + "...");
-
-                    // set the configuration up
-                    Config.Set("algorithm-type-name", algorithm);
-                    Config.Set("live-mode", "false");
-                    Config.Set("environment", "");
-                    Config.Set("messaging-handler", "QuantConnect.Messaging.Messaging");
-                    Config.Set("job-queue-handler", "QuantConnect.Queues.JobQueue");
-                    Config.Set("api-handler", "QuantConnect.Api.Api");
 
                     // run the algorithm in its own thread
 
@@ -68,8 +67,8 @@ namespace QuantConnect.Tests
                         engine.Run(job, algorithmPath);
                     }).Wait();
 
-                    var consoleResultHandler = (ConsoleResultHandler)algorithmHandlers.Results;
-                    statistics = consoleResultHandler.FinalStatistics;
+                    var backtestingResultHandler = (BacktestingResultHandler)algorithmHandlers.Results;
+                    statistics = backtestingResultHandler.FinalStatistics;
                 }
             }
             catch (Exception ex)

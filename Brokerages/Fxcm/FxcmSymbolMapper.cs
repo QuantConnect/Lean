@@ -40,8 +40,6 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <remarks>T1 is FXCM symbol, T2 is Lean symbol</remarks>
         private static readonly TupleList<string, string> FxcmSymbolMappings = new TupleList<string, string>
         {
-            { "10USNote", "USB10YUSD" },
-            { "5USNote", "USB05YUSD" },
             { "AUD/CAD", "AUDCAD" },
             { "AUD/CHF", "AUDCHF" },
             { "AUD/JPY", "AUDJPY" },
@@ -76,9 +74,7 @@ namespace QuantConnect.Brokerages.Fxcm
             { "HKG33", "HK33HKD" },
             { "ITA40", "IT40EUR" },
             { "JPN225", "JP225JPY" },
-            { "JPNBond", "JP10YBJPY" },
             { "NAS100", "NAS100USD" },
-            { "NED25", "NL25EUR" },
             { "NGAS", "NATGASUSD" },
             { "NZD/CAD", "NZDCAD" },
             { "NZD/CHF", "NZDCHF" },
@@ -86,10 +82,8 @@ namespace QuantConnect.Brokerages.Fxcm
             { "NZD/USD", "NZDUSD" },
             { "SPX500", "SPX500USD" },
             { "SUI20", "CH20CHF" },
-            { "TBond", "USB30YUSD" },
             { "TRY/JPY", "TRYJPY" },
             { "UK100", "UK100GBP" },
-            { "UKBond", "UK10YBGBP" },
             { "UKOil", "BCOUSD" },
             { "US30", "US30USD" },
             { "USD/MXN", "USDMXN" },

@@ -206,55 +206,7 @@ namespace QuantConnect.Lean.Engine.Results
                     Packet packet;
                     if (Messages.TryDequeue(out packet))
                     {
-                        switch (packet.Type)
-                        {
-                            //New Debug Message:
-                            case PacketType.Debug:
-                                var debug = packet as DebugPacket;
-                                Log.Debug("LiveTradingResultHandlerRun(): Debug Packet: " + debug.Message);
-                                _messagingHandler.DebugMessage(debug.Message, debug.ProjectId, _deployId, _compileId);
-                                break;
-
-                            case PacketType.RuntimeError:
-                                var runtimeError = packet as RuntimeErrorPacket;
-                                _messagingHandler.RuntimeError(_deployId, runtimeError.Message, runtimeError.StackTrace);
-                                break;
-
-                            //Log all order events to the frontend:
-                            case PacketType.OrderEvent:
-                                var orderEvent = packet as OrderEventPacket;
-                                DebugMessage("New Order Event: OrderId:" + orderEvent.Event.OrderId + " Symbol:" +
-                                                orderEvent.Event.Symbol.ToString() + " Quantity:" + orderEvent.Event.FillQuantity +
-                                                " Status:" + orderEvent.Event.Status);
-                                _messagingHandler.Send(orderEvent);
-                                break;
-
-                            //Send log messages to the browser as well for live trading:
-                            case PacketType.Log:
-                                var log = packet as LogPacket;
-                                Log.Debug("LiveTradingResultHandler.Run(): Log Packet: " + log.Message);
-                                _messagingHandler.LogMessage(_deployId, log.Message);
-                                break;
-
-                            //Send log messages to the browser as well for live trading:
-                            case PacketType.SecurityTypes:
-                                var securityPacket = packet as SecurityTypesPacket;
-                                Log.Debug("LiveTradingResultHandler.Run(): Security Types Packet: " + securityPacket.TypesCSV);
-                                _messagingHandler.SecurityTypes(securityPacket);
-                                break;
-
-                            //Status Update
-                            case PacketType.AlgorithmStatus:
-                                var statusPacket = packet as AlgorithmStatusPacket;
-                                Log.Debug("LiveTradingResultHandler.Run(): Algorithm Status Packet:" + statusPacket.Status + " " + statusPacket.AlgorithmId);
-                                _messagingHandler.AlgorithmStatus(statusPacket.AlgorithmId, statusPacket.Status, statusPacket.Message);
-                                break;
-
-                            default:
-                                _messagingHandler.Send(packet);
-                                Log.Debug("LiveTradingResultHandler.Run(): Case Unhandled: " + packet.Type);
-                                break;
-                        }
+                        _messagingHandler.Send(packet);
                     }
 
                     //2. Update the packet scanner:
@@ -346,7 +298,7 @@ namespace QuantConnect.Lean.Engine.Results
                     // only send holdings updates when we have changes in orders, except for first time, then we want to send all
                     foreach (var asset in _algorithm.Securities.Values.Where(x => !x.SubscriptionDataConfig.IsInternalFeed).OrderBy(x => x.Symbol.Value))
                     {
-                        holdings.Add(asset.Symbol.Value, new Holding(asset.Holdings));
+                        holdings.Add(asset.Symbol.Value, new Holding(asset));
                     }
 
                     //Add the algorithm statistics first.
@@ -577,6 +529,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             if (Messages.Count > 500) return;
             Messages.Enqueue(new HandledErrorPacket(_deployId, message, stacktrace));
+            AddToLogStore(message + (!string.IsNullOrEmpty(stacktrace) ? ": StackTrace: " + stacktrace : string.Empty));
         }
 
         /// <summary>
@@ -597,6 +550,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void RuntimeError(string message, string stacktrace = "")
         {
             Messages.Enqueue(new RuntimeErrorPacket(_deployId, message, stacktrace));
+            AddToLogStore(message + (!string.IsNullOrEmpty(stacktrace) ? ": StackTrace: " + stacktrace : string.Empty));
         }
 
         /// <summary>
@@ -661,10 +615,8 @@ namespace QuantConnect.Lean.Engine.Results
             Security security;
             if (_algorithm.Securities.TryGetValue(symbol, out security) && !security.SubscriptionDataConfig.IsInternalFeed && value > 0)
             {
-                var now = DateTime.Now;
-                var open = now.Date + security.Exchange.MarketOpen;
-                var close = now.Date + security.Exchange.MarketClose;
-                if (now > open && now < close)
+                var now = DateTime.UtcNow.ConvertFromUtc(security.Exchange.TimeZone);
+                if (security.Exchange.Hours.IsOpen(now, security.IsExtendedMarketHours))
                 {
                     Sample("Stockplot: " + symbol.Value, "Stockplot: " + symbol.Value, 0, SeriesType.Line, time, value);
                 }
@@ -756,14 +708,13 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Send a algorithm status update to the user of the algorithms running state.
         /// </summary>
-        /// <param name="algorithmId">String Id of the algorithm.</param>
         /// <param name="status">Status enum of the algorithm.</param>
         /// <param name="message">Optional string message describing reason for status change.</param>
-        public void SendStatusUpdate(string algorithmId, AlgorithmStatus status, string message = "")
+        public void SendStatusUpdate(AlgorithmStatus status, string message = "")
         {
             var msg = status + (string.IsNullOrEmpty(message) ? string.Empty : message);
             Log.Trace("LiveTradingResultHandler.SendStatusUpdate(): " + msg);
-            var packet = new AlgorithmStatusPacket(algorithmId, status, message);
+            var packet = new AlgorithmStatusPacket(_job.AlgorithmId, _job.ProjectId, status, message);
             Messages.Enqueue(packet);
         }
 
@@ -816,7 +767,7 @@ namespace QuantConnect.Lean.Engine.Results
                 result.Results = new LiveResult();
 
                 //Send the truncated packet:
-                _messagingHandler.LiveTradingResult(result);
+                _messagingHandler.Send(result);
             }
             catch (Exception err)
             {
@@ -960,6 +911,8 @@ namespace QuantConnect.Lean.Engine.Results
             //Send the message to frontend as packet:
             Log.Trace("LiveTradingResultHandler.OrderEvent(): " + newEvent, true);
             Messages.Enqueue(new OrderEventPacket(_deployId, newEvent));
+
+            DebugMessage(string.Format("New Order Event: OrderId:{0} Symbol:{1} Quantity:{2} Status:{3}", newEvent.OrderId, newEvent.Symbol, newEvent.FillQuantity, newEvent.Status));
 
             //Add the order event message to the log:
             LogMessage("New Order Event: Id:" + newEvent.OrderId + " Symbol:" + newEvent.Symbol.ToString() + " Quantity:" + newEvent.FillQuantity + " Status:" + newEvent.Status);
@@ -1121,48 +1074,27 @@ namespace QuantConnect.Lean.Engine.Results
                 RuntimeStatistic(pair.Key, pair.Value);
             }
 
-            //Send all the notification messages but timeout within a second
+            //Send all the notification messages but timeout within a second, or if this is a force process, wait till its done.
             var start = DateTime.Now;
-            while (_algorithm.Notify.Messages.Count > 0 && DateTime.Now < start.AddSeconds(1))
+            while (_algorithm.Notify.Messages.Count > 0 && (DateTime.Now < start.AddSeconds(1) || forceProcess))
             {
                 Notification message;
                 if (_algorithm.Notify.Messages.TryDequeue(out message))
                 {
                     //Process the notification messages:
                     Log.Trace("LiveTradingResultHandler.ProcessSynchronousEvents(): Processing Notification...");
-
-                    switch (message.GetType().Name)
+                    try
                     {
-                        case "NotificationEmail":
-                            _messagingHandler.Email(message as NotificationEmail);
-                            break;
-
-                        case "NotificationSms":
-                            _messagingHandler.Sms(message as NotificationSms);
-                            break;
-
-                        case "NotificationWeb":
-                            _messagingHandler.Web(message as NotificationWeb);
-                            break;
-
-                        default:
-                            try
-                            {
-                                //User code.
-                                message.Send();
-                            }
-                            catch (Exception err)
-                            {
-                                Log.Error(err, "Custom send notification:");
-                                ErrorMessage("Custom send notification: " + err.Message, err.StackTrace);
-                            }
-                            break;
+                        _messagingHandler.SendNotification(message);
+                    }
+                    catch (Exception err)
+                    {
+                        Log.Error(err, "Sending notification: " + message.GetType().FullName);
                     }
                 }
             }
 
             Log.Debug("LiveTradingResultHandler.ProcessSynchronousEvents(): Exit");
         }
-    } // End Result Handler Thread:
-
-} // End Namespace
+    }
+}

@@ -35,12 +35,28 @@ namespace QuantConnect.Indicators
             {
                 case MovingAverageType.Simple:
                     return new SimpleMovingAverage(period);
+
                 case MovingAverageType.Exponential:
                     return new ExponentialMovingAverage(period);
+
                 case MovingAverageType.Wilders:
                     return new ExponentialMovingAverage(period, 1m/period);
+
                 case MovingAverageType.LinearWeightedMovingAverage:
                     return new LinearWeightedMovingAverage(period);
+
+                case MovingAverageType.DoubleExponential:
+                    return new DoubleExponentialMovingAverage(period);
+
+                case MovingAverageType.TripleExponential:
+                    return new TripleExponentialMovingAverage(period);
+
+                case MovingAverageType.Triangular:
+                    return new TriangularMovingAverage(period);
+
+                case MovingAverageType.T3:
+                    return new T3MovingAverage(period);
+
                 default:
                     throw new ArgumentOutOfRangeException("movingAverageType");
             }
@@ -60,12 +76,28 @@ namespace QuantConnect.Indicators
             {
                 case MovingAverageType.Simple:
                     return new SimpleMovingAverage(name, period);
+
                 case MovingAverageType.Exponential:
                     return new ExponentialMovingAverage(name, period);
+
                 case MovingAverageType.Wilders:
                     return new ExponentialMovingAverage(name, period, 1m / period);
+
                 case MovingAverageType.LinearWeightedMovingAverage:
                     return new LinearWeightedMovingAverage(name, period);
+
+                case MovingAverageType.DoubleExponential:
+                    return new DoubleExponentialMovingAverage(name, period);
+
+                case MovingAverageType.TripleExponential:
+                    return new TripleExponentialMovingAverage(name, period);
+
+                case MovingAverageType.Triangular:
+                    return new TriangularMovingAverage(name, period);
+
+                case MovingAverageType.T3:
+                    return new T3MovingAverage(name, period);
+
                 default:
                     throw new ArgumentOutOfRangeException("movingAverageType");
             }

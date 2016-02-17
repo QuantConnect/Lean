@@ -48,6 +48,13 @@ namespace QuantConnect.Packets
         public int ProjectId;
 
         /// <summary>
+        /// True to emit message as a popup notification (toast),
+        /// false to emit message in console as text
+        /// </summary>
+        [JsonProperty(PropertyName = "bToast")]
+        public bool Toast;
+
+        /// <summary>
         /// Default constructor for JSON
         /// </summary>
         public DebugPacket()
@@ -57,13 +64,14 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Create a new instance of the notify debug packet:
         /// </summary>
-        public DebugPacket(int projectId, string algorithmId, string compileId, string message)
+        public DebugPacket(int projectId, string algorithmId, string compileId, string message, bool toast = false)
             : base(PacketType.Debug)
         {
             ProjectId = projectId;
             Message = message;
             CompileId = compileId;
             AlgorithmId = algorithmId;
+            Toast = toast;
         }
     
     } // End Work Packet:

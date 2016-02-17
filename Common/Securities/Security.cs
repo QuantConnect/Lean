@@ -16,7 +16,6 @@
 using System;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
@@ -36,7 +35,6 @@ namespace QuantConnect.Securities
     public class Security 
     {
         private LocalTimeKeeper _localTimeKeeper;
-
         private readonly SubscriptionDataConfig _config;
 
         /// <summary>
@@ -49,7 +47,23 @@ namespace QuantConnect.Securities
                 return _config.Symbol;
             }
         }
-        
+
+        /// <summary>
+        /// Gets the Cash object used for converting the quote currency to the account currency
+        /// </summary>
+        public Cash QuoteCurrency
+        {
+            get; private set;
+        }
+
+        /// <summary>
+        /// Gets the symbol properties for this security
+        /// </summary>
+        public SymbolProperties SymbolProperties
+        {
+            get; private set;
+        }
+
         /// <summary>
         /// Type of the security.
         /// </summary>
@@ -122,14 +136,17 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <seealso cref="EquityCache"/>
         /// <seealso cref="ForexCache"/>
-        public virtual SecurityCache Cache { get; set; }
+        public SecurityCache Cache
+        {
+            get; set;
+        }
 
         /// <summary>
         /// Holdings class contains the portfolio, cash and processes order fills.
         /// </summary>
         /// <seealso cref="EquityHolding"/>
         /// <seealso cref="ForexHolding"/>
-        public virtual SecurityHolding Holdings
+        public SecurityHolding Holdings
         {
             get; 
             set;
@@ -140,7 +157,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <seealso cref="EquityExchange"/>
         /// <seealso cref="ForexExchange"/>
-        public virtual SecurityExchange Exchange
+        public SecurityExchange Exchange
         {
             get;
             set;
@@ -194,7 +211,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public IFeeModel FeeModel
         {
-            get; 
+            get;
             set;
         }
 
@@ -203,7 +220,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public IFillModel FillModel
         {
-            get; 
+            get;
             set;
         }
 
@@ -212,7 +229,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public ISlippageModel SlippageModel
         {
-            get; 
+            get;
             set;
         }
 
@@ -239,7 +256,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public ISettlementModel SettlementModel
         {
-            get;
+            get; 
             set;
         }
 
@@ -259,17 +276,62 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Construct a new security vehicle based on the user options.
         /// </summary>
-        public Security(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, decimal leverage) 
+        public Security(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, Cash quoteCurrency, SymbolProperties symbolProperties)
+            : this(config,
+                quoteCurrency,
+                symbolProperties,
+                new SecurityExchange(exchangeHours),
+                new SecurityCache(),
+                new SecurityPortfolioModel(),
+                new ImmediateFillModel(),
+                new InteractiveBrokersFeeModel(),
+                new SpreadSlippageModel(),
+                new ImmediateSettlementModel(),
+                new SecurityMarginModel(1m),
+                new SecurityDataFilter())
         {
-            _config = config;
+        }
 
-            Cache = new SecurityCache();
-            Exchange = new SecurityExchange(exchangeHours);
-            DataFilter = new SecurityDataFilter();
-            PortfolioModel = new SecurityPortfolioModel();
-            TransactionModel = new SecurityTransactionModel();
-            MarginModel = new SecurityMarginModel(leverage);
-            SettlementModel = new ImmediateSettlementModel();
+        /// <summary>
+        /// Construct a new security vehicle based on the user options.
+        /// </summary>
+        protected Security(SubscriptionDataConfig config,
+            Cash quoteCurrency,
+            SymbolProperties symbolProperties,
+            SecurityExchange exchange,
+            SecurityCache cache,
+            ISecurityPortfolioModel portfolioModel,
+            IFillModel fillModel,
+            IFeeModel feeModel,
+            ISlippageModel slippageModel,
+            ISettlementModel settlementModel,
+            ISecurityMarginModel marginModel,
+            ISecurityDataFilter dataFilter
+            )
+        {
+
+            if (symbolProperties == null)
+            {
+                throw new ArgumentNullException("symbolProperties", "Security requires a valid SymbolProperties instance.");
+            }
+
+            if (symbolProperties.QuoteCurrency != quoteCurrency.Symbol)
+            {
+                throw new ArgumentException("symbolProperties.QuoteCurrency must match the quoteCurrency.Symbol");
+            }
+
+            _config = config;
+            QuoteCurrency = quoteCurrency;
+            SymbolProperties = symbolProperties;
+            Cache = cache;
+            Exchange = exchange;
+            DataFilter = dataFilter;
+            PortfolioModel = portfolioModel;
+            MarginModel = marginModel;
+            FillModel = fillModel;
+            FeeModel = feeModel;
+            SlippageModel = slippageModel;
+            SettlementModel = settlementModel;
             Holdings = new SecurityHolding(this);
         }
 

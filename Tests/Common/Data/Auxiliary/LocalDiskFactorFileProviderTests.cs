@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         [Test]
         public void CachesValueAndReturnsSameReference()
         {
-            var provider = new LocalDiskMapFileProvider();
+            var provider = new LocalDiskFactorFileProvider();
             var factorFile1 = provider.Get(Symbols.SPY);
             var factorFile2 = provider.Get(Symbols.SPY);
             Assert.IsTrue(ReferenceEquals(factorFile1, factorFile2));

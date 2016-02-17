@@ -89,7 +89,9 @@ namespace QuantConnect.Brokerages.Backtesting
         public override List<Holding> GetAccountHoldings()
         {
             // grab everything from the portfolio with a non-zero absolute quantity
-            return Algorithm.Portfolio.Values.Where(x => x.AbsoluteQuantity > 0).OrderBy(x => x.Symbol).Select(holding => new Holding(holding)).ToList();
+            return (from security in Algorithm.Portfolio.Securities.Values.OrderBy(x => x.Symbol) 
+                    where security.Holdings.AbsoluteQuantity > 0 
+                    select new Holding(security)).ToList();
         }
 
         /// <summary>
@@ -207,10 +209,18 @@ namespace QuantConnect.Brokerages.Backtesting
                 foreach (var kvp in _pending)
                 {
                     var order = kvp.Value;
+
                     if (order.Status.IsClosed())
                     {
                         // this should never actually happen as we always remove closed orders as they happen
                         _pending.TryRemove(order.Id, out order);
+                        continue;
+                    }
+
+                    // all order fills are processed on the next bar (except for market orders)
+                    if (order.Time == Algorithm.UtcTime && order.Type != OrderType.Market)
+                    {
+                        stillNeedsScan = true;
                         continue;
                     }
 
@@ -255,7 +265,7 @@ namespace QuantConnect.Brokerages.Backtesting
                     if (sufficientBuyingPower)
                     {
                         //Model:
-                        var model = security.TransactionModel;
+                        var model = security.FillModel;
 
                         //Based on the order type: refresh its model to get fill price and quantity
                         try
@@ -299,7 +309,7 @@ namespace QuantConnect.Brokerages.Backtesting
                         //Flag order as invalid and push off queue:
                         order.Status = OrderStatus.Invalid;
                         Algorithm.Error(string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id,
-                            order.GetValue(security.Price).SmartRounding()));
+                            order.GetValue(security).SmartRounding()));
                     }
 
                     // change in status or a new fill
