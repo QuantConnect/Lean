@@ -50,6 +50,9 @@
     <Compile Include="AccumulationDistributionOscillator.cs" />
     <Compile Include="AverageDirectionalIndex.cs" />
     <Compile Include="BalanceOfPower.cs" />
+    <Compile Include="CandlestickPatterns\CandleEnums.cs" />
+    <Compile Include="CandlestickPatterns\CandleSettings.cs" />
+    <Compile Include="CandlestickPatterns\CandlestickPattern.cs" />
     <Compile Include="ChandeMomentumOscillator.cs" />
     <Compile Include="DonchianChannel.cs" />
     <Compile Include="DoubleExponentialMovingAverage.cs" />
