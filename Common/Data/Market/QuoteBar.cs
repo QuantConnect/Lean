@@ -23,24 +23,15 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public class QuoteBar : BaseData, IBar
     {
-        // scale factor used in QC equity/forex data files
-        private const decimal _scaleFactor = 10000m;
-
-        private int _updateBidCount = 0;
-        private long _sumBidSize = 0;
-
-        private int _updateAskCount = 0;
-        private long _sumAskSize = 0;
-
         /// <summary>
         /// Average bid size
         /// </summary>
-        public long AvgBidSize { get; set; }
+        public long LastBidSize { get; set; }
         
         /// <summary>
         /// Average ask size
         /// </summary>
-        public long AvgAskSize { get; set; }
+        public long LastAskSize { get; set; }
 
         /// <summary>
         /// Bid OHLC
@@ -167,13 +158,9 @@ namespace QuantConnect.Data.Market
             Time = new DateTime();
             Bid = new Bar();
             Ask = new Bar();
-            AvgBidSize = _sumBidSize = 0;
-            AvgAskSize = _sumAskSize = 0;
             Value = 0;
             Period = TimeSpan.FromMinutes(1);
             DataType = MarketDataType.QuoteBar;
-            _updateBidCount = 0;
-            _updateAskCount = 0;
         }
 
         /// <summary>
@@ -189,13 +176,11 @@ namespace QuantConnect.Data.Market
             Bid = bid == null ? null : new Bar(bid.Open, bid.High, bid.Low, bid.Close);
             var ask = original.Ask;
             Ask = ask == null ? null : new Bar(ask.Open, ask.High, ask.Low, ask.Close);
-            AvgBidSize = original.AvgBidSize;
-            AvgAskSize = original.AvgAskSize;
+            LastBidSize = original.LastBidSize;
+            LastAskSize = original.LastAskSize;
             Value = original.Close;
             Period = original.Period;
             DataType = MarketDataType.QuoteBar;
-            _updateBidCount = 0;
-            _updateAskCount = 0;
         }
 
         /// <summary>
@@ -204,23 +189,21 @@ namespace QuantConnect.Data.Market
         /// <param name="time">DateTime Timestamp of the bar</param>
         /// <param name="symbol">Market MarketType Symbol</param>
         /// <param name="bid">Bid OLHC bar</param>
-        /// <param name="avgBidSize">Average bid size over period</param>
+        /// <param name="lastBidSize">Average bid size over period</param>
         /// <param name="ask">Ask OLHC bar</param>
-        /// <param name="avgAskSize">Average ask size over period</param>
+        /// <param name="lastAskSize">Average ask size over period</param>
         /// <param name="period">The period of this bar, specify null for default of 1 minute</param>
-        public QuoteBar(DateTime time, Symbol symbol, IBar bid, long avgBidSize, IBar ask, long avgAskSize, TimeSpan? period = null)
+        public QuoteBar(DateTime time, Symbol symbol, IBar bid, long lastBidSize, IBar ask, long lastAskSize, TimeSpan? period = null)
         {
             Symbol = symbol;
             Time = time;
             Bid = bid == null ? new Bar() : new Bar(bid.Open, bid.High, bid.Low, bid.Close);
             Ask = ask == null ? new Bar() : new Bar(ask.Open, ask.High, ask.Low, ask.Close);
-            AvgBidSize = avgBidSize;
-            AvgAskSize = avgAskSize;
+            LastBidSize = lastBidSize;
+            LastAskSize = lastAskSize;
             Value = Close;
             Period = period ?? TimeSpan.FromMinutes(1);
             DataType = MarketDataType.QuoteBar;
-            _updateBidCount = 0;
-            _updateAskCount = 0;
         }
 
         /// <summary>
@@ -238,23 +221,14 @@ namespace QuantConnect.Data.Market
             Bid.Update(bidPrice);
             Ask.Update(askPrice);
 
-            if ((_updateBidCount == 0 && AvgBidSize > 0) || (_updateAskCount == 0 && AvgAskSize > 0))
-            {
-                throw new InvalidOperationException("Average bid/ask size cannot be greater then zero if update counter is zero.");
-            }
-            
             if (bidSize > 0) 
-            {   
-                _updateBidCount++;
-                _sumBidSize += Convert.ToInt32(bidSize);
-                AvgBidSize = _sumBidSize / _updateBidCount;
+            {
+                LastBidSize = (long) bidSize;
             }
             
-            if (askSize > 0) 
+            if (askSize > 0)
             {
-                _updateAskCount++;
-                _sumAskSize += Convert.ToInt32(askSize);
-                AvgAskSize = _sumAskSize / _updateAskCount;
+                LastAskSize = (long) askSize;
             }
 
             // be prepared for updates without trades
@@ -300,8 +274,8 @@ namespace QuantConnect.Data.Market
             {
                 Ask = Ask == null ? null : Ask.Clone(),
                 Bid = Bid == null ? null : Bid.Clone(),
-                AvgAskSize = AvgAskSize,
-                AvgBidSize = AvgBidSize,
+                LastAskSize = LastAskSize,
+                LastBidSize = LastBidSize,
                 Symbol = Symbol,
                 Time = Time,
                 Period = Period,
