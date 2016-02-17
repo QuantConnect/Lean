@@ -124,9 +124,34 @@ namespace QuantConnect.Util
         /// <summary>
         /// Generates the relative zip file path rooted in the /Data directory
         /// </summary>
-        public static string GenerateRelativeZipFilePath(Symbol symbol, DateTime date, Resolution resolution)
+        public static string GenerateRelativeZipFilePath(Symbol symbol, DateTime date, Resolution resolution, TickType tickType)
         {
-            return GenerateRelativeZipFilePath(symbol.Value, symbol.ID.SecurityType, symbol.ID.Market, date, resolution);
+            var isHourOrDaily = resolution == Resolution.Hour || resolution == Resolution.Daily;
+            var securityType = symbol.ID.SecurityType.ToLower();
+            var market = symbol.ID.Market.ToLower();
+            var res = resolution.ToLower();
+            var directory = Path.Combine(securityType, market, res);
+            switch (symbol.ID.SecurityType)
+            {
+                case SecurityType.Base:
+                case SecurityType.Equity:
+                case SecurityType.Forex:
+                case SecurityType.Cfd:
+                    directory = !isHourOrDaily ? Path.Combine(directory, symbol.Value.ToLower()) : directory;
+                    break;
+
+                case SecurityType.Option:
+                    // options uses the underlying symbol for pathing
+                    directory = !isHourOrDaily ? Path.Combine(directory, symbol.ID.Symbol.ToLower()) : directory;
+                    break;
+
+                case SecurityType.Commodity:
+                case SecurityType.Future:
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            return Path.Combine(directory, GenerateZipFileName(symbol, date, resolution, tickType));
         }
 
         /// <summary>
@@ -134,7 +159,7 @@ namespace QuantConnect.Util
         /// </summary>
         public static string GenerateRelativeZipFilePath(string symbol, SecurityType securityType, string market, DateTime date, Resolution resolution)
         {
-            var directory = Path.Combine(securityType.ToString().ToLower(), market.ToLower(), resolution.ToString().ToLower());
+            var directory = Path.Combine(securityType.ToLower(), market.ToLower(), resolution.ToLower());
             if (resolution != Resolution.Daily && resolution != Resolution.Hour)
             {
                 directory = Path.Combine(directory, symbol.ToLower());
@@ -159,38 +184,40 @@ namespace QuantConnect.Util
                 case SecurityType.Cfd:
                     if (isHourOrDaily)
                     {
-                        return string.Format("{0}.csv", symbol.Value.ToLower());
+                        return string.Format("{0}.csv", 
+                            symbol.Value.ToLower()
+                            );
                     }
 
-                    return string.Format("{0}_{1}_{2}_{3}.csv",
-                        formattedDate,
-                        symbol.Value.ToLower(),
-                        resolution.ToString().ToLower(),
-                        tickType.ToString().ToLower()
+                    return string.Format("{0}_{1}_{2}_{3}.csv", 
+                        formattedDate, 
+                        symbol.Value.ToLower(), 
+                        resolution.ToLower(), 
+                        tickType.ToLower()
                         );
 
                 case SecurityType.Option:
                     if (isHourOrDaily)
                     {
-                        return string.Format("{0}_{1}_{2}_{3}_{4}_{5}.csv",
-                            symbol.Value.ToLower(),
-                            symbol.ID.OptionStyle,
-                            symbol.ID.OptionRight,
-                            symbol.ID.StrikePrice * 10000, // in deci-cents
-                            symbol.ID.Date,
-                            tickType.ToString().ToLower()
+                        return string.Format("{0}_{1}_{2}_{3}_{4:yyyyMMdd}_{5}.csv", 
+                            symbol.ID.Symbol.ToLower(), 
+                            symbol.ID.OptionStyle.ToLower(), 
+                            symbol.ID.OptionRight.ToLower(), 
+                            symbol.ID.StrikePrice*10000, // in deci-cents
+                            symbol.ID.Date, 
+                            tickType.ToLower()
                             );
                     }
 
-                    return string.Format("{0}_{1}_{2}_{3}_{4}_{5:yyyyMMdd}_{6}_{7}.csv",
-                        formattedDate,
-                        symbol.Value.ToLower(),
-                        symbol.ID.OptionStyle,
-                        symbol.ID.OptionRight,
+                    return string.Format("{0}_{1}_{2}_{3}_{4}_{5:yyyyMMdd}_{6}_{7}.csv", 
+                        formattedDate, 
+                        symbol.ID.Symbol.ToLower(), 
+                        symbol.ID.OptionStyle.ToLower(), 
+                        symbol.ID.OptionRight.ToLower(), 
                         symbol.ID.StrikePrice*10000, // in deci-cents
-                        symbol.ID.Date,
-                        resolution.ToString().ToLower(),
-                        tickType.ToString().ToLower()
+                        symbol.ID.Date, 
+                        resolution.ToLower(), 
+                        tickType.ToLower()
                         );
 
                 case SecurityType.Commodity:
@@ -223,7 +250,55 @@ namespace QuantConnect.Util
                 dataType = TickType.Quote;
             }
 
-            return string.Format("{0}_{1}_{2}_{3}.csv", date.ToString(DateFormat.EightCharacter), symbol, resolution.ToString().ToLower(), dataType.ToString().ToLower());
+            return string.Format("{0}_{1}_{2}_{3}.csv", date.ToString(DateFormat.EightCharacter), symbol, resolution.ToLower(), dataType.ToLower());
+        }
+
+        /// <summary>
+        /// Generates the zip file name for the specified date of data.
+        /// </summary>
+        public static string GenerateZipFileName(Symbol symbol, DateTime date, Resolution resolution, TickType tickType)
+        {
+            var tickTypeString = tickType.ToLower();
+            var formattedDate = date.ToString(DateFormat.EightCharacter);
+            var isHourOrDaily = resolution == Resolution.Hour || resolution == Resolution.Daily;
+
+            switch (symbol.ID.SecurityType)
+            {
+                case SecurityType.Base:
+                case SecurityType.Equity:
+                case SecurityType.Forex:
+                case SecurityType.Cfd:
+                    if (isHourOrDaily)
+                    {
+                        return string.Format("{0}.zip", 
+                            symbol.Value.ToLower()
+                            );
+                    }
+
+                    return string.Format("{0}_{1}.zip", 
+                        formattedDate, 
+                        tickTypeString
+                        );
+
+                case SecurityType.Option:
+                    if (isHourOrDaily)
+                    {
+                        return string.Format("{0}_{1}.zip", 
+                            symbol.ID.Symbol.ToLower(), // underlying
+                            tickTypeString
+                            );
+                    }
+
+                    return string.Format("{0}_{1}.zip", 
+                        formattedDate, 
+                        tickTypeString
+                        );
+
+                case SecurityType.Commodity:
+                case SecurityType.Future:
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         /// <summary>
