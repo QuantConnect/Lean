@@ -30,8 +30,9 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
         {
             get
             {
-                return new TestCaseData[]
+                return new[]
                 {
+                    new TestCaseData(new TwoCrows(), "CDL2CROWS").SetName("TwoCrows"),
                 };
             }
         }
