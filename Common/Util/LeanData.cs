@@ -122,9 +122,9 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// Generates the relative zip file path rooted in the /Data directory
+        /// Generates the relative zip directory for the specified symbol/resolution
         /// </summary>
-        public static string GenerateRelativeZipFilePath(Symbol symbol, DateTime date, Resolution resolution, TickType tickType)
+        public static string GenerateRelativeZipFileDirectory(Symbol symbol, Resolution resolution)
         {
             var isHourOrDaily = resolution == Resolution.Hour || resolution == Resolution.Daily;
             var securityType = symbol.ID.SecurityType.ToLower();
@@ -137,21 +137,25 @@ namespace QuantConnect.Util
                 case SecurityType.Equity:
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
-                    directory = !isHourOrDaily ? Path.Combine(directory, symbol.Value.ToLower()) : directory;
-                    break;
+                    return !isHourOrDaily ? Path.Combine(directory, symbol.Value.ToLower()) : directory;
 
                 case SecurityType.Option:
                     // options uses the underlying symbol for pathing
-                    directory = !isHourOrDaily ? Path.Combine(directory, symbol.ID.Symbol.ToLower()) : directory;
-                    break;
+                    return !isHourOrDaily ? Path.Combine(directory, symbol.ID.Symbol.ToLower()) : directory;
 
                 case SecurityType.Commodity:
                 case SecurityType.Future:
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
 
-            return Path.Combine(directory, GenerateZipFileName(symbol, date, resolution, tickType));
+        /// <summary>
+        /// Generates the relative zip file path rooted in the /Data directory
+        /// </summary>
+        public static string GenerateRelativeZipFilePath(Symbol symbol, DateTime date, Resolution resolution, TickType tickType)
+        {
+            return Path.Combine(GenerateRelativeZipFileDirectory(symbol, resolution), GenerateZipFileName(symbol, date, resolution, tickType));
         }
 
         /// <summary>
