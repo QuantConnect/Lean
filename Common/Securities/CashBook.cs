@@ -125,13 +125,17 @@ namespace QuantConnect.Securities
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.AppendLine(string.Format("{0} {1,7}    {2,10} = {3}", "Symbol", "Quantity", "Conversion", "Value in " + AccountCurrency));
+            sb.AppendLine(string.Format("{0} {1,13}    {2,10} = {3}", "Symbol", "Quantity", "Conversion", "Value in " + AccountCurrency));
             foreach (var value in Values)
             {
                 sb.AppendLine(value.ToString());
             }
-            sb.AppendLine("-----------------------------------------");
-            sb.AppendLine(string.Format("CashBook Total Value: {0}", TotalValueInAccountCurrency.ToString("C")));
+            sb.AppendLine("-------------------------------------------------");
+            sb.AppendLine(string.Format("CashBook Total Value:                {0}{1}", 
+                Currencies.CurrencySymbols[AccountCurrency], 
+                Math.Round(TotalValueInAccountCurrency, 2))
+                );
+
             return sb.ToString();
         }
 
