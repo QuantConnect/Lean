@@ -61,6 +61,7 @@ namespace QuantConnect
                     sid = SecurityIdentifier.GenerateCfd(ticker, market);
                     break;
                 case SecurityType.Option:
+                    throw new NotSupportedException("This method does not support SecurityType.Option. Please invoke Symbol.CreateOption instead.");
                 case SecurityType.Commodity:
                 case SecurityType.Future:
                 default:
@@ -68,6 +69,25 @@ namespace QuantConnect
             }
 
             return new Symbol(sid, alias ?? ticker);
+        }
+
+        /// <summary>
+        /// Provides a convenience method for creating an option Symbol.
+        /// </summary>
+        /// <param name="underlying">The underlying ticker</param>
+        /// <param name="market">The market the underlying resides in</param>
+        /// <param name="style">The option style (American, European, ect..)</param>
+        /// <param name="right">The option right (Put/Call)</param>
+        /// <param name="strike">The option strike price</param>
+        /// <param name="expiry">The option expiry date</param>
+        /// <param name="alias">An alias to be used for the symbol cache. Required when 
+        /// adding the same security from diferent markets</param>
+        /// <returns>A new Symbol object for the specified option contract</returns>
+        public static Symbol CreateOption(string underlying, string market, OptionStyle style, OptionRight right, decimal strike, DateTime expiry, string alias = null)
+        {
+            var sid = SecurityIdentifier.GenerateOption(expiry, underlying, market, strike, right, style);
+            alias = alias ?? string.Format("{0}_{1}_{2}_{3}", underlying, right.ToString()[0], strike.SmartRounding(), expiry.ToString("yyyyMMdd"));
+            return new Symbol(sid, alias);
         }
 
         #region Properties

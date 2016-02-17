@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System;
+
 namespace QuantConnect.Tests
 {
     /// <summary>
@@ -33,6 +35,8 @@ namespace QuantConnect.Tests
         
         public static readonly Symbol DE10YBEUR = CreateCfdSymbol("DE10YBEUR", Market.FXCM);
 
+        public static readonly Symbol SPY_P_192_Feb19_2016 = CreateOptionSymbol("SPY", OptionRight.Put, 192m, new DateTime(2016, 02, 19));
+
         private static Symbol CreateForexSymbol(string symbol)
         {
             return Symbol.Create(symbol, SecurityType.Forex, Market.FXCM);
@@ -46,6 +50,11 @@ namespace QuantConnect.Tests
         private static Symbol CreateCfdSymbol(string symbol, string market)
         {
             return Symbol.Create(symbol, SecurityType.Cfd, market);
+        }
+
+        private static Symbol CreateOptionSymbol(string symbol, OptionRight right, decimal strike, DateTime expiry)
+        {
+            return Symbol.CreateOption(symbol, Market.USA, OptionStyle.American, right, strike, expiry);
         }
     }
 }
