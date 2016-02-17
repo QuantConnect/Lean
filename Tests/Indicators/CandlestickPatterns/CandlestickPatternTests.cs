@@ -34,6 +34,7 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
                 {
                     new TestCaseData(new TwoCrows(), "CDL2CROWS").SetName("TwoCrows"),
                     new TestCaseData(new ThreeBlackCrows(), "CDL3BLACKCROWS").SetName("ThreeBlackCrows"),
+                    new TestCaseData(new ThreeInside(), "CDL3INSIDE").SetName("ThreeInside"),
                 };
             }
         }
