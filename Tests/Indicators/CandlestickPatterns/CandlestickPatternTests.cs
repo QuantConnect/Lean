@@ -61,7 +61,7 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
 
         private static Action<IndicatorBase<TradeBar>, double> Assertion
         {
-            get { return (indicator, expected) => Assert.AreEqual(expected, (double)indicator.Current.Value); }
+            get { return (indicator, expected) => Assert.AreEqual(expected, (double)indicator.Current.Value * 100); }
         }
     }
 }

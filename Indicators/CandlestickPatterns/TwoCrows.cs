@@ -27,7 +27,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
     /// - gap between the first and the second candle's real bodies
     /// - third candle: black candle that opens within the second real body and closes within the first real body
     /// The meaning of "long" is specified with CandleSettings
-    /// The returned value is negative(-1 to -100): two crows is always bearish;
+    /// The returned value is negative (-1): two crows is always bearish;
     /// The user should consider that two crows is significant when it appears in an uptrend, while this function
     /// does not consider the trend.
     /// </remarks>
@@ -83,7 +83,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
                 input.Open < window[1].Open && input.Open > window[1].Close &&
                 input.Close > window[2].Open && input.Close < window[2].Close
               )
-                value = -100m;
+                value = -1m;
             else
                 value = 0m;
 

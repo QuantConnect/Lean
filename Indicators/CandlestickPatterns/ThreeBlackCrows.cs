@@ -27,7 +27,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
     /// - each candle after the first must open within the prior candle's real body
     /// - the first candle's close should be under the prior white candle's high
     /// The meaning of "very short" is specified with CandleSettings
-    /// The returned value is negative(-1 to -100): three black crows is always bearish;
+    /// The returned value is negative (-1): three black crows is always bearish;
     /// The user should consider that 3 black crows is significant when it appears after a mature advance or at high levels,
     /// while this function does not consider it
     /// </remarks>
@@ -90,9 +90,9 @@ namespace QuantConnect.Indicators.CandlestickPatterns
                 window[2].Close > window[1].Close &&
                 window[1].Close > input.Close
               )
-                value = -100;
+                value = -1m;
             else
-                value = 0;
+                value = 0m;
 
             // add the current range and subtract the first range: this is done after the pattern recognition 
             // when avgPeriod is not 0, that means "compare with the previous candles" (it excludes the current candle)

@@ -27,7 +27,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
     /// - second candle: short real body totally engulfed by the first
     /// - third candle: black(white) candle that closes lower(higher) than the first candle's open
     /// The meaning of "short" and "long" is specified with CandleSettings
-    /// The returned value is +100 for the three inside up or -100 for the three inside down;
+    /// The returned value is positive (+1) for the three inside up or negative (-1) for the three inside down;
     /// The user should consider that a three inside up is significant when it appears in a downtrend and a three inside
     /// down is significant when it appears in an uptrend, while this function does not consider the trend
     /// </remarks>
@@ -85,7 +85,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
                   (GetCandleColor(window[2]) == CandleColor.Black && GetCandleColor(input) == CandleColor.White && input.Close > window[2].Open)
                 )
               )
-                value = -(int)GetCandleColor(window[2]) * 100m;
+                value = -(int)GetCandleColor(window[2]);
             else
                 value = 0m;
 
