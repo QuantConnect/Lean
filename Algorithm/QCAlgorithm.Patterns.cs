@@ -40,5 +40,21 @@ namespace QuantConnect.Algorithm
             RegisterIndicator(symbol, pattern, resolution, selector);
             return pattern;
         }
+
+        /// <summary>
+        /// Creates a new Three Black Crows pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public ThreeBlackCrows ThreeBlackCrows(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "THREEBLACKCROWS", resolution);
+            var pattern = new ThreeBlackCrows(name);
+            RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
     }
 }
