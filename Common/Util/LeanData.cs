@@ -32,7 +32,6 @@ namespace QuantConnect.Util
         public static string GenerateLine(IBaseData data, SecurityType securityType, Resolution resolution)
         {
             var line = string.Empty;
-            var format = "{0},{1},{2},{3},{4},{5}";
             var milliseconds = data.Time.TimeOfDay.TotalMilliseconds.ToString(CultureInfo.InvariantCulture);
             var longTime = data.Time.ToString(DateFormat.TwelveCharacter);
 
@@ -42,30 +41,18 @@ namespace QuantConnect.Util
                     switch (resolution)
                     {
                         case Resolution.Tick:
-                            var tick = data as Tick;
-                            if (tick != null)
-                            {
-                                line = string.Format(format, milliseconds, Scale(tick.LastPrice), tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious);
-                            }
-                            break;
+                            var tick = (Tick) data;
+                            return ToCsv(milliseconds, Scale(tick.LastPrice), tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious);
 
                         case Resolution.Minute:
                         case Resolution.Second:
-                            var bar = data as TradeBar;
-                            if (bar != null)
-                            {
-                                line = string.Format(format, milliseconds, Scale(bar.Open), Scale(bar.High), Scale(bar.Low), Scale(bar.Close), bar.Volume);
-                            }
-                            break;
+                            var bar = (TradeBar) data;
+                            return ToCsv(milliseconds, Scale(bar.Open), Scale(bar.High), Scale(bar.Low), Scale(bar.Close), bar.Volume);
 
                         case Resolution.Hour:
                         case Resolution.Daily:
-                            var bigBar = data as TradeBar;
-                            if (bigBar != null)
-                            {
-                                line = string.Format(format, longTime, Scale(bigBar.Open), Scale(bigBar.High), Scale(bigBar.Low), Scale(bigBar.Close), bigBar.Volume);
-                            }
-                            break;
+                            var bigBar = (TradeBar) data;
+                            return ToCsv(longTime, Scale(bigBar.Open), Scale(bigBar.High), Scale(bigBar.Low), Scale(bigBar.Close), bigBar.Volume);
                     }
                     break;
 
@@ -74,32 +61,23 @@ namespace QuantConnect.Util
                     switch (resolution)
                     {
                         case Resolution.Tick:
-                            var fxTick = data as Tick;
-                            if (fxTick != null)
-                            {
-                                line = string.Format("{0},{1},{2}", milliseconds, fxTick.BidPrice, fxTick.AskPrice);
-                            }
-                            break;
+                            var tick = (Tick) data;
+                            return ToCsv(milliseconds, tick.BidPrice, tick.AskPrice);
 
                         case Resolution.Second:
                         case Resolution.Minute:
-                            var fxBar = data as TradeBar;
-                            if (fxBar != null)
-                            {
-                                line = string.Format("{0},{1},{2},{3},{4}", milliseconds, fxBar.Open, fxBar.High, fxBar.Low, fxBar.Close);
-                            }
-                            break;
+                            var bar = (TradeBar) data;
+                            return ToCsv(milliseconds, bar.Open, bar.High, bar.Low, bar.Close);
 
                         case Resolution.Hour:
                         case Resolution.Daily:
-                            var dailyBar = data as TradeBar;
-                            if (dailyBar != null)
-                            {
-                                line = string.Format("{0},{1},{2},{3},{4}", longTime, dailyBar.Open, dailyBar.High, dailyBar.Low, dailyBar.Close);
-                            }
-                            break;
+                            var bigBar = (TradeBar) data;
+                            return ToCsv(longTime, bigBar.Open, bigBar.High, bigBar.Low, bigBar.Close);
                     }
                     break;
+
+                default:
+                    throw new NotImplementedException("LeanData.GenerateLine has not yet been implemented for security type: " + securityType);
             }
 
             return line;
@@ -343,6 +321,14 @@ namespace QuantConnect.Util
         private static int Scale(decimal value)
         {
             return Convert.ToInt32(value*10000);
+        }
+
+        /// <summary>
+        /// Create a csv line from the specified arguments
+        /// </summary>
+        private static string ToCsv(params object[] args)
+        {
+            return string.Join(",", args);
         }
     }
 }
