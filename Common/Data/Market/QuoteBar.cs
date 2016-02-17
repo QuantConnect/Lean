@@ -164,26 +164,6 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Cloner constructor for implementing fill forward. 
-        /// Return a new instance with the same values as this original.
-        /// </summary>
-        /// <param name="original">Original quotebar object we seek to clone</param>
-        public QuoteBar(QuoteBar original)
-        {
-            Symbol = original.Symbol;
-            Time = new DateTime(original.Time.Ticks);
-            var bid = original.Bid;
-            Bid = bid == null ? null : new Bar(bid.Open, bid.High, bid.Low, bid.Close);
-            var ask = original.Ask;
-            Ask = ask == null ? null : new Bar(ask.Open, ask.High, ask.Low, ask.Close);
-            LastBidSize = original.LastBidSize;
-            LastAskSize = original.LastAskSize;
-            Value = original.Close;
-            Period = original.Period;
-            DataType = MarketDataType.QuoteBar;
-        }
-
-        /// <summary>
         /// Initialize Quote Bar with Bid(OHLC) and Ask(OHLC) Values:
         /// </summary>
         /// <param name="time">DateTime Timestamp of the bar</param>
