@@ -144,10 +144,72 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Generate's the zip entry name to hold the specified data.
+        /// </summary>
+        public static string GenerateZipEntryName(Symbol symbol, DateTime date, Resolution resolution, TickType tickType)
+        {
+            var formattedDate = date.ToString(DateFormat.EightCharacter);
+            var isHourOrDaily = resolution == Resolution.Hour || resolution == Resolution.Daily;
+
+            switch (symbol.ID.SecurityType)
+            {
+                case SecurityType.Base:
+                case SecurityType.Equity:
+                case SecurityType.Forex:
+                case SecurityType.Cfd:
+                    if (isHourOrDaily)
+                    {
+                        return string.Format("{0}.csv", symbol.Value.ToLower());
+                    }
+
+                    return string.Format("{0}_{1}_{2}_{3}.csv",
+                        formattedDate,
+                        symbol.Value.ToLower(),
+                        resolution.ToString().ToLower(),
+                        tickType.ToString().ToLower()
+                        );
+
+                case SecurityType.Option:
+                    if (isHourOrDaily)
+                    {
+                        return string.Format("{0}_{1}_{2}_{3}_{4}_{5}.csv",
+                            symbol.Value.ToLower(),
+                            symbol.ID.OptionStyle,
+                            symbol.ID.OptionRight,
+                            symbol.ID.StrikePrice * 10000, // in deci-cents
+                            symbol.ID.Date,
+                            tickType.ToString().ToLower()
+                            );
+                    }
+
+                    return string.Format("{0}_{1}_{2}_{3}_{4}_{5:yyyyMMdd}_{6}_{7}.csv",
+                        formattedDate,
+                        symbol.Value.ToLower(),
+                        symbol.ID.OptionStyle,
+                        symbol.ID.OptionRight,
+                        symbol.ID.StrikePrice*10000, // in deci-cents
+                        symbol.ID.Date,
+                        resolution.ToString().ToLower(),
+                        tickType.ToString().ToLower()
+                        );
+
+                case SecurityType.Commodity:
+                case SecurityType.Future:
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        /// <summary>
         /// Creates the entry name for a QC zip data file
         /// </summary>
         public static string GenerateZipEntryName(string symbol, SecurityType securityType, DateTime date, Resolution resolution, TickType dataType = TickType.Trade)
         {
+            if (securityType != SecurityType.Base && securityType != SecurityType.Equity && securityType != SecurityType.Forex)
+            {
+                throw new NotImplementedException("This method only implements base, equity, and forex security type.");
+            }
+
             symbol = symbol.ToLower();
 
             if (resolution == Resolution.Hour || resolution == Resolution.Daily)
@@ -187,7 +249,7 @@ namespace QuantConnect.Util
         /// </summary>
         private static int Scale(decimal value)
         {
-            return Convert.ToInt32(value * 10000);
+            return Convert.ToInt32(value*10000);
         }
     }
 }
