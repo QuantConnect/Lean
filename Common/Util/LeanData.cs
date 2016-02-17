@@ -320,6 +320,20 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Gets the tick type most commonly associated with the specified security type
+        /// </summary>
+        /// <param name="securityType">The security type</param>
+        /// <returns>The most common tick type for the specified security type</returns>
+        public static TickType GetCommonTickType(SecurityType securityType)
+        {
+            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
+            {
+                return TickType.Quote;
+            }
+            return TickType.Trade;
+        }
+
+        /// <summary>
         /// Scale and convert the resulting number to deci-cents int.
         /// </summary>
         private static int Scale(decimal value)
