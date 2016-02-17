@@ -232,9 +232,9 @@ namespace QuantConnect.Util
         /// </summary>
         public static string GenerateZipEntryName(string symbol, SecurityType securityType, DateTime date, Resolution resolution, TickType dataType = TickType.Trade)
         {
-            if (securityType != SecurityType.Base && securityType != SecurityType.Equity && securityType != SecurityType.Forex)
+            if (securityType != SecurityType.Base && securityType != SecurityType.Equity && securityType != SecurityType.Forex && securityType != SecurityType.Cfd)
             {
-                throw new NotImplementedException("This method only implements base, equity, and forex security type.");
+                throw new NotImplementedException("This method only implements base, equity, forex and cfd security type.");
             }
 
             symbol = symbol.ToLower();
