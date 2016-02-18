@@ -29,10 +29,10 @@ using QuantConnect.Tests.Engine;
 
 namespace QuantConnect.Tests.Common.Orders.Fills
 {
-    [TestFixture]
+    [TestFixture, Ignore]
     public class PartialMarketFillModelTests
     {
-        [Test, Category("TravisExclude"), Ignore]
+        [Test, Category("TravisExclude")]
         public void CreatesSpecificNumberOfFills()
         {
             Security security;
