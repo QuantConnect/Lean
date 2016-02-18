@@ -45,6 +45,10 @@
       <HintPath>..\packages\log4net.2.0.5\lib\net45-full\log4net.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Moq, Version=4.2.1510.2205, Culture=neutral, PublicKeyToken=69f491c39445e920, processorArchitecture=MSIL">
+      <HintPath>..\packages\Moq.4.2.1510.2205\lib\net40\Moq.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -115,6 +119,7 @@
     <Compile Include="Common\Data\SliceTests.cs" />
     <Compile Include="Common\Data\SubscriptionDataSourceTests.cs" />
     <Compile Include="Common\MarketTests.cs" />
+    <Compile Include="Common\Orders\Fees\BitfinexFeeModelTests.cs" />
     <Compile Include="Common\Orders\Fills\PartialMarketFillModelTests.cs" />
     <Compile Include="Common\Orders\OrderJsonConverterTests.cs" />
     <Compile Include="Common\Orders\OrderTests.cs" />
