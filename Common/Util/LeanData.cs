@@ -31,7 +31,6 @@ namespace QuantConnect.Util
         /// </summary>
         public static string GenerateLine(IBaseData data, SecurityType securityType, Resolution resolution)
         {
-            var line = string.Empty;
             var milliseconds = data.Time.TimeOfDay.TotalMilliseconds.ToString(CultureInfo.InvariantCulture);
             var longTime = data.Time.ToString(DateFormat.TwelveCharacter);
 
@@ -42,7 +41,7 @@ namespace QuantConnect.Util
                     {
                         case Resolution.Tick:
                             var tick = (Tick) data;
-                            return ToCsv(milliseconds, Scale(tick.LastPrice), tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious);
+                            return ToCsv(milliseconds, Scale(tick.LastPrice), tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1" : "0");
 
                         case Resolution.Minute:
                         case Resolution.Second:
@@ -76,11 +75,71 @@ namespace QuantConnect.Util
                     }
                     break;
 
-                default:
-                    throw new NotImplementedException("LeanData.GenerateLine has not yet been implemented for security type: " + securityType);
+                case SecurityType.Option:
+                    var putCall = data.Symbol.ID.OptionRight == OptionRight.Put ? "P" : "C";
+                    switch (resolution)
+                    {
+                        case Resolution.Tick:
+                            var tick = (Tick)data;
+                            if (tick.TickType == TickType.Trade)
+                            {
+                                return ToCsv(milliseconds, putCall, Scale(tick.Symbol.ID.StrikePrice), tick.Symbol.ID.Date.ToString(DateFormat.EightCharacter),
+                                    Scale(tick.LastPrice), tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1": "0");
+                            }
+                            if (tick.TickType == TickType.Quote)
+                            {
+                                return ToCsv(milliseconds, putCall, Scale(tick.Symbol.ID.StrikePrice), tick.Symbol.ID.Date.ToString(DateFormat.EightCharacter),
+                                    Scale(tick.BidPrice), tick.BidSize, Scale(tick.AskPrice), tick.AskSize, tick.Exchange, tick.Suspicious ? "1" : "0");
+                            }
+                            break;
+
+                        case Resolution.Second:
+                        case Resolution.Minute:
+                            // option data can be quote or trade bars
+                            var quoteBar = data as QuoteBar;
+                            if (quoteBar != null)
+                            {
+                                return ToCsv(milliseconds,
+                                    putCall, Scale(quoteBar.Symbol.ID.StrikePrice), quoteBar.Symbol.ID.Date.ToString(DateFormat.EightCharacter), 
+                                    ToCsv(quoteBar.Bid), quoteBar.LastBidSize, 
+                                    ToCsv(quoteBar.Ask), quoteBar.LastAskSize);
+                            }
+                            var tradeBar = data as TradeBar;
+                            if (tradeBar != null)
+                            {
+                                return ToCsv(milliseconds,
+                                    putCall, Scale(tradeBar.Symbol.ID.StrikePrice), tradeBar.Symbol.ID.Date.ToString(DateFormat.EightCharacter),
+                                    Scale(tradeBar.Open), Scale(tradeBar.High), Scale(tradeBar.Low), Scale(tradeBar.Close), tradeBar.Volume);
+                            }
+                            break;
+
+                        case Resolution.Hour:
+                        case Resolution.Daily:
+                            // option data can be quote or trade bars
+                            var bigQuoteBar = data as QuoteBar;
+                            if (bigQuoteBar != null)
+                            {
+                                return ToCsv(longTime,
+                                    putCall, Scale(bigQuoteBar.Symbol.ID.StrikePrice), bigQuoteBar.Symbol.ID.Date.ToString(DateFormat.EightCharacter),
+                                    ToCsv(bigQuoteBar.Bid), bigQuoteBar.LastBidSize,
+                                    ToCsv(bigQuoteBar.Ask), bigQuoteBar.LastAskSize);
+                            }
+                            var bigTradeBar = data as TradeBar;
+                            if (bigTradeBar != null)
+                            {
+                                return ToCsv(longTime,
+                                    putCall, Scale(bigTradeBar.Symbol.ID.StrikePrice), bigTradeBar.Symbol.ID.Date.ToString(DateFormat.EightCharacter),
+                                    ToCsv(bigTradeBar), bigTradeBar.Volume);
+                            }
+                            break;
+
+                        default:
+                            throw new ArgumentOutOfRangeException("resolution", resolution, null);
+                    }
+                    break;
             }
 
-            return line;
+            throw new NotImplementedException("LeanData.GenerateLine has not yet been implemented for security type: " + securityType + " at resolution: " + resolution);
         }
 
         /// <summary>
@@ -181,25 +240,19 @@ namespace QuantConnect.Util
                 case SecurityType.Option:
                     if (isHourOrDaily)
                     {
-                        return string.Format("{0}_{1}_{2}_{3}_{4:yyyyMMdd}_{5}.csv", 
-                            symbol.ID.Symbol.ToLower(), 
-                            symbol.ID.OptionStyle.ToLower(), 
-                            symbol.ID.OptionRight.ToLower(), 
-                            symbol.ID.StrikePrice*10000, // in deci-cents
-                            symbol.ID.Date, 
-                            tickType.ToLower()
+                        return string.Format("{0}_{1}_{2}.csv",
+                            symbol.ID.Symbol.ToLower(), // underlying
+                            tickType.ToLower(),
+                            symbol.ID.OptionStyle.ToLower()
                             );
                     }
 
-                    return string.Format("{0}_{1}_{2}_{3}_{4}_{5:yyyyMMdd}_{6}_{7}.csv", 
-                        formattedDate, 
-                        symbol.ID.Symbol.ToLower(), 
-                        symbol.ID.OptionStyle.ToLower(), 
-                        symbol.ID.OptionRight.ToLower(), 
-                        symbol.ID.StrikePrice*10000, // in deci-cents
-                        symbol.ID.Date, 
-                        resolution.ToLower(), 
-                        tickType.ToLower()
+                    return string.Format("{0}_{1}_{2}_{3}_{4}.csv",
+                        formattedDate,
+                        symbol.ID.Symbol.ToLower(), // underlying
+                        resolution.ToLower(),
+                        tickType.ToLower(),
+                        symbol.ID.OptionStyle.ToLower()
                         );
 
                 case SecurityType.Commodity:
@@ -265,15 +318,17 @@ namespace QuantConnect.Util
                 case SecurityType.Option:
                     if (isHourOrDaily)
                     {
-                        return string.Format("{0}_{1}.zip", 
+                        return string.Format("{0}_{1}_{2}.zip", 
                             symbol.ID.Symbol.ToLower(), // underlying
-                            tickTypeString
+                            tickTypeString,
+                            symbol.ID.OptionStyle.ToLower()
                             );
                     }
 
-                    return string.Format("{0}_{1}.zip", 
+                    return string.Format("{0}_{1}_{2}.zip", 
                         formattedDate, 
-                        tickTypeString
+                        tickTypeString,
+                        symbol.ID.OptionStyle.ToLower()
                         );
 
                 case SecurityType.Commodity:
@@ -329,6 +384,18 @@ namespace QuantConnect.Util
         private static string ToCsv(params object[] args)
         {
             return string.Join(",", args);
+        }
+
+        /// <summary>
+        /// Creates a csv line for the bar, if null fills in empty strings
+        /// </summary>
+        private static string ToCsv(IBar bar)
+        {
+            if (bar == null)
+            {
+                return ToCsv(string.Empty, string.Empty, string.Empty, string.Empty);
+            }
+            return ToCsv(Scale(bar.Open), Scale(bar.High), Scale(bar.Low), Scale(bar.Close));
         }
     }
 }
