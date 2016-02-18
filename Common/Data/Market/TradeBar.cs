@@ -206,6 +206,9 @@ namespace QuantConnect.Data.Market
 
                     case SecurityType.Cfd:
                         return ParseCfd<TradeBar>(config, line, date);
+
+                    case SecurityType.Option:
+                        return ParseOption<TradeBar>(config, line, date);
                 }
             }
             catch (Exception err)
@@ -266,10 +269,10 @@ namespace QuantConnect.Data.Market
                 tradeBar.Time = date.Date.AddMilliseconds(csv[0].ToInt32()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
             }
 
-            tradeBar.Open = config.GetNormalizedPrice(csv[1].ToDecimal() * _scaleFactor);
-            tradeBar.High = config.GetNormalizedPrice(csv[2].ToDecimal() * _scaleFactor);
-            tradeBar.Low = config.GetNormalizedPrice(csv[3].ToDecimal() * _scaleFactor);
-            tradeBar.Close = config.GetNormalizedPrice(csv[4].ToDecimal() * _scaleFactor);
+            tradeBar.Open = config.GetNormalizedPrice(csv[1].ToDecimal()*_scaleFactor);
+            tradeBar.High = config.GetNormalizedPrice(csv[2].ToDecimal()*_scaleFactor);
+            tradeBar.Low = config.GetNormalizedPrice(csv[3].ToDecimal()*_scaleFactor);
+            tradeBar.Close = config.GetNormalizedPrice(csv[4].ToDecimal()*_scaleFactor);
             tradeBar.Volume = csv[5].ToInt64();
 
             return tradeBar;
@@ -361,6 +364,61 @@ namespace QuantConnect.Data.Market
         public static TradeBar ParseCfd(SubscriptionDataConfig config, string line, DateTime date)
         {
             return ParseCfd<TradeBar>(config, line, date);
+        }
+
+        /// <summary>
+        /// Parses CFD trade bar data into the specified tradebar type, useful for custom types with OHLCV data deriving from TradeBar
+        /// </summary>
+        /// <typeparam name="T">The requested output type, must derive from TradeBar</typeparam>
+        /// <param name="config">Symbols, Resolution, DataType, </param>
+        /// <param name="line">Line from the data file requested</param>
+        /// <param name="date">The base data used to compute the time of the bar since the line specifies a milliseconds since midnight</param>
+        /// <returns></returns>
+        public static T ParseOption<T>(SubscriptionDataConfig config, string line, DateTime date)
+            where T : TradeBar, new()
+        {
+            var tradeBar = new T
+            {
+                Period = config.Increment
+            };
+
+            var csv = line.ToCsv(8);
+            if (config.Resolution == Resolution.Daily || config.Resolution == Resolution.Hour)
+            {
+                // hourly and daily have different time format, and can use slow, robust c# parser.
+                tradeBar.Time = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+            }
+            else
+            {
+                // Using custom "ToDecimal" conversion for speed on high resolution data.
+                tradeBar.Time = date.Date.AddMilliseconds(csv[0].ToInt32()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+            }
+
+            tradeBar.Open = config.GetNormalizedPrice(csv[4].ToDecimal() * _scaleFactor);
+            tradeBar.High = config.GetNormalizedPrice(csv[5].ToDecimal() * _scaleFactor);
+            tradeBar.Low = config.GetNormalizedPrice(csv[6].ToDecimal() * _scaleFactor);
+            tradeBar.Close = config.GetNormalizedPrice(csv[7].ToDecimal() * _scaleFactor);
+            tradeBar.Volume = csv[8].ToInt64();
+
+            var putCall = csv[1] == "P" ? OptionRight.Put : OptionRight.Call;
+            var strike = csv[2].ToDecimal()*_scaleFactor;
+            var expiry = DateTime.ParseExact(csv[3], DateFormat.EightCharacter, null);
+            var symbol = Symbol.CreateOption(config.Symbol.ID.Symbol, config.Market, config.Symbol.ID.OptionStyle, putCall, strike, expiry);
+            tradeBar.Symbol = symbol;
+
+            return tradeBar;
+        }
+
+        /// <summary>
+        /// Parses CFD trade bar data into the specified tradebar type, useful for custom types with OHLCV data deriving from TradeBar
+        /// </summary>
+        /// <param name="config">Symbols, Resolution, DataType, </param>
+        /// <param name="line">Line from the data file requested</param>
+        /// <param name="date">The base data used to compute the time of the bar since the line specifies a milliseconds since midnight</param>
+        /// <returns></returns>
+        public static TradeBar ParseOption(SubscriptionDataConfig config, string line, DateTime date)
+        {
+            return ParseOption<TradeBar>(config, line, date);
         }
 
         /// <summary>

@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Globalization;
 
 namespace QuantConnect.Data.Market
 {
@@ -23,6 +24,9 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public class QuoteBar : BaseData, IBar
     {
+        // scale factor used in QC equity/forex data files
+        private const decimal _scaleFactor = 1 / 10000m;
+
         /// <summary>
         /// Average bid size
         /// </summary>
@@ -230,7 +234,57 @@ namespace QuantConnect.Data.Market
         /// <returns>Enumerable iterator for returning each line of the required data.</returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            throw new NotImplementedException("Equity quote bars data format has not yet been finalized.");
+            var quoteBar = new QuoteBar
+            {
+                Period = config.Increment
+            };
+
+            var csv = line.ToCsv(14);
+            if (config.Resolution == Resolution.Daily || config.Resolution == Resolution.Hour)
+            {
+                // hourly and daily have different time format, and can use slow, robust c# parser.
+                quoteBar.Time = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+            }
+            else
+            {
+                // Using custom "ToDecimal" conversion for speed on high resolution data.
+                quoteBar.Time = date.Date.AddMilliseconds(csv[0].ToInt32()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+            }
+
+            // only create the bid if it exists in the file
+            if (csv[4].Length != 0 || csv[5].Length != 0 || csv[6].Length != 0 || csv[7].Length != 0)
+            {
+                quoteBar.Bid = new Bar
+                {
+                    Open = config.GetNormalizedPrice(csv[4].ToDecimal()*_scaleFactor),
+                    High = config.GetNormalizedPrice(csv[5].ToDecimal()*_scaleFactor),
+                    Low = config.GetNormalizedPrice(csv[6].ToDecimal()*_scaleFactor),
+                    Close = config.GetNormalizedPrice(csv[7].ToDecimal()*_scaleFactor)
+                };
+                quoteBar.LastBidSize = csv[8].ToInt64();
+            }
+
+            // only create the bid if it exists in the file
+            if (csv[9].Length != 0 || csv[10].Length != 0 || csv[11].Length != 0 || csv[12].Length != 0)
+            {
+                quoteBar.Ask = new Bar
+                {
+                    Open = config.GetNormalizedPrice(csv[9].ToDecimal()*_scaleFactor),
+                    High = config.GetNormalizedPrice(csv[10].ToDecimal()*_scaleFactor),
+                    Low = config.GetNormalizedPrice(csv[11].ToDecimal()*_scaleFactor),
+                    Close = config.GetNormalizedPrice(csv[12].ToDecimal()*_scaleFactor)
+                };
+                quoteBar.LastAskSize = csv[13].ToInt64();
+            }
+
+            quoteBar.Value = quoteBar.Close;
+            var putCall = csv[1] == "P" ? OptionRight.Put : OptionRight.Call;
+            var strike = csv[2].ToDecimal() * _scaleFactor;
+            var expiry = DateTime.ParseExact(csv[3], DateFormat.EightCharacter, null);
+            var symbol = Symbol.CreateOption(config.Symbol.ID.Symbol, config.Market, config.Symbol.ID.OptionStyle, putCall, strike, expiry);
+            quoteBar.Symbol = symbol;
+
+            return quoteBar;
         }
 
         /// <summary>
