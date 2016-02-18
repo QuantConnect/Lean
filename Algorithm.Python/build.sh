@@ -3,6 +3,7 @@
 # Clean output directory
 rm QuantConnect.Algorithm.Python.dll
 rm ../Launcher/bin/Debug/QuantConnect.Algorithm.Python.dll
+rm ../Tests/bin/Debug/QuantConnect.Algorithm.Python.dll
 
 # Set the script variables: assuming installing the ./compiler/library/ and the caller is in ./compiler/bin/Debug/build.sh
 ipy="../../IronPython-2.7.5/ipy.exe"
@@ -16,3 +17,4 @@ mono $ipy $pyc /target:dll /out:QuantConnect.Algorithm.Python $pyfile
 
 # Copy to the Lean Algorithm Project
 cp QuantConnect.Algorithm.Python.dll ../Launcher/bin/Debug/QuantConnect.Algorithm.Python.dll
+cp QuantConnect.Algorithm.Python.dll ../Tests/bin/Debug/QuantConnect.Algorithm.Python.dll
