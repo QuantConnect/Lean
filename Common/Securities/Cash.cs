@@ -219,7 +219,13 @@ namespace QuantConnect.Securities
             // round the conversion rate for output
             decimal rate = ConversionRate;
             rate = rate < 1000 ? rate.RoundToSignificantDigits(5) : Math.Round(rate, 2);
-            return string.Format("{0}: {1,10} @ ${2,10} = {3}", Symbol, Amount.ToString("0.00"), rate.ToString("0.00####"), ValueInAccountCurrency.ToString("C"));
+            return string.Format("{0}: {1,15} @ ${2,10} = {3}{4}", 
+                Symbol, 
+                Amount.ToString("0.00"), 
+                rate.ToString("0.00####"), 
+                Currencies.CurrencySymbols[Symbol], 
+                Math.Round(ValueInAccountCurrency, 2)
+                );
         }
     }
 }

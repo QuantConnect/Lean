@@ -682,5 +682,15 @@ namespace QuantConnect
             }
             return source;
         }
+
+        /// <summary>
+        /// Converts the specified <paramref name="enum"/> value to its corresponding lower-case string representation
+        /// </summary>
+        /// <param name="enum">The enumeration value</param>
+        /// <returns>A lower-case string representation of the specified enumeration value</returns>
+        public static string ToLower(this Enum @enum)
+        {
+            return @enum.ToString().ToLower();
+        }
     }
 }

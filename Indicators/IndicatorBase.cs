@@ -91,11 +91,15 @@ namespace QuantConnect.Indicators
                 // compute a new value and update our previous time
                 Samples++;
                 _previousInput = input;
-                var nextValue = ComputeNextValue(input);
-                Current = new IndicatorDataPoint(input.Time, nextValue);
 
-                // let others know we've produced a new data point
-                OnUpdated(Current);
+                var nextResult = ValidateAndComputeNextValue(input);
+                if (nextResult.Status == IndicatorStatus.Success)
+                {
+                    Current = new IndicatorDataPoint(input.Time, nextResult.Value);
+
+                    // let others know we've produced a new data point
+                    OnUpdated(Current);
+                }
             }
             return IsReady;
         }
@@ -194,6 +198,18 @@ namespace QuantConnect.Indicators
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
         protected abstract decimal ComputeNextValue(T input);
+
+        /// <summary>
+        /// Computes the next value of this indicator from the given state
+        /// and returns an instance of the <see cref="IndicatorResult"/> class
+        /// </summary>
+        /// <param name="input">The input given to the indicator</param>
+        /// <returns>An IndicatorResult object including the status of the indicator</returns>
+        protected virtual IndicatorResult ValidateAndComputeNextValue(T input)
+        {
+            // default implementation always returns IndicatorStatus.Success
+            return new IndicatorResult(ComputeNextValue(input));
+        }
 
         /// <summary>
         /// Event invocator for the Updated event

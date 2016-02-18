@@ -54,6 +54,8 @@
     <Compile Include="DonchianChannel.cs" />
     <Compile Include="DoubleExponentialMovingAverage.cs" />
     <Compile Include="IchimokuKinkoHyo.cs" />
+    <Compile Include="IndicatorResult.cs" />
+    <Compile Include="IndicatorStatus.cs" />
     <Compile Include="KeltnerChannels.cs" />
     <Compile Include="LeastSquaresMovingAverage.cs" />
     <Compile Include="LogReturn.cs" />
