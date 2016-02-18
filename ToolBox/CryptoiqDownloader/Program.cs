@@ -22,6 +22,8 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
                 Console.WriteLine("FROMDATE = yyyymmdd");
                 Console.WriteLine("TODATE = yyyymmdd");
                 Environment.Exit(1);
+                //todo: remove default params
+                //args = new string[] { "20160214", DateTime.UtcNow.ToString("yyyyMMdd"), "bitfinex", "BTCUSD" };
             }
 
             try
@@ -32,17 +34,19 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
 
                 // Load settings from config.json
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
+                bool useDivisor = bool.Parse(Config.Get("bitfinex-user-divisor", "false"));
+
 
                 // Create an instance of the downloader
-                const string market = "bitcoin";
-                var downloader = new CryptoiqDownloader(args[2]);
+                const string market = Market.Bitcoin;
+                var downloader = new CryptoiqDownloader(args[2], useDivisor);
 
                 // Download the data
                 var symbolObject = Symbol.Create(args[3], SecurityType.Forex, market);
                 var data = downloader.Get(symbolObject, Resolution.Tick, startDate, endDate);
 
                 // Save the data
-                var writer = new LeanDataWriter(SecurityType.Forex, Resolution.Tick, symbolObject, dataDirectory, market);
+                var writer = new LeanDataWriter(Resolution.Tick, symbolObject, dataDirectory, TickType.Quote);
                 writer.Write(data);
 
             }

@@ -207,7 +207,7 @@ namespace QuantConnect.Data
             Lazy<object> dictionary;
             if (!_dataByType.TryGetValue(typeof(T), out dictionary))
             {
-                if (_data.Value.Values.Any(e => e.Type == SubscriptionType.Tick))
+                if (typeof(T) == typeof(Tick))
                 {
                     dictionary = new Lazy<object>(() => new DataDictionary<T>(_data.Value.Values.SelectMany<dynamic, dynamic>(x => x.GetData()).OfType<T>(), x => x.Symbol));
                 }

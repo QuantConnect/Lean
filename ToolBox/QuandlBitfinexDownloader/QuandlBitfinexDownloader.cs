@@ -32,10 +32,13 @@ namespace QuantConnect.ToolBox.QuandlBitfinexDownloader
     {
 
         string _apiKey;
+        bool _useDivisor;
+        decimal divisor = 100m;
 
-        public QuandlBitfinexDownloader(string apiKey)
+        public QuandlBitfinexDownloader(string apiKey, bool useDivisor = false)
         {
             _apiKey = apiKey;
+            _useDivisor = useDivisor;
         }
 
         /// <summary>
@@ -79,12 +82,12 @@ namespace QuantConnect.ToolBox.QuandlBitfinexDownloader
                         var bar = new TradeBar
                         {
                             Time = DateTime.Parse(line[0]),
-                            Open = decimal.Parse(line[1]),
-                            High = decimal.Parse(line[2]),
-                            Low = decimal.Parse(line[3]),
-                            Close = decimal.Parse(line[4]),
-                            Value = decimal.Parse(line[7]),
-                            Volume = (long)Math.Round(decimal.Parse(line[5]), 0),
+                            Open = _useDivisor ? decimal.Parse(line[1]) / divisor : decimal.Parse(line[1]),
+                            High = _useDivisor ? decimal.Parse(line[2]) / divisor : decimal.Parse(line[2]),
+                            Low = _useDivisor ? decimal.Parse(line[3]) / divisor : decimal.Parse(line[3]),
+                            Close = _useDivisor ? decimal.Parse(line[4]) / divisor : decimal.Parse(line[4]),
+                            Value = _useDivisor ? decimal.Parse(line[7]) / divisor : decimal.Parse(line[7]),
+                            Volume = (long)(_useDivisor ? Math.Round(decimal.Parse(line[5]), 0) * divisor : Math.Round(decimal.Parse(line[5]), 0)),
                             Symbol = symbol,
                             DataType = MarketDataType.TradeBar,
                             Period = new TimeSpan(24,0,0),

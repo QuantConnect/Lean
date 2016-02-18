@@ -24,17 +24,18 @@ namespace QuantConnect.ToolBox.QuandlBitfinexDownloader
             {
                 // Load settings from config.json
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
+                bool useDivisor = bool.Parse(Config.Get("bitfinex-user-divisor", "false"));
 
                 // Create an instance of the downloader
-                const string market = "bitcoin";
-                var downloader = new QuandlBitfinexDownloader(args[1]);
+                const string market = Market.Bitcoin;
+                var downloader = new QuandlBitfinexDownloader(args[1], useDivisor);
 
                 // Download the data
                 var symbol = Symbol.Create("BTCUSD", SecurityType.Forex, market);
                 var data = downloader.Get(symbol, Resolution.Daily, DateTime.ParseExact(args[0], "yyyyMMdd", CultureInfo.CurrentCulture), DateTime.UtcNow);
 
                 // Save the data
-                var writer = new LeanDataWriter(SecurityType.Forex, Resolution.Daily, symbol, dataDirectory, market);
+                var writer = new LeanDataWriter(Resolution.Daily, symbol, dataDirectory, TickType.Quote);
                 writer.Write(data);
 
             }

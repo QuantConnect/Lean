@@ -41,6 +41,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Krs.Ats.IBNet.9.66.0.31\lib\net20\Krs.Ats.IBNet.dll</HintPath>
     </Reference>
+    <Reference Include="log4net, Version=1.2.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <HintPath>..\packages\log4net.2.0.5\lib\net45-full\log4net.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -65,6 +69,14 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="TradingApi.Bitfinex, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Brokerages\Bitfinex\TradingApi.Bitfinex.dll</HintPath>
+    </Reference>
+    <Reference Include="TradingApi.ModelObjects, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Brokerages\Bitfinex\TradingApi.ModelObjects.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
@@ -72,6 +84,7 @@
     </Compile>
     <Compile Include="AlgorithmRunner.cs" />
     <Compile Include="Algorithm\AlgorithmTradingTests.cs" />
+    <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageTests.cs" />
     <Compile Include="Brokerages\BrokerageTests.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmBrokerageDataQueueHandlerTests.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmBrokerageTests.cs" />
@@ -254,6 +267,8 @@
     <None Include="TestData\CashTestingStrategy.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="Brokerages\Bitfinex\TradingApi.Bitfinex.dll" />
+    <Content Include="Brokerages\Bitfinex\TradingApi.ModelObjects.dll" />
     <Content Include="TestData\SampleMarketHoursDatabase.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
