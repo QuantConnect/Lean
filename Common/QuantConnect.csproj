@@ -152,6 +152,7 @@
     <Compile Include="Data\Consolidators\PeriodCountConsolidatorBase.cs" />
     <Compile Include="Data\Consolidators\RenkoConsolidator.cs" />
     <Compile Include="Data\Consolidators\TickConsolidator.cs" />
+    <Compile Include="Data\Consolidators\TickQuoteBarConsolidator.cs" />
     <Compile Include="Data\Consolidators\TradeBarConsolidatorBase.cs" />
     <Compile Include="Data\FileFormat.cs" />
     <Compile Include="Data\HistoryRequest.cs" />
