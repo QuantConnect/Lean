@@ -30,7 +30,13 @@ namespace QuantConnect.Tests
     /// </summary>
     public static class AlgorithmRunner
     {
-        public static void RunLocalBacktest(string algorithm, Dictionary<string, string> expectedStatistics)
+        /// <summary>
+        /// Run local backtest to extract statistics and compare them with expected one.
+        /// </summary>
+        /// <param name="algorithm">Algorithm name</param>
+        /// <param name="expectedStatistics">Expected statistics to compare with</param>
+        /// <param name="algorithmLanguage">Algorithm language (options: CSharp, FSharp, VisualBasic, Python and Java)</param>
+        public static void RunLocalBacktest(string algorithm, Dictionary<string, string> expectedStatistics, string algorithmLanguage = "CSharp")
         {
             var statistics = new Dictionary<string, string>();
 
@@ -46,6 +52,8 @@ namespace QuantConnect.Tests
                 Config.Set("job-queue-handler", "QuantConnect.Queues.JobQueue");
                 Config.Set("api-handler", "QuantConnect.Api.Api");
                 Config.Set("result-handler", "QuantConnect.Lean.Engine.Results.BacktestingResultHandler");
+                Config.Set("algorithm-language", algorithmLanguage);
+                Config.Set("algorithm-location", "QuantConnect.Algorithm." + algorithmLanguage + ".dll");
 
                 using (Log.LogHandler = new CompositeLogHandler(new ILogHandler[]
                 {
