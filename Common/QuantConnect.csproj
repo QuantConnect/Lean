@@ -149,6 +149,7 @@
     <Compile Include="Data\Auxiliary\MapFileRow.cs" />
     <Compile Include="Data\Consolidators\BaseDataConsolidator.cs" />
     <Compile Include="Data\Consolidators\DynamicDataConsolidator.cs" />
+    <Compile Include="Data\Consolidators\PeriodCountConsolidatorBase.cs" />
     <Compile Include="Data\Consolidators\RenkoConsolidator.cs" />
     <Compile Include="Data\Consolidators\TickConsolidator.cs" />
     <Compile Include="Data\Consolidators\TradeBarConsolidatorBase.cs" />
