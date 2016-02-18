@@ -31,6 +31,14 @@ namespace QuantConnect.Data.Consolidators
         private T _last;
 
         /// <summary>
+        /// Gets a clone of the data being currently consolidated
+        /// </summary>
+        public override BaseData WorkingData
+        {
+            get { return _last == null ? null : _last.Clone(); }
+        }
+
+        /// <summary>
         /// Gets the type produced by this consolidator
         /// </summary>
         public override Type OutputType

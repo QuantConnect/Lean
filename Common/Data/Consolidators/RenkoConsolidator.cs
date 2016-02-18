@@ -81,6 +81,14 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
+        /// Gets a clone of the data being currently consolidated
+        /// </summary>
+        public override BaseData WorkingData
+        {
+            get { return _currentBar == null ? null : _currentBar.Clone(); }
+        }
+
+        /// <summary>
         /// Gets <see cref="RenkoBar"/> which is the type emitted in the <see cref="IDataConsolidator.DataConsolidated"/> event.
         /// </summary>
         public override Type OutputType

@@ -39,6 +39,11 @@ namespace QuantConnect.Data.Consolidators
         BaseData Consolidated { get; }
 
         /// <summary>
+        /// Gets a clone of the data being currently consolidated
+        /// </summary>
+        BaseData WorkingData { get; }
+
+        /// <summary>
         /// Gets the type consumed by this consolidator
         /// </summary>
         Type InputType { get; }

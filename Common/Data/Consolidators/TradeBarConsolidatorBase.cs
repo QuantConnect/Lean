@@ -77,11 +77,19 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
+        /// Gets a clone of the data being currently consolidated
+        /// </summary>
+        public override BaseData WorkingData
+        {
+            get { return _workingBar != null ? _workingBar.Clone() : null; }
+        }
+
+        /// <summary>
         /// Gets a copy of the current 'workingBar'.
         /// </summary>
         public TradeBar WorkingBar
         {
-            get { return _workingBar != null ? (TradeBar)_workingBar.Clone() : null; }
+            get { return (TradeBar) WorkingData; }
         }
 
         /// <summary>
