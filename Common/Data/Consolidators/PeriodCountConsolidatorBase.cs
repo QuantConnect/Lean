@@ -183,6 +183,31 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
+        /// Scans this consolidator to see if it should emit a bar due to time passing
+        /// </summary>
+        /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
+        public override void Scan(DateTime currentLocalTime)
+        {
+            if (_period.HasValue)
+            {
+                if (_workingBar != null)
+                {
+                    var fireDataConsolidated = _period.Value == TimeSpan.Zero;
+                    if (!fireDataConsolidated && currentLocalTime - _workingBar.Time >= _period.Value)
+                    {
+                        fireDataConsolidated = true;
+                    }
+                    if (fireDataConsolidated)
+                    {
+                        OnDataConsolidated(_workingBar);
+                        _lastEmit = currentLocalTime;
+                        _workingBar = null;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Determines whether or not the specified data should be processd
         /// </summary>
         /// <param name="data">The data to check</param>

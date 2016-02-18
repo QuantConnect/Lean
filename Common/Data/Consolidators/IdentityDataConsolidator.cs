@@ -58,5 +58,13 @@ namespace QuantConnect.Data.Consolidators
                 _last = data;
             }
         }
+
+        /// <summary>
+        /// Scans this consolidator to see if it should emit a bar due to time passing
+        /// </summary>
+        /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
+        public override void Scan(DateTime currentLocalTime)
+        {
+        }
     }
 }

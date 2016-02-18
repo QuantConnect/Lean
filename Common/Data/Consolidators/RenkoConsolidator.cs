@@ -134,6 +134,14 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
+        /// Scans this consolidator to see if it should emit a bar due to time passing
+        /// </summary>
+        /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
+        public override void Scan(DateTime currentLocalTime)
+        {
+        }
+
+        /// <summary>
         /// Event invocator for the DataConsolidated event. This should be invoked
         /// by derived classes when they have consolidated a new piece of data.
         /// </summary>
