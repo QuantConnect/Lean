@@ -84,10 +84,10 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="CandlestickPatterns.cs" />
     <Compile Include="DollarVolumeUniverseDefinitions.cs" />
     <Compile Include="QCAlgorithm.cs" />
     <Compile Include="QCAlgorithm.History.cs" />
-    <Compile Include="QCAlgorithm.Patterns.cs" />
     <Compile Include="QCAlgorithm.Trading.cs" />
     <Compile Include="QCAlgorithm.Indicators.cs" />
     <Compile Include="QCAlgorithm.Plotting.cs" />

@@ -11,6 +11,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
 */
 
 using System;
@@ -21,10 +22,21 @@ using QuantConnect.Indicators.CandlestickPatterns;
 namespace QuantConnect.Algorithm
 {
     /// <summary>
-    /// QCAlgorithm candlestick pattern indicator methods
+    /// Provides helpers for using candlestick patterns
     /// </summary>
-    public partial class QCAlgorithm
+    public class CandlestickPatterns
     {
+        private readonly QCAlgorithm _algorithm;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CandlestickPatterns"/> class
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
+        public CandlestickPatterns(QCAlgorithm algorithm)
+        {
+            _algorithm = algorithm;
+        }
+
         /// <summary>
         /// Creates a new Two Crows pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
@@ -35,9 +47,9 @@ namespace QuantConnect.Algorithm
         /// <returns>The pattern indicator for the requested symbol.</returns>
         public TwoCrows TwoCrows(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
         {
-            var name = CreateIndicatorName(symbol, "TWOCROWS", resolution);
+            var name = _algorithm.CreateIndicatorName(symbol, "TWOCROWS", resolution);
             var pattern = new TwoCrows(name);
-            RegisterIndicator(symbol, pattern, resolution, selector);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
             return pattern;
         }
 
@@ -51,9 +63,9 @@ namespace QuantConnect.Algorithm
         /// <returns>The pattern indicator for the requested symbol.</returns>
         public ThreeBlackCrows ThreeBlackCrows(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
         {
-            var name = CreateIndicatorName(symbol, "THREEBLACKCROWS", resolution);
+            var name = _algorithm.CreateIndicatorName(symbol, "THREEBLACKCROWS", resolution);
             var pattern = new ThreeBlackCrows(name);
-            RegisterIndicator(symbol, pattern, resolution, selector);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
             return pattern;
         }
 
@@ -67,9 +79,9 @@ namespace QuantConnect.Algorithm
         /// <returns>The pattern indicator for the requested symbol.</returns>
         public ThreeInside ThreeInside(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
         {
-            var name = CreateIndicatorName(symbol, "THREEINSIDE", resolution);
+            var name = _algorithm.CreateIndicatorName(symbol, "THREEINSIDE", resolution);
             var pattern = new ThreeInside(name);
-            RegisterIndicator(symbol, pattern, resolution, selector);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
             return pattern;
         }
     }
