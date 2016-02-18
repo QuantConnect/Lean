@@ -55,6 +55,7 @@
     <Compile Include="CandlestickPatterns\CandlestickPattern.cs" />
     <Compile Include="CandlestickPatterns\ThreeBlackCrows.cs" />
     <Compile Include="CandlestickPatterns\ThreeInside.cs" />
+    <Compile Include="CandlestickPatterns\ThreeLineStrike.cs" />
     <Compile Include="CandlestickPatterns\TwoCrows.cs" />
     <Compile Include="ChandeMomentumOscillator.cs" />
     <Compile Include="DonchianChannel.cs" />
