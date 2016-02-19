@@ -100,7 +100,7 @@ namespace QuantConnect.ToolBox
             var lastTime = new DateTime();
 
             // Determine file path
-            var baseDirectory = Path.Combine(_dataDirectory, _securityType.ToString().ToLower(), _market);
+            //var baseDirectory = Path.Combine(_dataDirectory, _securityType.ToString().ToLower(), _market);
 
             // Loop through all the data and write to file as we go
             foreach (var data in source)
@@ -112,7 +112,7 @@ namespace QuantConnect.ToolBox
                 if (lastTime != DateTime.MinValue && data.Time.Date > lastTime.Date)
                 {
                     // Write and clear the file contents
-                    var outputFile = GetZipOutputFileName(baseDirectory, lastTime);
+                    var outputFile = GetZipOutputFileName(_dataDirectory, lastTime);
                     WriteFile(outputFile, sb.ToString(), lastTime);
                     sb.Clear();
                 }
@@ -126,7 +126,7 @@ namespace QuantConnect.ToolBox
             // Write the last file
             if (sb.Length > 0)
             {
-                var outputFile = GetZipOutputFileName(baseDirectory, lastTime);
+                var outputFile = GetZipOutputFileName(_dataDirectory, lastTime);
                 WriteFile(outputFile, sb.ToString(), lastTime);
             }
         }
