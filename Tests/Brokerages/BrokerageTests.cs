@@ -162,7 +162,7 @@ namespace QuantConnect.Tests.Brokerages
                     else
                     {
                         var accountHoldings = brokerage.GetAccountHoldings().ToDictionary(x => x.Symbol);
-                        if (accountHoldings.ContainsKey(args.Symbol))
+                        if (accountHoldings.ContainsKey(args.Symbol) && _securityProvider.TryGetValue(args.Symbol, out security))
                         {
                             _securityProvider[args.Symbol].Holdings.SetHoldings(args.FillPrice, args.FillQuantity);
                         }

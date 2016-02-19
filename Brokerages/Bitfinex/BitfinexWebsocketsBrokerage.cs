@@ -75,7 +75,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         public override void Connect()
         {
             _ws.Connect();
-            if (this._checkConnectionTask == null || this._checkConnectionTask.IsCanceled || this._checkConnectionTask.IsFaulted || this._checkConnectionTask.IsCompleted)
+            if (this._checkConnectionTask == null || this._checkConnectionTask.IsFaulted)
             {
                 this._checkConnectionTask = Task.Run(() => CheckConnection());
             }
@@ -112,6 +112,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         private void Reconnect()
         {
             _ws.Connect();
+            this.Authenticate();
             this.Subscribe(null,null);
         }
 
