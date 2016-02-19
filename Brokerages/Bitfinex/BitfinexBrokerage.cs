@@ -55,11 +55,11 @@ namespace QuantConnect.Brokerages.Bitfinex
         private void Initialize()
         {
             //todo: use json config
-            apiSecret = ConfigurationManager.AppSettings["ApiSecret"];
-            apiKey = ConfigurationManager.AppSettings["ApiKey"];
+            //apiSecret = ConfigurationManager.AppSettings["ApiSecret"];
+            //apiKey = ConfigurationManager.AppSettings["ApiKey"];
 
-            //apiSecret = Config.Get("bitfinex-api-secret");
-            //apiKey = Config.Get("bitfinex-api-key");
+            apiSecret = Config.Get("bitfinex-api-secret");
+            apiKey = Config.Get("bitfinex-api-key");
 
             _wallet = Config.Get("bitfinex-wallet");
             if (string.IsNullOrEmpty(_wallet))
@@ -76,11 +76,8 @@ namespace QuantConnect.Brokerages.Bitfinex
             _client = new BitfinexApi(apiSecret, apiKey);
             _tickerToken = new CancellationTokenSource();
 
-            //var interval = 3000;
-            // _orderFillTimer = new Timer(state => CheckForFills(), null, interval, interval);
         }
 
-        //todo:
         public override bool IsConnected
         {
             get { return true; }
