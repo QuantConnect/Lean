@@ -93,6 +93,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
         }
 
+        //todo: Currently data is not used
         private void PopulateWallet(string[][] data)
         {
             if (data.Length > 0)
@@ -103,11 +104,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                     for (int i = 0; i < data.Length; i++)
                     {
                         var msg = new WalletMessage(data[i]);
-                        string currency = msg.GetString("WLT_CURRENCY");
-                        if (currency != "BTC")
-                        {
-                            _cash.Add(new Securities.Cash(currency, msg.GetDecimal("WLT_BALANCE"), 1));
-                        }
+                        _cash.Add(new Securities.Cash(msg.GetString("WLT_CURRENCY"), msg.GetDecimal("WLT_BALANCE"), 1));
                     }
                 }
             }
