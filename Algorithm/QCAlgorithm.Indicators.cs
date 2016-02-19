@@ -846,6 +846,23 @@ namespace QuantConnect.Algorithm
             return natr;
         }
 
+
+        /// <summary>
+        /// Creates a new Heikin-Ashi indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose Heikin-Ashi we want</param>
+        /// <param name="period">The period over which to compute the NATR</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The Heikin-Ashi indicator for the requested symbol over the specified period</returns>
+        public HeikinAshi HA(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "HA", resolution);
+            var ha = new HeikinAshi(name);
+            RegisterIndicator(symbol, ha, resolution, selector);
+            return ha;
+        }
+
         /// <summary>
         /// Creates and registers a new consolidator to receive automatic updates at the specified resolution as well as configures
         /// the indicator to receive updates from the consolidator.

@@ -53,6 +53,7 @@
     <Compile Include="ChandeMomentumOscillator.cs" />
     <Compile Include="DonchianChannel.cs" />
     <Compile Include="DoubleExponentialMovingAverage.cs" />
+    <Compile Include="HeikinAshi.cs" />
     <Compile Include="IchimokuKinkoHyo.cs" />
     <Compile Include="IndicatorResult.cs" />
     <Compile Include="IndicatorStatus.cs" />
