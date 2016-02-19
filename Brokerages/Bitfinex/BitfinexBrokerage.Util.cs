@@ -44,6 +44,12 @@ namespace QuantConnect.Brokerages.Bitfinex
         };
         #endregion
 
+
+        /// <summary>
+        /// Map exchange status
+        /// </summary>
+        /// <param name="response"></param>
+        /// <returns></returns>
         public static OrderStatus MapOrderStatus(BitfinexOrderStatusResponse response)
         {
             decimal remainingAmount;
@@ -65,9 +71,15 @@ namespace QuantConnect.Brokerages.Bitfinex
             return OrderStatus.Invalid;
         }
 
+
+        /// <summary>
+        /// Map exchange order type
+        /// </summary>
+        /// <param name="orderType"></param>
+        /// <returns></returns>
         public string MapOrderType(OrderType orderType)
         {
-            var result = _orderTypeMap.Where(o => o.Wallet == _wallet && o.OrderType == orderType);
+            var result = _orderTypeMap.Where(o => o.Wallet == wallet && o.OrderType == orderType);
 
             if (result != null & result.Count() == 1)
             {
@@ -77,9 +89,15 @@ namespace QuantConnect.Brokerages.Bitfinex
             throw new Exception("Order type not supported: " + orderType.ToString());
         }
 
+
+        /// <summary>
+        /// Map exchange order type
+        /// </summary>
+        /// <param name="orderType"></param>
+        /// <returns></returns>
         public OrderType MapOrderType(string orderType)
         {
-            var result = _orderTypeMap.Where(o => o.Wallet == _wallet && o.BitfinexOrderType == orderType);
+            var result = _orderTypeMap.Where(o => o.Wallet == wallet && o.BitfinexOrderType == orderType);
 
             if (result != null & result.Count() == 1)
             {
@@ -89,6 +107,11 @@ namespace QuantConnect.Brokerages.Bitfinex
             throw new Exception("Order type not supported: " + orderType.ToString());
         }
 
+        /// <summary>
+        /// Map exchange order status
+        /// </summary>
+        /// <param name="msg"></param>
+        /// <returns></returns>
         public static OrderStatus MapOrderStatus(TradeMessage msg)
         {
             if (msg.FEE > 0)
@@ -96,14 +119,16 @@ namespace QuantConnect.Brokerages.Bitfinex
                 //todo: maybe still partially filled?
                 return OrderStatus.Filled;
             }
-            else
-            {
-                return OrderStatus.PartiallyFilled;
-            }
 
-            return OrderStatus.Invalid;
+            return OrderStatus.PartiallyFilled;
         }
 
+        /// <summary>
+        /// Creates authentication hash
+        /// </summary>
+        /// <param name="payload"></param>
+        /// <param name="apiSecret"></param>
+        /// <returns></returns>
         protected string GetHexHashSignature(string payload, string apiSecret)
         {
             HMACSHA384 hmac = new HMACSHA384(Encoding.UTF8.GetBytes(apiSecret));

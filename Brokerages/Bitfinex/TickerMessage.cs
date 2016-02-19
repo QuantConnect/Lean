@@ -7,9 +7,17 @@ using System.Threading.Tasks;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
+
+    /// <summary>
+    /// Ticker message object
+    /// </summary>
     public class TickerMessage : BaseMessage
     {
 
+        /// <summary>
+        /// Ticker Message constructor
+        /// </summary>
+        /// <param name="values"></param>
         public TickerMessage(string[] values)
             : base(values)
         {
@@ -28,16 +36,49 @@ namespace QuantConnect.Brokerages.Bitfinex
             LOW = GetDecimal("LOW");
         }
 
+        /// <summary>
+        /// Channel Id
+        /// </summary>
         public int CHANNEL_ID { get; set; }
+        /// <summary>
+        /// Bid
+        /// </summary>
         public decimal BID { get; set; }
+        /// <summary>
+        /// Bid Size
+        /// </summary>
         public decimal BID_SIZE { get; set; }
+        /// <summary>
+        /// Ask
+        /// </summary>
         public decimal ASK { get; set; }
+        /// <summary>
+        /// Ask Size
+        /// </summary>
         public decimal ASK_SIZE { get; set; }
+        /// <summary>
+        /// Daily Change
+        /// </summary>
         public decimal DAILY_CHANGE { get; set; }
+        /// <summary>
+        /// Daily Change %
+        /// </summary>
         public decimal DAILY_CHANGE_PERC { get; set; }
+        /// <summary>
+        /// Last Price
+        /// </summary>
         public decimal LAST_PRICE { get; set; }
+        /// <summary>
+        /// Volume
+        /// </summary>
         public decimal VOLUME { get; set; }
+        /// <summary>
+        /// High
+        /// </summary>
         public decimal HIGH { get; set; }
+        /// <summary>
+        /// Low
+        /// </summary>
         public decimal LOW { get; set; }
 
     }

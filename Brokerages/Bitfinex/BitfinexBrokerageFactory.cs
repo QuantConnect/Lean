@@ -9,19 +9,33 @@ using QuantConnect.Configuration;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
+
+    /// <summary>
+    /// Factory method to create Bitfinex Websockets brokerage
+    /// </summary>
     public class BitfinexBrokerageFactory : BrokerageFactory
     {
 
+        /// <summary>
+        /// Factory constructor
+        /// </summary>
         public BitfinexBrokerageFactory()
             : base(typeof(BitfinexBrokerage))
         {
         }
 
+        /// <summary>
+        /// Not required
+        /// </summary>
         public override void Dispose()
         {
 
         }
 
+
+        /// <summary>
+        /// provides brokerage connection data
+        /// </summary>
         public override Dictionary<string, string> BrokerageData
         {
             get
@@ -34,11 +48,20 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
         }
 
+        /// <summary>
+        /// The brokerage model
+        /// </summary>
         public override IBrokerageModel BrokerageModel
         {
             get { return new BitfinexBrokerageModel(); }
         }
 
+        /// <summary>
+        /// Create the Brokerage instance
+        /// </summary>
+        /// <param name="job"></param>
+        /// <param name="algorithm"></param>
+        /// <returns></returns>
         public override Interfaces.IBrokerage CreateBrokerage(Packets.LiveNodePacket job, Interfaces.IAlgorithm algorithm)
         {
             var brokerage = new BitfinexWebsocketsBrokerage();

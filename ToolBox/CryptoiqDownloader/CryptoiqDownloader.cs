@@ -21,6 +21,7 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
         public CryptoiqDownloader(string exchange = "bitfinex", bool useDivisor = false)
         {
             _exchange = exchange;
+            _useDivisor = useDivisor;
         }
 
         /// <summary>
@@ -64,7 +65,7 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
                             yield return new Tick
                             {
                                 Time = item.time,
-                                Symbol = symbol.Value,
+                                Symbol = symbol,
                                 Value = _useDivisor ? item.last / divisor: item.last,
                                 AskPrice = _useDivisor ? item.ask / divisor : item.ask,
                                 BidPrice = _useDivisor ? item.bid / divisor : item.bid,

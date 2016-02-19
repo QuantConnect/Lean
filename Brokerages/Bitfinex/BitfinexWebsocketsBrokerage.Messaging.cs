@@ -15,7 +15,12 @@ namespace QuantConnect.Brokerages.Bitfinex
 {
     public partial class BitfinexWebsocketsBrokerage
     {
-
+        
+        /// <summary>
+        /// Wss message handler
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         public void OnMessage(object sender, MessageEventArgs e)
         {
             var raw = JsonConvert.DeserializeObject<dynamic>(e.Data);
@@ -76,20 +81,20 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             var data = JsonConvert.DeserializeObject<string[]>(response);
             var msg = new TickerMessage(data);
-            lock (_ticks)
+            lock (ticks)
             {
-                _ticks.Add(new Tick
+                ticks.Add(new Tick
                 {
-                    AskPrice = msg.ASK / _divisor,
-                    BidPrice = msg.BID / _divisor,
-                    AskSize = (long)Math.Round(msg.ASK_SIZE * _divisor, 0),
-                    BidSize = (long)Math.Round(msg.BID_SIZE * _divisor, 0),
+                    AskPrice = msg.ASK / divisor,
+                    BidPrice = msg.BID / divisor,
+                    AskSize = (long)Math.Round(msg.ASK_SIZE * divisor, 0),
+                    BidSize = (long)Math.Round(msg.BID_SIZE * divisor, 0),
                     Time = DateTime.UtcNow,
-                    Value = msg.LAST_PRICE / _divisor,
+                    Value = msg.LAST_PRICE / divisor,
                     TickType = TickType.Quote,
-                    Symbol = _symbol,
+                    Symbol = symbol,
                     DataType = MarketDataType.Tick,
-                    Quantity = (int)(Math.Round(msg.VOLUME, 2) * _divisor)
+                    Quantity = (int)(Math.Round(msg.VOLUME, 2) * divisor)
                 });
             }
         }
@@ -105,7 +110,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                     for (int i = 0; i < data.Length; i++)
                     {
                         var msg = new WalletMessage(data[i]);
-                        _cash.Add(new Securities.Cash(msg.GetString("WLT_CURRENCY"), msg.GetDecimal("WLT_BALANCE"), 1));
+                        _cash.Add(new Securities.Cash(msg.WLT_CURRENCY, msg.WLT_BALANCE, 1));
                     }
                 }
             }
@@ -115,30 +120,30 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             var msg = new TradeMessage(data);
             int brokerId = msg.TRD_ORD_ID;
-            var cached = _cachedOrderIDs.Where(o => o.Value.BrokerId.Contains(brokerId.ToString()));
+            var cached = cachedOrderIDs.Where(o => o.Value.BrokerId.Contains(brokerId.ToString()));
 
             if (cached.Count() > 0 && cached.First().Value != null)
             {
                 var fill = new OrderEvent
                 (
-                    cached.First().Key, _symbol, msg.TRD_TIMESTAMP, MapOrderStatus(msg),
+                    cached.First().Key, symbol, msg.TRD_TIMESTAMP, MapOrderStatus(msg),
                     msg.TRD_AMOUNT_EXECUTED > 0 ? OrderDirection.Buy : OrderDirection.Sell,
-                    msg.TRD_PRICE_EXECUTED / _divisor, (int)(msg.TRD_AMOUNT_EXECUTED * _divisor),
+                    msg.TRD_PRICE_EXECUTED / divisor, (int)(msg.TRD_AMOUNT_EXECUTED * divisor),
                     msg.FEE, "Bitfinex Fill Event"
                 );
 
-                _filledOrderIDs.Add(cached.First().Key);
+                filledOrderIDs.Add(cached.First().Key);
 
                 if (fill.Status == OrderStatus.Filled)
                 {
                     BitfinexOrder outOrder = cached.First().Value;
-                    _cachedOrderIDs.TryRemove(cached.First().Key, out outOrder);
+                    cachedOrderIDs.TryRemove(cached.First().Key, out outOrder);
                 }
                 OnOrderEvent(fill);
             }
             else
             {
-                _unknownOrderIDs.Add(brokerId);
+                unknownOrderIDs.Add(brokerId);
             }
         }
 

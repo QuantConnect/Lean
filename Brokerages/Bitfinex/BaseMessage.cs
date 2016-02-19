@@ -6,12 +6,28 @@ using System.Threading.Tasks;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
+
+
+    /// <summary>
+    /// Base class for Bitfinex wss messages
+    /// </summary>
     public abstract class BaseMessage
     {
 
+        /// <summary>
+        /// Stored Keys for message
+        /// </summary>
         protected string[] allKeys { get; set; }
+
+        /// <summary>
+        /// Stores values of message
+        /// </summary>
         protected string[] allValues { get; set; }
 
+        /// <summary>
+        /// Creates base message
+        /// </summary>
+        /// <param name="values"></param>
         public BaseMessage(string[] values)
         {
             allValues = values;

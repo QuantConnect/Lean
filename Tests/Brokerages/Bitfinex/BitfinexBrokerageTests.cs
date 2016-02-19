@@ -73,7 +73,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         #endregion
 
         [SetUp]
-        public void Setup()
+        public override void Setup()
         {
             base.Setup();
             unit = new BitfinexWebsocketsBrokerage();

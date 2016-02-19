@@ -32,13 +32,21 @@ namespace QuantConnect.Brokerages.Bitfinex
         const int _heartBeatTimeout = 30;
         #endregion
 
+        /// <summary>
+        /// Create Brokerage instance
+        /// </summary>
         public BitfinexWebsocketsBrokerage()
             : base()
         {
         }
 
-        //todo: support other currency. Set symbol from here
-        public void Subscribe(Packets.LiveNodePacket job, IEnumerable<Symbol> symbols)
+        /// <summary>
+        /// Add subscription to Websockets service
+        /// </summary>
+        /// <param name="job"></param>
+        /// <param name="symbols"></param>
+        //todo: support other currency. Use symbol supplied here
+        public override void Subscribe(Packets.LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
             if (!this.IsConnected)
             {
@@ -49,12 +57,17 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 @event = "subscribe",
                 channel = "ticker",
-                pair = this._symbol.Value
+                pair = this.symbol.Value
             }));
 
         }
 
-        public void Unsubscribe(Packets.LiveNodePacket job, IEnumerable<Symbol> symbols)
+        /// <summary>
+        /// Remove subscription from Websockets service
+        /// </summary>
+        /// <param name="job"></param>
+        /// <param name="symbols"></param>
+        public override void Unsubscribe(Packets.LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
             foreach (var id in _channelId)
             {
@@ -71,11 +84,17 @@ namespace QuantConnect.Brokerages.Bitfinex
             }));
         }
 
+        /// <summary>
+        /// Returns if wss is connected
+        /// </summary>
         public override bool IsConnected
         {
             get { return _ws.IsAlive; }
         }
 
+        /// <summary>
+        /// Creates wss connection
+        /// </summary>
         public override void Connect()
         {
             _ws.Connect();
@@ -88,12 +107,18 @@ namespace QuantConnect.Brokerages.Bitfinex
             this.Authenticate();
         }
 
+        /// <summary>
+        /// Logs out and close connection
+        /// </summary>
         public override void Disconnect()
         {
             this.UnAuthenticate();
             this._ws.Close();
         }
 
+        /// <summary>
+        /// Ensures any wss connection or authentication is closed
+        /// </summary>
         public void Dispose()
         {
             _checkConnectionToken.Cancel();
@@ -101,7 +126,11 @@ namespace QuantConnect.Brokerages.Bitfinex
             this.Disconnect();
         }
 
-        public async Task CheckConnection()
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private async Task CheckConnection()
         {
             while (!_checkConnectionToken.Token.IsCancellationRequested)
             {

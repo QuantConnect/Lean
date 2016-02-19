@@ -56,7 +56,7 @@ namespace QuantConnect.Tests.Brokerages
         #region Test initialization and cleanup
 
         [SetUp]
-        public void Setup()
+        public virtual void Setup()
         {
             Log.Trace("");
             Log.Trace("");

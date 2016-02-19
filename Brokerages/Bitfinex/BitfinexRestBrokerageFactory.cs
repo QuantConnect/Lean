@@ -17,16 +17,26 @@ namespace QuantConnect.Brokerages.Bitfinex
     public class BitfinexRestBrokerageFactory : BrokerageFactory
     {
 
+
+        /// <summary>
+        /// Create factory instance
+        /// </summary>
         public BitfinexRestBrokerageFactory()
             : base(typeof(BitfinexBrokerage))
         {
         }
 
+        /// <summary>
+        /// Empty dispose method
+        /// </summary>
         public override void Dispose()
         {
 
         }
 
+        /// <summary>
+        /// Data for brokerage
+        /// </summary>
         public override Dictionary<string, string> BrokerageData
         {
             get
@@ -39,11 +49,20 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
         }
 
+        /// <summary>
+        /// Brokerage Model
+        /// </summary>
         public override IBrokerageModel BrokerageModel
         {
             get { return new BitfinexBrokerageModel(); }
         }
 
+        /// <summary>
+        /// Create brokerage instance
+        /// </summary>
+        /// <param name="job"></param>
+        /// <param name="algorithm"></param>
+        /// <returns></returns>
         public override Interfaces.IBrokerage CreateBrokerage(Packets.LiveNodePacket job, Interfaces.IAlgorithm algorithm)
         {
             var brokerage = new BitfinexBrokerage();
