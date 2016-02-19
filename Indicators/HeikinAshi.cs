@@ -49,6 +49,14 @@ namespace QuantConnect.Indicators
         public IndicatorBase<IndicatorDataPoint> Close { get; private set; }
 
         /// <summary>
+        /// Gets the Heikin-Ashi current TradeBar
+        /// </summary>
+        public TradeBar CurrentBar
+        {
+            get {  return new TradeBar(Open.Current.Time, Symbol.Empty, Open, High, Low, Close, 0);}
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="HeikinAshi"/> class using the specified name.
         /// </summary> 
         /// <param name="name">The name of this indicator</param>
