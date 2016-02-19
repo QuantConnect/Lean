@@ -181,10 +181,10 @@ namespace QuantConnect.Data.Market
         {
             Symbol = symbol;
             Time = time;
-            Bid = bid == null ? new Bar() : new Bar(bid.Open, bid.High, bid.Low, bid.Close);
-            Ask = ask == null ? new Bar() : new Bar(ask.Open, ask.High, ask.Low, ask.Close);
-            LastBidSize = lastBidSize;
-            LastAskSize = lastAskSize;
+            Bid = bid == null ? null : new Bar(bid.Open, bid.High, bid.Low, bid.Close);
+            Ask = ask == null ? null : new Bar(ask.Open, ask.High, ask.Low, ask.Close);
+            if (Bid != null) LastBidSize = lastBidSize;
+            if (Ask != null) LastAskSize = lastAskSize;
             Value = Close;
             Period = period ?? TimeSpan.FromMinutes(1);
             DataType = MarketDataType.QuoteBar;
@@ -263,6 +263,10 @@ namespace QuantConnect.Data.Market
                 };
                 quoteBar.LastBidSize = csv[8].ToInt64();
             }
+            else
+            {
+                quoteBar.Bid = null;
+            }
 
             // only create the bid if it exists in the file
             if (csv[9].Length != 0 || csv[10].Length != 0 || csv[11].Length != 0 || csv[12].Length != 0)
@@ -275,6 +279,10 @@ namespace QuantConnect.Data.Market
                     Close = config.GetNormalizedPrice(csv[12].ToDecimal()*_scaleFactor)
                 };
                 quoteBar.LastAskSize = csv[13].ToInt64();
+            }
+            else
+            {
+                quoteBar.Ask = null;
             }
 
             quoteBar.Value = quoteBar.Close;

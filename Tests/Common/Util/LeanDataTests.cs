@@ -101,6 +101,14 @@ namespace QuantConnect.Tests.Common.Util
 
         private static void AssertBarsAreEqual(IBar expected, IBar actual)
         {
+            if (expected == null && actual == null)
+            {
+                return;
+            }
+            if (expected == null && actual != null)
+            {
+                Assert.Fail("Expected null bar");
+            }
             Assert.AreEqual(expected.Open, actual.Open);
             Assert.AreEqual(expected.High, actual.High);
             Assert.AreEqual(expected.Low, actual.Low);
@@ -162,6 +170,10 @@ namespace QuantConnect.Tests.Common.Util
                     "20160218 00:00,10000,20000,30000,40000,5"),
 
                 // options
+                new LeanDataLineTestParameters(new QuoteBar(time, Symbols.SPY_P_192_Feb19_2016, null, 0, new Bar(6, 7, 8, 9), 10, TimeSpan.FromMinutes(1)) {Bid = null}, SecurityType.Option, Resolution.Minute,
+                    "34200000,P,1920000,20160219,,,,,0,60000,70000,80000,90000,10"),
+                new LeanDataLineTestParameters(new QuoteBar(time.Date, Symbols.SPY_P_192_Feb19_2016, new Bar(1, 2, 3, 4), 5, null, 0, TimeSpan.FromDays(1)) {Ask = null}, SecurityType.Option, Resolution.Daily,
+                    "20160218 00:00,P,1920000,20160219,10000,20000,30000,40000,5,,,,,0"),
                 new LeanDataLineTestParameters(new QuoteBar(time, Symbols.SPY_P_192_Feb19_2016, new Bar(1, 2, 3, 4), 5, new Bar(6, 7, 8, 9), 10, TimeSpan.FromMinutes(1)), SecurityType.Option, Resolution.Minute,
                     "34200000,P,1920000,20160219,10000,20000,30000,40000,5,60000,70000,80000,90000,10"),
                 new LeanDataLineTestParameters(new QuoteBar(time.Date, Symbols.SPY_P_192_Feb19_2016, new Bar(1, 2, 3, 4), 5, new Bar(6, 7, 8, 9), 10, TimeSpan.FromDays(1)), SecurityType.Option, Resolution.Daily,
