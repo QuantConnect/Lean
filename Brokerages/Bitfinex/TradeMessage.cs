@@ -43,9 +43,6 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
         }
 
-        protected void Map()
-        { }
-
         public string TRD_SEQ { get; set; }
         public int TRD_ID { get; set; }
         public string TRD_PAIR { get; set; }

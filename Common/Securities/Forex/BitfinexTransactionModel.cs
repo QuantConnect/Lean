@@ -18,14 +18,16 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities.Interfaces;
+using System;
 
 namespace QuantConnect.Securities.Forex
 {
     /// <summary>
-    /// Bitfinex Transaction Model Class: Specific transaction fill models for FOREX orders
+    /// Bitfinex Transaction Model Class. Provided for backwards compatibility
     /// </summary>
     /// <seealso cref="SecurityTransactionModel"/>
     /// <seealso cref="ISecurityTransactionModel"/>
+    [Obsolete]
     public class BitfinexTransactionModel : SecurityTransactionModel
     {
         /// <summary>
@@ -35,7 +37,7 @@ namespace QuantConnect.Securities.Forex
             : base(new ImmediateFillModel(), new BitfinexFeeModel(), new BitfinexSlippageModel())
         {
         }
-  
+
 
     }
 

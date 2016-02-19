@@ -10,7 +10,10 @@ using QuantConnect.Configuration;
 namespace QuantConnect.Brokerages.Bitfinex
 {
 
-    //todo: This should be adapted to allow REST only paper trading
+    /// <summary>
+    /// Alternate brokerage factory provided for paper testing using REST only
+    /// </summary>
+    //todo: further testing
     public class BitfinexRestBrokerageFactory : BrokerageFactory
     {
 

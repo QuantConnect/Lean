@@ -15,6 +15,10 @@ using WebSocketSharp;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
+
+    /// <summary>
+    /// Bitfinex WebSockets integration
+    /// </summary>
     public partial class BitfinexWebsocketsBrokerage : BitfinexBrokerage, IDataQueueHandler, IDisposable
     {
 
@@ -45,7 +49,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 @event = "subscribe",
                 channel = "ticker",
-                pair = this.symbol.Value
+                pair = this._symbol.Value
             }));
 
         }
@@ -87,6 +91,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         public override void Disconnect()
         {
             this.UnAuthenticate();
+            this._ws.Close();
         }
 
         public void Dispose()

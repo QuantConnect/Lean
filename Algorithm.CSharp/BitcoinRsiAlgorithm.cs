@@ -84,7 +84,6 @@ namespace QuantConnect.Algorithm.CSharp
 
         private void Long()
         {
-            //System.Threading.Thread.Sleep(1);
             if (!Portfolio[symbol].IsLong && rsi.Current.Value > 5 && rsi.Current.Value < 30)
             {
                 int quantity = CalculateOrderQuantity(symbol, 3m);
@@ -101,7 +100,6 @@ namespace QuantConnect.Algorithm.CSharp
 
         private void Short()
         {
-            //System.Threading.Thread.Sleep(1);
             if (!Portfolio[symbol].IsShort && rsi.Current.Value > 70)
             {
                 SetHoldings(symbol, -3.0m);

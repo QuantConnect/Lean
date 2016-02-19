@@ -12,7 +12,6 @@ using TradingApi.ModelObjects.Bitfinex.Json;
 namespace QuantConnect.Brokerages.Bitfinex
 {
 
-    //todo: margin orders
     public partial class BitfinexBrokerage
     {
 

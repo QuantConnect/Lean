@@ -15,6 +15,7 @@ namespace QuantConnect.Brokerages.Bitfinex
 {
     public partial class BitfinexWebsocketsBrokerage
     {
+
         public void OnMessage(object sender, MessageEventArgs e)
         {
             var raw = JsonConvert.DeserializeObject<dynamic>(e.Data);
@@ -79,21 +80,21 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 _ticks.Add(new Tick
                 {
-                    AskPrice = msg.ASK / divisor,
-                    BidPrice = msg.BID / divisor,
-                    AskSize = (long)Math.Round(msg.ASK_SIZE * divisor, 0),
-                    BidSize = (long)Math.Round(msg.BID_SIZE * divisor, 0),
+                    AskPrice = msg.ASK / _divisor,
+                    BidPrice = msg.BID / _divisor,
+                    AskSize = (long)Math.Round(msg.ASK_SIZE * _divisor, 0),
+                    BidSize = (long)Math.Round(msg.BID_SIZE * _divisor, 0),
                     Time = DateTime.UtcNow,
-                    Value = msg.LAST_PRICE / divisor,
+                    Value = msg.LAST_PRICE / _divisor,
                     TickType = TickType.Quote,
-                    Symbol = symbol.Value,
+                    Symbol = _symbol,
                     DataType = MarketDataType.Tick,
-                    Quantity = (int)(Math.Round(msg.VOLUME, 2) * divisor)
+                    Quantity = (int)(Math.Round(msg.VOLUME, 2) * _divisor)
                 });
             }
         }
 
-        //todo: Currently data is not used
+        //todo: Currently not used
         private void PopulateWallet(string[][] data)
         {
             if (data.Length > 0)
@@ -114,30 +115,30 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             var msg = new TradeMessage(data);
             int brokerId = msg.TRD_ORD_ID;
-            var cached = cachedOrderIDs.Where(o => o.Value.BrokerId.Contains(brokerId.ToString()));
-            //todo: handle partial fill
+            var cached = _cachedOrderIDs.Where(o => o.Value.BrokerId.Contains(brokerId.ToString()));
+
             if (cached.Count() > 0 && cached.First().Value != null)
             {
                 var fill = new OrderEvent
                 (
-                    cached.First().Key, symbol, msg.TRD_TIMESTAMP, MapOrderStatus(msg),
+                    cached.First().Key, _symbol, msg.TRD_TIMESTAMP, MapOrderStatus(msg),
                     msg.TRD_AMOUNT_EXECUTED > 0 ? OrderDirection.Buy : OrderDirection.Sell,
-                    msg.TRD_PRICE_EXECUTED / divisor, (int)(msg.TRD_AMOUNT_EXECUTED * divisor),
+                    msg.TRD_PRICE_EXECUTED / _divisor, (int)(msg.TRD_AMOUNT_EXECUTED * _divisor),
                     msg.FEE, "Bitfinex Fill Event"
                 );
 
-                filledOrderIDs.Add(cached.First().Key);
-                //todo: remove from cache?
+                _filledOrderIDs.Add(cached.First().Key);
+
                 if (fill.Status == OrderStatus.Filled)
                 {
                     BitfinexOrder outOrder = cached.First().Value;
-                    cachedOrderIDs.TryRemove(cached.First().Key, out outOrder);
+                    _cachedOrderIDs.TryRemove(cached.First().Key, out outOrder);
                 }
                 OnOrderEvent(fill);
             }
             else
             {
-                unknownOrderIDs.Add(brokerId);
+                _unknownOrderIDs.Add(brokerId);
             }
         }
 

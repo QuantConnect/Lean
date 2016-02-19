@@ -28,10 +28,7 @@ using QuantConnect.Configuration;
 
 namespace QuantConnect.Brokerages
 {
-    /// <summary>
-    /// Provides a default implementation of <see cref="IBrokerageModel"/> that allows all orders and uses
-    /// the default transaction models
-    /// </summary>
+
     public class BitfinexBrokerageModel : DefaultBrokerageModel
     {
 
@@ -66,6 +63,7 @@ namespace QuantConnect.Brokerages
         }
 
         //todo: support other currencies
+        //Checks for decimal are superfluous until quantity is changed from int to decimal
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
             message = null;
