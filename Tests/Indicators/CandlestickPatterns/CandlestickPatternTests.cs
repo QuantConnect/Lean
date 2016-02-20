@@ -45,6 +45,7 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
                     rows.Add(new TestCaseData(new ThreeOutside(), "CDL3OUTSIDE", testFileName).SetName("ThreeOutside-" + testFileName));
                     rows.Add(new TestCaseData(new ThreeStarsInSouth(), "CDL3STARSINSOUTH", testFileName).SetName("ThreeStarsInSouth-" + testFileName));
                     rows.Add(new TestCaseData(new ThreeWhiteSoldiers(), "CDL3WHITESOLDIERS", testFileName).SetName("ThreeWhiteSoldiers-" + testFileName));
+                    rows.Add(new TestCaseData(new AbandonedBaby(), "CDLABANDONEDBABY", testFileName).SetName("AbandonedBaby-" + testFileName));
                 }
 
                 return rows.ToArray();
