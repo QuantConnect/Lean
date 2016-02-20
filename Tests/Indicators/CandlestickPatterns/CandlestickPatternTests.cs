@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -24,43 +25,50 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
     [TestFixture]
     public class CandlestickPatternTests
     {
-        private const string TestFileName = "spy_candle_patterns.txt";
+        private readonly string[] _testFileNames =
+        {
+            "spy_candle_patterns.txt", "ewz_candle_patterns.txt", "eurusd_candle_patterns.txt"
+        };
 
         public virtual TestCaseData[] PatternTestParameters
         {
             get
             {
-                return new[]
+                var rows = new List<TestCaseData>();
+
+                foreach (var testFileName in _testFileNames)
                 {
-                    new TestCaseData(new TwoCrows(), "CDL2CROWS").SetName("TwoCrows"),
-                    new TestCaseData(new ThreeBlackCrows(), "CDL3BLACKCROWS").SetName("ThreeBlackCrows"),
-                    new TestCaseData(new ThreeInside(), "CDL3INSIDE").SetName("ThreeInside"),
-                    new TestCaseData(new ThreeLineStrike(), "CDL3LINESTRIKE").SetName("ThreeLineStrike"),
-                    new TestCaseData(new ThreeOutside(), "CDL3OUTSIDE").SetName("ThreeOutside"),
-                    new TestCaseData(new ThreeStarsInSouth(), "CDL3STARSINSOUTH").SetName("ThreeStarsInSouth"),
-                    new TestCaseData(new ThreeWhiteSoldiers(), "CDL3WHITESOLDIERS").SetName("ThreeWhiteSoldiers"),
-                };
+                    rows.Add(new TestCaseData(new TwoCrows(), "CDL2CROWS", testFileName).SetName("TwoCrows-" + testFileName));
+                    rows.Add(new TestCaseData(new ThreeBlackCrows(), "CDL3BLACKCROWS", testFileName).SetName("ThreeBlackCrows-" + testFileName));
+                    rows.Add(new TestCaseData(new ThreeInside(), "CDL3INSIDE", testFileName).SetName("ThreeInside-" + testFileName));
+                    rows.Add(new TestCaseData(new ThreeLineStrike(), "CDL3LINESTRIKE", testFileName).SetName("ThreeLineStrike-" + testFileName));
+                    rows.Add(new TestCaseData(new ThreeOutside(), "CDL3OUTSIDE", testFileName).SetName("ThreeOutside-" + testFileName));
+                    rows.Add(new TestCaseData(new ThreeStarsInSouth(), "CDL3STARSINSOUTH", testFileName).SetName("ThreeStarsInSouth-" + testFileName));
+                    rows.Add(new TestCaseData(new ThreeWhiteSoldiers(), "CDL3WHITESOLDIERS", testFileName).SetName("ThreeWhiteSoldiers-" + testFileName));
+                }
+
+                return rows.ToArray();
             }
         }
 
         [Test, TestCaseSource("PatternTestParameters")]
-        public void ComparesAgainstExternalData(IndicatorBase<TradeBar> indicator, string columnName)
+        public void ComparesAgainstExternalData(IndicatorBase<TradeBar> indicator, string columnName, string testFileName)
         {
-            TestHelper.TestIndicator(indicator, TestFileName, columnName, Assertion);
+            TestHelper.TestIndicator(indicator, testFileName, columnName, Assertion);
         }
 
         [Test, TestCaseSource("PatternTestParameters")]
-        public void ComparesAgainstExternalDataAfterReset(CandlestickPattern indicator, string columnName)
+        public void ComparesAgainstExternalDataAfterReset(CandlestickPattern indicator, string columnName, string testFileName)
         {
-            TestHelper.TestIndicator(indicator, TestFileName, columnName, Assertion);
+            TestHelper.TestIndicator(indicator, testFileName, columnName, Assertion);
             indicator.Reset();
-            TestHelper.TestIndicator(indicator, TestFileName, columnName, Assertion);
+            TestHelper.TestIndicator(indicator, testFileName, columnName, Assertion);
         }
 
         [Test, TestCaseSource("PatternTestParameters")]
-        public void ResetsProperly(CandlestickPattern indicator, string columnName)
+        public void ResetsProperly(CandlestickPattern indicator, string columnName, string testFileName)
         {
-            TestHelper.TestIndicatorReset(indicator, TestFileName);
+            TestHelper.TestIndicatorReset(indicator, testFileName);
         }
 
         private static Action<IndicatorBase<TradeBar>, double> Assertion
