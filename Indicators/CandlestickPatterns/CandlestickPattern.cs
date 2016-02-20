@@ -84,11 +84,35 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         }
 
         /// <summary>
+        /// Returns true if the candle is higher than the previous one
+        /// </summary>
+        protected static bool GetCandleGapUp(TradeBar tradeBar, TradeBar previousBar)
+        {
+            return tradeBar.Low > previousBar.High;
+        }
+
+        /// <summary>
+        /// Returns true if the candle is lower than the previous one
+        /// </summary>
+        protected static bool GetCandleGapDown(TradeBar tradeBar, TradeBar previousBar)
+        {
+            return tradeBar.High < previousBar.Low;
+        }
+
+        /// <summary>
         /// Returns true if the candle is higher than the previous one (with no body overlap)
         /// </summary>
         protected static bool GetRealBodyGapUp(TradeBar tradeBar, TradeBar previousBar)
         {
             return Math.Min(tradeBar.Open, tradeBar.Close) > Math.Max(previousBar.Open, previousBar.Close);
+        }
+
+        /// <summary>
+        /// Returns true if the candle is lower than the previous one (with no body overlap)
+        /// </summary>
+        protected static bool GetRealBodyGapDown(TradeBar tradeBar, TradeBar previousBar)
+        {
+            return Math.Max(tradeBar.Open, tradeBar.Close) < Math.Min(previousBar.Open, previousBar.Close);
         }
 
         /// <summary>
