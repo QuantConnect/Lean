@@ -38,6 +38,7 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
                     new TestCaseData(new ThreeLineStrike(), "CDL3LINESTRIKE").SetName("ThreeLineStrike"),
                     new TestCaseData(new ThreeOutside(), "CDL3OUTSIDE").SetName("ThreeOutside"),
                     new TestCaseData(new ThreeStarsInSouth(), "CDL3STARSINSOUTH").SetName("ThreeStarsInSouth"),
+                    new TestCaseData(new ThreeWhiteSoldiers(), "CDL3WHITESOLDIERS").SetName("ThreeWhiteSoldiers"),
                 };
             }
         }

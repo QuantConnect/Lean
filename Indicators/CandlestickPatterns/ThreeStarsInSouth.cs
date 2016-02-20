@@ -51,7 +51,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ThreeInside"/> class.
+        /// Initializes a new instance of the <see cref="ThreeStarsInSouth"/> class.
         /// </summary>
         public ThreeStarsInSouth()
             : this("THREESTARSINSOUTH")
