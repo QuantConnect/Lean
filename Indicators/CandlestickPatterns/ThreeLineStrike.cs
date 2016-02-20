@@ -41,7 +41,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         public ThreeLineStrike(string name) 
-            : base(name, CandleSettings.Get(CandleSettingType.Near).AveragePeriod + 3)
+            : base(name, CandleSettings.Get(CandleSettingType.Near).AveragePeriod + 3 + 1)
         {
         }
 
@@ -58,7 +58,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// </summary>
         public override bool IsReady
         {
-            get { return Samples >= Period; }
+            get { return Samples > Period; }
         }
 
         /// <summary>
@@ -71,8 +71,11 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         {
             if (!IsReady)
             {
-                if (window.Count > 3) _nearPeriodTotal[3] += GetCandleRange(CandleSettingType.Near, window[3]);
-                if (window.Count > 2) _nearPeriodTotal[1] += GetCandleRange(CandleSettingType.Near, window[2]);
+                if (window.Count > 3)
+                {
+                    _nearPeriodTotal[3] += GetCandleRange(CandleSettingType.Near, window[3]);
+                    _nearPeriodTotal[2] += GetCandleRange(CandleSettingType.Near, window[2]);
+                }
                 return 0m;
             }
 
