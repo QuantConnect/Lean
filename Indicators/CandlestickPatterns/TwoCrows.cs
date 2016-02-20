@@ -40,7 +40,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         public TwoCrows(string name) 
-            : base(name, CandleSettings.Get(CandleSettingType.BodyLong).AveragePeriod + 2)
+            : base(name, CandleSettings.Get(CandleSettingType.BodyLong).AveragePeriod + 2 + 1)
         {
         }
 
@@ -70,7 +70,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         {
             if (!IsReady)
             {
-                _bodyLongPeriodTotal += GetCandleRange(CandleSettingType.BodyLong, input);
+                if (Samples < Period - 2) _bodyLongPeriodTotal += GetCandleRange(CandleSettingType.BodyLong, input);
                 return 0m;
             }
 
