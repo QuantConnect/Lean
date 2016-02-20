@@ -6,10 +6,10 @@
     // two predefined environments, 'backtesting' and 'live', feel free
     // to add more!
 
-    "environment": "backtesting",
+    "environment": "live-bitfinex-websockets",
 
     // algorithm class selector
-    "algorithm-type-name": "BitcoinRsiAlgorithm",
+    "algorithm-type-name": "",
 
     // Algorithm language selector - options CSharp, FSharp, VisualBasic, Python, Java
     "algorithm-language": "CSharp",
@@ -122,11 +122,11 @@
             "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"
         },
 	
-	"live-bitfinex-websockets": {
+      "live-bitfinex-websockets": {
             "live-mode": "true",
             "live-mode-brokerage": "BitfinexBrokerage",
             "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
-            "result-handler": "QuantConnect.Lean.Engine.Results.ConsoleResultHandler",
+            "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
             "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
             "data-queue-handler": "QuantConnect.Brokerages.Bitfinex.BitfinexWebsocketsBrokerage",
             "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",

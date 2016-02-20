@@ -71,16 +71,13 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
                                 BidPrice = _useDivisor ? item.bid / divisor : item.bid,
                                 TickType = QuantConnect.TickType.Quote
                             };
-
                         }
                         hour++;
                     }
                 }
                 counter = counter.AddDays(1);
                 hour = 0;
-
             }
-
         }
 
         public class CryptoiqBitcoin

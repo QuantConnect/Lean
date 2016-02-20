@@ -82,10 +82,8 @@ namespace QuantConnect.Brokerages.Bitfinex
 
         private void Initialize()
         {
-            //todo: use json config
-            //apiSecret = ConfigurationManager.AppSettings["ApiSecret"];
-            //apiKey = ConfigurationManager.AppSettings["ApiKey"];
 
+            //todo: also stored in BrokerageData
             apiSecret = Config.Get("bitfinex-api-secret");
             apiKey = Config.Get("bitfinex-api-key");
 
