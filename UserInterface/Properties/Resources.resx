@@ -117,35 +117,8 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="FormStatusStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>100, 17</value>
-  </metadata>
-  <metadata name="Menu.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAABMLAAATCwAAAAAAAAAA
-        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHZj4AR2Y+AEdmPgAHZj4AAAAAAAAAAAAAAAAAAAA
-        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB2Y+T8dmPiEHZj4QB2Y+AcdmPgAAAAAAAAA
-        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB0cnEAdHJxAHRycQAZmf1cHJn65hyZ+uEdmPiVHZj4HR2Y
-        +AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB0cnEAdHJxAHRycR90cnFnbXV7mld/na4yj9i0HJj55h2Y
-        +K0dmPgYHZj4AAAAAAAAAAAAAAAAAAAAAAAAAAAAc3JyAHRycS50cnDBdnFv6XRyctl3cW3hdXFv10aG
-        t6EcmPrkHZj4fh2Y+AQAAAAAAAAAAAAAAAAAAAAAAAAAAHRycRN1cnC0cnN03EeGt6gukd68O4vJrW11
-        e8Z2cW7WMI/ZtxyY+tUdmPgiAAAAAAAAAAAAAAAAHZj4ABuZ+QB1cnBNdXFv50eGt64amf3iHJn62BqZ
-        /Okxj9e0dXJw2Vl+mrQbmfvhHZj4VAAAAAAAAAAAAAAAAB2Y+AsYm/obcXN2anNyc8Eok+bCHJn6uB6Y
-        9yAdmPl/HZj3v2p2gb1od4S/HZj42B2Y+W0AAAAAAAAAAAAAAAAdmPhIHJj4yy6Q3VBleYggHpf2rh2Y
-        +LsdmPgYG5n6CyqS4iNzcnKsZ3eFwB2Y+NgdmPluAAAAAAAAAAAAAAAAHZj4NR2Y+OUcmPlyWn2dAB2Y
-        +VsdmPjsHJj6hXlmcgB4cGsrdnFu11l+m7UbmfvhHZj4VAAAAAAAAAAAAAAAAB2Y+A0dmPiuHZj4wR2Y
-        +BUdmPgHHJj5WieT6Gd0cnE+dXJwtnVycNgxj9m5HJj61R2Y+CIAAAAAAAAAAAAAAAAdmPgAHZj4TR2Y
-        +OsdmPiKHZj4Dh6Y9gB2cW5ZdnFu43VycNhGhrilHJj65R2Y+H4dmPgEAAAAAAAAAAAAAAAAHZj4AB2Y
-        +AgdmPiEHZj48B2Y+KgcmPlNUIKpaVd/nq0xj9izHJj55x2Y+KodmPgXHZj4AAAAAAAAAAAAAAAAAAAA
-        AAAdmPgAHZj4DR2Y+HMdmPjZHZj47xyY+eUcmProHJn64R2Y+JQdmPgcHZj4AAAAAAAAAAAAAAAAAAAA
-        AAAAAAAAAAAAAB2Y+AAdmPgAHZj4Kx2Y+HQdmPiWHZj4gh2Y+D4dmPgHHZj4AAAAAAAAAAAAAAAAAAAA
-        AAAAAAAAAAAAAAAAAAAAAAAAHZj4AB2Y+AAdmPgAHZj4Ax2Y+AEdmPgAHZj4AAAAAAAAAAAAAAAAAAAA
-        AAAAAAAA/n8AAP4fAAD+DwAA+AcAAPADAADgAwAA4AMAAIADAACAAwAAiIMAAIADAADCAwAAwAcAAOAP
-        AAD4HwAA/n8AAA==
-</value>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="application-exit-16" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Icons\application-exit-16.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

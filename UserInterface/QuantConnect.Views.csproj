@@ -49,6 +49,11 @@
     <Compile Include="Model\LeanEngineWinFormModel.cs" />
     <Compile Include="Presenter\IPresenter.cs" />
     <Compile Include="Presenter\LeanEngineWinFormPresenter.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="View\ILeanEngineWinFormView.cs" />
     <Compile Include="WinForms\LeanEngineWinForm.cs">
       <SubType>Form</SubType>
@@ -137,6 +142,10 @@
     <Content Include="Icons\window-tile-vertical.png" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Include="WinForms\LeanEngineWinForm.resx">
       <DependentUpon>LeanEngineWinForm.cs</DependentUpon>
     </EmbeddedResource>

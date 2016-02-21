@@ -31,7 +31,7 @@ namespace QuantConnect.Views.Presenter
         /// <param name="keyEventArgs"></param>
         private void ConsoleOnKeyUp(object sender, KeyEventArgs keyEventArgs)
         {
-            if (!((LeanEngineWinForm) _view).ResultsHandler.IsActive)
+            if ((LeanEngineWinForm) _view != null && ((LeanEngineWinForm) _view).ResultsHandler != null && !((LeanEngineWinForm) _view).ResultsHandler.IsActive)
             {
                 Environment.Exit(0);
             }
@@ -112,15 +112,18 @@ namespace QuantConnect.Views.Presenter
         {
             message = DateTime.Now.ToString("u") + " " + message + Environment.NewLine;
             //Add to console:
-            var console = ((LeanEngineWinForm) _view).Log;
-            console.AppendText(message, color);
+            var console = ((LeanEngineWinForm) _view).RichTextBoxLog;
+            console.AppendText(message);
             console.Refresh();
         }
 
         private void ExitApplication(object sender, EventArgs e)
         {
-            ((LeanEngineWinForm) _view).Engine.SystemHandlers.Dispose();
-            ((LeanEngineWinForm) _view).Engine.AlgorithmHandlers.Dispose();
+            if (((LeanEngineWinForm)_view).Engine != null)
+            { 
+                ((LeanEngineWinForm) _view).Engine.SystemHandlers.Dispose();
+                ((LeanEngineWinForm) _view).Engine.AlgorithmHandlers.Dispose();
+            }
             Environment.Exit(0);
         }
     }

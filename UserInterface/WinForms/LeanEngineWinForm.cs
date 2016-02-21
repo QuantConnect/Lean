@@ -15,13 +15,12 @@
 */
 
 using System;
-using System.Drawing;
-using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Logging;
 using QuantConnect.Util;
 using QuantConnect.Views.Model;
 using QuantConnect.Views.Presenter;
@@ -31,112 +30,48 @@ using Timer = System.Windows.Forms.Timer;
 namespace QuantConnect.Views.WinForms
 {
     /// <summary>
-    /// Primary Form for use with LEAN:
+    ///     Primary Form for use with LEAN:
     /// </summary>
-    public partial class LeanEngineWinForm : Form, ILeanEngineWinFormView
+    public class LeanEngineWinForm : Form, ILeanEngineWinFormView
     {
-        public Engine Engine { get; private set;}
-        //Form Controls:
-        public RichTextBox Log { get; private set; }
-
-        public IResultHandler ResultsHandler { get; private set; }
-
-        #region FormElementDeclarations
-
-        //Menu Form elements:
-        private GroupBox _logGroupBox;
-        private MenuStrip _menu;
-        private ToolStripMenuItem _menuFile;
-        private ToolStripMenuItem _menuFileExit;
-
-        //Status Stripe Elements:
-        private StatusStrip _statusStrip;
-        private ToolStripStatusLabel _statusStripLabel;
-        private ToolStripStatusLabel _statusStripStatistics;
-        private ToolStripProgressBar _statusStripProgress;
-        private ToolStripStatusLabel _statusStripSpring;
-        
-        //Timer;
-        private Timer _timer;
-
-        #endregion
-
-        //Form Business Logic:
-        private Timer _polling;
-        private bool _isComplete = false;
         private static Thread _leanEngineThread;
-        private LeanEngineWinFormPresenter _presenter;
 
         //Setup Configuration:
         public static string IconPath = "../../Icons/";
 
+        //Form Elements
+        private readonly Timer _polling;
+        private GroupBox LogGroupBox;
+        private RichTextBox TextBoxLog;
+        private MenuStrip Menu;
+        private ToolStripMenuItem FileMenuItem;
+        private ToolStripMenuItem ExitMenuItem;
+        private StatusStrip FormStatusStrip;
+        private ToolStripStatusLabel FormToolStripStatusLabel;
+        private ToolStripStatusLabel FormToolStripStatusStringLabel;
+        private ToolStripStatusLabel StatisticsToolStripStatusLabel;
+        private ToolStripProgressBar FormToolStripProgressBar;
+        private LeanEngineWinFormPresenter _presenter;
+
         /// <summary>
-        /// Launch the Lean Engine Primary Form:
+        ///     Launch the Lean Engine Primary Form:
         /// </summary>
-        /// <param name="engine">Accept the engine instance we just launched</param>
-        public LeanEngineWinForm(Engine engine)
+        public LeanEngineWinForm()
         {
             var model = new LeanEngineWinFormModel();
             _presenter = new LeanEngineWinFormPresenter(this, model);
-            Engine = engine;
-            ResultsHandler = engine.AlgorithmHandlers.Results;
-            //_presenter.ShowView();
+
+            InitializeComponent();
 
             //Create Form:
             Text = "QuantConnect Lean Algorithmic Trading Engine: v" + Constants.Version;
-            Size = new Size(1024,768);
-            MinimumSize = new Size(1024, 768);
-            CenterToScreen();
-            WindowState = FormWindowState.Maximized;
-            Icon = new Icon("../../../lean.ico");
-
-            var exitIcon = Image.FromStream(System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("QuantConnect.Views.Icons.application-exit-16.png"));
             
-            _logGroupBox = new GroupBox
-            {
-                Parent = this,
-                Location = new Point(10, 40),
-                Size = new Size(989, 662),
-                AutoSize = true,
-                Text = "Log",
-                Anchor = (AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top | AnchorStyles.Bottom)
-            };
-
             //Setup Console Log Area:
-            Log = new RichTextBox
-            {
-                Parent = _logGroupBox,
-                ReadOnly = true,
-                Multiline = true,
-                Location = new Point(10, 20),
-                Size = new Size(965, 632),
-                AutoSize = true,
-                Anchor = (AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top | AnchorStyles.Bottom)
-            };
+            TextBoxLog.Parent = LogGroupBox;
 
-            Log.KeyUp += ConsoleOnKeyUp;
-            
-            //Add the menu items to the tool strip
-            _menu = new MenuStrip();
-            _menuFile = new ToolStripMenuItem("&File");
-            _menuFileExit = new ToolStripMenuItem("E&xit", exitIcon, ExitApplication);
-            _menuFile.DropDownItems.AddRange(new ToolStripItem[] { _menuFileExit });
-            _menu.Items.AddRange(new ToolStripItem[] { _menuFile });
+            Log.LogHandler = new RichTextBoxLogHandler(TextBoxLog);
+            TextBoxLog.KeyUp += ConsoleOnKeyUp;
 
-            Controls.Add(_menu);
-            MainMenuStrip = _menu;
-
-            //Create and add the status strip:
-            _statusStrip = new StatusStrip();
-            _statusStripLabel = new ToolStripStatusLabel("Loading Complete");
-            _statusStripProgress = new ToolStripProgressBar();
-            _statusStripSpring = new ToolStripStatusLabel { Spring = true };
-            _statusStripStatistics = new ToolStripStatusLabel("Statistics: CPU:    Ram:    ");
-            _statusStrip.Items.AddRange(new ToolStripItem[] { _statusStripLabel, _statusStripSpring, _statusStripStatistics, _statusStripProgress });
-            
-            Controls.Add(_statusStrip);
-            
-            Name = "LeanEngineWinForm";
             ResumeLayout(false);
 
             //Form Events:
@@ -155,9 +90,28 @@ namespace QuantConnect.Views.WinForms
             //Setup Container Events:
             Load += OnLoad;
         }
-        
+
+        public Engine Engine { get; private set; }
+        //Form Controls:
+        public RichTextBox RichTextBoxLog { get; private set; }
+        public IResultHandler ResultsHandler { get; set; }
+        public event EventHandler TickerTick;
+        public event EventHandler PollingTick;
+        public event EventHandler ExitApplication;
+        public event KeyEventHandler ConsoleOnKeyUp;
+
+        public void OnPropertyChanged(LeanEngineWinFormModel model)
+        {
+            StatisticsToolStripStatusLabel.Text = model.StatusStripStatisticsText;
+        }
+
+        private void Exit(object sender, EventArgs eventArgs)
+        {
+            ExitApplication(sender, eventArgs);
+        }
+
         /// <summary>
-        /// Initialization events on loading the container
+        ///     Initialization events on loading the container
         /// </summary>
         private void OnLoad(object sender, EventArgs eventArgs)
         {
@@ -165,18 +119,20 @@ namespace QuantConnect.Views.WinForms
             _timer.Start();
 
             //Complete load
-            _statusStripLabel.Text = "LEAN Desktop v" + Constants.Version + " Load Complete.";
+            FormToolStripStatusLabel.Text = "LEAN Desktop v" + Constants.Version + " Load Complete.";
+
+            //Load the Lean Engine
+            Engine = LaunchLean();
         }
 
-
         /// <summary>
-        /// Launch the Desktop Interface
+        ///     Launch the Desktop Interface
         /// </summary>
         /// <remarks>
-        ///     This is a preliminary implementation of a UX for the Lean Engine. It is not considered complete or 
+        ///     This is a preliminary implementation of a UX for the Lean Engine. It is not considered complete or
         ///     production ready but is committed so the open source community can begin experimenting with custom UIs!
         /// </remarks>
-        static public void Main()
+        public static void Main()
         {
             const string algorithm = "BasicTemplateAlgorithm";
 
@@ -184,7 +140,6 @@ namespace QuantConnect.Views.WinForms
 
             // Setup the configuration, since the UX is not in the 
             // lean directory we write a new config in the UX output directory.
-            // TODO > Most of this should be configured through a helper form in the UX.
             Config.Set("algorithm-type-name", algorithm);
             Config.Set("live-mode", "false");
             Config.Set("messaging-handler", "QuantConnect.Messaging.Messaging");
@@ -194,19 +149,18 @@ namespace QuantConnect.Views.WinForms
             Config.Set("environment", "desktop");
 
             //Start default backtest.
-            var engine = LaunchLean();
 
             //Start GUI
-            Application.Run(new LeanEngineWinForm(engine));
+            Application.Run(new LeanEngineWinForm());
+
         }
 
         /// <summary>
-        /// Launch the LEAN Engine in a separate thread.
+        ///     Launch the LEAN Engine in a separate thread.
         /// </summary>
         public static Engine LaunchLean()
         {
             //Launch the Lean Engine in another thread: this will run the algorithm specified above.
-            // TODO > This should only be launched when clicking a backtest/trade live button provided in the UX.
 
             var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(Composer.Instance);
             var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance);
@@ -223,14 +177,152 @@ namespace QuantConnect.Views.WinForms
             return engine;
         }
 
-        public event EventHandler TickerTick;
-        public event EventHandler PollingTick;
-        public event EventHandler ExitApplication;
-        public event KeyEventHandler ConsoleOnKeyUp;
+        #region FormElementDeclarations
 
-        public void OnPropertyChanged(LeanEngineWinFormModel model)
+        //Menu Form elements:
+        private readonly GroupBox _logGroupBox;
+        private readonly MenuStrip _menu;
+        private readonly ToolStripMenuItem _menuFile;
+        private readonly ToolStripMenuItem _menuFileExit;
+
+        //Status Stripe Elements:
+        private readonly StatusStrip _statusStrip;
+        private readonly ToolStripStatusLabel _statusStripLabel;
+        private readonly ToolStripStatusLabel _statusStripStatistics;
+        private readonly ToolStripProgressBar _statusStripProgress;
+        private readonly ToolStripStatusLabel _statusStripSpring;
+
+        //Timer;
+        private readonly Timer _timer;
+
+        #endregion
+
+        private void InitializeComponent()
         {
-            _statusStripStatistics.Text = model.StatusStripStatisticsText;
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(LeanEngineWinForm));
+            this.LogGroupBox = new System.Windows.Forms.GroupBox();
+            this.TextBoxLog = new System.Windows.Forms.RichTextBox();
+            this.Menu = new System.Windows.Forms.MenuStrip();
+            this.FileMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ExitMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.FormStatusStrip = new System.Windows.Forms.StatusStrip();
+            this.FormToolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.FormToolStripStatusStringLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.StatisticsToolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.FormToolStripProgressBar = new System.Windows.Forms.ToolStripProgressBar();
+            this.LogGroupBox.SuspendLayout();
+            this.Menu.SuspendLayout();
+            this.FormStatusStrip.SuspendLayout();
+            this.SuspendLayout();
+            // 
+            // LogGroupBox
+            // 
+            this.LogGroupBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.LogGroupBox.AutoSize = true;
+            this.LogGroupBox.Controls.Add(this.FormStatusStrip);
+            this.LogGroupBox.Controls.Add(this.TextBoxLog);
+            this.LogGroupBox.Location = new System.Drawing.Point(10, 40);
+            this.LogGroupBox.Name = "LogGroupBox";
+            this.LogGroupBox.Size = new System.Drawing.Size(989, 668);
+            this.LogGroupBox.TabIndex = 0;
+            this.LogGroupBox.TabStop = false;
+            this.LogGroupBox.Text = "Log";
+            // 
+            // TextBoxLog
+            // 
+            this.TextBoxLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.TextBoxLog.Location = new System.Drawing.Point(10, 20);
+            this.TextBoxLog.Name = "TextBoxLog";
+            this.TextBoxLog.ReadOnly = true;
+            this.TextBoxLog.Size = new System.Drawing.Size(965, 629);
+            this.TextBoxLog.TabIndex = 0;
+            this.TextBoxLog.Text = "";
+            // 
+            // Menu
+            // 
+            this.Menu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.FileMenuItem});
+            this.Menu.Location = new System.Drawing.Point(0, 0);
+            this.Menu.Name = "Menu";
+            this.Menu.Size = new System.Drawing.Size(1008, 24);
+            this.Menu.TabIndex = 1;
+            this.Menu.Text = "menuStrip1";
+            // 
+            // FileMenuItem
+            // 
+            this.FileMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.ExitMenuItem});
+            this.FileMenuItem.Name = "FileMenuItem";
+            this.FileMenuItem.Size = new System.Drawing.Size(37, 20);
+            this.FileMenuItem.Text = "File";
+            // 
+            // ExitMenuItem
+            // 
+            this.ExitMenuItem.Image = global::QuantConnect.Views.Properties.Resources.application_exit_16;
+            this.ExitMenuItem.Name = "ExitMenuItem";
+            this.ExitMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.ExitMenuItem.Text = "Exit";
+            this.ExitMenuItem.Click += new System.EventHandler(this.Exit);
+            // 
+            // FormStatusStrip
+            // 
+            this.FormStatusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.FormToolStripStatusLabel,
+            this.FormToolStripStatusStringLabel,
+            this.StatisticsToolStripStatusLabel,
+            this.FormToolStripProgressBar});
+            this.FormStatusStrip.Location = new System.Drawing.Point(3, 643);
+            this.FormStatusStrip.Name = "FormStatusStrip";
+            this.FormStatusStrip.Size = new System.Drawing.Size(983, 22);
+            this.FormStatusStrip.TabIndex = 1;
+            // 
+            // FormToolStripStatusLabel
+            // 
+            this.FormToolStripStatusLabel.Name = "FormToolStripStatusLabel";
+            this.FormToolStripStatusLabel.Size = new System.Drawing.Size(105, 17);
+            this.FormToolStripStatusLabel.Text = "Loading Complete";
+            // 
+            // FormToolStripStatusStringLabel
+            // 
+            this.FormToolStripStatusStringLabel.Name = "FormToolStripStatusStringLabel";
+            this.FormToolStripStatusStringLabel.Size = new System.Drawing.Size(594, 17);
+            this.FormToolStripStatusStringLabel.Spring = true;
+            // 
+            // StatisticsToolStripStatusLabel
+            // 
+            this.StatisticsToolStripStatusLabel.Name = "StatisticsToolStripStatusLabel";
+            this.StatisticsToolStripStatusLabel.Size = new System.Drawing.Size(136, 17);
+            this.StatisticsToolStripStatusLabel.Text = "Statistics: CPU:    Ram:    ";
+            // 
+            // FormToolStripProgressBar
+            // 
+            this.FormToolStripProgressBar.Name = "FormToolStripProgressBar";
+            this.FormToolStripProgressBar.Size = new System.Drawing.Size(100, 16);
+            // 
+            // LeanEngineWinForm
+            // 
+            this.ClientSize = new System.Drawing.Size(1008, 729);
+            this.Controls.Add(this.LogGroupBox);
+            this.Controls.Add(this.Menu);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MainMenuStrip = this.Menu;
+            this.MaximumSize = new System.Drawing.Size(1024, 768);
+            this.Name = "LeanEngineWinForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
+            this.LogGroupBox.ResumeLayout(false);
+            this.LogGroupBox.PerformLayout();
+            this.Menu.ResumeLayout(false);
+            this.Menu.PerformLayout();
+            this.FormStatusStrip.ResumeLayout(false);
+            this.FormStatusStrip.PerformLayout();
+            this.ResumeLayout(false);
+            this.PerformLayout();
+
         }
     }
 }

@@ -70,6 +70,7 @@
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -81,6 +82,7 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="CompositeLogHandler.cs" />
+    <Compile Include="RichTextBoxLogHandler.cs" />
     <Compile Include="FunctionalLogHandler.cs" />
     <Compile Include="ConsoleLogHandler.cs" />
     <Compile Include="FileLogHandler.cs" />

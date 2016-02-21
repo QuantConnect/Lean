@@ -41,7 +41,7 @@ namespace QuantConnect.Lean.Launcher
             if (Config.Get("output-environment") == "gui")
             {
                 Application.EnableVisualStyles();
-                Application.Run(new Views.WinForms.LeanEngineWinForm(Views.WinForms.LeanEngineWinForm.LaunchLean()));
+                Application.Run(new Views.WinForms.LeanEngineWinForm());
             }
             else
             {
