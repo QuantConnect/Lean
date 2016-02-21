@@ -53,6 +53,7 @@
     <Compile Include="CandlestickPatterns\AbandonedBaby.cs" />
     <Compile Include="CandlestickPatterns\AdvanceBlock.cs" />
     <Compile Include="CandlestickPatterns\BeltHold.cs" />
+    <Compile Include="CandlestickPatterns\Breakaway.cs" />
     <Compile Include="CandlestickPatterns\CandleEnums.cs" />
     <Compile Include="CandlestickPatterns\CandleSettings.cs" />
     <Compile Include="CandlestickPatterns\CandlestickPattern.cs" />
