@@ -113,24 +113,39 @@ namespace QuantConnect.Indicators.CandlestickPatterns
             }
 
             decimal value;
-            if (GetCandleColor(window[2]) == CandleColor.White &&
+            if (
+                // 1st white
+                GetCandleColor(window[2]) == CandleColor.White &&
+                // 2nd white
                 GetCandleColor(window[1]) == CandleColor.White &&
+                // 3rd white
                 GetCandleColor(input) == CandleColor.White &&
+                // consecutive higher closes
                 input.Close > window[1].Close && window[1].Close > window[2].Close &&
+                // 2nd opens within/near 1st real body
                 window[1].Open > window[2].Open &&
                 window[1].Open <= window[2].Close + GetCandleAverage(CandleSettingType.Near, _nearPeriodTotal[2], window[2]) &&
+                // 3rd opens within/near 2nd real body
                 input.Open > window[1].Open &&
                 input.Open <= window[1].Close + GetCandleAverage(CandleSettingType.Near, _nearPeriodTotal[1], window[1]) &&
+                // 1st: long real body
                 GetRealBody(window[2]) > GetCandleAverage(CandleSettingType.BodyLong, _bodyLongPeriodTotal, window[2]) &&
+                // 1st: short upper shadow
                 GetUpperShadow(window[2]) < GetCandleAverage(CandleSettingType.ShadowShort, _shadowShortPeriodTotal[2], window[2]) &&
                 (
+                    // ( 2 far smaller than 1 && 3 not longer than 2 )
+                    // advance blocked with the 2nd, 3rd must not carry on the advance
                     (
                         GetRealBody(window[1]) < GetRealBody(window[2]) - GetCandleAverage(CandleSettingType.Far, _farPeriodTotal[2], window[2]) &&
                         GetRealBody(input) < GetRealBody(window[1]) + GetCandleAverage(CandleSettingType.Near, _nearPeriodTotal[1], window[1])
                     ) ||
+                    // 3 far smaller than 2
+                    // advance blocked with the 3rd
                     (
                         GetRealBody(input) < GetRealBody(window[1]) - GetCandleAverage(CandleSettingType.Far, _farPeriodTotal[1], window[1])
                     ) ||
+                    // ( 3 smaller than 2 && 2 smaller than 1 && (3 or 2 not short upper shadow) )
+                    // advance blocked with progressively smaller real bodies and some upper shadows
                     (
                         GetRealBody(input) < GetRealBody(window[1]) &&
                         GetRealBody(window[1]) < GetRealBody(window[2]) &&
@@ -139,6 +154,8 @@ namespace QuantConnect.Indicators.CandlestickPatterns
                             GetUpperShadow(window[1]) > GetCandleAverage(CandleSettingType.ShadowShort, _shadowShortPeriodTotal[1], window[1])
                         )
                     ) ||
+                    // ( 3 smaller than 2 && 3 long upper shadow )
+                    // advance blocked with 3rd candle's long upper shadow and smaller body
                     (
                         GetRealBody(input) < GetRealBody(window[1]) &&
                         GetUpperShadow(input) > GetCandleAverage(CandleSettingType.ShadowLong, _shadowLongPeriodTotal[0], input)

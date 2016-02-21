@@ -26,7 +26,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
     /// - first candle: long white(black) real body
     /// - second candle: short real body totally engulfed by the first
     /// - third candle: black(white) candle that closes lower(higher) than the first candle's open
-    /// The meaning of "short" and "long" is specified with CandleSettings
+    /// The meaning of "short" and "long" is specified with SetCandleSettings
     /// The returned value is positive (+1) for the three inside up or negative (-1) for the three inside down;
     /// The user should consider that a three inside up is significant when it appears in a downtrend and a three inside
     /// down is significant when it appears in an uptrend, while this function does not consider the trend
@@ -77,11 +77,17 @@ namespace QuantConnect.Indicators.CandlestickPatterns
             }
 
             decimal value;
-            if (GetRealBody(window[2]) > GetCandleAverage(CandleSettingType.BodyLong, _bodyLongPeriodTotal, window[2]) &&
+            if (
+                // 1st: long
+                GetRealBody(window[2]) > GetCandleAverage(CandleSettingType.BodyLong, _bodyLongPeriodTotal, window[2]) &&
+                // 2nd: short
                 GetRealBody(window[1]) <= GetCandleAverage(CandleSettingType.BodyShort, _bodyShortPeriodTotal, window[1]) &&
+                //      engulfed by 1st
                 Math.Max(window[1].Close, window[1].Open) < Math.Max(window[2].Close, window[2].Open) &&
                 Math.Min(window[1].Close, window[1].Open) > Math.Min(window[2].Close, window[2].Open) &&
+                // 3rd: opposite to 1st
                 ((GetCandleColor(window[2]) == CandleColor.White && GetCandleColor(input) == CandleColor.Black && input.Close < window[2].Open) ||
+                  //      and closing out
                   (GetCandleColor(window[2]) == CandleColor.Black && GetCandleColor(input) == CandleColor.White && input.Close > window[2].Open)
                 )
               )

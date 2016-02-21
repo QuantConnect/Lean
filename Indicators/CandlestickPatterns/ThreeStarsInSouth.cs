@@ -28,7 +28,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
     /// - second candle: smaller black candle that opens higher than prior close but within prior candle's range 
     /// and trades lower than prior close but not lower than prior low and closes off of its low(it has a shadow)
     /// - third candle: small black marubozu(or candle with very short shadows) engulfed by prior candle's range
-    /// The meanings of "long body", "short body", "very short shadow" are specified with CandleSettings;
+    /// The meanings of "long body", "short body", "very short shadow" are specified with SetCandleSettings;
     /// The returned value is positive (+1): 3 stars in the south is always bullish;
     /// The user should consider that 3 stars in the south is significant when it appears in downtrend, while this function
     /// does not consider it
@@ -85,19 +85,32 @@ namespace QuantConnect.Indicators.CandlestickPatterns
             }
 
             decimal value;
-            if (GetCandleColor(window[2]) == CandleColor.Black &&
+            if (
+                // 1st black
+                GetCandleColor(window[2]) == CandleColor.Black &&
+                // 2nd black
                 GetCandleColor(window[1]) == CandleColor.Black &&
+                // 3rd black
                 GetCandleColor(input) == CandleColor.Black &&
+                // 1st: long
                 GetRealBody(window[2]) > GetCandleAverage(CandleSettingType.BodyLong, _bodyLongPeriodTotal, window[2]) &&
+                //      with long lower shadow
                 GetLowerShadow(window[2]) > GetCandleAverage(CandleSettingType.ShadowLong, _shadowLongPeriodTotal, window[2]) &&
+                // 2nd: smaller candle
                 GetRealBody(window[1]) < GetRealBody(window[2]) &&
+                //      that opens higher but within 1st range
                 window[1].Open > window[2].Close && window[1].Open <= window[2].High &&
+                //      and trades lower than 1st close
                 window[1].Low < window[2].Close &&
+                //      but not lower than 1st low
                 window[1].Low >= window[2].Low &&
+                //      and has a lower shadow
                 GetLowerShadow(window[1]) > GetCandleAverage(CandleSettingType.ShadowVeryShort, _shadowVeryShortPeriodTotal[1], window[1]) &&
+                // 3rd: small marubozu
                 GetRealBody(input) < GetCandleAverage(CandleSettingType.BodyShort, _bodyShortPeriodTotal, input) &&
                 GetLowerShadow(input) < GetCandleAverage(CandleSettingType.ShadowVeryShort, _shadowVeryShortPeriodTotal[0], input) &&
                 GetUpperShadow(input) < GetCandleAverage(CandleSettingType.ShadowVeryShort, _shadowVeryShortPeriodTotal[0], input) &&
+                //      engulfed by prior candle's range
                 input.Low > window[1].Low && input.High < window[1].High
               )
                 value = 1m;

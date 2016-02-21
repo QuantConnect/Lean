@@ -27,7 +27,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
     /// each opening within or near the previous real body
     /// - fourth candle: black (white) candle that opens above (below) prior candle's close and closes below (above) 
     /// the first candle's open
-    /// The meaning of "near" is specified with TA_SetCandleSettings;
+    /// The meaning of "near" is specified with SetCandleSettings;
     /// The returned value is positive (+1) when bullish or negative (-1) when bearish;
     /// The user should consider that 3-line strike is significant when it appears in a trend in the same direction of
     /// the first three candles, while this function does not consider it
@@ -80,24 +80,37 @@ namespace QuantConnect.Indicators.CandlestickPatterns
             }
 
             decimal value;
-            if (GetCandleColor(window[3]) == GetCandleColor(window[2]) &&
+            if (
+                // three with same color
+                GetCandleColor(window[3]) == GetCandleColor(window[2]) &&
                 GetCandleColor(window[2]) == GetCandleColor(window[1]) &&
+                // 4th opposite color
                 (int)GetCandleColor(input) == -(int)GetCandleColor(window[1]) &&
+                // 2nd opens within/near 1st rb
                 window[2].Open >= Math.Min(window[3].Open, window[3].Close) - GetCandleAverage(CandleSettingType.Near, _nearPeriodTotal[3], window[3]) &&
                 window[2].Open <= Math.Max(window[3].Open, window[3].Close) + GetCandleAverage(CandleSettingType.Near, _nearPeriodTotal[3], window[3]) &&
+                // 3rd opens within/near 2nd rb
                 window[1].Open >= Math.Min(window[2].Open, window[2].Close) - GetCandleAverage(CandleSettingType.Near, _nearPeriodTotal[2], window[2]) &&
                 window[1].Open <= Math.Max(window[2].Open, window[2].Close) + GetCandleAverage(CandleSettingType.Near, _nearPeriodTotal[2], window[2]) &&
                 (
                     (
+                        // if three white
                         GetCandleColor(window[1]) == CandleColor.White &&
+                        // consecutive higher closes
                         window[1].Close > window[2].Close && window[2].Close > window[3].Close &&
+                        // 4th opens above prior close
                         input.Open > window[1].Close &&
+                        // 4th closes below 1st open
                         input.Close < window[3].Open
                     ) ||
                     (
+                        // if three black
                         GetCandleColor(window[1]) == CandleColor.Black &&
+                        // consecutive lower closes
                         window[1].Close < window[2].Close && window[2].Close < window[3].Close &&
+                        // 4th opens below prior close
                         input.Open < window[1].Close &&
+                        // 4th closes above 1st open
                         input.Close > window[3].Open
                     )
                 )

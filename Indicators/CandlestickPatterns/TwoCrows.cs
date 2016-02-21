@@ -26,7 +26,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
     /// - second candle: black real body
     /// - gap between the first and the second candle's real bodies
     /// - third candle: black candle that opens within the second real body and closes within the first real body
-    /// The meaning of "long" is specified with CandleSettings
+    /// The meaning of "long" is specified with SetCandleSettings
     /// The returned value is negative (-1): two crows is always bearish;
     /// The user should consider that two crows is significant when it appears in an uptrend, while this function
     /// does not consider the trend.
@@ -75,12 +75,20 @@ namespace QuantConnect.Indicators.CandlestickPatterns
             }
 
             decimal value;
-            if (GetCandleColor(window[2]) == CandleColor.White &&
+            if (
+                // 1st: white
+                GetCandleColor(window[2]) == CandleColor.White &&
+                //      long
                 GetRealBody(window[2]) > GetCandleAverage(CandleSettingType.BodyLong, _bodyLongPeriodTotal, window[2]) &&
+                // 2nd: black
                 GetCandleColor(window[1]) == CandleColor.Black &&
+                //      gapping up
                 GetRealBodyGapUp(window[1], window[2]) &&
+                // 3rd: black
                 GetCandleColor(input) == CandleColor.Black &&
+                //      opening within 2nd rb
                 input.Open < window[1].Open && input.Open > window[1].Close &&
+                //      closing within 1st rb
                 input.Close > window[2].Open && input.Close < window[2].Close
               )
                 value = -1m;

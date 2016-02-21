@@ -96,19 +96,32 @@ namespace QuantConnect.Indicators.CandlestickPatterns
             }
 
             decimal value;
-            if (GetCandleColor(window[2]) == CandleColor.White &&
+            if (
+                // 1st white
+                GetCandleColor(window[2]) == CandleColor.White &&
+                // very short upper shadow
                 GetUpperShadow(window[2]) < GetCandleAverage(CandleSettingType.ShadowVeryShort, _shadowVeryShortPeriodTotal[2], window[2]) &&
+                // 2nd white
                 GetCandleColor(window[1]) == CandleColor.White &&
+                // very short upper shadow
                 GetUpperShadow(window[1]) < GetCandleAverage(CandleSettingType.ShadowVeryShort, _shadowVeryShortPeriodTotal[1], window[1]) &&
+                // 3rd white
                 GetCandleColor(input) == CandleColor.White &&
+                // very short upper shadow
                 GetUpperShadow(input) < GetCandleAverage(CandleSettingType.ShadowVeryShort, _shadowVeryShortPeriodTotal[0], input) &&
+                // consecutive higher closes
                 input.Close > window[1].Close && window[1].Close > window[2].Close &&
+                // 2nd opens within/near 1st real body
                 window[1].Open > window[2].Open &&
                 window[1].Open <= window[2].Close + GetCandleAverage(CandleSettingType.Near, _nearPeriodTotal[2], window[2]) &&
+                // 3rd opens within/near 2nd real body
                 input.Open > window[1].Open &&
                 input.Open <= window[1].Close + GetCandleAverage(CandleSettingType.Near, _nearPeriodTotal[1], window[1]) &&
+                // 2nd not far shorter than 1st
                 GetRealBody(window[1]) > GetRealBody(window[2]) - GetCandleAverage(CandleSettingType.Far, _farPeriodTotal[2], window[2]) &&
+                // 3rd not far shorter than 2nd
                 GetRealBody(input) > GetRealBody(window[1]) - GetCandleAverage(CandleSettingType.Far, _farPeriodTotal[1], window[1]) &&
+                // not short real body
                 GetRealBody(input) > GetCandleAverage(CandleSettingType.BodyShort, _bodyShortPeriodTotal, input)
               )
                 value = 1m;

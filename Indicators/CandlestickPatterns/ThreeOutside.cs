@@ -71,13 +71,20 @@ namespace QuantConnect.Indicators.CandlestickPatterns
             }
 
             decimal value;
-            if ((GetCandleColor(window[1]) == CandleColor.White && GetCandleColor(window[2]) == CandleColor.Black &&
+            if (
+               (
+                  // white engulfs black
+                  GetCandleColor(window[1]) == CandleColor.White && GetCandleColor(window[2]) == CandleColor.Black &&
                   window[1].Close > window[2].Open && window[1].Open < window[2].Close &&
+                  // third candle higher
                   input.Close > window[1].Close
                 )
                 ||
-                (GetCandleColor(window[1]) == CandleColor.Black && GetCandleColor(window[2]) == CandleColor.White &&
+                (
+                  // black engulfs white
+                  GetCandleColor(window[1]) == CandleColor.Black && GetCandleColor(window[2]) == CandleColor.White &&
                   window[1].Open > window[2].Close && window[1].Close < window[2].Open &&
+                  // third candle lower
                   input.Close < window[1].Close
                 )
               )

@@ -26,7 +26,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
     /// - each candle must have no or very short lower shadow
     /// - each candle after the first must open within the prior candle's real body
     /// - the first candle's close should be under the prior white candle's high
-    /// The meaning of "very short" is specified with CandleSettings
+    /// The meaning of "very short" is specified with SetCandleSettings
     /// The returned value is negative (-1): three black crows is always bearish;
     /// The user should consider that 3 black crows is significant when it appears after a mature advance or at high levels,
     /// while this function does not consider it
@@ -77,17 +77,30 @@ namespace QuantConnect.Indicators.CandlestickPatterns
             }
 
             decimal value;
-            if (GetCandleColor(window[3]) == CandleColor.White &&
+            if (
+                // white
+                GetCandleColor(window[3]) == CandleColor.White &&
+                // 1st black
                 GetCandleColor(window[2]) == CandleColor.Black &&
+                // very short lower shadow
                 GetLowerShadow(window[2]) < GetCandleAverage(CandleSettingType.ShadowVeryShort, _shadowVeryShortPeriodTotal[2], window[2]) &&
+                // 2nd black
                 GetCandleColor(window[1]) == CandleColor.Black &&
+                // very short lower shadow
                 GetLowerShadow(window[1]) < GetCandleAverage(CandleSettingType.ShadowVeryShort, _shadowVeryShortPeriodTotal[1], window[1]) &&
+                // 3rd black
                 GetCandleColor(input) == CandleColor.Black &&
+                // very short lower shadow
                 GetLowerShadow(input) < GetCandleAverage(CandleSettingType.ShadowVeryShort, _shadowVeryShortPeriodTotal[0], input) &&
+                // 2nd black opens within 1st black's rb
                 window[1].Open < window[2].Open && window[1].Open > window[2].Close &&
+                // 3rd black opens within 2nd black's rb
                 input.Open < window[1].Open && input.Open > window[1].Close &&
+                // 1st black closes under prior candle's high
                 window[3].High > window[2].Close &&
+                // three declining
                 window[2].Close > window[1].Close &&
+                // three declining
                 window[1].Close > input.Close
               )
                 value = -1m;

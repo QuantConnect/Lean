@@ -94,21 +94,36 @@ namespace QuantConnect.Indicators.CandlestickPatterns
             }
 
             decimal value;
-            if (GetRealBody(window[2]) > GetCandleAverage(CandleSettingType.BodyLong, _bodyLongPeriodTotal, window[2]) &&
+            if (
+                // 1st: long
+                GetRealBody(window[2]) > GetCandleAverage(CandleSettingType.BodyLong, _bodyLongPeriodTotal, window[2]) &&
+                // 2nd: doji
                 GetRealBody(window[1]) <= GetCandleAverage(CandleSettingType.BodyDoji, _bodyDojiPeriodTotal, window[1]) &&
+                // 3rd: longer than short
                 GetRealBody(input) > GetCandleAverage(CandleSettingType.BodyShort, _bodyShortPeriodTotal, input) &&
-                ((GetCandleColor(window[2]) == CandleColor.White &&
+                ((
+                    // 1st white
+                    GetCandleColor(window[2]) == CandleColor.White &&
+                    // 3rd black
                     GetCandleColor(input) == CandleColor.Black &&
+                    // 3rd closes well within 1st rb
                     input.Close < window[2].Close - GetRealBody(window[2]) * _penetration &&
+                    // upside gap between 1st and 2nd
                     GetCandleGapUp(window[1], window[2]) &&
+                    // downside gap between 2nd and 3rd
                     GetCandleGapDown(input, window[1])
                   )
                   ||
                   (
+                    // 1st black
                     GetCandleColor(window[2]) == CandleColor.Black &&
+                    // 3rd white
                     GetCandleColor(input) == CandleColor.White &&
+                    // 3rd closes well within 1st rb
                     input.Close > window[2].Close + GetRealBody(window[2]) * _penetration &&
+                    // downside gap between 1st and 2nd
                     GetCandleGapDown(window[1], window[2]) &&
+                    // upside gap between 2nd and 3rd
                     GetCandleGapUp(input, window[1])
                   )
                 )
