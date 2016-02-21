@@ -33,6 +33,9 @@ namespace QuantConnect.Indicators.CandlestickPatterns
     /// </remarks>
     public class ThreeInside : CandlestickPattern
     {
+        private readonly int _bodyLongAveragePeriod;
+        private readonly int _bodyShortAveragePeriod;
+
         private decimal _bodyLongPeriodTotal;
         private decimal _bodyShortPeriodTotal;
 
@@ -43,6 +46,8 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         public ThreeInside(string name) 
             : base(name, Math.Max(CandleSettings.Get(CandleSettingType.BodyShort).AveragePeriod, CandleSettings.Get(CandleSettingType.BodyLong).AveragePeriod) + 2 + 1)
         {
+            _bodyLongAveragePeriod = CandleSettings.Get(CandleSettingType.BodyLong).AveragePeriod;
+            _bodyShortAveragePeriod = CandleSettings.Get(CandleSettingType.BodyShort).AveragePeriod;
         }
 
         /// <summary>
@@ -71,8 +76,16 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         {
             if (!IsReady)
             {
-                if (Samples > 0 && Samples < Period - 2) _bodyLongPeriodTotal += GetCandleRange(CandleSettingType.BodyLong, input);
-                if (Samples > 1 && Samples < Period - 1) _bodyShortPeriodTotal += GetCandleRange(CandleSettingType.BodyShort, input);
+                if (Samples >= Period - _bodyLongAveragePeriod - 2 && Samples < Period - 2)
+                {
+                    _bodyLongPeriodTotal += GetCandleRange(CandleSettingType.BodyLong, input);
+                }
+
+                if (Samples >= Period - _bodyShortAveragePeriod - 1 && Samples < Period - 1)
+                {
+                    _bodyShortPeriodTotal += GetCandleRange(CandleSettingType.BodyShort, input);
+                }
+
                 return 0m;
             }
 
@@ -98,8 +111,11 @@ namespace QuantConnect.Indicators.CandlestickPatterns
             // add the current range and subtract the first range: this is done after the pattern recognition 
             // when avgPeriod is not 0, that means "compare with the previous candles" (it excludes the current candle)
 
-            _bodyLongPeriodTotal += GetCandleRange(CandleSettingType.BodyLong, window[2]) - GetCandleRange(CandleSettingType.BodyLong, window[Period - 1]);
-            _bodyShortPeriodTotal += GetCandleRange(CandleSettingType.BodyShort, window[1]) - GetCandleRange(CandleSettingType.BodyShort, window[Period - 2]);
+            _bodyLongPeriodTotal += GetCandleRange(CandleSettingType.BodyLong, window[2]) -
+                                    GetCandleRange(CandleSettingType.BodyLong, window[2 + _bodyLongAveragePeriod]);
+
+            _bodyShortPeriodTotal += GetCandleRange(CandleSettingType.BodyShort, window[1]) -
+                                     GetCandleRange(CandleSettingType.BodyShort, window[1 + _bodyShortAveragePeriod]);
 
             return value;
         }

@@ -37,6 +37,11 @@ namespace QuantConnect.Indicators.CandlestickPatterns
     /// </remarks>
     public class ThreeWhiteSoldiers : CandlestickPattern
     {
+        private readonly int _shadowVeryShortAveragePeriod;
+        private readonly int _nearAveragePeriod;
+        private readonly int _farAveragePeriod;
+        private readonly int _bodyShortAveragePeriod;
+
         private decimal[] _shadowVeryShortPeriodTotal = new decimal[3];
         private decimal[] _nearPeriodTotal = new decimal[3];
         private decimal[] _farPeriodTotal = new decimal[3];
@@ -48,8 +53,12 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// <param name="name">The name of this indicator</param>
         public ThreeWhiteSoldiers(string name) 
             : base(name, Math.Max(Math.Max(CandleSettings.Get(CandleSettingType.ShadowVeryShort).AveragePeriod, CandleSettings.Get(CandleSettingType.BodyShort).AveragePeriod),
-                  Math.Max(CandleSettings.Get(CandleSettingType.Far).AveragePeriod, CandleSettings.Get(CandleSettingType.Near).AveragePeriod)) + 2)
+                  Math.Max(CandleSettings.Get(CandleSettingType.Far).AveragePeriod, CandleSettings.Get(CandleSettingType.Near).AveragePeriod)) + 2 + 1)
         {
+            _shadowVeryShortAveragePeriod = CandleSettings.Get(CandleSettingType.ShadowVeryShort).AveragePeriod;
+            _nearAveragePeriod = CandleSettings.Get(CandleSettingType.Near).AveragePeriod;
+            _farAveragePeriod = CandleSettings.Get(CandleSettingType.Far).AveragePeriod;
+            _bodyShortAveragePeriod = CandleSettings.Get(CandleSettingType.BodyShort).AveragePeriod;
         }
 
         /// <summary>
@@ -65,7 +74,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// </summary>
         public override bool IsReady
         {
-            get { return Samples > Period; }
+            get { return Samples >= Period; }
         }
 
         /// <summary>
@@ -78,20 +87,30 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         {
             if (!IsReady)
             {
-                if (Samples > 2)
+                if (Samples >= Period - _shadowVeryShortAveragePeriod)
                 {
                     _shadowVeryShortPeriodTotal[2] += GetCandleRange(CandleSettingType.ShadowVeryShort, window[2]);
                     _shadowVeryShortPeriodTotal[1] += GetCandleRange(CandleSettingType.ShadowVeryShort, window[1]);
                     _shadowVeryShortPeriodTotal[0] += GetCandleRange(CandleSettingType.ShadowVeryShort, input);
+                }
 
+                if (Samples >= Period - _nearAveragePeriod)
+                {
                     _nearPeriodTotal[2] += GetCandleRange(CandleSettingType.Near, window[2]);
                     _nearPeriodTotal[1] += GetCandleRange(CandleSettingType.Near, window[1]);
+                }
 
+                if (Samples >= Period - _farAveragePeriod)
+                {
                     _farPeriodTotal[2] += GetCandleRange(CandleSettingType.Far, window[2]);
                     _farPeriodTotal[1] += GetCandleRange(CandleSettingType.Far, window[1]);
+                }
 
+                if (Samples >= Period - _bodyShortAveragePeriod)
+                {
                     _bodyShortPeriodTotal += GetCandleRange(CandleSettingType.BodyShort, input);
                 }
+
                 return 0m;
             }
 
@@ -134,18 +153,23 @@ namespace QuantConnect.Indicators.CandlestickPatterns
             for (var i = 2; i >= 0; i--)
             {
                 _shadowVeryShortPeriodTotal[i] += GetCandleRange(CandleSettingType.ShadowVeryShort, window[i]) -
-                                                  GetCandleRange(CandleSettingType.ShadowVeryShort, window[Period - 3 + i]);
+                                                  GetCandleRange(CandleSettingType.ShadowVeryShort, window[i + _shadowVeryShortAveragePeriod]);
             }
 
             for (var i = 2; i >= 1; i--)
             {
                 _farPeriodTotal[i] += GetCandleRange(CandleSettingType.Far, window[i]) -
-                                      GetCandleRange(CandleSettingType.Far, window[Period - 3 + i]);
-                _nearPeriodTotal[i] += GetCandleRange(CandleSettingType.Near, window[i]) -
-                                       GetCandleRange(CandleSettingType.Near, window[Period - 3 + i]);
+                                      GetCandleRange(CandleSettingType.Far, window[i + _farAveragePeriod]);
             }
 
-            _bodyShortPeriodTotal += GetCandleRange(CandleSettingType.BodyShort, input) - GetCandleRange(CandleSettingType.BodyShort, window[Period - 3]);
+            for (var i = 2; i >= 1; i--)
+            {
+                _nearPeriodTotal[i] += GetCandleRange(CandleSettingType.Near, window[i]) -
+                                       GetCandleRange(CandleSettingType.Near, window[i + _nearAveragePeriod]);
+            }
+
+            _bodyShortPeriodTotal += GetCandleRange(CandleSettingType.BodyShort, input) -
+                                     GetCandleRange(CandleSettingType.BodyShort, window[_bodyShortAveragePeriod]);
 
             return value;
         }

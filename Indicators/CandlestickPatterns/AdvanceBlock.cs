@@ -36,6 +36,12 @@ namespace QuantConnect.Indicators.CandlestickPatterns
     /// </remarks>
     public class AdvanceBlock : CandlestickPattern
     {
+        private readonly int _shadowShortAveragePeriod;
+        private readonly int _shadowLongAveragePeriod;
+        private readonly int _nearAveragePeriod;
+        private readonly int _farAveragePeriod;
+        private readonly int _bodyLongAveragePeriod;
+
         private decimal[] _shadowShortPeriodTotal = new decimal[3];
         private decimal[] _shadowLongPeriodTotal = new decimal[2];
         private decimal[] _nearPeriodTotal = new decimal[3];
@@ -51,12 +57,17 @@ namespace QuantConnect.Indicators.CandlestickPatterns
                   Math.Max(CandleSettings.Get(CandleSettingType.Far).AveragePeriod, CandleSettings.Get(CandleSettingType.Near).AveragePeriod)),
                   CandleSettings.Get(CandleSettingType.BodyLong).AveragePeriod) + 2 + 1)
         {
+            _shadowShortAveragePeriod = CandleSettings.Get(CandleSettingType.ShadowShort).AveragePeriod;
+            _shadowLongAveragePeriod = CandleSettings.Get(CandleSettingType.ShadowLong).AveragePeriod;
+            _nearAveragePeriod = CandleSettings.Get(CandleSettingType.Near).AveragePeriod;
+            _farAveragePeriod = CandleSettings.Get(CandleSettingType.Far).AveragePeriod;
+            _bodyLongAveragePeriod = CandleSettings.Get(CandleSettingType.BodyLong).AveragePeriod;
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AdvanceBlock"/> class.
-        /// </summary>
-        public AdvanceBlock()
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AdvanceBlock"/> class.
+    /// </summary>
+    public AdvanceBlock()
             : this("ADVANCEBLOCK")
         {
         }
@@ -79,31 +90,31 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         {
             if (!IsReady)
             {
-                if (Samples >= Period - CandleSettings.Get(CandleSettingType.ShadowShort).AveragePeriod)
+                if (Samples >= Period - _shadowShortAveragePeriod)
                 {
                     _shadowShortPeriodTotal[2] += GetCandleRange(CandleSettingType.ShadowShort, window[2]);
                     _shadowShortPeriodTotal[1] += GetCandleRange(CandleSettingType.ShadowShort, window[1]);
                     _shadowShortPeriodTotal[0] += GetCandleRange(CandleSettingType.ShadowShort, input);
                 }
 
-                if (Samples >= Period - CandleSettings.Get(CandleSettingType.ShadowLong).AveragePeriod)
+                if (Samples >= Period - _shadowLongAveragePeriod)
                 {
                     _shadowLongPeriodTotal[1] += GetCandleRange(CandleSettingType.ShadowLong, window[1]);
                     _shadowLongPeriodTotal[0] += GetCandleRange(CandleSettingType.ShadowLong, input);
                 }
 
-                if (Samples >= Period - CandleSettings.Get(CandleSettingType.BodyLong).AveragePeriod)
+                if (Samples >= Period - _bodyLongAveragePeriod)
                 {
                     _bodyLongPeriodTotal += GetCandleRange(CandleSettingType.BodyLong, window[2]);
                 }
 
-                if (Samples >= Period - CandleSettings.Get(CandleSettingType.Near).AveragePeriod)
+                if (Samples >= Period - _nearAveragePeriod)
                 {
                     _nearPeriodTotal[2] += GetCandleRange(CandleSettingType.Near, window[2]);
                     _nearPeriodTotal[1] += GetCandleRange(CandleSettingType.Near, window[1]);
                 }
 
-                if (Samples >= Period - CandleSettings.Get(CandleSettingType.Far).AveragePeriod)
+                if (Samples >= Period - _farAveragePeriod)
                 {
                     _farPeriodTotal[2] += GetCandleRange(CandleSettingType.Far, window[2]);
                     _farPeriodTotal[1] += GetCandleRange(CandleSettingType.Far, window[1]);
@@ -172,25 +183,25 @@ namespace QuantConnect.Indicators.CandlestickPatterns
             for (var i = 2; i >= 0; i--)
             {
                 _shadowShortPeriodTotal[i] += GetCandleRange(CandleSettingType.ShadowShort, window[i]) -
-                                              GetCandleRange(CandleSettingType.ShadowShort, window[i + CandleSettings.Get(CandleSettingType.ShadowShort).AveragePeriod]);
+                                              GetCandleRange(CandleSettingType.ShadowShort, window[i + _shadowShortAveragePeriod]);
             }
 
             for (var i = 1; i >= 0; i--)
             {
                 _shadowLongPeriodTotal[i] += GetCandleRange(CandleSettingType.ShadowLong, window[i]) -
-                                             GetCandleRange(CandleSettingType.ShadowLong, window[i + CandleSettings.Get(CandleSettingType.ShadowLong).AveragePeriod]);
+                                             GetCandleRange(CandleSettingType.ShadowLong, window[i + _shadowLongAveragePeriod]);
             }
 
             for (var i = 2; i >= 1; i--)
             {
                 _farPeriodTotal[i] += GetCandleRange(CandleSettingType.Far, window[i]) -
-                                      GetCandleRange(CandleSettingType.Far, window[i + CandleSettings.Get(CandleSettingType.Far).AveragePeriod]);
+                                      GetCandleRange(CandleSettingType.Far, window[i + _farAveragePeriod]);
                 _nearPeriodTotal[i] += GetCandleRange(CandleSettingType.Near, window[i]) -
-                                       GetCandleRange(CandleSettingType.Near, window[i + CandleSettings.Get(CandleSettingType.Near).AveragePeriod]);
+                                       GetCandleRange(CandleSettingType.Near, window[i + _nearAveragePeriod]);
             }
 
             _bodyLongPeriodTotal += GetCandleRange(CandleSettingType.BodyLong, window[2]) - 
-                                    GetCandleRange(CandleSettingType.BodyLong, window[2 + CandleSettings.Get(CandleSettingType.BodyLong).AveragePeriod]);
+                                    GetCandleRange(CandleSettingType.BodyLong, window[2 + _bodyLongAveragePeriod]);
 
             return value;
         }

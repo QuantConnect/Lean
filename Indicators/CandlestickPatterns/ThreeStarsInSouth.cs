@@ -35,6 +35,11 @@ namespace QuantConnect.Indicators.CandlestickPatterns
     /// </remarks>
     public class ThreeStarsInSouth : CandlestickPattern
     {
+        private readonly int _bodyLongAveragePeriod;
+        private readonly int _shadowLongAveragePeriod;
+        private readonly int _shadowVeryShortAveragePeriod;
+        private readonly int _bodyShortAveragePeriod;
+
         private decimal _bodyLongPeriodTotal;
         private decimal _shadowLongPeriodTotal;
         private decimal[] _shadowVeryShortPeriodTotal = new decimal[2];
@@ -46,8 +51,12 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// <param name="name">The name of this indicator</param>
         public ThreeStarsInSouth(string name) 
             : base(name, Math.Max(Math.Max(CandleSettings.Get(CandleSettingType.ShadowVeryShort).AveragePeriod, CandleSettings.Get(CandleSettingType.ShadowLong).AveragePeriod),
-                  Math.Max(CandleSettings.Get(CandleSettingType.BodyLong).AveragePeriod, CandleSettings.Get(CandleSettingType.BodyShort).AveragePeriod)) + 2)
+                  Math.Max(CandleSettings.Get(CandleSettingType.BodyLong).AveragePeriod, CandleSettings.Get(CandleSettingType.BodyShort).AveragePeriod)) + 2 + 1)
         {
+            _bodyLongAveragePeriod = CandleSettings.Get(CandleSettingType.BodyLong).AveragePeriod;
+            _shadowLongAveragePeriod = CandleSettings.Get(CandleSettingType.ShadowLong).AveragePeriod;
+            _shadowVeryShortAveragePeriod = CandleSettings.Get(CandleSettingType.ShadowVeryShort).AveragePeriod;
+            _bodyShortAveragePeriod = CandleSettings.Get(CandleSettingType.BodyShort).AveragePeriod;
         }
 
         /// <summary>
@@ -63,7 +72,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// </summary>
         public override bool IsReady
         {
-            get { return Samples > Period; }
+            get { return Samples >= Period; }
         }
 
         /// <summary>
@@ -76,11 +85,27 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         {
             if (!IsReady)
             {
-                if (Samples > 2) _bodyLongPeriodTotal += GetCandleRange(CandleSettingType.BodyLong, window[2]);
-                if (Samples > 2) _shadowLongPeriodTotal += GetCandleRange(CandleSettingType.ShadowLong, window[2]);
-                if (Samples > 2) _shadowVeryShortPeriodTotal[1] += GetCandleRange(CandleSettingType.ShadowVeryShort, window[1]);
-                if (Samples > 2) _shadowVeryShortPeriodTotal[0] += GetCandleRange(CandleSettingType.ShadowVeryShort, input);
-                if (Samples > 2) _bodyShortPeriodTotal += GetCandleRange(CandleSettingType.BodyShort, input);
+                if (Samples >= Period - _bodyLongAveragePeriod)
+                {
+                    _bodyLongPeriodTotal += GetCandleRange(CandleSettingType.BodyLong, window[2]);
+                }
+
+                if (Samples >= Period - _shadowLongAveragePeriod)
+                {
+                    _shadowLongPeriodTotal += GetCandleRange(CandleSettingType.ShadowLong, window[2]);
+                }
+
+                if (Samples >= Period - _shadowVeryShortAveragePeriod)
+                {
+                    _shadowVeryShortPeriodTotal[1] += GetCandleRange(CandleSettingType.ShadowVeryShort, window[1]);
+                    _shadowVeryShortPeriodTotal[0] += GetCandleRange(CandleSettingType.ShadowVeryShort, input);
+                }
+
+                if (Samples >= Period - _bodyShortAveragePeriod)
+                {
+                    _bodyShortPeriodTotal += GetCandleRange(CandleSettingType.BodyShort, input);
+                }
+
                 return 0m;
             }
 
@@ -120,14 +145,20 @@ namespace QuantConnect.Indicators.CandlestickPatterns
             // add the current range and subtract the first range: this is done after the pattern recognition 
             // when avgPeriod is not 0, that means "compare with the previous candles" (it excludes the current candle)
 
-            _bodyLongPeriodTotal += GetCandleRange(CandleSettingType.BodyLong, window[2]) - GetCandleRange(CandleSettingType.BodyLong, window[Period - 1]);
-            _shadowLongPeriodTotal += GetCandleRange(CandleSettingType.ShadowLong, window[2]) - GetCandleRange(CandleSettingType.ShadowLong, window[Period - 1]);
+            _bodyLongPeriodTotal += GetCandleRange(CandleSettingType.BodyLong, window[2]) -
+                                    GetCandleRange(CandleSettingType.BodyLong, window[2 + _bodyLongAveragePeriod]);
+
+            _shadowLongPeriodTotal += GetCandleRange(CandleSettingType.ShadowLong, window[2]) -
+                                      GetCandleRange(CandleSettingType.ShadowLong, window[2 + _shadowLongAveragePeriod]);
+
             for (var i = 1; i >= 0; i--)
             {
                 _shadowVeryShortPeriodTotal[i] += GetCandleRange(CandleSettingType.ShadowVeryShort, window[i]) -
-                                                  GetCandleRange(CandleSettingType.ShadowVeryShort, window[Period - 3 + i]);
+                                                  GetCandleRange(CandleSettingType.ShadowVeryShort, window[i + _shadowVeryShortAveragePeriod]);
             }
-            _bodyShortPeriodTotal += GetCandleRange(CandleSettingType.BodyShort, input) - GetCandleRange(CandleSettingType.BodyShort, window[Period - 3]);
+
+            _bodyShortPeriodTotal += GetCandleRange(CandleSettingType.BodyShort, input) -
+                                     GetCandleRange(CandleSettingType.BodyShort, window[_bodyShortAveragePeriod]);
 
             return value;
         }

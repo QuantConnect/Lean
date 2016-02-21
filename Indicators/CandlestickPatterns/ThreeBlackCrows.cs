@@ -33,6 +33,8 @@ namespace QuantConnect.Indicators.CandlestickPatterns
     /// </remarks>
     public class ThreeBlackCrows : CandlestickPattern
     {
+        private readonly int _shadowVeryShortAveragePeriod;
+
         private decimal[] _shadowVeryShortPeriodTotal = new decimal[3];
 
         /// <summary>
@@ -40,8 +42,9 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         public ThreeBlackCrows(string name) 
-            : base(name, CandleSettings.Get(CandleSettingType.ShadowVeryShort).AveragePeriod + 3)
+            : base(name, CandleSettings.Get(CandleSettingType.ShadowVeryShort).AveragePeriod + 3 + 1)
         {
+            _shadowVeryShortAveragePeriod = CandleSettings.Get(CandleSettingType.ShadowVeryShort).AveragePeriod;
         }
 
         /// <summary>
@@ -57,7 +60,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// </summary>
         public override bool IsReady
         {
-            get { return Samples > Period; }
+            get { return Samples >= Period; }
         }
 
         /// <summary>
@@ -70,9 +73,13 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         {
             if (!IsReady)
             {
-                if (window.Count > 2) _shadowVeryShortPeriodTotal[2] += GetCandleRange(CandleSettingType.ShadowVeryShort, window[2]);
-                if (window.Count > 1) _shadowVeryShortPeriodTotal[1] += GetCandleRange(CandleSettingType.ShadowVeryShort, window[1]);
-                _shadowVeryShortPeriodTotal[0] += GetCandleRange(CandleSettingType.ShadowVeryShort, input);
+                if (Samples >= Period - _shadowVeryShortAveragePeriod)
+                {
+                    _shadowVeryShortPeriodTotal[2] += GetCandleRange(CandleSettingType.ShadowVeryShort, window[2]);
+                    _shadowVeryShortPeriodTotal[1] += GetCandleRange(CandleSettingType.ShadowVeryShort, window[1]);
+                    _shadowVeryShortPeriodTotal[0] += GetCandleRange(CandleSettingType.ShadowVeryShort, input);
+                }
+
                 return 0m;
             }
 
@@ -113,7 +120,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
             for (var i = 2; i >= 0; i--)
             {
                 _shadowVeryShortPeriodTotal[i] += GetCandleRange(CandleSettingType.ShadowVeryShort, window[i]) -
-                                                  GetCandleRange(CandleSettingType.ShadowVeryShort, window[Period - 3 + i]);
+                                                  GetCandleRange(CandleSettingType.ShadowVeryShort, window[i + _shadowVeryShortAveragePeriod]);
             }
 
             return value;

@@ -33,6 +33,8 @@ namespace QuantConnect.Indicators.CandlestickPatterns
     /// </remarks>
     public class TwoCrows : CandlestickPattern
     {
+        private readonly int _bodyLongAveragePeriod;
+
         private decimal _bodyLongPeriodTotal;
 
         /// <summary>
@@ -42,6 +44,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         public TwoCrows(string name) 
             : base(name, CandleSettings.Get(CandleSettingType.BodyLong).AveragePeriod + 2 + 1)
         {
+            _bodyLongAveragePeriod = CandleSettings.Get(CandleSettingType.BodyLong).AveragePeriod;
         }
 
         /// <summary>
@@ -57,7 +60,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// </summary>
         public override bool IsReady
         {
-            get { return Samples > Period; }
+            get { return Samples >= Period; }
         }
 
         /// <summary>
@@ -70,7 +73,10 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         {
             if (!IsReady)
             {
-                if (Samples < Period - 2) _bodyLongPeriodTotal += GetCandleRange(CandleSettingType.BodyLong, input);
+                if (Samples >= Period - _bodyLongAveragePeriod - 2 && Samples < Period - 2)
+                {
+                    _bodyLongPeriodTotal += GetCandleRange(CandleSettingType.BodyLong, input);
+                }
                 return 0m;
             }
 
@@ -98,7 +104,8 @@ namespace QuantConnect.Indicators.CandlestickPatterns
             // add the current range and subtract the first range: this is done after the pattern recognition 
             // when avgPeriod is not 0, that means "compare with the previous candles" (it excludes the current candle)
 
-            _bodyLongPeriodTotal += GetCandleRange(CandleSettingType.BodyLong, window[2]) - GetCandleRange(CandleSettingType.BodyLong, window[Period - 1]);
+            _bodyLongPeriodTotal += GetCandleRange(CandleSettingType.BodyLong, window[2]) -
+                                    GetCandleRange(CandleSettingType.BodyLong, window[2 + _bodyLongAveragePeriod]);
 
             return value;
         }
