@@ -51,6 +51,7 @@
     <Compile Include="AverageDirectionalIndex.cs" />
     <Compile Include="BalanceOfPower.cs" />
     <Compile Include="CandlestickPatterns\AbandonedBaby.cs" />
+    <Compile Include="CandlestickPatterns\AdvanceBlock.cs" />
     <Compile Include="CandlestickPatterns\CandleEnums.cs" />
     <Compile Include="CandlestickPatterns\CandleSettings.cs" />
     <Compile Include="CandlestickPatterns\CandlestickPattern.cs" />
