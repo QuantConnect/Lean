@@ -31,6 +31,14 @@ namespace QuantConnect.Data.Consolidators
         private T _last;
 
         /// <summary>
+        /// Gets a clone of the data being currently consolidated
+        /// </summary>
+        public override BaseData WorkingData
+        {
+            get { return _last == null ? null : _last.Clone(); }
+        }
+
+        /// <summary>
         /// Gets the type produced by this consolidator
         /// </summary>
         public override Type OutputType
@@ -49,6 +57,14 @@ namespace QuantConnect.Data.Consolidators
                 OnDataConsolidated(data);
                 _last = data;
             }
+        }
+
+        /// <summary>
+        /// Scans this consolidator to see if it should emit a bar due to time passing
+        /// </summary>
+        /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
+        public override void Scan(DateTime currentLocalTime)
+        {
         }
     }
 }

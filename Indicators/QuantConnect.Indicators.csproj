@@ -54,16 +54,20 @@
     <Compile Include="DonchianChannel.cs" />
     <Compile Include="DoubleExponentialMovingAverage.cs" />
     <Compile Include="IchimokuKinkoHyo.cs" />
+    <Compile Include="IndicatorResult.cs" />
+    <Compile Include="IndicatorStatus.cs" />
     <Compile Include="KeltnerChannels.cs" />
     <Compile Include="LeastSquaresMovingAverage.cs" />
     <Compile Include="LogReturn.cs" />
     <Compile Include="Momersion.cs" />
+    <Compile Include="NormalizedAverageTrueRange.cs" />
     <Compile Include="OnBalanceVolume.cs" />
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="LinearWeightedMovingAverage.cs" />
     <Compile Include="ParabolicStopAndReverse.cs" />
+    <Compile Include="T3MovingAverage.cs" />
     <Compile Include="RateOfChangeRatio.cs" />
     <Compile Include="TrueRange.cs" />
     <Compile Include="TripleExponentialMovingAverage.cs" />

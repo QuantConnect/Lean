@@ -342,7 +342,6 @@ namespace QuantConnect.Algorithm
             var price = security.Price;
 
             //Check the exchange is open before sending a market on close orders
-            //Allow market orders, they'll just execute when the exchange reopens
             if (request.OrderType == OrderType.MarketOnClose && !security.Exchange.ExchangeOpen)
             {
                 return OrderResponse.Error(request, OrderResponseErrorCode.ExchangeNotOpen, request.OrderType + " order and exchange not open.");
@@ -352,41 +351,31 @@ namespace QuantConnect.Algorithm
             {
                 return OrderResponse.Error(request, OrderResponseErrorCode.SecurityPriceZero, request.Symbol.ToString() + ": asset price is $0. If using custom data make sure you've set the 'Value' property.");
             }
+
+            // check quote currency existence/conversion rate on all orders
+            Cash quoteCash;
+            var quoteCurrency = security.QuoteCurrency.Symbol;
+            if (!Portfolio.CashBook.TryGetValue(quoteCurrency, out quoteCash))
+            {
+                return OrderResponse.Error(request, OrderResponseErrorCode.QuoteCurrencyRequired, request.Symbol.Value + ": requires " + quoteCurrency + " in the cashbook to trade.");
+            }
+            if (security.QuoteCurrency.ConversionRate == 0m)
+            {
+                return OrderResponse.Error(request, OrderResponseErrorCode.ConversionRateZero, request.Symbol.Value + ": requires " + quoteCurrency + " to have a non-zero conversion rate. This can be caused by lack of data.");
+            }
             
+            // need to also check base currency existence/conversion rate on forex orders
             if (security.Type == SecurityType.Forex)
             {
-                // for forex pairs we need to verify that the conversions to USD have values as well
-                string baseCurrency, quoteCurrency;
-                Forex.DecomposeCurrencyPair(security.Symbol.Value, out baseCurrency, out quoteCurrency);
-
-                // verify they're in the portfolio
-                Cash baseCash, quoteCash;
-                if (!Portfolio.CashBook.TryGetValue(baseCurrency, out baseCash) || !Portfolio.CashBook.TryGetValue(quoteCurrency, out quoteCash))
+                Cash baseCash;
+                var baseCurrency = ((Forex) security).BaseCurrencySymbol;
+                if (!Portfolio.CashBook.TryGetValue(baseCurrency, out baseCash))
                 {
                     return OrderResponse.Error(request, OrderResponseErrorCode.ForexBaseAndQuoteCurrenciesRequired, request.Symbol.Value + ": requires " + baseCurrency + " and " + quoteCurrency + " in the cashbook to trade.");
                 }
-                // verify we have conversion rates for each leg of the pair back into the account currency
-                if (baseCash.ConversionRate == 0m || quoteCash.ConversionRate == 0m)
+                if (baseCash.ConversionRate == 0m)
                 {
                     return OrderResponse.Error(request, OrderResponseErrorCode.ForexConversionRateZero, request.Symbol.Value + ": requires " + baseCurrency + " and " + quoteCurrency + " to have non-zero conversion rates. This can be caused by lack of data.");
-                }
-            }
-            else if (security.Type == SecurityType.Cfd)
-            {
-                // for CFD we need to verify that the conversion to USD has a value as well
-                var cfd = (Cfd) security;
-                var quoteCurrency = cfd.QuoteCurrencySymbol;
-
-                // verify it's in the portfolio
-                Cash quoteCash;
-                if (!Portfolio.CashBook.TryGetValue(quoteCurrency, out quoteCash))
-                {
-                    return OrderResponse.Error(request, OrderResponseErrorCode.CfdQuoteCurrencyRequired, request.Symbol.Value + ": requires " + quoteCurrency + " in the cashbook to trade.");
-                }
-                // verify we have a conversion rate back into the account currency
-                if (quoteCash.ConversionRate == 0m)
-                {
-                    return OrderResponse.Error(request, OrderResponseErrorCode.CfdConversionRateZero, request.Symbol.Value + ": requires " + quoteCurrency + " to have a non-zero conversion rate. This can be caused by lack of data.");
                 }
             }
             

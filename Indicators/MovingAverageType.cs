@@ -47,6 +47,10 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// The triangular moving average
         /// </summary>
-        Triangular
+        Triangular,
+        /// <summary>
+        /// The T3 moving average
+        /// </summary>
+        T3
     }
 }

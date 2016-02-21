@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Globalization;
 
 namespace QuantConnect.Data.Market
 {
@@ -24,23 +25,17 @@ namespace QuantConnect.Data.Market
     public class QuoteBar : BaseData, IBar
     {
         // scale factor used in QC equity/forex data files
-        private const decimal _scaleFactor = 10000m;
-
-        private int _updateBidCount = 0;
-        private long _sumBidSize = 0;
-
-        private int _updateAskCount = 0;
-        private long _sumAskSize = 0;
+        private const decimal _scaleFactor = 1 / 10000m;
 
         /// <summary>
         /// Average bid size
         /// </summary>
-        public long AvgBidSize { get; set; }
+        public long LastBidSize { get; set; }
         
         /// <summary>
         /// Average ask size
         /// </summary>
-        public long AvgAskSize { get; set; }
+        public long LastAskSize { get; set; }
 
         /// <summary>
         /// Bid OHLC
@@ -167,35 +162,9 @@ namespace QuantConnect.Data.Market
             Time = new DateTime();
             Bid = new Bar();
             Ask = new Bar();
-            AvgBidSize = _sumBidSize = 0;
-            AvgAskSize = _sumAskSize = 0;
             Value = 0;
             Period = TimeSpan.FromMinutes(1);
             DataType = MarketDataType.QuoteBar;
-            _updateBidCount = 0;
-            _updateAskCount = 0;
-        }
-
-        /// <summary>
-        /// Cloner constructor for implementing fill forward. 
-        /// Return a new instance with the same values as this original.
-        /// </summary>
-        /// <param name="original">Original quotebar object we seek to clone</param>
-        public QuoteBar(QuoteBar original)
-        {
-            Symbol = original.Symbol;
-            Time = new DateTime(original.Time.Ticks);
-            var bid = original.Bid;
-            Bid = bid == null ? null : new Bar(bid.Open, bid.High, bid.Low, bid.Close);
-            var ask = original.Ask;
-            Ask = ask == null ? null : new Bar(ask.Open, ask.High, ask.Low, ask.Close);
-            AvgBidSize = original.AvgBidSize;
-            AvgAskSize = original.AvgAskSize;
-            Value = original.Close;
-            Period = original.Period;
-            DataType = MarketDataType.QuoteBar;
-            _updateBidCount = 0;
-            _updateAskCount = 0;
         }
 
         /// <summary>
@@ -204,23 +173,21 @@ namespace QuantConnect.Data.Market
         /// <param name="time">DateTime Timestamp of the bar</param>
         /// <param name="symbol">Market MarketType Symbol</param>
         /// <param name="bid">Bid OLHC bar</param>
-        /// <param name="avgBidSize">Average bid size over period</param>
+        /// <param name="lastBidSize">Average bid size over period</param>
         /// <param name="ask">Ask OLHC bar</param>
-        /// <param name="avgAskSize">Average ask size over period</param>
+        /// <param name="lastAskSize">Average ask size over period</param>
         /// <param name="period">The period of this bar, specify null for default of 1 minute</param>
-        public QuoteBar(DateTime time, Symbol symbol, IBar bid, long avgBidSize, IBar ask, long avgAskSize, TimeSpan? period = null)
+        public QuoteBar(DateTime time, Symbol symbol, IBar bid, long lastBidSize, IBar ask, long lastAskSize, TimeSpan? period = null)
         {
             Symbol = symbol;
             Time = time;
             Bid = bid == null ? new Bar() : new Bar(bid.Open, bid.High, bid.Low, bid.Close);
             Ask = ask == null ? new Bar() : new Bar(ask.Open, ask.High, ask.Low, ask.Close);
-            AvgBidSize = avgBidSize;
-            AvgAskSize = avgAskSize;
+            LastBidSize = lastBidSize;
+            LastAskSize = lastAskSize;
             Value = Close;
             Period = period ?? TimeSpan.FromMinutes(1);
             DataType = MarketDataType.QuoteBar;
-            _updateBidCount = 0;
-            _updateAskCount = 0;
         }
 
         /// <summary>
@@ -234,27 +201,21 @@ namespace QuantConnect.Data.Market
         /// <param name="askSize">The size of the current ask, if available, if not, pass 0</param>
         public override void Update(decimal lastTrade, decimal bidPrice, decimal askPrice, decimal volume, decimal bidSize, decimal askSize)
         {
-            // update our bid and ask bars
-            Bid.Update(bidPrice);
-            Ask.Update(askPrice);
+            // update our bid and ask bars - handle null values, this is to give good values for midpoint OHLC
+            if (Bid == null && bidPrice != 0) Bid = new Bar();
+            if (Bid != null) Bid.Update(bidPrice);
 
-            if ((_updateBidCount == 0 && AvgBidSize > 0) || (_updateAskCount == 0 && AvgAskSize > 0))
-            {
-                throw new InvalidOperationException("Average bid/ask size cannot be greater then zero if update counter is zero.");
-            }
-            
+            if (Ask == null && askPrice != 0) Ask = new Bar();
+            if (Ask != null) Ask.Update(askPrice);
+
             if (bidSize > 0) 
-            {   
-                _updateBidCount++;
-                _sumBidSize += Convert.ToInt32(bidSize);
-                AvgBidSize = _sumBidSize / _updateBidCount;
+            {
+                LastBidSize = (long) bidSize;
             }
             
-            if (askSize > 0) 
+            if (askSize > 0)
             {
-                _updateAskCount++;
-                _sumAskSize += Convert.ToInt32(askSize);
-                AvgAskSize = _sumAskSize / _updateAskCount;
+                LastAskSize = (long) askSize;
             }
 
             // be prepared for updates without trades
@@ -273,7 +234,57 @@ namespace QuantConnect.Data.Market
         /// <returns>Enumerable iterator for returning each line of the required data.</returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            throw new NotImplementedException("Equity quote bars data format has not yet been finalized.");
+            var quoteBar = new QuoteBar
+            {
+                Period = config.Increment
+            };
+
+            var csv = line.ToCsv(14);
+            if (config.Resolution == Resolution.Daily || config.Resolution == Resolution.Hour)
+            {
+                // hourly and daily have different time format, and can use slow, robust c# parser.
+                quoteBar.Time = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+            }
+            else
+            {
+                // Using custom "ToDecimal" conversion for speed on high resolution data.
+                quoteBar.Time = date.Date.AddMilliseconds(csv[0].ToInt32()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+            }
+
+            // only create the bid if it exists in the file
+            if (csv[4].Length != 0 || csv[5].Length != 0 || csv[6].Length != 0 || csv[7].Length != 0)
+            {
+                quoteBar.Bid = new Bar
+                {
+                    Open = config.GetNormalizedPrice(csv[4].ToDecimal()*_scaleFactor),
+                    High = config.GetNormalizedPrice(csv[5].ToDecimal()*_scaleFactor),
+                    Low = config.GetNormalizedPrice(csv[6].ToDecimal()*_scaleFactor),
+                    Close = config.GetNormalizedPrice(csv[7].ToDecimal()*_scaleFactor)
+                };
+                quoteBar.LastBidSize = csv[8].ToInt64();
+            }
+
+            // only create the bid if it exists in the file
+            if (csv[9].Length != 0 || csv[10].Length != 0 || csv[11].Length != 0 || csv[12].Length != 0)
+            {
+                quoteBar.Ask = new Bar
+                {
+                    Open = config.GetNormalizedPrice(csv[9].ToDecimal()*_scaleFactor),
+                    High = config.GetNormalizedPrice(csv[10].ToDecimal()*_scaleFactor),
+                    Low = config.GetNormalizedPrice(csv[11].ToDecimal()*_scaleFactor),
+                    Close = config.GetNormalizedPrice(csv[12].ToDecimal()*_scaleFactor)
+                };
+                quoteBar.LastAskSize = csv[13].ToInt64();
+            }
+
+            quoteBar.Value = quoteBar.Close;
+            var putCall = csv[1] == "P" ? OptionRight.Put : OptionRight.Call;
+            var strike = csv[2].ToDecimal() * _scaleFactor;
+            var expiry = DateTime.ParseExact(csv[3], DateFormat.EightCharacter, null);
+            var symbol = Symbol.CreateOption(config.Symbol.ID.Symbol, config.Market, config.Symbol.ID.OptionStyle, putCall, strike, expiry);
+            quoteBar.Symbol = symbol;
+
+            return quoteBar;
         }
 
         /// <summary>
@@ -300,8 +311,8 @@ namespace QuantConnect.Data.Market
             {
                 Ask = Ask == null ? null : Ask.Clone(),
                 Bid = Bid == null ? null : Bid.Clone(),
-                AvgAskSize = AvgAskSize,
-                AvgBidSize = AvgBidSize,
+                LastAskSize = LastAskSize,
+                LastBidSize = LastBidSize,
                 Symbol = Symbol,
                 Time = Time,
                 Period = Period,

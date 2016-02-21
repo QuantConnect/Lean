@@ -72,7 +72,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override bool IsReady
         {
-            get { return Samples > _period; }
+            get { return Samples >= _period; }
         }
 
         /// <summary>

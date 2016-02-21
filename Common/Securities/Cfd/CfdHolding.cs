@@ -13,8 +13,6 @@
  * limitations under the License.
 */
 
-using QuantConnect.Orders;
-
 namespace QuantConnect.Securities.Cfd
 {
     /// <summary>
@@ -23,8 +21,6 @@ namespace QuantConnect.Securities.Cfd
     /// <seealso cref="SecurityHolding"/>
     public class CfdHolding : SecurityHolding
     {
-        private readonly Cfd _cfd;
-
         /// <summary>
         /// CFD Holding Class constructor
         /// </summary>
@@ -32,57 +28,6 @@ namespace QuantConnect.Securities.Cfd
         public CfdHolding(Cfd security)
             : base(security)
         {
-            _cfd = security;
-        }
-
-        /// <summary>
-        /// Gets the conversion rate from the quote currency into the account currency
-        /// </summary>
-        public decimal ConversionRate
-        {
-            get { return _cfd.QuoteCurrency.ConversionRate; }
-        }
-
-        /// <summary>
-        /// Acquisition cost of the security total holdings.
-        /// </summary>
-        public override decimal HoldingsCost
-        {
-            // we need to add a conversion since the data is in terms of the quote currency
-            get { return base.HoldingsCost * _cfd.ContractMultiplier * _cfd.QuoteCurrency.ConversionRate; }
-        }
-
-        /// <summary>
-        /// Market value of our holdings.
-        /// </summary>
-        public override decimal HoldingsValue
-        {
-            // we need to add a conversion since the data is in terms of the quote currency
-            get { return base.HoldingsValue * _cfd.ContractMultiplier * _cfd.QuoteCurrency.ConversionRate; }
-        }
-
-        /// <summary>
-        /// Profit if we closed the holdings right now including the approximate fees.
-        /// </summary>
-        /// <remarks>Does not use the transaction model for market fills but should.</remarks>
-        public override decimal TotalCloseProfit()
-        {
-            if (AbsoluteQuantity == 0)
-            {
-                return 0;
-            }
-
-            decimal orderFee = 0;
-
-            if (AbsoluteQuantity > 0)
-            {
-                // this is in the account currency
-                var marketOrder = new MarketOrder(_cfd.Symbol, -Quantity, _cfd.LocalTime.ConvertToUtc(_cfd.Exchange.TimeZone));
-                orderFee = _cfd.FeeModel.GetOrderFee(_cfd, marketOrder);
-            }
-
-            // we need to add a conversion since the data is in terms of the quote currency
-            return (Price - AveragePrice) * Quantity * _cfd.ContractMultiplier * _cfd.QuoteCurrency.ConversionRate - orderFee;
         }
     }
 }

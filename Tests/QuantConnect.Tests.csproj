@@ -101,6 +101,7 @@
     <Compile Include="Common\Data\Market\TradeBarTests.cs" />
     <Compile Include="Common\Data\SliceTests.cs" />
     <Compile Include="Common\Data\SubscriptionDataSourceTests.cs" />
+    <Compile Include="Common\Data\TickQuoteBarConsolidatorTests.cs" />
     <Compile Include="Common\MarketTests.cs" />
     <Compile Include="Common\Orders\Fills\PartialMarketFillModelTests.cs" />
     <Compile Include="Common\Orders\OrderJsonConverterTests.cs" />
@@ -123,6 +124,7 @@
     <Compile Include="Common\Securities\SecurityExchangeHoursTests.cs" />
     <Compile Include="Common\Securities\SecurityIdentifierTests.cs" />
     <Compile Include="Common\Securities\SecurityManagerTests.cs" />
+    <Compile Include="Common\Securities\SecurityPortfolioModelTests.cs" />
     <Compile Include="Common\Securities\SecurityTests.cs" />
     <Compile Include="Common\Securities\SecurityTransactionModelTests.cs" />
     <Compile Include="Common\Securities\UniverseManagerTests.cs" />
@@ -137,6 +139,7 @@
     <Compile Include="Common\TimeZonesTest.cs" />
     <Compile Include="Common\Util\BusyBlockingCollectionTests.cs" />
     <Compile Include="Common\Util\ColorJsonConverterTests.cs" />
+    <Compile Include="Common\Util\LeanDataTests.cs" />
     <Compile Include="Common\Util\MarketHoursDatabaseJsonConverterTests.cs" />
     <Compile Include="Common\Util\MemoizingEnumerableTests.cs" />
     <Compile Include="Common\Util\ObjectActivatorTests.cs" />
@@ -170,6 +173,7 @@
     <Compile Include="Indicators\AverageDirectionalIndexTests.cs" />
     <Compile Include="Indicators\BalanceOfPowerTests.cs" />
     <Compile Include="Indicators\ChandeMomentumOscillatorTests.cs" />
+    <Compile Include="Indicators\CommonIndicatorTests.cs" />
     <Compile Include="Indicators\DonchianChannelTest.cs" />
     <Compile Include="Indicators\DoubleExponentialMovingAverageTests.cs" />
     <Compile Include="Indicators\IchimokuKinkoHyoTests.cs" />
@@ -177,8 +181,10 @@
     <Compile Include="Indicators\LeastSquaresMovingAverageTest.cs" />
     <Compile Include="Indicators\LogReturnTests.cs" />
     <Compile Include="Indicators\MomersionTests.cs" />
+    <Compile Include="Indicators\NormalizedAverageTrueRangeTests.cs" />
     <Compile Include="Indicators\OnBalanceVolumeTest.cs" />
     <Compile Include="Indicators\ParabolicStopAndReverseTests.cs" />
+    <Compile Include="Indicators\T3MovingAverageTests.cs" />
     <Compile Include="Indicators\RateOfChangeRatioTests.cs" />
     <Compile Include="Indicators\TrueRangeTests.cs" />
     <Compile Include="Indicators\TripleExponentialMovingAverageTests.cs" />
@@ -367,10 +373,16 @@
     <Content Include="TestData\spy_mfi.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="TestData\spy_natr.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="TestData\spy_ohlcv.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_parabolic_SAR.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_t3.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_rocr.txt">

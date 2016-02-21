@@ -19,37 +19,21 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class RateOfChangeRatioTests
+    public class RateOfChangeRatioTests : CommonIndicatorTests<IndicatorDataPoint>
     {
-        [Test]
-        public void ComparesAgainstExternalData()
+        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
-            var rocr = new RateOfChangeRatio("ROCR", 5);
-
-            RunTestIndicator(rocr);
+            return new RateOfChangeRatio(5);
         }
 
-        [Test]
-        public void ComparesAgainstExternalDataAfterReset()
+        protected override string TestFileName
         {
-            var rocr = new RateOfChangeRatio("ROCR", 5);
-
-            RunTestIndicator(rocr);
-            rocr.Reset();
-            RunTestIndicator(rocr);
+            get { return "spy_rocr.txt"; }
         }
 
-        [Test]
-        public void ResetsProperly()
+        protected override string TestColumnName
         {
-            var rocr = new RateOfChangeRatio("ROCR", 5);
-        
-            TestHelper.TestIndicatorReset(rocr, "spy_rocr.txt");
-        }
-
-        private static void RunTestIndicator(RateOfChangeRatio rocr)
-        {
-            TestHelper.TestIndicator(rocr, "spy_rocr.txt", "ROCR_5", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-6));
+            get { return "ROCR_5"; }
         }
     }
 }

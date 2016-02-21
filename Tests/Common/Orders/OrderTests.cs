@@ -48,15 +48,16 @@ namespace QuantConnect.Tests.Common.Orders
 
             var time = new DateTime(2016, 2, 4, 16, 0, 0).ConvertToUtc(tz);
 
-            var equity = new Equity(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false));
+            var equity = new Equity(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
             equity.SetMarketPrice(new Tick {Value = price});
 
             var gbpCash = new Cash("GBP", 0, 1.46m);
-            var forex = new Forex(SecurityExchangeHours.AlwaysOpen(tz), gbpCash, new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURGBP, Resolution.Minute, tz, tz, true, false, false));
+            var properties = SymbolProperties.GetDefault(gbpCash.Symbol);
+            var forex = new Forex(SecurityExchangeHours.AlwaysOpen(tz), gbpCash, new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURGBP, Resolution.Minute, tz, tz, true, false, false), properties);
             forex.SetMarketPrice(new Tick {Value= price});
 
             var eurCash = new Cash("EUR", 0, 1.12m);
-            var properties = new SymbolProperties("Euro-Bund", eurCash.Symbol, 10, 0.1m);
+            properties = new SymbolProperties("Euro-Bund", eurCash.Symbol, 10, 0.1m);
             var cfd = new Cfd(SecurityExchangeHours.AlwaysOpen(tz), eurCash, new SubscriptionDataConfig(typeof(TradeBar), Symbols.DE10YBEUR, Resolution.Minute, tz, tz, true, false, false), properties);
             cfd.SetMarketPrice(new Tick { Value = price });
             var multiplierTimesConversionRate = properties.ContractMultiplier*eurCash.ConversionRate;

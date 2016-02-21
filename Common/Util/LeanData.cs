@@ -31,8 +31,6 @@ namespace QuantConnect.Util
         /// </summary>
         public static string GenerateLine(IBaseData data, SecurityType securityType, Resolution resolution)
         {
-            var line = string.Empty;
-            var format = "{0},{1},{2},{3},{4},{5}";
             var milliseconds = data.Time.TimeOfDay.TotalMilliseconds.ToString(CultureInfo.InvariantCulture);
             var longTime = data.Time.ToString(DateFormat.TwelveCharacter);
 
@@ -42,30 +40,18 @@ namespace QuantConnect.Util
                     switch (resolution)
                     {
                         case Resolution.Tick:
-                            var tick = data as Tick;
-                            if (tick != null)
-                            {
-                                line = string.Format(format, milliseconds, Scale(tick.LastPrice), tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious);
-                            }
-                            break;
+                            var tick = (Tick) data;
+                            return ToCsv(milliseconds, Scale(tick.LastPrice), tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1" : "0");
 
                         case Resolution.Minute:
                         case Resolution.Second:
-                            var bar = data as TradeBar;
-                            if (bar != null)
-                            {
-                                line = string.Format(format, milliseconds, Scale(bar.Open), Scale(bar.High), Scale(bar.Low), Scale(bar.Close), bar.Volume);
-                            }
-                            break;
+                            var bar = (TradeBar) data;
+                            return ToCsv(milliseconds, Scale(bar.Open), Scale(bar.High), Scale(bar.Low), Scale(bar.Close), bar.Volume);
 
                         case Resolution.Hour:
                         case Resolution.Daily:
-                            var bigBar = data as TradeBar;
-                            if (bigBar != null)
-                            {
-                                line = string.Format(format, longTime, Scale(bigBar.Open), Scale(bigBar.High), Scale(bigBar.Low), Scale(bigBar.Close), bigBar.Volume);
-                            }
-                            break;
+                            var bigBar = (TradeBar) data;
+                            return ToCsv(longTime, Scale(bigBar.Open), Scale(bigBar.High), Scale(bigBar.Low), Scale(bigBar.Close), bigBar.Volume);
                     }
                     break;
 
@@ -74,35 +60,86 @@ namespace QuantConnect.Util
                     switch (resolution)
                     {
                         case Resolution.Tick:
-                            var fxTick = data as Tick;
-                            if (fxTick != null)
+                            var tick = (Tick) data;
+                            return ToCsv(milliseconds, tick.BidPrice, tick.AskPrice);
+
+                        case Resolution.Second:
+                        case Resolution.Minute:
+                            var bar = (TradeBar) data;
+                            return ToCsv(milliseconds, bar.Open, bar.High, bar.Low, bar.Close);
+
+                        case Resolution.Hour:
+                        case Resolution.Daily:
+                            var bigBar = (TradeBar) data;
+                            return ToCsv(longTime, bigBar.Open, bigBar.High, bigBar.Low, bigBar.Close);
+                    }
+                    break;
+
+                case SecurityType.Option:
+                    var putCall = data.Symbol.ID.OptionRight == OptionRight.Put ? "P" : "C";
+                    switch (resolution)
+                    {
+                        case Resolution.Tick:
+                            var tick = (Tick)data;
+                            if (tick.TickType == TickType.Trade)
                             {
-                                line = string.Format("{0},{1},{2}", milliseconds, fxTick.BidPrice, fxTick.AskPrice);
+                                return ToCsv(milliseconds, putCall, Scale(tick.Symbol.ID.StrikePrice), tick.Symbol.ID.Date.ToString(DateFormat.EightCharacter),
+                                    Scale(tick.LastPrice), tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1": "0");
+                            }
+                            if (tick.TickType == TickType.Quote)
+                            {
+                                return ToCsv(milliseconds, putCall, Scale(tick.Symbol.ID.StrikePrice), tick.Symbol.ID.Date.ToString(DateFormat.EightCharacter),
+                                    Scale(tick.BidPrice), tick.BidSize, Scale(tick.AskPrice), tick.AskSize, tick.Exchange, tick.Suspicious ? "1" : "0");
                             }
                             break;
 
                         case Resolution.Second:
                         case Resolution.Minute:
-                            var fxBar = data as TradeBar;
-                            if (fxBar != null)
+                            // option data can be quote or trade bars
+                            var quoteBar = data as QuoteBar;
+                            if (quoteBar != null)
                             {
-                                line = string.Format("{0},{1},{2},{3},{4}", milliseconds, fxBar.Open, fxBar.High, fxBar.Low, fxBar.Close);
+                                return ToCsv(milliseconds,
+                                    putCall, Scale(quoteBar.Symbol.ID.StrikePrice), quoteBar.Symbol.ID.Date.ToString(DateFormat.EightCharacter), 
+                                    ToCsv(quoteBar.Bid), quoteBar.LastBidSize, 
+                                    ToCsv(quoteBar.Ask), quoteBar.LastAskSize);
+                            }
+                            var tradeBar = data as TradeBar;
+                            if (tradeBar != null)
+                            {
+                                return ToCsv(milliseconds,
+                                    putCall, Scale(tradeBar.Symbol.ID.StrikePrice), tradeBar.Symbol.ID.Date.ToString(DateFormat.EightCharacter),
+                                    Scale(tradeBar.Open), Scale(tradeBar.High), Scale(tradeBar.Low), Scale(tradeBar.Close), tradeBar.Volume);
                             }
                             break;
 
                         case Resolution.Hour:
                         case Resolution.Daily:
-                            var dailyBar = data as TradeBar;
-                            if (dailyBar != null)
+                            // option data can be quote or trade bars
+                            var bigQuoteBar = data as QuoteBar;
+                            if (bigQuoteBar != null)
                             {
-                                line = string.Format("{0},{1},{2},{3},{4}", longTime, dailyBar.Open, dailyBar.High, dailyBar.Low, dailyBar.Close);
+                                return ToCsv(longTime,
+                                    putCall, Scale(bigQuoteBar.Symbol.ID.StrikePrice), bigQuoteBar.Symbol.ID.Date.ToString(DateFormat.EightCharacter),
+                                    ToCsv(bigQuoteBar.Bid), bigQuoteBar.LastBidSize,
+                                    ToCsv(bigQuoteBar.Ask), bigQuoteBar.LastAskSize);
+                            }
+                            var bigTradeBar = data as TradeBar;
+                            if (bigTradeBar != null)
+                            {
+                                return ToCsv(longTime,
+                                    putCall, Scale(bigTradeBar.Symbol.ID.StrikePrice), bigTradeBar.Symbol.ID.Date.ToString(DateFormat.EightCharacter),
+                                    ToCsv(bigTradeBar), bigTradeBar.Volume);
                             }
                             break;
+
+                        default:
+                            throw new ArgumentOutOfRangeException("resolution", resolution, null);
                     }
                     break;
             }
 
-            return line;
+            throw new NotImplementedException("LeanData.GenerateLine has not yet been implemented for security type: " + securityType + " at resolution: " + resolution);
         }
 
         /// <summary>
@@ -122,11 +159,40 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Generates the relative zip directory for the specified symbol/resolution
+        /// </summary>
+        public static string GenerateRelativeZipFileDirectory(Symbol symbol, Resolution resolution)
+        {
+            var isHourOrDaily = resolution == Resolution.Hour || resolution == Resolution.Daily;
+            var securityType = symbol.ID.SecurityType.ToLower();
+            var market = symbol.ID.Market.ToLower();
+            var res = resolution.ToLower();
+            var directory = Path.Combine(securityType, market, res);
+            switch (symbol.ID.SecurityType)
+            {
+                case SecurityType.Base:
+                case SecurityType.Equity:
+                case SecurityType.Forex:
+                case SecurityType.Cfd:
+                    return !isHourOrDaily ? Path.Combine(directory, symbol.Value.ToLower()) : directory;
+
+                case SecurityType.Option:
+                    // options uses the underlying symbol for pathing
+                    return !isHourOrDaily ? Path.Combine(directory, symbol.ID.Symbol.ToLower()) : directory;
+
+                case SecurityType.Commodity:
+                case SecurityType.Future:
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        /// <summary>
         /// Generates the relative zip file path rooted in the /Data directory
         /// </summary>
-        public static string GenerateRelativeZipFilePath(Symbol symbol, DateTime date, Resolution resolution)
+        public static string GenerateRelativeZipFilePath(Symbol symbol, DateTime date, Resolution resolution, TickType tickType)
         {
-            return GenerateRelativeZipFilePath(symbol.Value, symbol.ID.SecurityType, symbol.ID.Market, date, resolution);
+            return Path.Combine(GenerateRelativeZipFileDirectory(symbol, resolution), GenerateZipFileName(symbol, date, resolution, tickType));
         }
 
         /// <summary>
@@ -134,7 +200,7 @@ namespace QuantConnect.Util
         /// </summary>
         public static string GenerateRelativeZipFilePath(string symbol, SecurityType securityType, string market, DateTime date, Resolution resolution)
         {
-            var directory = Path.Combine(securityType.ToString().ToLower(), market.ToLower(), resolution.ToString().ToLower());
+            var directory = Path.Combine(securityType.ToLower(), market.ToLower(), resolution.ToLower());
             if (resolution != Resolution.Daily && resolution != Resolution.Hour)
             {
                 directory = Path.Combine(directory, symbol.ToLower());
@@ -144,10 +210,68 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Generate's the zip entry name to hold the specified data.
+        /// </summary>
+        public static string GenerateZipEntryName(Symbol symbol, DateTime date, Resolution resolution, TickType tickType)
+        {
+            var formattedDate = date.ToString(DateFormat.EightCharacter);
+            var isHourOrDaily = resolution == Resolution.Hour || resolution == Resolution.Daily;
+
+            switch (symbol.ID.SecurityType)
+            {
+                case SecurityType.Base:
+                case SecurityType.Equity:
+                case SecurityType.Forex:
+                case SecurityType.Cfd:
+                    if (isHourOrDaily)
+                    {
+                        return string.Format("{0}.csv", 
+                            symbol.Value.ToLower()
+                            );
+                    }
+
+                    return string.Format("{0}_{1}_{2}_{3}.csv", 
+                        formattedDate, 
+                        symbol.Value.ToLower(), 
+                        resolution.ToLower(), 
+                        tickType.ToLower()
+                        );
+
+                case SecurityType.Option:
+                    if (isHourOrDaily)
+                    {
+                        return string.Format("{0}_{1}_{2}.csv",
+                            symbol.ID.Symbol.ToLower(), // underlying
+                            tickType.ToLower(),
+                            symbol.ID.OptionStyle.ToLower()
+                            );
+                    }
+
+                    return string.Format("{0}_{1}_{2}_{3}_{4}.csv",
+                        formattedDate,
+                        symbol.ID.Symbol.ToLower(), // underlying
+                        resolution.ToLower(),
+                        tickType.ToLower(),
+                        symbol.ID.OptionStyle.ToLower()
+                        );
+
+                case SecurityType.Commodity:
+                case SecurityType.Future:
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        /// <summary>
         /// Creates the entry name for a QC zip data file
         /// </summary>
         public static string GenerateZipEntryName(string symbol, SecurityType securityType, DateTime date, Resolution resolution, TickType dataType = TickType.Trade)
         {
+            if (securityType != SecurityType.Base && securityType != SecurityType.Equity && securityType != SecurityType.Forex && securityType != SecurityType.Cfd)
+            {
+                throw new NotImplementedException("This method only implements base, equity, forex and cfd security type.");
+            }
+
             symbol = symbol.ToLower();
 
             if (resolution == Resolution.Hour || resolution == Resolution.Daily)
@@ -161,7 +285,57 @@ namespace QuantConnect.Util
                 dataType = TickType.Quote;
             }
 
-            return string.Format("{0}_{1}_{2}_{3}.csv", date.ToString(DateFormat.EightCharacter), symbol, resolution.ToString().ToLower(), dataType.ToString().ToLower());
+            return string.Format("{0}_{1}_{2}_{3}.csv", date.ToString(DateFormat.EightCharacter), symbol, resolution.ToLower(), dataType.ToLower());
+        }
+
+        /// <summary>
+        /// Generates the zip file name for the specified date of data.
+        /// </summary>
+        public static string GenerateZipFileName(Symbol symbol, DateTime date, Resolution resolution, TickType tickType)
+        {
+            var tickTypeString = tickType.ToLower();
+            var formattedDate = date.ToString(DateFormat.EightCharacter);
+            var isHourOrDaily = resolution == Resolution.Hour || resolution == Resolution.Daily;
+
+            switch (symbol.ID.SecurityType)
+            {
+                case SecurityType.Base:
+                case SecurityType.Equity:
+                case SecurityType.Forex:
+                case SecurityType.Cfd:
+                    if (isHourOrDaily)
+                    {
+                        return string.Format("{0}.zip", 
+                            symbol.Value.ToLower()
+                            );
+                    }
+
+                    return string.Format("{0}_{1}.zip", 
+                        formattedDate, 
+                        tickTypeString
+                        );
+
+                case SecurityType.Option:
+                    if (isHourOrDaily)
+                    {
+                        return string.Format("{0}_{1}_{2}.zip", 
+                            symbol.ID.Symbol.ToLower(), // underlying
+                            tickTypeString,
+                            symbol.ID.OptionStyle.ToLower()
+                            );
+                    }
+
+                    return string.Format("{0}_{1}_{2}.zip", 
+                        formattedDate, 
+                        tickTypeString,
+                        symbol.ID.OptionStyle.ToLower()
+                        );
+
+                case SecurityType.Commodity:
+                case SecurityType.Future:
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         /// <summary>
@@ -183,11 +357,45 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Gets the tick type most commonly associated with the specified security type
+        /// </summary>
+        /// <param name="securityType">The security type</param>
+        /// <returns>The most common tick type for the specified security type</returns>
+        public static TickType GetCommonTickType(SecurityType securityType)
+        {
+            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
+            {
+                return TickType.Quote;
+            }
+            return TickType.Trade;
+        }
+
+        /// <summary>
         /// Scale and convert the resulting number to deci-cents int.
         /// </summary>
         private static int Scale(decimal value)
         {
-            return Convert.ToInt32(value * 10000);
+            return Convert.ToInt32(value*10000);
+        }
+
+        /// <summary>
+        /// Create a csv line from the specified arguments
+        /// </summary>
+        private static string ToCsv(params object[] args)
+        {
+            return string.Join(",", args);
+        }
+
+        /// <summary>
+        /// Creates a csv line for the bar, if null fills in empty strings
+        /// </summary>
+        private static string ToCsv(IBar bar)
+        {
+            if (bar == null)
+            {
+                return ToCsv(string.Empty, string.Empty, string.Empty, string.Empty);
+            }
+            return ToCsv(Scale(bar.Open), Scale(bar.High), Scale(bar.Low), Scale(bar.Close));
         }
     }
 }

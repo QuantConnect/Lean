@@ -13,12 +13,26 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Securities.Equity
+namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// The equity portfolio model implementation is the same as the default
+    /// The possible states returned by <see cref="IndicatorBase{T}.ComputeNextValue"/>
     /// </summary>
-    public class EquityPortfolioModel : SecurityPortfolioModel
+    public enum IndicatorStatus
     {
+        /// <summary>
+        /// The indicator successfully calculated a value for the input data
+        /// </summary>
+        Success,
+
+        /// <summary>
+        /// The indicator detected an invalid input data point or tradebar
+        /// </summary>
+        InvalidInput,
+
+        /// <summary>
+        /// The indicator encountered a math error during calculations
+        /// </summary>
+        MathError,
     }
 }

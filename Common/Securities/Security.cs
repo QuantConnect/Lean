@@ -47,7 +47,23 @@ namespace QuantConnect.Securities
                 return _config.Symbol;
             }
         }
-        
+
+        /// <summary>
+        /// Gets the Cash object used for converting the quote currency to the account currency
+        /// </summary>
+        public Cash QuoteCurrency
+        {
+            get; private set;
+        }
+
+        /// <summary>
+        /// Gets the symbol properties for this security
+        /// </summary>
+        public SymbolProperties SymbolProperties
+        {
+            get; private set;
+        }
+
         /// <summary>
         /// Type of the security.
         /// </summary>
@@ -260,8 +276,10 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Construct a new security vehicle based on the user options.
         /// </summary>
-        public Security(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config)
+        public Security(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, Cash quoteCurrency, SymbolProperties symbolProperties)
             : this(config,
+                quoteCurrency,
+                symbolProperties,
                 new SecurityExchange(exchangeHours),
                 new SecurityCache(),
                 new SecurityPortfolioModel(),
@@ -278,6 +296,8 @@ namespace QuantConnect.Securities
         /// Construct a new security vehicle based on the user options.
         /// </summary>
         protected Security(SubscriptionDataConfig config,
+            Cash quoteCurrency,
+            SymbolProperties symbolProperties,
             SecurityExchange exchange,
             SecurityCache cache,
             ISecurityPortfolioModel portfolioModel,
@@ -289,7 +309,20 @@ namespace QuantConnect.Securities
             ISecurityDataFilter dataFilter
             )
         {
+
+            if (symbolProperties == null)
+            {
+                throw new ArgumentNullException("symbolProperties", "Security requires a valid SymbolProperties instance.");
+            }
+
+            if (symbolProperties.QuoteCurrency != quoteCurrency.Symbol)
+            {
+                throw new ArgumentException("symbolProperties.QuoteCurrency must match the quoteCurrency.Symbol");
+            }
+
             _config = config;
+            QuoteCurrency = quoteCurrency;
+            SymbolProperties = symbolProperties;
             Cache = cache;
             Exchange = exchange;
             DataFilter = dataFilter;

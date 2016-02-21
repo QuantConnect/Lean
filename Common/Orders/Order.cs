@@ -170,23 +170,13 @@ namespace QuantConnect.Orders
         public decimal GetValue(Security security)
         {
             var value = GetValueImpl(security);
-            switch (security.Type)
-            {
-                // this is here until QuoteCurrency is on the base Security
-                case SecurityType.Forex:
-                    var forex = (Forex) security;
-                    value = value*forex.QuoteCurrency.ConversionRate;
-                    break;
-                case SecurityType.Cfd:
-                    var cfd = (Cfd) security;
-                    value = value*cfd.ContractMultiplier*cfd.QuoteCurrency.ConversionRate;
-                    break;
-            }
-            return value;
+            return value*security.QuoteCurrency.ConversionRate*security.SymbolProperties.ContractMultiplier;
         }
 
         /// <summary>
-        /// Gets the order value in units of the security's quote currency
+        /// Gets the order value in units of the security's quote currency for a single unit.
+        /// A single unit here is a single share of stock, or a single barrel of oil, or the
+        /// cost of a single share in an option contract.
         /// </summary>
         /// <param name="security">The security matching this order's symbol</param>
         protected abstract decimal GetValueImpl(Security security);
