@@ -52,6 +52,7 @@
     <Compile Include="BalanceOfPower.cs" />
     <Compile Include="CandlestickPatterns\AbandonedBaby.cs" />
     <Compile Include="CandlestickPatterns\AdvanceBlock.cs" />
+    <Compile Include="CandlestickPatterns\ClosingMarubozu.cs" />
     <Compile Include="CandlestickPatterns\BeltHold.cs" />
     <Compile Include="CandlestickPatterns\Breakaway.cs" />
     <Compile Include="CandlestickPatterns\CandleEnums.cs" />

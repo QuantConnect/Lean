@@ -49,6 +49,7 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
                     rows.Add(new TestCaseData(new AdvanceBlock(), "CDLADVANCEBLOCK", testFileName).SetName("AdvanceBlock-" + testFileName));
                     rows.Add(new TestCaseData(new BeltHold(), "CDLBELTHOLD", testFileName).SetName("BeltHold-" + testFileName));
                     rows.Add(new TestCaseData(new Breakaway(), "CDLBREAKAWAY", testFileName).SetName("Breakaway-" + testFileName));
+                    rows.Add(new TestCaseData(new ClosingMarubozu(), "CDLCLOSINGMARUBOZU", testFileName).SetName("ClosingMarubozu-" + testFileName));
                 }
 
                 return rows.ToArray();
