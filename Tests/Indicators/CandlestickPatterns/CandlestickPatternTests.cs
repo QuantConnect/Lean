@@ -55,6 +55,7 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
                     rows.Add(new TestCaseData(new DarkCloudCover(), "CDLDARKCLOUDCOVER", testFileName).SetName("DarkCloudCover-" + testFileName));
                     rows.Add(new TestCaseData(new Doji(), "CDLDOJI", testFileName).SetName("Doji-" + testFileName));
                     rows.Add(new TestCaseData(new DojiStar(), "CDLDOJISTAR", testFileName).SetName("DojiStar-" + testFileName));
+                    rows.Add(new TestCaseData(new DragonflyDoji(), "CDLDRAGONFLYDOJI", testFileName).SetName("DragonflyDoji-" + testFileName));
                 }
 
                 return rows.ToArray();
