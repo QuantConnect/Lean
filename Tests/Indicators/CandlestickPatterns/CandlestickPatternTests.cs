@@ -53,6 +53,7 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
                     rows.Add(new TestCaseData(new ConcealedBabySwallow(), "CDLCONCEALBABYSWALL", testFileName).SetName("ConcealedBabySwallow-" + testFileName));
                     rows.Add(new TestCaseData(new Counterattack(), "CDLCOUNTERATTACK", testFileName).SetName("Counterattack-" + testFileName));
                     rows.Add(new TestCaseData(new DarkCloudCover(), "CDLDARKCLOUDCOVER", testFileName).SetName("DarkCloudCover-" + testFileName));
+                    rows.Add(new TestCaseData(new Doji(), "CDLDOJI", testFileName).SetName("Doji-" + testFileName));
                 }
 
                 return rows.ToArray();

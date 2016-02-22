@@ -67,6 +67,7 @@
     <Compile Include="CandlestickPatterns\Counterattack.cs" />
     <Compile Include="CandlestickPatterns\ThreeStarsInSouth.cs" />
     <Compile Include="CandlestickPatterns\ThreeWhiteSoldiers.cs" />
+    <Compile Include="CandlestickPatterns\Doji.cs" />
     <Compile Include="CandlestickPatterns\TwoCrows.cs" />
     <Compile Include="ChandeMomentumOscillator.cs" />
     <Compile Include="DonchianChannel.cs" />
