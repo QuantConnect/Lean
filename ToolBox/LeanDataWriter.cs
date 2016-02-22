@@ -99,8 +99,6 @@ namespace QuantConnect.ToolBox
             var sb = new StringBuilder();
             var lastTime = new DateTime();
 
-            // Determine file path
-            //var baseDirectory = Path.Combine(_dataDirectory, _securityType.ToString().ToLower(), _market);
 
             // Loop through all the data and write to file as we go
             foreach (var data in source)
