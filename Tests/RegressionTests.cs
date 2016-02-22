@@ -15,16 +15,22 @@
 
 using System.Collections.Generic;
 using NUnit.Framework;
+using System.Linq;
 
 namespace QuantConnect.Tests
 {
     [TestFixture, Category("TravisExclude")]
     public class RegressionTests
     {
-        [Test]
-        public void BasicTemplateAlgorithm()
+        [Test, TestCaseSource("GetRegressionTestParameters")]
+        public void AlgorithmStatisticsRegression(AlgorithmStatisticsTestParameters parameters)
         {
-            AlgorithmRunner.RunLocalBacktest("BasicTemplateAlgorithm", new Dictionary<string, string>
+            AlgorithmRunner.RunLocalBacktest(parameters.Algorithm, parameters.Statistics, parameters.Language);
+        }
+
+        private static TestCaseData[] GetRegressionTestParameters()
+        {
+            var basicTemplateStatistics = new Dictionary<string, string>
             {
                 {"Total Trades", "1"},
                 {"Average Win", "0%"},
@@ -45,13 +51,9 @@ namespace QuantConnect.Tests
                 {"Tracking Error", "0.246"},
                 {"Treynor Ratio", "4.572"},
                 {"Total Fees", "$3.09"}
-            });
-        }
+            };
 
-        [Test]
-        public void LimitFillRegressionAlgorithm()
-        {
-            AlgorithmRunner.RunLocalBacktest("LimitFillRegressionAlgorithm", new Dictionary<string, string>
+            var limitFillRegressionStatistics = new Dictionary<string, string>
             {
                 {"Total Trades", "34"},
                 {"Average Win", "0.02%"},
@@ -72,13 +74,9 @@ namespace QuantConnect.Tests
                 {"Tracking Error", "0.194"},
                 {"Treynor Ratio", "29.506"},
                 {"Total Fees", "$34.00"}
-            });
-        }
+            };
 
-        [Test]
-        public void UpdateOrderRegressionAlgorithm()
-        {
-            AlgorithmRunner.RunLocalBacktest("UpdateOrderRegressionAlgorithm", new Dictionary<string, string>
+            var updateOrderRegressionStatistics = new Dictionary<string, string>
             {
                 {"Total Trades", "21"},
                 {"Average Win", "0%"},
@@ -99,13 +97,9 @@ namespace QuantConnect.Tests
                 {"Tracking Error", "0.112"},
                 {"Treynor Ratio", "-1.755"},
                 {"Total Fees", "$21.00"}
-            });
-        }
+            };
 
-        [Test]
-        public void RegressionAlgorithm()
-        {
-            AlgorithmRunner.RunLocalBacktest("RegressionAlgorithm", new Dictionary<string, string>
+            var regressionStatistics = new Dictionary<string, string>
             {
                 {"Total Trades", "5433"},
                 {"Average Win", "0.00%"},
@@ -126,13 +120,9 @@ namespace QuantConnect.Tests
                 {"Tracking Error", "0.174"},
                 {"Treynor Ratio", "-33.666"},
                 {"Total Fees", "$5433.00"}
-            });
-        }
+            };
 
-        [Test]
-        public void UniverseSelectionRegressionAlgorithm()
-        {
-            AlgorithmRunner.RunLocalBacktest("UniverseSelectionRegressionAlgorithm", new Dictionary<string, string>
+            var universeSelectionRegressionStatistics = new Dictionary<string, string>
             {
                 {"Total Trades", "4"},
                 {"Average Win", "0.70%"},
@@ -153,13 +143,9 @@ namespace QuantConnect.Tests
                 {"Tracking Error", "0.166"},
                 {"Treynor Ratio", "-0.918"},
                 {"Total Fees", "$2.00"}
-            });
-        }
+            };
 
-        [Test]
-        public void CustomDataRegressionAlgorithm()
-        {
-            AlgorithmRunner.RunLocalBacktest("CustomDataRegressionAlgorithm", new Dictionary<string, string>
+            var customDataRegressionStatistics = new Dictionary<string, string>
             {
                 {"Total Trades", "1"},
                 {"Average Win", "0%"},
@@ -180,13 +166,9 @@ namespace QuantConnect.Tests
                 {"Tracking Error", "118.917"},
                 {"Treynor Ratio", "1.072"},
                 {"Total Fees", "$0.00"}
-            });
-        }
+            };
 
-        [Test]
-        public void AddRemoveSecurityRegressionAlgorithm()
-        {
-            AlgorithmRunner.RunLocalBacktest("AddRemoveSecurityRegressionAlgorithm", new Dictionary<string, string>
+            var addRemoveSecurityRegressionStatistics = new Dictionary<string, string>
             {
                 {"Total Trades", "5"},
                 {"Average Win", "0.49%"},
@@ -207,13 +189,9 @@ namespace QuantConnect.Tests
                 {"Tracking Error", "0.236"},
                 {"Treynor Ratio", "50.468"},
                 {"Total Fees", "$25.21"}
-            });
-        }
+            };
 
-        [Test]
-        public void DropboxBaseDataUniverseSelectionAlgorithm()
-        {
-            AlgorithmRunner.RunLocalBacktest("DropboxBaseDataUniverseSelectionAlgorithm", new Dictionary<string, string>
+            var dropboxBaseDataUniverseSelectionStatistics = new Dictionary<string, string>
             {
                 {"Total Trades", "67"},
                 {"Average Win", "1.07%"},
@@ -234,13 +212,9 @@ namespace QuantConnect.Tests
                 {"Tracking Error", "0.146"},
                 {"Treynor Ratio", "-1.871"},
                 {"Total Fees", "$300.29"}
-            });
-        }
+            };
 
-        [Test]
-        public void DropboxUniverseSelectionAlgorithm()
-        {
-            AlgorithmRunner.RunLocalBacktest("DropboxUniverseSelectionAlgorithm", new Dictionary<string, string>
+            var dropboxUniverseSelectionStatistics = new Dictionary<string, string>
             {
                 {"Total Trades", "49"},
                 {"Average Win", "1.58%"},
@@ -261,13 +235,9 @@ namespace QuantConnect.Tests
                 {"Tracking Error", "0.161"},
                 {"Treynor Ratio", "-2.319"},
                 {"Total Fees", "$233.07"}
-            });
-        }
+            };
 
-        [Test]
-        public void ParameterizedAlgorithm()
-        {
-            AlgorithmRunner.RunLocalBacktest("ParameterizedAlgorithm", new Dictionary<string, string>
+            var parameterizedStatistics = new Dictionary<string, string>
             {
                 {"Total Trades", "1"},
                 {"Average Win", "0%"},
@@ -288,7 +258,43 @@ namespace QuantConnect.Tests
                 {"Tracking Error", "0.171"},
                 {"Treynor Ratio", "4.634"},
                 {"Total Fees", "$3.09"},
-            });
+            };
+
+            return new List<AlgorithmStatisticsTestParameters>
+            {
+                // CSharp
+                new AlgorithmStatisticsTestParameters("AddRemoveSecurityRegressionAlgorithm", addRemoveSecurityRegressionStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("CustomDataRegressionAlgorithm", customDataRegressionStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("DropboxBaseDataUniverseSelectionAlgorithm", dropboxBaseDataUniverseSelectionStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("DropboxUniverseSelectionAlgorithm", dropboxUniverseSelectionStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("LimitFillRegressionAlgorithm", limitFillRegressionStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("ParameterizedAlgorithm", parameterizedStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("RegressionAlgorithm", regressionStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("UniverseSelectionRegressionAlgorithm", universeSelectionRegressionStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("UpdateOrderRegressionAlgorithm", updateOrderRegressionStatistics, Language.CSharp),
+
+                // FSharp
+                new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.FSharp),
+
+                // VisualBasic
+                new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.VisualBasic),
+            }.Select(x => new TestCaseData(x).SetName(x.Language + "/" + x.Algorithm)).ToArray();
+        }
+
+        public class AlgorithmStatisticsTestParameters
+        {
+            public readonly string Algorithm;
+            public readonly Dictionary<string, string> Statistics;
+            public readonly Language Language;
+
+            public AlgorithmStatisticsTestParameters(string algorithm, Dictionary<string, string> statistics, Language language)
+            {
+                Algorithm = algorithm;
+                Statistics = statistics;
+                Language = language;
+            }
         }
     }
+
 }
