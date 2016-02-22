@@ -45,6 +45,9 @@ namespace QuantConnect.Brokerages
         /// </summary>
         FxcmBrokerage,
 
+        /// <summary>
+        /// Transaction and submit/execution rules will use Bitfinex models
+        /// </summary>
         BitfinexBrokerage
     }
 }

@@ -18,6 +18,11 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
         private bool _useDivisor;
         decimal divisor = 100m;
 
+        /// <summary>
+        /// Creates instance of downloader
+        /// </summary>
+        /// <param name="exchange"></param>
+        /// <param name="useDivisor"></param>
         public CryptoiqDownloader(string exchange = "bitfinex", bool useDivisor = false)
         {
             _exchange = exchange;

@@ -6,10 +6,10 @@
     // two predefined environments, 'backtesting' and 'live', feel free
     // to add more!
 
-    "environment": "live-bitfinex-websockets",
+    "environment": "backtesting",
 
     // algorithm class selector
-    "algorithm-type-name": "",
+    "algorithm-type-name": "BitcoinRsiAlgorithm",
 
     // Algorithm language selector - options CSharp, FSharp, VisualBasic, Python, Java
     "algorithm-language": "CSharp",

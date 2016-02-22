@@ -108,7 +108,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         }
 
         /// <summary>
-        /// Logs out and close connection
+        /// Logs out and closes connection
         /// </summary>
         public override void Disconnect()
         {

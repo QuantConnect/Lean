@@ -20,7 +20,7 @@ namespace QuantConnect.Brokerages.Bitfinex
 {
 
     /// <summary>
-    /// Bitfinex REST integration.
+    /// Bitfinex exchange REST integration.
     /// </summary>
     public partial class BitfinexBrokerage : Brokerage, IDataQueueHandler
     {
@@ -306,7 +306,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         }
 
         /// <summary>
-        /// Retreive holding from exchange
+        /// Retreive holdings from exchange
         /// </summary>
         /// <returns></returns>
         public override List<Holding> GetAccountHoldings()
@@ -334,7 +334,7 @@ namespace QuantConnect.Brokerages.Bitfinex
 
         
         /// <summary>
-        /// Get Cash Balances
+        /// Get Cash Balances from exchange
         /// </summary>
         /// <returns></returns>
         //todo: handle other currencies
@@ -361,7 +361,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         }
 
         /// <summary>
-        /// Get tick data
+        /// Get queued tick data
         /// </summary>
         /// <returns></returns>
         public IEnumerable<Data.BaseData> GetNextTicks()

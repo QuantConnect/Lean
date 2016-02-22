@@ -6,11 +6,21 @@ using System.Threading.Tasks;
 
 namespace QuantConnect.Orders.Fees
 {
+
+    /// <summary>
+    /// Provides an implementation of <see cref="IFeeModel"/> that models Bitfinex order fees
+    /// </summary>
     public class BitfinexFeeModel : IFeeModel
     {
+
+        /// <summary>
+        /// Get the fee for this order
+        /// </summary>
+        /// <param name="security">The security matching the order</param>
+        /// <param name="order">The order to compute fees for</param>
+        /// <returns>The cost of the order in units of the account currency</returns>
         public decimal GetOrderFee(Securities.Security security, Order order)
         {
-            //todo: test maker fee 0.001m
             //todo: fee scaling with trade size
             decimal divisor = 0.002m;
 

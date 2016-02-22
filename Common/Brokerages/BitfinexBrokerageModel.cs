@@ -29,12 +29,20 @@ using QuantConnect.Configuration;
 namespace QuantConnect.Brokerages
 {
 
+    /// <summary>
+    /// Provides Bitfinex specific properties
+    /// </summary>
     public class BitfinexBrokerageModel : DefaultBrokerageModel
     {
 
         string _wallet;
         const string exchange = "exchange";
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BitfinexBrokerageModel"/> class
+        /// </summary>
+        /// <param name="accountType">The type of account to be modelled, defaults to 
+        /// <see cref="QuantConnect.AccountType.Margin"/></param>
         public BitfinexBrokerageModel(AccountType accountType = AccountType.Margin)
             : base(accountType)
         {
@@ -47,23 +55,45 @@ namespace QuantConnect.Brokerages
 
         }
 
+        /// <summary>
+        /// Bitfinex global leverage rule
+        /// </summary>
+        /// <param name="security"></param>
+        /// <returns></returns>
         public override decimal GetLeverage(Security security)
         {
             return this.AccountType == AccountType.Margin ? 3.3m : 0;
         }
 
+        /// <summary>
+        /// Provides Bitfinex fee model
+        /// </summary>
+        /// <param name="security"></param>
+        /// <returns></returns>
         public override IFeeModel GetFeeModel(Security security)
         {
             return new BitfinexFeeModel();
         }
 
+        /// <summary>
+        /// Provides Bitfinex slippage model
+        /// </summary>
+        /// <param name="security"></param>
+        /// <returns></returns>
         public override ISlippageModel GetSlippageModel(Security security)
         {
             return new BitfinexSlippageModel();
         }
 
         //todo: support other currencies
-        //Checks for decimal are superfluous until quantity is changed from int to decimal
+        //todo: Checks for decimal are superfluous until quantity is changed from int to decimal
+        /// <summary>
+        /// Validates pending orders based on currency pair, order amount, security type
+        /// </summary>
+        /// <param name="security"></param>
+        /// <param name="order"></param>
+        /// <param name="message"></param>
+        /// <returns></returns>
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
             message = null;
@@ -72,7 +102,7 @@ namespace QuantConnect.Brokerages
             if (securityType != SecurityType.Forex || security.Symbol.Value != BTCUSD || NumberOfDecimals(order.Quantity) > 2)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    "This model only supports BTCUSD orders > 0.01.");
+                    "This model only supports BTCUSD orders on a scale of 0.01 or more.");
 
                 return false;
             }

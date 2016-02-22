@@ -25,7 +25,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         protected string[] allValues { get; set; }
 
         /// <summary>
-        /// Creates base message
+        /// Creates base message instance
         /// </summary>
         /// <param name="values"></param>
         public BaseMessage(string[] values)
@@ -33,16 +33,31 @@ namespace QuantConnect.Brokerages.Bitfinex
             allValues = values;
         }
 
+        /// <summary>
+        /// Returns typed value from untyped json array
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
         public string GetString(string key)
         {
             return allValues[Array.IndexOf(allKeys, key)];
         }
 
+        /// <summary>
+        /// Returns typed value from untyped json array
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
         public decimal GetDecimal(string key)
         {
             return decimal.Parse(allValues[Array.IndexOf(allKeys, key)]);
         }
 
+        /// <summary>
+        /// Returns typed value from untyped json array
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
         public decimal GetDecimalFromScientific(string key)
         {
             if (allValues[Array.IndexOf(allKeys, key)] == null)
@@ -53,11 +68,21 @@ namespace QuantConnect.Brokerages.Bitfinex
             return Decimal.Parse(value, System.Globalization.NumberStyles.AllowExponent | System.Globalization.NumberStyles.AllowDecimalPoint);
         }
 
+        /// <summary>
+        /// Returns typed value from untyped json array
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
         public int GetInt(string key)
         {
             return int.Parse(allValues[Array.IndexOf(allKeys, key)]);
         }
 
+        /// <summary>
+        /// Returns typed value from untyped json array
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
         public int TryGetInt(string key)
         {
             int parsed;
@@ -68,6 +93,11 @@ namespace QuantConnect.Brokerages.Bitfinex
             return 0;
         }
 
+        /// <summary>
+        /// Returns typed value from untyped json array
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
         public DateTime GetDateTime(string key)
         {
             return Time.UnixTimeStampToDateTime(double.Parse(allValues[Array.IndexOf(allKeys, key)]));

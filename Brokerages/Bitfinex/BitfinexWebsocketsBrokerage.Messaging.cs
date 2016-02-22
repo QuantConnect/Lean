@@ -38,16 +38,19 @@ namespace QuantConnect.Brokerages.Bitfinex
                 }
                 else if (term == "tu" || term == "te")
                 {
+                    //trade execution/update
                     var data = raw[2].ToObject(typeof(string[]));
                     PopulateTrade(data);
                 }
                 else if (term == "ws")
                 {
+                    //wallet update
                     var data = raw[2].ToObject(typeof(string[][]));
                     PopulateWallet(data);
                 }
                 else if (_channelId.ContainsKey(id) && _channelId[id] == "ticker")
                 {
+                    //ticker
                     PopulateTicker(e.Data);
                     return;
                 }
@@ -99,7 +102,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
         }
 
-        //todo: Currently not used
+        //todo: Currently populated but not used
         private void PopulateWallet(string[][] data)
         {
             if (data.Length > 0)

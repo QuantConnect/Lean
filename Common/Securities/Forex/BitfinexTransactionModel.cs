@@ -31,7 +31,7 @@ namespace QuantConnect.Securities.Forex
     public class BitfinexTransactionModel : SecurityTransactionModel
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ForexTransactionModel"/> class
+        /// Initializes a new instance of the <see cref="BitfinexTransactionModel"/> class
         /// </summary>
         public BitfinexTransactionModel()
             : base(new ImmediateFillModel(), new BitfinexFeeModel(), new BitfinexSlippageModel())
