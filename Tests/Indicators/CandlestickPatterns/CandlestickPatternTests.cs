@@ -51,6 +51,7 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
                     rows.Add(new TestCaseData(new Breakaway(), "CDLBREAKAWAY", testFileName).SetName("Breakaway-" + testFileName));
                     rows.Add(new TestCaseData(new ClosingMarubozu(), "CDLCLOSINGMARUBOZU", testFileName).SetName("ClosingMarubozu-" + testFileName));
                     rows.Add(new TestCaseData(new ConcealedBabySwallow(), "CDLCONCEALBABYSWALL", testFileName).SetName("ConcealedBabySwallow-" + testFileName));
+                    rows.Add(new TestCaseData(new Counterattack(), "CDLCOUNTERATTACK", testFileName).SetName("Counterattack-" + testFileName));
                 }
 
                 return rows.ToArray();
