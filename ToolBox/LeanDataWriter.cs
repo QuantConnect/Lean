@@ -142,9 +142,7 @@ namespace QuantConnect.ToolBox
             var lastTime = new DateTime();
 
             // Determine file path
-            var baseDirectory = Path.Combine(_dataDirectory, _securityType.ToString().ToLower(), _market);
-
-            var outputFile = GetZipOutputFileName(baseDirectory, lastTime);
+            var outputFile = GetZipOutputFileName(_dataDirectory, lastTime);
 
             // Load new data rows into a SortedDictionary for easy merge/update
             var newRows = new SortedDictionary<DateTime, string>(source.ToDictionary(x => x.Time, x => LeanData.GenerateLine(x, _securityType, _resolution)));
