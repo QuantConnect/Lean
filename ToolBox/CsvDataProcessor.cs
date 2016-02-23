@@ -16,7 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using System.Threading.Tasks;
 using QuantConnect.Data;
 using QuantConnect.Util;
 
@@ -24,28 +24,30 @@ namespace QuantConnect.ToolBox
 {
     /// <summary>
     /// Provides an implementation of <see cref="IDataProcessor"/> that writes the incoming
-    /// stream of data to a zip file. A intermediate csv is created during processing and the zip
-    /// is performed upon a call to <see cref="Dispose"/>
+    /// stream of data to a csv file.
     /// </summary>
-    public class ZipCsvDataProcessor : IDataProcessor
+    public class CsvDataProcessor : IDataProcessor
     {
+        private const int TicksPerFlush = 50;
+        private static readonly object DirectoryCreateSync = new object();
+        
         private readonly string _dataDirectory;
         private readonly Resolution _resolution;
         private readonly TickType _tickType;
-        private readonly Dictionary<string, Tuple<string, TextWriter>> _writers;
+        private readonly Dictionary<Symbol, Writer> _writers;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ZipCsvDataProcessor"/> class
+        /// Initializes a new instance of the <see cref="CsvDataProcessor"/> class
         /// </summary>
         /// <param name="dataDirectory">The root data directory, /Data</param>
         /// <param name="resolution">The resolution being sent into the Process method</param>
         /// <param name="tickType">The tick type, trade or quote</param>
-        public ZipCsvDataProcessor(string dataDirectory, Resolution resolution, TickType tickType)
+        public CsvDataProcessor(string dataDirectory, Resolution resolution, TickType tickType)
         {
             _dataDirectory = dataDirectory;
             _resolution = resolution;
             _tickType = tickType;
-            _writers = new Dictionary<string, Tuple<string, TextWriter>>();
+            _writers = new Dictionary<Symbol, Writer>();
         }
 
         /// <summary>
@@ -54,16 +56,21 @@ namespace QuantConnect.ToolBox
         /// <param name="data">The data to be processed</param>
         public void Process(BaseData data)
         {
-            Tuple<string, TextWriter> tuple;
-            var entry = LeanData.GenerateZipEntryName(data.Symbol, data.Time.Date, _resolution, _tickType);
-            if (!_writers.TryGetValue(entry, out tuple))
+            Writer writer;
+            if (!_writers.TryGetValue(data.Symbol, out writer))
             {
-                tuple = CreateTextWriter(data, entry);
-                _writers[entry] = tuple;
+                writer = CreateTextWriter(data);
+                _writers[data.Symbol] = writer;
+            }
+
+            // flush every so often
+            if (++writer.ProcessCount%TicksPerFlush == 0)
+            {
+                writer.TextWriter.Flush();
             }
 
             var line = LeanData.GenerateLine(data, data.Symbol.ID.SecurityType, _resolution);
-            tuple.Item2.WriteLine(line);
+            writer.TextWriter.WriteLine(line);
         }
 
         /// <summary>
@@ -73,32 +80,40 @@ namespace QuantConnect.ToolBox
         {
             foreach (var kvp in _writers)
             {
-                kvp.Value.Item2.Dispose();
+                kvp.Value.TextWriter.Dispose();
             }
-
-            // group by the directory where the csv's are stored
-            foreach (var grouping in _writers.GroupBy(x => new FileInfo(x.Value.Item1).Directory.FullName))
-            {
-                // zip the contents of the directory and then delete the directory
-                Compression.ZipDirectory(grouping.Key, grouping.Key + ".zip", false);
-                Directory.Delete(grouping.Key, true);
-            }
-
-            _writers.Clear();
         }
 
         /// <summary>
         /// Creates the <see cref="TextWriter"/> that writes data to csv files
         /// </summary>
-        private Tuple<string, TextWriter> CreateTextWriter(BaseData data, string entry)
+        private Writer CreateTextWriter(BaseData data)
         {
+            var entry = LeanData.GenerateZipEntryName(data.Symbol, data.Time.Date, _resolution, _tickType);
             var relativePath = LeanData.GenerateRelativeZipFilePath(data.Symbol, data.Time.Date, _resolution, _tickType)
                 .Replace(".zip", string.Empty);
             var path = Path.Combine(Path.Combine(_dataDirectory, relativePath), entry);
             var directory = new FileInfo(path).Directory.FullName;
-            if (Directory.Exists(directory)) Directory.Delete(directory, true);
-            Directory.CreateDirectory(directory);
-            return Tuple.Create(path, (TextWriter)new StreamWriter(path));
+            if (!Directory.Exists(directory))
+            {
+                // lock before checking again
+                lock (DirectoryCreateSync) if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
+            }
+
+            return new Writer(path, new StreamWriter(path));
+        }
+
+
+        private sealed class Writer
+        {
+            public readonly string Path;
+            public readonly TextWriter TextWriter;
+            public int ProcessCount;
+            public Writer(string path, TextWriter textWriter)
+            {
+                Path = path;
+                TextWriter = textWriter;
+            }
         }
     }
 }

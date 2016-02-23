@@ -144,6 +144,7 @@
   <ItemGroup>
     <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsParser.cs" />
     <Compile Include="AlgoSeekOptionsConverter\Program.cs" />
+    <Compile Include="Bz2StreamProvider.cs" />
     <Compile Include="CoarseUniverseGenerator\Program.cs" />
     <Compile Include="ConsolidatorDataProcessor.cs" />
     <Compile Include="DukascopyDownloader\DukascopyDataDownloader.cs" />
@@ -177,7 +178,7 @@
     <Compile Include="RawFileProcessor.cs" />
     <Compile Include="YahooDownloader\Program.cs" />
     <Compile Include="YahooDownloader\YahooDataDownloader.cs" />
-    <Compile Include="ZipCsvDataProcessor.cs" />
+    <Compile Include="CsvDataProcessor.cs" />
     <Compile Include="ZipStreamProvider.cs" />
   </ItemGroup>
   <ItemGroup>

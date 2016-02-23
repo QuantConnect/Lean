@@ -28,6 +28,8 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
     /// </summary>
     public class AlgoSeekOptionsParser : IStreamParser
     {
+        private const int LogInterval = 1000000;
+
         static AlgoSeekOptionsParser()
         {
             Log.Error("WARNING:: TEST MODE:: AWAITING FINAL FILE NAMING CONVENTION");
@@ -36,12 +38,13 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         /// <summary>
         /// Parses the specified input stream into an enumerable of data
         /// </summary>
-        /// <param name="source"></param>
+        /// <param name="source">The source of the stream</param>
         /// <param name="stream">The input stream to be parsed</param>
         /// <returns>An enumerable of base data</returns>
         public IEnumerable<BaseData> Parse(string source, Stream stream)
         {
-            var referenceDate = DateTime.Today;
+            var count = 0L;
+            var referenceDate = DateTime.ParseExact(new FileInfo(source).Directory.Name, DateFormat.EightCharacter, null);
             
             using (var reader = new StreamReader(stream))
             {
@@ -51,6 +54,13 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                 string line;
                 while ((line = reader.ReadLine()) != null)
                 {
+                    count++;
+
+                    if (count%LogInterval == 0)
+                    {
+                        Log.Trace("AlgoSeekOptionsParser.Parse({0}): Parsed {1,3}M lines.", source, count/LogInterval);
+                    }
+
                     Tick tick;
                     try
                     {
@@ -93,6 +103,15 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
 
                         // detail: PUT at 30.0000 on 2014-01-18
                         var underlying = csv[4];
+
+                        //FOR WINDOWS TESTING
+                        //if (underlying.Equals("AUX", StringComparison.OrdinalIgnoreCase)
+                         //|| underlying.Equals("CON", StringComparison.OrdinalIgnoreCase)
+                         //|| underlying.Equals("PRN", StringComparison.OrdinalIgnoreCase))
+                        //{
+                            //continue;
+                        //}
+
                         var optionRight = csv[5][0] == 'P' ? OptionRight.Put : OptionRight.Call;
                         var expiry = DateTime.ParseExact(csv[6], "yyyyMMdd", null);
                         var strike = csv[7].ToDecimal()/10000m;

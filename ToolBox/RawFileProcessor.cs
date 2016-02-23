@@ -98,6 +98,7 @@ namespace QuantConnect.ToolBox
                 }
             }
 
+            Log.Trace("RawFileProcessor.Process({0}): Finished.", source);
             _streamProvider.Close(source);
         }
 

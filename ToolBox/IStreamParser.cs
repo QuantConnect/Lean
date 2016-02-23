@@ -28,7 +28,7 @@ namespace QuantConnect.ToolBox
         /// <summary>
         /// Parses the specified input stream into an enumerable of data
         /// </summary>
-        /// <param name="source"></param>
+        /// <param name="source">The source of the stream</param>
         /// <param name="stream">The input stream to be parsed</param>
         /// <returns>An enumerable of base data</returns>
         IEnumerable<BaseData> Parse(string source, Stream stream);

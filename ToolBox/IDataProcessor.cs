@@ -63,7 +63,7 @@ namespace QuantConnect.ToolBox
             if (set.Contains(Resolution.Tick))
             {
                 // tick is filtered via trade/quote
-                var tick = new ZipCsvDataProcessor(dataDirectory, Resolution.Tick, tickType);
+                var tick = new CsvDataProcessor(dataDirectory, Resolution.Tick, tickType);
                 root.PipeTo(tick);
             }
             if (set.Contains(Resolution.Second))
@@ -90,7 +90,7 @@ namespace QuantConnect.ToolBox
 
         private static PipeDataProcessor AddResolution(string dataDirectory, TickType tickType, PipeDataProcessor root, Resolution resolution, bool sourceIsTick)
         {
-            var second = new ZipCsvDataProcessor(dataDirectory, resolution, tickType);
+            var second = new CsvDataProcessor(dataDirectory, resolution, tickType);
             var secondRoot = new PipeDataProcessor(second);
             var aggregator = new ConsolidatorDataProcessor(secondRoot, data => CreateConsolidator(resolution, tickType, data, sourceIsTick));
             root.PipeTo(aggregator);
