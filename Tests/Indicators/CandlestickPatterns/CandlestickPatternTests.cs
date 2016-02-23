@@ -63,6 +63,7 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
                     rows.Add(new TestCaseData(new GravestoneDoji(), "CDLGRAVESTONEDOJI", testFileName).SetName("GravestoneDoji-" + testFileName));
                     rows.Add(new TestCaseData(new Hammer(), "CDLHAMMER", testFileName).SetName("Hammer-" + testFileName));
                     rows.Add(new TestCaseData(new HangingMan(), "CDLHANGINGMAN", testFileName).SetName("HangingMan-" + testFileName));
+                    rows.Add(new TestCaseData(new Harami(), "CDLHARAMI", testFileName).SetName("Harami-" + testFileName));
                 }
 
                 return rows.ToArray();
