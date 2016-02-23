@@ -306,7 +306,12 @@ namespace QuantConnect
         /// <returns>List of the updates from the series</returns>
         public Series GetUpdates() 
         {
-            var copy = new Series(Name, SeriesType, Index, Unit);
+            var copy = new Series(Name, SeriesType, Index, Unit)
+            {
+                Color = Color,
+                ScatterMarkerSymbol = ScatterMarkerSymbol
+            };
+
             try
             {
                 //Add the updates since the last 
