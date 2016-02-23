@@ -424,5 +424,21 @@ namespace QuantConnect.Algorithm
             _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
             return pattern;
         }
+
+        /// <summary>
+        /// Creates a new Hanging Man pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public HangingMan HangingMan(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "HANGINGMAN", resolution);
+            var pattern = new HangingMan(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
     }
 }
