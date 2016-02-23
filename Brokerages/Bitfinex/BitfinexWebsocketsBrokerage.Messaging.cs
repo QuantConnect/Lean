@@ -150,7 +150,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
         }
 
-        private void Authenticate()
+        protected override void Authenticate()
         {
             string key = apiKey;
             string payload = "AUTH" + DateTime.UtcNow.Ticks.ToString();

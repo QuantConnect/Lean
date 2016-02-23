@@ -129,6 +129,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <returns></returns>
         public override bool PlaceOrder(Orders.Order order)
         {
+            Authenticate();
             var newOrder = new BitfinexNewOrderPost
             {
                 Amount = ((order.Quantity < 0 ? order.Quantity * -1 : order.Quantity) / divisor).ToString(),
@@ -430,6 +431,9 @@ namespace QuantConnect.Brokerages.Bitfinex
                 cachedOrderIDs[key] = updatedOrder;
             }
         }
+
+        protected virtual void Authenticate()
+        { }
 
     }
 
