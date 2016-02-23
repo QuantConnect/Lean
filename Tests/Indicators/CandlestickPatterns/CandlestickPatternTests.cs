@@ -59,6 +59,7 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
                     rows.Add(new TestCaseData(new Engulfing(), "CDLENGULFING", testFileName).SetName("Engulfing-" + testFileName));
                     rows.Add(new TestCaseData(new EveningDojiStar(), "CDLEVENINGDOJISTAR", testFileName).SetName("EveningDojiStar-" + testFileName));
                     rows.Add(new TestCaseData(new EveningStar(), "CDLEVENINGSTAR", testFileName).SetName("EveningStar-" + testFileName));
+                    rows.Add(new TestCaseData(new GapSideBySideWhite(), "CDLGAPSIDESIDEWHITE", testFileName).SetName("GapSideBySideWhite-" + testFileName));
                 }
 
                 return rows.ToArray();
