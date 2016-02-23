@@ -70,6 +70,7 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
                         // Lean uses decimals while TA-lib uses doubles, so this test only passes with the ewz test file 
                         rows.Add(new TestCaseData(new HighWaveCandle(), "CDLHIGHWAVE", testFileName).SetName("HighWaveCandle-" + testFileName));
                     }
+                    rows.Add(new TestCaseData(new Hikkake(), "CDLHIKKAKE", testFileName).SetName("Hikkake-" + testFileName));
                 }
 
                 return rows.ToArray();

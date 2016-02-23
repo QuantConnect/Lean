@@ -75,6 +75,7 @@
     <Compile Include="CandlestickPatterns\ConcealedBabySwallow.cs" />
     <Compile Include="CandlestickPatterns\ThreeLineStrike.cs" />
     <Compile Include="CandlestickPatterns\Engulfing.cs" />
+    <Compile Include="CandlestickPatterns\Hikkake.cs" />
     <Compile Include="CandlestickPatterns\ThreeOutside.cs" />
     <Compile Include="CandlestickPatterns\Counterattack.cs" />
     <Compile Include="CandlestickPatterns\ThreeStarsInSouth.cs" />
