@@ -26,6 +26,7 @@ using java.util;
 using QuantConnect.Brokerages.Fxcm;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.Tools;
 using TimeZone = java.util.TimeZone;
 
 namespace QuantConnect.ToolBox.FxcmDownloader

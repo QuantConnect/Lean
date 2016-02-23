@@ -19,6 +19,7 @@ using System.Linq;
 using org.apache.log4j;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.Tools;
 using QuantConnect.Logging;
 
 namespace QuantConnect.ToolBox.FxcmDownloader
@@ -85,7 +86,7 @@ namespace QuantConnect.ToolBox.FxcmDownloader
                         var ticks = data.Cast<Tick>().ToList();
 
                         // Save the data (second resolution)
-                        var writer = new LeanDataWriter(resolution, symbol, dataDirectory);
+                        var writer = new DataWriter(resolution, symbol, dataDirectory);
                         writer.Write(ticks);
 
                         // Save the data (other resolutions)
@@ -93,7 +94,7 @@ namespace QuantConnect.ToolBox.FxcmDownloader
                         {
                             var resData = FxcmDataDownloader.AggregateTicks(symbol, ticks, res.ToTimeSpan());
 
-                            writer = new LeanDataWriter(res, symbol, dataDirectory);
+                            writer = new DataWriter(res, symbol, dataDirectory);
                             writer.Write(resData);
                         }
 
@@ -101,7 +102,7 @@ namespace QuantConnect.ToolBox.FxcmDownloader
                     else
                     {
                         // Save the data (single resolution)
-                        var writer = new LeanDataWriter(resolution, symbol, dataDirectory);
+                        var writer = new DataWriter(resolution, symbol, dataDirectory);
                         writer.Write(data);
                     }
                 }

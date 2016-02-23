@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Net;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.Tools;
 
 namespace QuantConnect.ToolBox.YahooDownloader
 {

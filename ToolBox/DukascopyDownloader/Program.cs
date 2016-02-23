@@ -18,6 +18,7 @@ using System.Globalization;
 using System.Linq;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.Tools;
 using QuantConnect.Logging;
 
 namespace QuantConnect.ToolBox.DukascopyDownloader
@@ -72,7 +73,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
                         var ticks = data.Cast<Tick>().ToList();
 
                         // Save the data (tick resolution)
-                        var writer = new LeanDataWriter(resolution, symbolObject, dataDirectory);
+                        var writer = new DataWriter(resolution, symbolObject, dataDirectory);
                         writer.Write(ticks);
 
                         // Save the data (other resolutions)
@@ -80,14 +81,14 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
                         {
                             var resData = DukascopyDataDownloader.AggregateTicks(symbolObject, ticks, res.ToTimeSpan());
 
-                            writer = new LeanDataWriter(res, symbolObject, dataDirectory);
+                            writer = new DataWriter(res, symbolObject, dataDirectory);
                             writer.Write(resData);
                         }
                     }
                     else
                     {
                         // Save the data (single resolution)
-                        var writer = new LeanDataWriter(resolution, symbolObject, dataDirectory);
+                        var writer = new DataWriter(resolution, symbolObject, dataDirectory);
                         writer.Write(data);
                     }
                 }

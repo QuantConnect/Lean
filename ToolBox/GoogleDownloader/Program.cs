@@ -16,6 +16,7 @@
 using System;
 using System.Globalization;
 using QuantConnect.Configuration;
+using QuantConnect.Lean.Engine.Tools;
 using QuantConnect.Logging;
 
 namespace QuantConnect.ToolBox.GoogleDownloader
@@ -60,7 +61,7 @@ namespace QuantConnect.ToolBox.GoogleDownloader
                     var data = downloader.Get(symbolObject, resolution, startDate, endDate);
 
                     // Save the data
-                    var writer = new LeanDataWriter(resolution, symbolObject, dataDirectory);
+                    var writer = new DataWriter(resolution, symbolObject, dataDirectory);
                     writer.Write(data);
                 }
             }
