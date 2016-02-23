@@ -236,10 +236,11 @@ namespace QuantConnect.Data.Market
         {
             var quoteBar = new QuoteBar
             {
-                Period = config.Increment
+                Period = config.Increment,
+                Symbol = config.Symbol
             };
 
-            var csv = line.ToCsv(14);
+            var csv = line.ToCsv(10);
             if (config.Resolution == Resolution.Daily || config.Resolution == Resolution.Hour)
             {
                 // hourly and daily have different time format, and can use slow, robust c# parser.
@@ -252,33 +253,33 @@ namespace QuantConnect.Data.Market
             }
 
             // only create the bid if it exists in the file
-            if (csv[4].Length != 0 || csv[5].Length != 0 || csv[6].Length != 0 || csv[7].Length != 0)
+            if (csv[1].Length != 0 || csv[2].Length != 0 || csv[3].Length != 0 || csv[4].Length != 0)
             {
                 quoteBar.Bid = new Bar
                 {
-                    Open = config.GetNormalizedPrice(csv[4].ToDecimal()*_scaleFactor),
-                    High = config.GetNormalizedPrice(csv[5].ToDecimal()*_scaleFactor),
-                    Low = config.GetNormalizedPrice(csv[6].ToDecimal()*_scaleFactor),
-                    Close = config.GetNormalizedPrice(csv[7].ToDecimal()*_scaleFactor)
+                    Open = config.GetNormalizedPrice(csv[1].ToDecimal()*_scaleFactor),
+                    High = config.GetNormalizedPrice(csv[2].ToDecimal()*_scaleFactor),
+                    Low = config.GetNormalizedPrice(csv[3].ToDecimal()*_scaleFactor),
+                    Close = config.GetNormalizedPrice(csv[4].ToDecimal()*_scaleFactor)
                 };
-                quoteBar.LastBidSize = csv[8].ToInt64();
+                quoteBar.LastBidSize = csv[5].ToInt64();
             }
             else
             {
                 quoteBar.Bid = null;
             }
 
-            // only create the bid if it exists in the file
-            if (csv[9].Length != 0 || csv[10].Length != 0 || csv[11].Length != 0 || csv[12].Length != 0)
+            // only create the ask if it exists in the file
+            if (csv[6].Length != 0 || csv[7].Length != 0 || csv[8].Length != 0 || csv[9].Length != 0)
             {
                 quoteBar.Ask = new Bar
                 {
-                    Open = config.GetNormalizedPrice(csv[9].ToDecimal()*_scaleFactor),
-                    High = config.GetNormalizedPrice(csv[10].ToDecimal()*_scaleFactor),
-                    Low = config.GetNormalizedPrice(csv[11].ToDecimal()*_scaleFactor),
-                    Close = config.GetNormalizedPrice(csv[12].ToDecimal()*_scaleFactor)
+                    Open = config.GetNormalizedPrice(csv[6].ToDecimal()*_scaleFactor),
+                    High = config.GetNormalizedPrice(csv[7].ToDecimal()*_scaleFactor),
+                    Low = config.GetNormalizedPrice(csv[8].ToDecimal()*_scaleFactor),
+                    Close = config.GetNormalizedPrice(csv[9].ToDecimal()*_scaleFactor)
                 };
-                quoteBar.LastAskSize = csv[13].ToInt64();
+                quoteBar.LastAskSize = csv[10].ToInt64();
             }
             else
             {
@@ -286,11 +287,6 @@ namespace QuantConnect.Data.Market
             }
 
             quoteBar.Value = quoteBar.Close;
-            var putCall = csv[1] == "P" ? OptionRight.Put : OptionRight.Call;
-            var strike = csv[2].ToDecimal() * _scaleFactor;
-            var expiry = DateTime.ParseExact(csv[3], DateFormat.EightCharacter, null);
-            var symbol = Symbol.CreateOption(config.Symbol.ID.Symbol, config.Market, config.Symbol.ID.OptionStyle, putCall, strike, expiry);
-            quoteBar.Symbol = symbol;
 
             return quoteBar;
         }

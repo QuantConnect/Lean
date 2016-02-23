@@ -257,36 +257,33 @@ namespace QuantConnect.Data.Market
 
                     case SecurityType.Option:
                     {
-                        var csv = line.ToCsv(10);
-                        TickType = csv.Count == 10 ? TickType.Quote : TickType.Trade;
+                        var csv = line.ToCsv(7);
+                        TickType = csv.Count == 7 ? TickType.Quote : TickType.Trade;
                         Time = date.Date.AddMilliseconds(csv[0].ToInt64()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
-                        var putCall = csv[1] == "P" ? OptionRight.Put : OptionRight.Call;
-                        var strike = csv[2].ToDecimal() / scaleFactor;
-                        var expiry = DateTime.ParseExact(csv[3], DateFormat.EightCharacter, null);
-                        Symbol = Symbol.CreateOption(config.Symbol.ID.Symbol, config.Market, config.Symbol.ID.OptionStyle, putCall, strike, expiry);
+                        Symbol = config.Symbol;
 
                         if (TickType == TickType.Trade)
                         {
-                            Value = config.GetNormalizedPrice(csv[4].ToDecimal()/scaleFactor);
-                            Quantity = csv[5].ToInt32();
-                            Exchange = csv[6];
-                            SaleCondition = csv[7];
-                            Suspicious = csv[8] == "1";
+                            Value = config.GetNormalizedPrice(csv[1].ToDecimal()/scaleFactor);
+                            Quantity = csv[2].ToInt32();
+                            Exchange = csv[3];
+                            SaleCondition = csv[4];
+                            Suspicious = csv[5] == "1";
                         }
                         else
                         {
-                            if (csv[4].Length != 0)
+                            if (csv[1].Length != 0)
                             {
-                                BidPrice = config.GetNormalizedPrice(csv[4].ToDecimal()/scaleFactor);
-                                BidSize = csv[5].ToInt32();
+                                BidPrice = config.GetNormalizedPrice(csv[1].ToDecimal()/scaleFactor);
+                                BidSize = csv[2].ToInt32();
                             }
-                            if (csv[6].Length != 0)
+                            if (csv[3].Length != 0)
                             {
-                                AskPrice = config.GetNormalizedPrice(csv[6].ToDecimal()/scaleFactor);
-                                AskSize = csv[7].ToInt32();
+                                AskPrice = config.GetNormalizedPrice(csv[3].ToDecimal()/scaleFactor);
+                                AskSize = csv[4].ToInt32();
                             }
-                            Exchange = csv[8];
-                            Suspicious = csv[9] == "1";
+                            Exchange = csv[5];
+                            Suspicious = csv[6] == "1";
 
                             if (BidPrice != 0)
                             {

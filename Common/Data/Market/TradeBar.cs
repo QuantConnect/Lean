@@ -379,10 +379,11 @@ namespace QuantConnect.Data.Market
         {
             var tradeBar = new T
             {
-                Period = config.Increment
+                Period = config.Increment,
+                Symbol = config.Symbol
             };
 
-            var csv = line.ToCsv(8);
+            var csv = line.ToCsv(6);
             if (config.Resolution == Resolution.Daily || config.Resolution == Resolution.Hour)
             {
                 // hourly and daily have different time format, and can use slow, robust c# parser.
@@ -394,17 +395,11 @@ namespace QuantConnect.Data.Market
                 tradeBar.Time = date.Date.AddMilliseconds(csv[0].ToInt32()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
             }
 
-            tradeBar.Open = config.GetNormalizedPrice(csv[4].ToDecimal() * _scaleFactor);
-            tradeBar.High = config.GetNormalizedPrice(csv[5].ToDecimal() * _scaleFactor);
-            tradeBar.Low = config.GetNormalizedPrice(csv[6].ToDecimal() * _scaleFactor);
-            tradeBar.Close = config.GetNormalizedPrice(csv[7].ToDecimal() * _scaleFactor);
-            tradeBar.Volume = csv[8].ToInt64();
-
-            var putCall = csv[1] == "P" ? OptionRight.Put : OptionRight.Call;
-            var strike = csv[2].ToDecimal()*_scaleFactor;
-            var expiry = DateTime.ParseExact(csv[3], DateFormat.EightCharacter, null);
-            var symbol = Symbol.CreateOption(config.Symbol.ID.Symbol, config.Market, config.Symbol.ID.OptionStyle, putCall, strike, expiry);
-            tradeBar.Symbol = symbol;
+            tradeBar.Open = config.GetNormalizedPrice(csv[1].ToDecimal() * _scaleFactor);
+            tradeBar.High = config.GetNormalizedPrice(csv[2].ToDecimal() * _scaleFactor);
+            tradeBar.Low = config.GetNormalizedPrice(csv[3].ToDecimal() * _scaleFactor);
+            tradeBar.Close = config.GetNormalizedPrice(csv[4].ToDecimal() * _scaleFactor);
+            tradeBar.Volume = csv[5].ToInt64();
 
             return tradeBar;
         }
