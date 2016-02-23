@@ -663,7 +663,10 @@ namespace QuantConnect.Lean.Engine.Results
                         //If we don't already have this record, its the first packet
                         if (!Charts[update.Name].Series.ContainsKey(series.Name))
                         {
-                            Charts[update.Name].Series.Add(series.Name, new Series(series.Name, series.SeriesType, series.Index, series.Unit));
+                            Charts[update.Name].Series.Add(series.Name, new Series(series.Name, series.SeriesType, series.Index, series.Unit)
+                            {
+                                Color = series.Color, ScatterMarkerSymbol = series.ScatterMarkerSymbol
+                            });
                         }
 
                         //We already have this record, so just the new samples to the end:
