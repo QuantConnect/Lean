@@ -147,8 +147,6 @@
     <Compile Include="FxcmDownloader\Program.cs" />
     <Compile Include="GoogleDownloader\GoogleDataDownloader.cs" />
     <Compile Include="GoogleDownloader\Program.cs" />
-    <Compile Include="LeanDataWriter.cs" />
-    <Compile Include="LeanInstrument.cs" />
     <Compile Include="OandaDownloader\OandaDataDownloader.cs" />
     <Compile Include="OandaDownloader\OandaRestLibrary\Credentials.cs" />
     <Compile Include="OandaDownloader\OandaRestLibrary\Candle.cs" />
@@ -159,7 +157,6 @@
     <Compile Include="OandaDownloader\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QuantQuoteConverter\Program.cs" />
-    <Compile Include="IDataDownloader.cs" />
     <Compile Include="YahooDownloader\Program.cs" />
     <Compile Include="YahooDownloader\YahooDataDownloader.cs" />
   </ItemGroup>
@@ -190,6 +187,10 @@
     <ProjectReference Include="..\Configuration\QuantConnect.Configuration.csproj">
       <Project>{0aeb4ea3-28c8-476e-89fd-926f06590b4c}</Project>
       <Name>QuantConnect.Configuration</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Engine\QuantConnect.Lean.Engine.csproj">
+      <Project>{12156f46-d07e-4e3d-ad2b-7409e82ab62f}</Project>
+      <Name>QuantConnect.Lean.Engine</Name>
     </ProjectReference>
     <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj">
       <Project>{01911409-86be-4e7d-9947-df714138610d}</Project>

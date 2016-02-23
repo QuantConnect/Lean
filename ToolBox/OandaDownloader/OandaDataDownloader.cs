@@ -25,6 +25,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.ToolBox.OandaDownloader.OandaRestLibrary;
 using QuantConnect.Brokerages.Oanda;
+using QuantConnect.Lean.Engine.Tools;
 
 namespace QuantConnect.ToolBox.OandaDownloader
 {

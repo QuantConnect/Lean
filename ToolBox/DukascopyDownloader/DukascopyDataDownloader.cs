@@ -13,15 +13,16 @@
  * limitations under the License.
 */
 
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.Tools;
+using QuantConnect.Logging;
+using SevenZip;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using QuantConnect.Data;
-using QuantConnect.Data.Market;
-using QuantConnect.Logging;
-using SevenZip;
 
 namespace QuantConnect.ToolBox.DukascopyDownloader
 {
