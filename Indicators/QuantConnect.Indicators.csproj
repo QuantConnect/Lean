@@ -50,6 +50,7 @@
     <Compile Include="AccumulationDistributionOscillator.cs" />
     <Compile Include="AverageDirectionalIndex.cs" />
     <Compile Include="BalanceOfPower.cs" />
+    <Compile Include="CandlestickPatterns\GravestoneDoji.cs" />
     <Compile Include="CandlestickPatterns\EveningStar.cs" />
     <Compile Include="CandlestickPatterns\EveningDojiStar.cs" />
     <Compile Include="CandlestickPatterns\DragonflyDoji.cs" />
