@@ -236,20 +236,26 @@ namespace QuantConnect.Util
                 case SecurityType.Option:
                     if (isHourOrDaily)
                     {
-                        return string.Format("{0}_{1}_{2}.csv",
+                        return string.Join("_",
                             symbol.ID.Symbol.ToLower(), // underlying
                             tickType.ToLower(),
-                            symbol.ID.OptionStyle.ToLower()
-                            );
+                            symbol.ID.OptionStyle.ToLower(),
+                            symbol.ID.OptionRight.ToLower(),
+                            Scale(symbol.ID.StrikePrice),
+                            symbol.ID.Date.ToString(DateFormat.EightCharacter)
+                            ) + ".csv";
                     }
 
-                    return string.Format("{0}_{1}_{2}_{3}_{4}.csv",
+                    return string.Join("_",
                         formattedDate,
                         symbol.ID.Symbol.ToLower(), // underlying
                         resolution.ToLower(),
                         tickType.ToLower(),
-                        symbol.ID.OptionStyle.ToLower()
-                        );
+                        symbol.ID.OptionStyle.ToLower(),
+                        symbol.ID.OptionRight.ToLower(),
+                        Scale(symbol.ID.StrikePrice),
+                        symbol.ID.Date.ToString(DateFormat.EightCharacter)
+                        ) + ".csv";
 
                 case SecurityType.Commodity:
                 case SecurityType.Future:

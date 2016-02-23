@@ -30,9 +30,9 @@ namespace QuantConnect.ToolBox
         /// </summary>
         /// <param name="source">The source file to be opened</param>
         /// <returns>The stream representing the specified source</returns>
-        public Stream Open(string source)
+        public IEnumerable<Stream> Open(string source)
         {
-            return File.OpenRead(source);
+            yield return File.OpenRead(source);
         }
 
         /// <summary>

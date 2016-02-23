@@ -26,20 +26,23 @@ namespace QuantConnect.ToolBox
     public class ZipStreamProvider : IStreamProvider
     {
         private readonly object _sync = new object();
-        private readonly Dictionary<string, ZipFile> _zipFiles = new Dictionary<string, ZipFile>(); 
+        private readonly Dictionary<string, ZipFile> _zipFiles = new Dictionary<string, ZipFile>();
 
         /// <summary>
         /// Opens the specified source as read to be consumed stream
         /// </summary>
         /// <param name="source">The source file to be opened</param>
         /// <returns>The stream representing the specified source</returns>
-        public Stream Open(string source)
+        public IEnumerable<Stream> Open(string source)
         {
             lock (_sync)
             {
                 var archive = new ZipFile(source);
                 _zipFiles.Add(source, archive);
-                return archive.Single().OpenReader();
+                foreach (var entry in archive)
+                {
+                    yield return entry.OpenReader();
+                }
             }
         }
 

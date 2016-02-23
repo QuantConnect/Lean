@@ -25,8 +25,8 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
     {
         static void Main()
         {
-            var directory = "F:/Downloads/AlgoSeek";//smaller";
-            directory = "F:/Downloads/opra38"; // SPY 20gb file
+            var directory = "F:/Downloads/AlgoSeek/smaller";
+            //directory = "F:/AlgoSeek/20151224";
             var dataDirectory = "./Data";
 
             Log.LogHandler = new CompositeLogHandler(new ILogHandler[]

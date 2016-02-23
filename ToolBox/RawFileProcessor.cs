@@ -84,16 +84,21 @@ namespace QuantConnect.ToolBox
             _start = _start ?? DateTime.UtcNow;
 
             // process the source file
-            using (var stream = _streamProvider.Open(source))
+            foreach (var stream in _streamProvider.Open(source))
             {
-                foreach (var data in _parser.Parse(source, stream))
+                using (stream)
                 {
-                    foreach (var processor in _processors)
+                    foreach (var data in _parser.Parse(source, stream))
                     {
-                        processor.Process(data);
+                        foreach (var processor in _processors)
+                        {
+                            processor.Process(data);
+                        }
                     }
                 }
             }
+
+            _streamProvider.Close(source);
         }
 
         /// <summary>

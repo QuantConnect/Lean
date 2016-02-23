@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace QuantConnect.ToolBox
@@ -28,7 +29,7 @@ namespace QuantConnect.ToolBox
         /// </summary>
         /// <param name="source">The source file to be opened</param>
         /// <returns>The stream representing the specified source</returns>
-        Stream Open(string source);
+        IEnumerable<Stream> Open(string source);
 
         /// <summary>
         /// Closes the specified source file stream
