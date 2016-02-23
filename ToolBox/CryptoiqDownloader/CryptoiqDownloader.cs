@@ -50,7 +50,7 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
             int hour = 1;
             var url = "http://cryptoiq.io/api/marketdata/ticker/{3}/{2}/{0}/{1}";
 
-            while (counter < endUtc)
+            while (counter <= endUtc)
             {
                 // Console.WriteLine(counter.ToString());
                 while (hour < 24)
