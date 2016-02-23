@@ -50,6 +50,7 @@
     <Compile Include="AccumulationDistributionOscillator.cs" />
     <Compile Include="AverageDirectionalIndex.cs" />
     <Compile Include="BalanceOfPower.cs" />
+    <Compile Include="CandlestickPatterns\HaramiCross.cs" />
     <Compile Include="CandlestickPatterns\Harami.cs" />
     <Compile Include="CandlestickPatterns\HangingMan.cs" />
     <Compile Include="CandlestickPatterns\Hammer.cs" />
