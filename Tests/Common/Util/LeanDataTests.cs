@@ -66,11 +66,10 @@ namespace QuantConnect.Tests.Common.Util
         public void ParsesGeneratedLines(LeanDataLineTestParameters parameters)
         {
             // ignore time zone issues here, we'll just say everything is UTC, so no conversions are performed
-            var config = new SubscriptionDataConfig(parameters.Data.GetType(), parameters.Data.Symbol, parameters.Resolution, TimeZones.Utc, TimeZones.Utc, false, true, false);
             var factory = (BaseData) Activator.CreateInstance(parameters.Data.GetType());
-            var parsed = factory.Reader(config, parameters.ExpectedLine, parameters.Data.Time.Date, false);
+            var parsed = factory.Reader(parameters.Config, parameters.ExpectedLine, parameters.Data.Time.Date, false);
 
-            Assert.IsInstanceOf(config.Type, parsed);
+            Assert.IsInstanceOf(parameters.Config.Type, parsed);
             Assert.AreEqual(parameters.Data.Time, parsed.Time);
             Assert.AreEqual(parameters.Data.EndTime, parsed.EndTime);
             Assert.AreEqual(parameters.Data.Symbol, parsed.Symbol);
@@ -247,6 +246,7 @@ namespace QuantConnect.Tests.Common.Util
             public readonly SecurityType SecurityType;
             public readonly Resolution Resolution;
             public readonly string ExpectedLine;
+            public readonly SubscriptionDataConfig Config;
 
             public LeanDataLineTestParameters(BaseData data, SecurityType securityType, Resolution resolution, string expectedLine)
             {
@@ -254,6 +254,7 @@ namespace QuantConnect.Tests.Common.Util
                 SecurityType = securityType;
                 Resolution = resolution;
                 ExpectedLine = expectedLine;
+                Config = new SubscriptionDataConfig(Data.GetType(), Data.Symbol, Resolution, TimeZones.Utc, TimeZones.Utc, false, true, false);
 
                 Name = SecurityType + "_" + data.GetType().Name;
 
