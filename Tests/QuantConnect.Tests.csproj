@@ -173,6 +173,7 @@
     <Compile Include="Indicators\AccumulationDistributionTests.cs" />
     <Compile Include="Indicators\AverageDirectionalIndexTests.cs" />
     <Compile Include="Indicators\BalanceOfPowerTests.cs" />
+    <Compile Include="Indicators\CandlestickPatterns\CandlestickPatternTests.cs" />
     <Compile Include="Indicators\ChandeMomentumOscillatorTests.cs" />
     <Compile Include="Indicators\CommonIndicatorTests.cs" />
     <Compile Include="Indicators\DonchianChannelTest.cs" />
@@ -258,6 +259,12 @@
     <None Include="TestData\CashTestingStrategy.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="TestData\eurusd_candle_patterns.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\ewz_candle_patterns.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="TestData\SampleMarketHoursDatabase.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -361,6 +368,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_bop.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_candle_patterns.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_cmo.txt">

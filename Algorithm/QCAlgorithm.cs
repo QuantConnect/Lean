@@ -136,6 +136,8 @@ namespace QuantConnect.Algorithm
             TradeBuilder = new TradeBuilder(FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO);
 
             SecurityInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(AccountType.Margin));
+
+            CandlestickPatterns = new CandlestickPatterns(this);
         }
 
         /// <summary>
@@ -227,6 +229,15 @@ namespace QuantConnect.Algorithm
         /// Gets the Trade Builder to generate trades from executions
         /// </summary>
         public TradeBuilder TradeBuilder
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Gets an instance to access the candlestick pattern helper methods
+        /// </summary>
+        public CandlestickPatterns CandlestickPatterns
         {
             get;
             private set;
