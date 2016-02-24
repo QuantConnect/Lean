@@ -15,7 +15,7 @@ namespace QuantConnect.Brokerages.Bitfinex
 {
     public partial class BitfinexWebsocketsBrokerage
     {
-        
+
         /// <summary>
         /// Wss message handler
         /// </summary>
@@ -23,60 +23,72 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <param name="e"></param>
         public void OnMessage(object sender, MessageEventArgs e)
         {
-            var raw = JsonConvert.DeserializeObject<dynamic>(e.Data);
+            try
+            {
+                var raw = JsonConvert.DeserializeObject<dynamic>(e.Data);
 
-            if (raw.Type == Newtonsoft.Json.Linq.JTokenType.Array)
-            {
-                int id = raw[0];
-                string term = raw[1];
+                if (raw.Type == Newtonsoft.Json.Linq.JTokenType.Array)
+                {
+                    int id = raw[0];
+                    string term = raw[1];
 
-                if (term == "hb")
-                {
-                    //heartbeat
-                    _heartbeatCounter = DateTime.UtcNow;
-                    return;
+                    if (term == "hb")
+                    {
+                        //heartbeat
+                        _heartbeatCounter = DateTime.UtcNow;
+                        return;
+                    }
+                    else if (term == "tu" || term == "te")
+                    {
+                        //trade execution/update
+                        var data = raw[2].ToObject(typeof(string[]));
+                        PopulateTrade(data);
+                    }
+                    else if (term == "ws")
+                    {
+                        //wallet
+                        var data = raw[2].ToObject(typeof(string[][]));
+                        PopulateWallet(data);
+                    }
+                    else if (_channelId.ContainsKey(id) && _channelId[id] == "ticker")
+                    {
+                        //ticker
+                        PopulateTicker(e.Data);
+                        return;
+                    }
                 }
-                else if (term == "tu" || term == "te")
+                else if (raw.channel == "ticker" && raw.@event == "subscribed")
                 {
-                    //trade execution/update
-                    var data = raw[2].ToObject(typeof(string[]));
-                    PopulateTrade(data);
+                    if (!this._channelId.ContainsKey((int)raw.chanId))
+                    {
+                        this._channelId[(int)raw.chanId] = "ticker";
+                    }
                 }
-                else if (term == "ws")
+                else if (raw.chanId == 0)
                 {
-                    //wallet update
-                    var data = raw[2].ToObject(typeof(string[][]));
-                    PopulateWallet(data);
+                    if (raw.status == "FAIL")
+                    {
+                        throw new Exception("Failed to authenticate with ws gateway");
+                    }
+                    Log.Trace("Successful wss auth");
                 }
-                else if (_channelId.ContainsKey(id) && _channelId[id] == "ticker")
+                else if (raw.@event == "info" && raw.code == "20051")
+                {                   
+                    this.Reconnect();
+                }
+                else if (raw.@event == "info" && raw.code == "20061")
                 {
-                    //ticker
-                    PopulateTicker(e.Data);
-                    return;
+                    Unsubscribe(null, null);
+                    Subscribe(null, null);
+                    Authenticate();
                 }
+
+                Log.Trace(e.Data);
             }
-            else if (raw.chanId == 0)
+            catch (Exception ex)
             {
-                if (raw.status == "FAIL")
-                {
-                    throw new Exception("Failed to authenticate with ws gateway");
-                }
-                Log.Trace("Successful wss auth");
+                Log.Error(ex, string.Format("Parsing wss message failed. Data: {0}", e.Data));
             }
-            else if (raw.@event == "info" && (raw.code == "20051" || raw.code == "20060"))
-            {
-                this.Unsubscribe(null, null);
-                this.Disconnect();
-                Reconnect();
-            }
-            else if (raw.channel == "ticker" && raw.@event == "subscribed")
-            {
-                if (!this._channelId.ContainsKey((int)raw.chanId))
-                {
-                    this._channelId[(int)raw.chanId] = "ticker";
-                }
-            }
-            Log.Trace(e.Data);
         }
 
 
@@ -123,7 +135,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             var msg = new TradeMessage(data);
             int brokerId = msg.TRD_ORD_ID;
-            var cached = cachedOrderIDs.Where(o => o.Value.BrokerId.Contains(brokerId.ToString()));
+            var cached = CachedOrderIDs.Where(o => o.Value.BrokerId.Contains(brokerId.ToString()));
 
             if (cached.Count() > 0 && cached.First().Value != null)
             {
@@ -132,7 +144,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                     cached.First().Key, symbol, msg.TRD_TIMESTAMP, MapOrderStatus(msg),
                     msg.TRD_AMOUNT_EXECUTED > 0 ? OrderDirection.Buy : OrderDirection.Sell,
                     msg.TRD_PRICE_EXECUTED / divisor, (int)(msg.TRD_AMOUNT_EXECUTED * divisor),
-                    msg.FEE, "Bitfinex Fill Event"
+                    msg.FEE / divisor, "Bitfinex Fill Event"
                 );
 
                 filledOrderIDs.Add(cached.First().Key);
@@ -140,7 +152,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 if (fill.Status == OrderStatus.Filled)
                 {
                     BitfinexOrder outOrder = cached.First().Value;
-                    cachedOrderIDs.TryRemove(cached.First().Key, out outOrder);
+                    CachedOrderIDs.TryRemove(cached.First().Key, out outOrder);
                 }
                 OnOrderEvent(fill);
             }
@@ -150,11 +162,15 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
         }
 
+
+        /// <summary>
+        /// Authenticate with wss
+        /// </summary>
         protected override void Authenticate()
         {
             string key = apiKey;
             string payload = "AUTH" + DateTime.UtcNow.Ticks.ToString();
-            _ws.Send(JsonConvert.SerializeObject(new
+            WebSocket.Send(JsonConvert.SerializeObject(new
             {
                 @event = "auth",
                 apiKey = key,
@@ -165,11 +181,11 @@ namespace QuantConnect.Brokerages.Bitfinex
 
         private void UnAuthenticate()
         {
-            _ws.Send(JsonConvert.SerializeObject(new
+            WebSocket.Send(JsonConvert.SerializeObject(new
             {
                 @event = "unauth"
             }));
-            _ws.Close();
+            WebSocket.Close();
         }
 
     }

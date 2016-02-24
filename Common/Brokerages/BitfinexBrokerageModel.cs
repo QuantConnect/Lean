@@ -86,7 +86,7 @@ namespace QuantConnect.Brokerages
         }
 
         //todo: support other currencies
-        //todo: Checks for decimal are superfluous until quantity is changed from int to decimal
+        //todo: Checks for decimals are superfluous until quantity is changed from int to decimal
         /// <summary>
         /// Validates pending orders based on currency pair, order amount, security type
         /// </summary>

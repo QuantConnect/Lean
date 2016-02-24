@@ -180,9 +180,11 @@
     <Compile Include="Bitfinex\BitfinexOrder.cs" />
     <Compile Include="Bitfinex\BitfinexWebsocketsBrokerage.cs" />
     <Compile Include="Bitfinex\BitfinexWebsocketsBrokerage.Messaging.cs" />
+    <Compile Include="Bitfinex\IWebSocket.cs" />
     <Compile Include="Bitfinex\TickerMessage.cs" />
     <Compile Include="Bitfinex\TradeMessage.cs" />
     <Compile Include="Bitfinex\WalletMessage.cs" />
+    <Compile Include="Bitfinex\WebSocketWrapper.cs" />
     <Compile Include="Brokerage.cs" />
     <Compile Include="BrokerageException.cs" />
     <Compile Include="BrokerageFactory.cs" />

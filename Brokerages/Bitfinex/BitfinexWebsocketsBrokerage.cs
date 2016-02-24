@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -23,14 +24,18 @@ namespace QuantConnect.Brokerages.Bitfinex
     {
 
         #region Declarations
-        WebSocket _ws = new WebSocket("wss://api2.bitfinex.com:3000/ws");
         List<Securities.Cash> _cash = new List<Securities.Cash>();
         Dictionary<int, string> _channelId = new Dictionary<int, string>();
         Task _checkConnectionTask = null;
-        CancellationTokenSource _checkConnectionToken = new CancellationTokenSource();
+        CancellationTokenSource _checkConnectionToken;
         DateTime _heartbeatCounter = DateTime.UtcNow;
         const int _heartBeatTimeout = 30;
         #endregion
+
+        /// <summary>
+        /// Websocket client wrapper
+        /// </summary>
+        public IWebSocket WebSocket { get; set; }
 
         /// <summary>
         /// Create Brokerage instance
@@ -38,6 +43,8 @@ namespace QuantConnect.Brokerages.Bitfinex
         public BitfinexWebsocketsBrokerage()
             : base()
         {
+            WebSocket = new WebSocketWrapper();
+            WebSocket.Initialize((Config.Get("bitfinex-wss", "wss://api2.bitfinex.com:3000/ws")));
         }
 
         /// <summary>
@@ -53,7 +60,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 this.Connect();
             }
 
-            _ws.Send(JsonConvert.SerializeObject(new
+            WebSocket.Send(JsonConvert.SerializeObject(new
             {
                 @event = "subscribe",
                 channel = "ticker",
@@ -77,7 +84,7 @@ namespace QuantConnect.Brokerages.Bitfinex
 
         private void Unsubscribe(int id)
         {
-            _ws.Send(JsonConvert.SerializeObject(new
+            WebSocket.Send(JsonConvert.SerializeObject(new
             {
                 @event = "unsubscribe",
                 channelId = id,
@@ -89,7 +96,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// </summary>
         public override bool IsConnected
         {
-            get { return _ws.IsAlive; }
+            get { return WebSocket.IsAlive; }
         }
 
         /// <summary>
@@ -97,13 +104,14 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// </summary>
         public override void Connect()
         {
-            _ws.Connect();
-            if (this._checkConnectionTask == null || this._checkConnectionTask.IsFaulted)
+            WebSocket.Connect();
+            if (this._checkConnectionTask == null || this._checkConnectionTask.IsFaulted || this._checkConnectionTask.IsCanceled || this._checkConnectionTask.IsCompleted)
             {
                 this._checkConnectionTask = Task.Run(() => CheckConnection());
+                this._checkConnectionToken = new CancellationTokenSource();
             }
             this._channelId.Clear();
-            _ws.OnMessage += OnMessage;
+            WebSocket.OnMessage(OnMessage);
             this.Authenticate();
         }
 
@@ -113,16 +121,15 @@ namespace QuantConnect.Brokerages.Bitfinex
         public override void Disconnect()
         {
             this.UnAuthenticate();
-            this._ws.Close();
+            _checkConnectionToken.Cancel();
+            this.WebSocket.Close();
         }
 
         /// <summary>
         /// Ensures any wss connection or authentication is closed
         /// </summary>
         public void Dispose()
-        {
-            _checkConnectionToken.Cancel();
-            this.Unsubscribe(null, null);
+        {           
             this.Disconnect();
         }
 
@@ -145,9 +152,9 @@ namespace QuantConnect.Brokerages.Bitfinex
 
         private void Reconnect()
         {
-            _ws.Connect();
+            WebSocket.Connect();
             this.Authenticate();
-            this.Subscribe(null,null);
+            this.Subscribe(null, null);
         }
 
     }
