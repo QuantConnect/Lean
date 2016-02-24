@@ -81,6 +81,7 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
                     rows.Add(new TestCaseData(new InNeck(), "CDLINNECK", testFileName).SetName("InNeck-" + testFileName));
                     rows.Add(new TestCaseData(new InvertedHammer(), "CDLINVERTEDHAMMER", testFileName).SetName("InvertedHammer-" + testFileName));
                     rows.Add(new TestCaseData(new Kicking(), "CDLKICKING", testFileName).SetName("Kicking-" + testFileName));
+                    rows.Add(new TestCaseData(new KickingByLength(), "CDLKICKINGBYLENGTH", testFileName).SetName("KickingByLength-" + testFileName));
                 }
 
                 return rows.ToArray();
