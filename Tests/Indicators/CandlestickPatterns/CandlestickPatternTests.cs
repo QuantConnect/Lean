@@ -84,6 +84,7 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
                     rows.Add(new TestCaseData(new KickingByLength(), "CDLKICKINGBYLENGTH", testFileName).SetName("KickingByLength-" + testFileName));
                     rows.Add(new TestCaseData(new LadderBottom(), "CDLLADDERBOTTOM", testFileName).SetName("LadderBottom-" + testFileName));
                     rows.Add(new TestCaseData(new LongLeggedDoji(), "CDLLONGLEGGEDDOJI", testFileName).SetName("LongLeggedDoji-" + testFileName));
+                    rows.Add(new TestCaseData(new LongLineCandle(), "CDLLONGLINE", testFileName).SetName("LongLineCandle-" + testFileName));
                 }
 
                 return rows.ToArray();
