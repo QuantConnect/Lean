@@ -105,6 +105,16 @@ namespace QuantConnect.Tests.Common.Util
             }
         }
 
+        [Test, TestCaseSource("GetLeanDataLineTestParameters")]
+        public void GetSourceMatchesGenerateZipFilePath(LeanDataLineTestParameters parameters)
+        {
+            var source = parameters.Data.GetSource(parameters.Config, parameters.Data.Time.Date, false);
+            var normalizedSourcePath = new FileInfo(source.Source).FullName;
+            var zipFilePath = LeanData.GenerateZipFilePath(Constants.DataFolder, parameters.Data.Symbol, parameters.Data.Time.Date, parameters.Resolution, parameters.TickType);
+            var normalizeZipFilePath = new FileInfo(zipFilePath).FullName;
+            Assert.AreEqual(normalizeZipFilePath, normalizedSourcePath);
+        }
+
         private static void AssertBarsAreEqual(IBar expected, IBar actual)
         {
             if (expected == null && actual == null)
@@ -247,6 +257,7 @@ namespace QuantConnect.Tests.Common.Util
             public readonly Resolution Resolution;
             public readonly string ExpectedLine;
             public readonly SubscriptionDataConfig Config;
+            public readonly TickType TickType;
 
             public LeanDataLineTestParameters(BaseData data, SecurityType securityType, Resolution resolution, string expectedLine)
             {
@@ -254,6 +265,30 @@ namespace QuantConnect.Tests.Common.Util
                 SecurityType = securityType;
                 Resolution = resolution;
                 ExpectedLine = expectedLine;
+                if (data is Tick)
+                {
+                    var tick = (Tick) data;
+                    TickType = tick.TickType;
+                }
+                else if (data is TradeBar)
+                {
+                    TickType = TickType.Trade;
+                }
+                else if (data is QuoteBar)
+                {
+                    TickType = TickType.Quote;
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+
+                // override for forex/cfd
+                if (data.Symbol.ID.SecurityType == SecurityType.Forex || data.Symbol.ID.SecurityType == SecurityType.Cfd)
+                {
+                    TickType = TickType.Quote;
+                }
+
                 Config = new SubscriptionDataConfig(Data.GetType(), Data.Symbol, Resolution, TimeZones.Utc, TimeZones.Utc, false, true, false);
 
                 Name = SecurityType + "_" + data.GetType().Name;
