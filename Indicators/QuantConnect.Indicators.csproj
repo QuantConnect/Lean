@@ -81,6 +81,7 @@
     <Compile Include="CandlestickPatterns\ThreeOutside.cs" />
     <Compile Include="CandlestickPatterns\Counterattack.cs" />
     <Compile Include="CandlestickPatterns\ThreeStarsInSouth.cs" />
+    <Compile Include="CandlestickPatterns\IdenticalThreeCrows.cs" />
     <Compile Include="CandlestickPatterns\ThreeWhiteSoldiers.cs" />
     <Compile Include="CandlestickPatterns\Doji.cs" />
     <Compile Include="CandlestickPatterns\TwoCrows.cs" />

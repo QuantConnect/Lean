@@ -77,6 +77,7 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
                         rows.Add(new TestCaseData(new HikkakeModified(), "CDLHIKKAKEMOD", testFileName).SetName("HikkakeModified-" + testFileName));
                     }
                     rows.Add(new TestCaseData(new HomingPigeon(), "CDLHOMINGPIGEON", testFileName).SetName("HomingPigeon-" + testFileName));
+                    rows.Add(new TestCaseData(new IdenticalThreeCrows(), "CDLIDENTICAL3CROWS", testFileName).SetName("IdenticalThreeCrows-" + testFileName));
                 }
 
                 return rows.ToArray();
