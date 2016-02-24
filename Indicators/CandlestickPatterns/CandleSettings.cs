@@ -50,6 +50,16 @@ namespace QuantConnect.Indicators.CandlestickPatterns
             DefaultSettings.TryGetValue(type, out setting);
             return setting;
         }
+
+        /// <summary>
+        /// Changes the default candle setting for the requested type
+        /// </summary>
+        /// <param name="type">The candle setting type</param>
+        /// <param name="setting">The candle setting</param>
+        public static void Set(CandleSettingType type, CandleSetting setting)
+        {
+            DefaultSettings[type] = setting;
+        }
     }
 
     /// <summary>
