@@ -69,6 +69,7 @@
     <Compile Include="CandlestickPatterns\CandleEnums.cs" />
     <Compile Include="CandlestickPatterns\CandleSettings.cs" />
     <Compile Include="CandlestickPatterns\CandlestickPattern.cs" />
+    <Compile Include="CandlestickPatterns\HikkakeModified.cs" />
     <Compile Include="CandlestickPatterns\ThreeBlackCrows.cs" />
     <Compile Include="CandlestickPatterns\GapSideBySideWhite.cs" />
     <Compile Include="CandlestickPatterns\ThreeInside.cs" />

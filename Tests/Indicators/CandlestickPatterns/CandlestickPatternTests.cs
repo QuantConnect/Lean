@@ -71,6 +71,11 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
                         rows.Add(new TestCaseData(new HighWaveCandle(), "CDLHIGHWAVE", testFileName).SetName("HighWaveCandle-" + testFileName));
                     }
                     rows.Add(new TestCaseData(new Hikkake(), "CDLHIKKAKE", testFileName).SetName("Hikkake-" + testFileName));
+                    if (testFileName.Contains("spy"))
+                    {
+                        // Lean uses decimals while TA-lib uses doubles, so this test only passes with the spy test file 
+                        rows.Add(new TestCaseData(new HikkakeModified(), "CDLHIKKAKEMOD", testFileName).SetName("HikkakeModified-" + testFileName));
+                    }
                 }
 
                 return rows.ToArray();
@@ -99,7 +104,16 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
 
         private static Action<IndicatorBase<TradeBar>, double> Assertion
         {
-            get { return (indicator, expected) => Assert.AreEqual(expected, (double)indicator.Current.Value * 100); }
+            get
+            {
+                return (indicator, expected) =>
+                {
+                    // Trace line for debugging
+                    // Console.WriteLine(indicator.Current.EndTime + "\t" + expected + "\t" + indicator.Current.Value * 100);
+
+                    Assert.AreEqual(expected, (double) indicator.Current.Value * 100);
+                };
+            }
         }
     }
 }
