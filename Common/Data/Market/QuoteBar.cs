@@ -15,6 +15,7 @@
 
 using System;
 using System.Globalization;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.Market
 {
@@ -301,8 +302,13 @@ namespace QuantConnect.Data.Market
         /// <returns>String source location of the file</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            // we have a design in github for options structure: https://github.com/QuantConnect/Lean/issues/166
-            throw new NotImplementedException("QuoteBar folder structure has not been implemented yet.");
+            if (isLiveMode)
+            {
+                return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.LocalFile);
+            }
+
+            var source = LeanData.GenerateZipFilePath(Constants.DataFolder, config.Symbol, date, config.Resolution, TickType.Quote);
+            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
 
         /// <summary>

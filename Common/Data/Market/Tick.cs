@@ -17,6 +17,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.Market
 {
@@ -340,29 +341,19 @@ namespace QuantConnect.Data.Market
         /// <returns>String source location of the file to be opened with a stream</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            var dataType = TickType.Trade;
-
             if (isLiveMode)
             {
                 // Currently ticks aren't sourced through GetSource in live mode
                 return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.LocalFile);
             }
 
-            var dateFormat = "yyyyMMdd";
+            var dataType = TickType.Trade;
             if (config.SecurityType == SecurityType.Forex || config.SecurityType == SecurityType.Cfd)
             {
                 dataType = TickType.Quote;
             }
 
-            var symbol = string.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol.Value : config.MappedSymbol;
-            var securityType = config.SecurityType.ToString().ToLower();
-            var market = config.Market.ToLower();
-            var resolution = config.Resolution.ToString().ToLower();
-            var file = date.ToString(dateFormat) + "_" + dataType.ToString().ToLower() + ".zip";
-
-            //Add in the market for equities/cfd/forex for internationalization support.
-            var source = Path.Combine(Constants.DataFolder, securityType, market, resolution, symbol.ToLower(), file);
-
+            var source = LeanData.GenerateZipFilePath(Constants.DataFolder, config.Symbol, date, config.Resolution, dataType);
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
 

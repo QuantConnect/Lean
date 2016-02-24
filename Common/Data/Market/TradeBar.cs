@@ -18,6 +18,7 @@ using System.Globalization;
 using System.IO;
 using System.Threading;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.Market
 {
@@ -446,28 +447,13 @@ namespace QuantConnect.Data.Market
         /// <returns>String source location of the file</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-
             if (isLiveMode)
             {
                 return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.LocalFile);
             }
 
             var dataType = (config.SecurityType == SecurityType.Forex || config.SecurityType == SecurityType.Cfd) ? TickType.Quote : TickType.Trade; 
-            var securityTypePath = config.SecurityType.ToString().ToLower();
-            var resolutionPath = config.Resolution.ToString().ToLower();
-            var symbolPath = (string.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol.Value : config.MappedSymbol).ToLower();
-            var market = config.Market.ToLower();
-            var filename = date.ToString(DateFormat.EightCharacter) + "_" + dataType.ToString().ToLower() + ".zip";
-
-
-            if (config.Resolution == Resolution.Hour || config.Resolution == Resolution.Daily)
-            {
-                // hourly/daily data is all in a single file, no sub directories
-                filename = symbolPath + ".zip";
-                symbolPath = string.Empty;
-            }
-
-            var source = Path.Combine(Constants.DataFolder, securityTypePath, market, resolutionPath, symbolPath, filename);
+            var source = LeanData.GenerateZipFilePath(Constants.DataFolder, config.Symbol, date, config.Resolution, dataType);
 
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
