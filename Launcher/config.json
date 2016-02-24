@@ -82,7 +82,8 @@
 
     "bitfinex-wallet": "trading",
     "bitfinex-api-secret": "",
-    "bitfinex-api-key":  "",
+    "bitfinex-api-key": "",
+    "bitfinex-wss":  "wss://api2.bitfinex.com:3000/ws",
 
     "environments": {
 
