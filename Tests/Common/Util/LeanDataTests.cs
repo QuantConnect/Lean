@@ -289,7 +289,7 @@ namespace QuantConnect.Tests.Common.Util
                     TickType = TickType.Quote;
                 }
 
-                Config = new SubscriptionDataConfig(Data.GetType(), Data.Symbol, Resolution, TimeZones.Utc, TimeZones.Utc, false, true, false);
+                Config = new SubscriptionDataConfig(Data.GetType(), Data.Symbol, Resolution, TimeZones.Utc, TimeZones.Utc, false, true, false, false, TickType);
 
                 Name = SecurityType + "_" + data.GetType().Name;
 

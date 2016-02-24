@@ -259,7 +259,7 @@ namespace QuantConnect.Data.Market
                     case SecurityType.Option:
                     {
                         var csv = line.ToCsv(7);
-                        TickType = csv.Count == 7 ? TickType.Quote : TickType.Trade;
+                        TickType = config.TickType;
                         Time = date.Date.AddMilliseconds(csv[0].ToInt64()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
                         Symbol = config.Symbol;
 
@@ -347,13 +347,7 @@ namespace QuantConnect.Data.Market
                 return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.LocalFile);
             }
 
-            var dataType = TickType.Trade;
-            if (config.SecurityType == SecurityType.Forex || config.SecurityType == SecurityType.Cfd)
-            {
-                dataType = TickType.Quote;
-            }
-
-            var source = LeanData.GenerateZipFilePath(Constants.DataFolder, config.Symbol, date, config.Resolution, dataType);
+            var source = LeanData.GenerateZipFilePath(Constants.DataFolder, config.Symbol, date, config.Resolution, config.TickType);
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
 
