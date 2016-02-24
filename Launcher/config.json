@@ -6,7 +6,7 @@
     // two predefined environments, 'backtesting' and 'live', feel free
     // to add more!
 
-    "environment": "backtesting",
+    "environment": "desktop",
 
     // algorithm class selector
     "algorithm-type-name": "BasicTemplateAlgorithm",
@@ -26,7 +26,7 @@
 
     // handlers
     "log-handler": "QuantConnect.Logging.CompositeLogHandler",
-    "messaging-handler": "QuantConnect.Messaging.Messaging",
+    "messaging-handler": "QuantConnect.Messaging.EventMessagingHandler",
     "job-queue-handler": "QuantConnect.Queues.JobQueue",
     "api-handler": "QuantConnect.Api.Api",
     "command-queue-handler": "QuantConnect.Queues.EmptyCommandQueueHandler",
@@ -96,9 +96,8 @@
 
         "desktop": {
             "live-mode": false,
-
             "setup-handler": "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler",
-            "result-handler": "QuantConnect.Lean.Engine.Results.DesktopResultHandler",
+            "result-handler": "QuantConnect.Lean.Engine.Results.BacktestingResultHandler",
             "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed",
             "real-time-handler": "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler",
             "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"

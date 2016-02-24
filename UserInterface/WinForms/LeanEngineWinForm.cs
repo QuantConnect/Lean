@@ -21,6 +21,8 @@ using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
+using QuantConnect.Messaging;
+using QuantConnect.Packets;
 using QuantConnect.Util;
 using QuantConnect.Views.Model;
 using QuantConnect.Views.Presenter;
@@ -40,10 +42,9 @@ namespace QuantConnect.Views.WinForms
         public static string IconPath = "../../Icons/";
 
         //Form Elements
-        private readonly Timer _polling;
         private GroupBox LogGroupBox;
         private RichTextBox TextBoxLog;
-        private MenuStrip Menu;
+        private MenuStrip MenuStrip;
         private ToolStripMenuItem FileMenuItem;
         private ToolStripMenuItem ExitMenuItem;
         private StatusStrip FormStatusStrip;
@@ -52,19 +53,58 @@ namespace QuantConnect.Views.WinForms
         private ToolStripStatusLabel StatisticsToolStripStatusLabel;
         private ToolStripProgressBar FormToolStripProgressBar;
         private LeanEngineWinFormPresenter _presenter;
+        
+        private void HandleDebugPacket(DebugPacket packet)
+        {
+            Log.Trace("Debug: " + packet.Message);
+        }
+        private void HandleLogPacket(LogPacket packet)
+        {
+            Log.Trace("Log: " + packet.Message);
+        }
+        private void HandleRuntimeErrorPacket(RuntimeErrorPacket packet)
+        {
+            var rstack = (!string.IsNullOrEmpty(packet.StackTrace) ? (Environment.NewLine + " " + packet.StackTrace) : string.Empty);
+            Log.Error(packet.Message + rstack);
+        }
+
+        private void HandleHandledErrorPacket(HandledErrorPacket packet)
+        {
+            var hstack = (!string.IsNullOrEmpty(packet.StackTrace) ? (Environment.NewLine + " " + packet.StackTrace) : string.Empty);
+            Log.Error(packet.Message + hstack);
+            
+        }
+
+        private void HandleBacktestResultPacket(BacktestResultPacket packet)
+        {
+            if (packet.Progress == 1)
+            {
+                foreach (var pair in packet.Results.Statistics)
+                {
+                    Log.Trace("STATISTICS:: " + pair.Key + " " + pair.Value);
+                }
+            }
+        }
 
         /// <summary>
         ///     Launch the Lean Engine Primary Form:
         /// </summary>
         public LeanEngineWinForm()
         {
+            var systemHandler = LeanEngineSystemHandlers.FromConfiguration(Composer.Instance);
+            var msgHandler = (EventMessagingHandler)systemHandler.Notify;
+            msgHandler.DebugEvent += HandleDebugPacket;
+            msgHandler.LogEvent += HandleLogPacket;
+            msgHandler.RuntimeErrorEvent += HandleRuntimeErrorPacket;
+            msgHandler.HandledErrorEvent += HandleHandledErrorPacket;
+            msgHandler.BacktestResultEvent += HandleBacktestResultPacket;
             var model = new LeanEngineWinFormModel();
             _presenter = new LeanEngineWinFormPresenter(this, model);
 
             InitializeComponent();
 
             //Create Form:
-            Text = "QuantConnect Lean Algorithmic Trading Engine: v" + Constants.Version;
+            Text = @"QuantConnect Lean Algorithmic Trading Engine: v" + Constants.Version;
             
             //Setup Console Log Area:
             TextBoxLog.Parent = LogGroupBox;
@@ -76,12 +116,7 @@ namespace QuantConnect.Views.WinForms
 
             //Form Events:
             Closed += ExitApplication;
-
-            //Setup Polling Events:
-            _polling = new Timer { Interval = 1000 };
-            _polling.Tick += PollingTick;
-            _polling.Start();
-
+            
             //Trigger a timer event.
             _timer = new Timer { Interval = 1000 };
             _timer.Tick += TickerTick;
@@ -91,12 +126,22 @@ namespace QuantConnect.Views.WinForms
             Load += OnLoad;
         }
 
+        /// <returns>
+        /// The text associated with this control.
+        /// </returns>
+        public override sealed string Text
+        {
+            get { return base.Text; }
+            set { base.Text = value; }
+        }
+
         public Engine Engine { get; private set; }
+        public LeanEngineSystemHandlers EngineSystemHandlers { get; set; }
+
         //Form Controls:
-        public RichTextBox RichTextBoxLog { get; private set; }
+        public RichTextBox RichTextBoxLog { get; set; }
         public IResultHandler ResultsHandler { get; set; }
         public event EventHandler TickerTick;
-        public event EventHandler PollingTick;
         public event EventHandler ExitApplication;
         public event KeyEventHandler ConsoleOnKeyUp;
 
@@ -119,7 +164,7 @@ namespace QuantConnect.Views.WinForms
             _timer.Start();
 
             //Complete load
-            FormToolStripStatusLabel.Text = "LEAN Desktop v" + Constants.Version + " Load Complete.";
+            FormToolStripStatusLabel.Text = @"LEAN Desktop v" + Constants.Version + @" Load Complete.";
 
             //Load the Lean Engine
             Engine = LaunchLean();
@@ -136,7 +181,7 @@ namespace QuantConnect.Views.WinForms
         {
             const string algorithm = "BasicTemplateAlgorithm";
 
-            Console.WriteLine("Running " + algorithm + "...");
+            Console.WriteLine(@"Running " + algorithm + @"...");
 
             // Setup the configuration, since the UX is not in the 
             // lean directory we write a new config in the UX output directory.
@@ -178,20 +223,7 @@ namespace QuantConnect.Views.WinForms
         }
 
         #region FormElementDeclarations
-
-        //Menu Form elements:
-        private readonly GroupBox _logGroupBox;
-        private readonly MenuStrip _menu;
-        private readonly ToolStripMenuItem _menuFile;
-        private readonly ToolStripMenuItem _menuFileExit;
-
-        //Status Stripe Elements:
-        private readonly StatusStrip _statusStrip;
-        private readonly ToolStripStatusLabel _statusStripLabel;
-        private readonly ToolStripStatusLabel _statusStripStatistics;
-        private readonly ToolStripProgressBar _statusStripProgress;
-        private readonly ToolStripStatusLabel _statusStripSpring;
-
+        
         //Timer;
         private readonly Timer _timer;
 
@@ -202,7 +234,7 @@ namespace QuantConnect.Views.WinForms
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(LeanEngineWinForm));
             this.LogGroupBox = new System.Windows.Forms.GroupBox();
             this.TextBoxLog = new System.Windows.Forms.RichTextBox();
-            this.Menu = new System.Windows.Forms.MenuStrip();
+            this.MenuStrip = new System.Windows.Forms.MenuStrip();
             this.FileMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ExitMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.FormStatusStrip = new System.Windows.Forms.StatusStrip();
@@ -211,7 +243,7 @@ namespace QuantConnect.Views.WinForms
             this.StatisticsToolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.FormToolStripProgressBar = new System.Windows.Forms.ToolStripProgressBar();
             this.LogGroupBox.SuspendLayout();
-            this.Menu.SuspendLayout();
+            this.MenuStrip.SuspendLayout();
             this.FormStatusStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -244,13 +276,13 @@ namespace QuantConnect.Views.WinForms
             // 
             // Menu
             // 
-            this.Menu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.MenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.FileMenuItem});
-            this.Menu.Location = new System.Drawing.Point(0, 0);
-            this.Menu.Name = "Menu";
-            this.Menu.Size = new System.Drawing.Size(1008, 24);
-            this.Menu.TabIndex = 1;
-            this.Menu.Text = "menuStrip1";
+            this.MenuStrip.Location = new System.Drawing.Point(0, 0);
+            this.MenuStrip.Name = "Menu";
+            this.MenuStrip.Size = new System.Drawing.Size(1008, 24);
+            this.MenuStrip.TabIndex = 1;
+            this.MenuStrip.Text = "menuStrip1";
             // 
             // FileMenuItem
             // 
@@ -307,17 +339,17 @@ namespace QuantConnect.Views.WinForms
             // 
             this.ClientSize = new System.Drawing.Size(1008, 729);
             this.Controls.Add(this.LogGroupBox);
-            this.Controls.Add(this.Menu);
+            this.Controls.Add(this.MenuStrip);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MainMenuStrip = this.Menu;
+            this.MainMenuStrip = this.MenuStrip;
             this.MaximumSize = new System.Drawing.Size(1024, 768);
             this.Name = "LeanEngineWinForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.LogGroupBox.ResumeLayout(false);
             this.LogGroupBox.PerformLayout();
-            this.Menu.ResumeLayout(false);
-            this.Menu.PerformLayout();
+            this.MenuStrip.ResumeLayout(false);
+            this.MenuStrip.PerformLayout();
             this.FormStatusStrip.ResumeLayout(false);
             this.FormStatusStrip.PerformLayout();
             this.ResumeLayout(false);

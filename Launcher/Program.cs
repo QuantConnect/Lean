@@ -32,7 +32,6 @@ namespace QuantConnect.Lean.Launcher
 
         static void Main(string[] args)
         {
-
             //Initialize:
             string mode = "RELEASE";
 #if DEBUG
@@ -41,7 +40,7 @@ namespace QuantConnect.Lean.Launcher
             if (Config.Get("output-environment") == "gui")
             {
                 Application.EnableVisualStyles();
-                Application.Run(new Views.WinForms.LeanEngineWinForm());
+                Application.Run(new Views.WinForms.LeanEngineWinForm());    
             }
             else
             {
