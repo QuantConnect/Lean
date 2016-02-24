@@ -223,6 +223,11 @@ namespace QuantConnect.Packets
         public IDictionary<string, string> Statistics = new Dictionary<string, string>();
 
         /// <summary>
+        /// The runtime / dynamic statistics generated while a backtest is running.
+        /// </summary>
+        public IDictionary<string, string> RuntimeStatistics = new Dictionary<string, string>(); 
+
+        /// <summary>
         /// Rolling window detailed statistics.
         /// </summary>
         public Dictionary<string, AlgorithmPerformance> RollingWindow = new Dictionary<string, AlgorithmPerformance>();
