@@ -38,7 +38,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new Two Crows pattern indicator.
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.TwoCrows"/> pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose pattern we seek</param>
@@ -54,7 +54,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new Three Black Crows pattern indicator.
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.ThreeBlackCrows"/> pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose pattern we seek</param>
@@ -70,7 +70,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new Three Inside Up/Down pattern indicator.
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.ThreeInside"/> pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose pattern we seek</param>
@@ -86,7 +86,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new Three Line Strike pattern indicator.
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.ThreeLineStrike"/> pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose pattern we seek</param>
@@ -102,7 +102,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new Three Outside Up/Down pattern indicator.
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.ThreeOutside"/> pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose pattern we seek</param>
@@ -118,7 +118,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new Three Stars In The South pattern indicator.
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.ThreeStarsInSouth"/> pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose pattern we seek</param>
@@ -134,7 +134,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new Three Advancing White Soldiers pattern indicator.
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.ThreeWhiteSoldiers"/> pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose pattern we seek</param>
@@ -150,7 +150,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new Abandoned Baby pattern indicator.
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.AbandonedBaby"/> pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose pattern we seek</param>
@@ -167,7 +167,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new Advance Block pattern indicator.
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.AdvanceBlock"/> pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose pattern we seek</param>
@@ -183,7 +183,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new Belt-Hold pattern indicator.
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.BeltHold"/> pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose pattern we seek</param>
@@ -199,7 +199,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new Breakaway pattern indicator.
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.Breakaway"/> pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose pattern we seek</param>
@@ -215,7 +215,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new Closing Marubozu pattern indicator.
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.ClosingMarubozu"/> pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose pattern we seek</param>
@@ -231,7 +231,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new Concealed Baby Swallow pattern indicator.
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.ConcealedBabySwallow"/> pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose pattern we seek</param>
@@ -247,7 +247,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new Counterattack pattern indicator.
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.Counterattack"/> pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose pattern we seek</param>
@@ -263,7 +263,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new Dark Cloud Cover pattern indicator.
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.DarkCloudCover"/> pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose pattern we seek</param>
@@ -280,7 +280,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new Doji pattern indicator.
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.Doji"/> pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose pattern we seek</param>
@@ -296,7 +296,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new Doji Star pattern indicator.
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.DojiStar"/> pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose pattern we seek</param>
@@ -312,7 +312,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new Dragonfly Doji pattern indicator.
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.DragonflyDoji"/> pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose pattern we seek</param>
@@ -328,7 +328,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new Engulfing pattern indicator.
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.Engulfing"/> pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose pattern we seek</param>
@@ -344,7 +344,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new Evening Doji Star pattern indicator.
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.EveningDojiStar"/> pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose pattern we seek</param>
@@ -361,7 +361,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new Evening Star pattern indicator.
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.EveningStar"/> pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose pattern we seek</param>
@@ -378,7 +378,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new Up/Down-gap side-by-side white lines pattern indicator.
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.GapSideBySideWhite"/> pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose pattern we seek</param>
@@ -394,7 +394,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new GravestoneDoji pattern indicator.
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.GravestoneDoji"/> pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose pattern we seek</param>
@@ -410,7 +410,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new Hammer pattern indicator.
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.Hammer"/> pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose pattern we seek</param>
@@ -426,7 +426,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new Hanging Man pattern indicator.
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.HangingMan"/> pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose pattern we seek</param>
@@ -442,7 +442,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new Harami pattern indicator.
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.Harami"/> pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose pattern we seek</param>
@@ -458,7 +458,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new Harami Cross pattern indicator.
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.HaramiCross"/> pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose pattern we seek</param>
@@ -474,7 +474,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new High-Wave Candle pattern indicator.
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.HighWaveCandle"/> pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose pattern we seek</param>
@@ -490,7 +490,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new Hikkake pattern indicator.
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.Hikkake"/> pattern indicator.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
         /// <param name="symbol">The symbol whose pattern we seek</param>
