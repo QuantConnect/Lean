@@ -58,7 +58,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             switch (source.Format)
             {
                 case FileFormat.Csv:
-                    return new BaseDataSubscriptionFactory(config, date, isLiveMode);
+                    return new TextSubscriptionFactory(config, date, isLiveMode);
 
                 default:
                     throw new NotImplementedException("SubscriptionFactory.ForSource(" + source + ") has not been implemented yet.");

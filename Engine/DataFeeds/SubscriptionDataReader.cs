@@ -442,11 +442,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             };
 
-            if (factory is BaseDataSubscriptionFactory)
+            if (factory is TextSubscriptionFactory)
             {
                 // handle empty files/instantiation errors
-                var baseDataSubscriptionFactory = (BaseDataSubscriptionFactory)factory;
-                baseDataSubscriptionFactory.CreateStreamReaderError += (sender, args) =>
+                var textSubscriptionFactory = (TextSubscriptionFactory)factory;
+                textSubscriptionFactory.CreateStreamReaderError += (sender, args) =>
                 {
                     Log.Error(string.Format("Failed to get StreamReader for data source({0}), symbol({1}). Skipping date({2}). Reader is null.", args.Source.Source, _mappedSymbol, args.Date.ToShortDateString()));
                     if (_config.IsCustomData)
@@ -456,7 +456,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 };
 
                 // handle parser errors
-                baseDataSubscriptionFactory.ReaderError += (sender, args) =>
+                textSubscriptionFactory.ReaderError += (sender, args) =>
                 {
                     _resultHandler.RuntimeError(string.Format("Error invoking {0} data reader. Line: {1} Error: {2}", _config.Symbol, args.Line, args.Exception.Message), args.Exception.StackTrace);
                 };
