@@ -11,6 +11,7 @@ using QuantConnect.Configuration;
 using TradingApi.ModelObjects.Bitfinex.Json;
 using QuantConnect.Orders;
 using System.Reflection;
+using Moq;
 
 
 namespace QuantConnect.Tests.Brokerages.Bitfinex

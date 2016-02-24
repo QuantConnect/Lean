@@ -46,12 +46,11 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <summary>
         /// List of known orders
         /// </summary>
-        protected ConcurrentDictionary<int, BitfinexOrder> cachedOrderIDs = new ConcurrentDictionary<int, BitfinexOrder>();
+        public ConcurrentDictionary<int, BitfinexOrder> CachedOrderIDs = new ConcurrentDictionary<int, BitfinexOrder>();
         /// <summary>
         /// List of filled orders
         /// </summary>
         protected readonly FixedSizeHashQueue<int> filledOrderIDs = new FixedSizeHashQueue<int>(10000);       
-        //todo: record fills when none found
         /// <summary>
         /// List of unknown orders
         /// </summary>
@@ -90,10 +89,10 @@ namespace QuantConnect.Brokerages.Bitfinex
             wallet = Config.Get("bitfinex-wallet", "exchange");
 
             if (string.IsNullOrEmpty(apiSecret))
-                throw new Exception("Missing ApiSecret in App.config");
+                throw new Exception("Missing ApiSecret in config.json");
 
             if (string.IsNullOrEmpty(apiKey))
-                throw new Exception("Missing ApiKey in App.config");
+                throw new Exception("Missing ApiKey in config.json");
 
             _client = new BitfinexApi(apiSecret, apiKey);
             _tickerToken = new CancellationTokenSource();
@@ -219,7 +218,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                     if (response.Id > 0)
                     {
                         BitfinexOrder cached;
-                        this.cachedOrderIDs.TryRemove(order.Id, out cached);
+                        this.CachedOrderIDs.TryRemove(order.Id, out cached);
                         const int orderFee = 0;
                         OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Bitfinex Fill Event") { Status = OrderStatus.Canceled });
                     }
@@ -281,9 +280,8 @@ namespace QuantConnect.Brokerages.Bitfinex
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-
                 throw;
             }
             //todo: find order id then update local cache
@@ -422,16 +420,19 @@ namespace QuantConnect.Brokerages.Bitfinex
         private void UpdateCachedOpenOrder(int key, BitfinexOrder updatedOrder)
         {
             BitfinexOrder cachedOpenOrder;
-            if (cachedOrderIDs.TryGetValue(key, out cachedOpenOrder))
+            if (CachedOrderIDs.TryGetValue(key, out cachedOpenOrder))
             {
                 cachedOpenOrder = updatedOrder;
             }
             else
             {
-                cachedOrderIDs[key] = updatedOrder;
+                CachedOrderIDs[key] = updatedOrder;
             }
         }
 
+        /// <summary>
+        /// Provided for derived classes
+        /// </summary>
         protected virtual void Authenticate()
         { }
 

@@ -77,6 +77,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Brokerages\Bitfinex\TradingApi.ModelObjects.dll</HintPath>
     </Reference>
+    <Reference Include="websocket-sharp, Version=1.0.2.36589, Culture=neutral, PublicKeyToken=5660b08a1845a91e, processorArchitecture=MSIL">
+      <HintPath>..\packages\WebSocketSharp.1.0.3-rc9\lib\websocket-sharp.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
@@ -85,6 +89,7 @@
     <Compile Include="AlgorithmRunner.cs" />
     <Compile Include="Algorithm\AlgorithmTradingTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageTests.cs" />
+    <Compile Include="Brokerages\Bitfinex\BitfinexWebsocketsBrokerageTests.cs" />
     <Compile Include="Brokerages\BrokerageTests.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmBrokerageDataQueueHandlerTests.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmBrokerageTests.cs" />
