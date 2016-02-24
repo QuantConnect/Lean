@@ -141,9 +141,9 @@ namespace QuantConnect.Util
         /// <summary>
         /// Generates the full zip file path rooted in the <paramref name="dataDirectory"/>
         /// </summary>
-        public static string GenerateZipFilePath(string dataDirectory, Symbol symbol, DateTime date, Resolution resolution)
+        public static string GenerateZipFilePath(string dataDirectory, Symbol symbol, DateTime date, Resolution resolution, TickType tickType)
         {
-            return GenerateZipFilePath(dataDirectory, symbol.Value, symbol.ID.SecurityType, symbol.ID.Market, date, resolution);
+            return Path.Combine(dataDirectory, GenerateRelativeZipFilePath(symbol, date, resolution, tickType));
         }
 
         /// <summary>

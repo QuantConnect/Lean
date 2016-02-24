@@ -48,6 +48,13 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(parameters.ExpectedRelativeZipFilePath, relativePath);
         }
 
+        [Test, TestCaseSource("GetLeanDataTestParameters")]
+        public void GenerateZipFilePath(LeanDataTestParameters parameters)
+        {
+            var path = LeanData.GenerateZipFilePath(Constants.DataFolder, parameters.Symbol, parameters.Date, parameters.Resolution, parameters.TickType);
+            Assert.AreEqual(parameters.ExpectedZipFilePath, path);
+        }
+
         [Test, TestCaseSource("GetLeanDataLineTestParameters")]
         public void GenerateLine(LeanDataLineTestParameters parameters)
         {
@@ -215,6 +222,7 @@ namespace QuantConnect.Tests.Common.Util
             public readonly string ExpectedZipFileName;
             public readonly string ExpectedZipEntryName;
             public readonly string ExpectedRelativeZipFilePath;
+            public readonly string ExpectedZipFilePath;
             public SecurityType SecurityType { get { return Symbol.ID.SecurityType; } }
 
             public LeanDataTestParameters(Symbol symbol, DateTime date, Resolution resolution, TickType tickType, string expectedZipFileName, string expectedZipEntryName, string expectedRelativeZipFileDirectory = "")
@@ -226,6 +234,7 @@ namespace QuantConnect.Tests.Common.Util
                 ExpectedZipFileName = expectedZipFileName;
                 ExpectedZipEntryName = expectedZipEntryName;
                 ExpectedRelativeZipFilePath = Path.Combine(expectedRelativeZipFileDirectory, expectedZipFileName).Replace("/", Path.DirectorySeparatorChar.ToString());
+                ExpectedZipFilePath = Path.Combine(Constants.DataFolder, ExpectedRelativeZipFilePath);
 
                 Name = SecurityType + "_" + resolution;
             }
