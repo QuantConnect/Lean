@@ -96,6 +96,11 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
                     }
                     rows.Add(new TestCaseData(new OnNeck(), "CDLONNECK", testFileName).SetName("OnNeck-" + testFileName));
                     rows.Add(new TestCaseData(new Piercing(), "CDLPIERCING", testFileName).SetName("Piercing-" + testFileName));
+                    if (!testFileName.Contains("spy"))
+                    {
+                        // Lean uses decimals while TA-lib uses doubles, so this test does not pass with the spy test file 
+                        rows.Add(new TestCaseData(new RickshawMan(), "CDLRICKSHAWMAN", testFileName).SetName("RickshawMan-" + testFileName));
+                    }
                 }
 
                 return rows.ToArray();
