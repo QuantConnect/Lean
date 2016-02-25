@@ -94,6 +94,7 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
                         // Lean uses decimals while TA-lib uses doubles, so this test does not pass with the eurusd test file 
                         rows.Add(new TestCaseData(new MorningStar(), "CDLMORNINGSTAR", testFileName).SetName("MorningStar-" + testFileName));
                     }
+                    rows.Add(new TestCaseData(new OnNeck(), "CDLONNECK", testFileName).SetName("OnNeck-" + testFileName));
                 }
 
                 return rows.ToArray();
