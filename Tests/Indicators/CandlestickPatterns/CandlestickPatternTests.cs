@@ -102,6 +102,7 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
                         rows.Add(new TestCaseData(new RickshawMan(), "CDLRICKSHAWMAN", testFileName).SetName("RickshawMan-" + testFileName));
                     }
                     rows.Add(new TestCaseData(new RiseFallThreeMethods(), "CDLRISEFALL3METHODS", testFileName).SetName("RiseFallThreeMethods-" + testFileName));
+                    rows.Add(new TestCaseData(new SeparatingLines(), "CDLSEPARATINGLINES", testFileName).SetName("SeparatingLines-" + testFileName));
                 }
 
                 return rows.ToArray();
