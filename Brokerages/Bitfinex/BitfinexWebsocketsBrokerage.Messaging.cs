@@ -90,8 +90,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 Log.Error(ex, string.Format("Parsing wss message failed. Data: {0}", e.Data));
             }
         }
-
-
+        
         private void PopulateTicker(string response)
         {
             var data = JsonConvert.DeserializeObject<string[]>(response);
@@ -151,7 +150,7 @@ namespace QuantConnect.Brokerages.Bitfinex
 
                 if (fill.Status == OrderStatus.Filled)
                 {
-                    BitfinexOrder outOrder = cached.First().Value;
+                    Order outOrder = cached.First().Value;
                     CachedOrderIDs.TryRemove(cached.First().Key, out outOrder);
                 }
                 OnOrderEvent(fill);
