@@ -95,6 +95,7 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
                         rows.Add(new TestCaseData(new MorningStar(), "CDLMORNINGSTAR", testFileName).SetName("MorningStar-" + testFileName));
                     }
                     rows.Add(new TestCaseData(new OnNeck(), "CDLONNECK", testFileName).SetName("OnNeck-" + testFileName));
+                    rows.Add(new TestCaseData(new Piercing(), "CDLPIERCING", testFileName).SetName("Piercing-" + testFileName));
                 }
 
                 return rows.ToArray();
