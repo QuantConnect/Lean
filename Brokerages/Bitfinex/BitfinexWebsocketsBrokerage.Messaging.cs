@@ -141,6 +141,12 @@ namespace QuantConnect.Brokerages.Bitfinex
 
             if (cached.Count() > 0 && cached.First().Value != null)
             {
+                //todo: support btc fees?
+                if (!string.IsNullOrEmpty(msg.FEE_CURRENCY) && msg.FEE_CURRENCY != "USD")
+                {
+                    throw new Exception("Only fees in USD are currently supported.");
+                }
+
                 var fill = new OrderEvent
                 (
                     cached.First().Key, symbol, msg.TRD_TIMESTAMP, MapOrderStatus(msg),

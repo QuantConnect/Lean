@@ -94,7 +94,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
         public void OnMessageTradePartialFillTest()
         {
             string brokerId = "2";
-            string json = "[0,\"te\", [\"abc123\",\"1\",\"BTCUSD\",\"1453989092 \",\"" + brokerId + "\",\"2\",\"4\",\"<ORD_TYPE>\",\"5\",\"0\",\"USD\"]]";
+            string json = "[0,\"te\", [\"abc123\",\"1\",\"BTCUSD\",\"1453989092 \",\"" + brokerId + "\",\"2\",\"4\",\"<ORD_TYPE>\",\"5\",\"0\",\"\"]]";
 
             unit.CachedOrderIDs.TryAdd(1, new BitfinexOrder { BrokerId = new List<string> { brokerId } });
 
