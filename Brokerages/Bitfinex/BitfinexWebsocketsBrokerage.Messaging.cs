@@ -78,6 +78,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 }
                 else if (raw.@event == "info" && raw.code == "20061")
                 {
+                    UnAuthenticate();
                     Unsubscribe(null, null);
                     Subscribe(null, null);
                     Authenticate();
