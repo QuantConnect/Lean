@@ -80,15 +80,24 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 Unsubscribe(id.Key);
             }
+            this._channelId.Clear();
         }
 
         private void Unsubscribe(int id)
         {
-            WebSocket.Send(JsonConvert.SerializeObject(new
+            try
             {
-                @event = "unsubscribe",
-                channelId = id,
-            }));
+                WebSocket.Send(JsonConvert.SerializeObject(new
+                   {
+                       @event = "unsubscribe",
+                       channelId = id,
+                   }));
+                this._channelId.Remove(id);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error encountered whilst attempting unsubscribe.");
+            }
         }
 
         /// <summary>
@@ -129,7 +138,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// Ensures any wss connection or authentication is closed
         /// </summary>
         public void Dispose()
-        {           
+        {
             this.Disconnect();
         }
 
@@ -146,15 +155,16 @@ namespace QuantConnect.Brokerages.Bitfinex
                     Log.Trace("Heartbeat timeout. Reconnecting");
                     Reconnect();
                 }
-                await Task.Delay(TimeSpan.FromSeconds(5), _checkConnectionToken.Token);
+                await Task.Delay(TimeSpan.FromSeconds(10), _checkConnectionToken.Token);
             }
         }
 
         private void Reconnect()
         {
+            this.Unsubscribe(null, null);
             WebSocket.Connect();
-            this.Authenticate();
             this.Subscribe(null, null);
+            this.Authenticate();
         }
 
     }

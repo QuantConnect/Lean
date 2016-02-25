@@ -73,11 +73,13 @@ namespace QuantConnect.Brokerages.Bitfinex
                     Log.Trace("Successful wss auth");
                 }
                 else if (raw.@event == "info" && raw.code == "20051")
-                {                   
+                {
+                    //hard reset
                     this.Reconnect();
                 }
                 else if (raw.@event == "info" && raw.code == "20061")
                 {
+                    //soft reset
                     UnAuthenticate();
                     Unsubscribe(null, null);
                     Subscribe(null, null);
