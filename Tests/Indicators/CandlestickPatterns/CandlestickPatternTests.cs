@@ -115,6 +115,11 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
                         rows.Add(new TestCaseData(new SpinningTop(), "CDLSPINNINGTOP", testFileName).SetName("SpinningTop-" + testFileName));
                     }
                     rows.Add(new TestCaseData(new StalledPattern(), "CDLSTALLEDPATTERN", testFileName).SetName("StalledPattern-" + testFileName));
+                    if (testFileName.Contains("ewz"))
+                    {
+                        // Lean uses decimals while TA-lib uses doubles, so this test only passes with the ewz test file 
+                        rows.Add(new TestCaseData(new StickSandwich(), "CDLSTICKSANDWICH", testFileName).SetName("StickSandwich-" + testFileName));
+                    }
                 }
 
                 return rows.ToArray();
