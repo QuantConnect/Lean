@@ -52,6 +52,11 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
+        /// Trade or quote data
+        /// </summary>
+        public readonly TickType TickType;
+
+        /// <summary>
         /// Resolution of the asset we're requesting, second minute or tick
         /// </summary>
         public readonly Resolution Resolution;
@@ -143,6 +148,7 @@ namespace QuantConnect.Data
         /// <param name="isInternalFeed">Set to true if this subscription is added for the sole purpose of providing currency conversion rates,
         /// setting this flag to true will prevent the data from being sent into the algorithm's OnData methods</param>
         /// <param name="isCustom">True if this is user supplied custom data, false for normal QC data</param>
+        /// <param name="tickType">Specifies if trade or quote data is subscribed</param>
         public SubscriptionDataConfig(Type objectType,
             Symbol symbol,
             Resolution resolution,
@@ -151,7 +157,8 @@ namespace QuantConnect.Data
             bool fillForward,
             bool extendedHours,
             bool isInternalFeed,
-            bool isCustom = false)
+            bool isCustom = false,
+            TickType? tickType = null)
         {
             Type = objectType;
             SecurityType = symbol.ID.SecurityType;
@@ -167,6 +174,19 @@ namespace QuantConnect.Data
             DataTimeZone = dataTimeZone;
             ExchangeTimeZone = exchangeTimeZone;
             Consolidators = new HashSet<IDataConsolidator>();
+
+            if (!tickType.HasValue)
+            {
+                TickType = TickType.Trade;
+                if (SecurityType == SecurityType.Forex || SecurityType == SecurityType.Cfd)
+                {
+                    TickType = TickType.Quote;
+                }
+            }
+            else
+            {
+                TickType = tickType.Value;
+            }
 
             switch (resolution)
             {
@@ -207,6 +227,7 @@ namespace QuantConnect.Data
         /// <param name="isInternalFeed">Set to true if this subscription is added for the sole purpose of providing currency conversion rates,
         /// setting this flag to true will prevent the data from being sent into the algorithm's OnData methods</param>
         /// <param name="isCustom">True if this is user supplied custom data, false for normal QC data</param>
+        /// <param name="tickType">Specifies if trade or quote data is subscribed</param>
         public SubscriptionDataConfig(SubscriptionDataConfig config,
             Type objectType = null,
             Symbol symbol = null,
@@ -216,7 +237,8 @@ namespace QuantConnect.Data
             bool? fillForward = null,
             bool? extendedHours = null,
             bool? isInternalFeed = null,
-            bool? isCustom = null)
+            bool? isCustom = null,
+            TickType? tickType = null)
             : this(
             objectType ?? config.Type,
             symbol ?? config.Symbol,
@@ -226,7 +248,8 @@ namespace QuantConnect.Data
             fillForward ?? config.FillDataForward,
             extendedHours ?? config.ExtendedMarketHours,
             isInternalFeed ?? config.IsInternalFeed,
-            isCustom ?? config.IsCustomData
+            isCustom ?? config.IsCustomData,
+            tickType ?? config.TickType
             )
         {
         }

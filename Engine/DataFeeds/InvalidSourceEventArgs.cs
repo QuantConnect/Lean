@@ -19,7 +19,7 @@ using QuantConnect.Data;
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// Event arguments for the <see cref="BaseDataSubscriptionFactory.InvalidSource"/> event
+    /// Event arguments for the <see cref="ISubscriptionFactory.InvalidSource"/> event
     /// </summary>
     public sealed class InvalidSourceEventArgs : EventArgs
     {

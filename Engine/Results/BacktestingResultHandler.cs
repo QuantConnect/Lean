@@ -53,6 +53,8 @@ namespace QuantConnect.Lean.Engine.Results
         private ConcurrentDictionary<string, Chart> _charts;
         private bool _isActive = true;
         private object _chartLock = new Object();
+        private object _runtimeLock = new Object();
+        private readonly Dictionary<string, string> _runtimeStatistics = new Dictionary<string, string>();
         private double _daysProcessed = 0;
         private double _lastDaysProcessed = 1;
         private bool _processingFinalPacket = false;
@@ -74,6 +76,7 @@ namespace QuantConnect.Lean.Engine.Results
         private IMessagingHandler _messagingHandler;
         private IApi _api;
         private ITransactionHandler _transactionHandler;
+        private ISetupHandler _setupHandler;
 
         private const double _samples = 4000;
         private const double _minimumSamplePeriod = 4;
@@ -203,6 +206,7 @@ namespace QuantConnect.Lean.Engine.Results
             _api = api;
             _messagingHandler = messagingHandler;
             _transactionHandler = transactionHandler;
+            _setupHandler = setupHandler;
             _job = (BacktestNodePacket)job;
             if (_job == null) throw new Exception("BacktestingResultHandler.Constructor(): Submitted Job type invalid.");
             _compileId = _job.CompileId;
@@ -312,6 +316,21 @@ namespace QuantConnect.Lean.Engine.Results
                     }
                 }
 
+                //Get the runtime statistics from the user algorithm:
+                var runtimeStatistics = new Dictionary<string, string>();
+                lock (_runtimeLock)
+                {
+                    foreach (var pair in _runtimeStatistics)
+                    {
+                        runtimeStatistics.Add(pair.Key, pair.Value);
+                    }
+                }
+                runtimeStatistics.Add("Unrealized:", "$" + _algorithm.Portfolio.TotalUnrealizedProfit.ToString("N2"));
+                runtimeStatistics.Add("Fees:", "-$" + _algorithm.Portfolio.TotalFees.ToString("N2"));
+                runtimeStatistics.Add("Net Profit:", "$" + _algorithm.Portfolio.TotalProfit.ToString("N2"));
+                runtimeStatistics.Add("Return:", ((_algorithm.Portfolio.TotalPortfolioValue - _setupHandler.StartingPortfolioValue) / _setupHandler.StartingPortfolioValue).ToString("P"));
+                runtimeStatistics.Add("Equity:", "$" + _algorithm.Portfolio.TotalPortfolioValue.ToString("N2"));
+
                 //Profit Loss Changes:
                 var progress = Convert.ToDecimal(_daysProcessed / _jobDays);
                 if (progress > 0.999m) progress = 0.999m;
@@ -327,7 +346,7 @@ namespace QuantConnect.Lean.Engine.Results
                 }
 
                 //2. Backtest Update -> Send the truncated packet to the backtester:
-                var splitPackets = SplitPackets(deltaCharts, deltaOrders, progress);
+                var splitPackets = SplitPackets(deltaCharts, deltaOrders, runtimeStatistics, progress);
 
                 foreach (var backtestingPacket in splitPackets)
                 {
@@ -343,7 +362,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Run over all the data and break it into smaller packets to ensure they all arrive at the terminal
         /// </summary>
-        public IEnumerable<BacktestResultPacket> SplitPackets(Dictionary<string, Chart> deltaCharts, Dictionary<int, Order> deltaOrders, decimal progress)
+        public IEnumerable<BacktestResultPacket> SplitPackets(Dictionary<string, Chart> deltaCharts, Dictionary<int, Order> deltaOrders, Dictionary<string,string> runtimeStatistics, decimal progress)
         {
             // break the charts into groups
             var splitPackets = new List<BacktestResultPacket>();
@@ -360,6 +379,9 @@ namespace QuantConnect.Lean.Engine.Results
 
             // Add the orders into the charting packet:
             splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { Orders = deltaOrders }, progress));
+
+            //Add any user runtime statistics into the backtest.
+            splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { RuntimeStatistics = runtimeStatistics }, progress));
 
             return splitPackets;
         }
@@ -436,7 +458,10 @@ namespace QuantConnect.Lean.Engine.Results
 
                 //Create a result packet to send to the browser.
                 var result = new BacktestResultPacket((BacktestNodePacket) job,
-                    new BacktestResult(charts, orders, profitLoss, statisticsResults.Summary, statisticsResults.RollingPerformances), 1m)
+                    new BacktestResult(charts, orders, profitLoss, statisticsResults.Summary, statisticsResults.RollingPerformances)
+                    {
+                        RuntimeStatistics = _runtimeStatistics
+                    }, 1m)
                 {
                     ProcessingTime = (DateTime.Now - _startTime).TotalSeconds,
                     DateFinished = DateTime.Now,
@@ -663,7 +688,10 @@ namespace QuantConnect.Lean.Engine.Results
                         //If we don't already have this record, its the first packet
                         if (!Charts[update.Name].Series.ContainsKey(series.Name))
                         {
-                            Charts[update.Name].Series.Add(series.Name, new Series(series.Name, series.SeriesType, series.Index, series.Unit));
+                            Charts[update.Name].Series.Add(series.Name, new Series(series.Name, series.SeriesType, series.Index, series.Unit)
+                            {
+                                Color = series.Color, ScatterMarkerSymbol = series.ScatterMarkerSymbol
+                            });
                         }
 
                         //We already have this record, so just the new samples to the end:
@@ -735,7 +763,10 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="value">Runtime headline statistic value</param>
         public void RuntimeStatistic(string key, string value)
         {
-            // Do nothing. Banner statistics don't apply in backtesting.
+            lock (_runtimeLock)
+            {
+                _runtimeStatistics[key] = value;
+            }
         }
 
         /// <summary>
@@ -826,7 +857,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <remarks>Prime candidate for putting into a base class. Is identical across all result handlers.</remarks>
         public void ProcessSynchronousEvents(bool forceProcess = false)
         {
-            var time = _algorithm.Time;
+            var time = _algorithm.UtcTime;
 
             if (time > _nextSample || forceProcess)
             {
@@ -857,6 +888,12 @@ namespace QuantConnect.Lean.Engine.Results
             //Send out the log messages:
             _algorithm.LogMessages.ForEach(x => LogMessage(x));
             _algorithm.LogMessages.Clear();
+
+            //Set the running statistics:
+            foreach (var pair in _algorithm.RuntimeStatistics)
+            {
+                RuntimeStatistic(pair.Key, pair.Value);
+            }
         }
     }
 }

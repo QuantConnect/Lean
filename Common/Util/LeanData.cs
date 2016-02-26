@@ -83,12 +83,12 @@ namespace QuantConnect.Util
                             var tick = (Tick)data;
                             if (tick.TickType == TickType.Trade)
                             {
-                                return ToCsv(milliseconds, putCall, Scale(tick.Symbol.ID.StrikePrice), tick.Symbol.ID.Date.ToString(DateFormat.EightCharacter),
+                                return ToCsv(milliseconds,
                                     Scale(tick.LastPrice), tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1": "0");
                             }
                             if (tick.TickType == TickType.Quote)
                             {
-                                return ToCsv(milliseconds, putCall, Scale(tick.Symbol.ID.StrikePrice), tick.Symbol.ID.Date.ToString(DateFormat.EightCharacter),
+                                return ToCsv(milliseconds,
                                     Scale(tick.BidPrice), tick.BidSize, Scale(tick.AskPrice), tick.AskSize, tick.Exchange, tick.Suspicious ? "1" : "0");
                             }
                             break;
@@ -100,7 +100,6 @@ namespace QuantConnect.Util
                             if (quoteBar != null)
                             {
                                 return ToCsv(milliseconds,
-                                    putCall, Scale(quoteBar.Symbol.ID.StrikePrice), quoteBar.Symbol.ID.Date.ToString(DateFormat.EightCharacter), 
                                     ToCsv(quoteBar.Bid), quoteBar.LastBidSize, 
                                     ToCsv(quoteBar.Ask), quoteBar.LastAskSize);
                             }
@@ -108,7 +107,6 @@ namespace QuantConnect.Util
                             if (tradeBar != null)
                             {
                                 return ToCsv(milliseconds,
-                                    putCall, Scale(tradeBar.Symbol.ID.StrikePrice), tradeBar.Symbol.ID.Date.ToString(DateFormat.EightCharacter),
                                     Scale(tradeBar.Open), Scale(tradeBar.High), Scale(tradeBar.Low), Scale(tradeBar.Close), tradeBar.Volume);
                             }
                             break;
@@ -120,7 +118,6 @@ namespace QuantConnect.Util
                             if (bigQuoteBar != null)
                             {
                                 return ToCsv(longTime,
-                                    putCall, Scale(bigQuoteBar.Symbol.ID.StrikePrice), bigQuoteBar.Symbol.ID.Date.ToString(DateFormat.EightCharacter),
                                     ToCsv(bigQuoteBar.Bid), bigQuoteBar.LastBidSize,
                                     ToCsv(bigQuoteBar.Ask), bigQuoteBar.LastAskSize);
                             }
@@ -128,7 +125,6 @@ namespace QuantConnect.Util
                             if (bigTradeBar != null)
                             {
                                 return ToCsv(longTime,
-                                    putCall, Scale(bigTradeBar.Symbol.ID.StrikePrice), bigTradeBar.Symbol.ID.Date.ToString(DateFormat.EightCharacter),
                                     ToCsv(bigTradeBar), bigTradeBar.Volume);
                             }
                             break;
@@ -145,9 +141,9 @@ namespace QuantConnect.Util
         /// <summary>
         /// Generates the full zip file path rooted in the <paramref name="dataDirectory"/>
         /// </summary>
-        public static string GenerateZipFilePath(string dataDirectory, Symbol symbol, DateTime date, Resolution resolution)
+        public static string GenerateZipFilePath(string dataDirectory, Symbol symbol, DateTime date, Resolution resolution, TickType tickType)
         {
-            return GenerateZipFilePath(dataDirectory, symbol.Value, symbol.ID.SecurityType, symbol.ID.Market, date, resolution);
+            return Path.Combine(dataDirectory, GenerateRelativeZipFilePath(symbol, date, resolution, tickType));
         }
 
         /// <summary>

@@ -18,6 +18,7 @@ using System.Globalization;
 using System.IO;
 using System.Threading;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.Market
 {
@@ -379,10 +380,11 @@ namespace QuantConnect.Data.Market
         {
             var tradeBar = new T
             {
-                Period = config.Increment
+                Period = config.Increment,
+                Symbol = config.Symbol
             };
 
-            var csv = line.ToCsv(8);
+            var csv = line.ToCsv(6);
             if (config.Resolution == Resolution.Daily || config.Resolution == Resolution.Hour)
             {
                 // hourly and daily have different time format, and can use slow, robust c# parser.
@@ -394,17 +396,11 @@ namespace QuantConnect.Data.Market
                 tradeBar.Time = date.Date.AddMilliseconds(csv[0].ToInt32()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
             }
 
-            tradeBar.Open = config.GetNormalizedPrice(csv[4].ToDecimal() * _scaleFactor);
-            tradeBar.High = config.GetNormalizedPrice(csv[5].ToDecimal() * _scaleFactor);
-            tradeBar.Low = config.GetNormalizedPrice(csv[6].ToDecimal() * _scaleFactor);
-            tradeBar.Close = config.GetNormalizedPrice(csv[7].ToDecimal() * _scaleFactor);
-            tradeBar.Volume = csv[8].ToInt64();
-
-            var putCall = csv[1] == "P" ? OptionRight.Put : OptionRight.Call;
-            var strike = csv[2].ToDecimal()*_scaleFactor;
-            var expiry = DateTime.ParseExact(csv[3], DateFormat.EightCharacter, null);
-            var symbol = Symbol.CreateOption(config.Symbol.ID.Symbol, config.Market, config.Symbol.ID.OptionStyle, putCall, strike, expiry);
-            tradeBar.Symbol = symbol;
+            tradeBar.Open = config.GetNormalizedPrice(csv[1].ToDecimal() * _scaleFactor);
+            tradeBar.High = config.GetNormalizedPrice(csv[2].ToDecimal() * _scaleFactor);
+            tradeBar.Low = config.GetNormalizedPrice(csv[3].ToDecimal() * _scaleFactor);
+            tradeBar.Close = config.GetNormalizedPrice(csv[4].ToDecimal() * _scaleFactor);
+            tradeBar.Volume = csv[5].ToInt64();
 
             return tradeBar;
         }
@@ -451,29 +447,12 @@ namespace QuantConnect.Data.Market
         /// <returns>String source location of the file</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-
             if (isLiveMode)
             {
                 return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.LocalFile);
             }
 
-            var dataType = (config.SecurityType == SecurityType.Forex || config.SecurityType == SecurityType.Cfd) ? TickType.Quote : TickType.Trade; 
-            var securityTypePath = config.SecurityType.ToString().ToLower();
-            var resolutionPath = config.Resolution.ToString().ToLower();
-            var symbolPath = (string.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol.Value : config.MappedSymbol).ToLower();
-            var market = config.Market.ToLower();
-            var filename = date.ToString(DateFormat.EightCharacter) + "_" + dataType.ToString().ToLower() + ".zip";
-
-
-            if (config.Resolution == Resolution.Hour || config.Resolution == Resolution.Daily)
-            {
-                // hourly/daily data is all in a single file, no sub directories
-                filename = symbolPath + ".zip";
-                symbolPath = string.Empty;
-            }
-
-            var source = Path.Combine(Constants.DataFolder, securityTypePath, market, resolutionPath, symbolPath, filename);
-
+            var source = LeanData.GenerateZipFilePath(Constants.DataFolder, config.Symbol, date, config.Resolution, config.TickType);
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
 

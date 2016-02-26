@@ -400,8 +400,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         var sourceProvider = (BaseData)Activator.CreateInstance(config.Type);
                         var dateInDataTimeZone = DateTime.UtcNow.ConvertFromUtc(config.DataTimeZone).Date;
-                        var factory = new BaseDataSubscriptionFactory(config, dateInDataTimeZone, true);
                         var source = sourceProvider.GetSource(config, dateInDataTimeZone, true);
+                        var factory = SubscriptionFactory.ForSource(source, config, dateInDataTimeZone, false);
                         var factoryReadEnumerator = factory.Read(source).GetEnumerator();
                         var maximumDataAge = TimeSpan.FromTicks(Math.Max(config.Increment.Ticks, TimeSpan.FromSeconds(5).Ticks));
                         var fastForward = new FastForwardEnumerator(factoryReadEnumerator, _timeProvider, security.Exchange.TimeZone, maximumDataAge);
@@ -529,8 +529,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     var sourceProvider = (BaseData)Activator.CreateInstance(config.Type);
                     var dateInDataTimeZone = DateTime.UtcNow.ConvertFromUtc(config.DataTimeZone).Date;
-                    var factory = new BaseDataSubscriptionFactory(config, dateInDataTimeZone, true);
                     var source = sourceProvider.GetSource(config, dateInDataTimeZone, true);
+                    var factory = SubscriptionFactory.ForSource(source, config, dateInDataTimeZone, false);
                     var factorEnumerator = factory.Read(source).GetEnumerator();
                     var fastForward = new FastForwardEnumerator(factorEnumerator, _timeProvider, security.Exchange.TimeZone, config.Increment);
                     var frontierAware = new FrontierAwareEnumerator(fastForward, _frontierTimeProvider, tzOffsetProvider);

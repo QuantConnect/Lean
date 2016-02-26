@@ -76,6 +76,7 @@ namespace QuantConnect.Data.Consolidators
             // update the bid and ask
             if (bid != null)
             {
+                workingBar.LastBidSize = data.LastBidSize;
                 if (workingBar.Bid == null)
                 {
                     workingBar.Bid = new Bar(bid.Open, bid.High, bid.Low, bid.Close);
@@ -83,13 +84,13 @@ namespace QuantConnect.Data.Consolidators
                 else
                 {
                     workingBar.Bid.Close = bid.Close;
-                    workingBar.LastBidSize = data.LastBidSize;
                     if (workingBar.Bid.High < bid.High) workingBar.Bid.High = bid.High;
                     if (workingBar.Bid.Low > bid.Low) workingBar.Bid.Low = bid.Low;
                 }
             }
             if (ask != null)
             {
+                workingBar.LastAskSize = data.LastAskSize;
                 if (workingBar.Ask == null)
                 {
                     workingBar.Ask = new Bar(ask.Open, ask.High, ask.Low, ask.Close);
@@ -97,7 +98,6 @@ namespace QuantConnect.Data.Consolidators
                 else
                 {
                     workingBar.Ask.Close = ask.Close;
-                    workingBar.LastBidSize = data.LastBidSize;
                     if (workingBar.Ask.High < ask.High) workingBar.Ask.High = ask.High;
                     if (workingBar.Ask.Low > ask.Low) workingBar.Ask.Low = ask.Low;
                 }
