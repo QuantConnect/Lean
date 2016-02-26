@@ -122,6 +122,7 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
                     }
                     rows.Add(new TestCaseData(new Takuri(), "CDLTAKURI", testFileName).SetName("Takuri-" + testFileName));
                     rows.Add(new TestCaseData(new TasukiGap(), "CDLTASUKIGAP", testFileName).SetName("TasukiGap-" + testFileName));
+                    rows.Add(new TestCaseData(new Thrusting(), "CDLTHRUSTING", testFileName).SetName("Thrusting-" + testFileName));
                 }
 
                 return rows.ToArray();
