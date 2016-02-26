@@ -37,7 +37,7 @@ namespace QuantConnect.Lean.Launcher
 #if DEBUG
             mode = "DEBUG";
 #endif
-            if (Config.Get("output-environment") == "gui")
+            if (Config.Get("environment") == "desktop")
             {
                 Application.EnableVisualStyles();
                 Application.Run(new Views.WinForms.LeanEngineWinForm());    

@@ -91,6 +91,7 @@ namespace QuantConnect.Views.WinForms
         /// </summary>
         public LeanEngineWinForm()
         {
+            Config.Set("messaging-handler", "QuantConnect.Messaging.EventMessagingHandler");
             var systemHandler = LeanEngineSystemHandlers.FromConfiguration(Composer.Instance);
             var msgHandler = (EventMessagingHandler)systemHandler.Notify;
             msgHandler.DebugEvent += HandleDebugPacket;
@@ -187,7 +188,7 @@ namespace QuantConnect.Views.WinForms
             // lean directory we write a new config in the UX output directory.
             Config.Set("algorithm-type-name", algorithm);
             Config.Set("live-mode", "false");
-            Config.Set("messaging-handler", "QuantConnect.Messaging.Messaging");
+            Config.Set("messaging-handler", "QuantConnect.Messaging.EventMessagingHandler");
             Config.Set("job-queue-handler", "QuantConnect.Queues.JobQueue");
             Config.Set("api-handler", "QuantConnect.Api.Api");
             Config.Set("result-handler", "QuantConnect.Lean.Engine.Results.DesktopResultHandler");
