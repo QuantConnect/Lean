@@ -161,7 +161,9 @@ namespace QuantConnect.Brokerages.Bitfinex
 
         private void Reconnect()
         {
+            this.UnAuthenticate();
             this.Unsubscribe(null, null);
+            WebSocket.Close();
             WebSocket.Connect();
             this.Subscribe(null, null);
             this.Authenticate();
