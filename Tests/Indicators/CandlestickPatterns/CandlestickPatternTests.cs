@@ -103,6 +103,7 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
                     }
                     rows.Add(new TestCaseData(new RiseFallThreeMethods(), "CDLRISEFALL3METHODS", testFileName).SetName("RiseFallThreeMethods-" + testFileName));
                     rows.Add(new TestCaseData(new SeparatingLines(), "CDLSEPARATINGLINES", testFileName).SetName("SeparatingLines-" + testFileName));
+                    rows.Add(new TestCaseData(new ShootingStar(), "CDLSHOOTINGSTAR", testFileName).SetName("ShootingStar-" + testFileName));
                 }
 
                 return rows.ToArray();
