@@ -14,8 +14,8 @@
 */
 
 using System;
-using System.Drawing;
 using System.Windows.Forms;
+using QuantConnect.Logging;
 using QuantConnect.Messaging;
 using QuantConnect.Packets;
 using QuantConnect.Views.Model;
@@ -28,16 +28,53 @@ namespace QuantConnect.Views.Presenter
     {
         private readonly ILeanEngineWinFormView _view;
         private readonly LeanEngineWinFormModel _model;
-        private readonly EventMessagingHandler _eventMessagingHandler;
 
-        public LeanEngineWinFormPresenter(ILeanEngineWinFormView view, LeanEngineWinFormModel model)
+        private void HandleDebugPacket(DebugPacket packet)
+        {
+            Log.Trace("Debug: " + packet.Message);
+        }
+        private void HandleLogPacket(LogPacket packet)
+        {
+            Log.Trace("Log: " + packet.Message);
+        }
+        private void HandleRuntimeErrorPacket(RuntimeErrorPacket packet)
+        {
+            var rstack = (!string.IsNullOrEmpty(packet.StackTrace) ? (Environment.NewLine + " " + packet.StackTrace) : string.Empty);
+            Log.Error(packet.Message + rstack);
+        }
+
+        private void HandleHandledErrorPacket(HandledErrorPacket packet)
+        {
+            var hstack = (!string.IsNullOrEmpty(packet.StackTrace) ? (Environment.NewLine + " " + packet.StackTrace) : string.Empty);
+            Log.Error(packet.Message + hstack);
+
+        }
+
+        private void HandleBacktestResultPacket(BacktestResultPacket packet)
+        {
+            if (packet.Progress == 1)
+            {
+                foreach (var pair in packet.Results.Statistics)
+                {
+                    _model.LogText += "STATISTICS:: " + pair.Key + " " + pair.Value;
+                    Log.Trace("STATISTICS:: " + pair.Key + " " + pair.Value);
+                }
+            }
+        }
+
+
+        public LeanEngineWinFormPresenter(ILeanEngineWinFormView view, LeanEngineWinFormModel model, EventMessagingHandler messageHandler)
         {
             _view = view;
             _model = model;
             view.ExitApplication += ExitApplication;
-            //view.PollingTick += PollingTick;
             view.TickerTick += TimerOnTick;
             view.ConsoleOnKeyUp += ConsoleOnKeyUp;
+            messageHandler.DebugEvent += HandleDebugPacket;
+            messageHandler.LogEvent += HandleLogPacket;
+            messageHandler.RuntimeErrorEvent += HandleRuntimeErrorPacket;
+            messageHandler.HandledErrorEvent += HandleHandledErrorPacket;
+            messageHandler.BacktestResultEvent += HandleBacktestResultPacket;
         }
 
 
@@ -63,79 +100,7 @@ namespace QuantConnect.Views.Presenter
                                                                 " Ram: " , OS.TotalPhysicalMemoryUsed , " Mb");
             _view.OnPropertyChanged(_model);
         }
-
-        /// <summary>
-        ///     Primary polling thread for the logging and chart display.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="eventArgs"></param>
-        private void PollingTick(object sender, EventArgs eventArgs)
-        {
-            Packet message;
-            if (((LeanEngineWinForm) _view).ResultsHandler == null) return;
-            while (((LeanEngineWinForm) _view).ResultsHandler.Messages.TryDequeue(out message))
-            {
-                //get the messaging system instance
-
-                //Process the packet request:
-                switch (message.Type)
-                {
-                    case PacketType.BacktestResult:
-                        //Draw chart
-                        break;
-
-                    case PacketType.LiveResult:
-                        //Draw streaming chart
-                        break;
-
-                    case PacketType.AlgorithmStatus:
-                        //Algorithm status update
-                        break;
-
-                    case PacketType.RuntimeError:
-                        var runError = message as RuntimeErrorPacket;
-                        if (runError != null) AppendConsole(runError.Message, Color.Red);
-                        break;
-
-                    case PacketType.HandledError:
-                        var handledError = message as HandledErrorPacket;
-                        if (handledError != null) AppendConsole(handledError.Message, Color.Red);
-                        break;
-
-                    case PacketType.Log:
-                        var log = message as LogPacket;
-                        if (log != null) AppendConsole(log.Message);
-                        break;
-
-                    case PacketType.Debug:
-                        var debug = message as DebugPacket;
-                        if (debug != null) AppendConsole(debug.Message);
-                        break;
-
-                    case PacketType.OrderEvent:
-                        //New order event.
-                        break;
-
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-            }
-        }
-
-        /// <summary>
-        ///     Write to the console in specific font color.
-        /// </summary>
-        /// <param name="message">String to append</param>
-        /// <param name="color">Defaults to black</param>
-        private void AppendConsole(string message, Color color = default(Color))
-        {
-            message = DateTime.Now.ToString("u") + " " + message + Environment.NewLine;
-            //Add to console:
-            var console = ((LeanEngineWinForm) _view).RichTextBoxLog;
-            console.AppendText(message);
-            console.Refresh();
-        }
-
+        
         private void ExitApplication(object sender, EventArgs e)
         {
             if (((LeanEngineWinForm)_view).Engine != null)

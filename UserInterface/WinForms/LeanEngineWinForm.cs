@@ -54,38 +54,6 @@ namespace QuantConnect.Views.WinForms
         private ToolStripProgressBar FormToolStripProgressBar;
         private LeanEngineWinFormPresenter _presenter;
         
-        private void HandleDebugPacket(DebugPacket packet)
-        {
-            Log.Trace("Debug: " + packet.Message);
-        }
-        private void HandleLogPacket(LogPacket packet)
-        {
-            Log.Trace("Log: " + packet.Message);
-        }
-        private void HandleRuntimeErrorPacket(RuntimeErrorPacket packet)
-        {
-            var rstack = (!string.IsNullOrEmpty(packet.StackTrace) ? (Environment.NewLine + " " + packet.StackTrace) : string.Empty);
-            Log.Error(packet.Message + rstack);
-        }
-
-        private void HandleHandledErrorPacket(HandledErrorPacket packet)
-        {
-            var hstack = (!string.IsNullOrEmpty(packet.StackTrace) ? (Environment.NewLine + " " + packet.StackTrace) : string.Empty);
-            Log.Error(packet.Message + hstack);
-            
-        }
-
-        private void HandleBacktestResultPacket(BacktestResultPacket packet)
-        {
-            if (packet.Progress == 1)
-            {
-                foreach (var pair in packet.Results.Statistics)
-                {
-                    Log.Trace("STATISTICS:: " + pair.Key + " " + pair.Value);
-                }
-            }
-        }
-
         /// <summary>
         ///     Launch the Lean Engine Primary Form:
         /// </summary>
@@ -93,14 +61,9 @@ namespace QuantConnect.Views.WinForms
         {
             Config.Set("messaging-handler", "QuantConnect.Messaging.EventMessagingHandler");
             var systemHandler = LeanEngineSystemHandlers.FromConfiguration(Composer.Instance);
-            var msgHandler = (EventMessagingHandler)systemHandler.Notify;
-            msgHandler.DebugEvent += HandleDebugPacket;
-            msgHandler.LogEvent += HandleLogPacket;
-            msgHandler.RuntimeErrorEvent += HandleRuntimeErrorPacket;
-            msgHandler.HandledErrorEvent += HandleHandledErrorPacket;
-            msgHandler.BacktestResultEvent += HandleBacktestResultPacket;
+            var messageHandler = (EventMessagingHandler)systemHandler.Notify;
             var model = new LeanEngineWinFormModel();
-            _presenter = new LeanEngineWinFormPresenter(this, model);
+            _presenter = new LeanEngineWinFormPresenter(this, model, messageHandler);
 
             InitializeComponent();
 
@@ -140,7 +103,6 @@ namespace QuantConnect.Views.WinForms
         public LeanEngineSystemHandlers EngineSystemHandlers { get; set; }
 
         //Form Controls:
-        public RichTextBox RichTextBoxLog { get; set; }
         public IResultHandler ResultsHandler { get; set; }
         public event EventHandler TickerTick;
         public event EventHandler ExitApplication;
@@ -150,7 +112,7 @@ namespace QuantConnect.Views.WinForms
         {
             StatisticsToolStripStatusLabel.Text = model.StatusStripStatisticsText;
         }
-
+        
         private void Exit(object sender, EventArgs eventArgs)
         {
             ExitApplication(sender, eventArgs);
