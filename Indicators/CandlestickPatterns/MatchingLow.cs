@@ -94,8 +94,8 @@ namespace QuantConnect.Indicators.CandlestickPatterns
             // add the current range and subtract the first range: this is done after the pattern recognition 
             // when avgPeriod is not 0, that means "compare with the previous candles" (it excludes the current candle)
 
-            _equalPeriodTotal += GetCandleRange(CandleSettingType.ShadowVeryShort, window[1]) -
-                                 GetCandleRange(CandleSettingType.ShadowVeryShort, window[_equalAveragePeriod + 1]);
+            _equalPeriodTotal += GetCandleRange(CandleSettingType.Equal, window[1]) -
+                                 GetCandleRange(CandleSettingType.Equal, window[_equalAveragePeriod + 1]);
 
             return value;
         }
