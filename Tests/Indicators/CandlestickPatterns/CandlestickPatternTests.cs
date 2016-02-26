@@ -120,6 +120,7 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
                         // Lean uses decimals while TA-lib uses doubles, so this test only passes with the ewz test file 
                         rows.Add(new TestCaseData(new StickSandwich(), "CDLSTICKSANDWICH", testFileName).SetName("StickSandwich-" + testFileName));
                     }
+                    rows.Add(new TestCaseData(new Takuri(), "CDLTAKURI", testFileName).SetName("Takuri-" + testFileName));
                 }
 
                 return rows.ToArray();
