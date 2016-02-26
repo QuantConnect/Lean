@@ -125,6 +125,7 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
                     rows.Add(new TestCaseData(new Thrusting(), "CDLTHRUSTING", testFileName).SetName("Thrusting-" + testFileName));
                     rows.Add(new TestCaseData(new Tristar(), "CDLTRISTAR", testFileName).SetName("Tristar-" + testFileName));
                     rows.Add(new TestCaseData(new UniqueThreeRiver(), "CDLUNIQUE3RIVER", testFileName).SetName("UniqueThreeRiver-" + testFileName));
+                    rows.Add(new TestCaseData(new UpsideGapTwoCrows(), "CDLUPSIDEGAP2CROWS", testFileName).SetName("UpsideGapTwoCrows-" + testFileName));
                 }
 
                 return rows.ToArray();
