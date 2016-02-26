@@ -121,6 +121,7 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
                         rows.Add(new TestCaseData(new StickSandwich(), "CDLSTICKSANDWICH", testFileName).SetName("StickSandwich-" + testFileName));
                     }
                     rows.Add(new TestCaseData(new Takuri(), "CDLTAKURI", testFileName).SetName("Takuri-" + testFileName));
+                    rows.Add(new TestCaseData(new TasukiGap(), "CDLTASUKIGAP", testFileName).SetName("TasukiGap-" + testFileName));
                 }
 
                 return rows.ToArray();
