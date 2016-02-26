@@ -114,6 +114,7 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
                         // Lean uses decimals while TA-lib uses doubles, so this test does not pass with the spy test file 
                         rows.Add(new TestCaseData(new SpinningTop(), "CDLSPINNINGTOP", testFileName).SetName("SpinningTop-" + testFileName));
                     }
+                    rows.Add(new TestCaseData(new StalledPattern(), "CDLSTALLEDPATTERN", testFileName).SetName("StalledPattern-" + testFileName));
                 }
 
                 return rows.ToArray();
