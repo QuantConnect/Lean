@@ -369,9 +369,9 @@ namespace QuantConnect.Util
         /// <summary>
         /// Scale and convert the resulting number to deci-cents int.
         /// </summary>
-        private static int Scale(decimal value)
+        private static long Scale(decimal value)
         {
-            return Convert.ToInt32(value*10000);
+            return (long)(value*10000);
         }
 
         /// <summary>
