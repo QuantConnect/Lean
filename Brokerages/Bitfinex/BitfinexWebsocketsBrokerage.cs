@@ -88,10 +88,10 @@ namespace QuantConnect.Brokerages.Bitfinex
             try
             {
                 WebSocket.Send(JsonConvert.SerializeObject(new
-                   {
-                       @event = "unsubscribe",
-                       channelId = id,
-                   }));
+                {
+                    @event = "unsubscribe",
+                    channelId = id,
+                }));
                 this._channelId.Remove(id);
             }
             catch (Exception ex)
@@ -161,9 +161,16 @@ namespace QuantConnect.Brokerages.Bitfinex
 
         private void Reconnect()
         {
-            this.UnAuthenticate();
-            this.Unsubscribe(null, null);
-            WebSocket.Close();
+            //try to clean up state
+            try
+            {
+                this.UnAuthenticate();
+                this.Unsubscribe(null, null);
+                WebSocket.Close();
+            }
+            catch (Exception)
+            {
+            }
             WebSocket.Connect();
             this.Subscribe(null, null);
             this.Authenticate();

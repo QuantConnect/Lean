@@ -141,12 +141,6 @@ namespace QuantConnect.Brokerages.Bitfinex
 
             if (cached.Count() > 0 && cached.First().Value != null)
             {
-                //todo: support btc fees?
-                if (!string.IsNullOrEmpty(msg.FEE_CURRENCY) && msg.FEE_CURRENCY != "USD")
-                {
-                    throw new Exception("Only fees in USD are currently supported.");
-                }
-
                 var fill = new OrderEvent
                 (
                     cached.First().Key, symbol, msg.TRD_TIMESTAMP, MapOrderStatus(msg),
@@ -154,6 +148,12 @@ namespace QuantConnect.Brokerages.Bitfinex
                     msg.TRD_PRICE_EXECUTED / divisor, (int)(msg.TRD_AMOUNT_EXECUTED * divisor),
                     msg.FEE / divisor, "Bitfinex Fill Event"
                 );
+                fill.FillPrice = msg.TRD_PRICE_EXECUTED / divisor;
+
+                if (msg.FEE_CURRENCY == "BTC")
+                {
+                    msg.FEE = (msg.FEE * msg.TRD_PRICE_EXECUTED) / divisor;
+                }
 
                 filledOrderIDs.Add(cached.First().Key);
 
