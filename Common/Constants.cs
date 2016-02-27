@@ -24,8 +24,6 @@ namespace QuantConnect
     /// </summary>
     public static class Constants
     {
-        private static readonly string DataFolderPath = Config.Get("data-folder", Config.Get("data-directory", @"../../../Data/"));
-
         static Constants()
         {
             Version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
@@ -41,7 +39,7 @@ namespace QuantConnect
         /// </summary>
         public static string DataFolder
         {
-            get { return DataFolderPath; }
+            get { return Config.Get("data-folder", Config.Get("data-directory", @"../../../Data/")); }
         }
 
         /// <summary>
