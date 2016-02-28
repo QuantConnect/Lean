@@ -16,7 +16,7 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
 
         private string _exchange;
         private bool _useDivisor;
-        decimal divisor = 100m;
+        const decimal divisor = 100m;
 
         /// <summary>
         /// Creates instance of downloader
@@ -60,8 +60,7 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
 
                     using (var cl = new WebClient())
                     {
-                        //cl.Proxy
-                        var data = cl.DownloadString(request);
+                       var data = cl.DownloadString(request);
 
                         var mbtc = JsonConvert.DeserializeObject<List<CryptoiqBitcoin>>(data);
                         mbtc = mbtc.OrderBy(m => m.time).ToList();

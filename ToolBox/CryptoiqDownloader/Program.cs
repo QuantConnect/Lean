@@ -22,8 +22,8 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
                 Console.WriteLine("FROMDATE = yyyymmdd");
                 Console.WriteLine("TODATE = yyyymmdd");
                 Environment.Exit(1);
-                //todo: remove default params
-                //args = new string[] { "20160214", DateTime.UtcNow.ToString("yyyyMMdd"), "bitfinex", "BTCUSD" };
+                //useful detault params
+                //args = new string[] { "20151110", DateTime.UtcNow.ToString("yyyyMMdd"), "bitfinex", "BTCUSD" };
             }
 
             try
