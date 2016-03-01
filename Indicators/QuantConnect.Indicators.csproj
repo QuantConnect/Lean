@@ -49,6 +49,7 @@
     <Compile Include="AccumulationDistribution.cs" />
     <Compile Include="AccumulationDistributionOscillator.cs" />
     <Compile Include="AverageDirectionalIndex.cs" />
+    <Compile Include="AverageDirectionalMovementIndexRating.cs" />
     <Compile Include="BalanceOfPower.cs" />
     <Compile Include="CandlestickPatterns\UpDownGapThreeMethods.cs" />
     <Compile Include="CandlestickPatterns\UpsideGapTwoCrows.cs" />
