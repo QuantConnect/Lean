@@ -98,6 +98,21 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
+        public decimal TryGetDecimal(string key)
+        {
+            decimal parsed;
+            if (decimal.TryParse(allValues[Array.IndexOf(allKeys, key)], out parsed))
+            {
+                return parsed;
+            }
+            return 0m;
+        }
+
+        /// <summary>
+        /// Returns typed value from untyped json array
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
         public DateTime GetDateTime(string key)
         {
             return Time.UnixTimeStampToDateTime(double.Parse(allValues[Array.IndexOf(allKeys, key)]));

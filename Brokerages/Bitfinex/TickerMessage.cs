@@ -25,9 +25,9 @@ namespace QuantConnect.Brokerages.Bitfinex
 
             CHANNEL_ID = GetInt("CHANNEL_ID");
             BID = GetDecimal("BID");
-            BID_SIZE = GetDecimal("BID_SIZE");
+            BID_SIZE = TryGetDecimal("BID_SIZE");
             ASK = GetDecimal("ASK");
-            ASK_SIZE = GetDecimal("ASK_SIZE");
+            ASK_SIZE = TryGetDecimal("ASK_SIZE");
             DAILY_CHANGE = GetDecimal("DAILY_CHANGE");
             DAILY_CHANGE_PERC = GetDecimal("DAILY_CHANGE_PERC");
             LAST_PRICE = GetDecimal("LAST_PRICE");

@@ -128,6 +128,23 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
             Assert.AreEqual(0.01m, actual.Price);
         }
 
+        [Test()]
+        public void OnMessageTickerTest2()
+        {
+
+            string json = "{\"event\":\"subscribed\",\"channel\":\"ticker\",\"chanId\":\"2\"}";
+
+            unit.OnMessage(unit, GetArgs(json));
+
+            json = "[2,432.51,5.79789796,432.74,0.00009992,-6.41,-0.01,432.72,20067.46166511,442.79,427.26]";
+
+            unit.OnMessage(unit, GetArgs(json));
+
+            var actual = unit.GetNextTicks().First();
+            Assert.AreEqual("BTCUSD", actual.Symbol.Value);
+            Assert.AreEqual(4.3272m, actual.Price);
+        }
+
 
         [Test()]
         public void OnMessageInfoRestartTest()

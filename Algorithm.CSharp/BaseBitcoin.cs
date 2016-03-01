@@ -44,10 +44,12 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        /// Bitfinex margin call uses different behaviour
+        /// Bitfinex margin call uses different behaviour to vanilla LEAN.
         /// </summary>
+        /// <remarks>For the time being, margin call requests are ignored and algorithms are expected to provide their own.
+        /// If the ticker price moves more than 15% against the base price of your position then you risk your entire position being liquidated.</remarks>
         /// <param name="requests"></param>
-        /// todo: Implement BitfinexMarginCallModel
+        /// todo: Implement BitfinexMarginCallModel and/or override SecurityPortfolioManager.ScanForMarginCall()
         public override void OnMarginCall(List<Orders.SubmitOrderRequest> requests)
         {
             requests.Clear();
@@ -72,11 +74,13 @@ namespace QuantConnect.Algorithm.CSharp
 
         protected virtual void Long()
         {
+            Liquidate();
             SetHoldings(BitcoinSymbol, 3.0m);
         }
 
         protected virtual void Short()
         {
+            Liquidate();
             SetHoldings(BitcoinSymbol, -3.0m);
         }
 
