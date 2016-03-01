@@ -34,7 +34,7 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
 
                 // Load settings from config.json
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
-                bool useDivisor = bool.Parse(Config.Get("bitfinex-user-divisor", "false"));
+                bool useDivisor = bool.Parse(Config.Get("bitfinex-use-divisor", "false"));
 
 
                 // Create an instance of the downloader

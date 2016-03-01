@@ -140,6 +140,7 @@
   <ItemGroup>
     <Compile Include="AlgoSeekOptionsConverter\Program.cs" />
     <Compile Include="CoarseUniverseGenerator\Program.cs" />
+    <Compile Include="CryptoiqDownloader\CryptoiqBitcoin.cs" />
     <Compile Include="CryptoiqDownloader\CryptoiqDownloader.cs" />
     <Compile Include="CryptoiqDownloader\Program.cs" />
     <Compile Include="DukascopyDownloader\DukascopyDataDownloader.cs" />

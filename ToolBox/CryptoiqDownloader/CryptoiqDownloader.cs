@@ -84,17 +84,5 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
             }
         }
 
-        public class CryptoiqBitcoin
-        {
-
-            public DateTime time;
-            public decimal ask;
-            public decimal bid;
-            public decimal last;
-            public decimal high;
-            public decimal low;
-            public decimal volume;
-        }
-
     }
 }
