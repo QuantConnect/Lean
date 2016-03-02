@@ -196,18 +196,18 @@ namespace QuantConnect.Views.WinForms
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(LeanEngineWinForm));
             this.LogGroupBox = new System.Windows.Forms.GroupBox();
-            this.TextBoxLog = new System.Windows.Forms.RichTextBox();
-            this.MenuStrip = new System.Windows.Forms.MenuStrip();
-            this.FileMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.ExitMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.FormStatusStrip = new System.Windows.Forms.StatusStrip();
             this.FormToolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.FormToolStripStatusStringLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.StatisticsToolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.FormToolStripProgressBar = new System.Windows.Forms.ToolStripProgressBar();
+            this.TextBoxLog = new System.Windows.Forms.RichTextBox();
+            this.MenuStrip = new System.Windows.Forms.MenuStrip();
+            this.FileMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ExitMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.LogGroupBox.SuspendLayout();
-            this.MenuStrip.SuspendLayout();
             this.FormStatusStrip.SuspendLayout();
+            this.MenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // LogGroupBox
@@ -218,12 +218,47 @@ namespace QuantConnect.Views.WinForms
             this.LogGroupBox.AutoSize = true;
             this.LogGroupBox.Controls.Add(this.FormStatusStrip);
             this.LogGroupBox.Controls.Add(this.TextBoxLog);
-            this.LogGroupBox.Location = new System.Drawing.Point(10, 40);
+            this.LogGroupBox.Location = new System.Drawing.Point(10, 503);
             this.LogGroupBox.Name = "LogGroupBox";
-            this.LogGroupBox.Size = new System.Drawing.Size(989, 668);
+            this.LogGroupBox.Size = new System.Drawing.Size(989, 205);
             this.LogGroupBox.TabIndex = 0;
             this.LogGroupBox.TabStop = false;
             this.LogGroupBox.Text = "Log";
+            // 
+            // FormStatusStrip
+            // 
+            this.FormStatusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.FormToolStripStatusLabel,
+            this.FormToolStripStatusStringLabel,
+            this.StatisticsToolStripStatusLabel,
+            this.FormToolStripProgressBar});
+            this.FormStatusStrip.Location = new System.Drawing.Point(3, 180);
+            this.FormStatusStrip.Name = "FormStatusStrip";
+            this.FormStatusStrip.Size = new System.Drawing.Size(983, 22);
+            this.FormStatusStrip.TabIndex = 1;
+            // 
+            // FormToolStripStatusLabel
+            // 
+            this.FormToolStripStatusLabel.Name = "FormToolStripStatusLabel";
+            this.FormToolStripStatusLabel.Size = new System.Drawing.Size(105, 17);
+            this.FormToolStripStatusLabel.Text = "Loading Complete";
+            // 
+            // FormToolStripStatusStringLabel
+            // 
+            this.FormToolStripStatusStringLabel.Name = "FormToolStripStatusStringLabel";
+            this.FormToolStripStatusStringLabel.Size = new System.Drawing.Size(625, 17);
+            this.FormToolStripStatusStringLabel.Spring = true;
+            // 
+            // StatisticsToolStripStatusLabel
+            // 
+            this.StatisticsToolStripStatusLabel.Name = "StatisticsToolStripStatusLabel";
+            this.StatisticsToolStripStatusLabel.Size = new System.Drawing.Size(136, 17);
+            this.StatisticsToolStripStatusLabel.Text = "Statistics: CPU:    Ram:    ";
+            // 
+            // FormToolStripProgressBar
+            // 
+            this.FormToolStripProgressBar.Name = "FormToolStripProgressBar";
+            this.FormToolStripProgressBar.Size = new System.Drawing.Size(100, 16);
             // 
             // TextBoxLog
             // 
@@ -233,16 +268,16 @@ namespace QuantConnect.Views.WinForms
             this.TextBoxLog.Location = new System.Drawing.Point(10, 20);
             this.TextBoxLog.Name = "TextBoxLog";
             this.TextBoxLog.ReadOnly = true;
-            this.TextBoxLog.Size = new System.Drawing.Size(965, 629);
+            this.TextBoxLog.Size = new System.Drawing.Size(965, 166);
             this.TextBoxLog.TabIndex = 0;
             this.TextBoxLog.Text = "";
             // 
-            // Menu
+            // MenuStrip
             // 
             this.MenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.FileMenuItem});
             this.MenuStrip.Location = new System.Drawing.Point(0, 0);
-            this.MenuStrip.Name = "Menu";
+            this.MenuStrip.Name = "MenuStrip";
             this.MenuStrip.Size = new System.Drawing.Size(1008, 24);
             this.MenuStrip.TabIndex = 1;
             this.MenuStrip.Text = "menuStrip1";
@@ -259,44 +294,9 @@ namespace QuantConnect.Views.WinForms
             // 
             this.ExitMenuItem.Image = global::QuantConnect.Views.Properties.Resources.application_exit_16;
             this.ExitMenuItem.Name = "ExitMenuItem";
-            this.ExitMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.ExitMenuItem.Size = new System.Drawing.Size(92, 22);
             this.ExitMenuItem.Text = "Exit";
             this.ExitMenuItem.Click += new System.EventHandler(this.Exit);
-            // 
-            // FormStatusStrip
-            // 
-            this.FormStatusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.FormToolStripStatusLabel,
-            this.FormToolStripStatusStringLabel,
-            this.StatisticsToolStripStatusLabel,
-            this.FormToolStripProgressBar});
-            this.FormStatusStrip.Location = new System.Drawing.Point(3, 643);
-            this.FormStatusStrip.Name = "FormStatusStrip";
-            this.FormStatusStrip.Size = new System.Drawing.Size(983, 22);
-            this.FormStatusStrip.TabIndex = 1;
-            // 
-            // FormToolStripStatusLabel
-            // 
-            this.FormToolStripStatusLabel.Name = "FormToolStripStatusLabel";
-            this.FormToolStripStatusLabel.Size = new System.Drawing.Size(105, 17);
-            this.FormToolStripStatusLabel.Text = "Loading Complete";
-            // 
-            // FormToolStripStatusStringLabel
-            // 
-            this.FormToolStripStatusStringLabel.Name = "FormToolStripStatusStringLabel";
-            this.FormToolStripStatusStringLabel.Size = new System.Drawing.Size(594, 17);
-            this.FormToolStripStatusStringLabel.Spring = true;
-            // 
-            // StatisticsToolStripStatusLabel
-            // 
-            this.StatisticsToolStripStatusLabel.Name = "StatisticsToolStripStatusLabel";
-            this.StatisticsToolStripStatusLabel.Size = new System.Drawing.Size(136, 17);
-            this.StatisticsToolStripStatusLabel.Text = "Statistics: CPU:    Ram:    ";
-            // 
-            // FormToolStripProgressBar
-            // 
-            this.FormToolStripProgressBar.Name = "FormToolStripProgressBar";
-            this.FormToolStripProgressBar.Size = new System.Drawing.Size(100, 16);
             // 
             // LeanEngineWinForm
             // 
@@ -311,10 +311,10 @@ namespace QuantConnect.Views.WinForms
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.LogGroupBox.ResumeLayout(false);
             this.LogGroupBox.PerformLayout();
-            this.MenuStrip.ResumeLayout(false);
-            this.MenuStrip.PerformLayout();
             this.FormStatusStrip.ResumeLayout(false);
             this.FormStatusStrip.PerformLayout();
+            this.MenuStrip.ResumeLayout(false);
+            this.MenuStrip.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
