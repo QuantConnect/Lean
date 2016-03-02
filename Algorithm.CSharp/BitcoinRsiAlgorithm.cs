@@ -69,7 +69,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (!Portfolio[BitcoinSymbol].IsLong && rsi.Current.Value > 5 && rsi.Current.Value < 30)
             {
                 Liquidate();
-                SetHoldings(BitcoinSymbol, 3.0m, true);
+                SetHoldings(BitcoinSymbol, 3.0m, false);
                 //maker fee
                 //LimitOrder(BitcoinSymbol, quantity, Portfolio[BitcoinSymbol].Price - 0.1m);
                 Output("Long");
@@ -82,7 +82,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (!Portfolio[BitcoinSymbol].IsShort && rsi.Current.Value > 70)
             {
                 Liquidate();
-                SetHoldings(BitcoinSymbol, -3.0m, true);
+                SetHoldings(BitcoinSymbol, -3.0m, false);
                 Output("Short");
             }
         }
