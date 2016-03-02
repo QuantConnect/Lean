@@ -9,6 +9,11 @@ using System.Threading.Tasks;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+
+    /// <summary>
+    /// Base class for Bitcoin algorithms. This base class provides standard behaviour for trading BTCUSD on Bitfinex
+    /// trading on Bitfinex
+    /// </summary>
     public abstract class BaseBitcoin : QCAlgorithm
     {
 
@@ -25,6 +30,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             SetStartDate(2015, 11, 10);
             SetEndDate(2016,2, 20);
+            //if trading with exchange wallet
+            //SetBrokerageModel(BrokerageName.BitfinexBrokerage, AccountType.Cash);
             SetBrokerageModel(BrokerageName.BitfinexBrokerage, AccountType.Margin);
             SetTimeZone(DateTimeZone.Utc);
             Transactions.MarketOrderFillTimeout = new TimeSpan(0, 0, 20);
@@ -72,12 +79,20 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        /// <summary>
+        /// Bitfinex has transaction limits based on maximum margin, so you must liquidate before reversing position
+        /// </summary>
+        //todo: implement transaction limits in brokerage model
         protected virtual void Long()
         {
             Liquidate();
             SetHoldings(BitcoinSymbol, 3.0m);
         }
 
+        /// <summary>
+        /// Bitfinex has transaction limits based on maximum margin, so you must liquidate before reversing position
+        /// </summary>
+        //todo: implement transaction limits in brokerage model
         protected virtual void Short()
         {
             Liquidate();
