@@ -33,7 +33,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>QuantConnect.ToolBox.DukascopyDownloader.Program</StartupObject>
+    <StartupObject>QuantConnect.ToolBox.CryptoiqDownloader.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="IKVM.AWT.WinForms">
@@ -140,6 +140,9 @@
   <ItemGroup>
     <Compile Include="AlgoSeekOptionsConverter\Program.cs" />
     <Compile Include="CoarseUniverseGenerator\Program.cs" />
+    <Compile Include="CryptoiqDownloader\CryptoiqBitcoin.cs" />
+    <Compile Include="CryptoiqDownloader\CryptoiqDownloader.cs" />
+    <Compile Include="CryptoiqDownloader\Program.cs" />
     <Compile Include="DukascopyDownloader\DukascopyDataDownloader.cs" />
     <Compile Include="DukascopyDownloader\DukascopySymbolMapper.cs" />
     <Compile Include="DukascopyDownloader\Program.cs" />
