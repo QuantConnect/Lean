@@ -254,24 +254,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _frontierUtc = _timeProvider.GetUtcNow();
                     _frontierTimeProvider.SetCurrentTime(_frontierUtc);
 
-                    var data = new List<KeyValuePair<Security, List<BaseData>>>();
+                    var data = new List<DataFeedPacket>();
                     foreach (var kvp in _subscriptions)
                     {
                         var subscription = kvp.Value;
 
-                        var cache = new KeyValuePair<Security, List<BaseData>>(subscription.Security, new List<BaseData>());
+                        var packet = new DataFeedPacket(subscription.Security);
 
                         // dequeue data that is time stamped at or before this frontier
                         while (subscription.MoveNext() && subscription.Current != null)
                         {
-                            cache.Value.Add(subscription.Current);
+                            packet.Add(subscription.Current);
                         }
 
                         // if we have data, add it to be added to the bridge
-                        if (cache.Value.Count > 0) data.Add(cache);
+                        if (packet.Count > 0) data.Add(packet);
 
                         // we have new universe data to select based on
-                        if (subscription.IsUniverseSelectionSubscription && cache.Value.Count > 0)
+                        if (subscription.IsUniverseSelectionSubscription && packet.Count > 0)
                         {
                             var universe = subscription.Universe;
 
@@ -283,7 +283,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                             // assume that if the first item is a base data collection then the enumerator handled the aggregation,
                             // otherwise, load all the the data into a new collection instance
-                            var collection = cache.Value[0] as BaseDataCollection ?? new BaseDataCollection(_frontierUtc, subscription.Configuration.Symbol, cache.Value);
+                            var collection = packet.Data[0] as BaseDataCollection ?? new BaseDataCollection(_frontierUtc, subscription.Configuration.Symbol, packet.Data);
 
                             _changes += _universeSelection.ApplyUniverseSelection(universe, _frontierUtc, collection);
                         }

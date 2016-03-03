@@ -42,7 +42,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Gets the data in the time slice
         /// </summary>
-        public List<KeyValuePair<Security, List<BaseData>>> Data { get; private set; }
+        public List<DataFeedPacket> Data { get; private set; }
 
         /// <summary>
         /// Gets the <see cref="Slice"/> that will be used as input for the algorithm
@@ -80,7 +80,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public TimeSlice(DateTime time,
             int dataPointCount,
             Slice slice,
-            List<KeyValuePair<Security, List<BaseData>>> data,
+            List<DataFeedPacket> data,
             List<KeyValuePair<Cash, BaseData>> cashBookUpdateData,
             List<KeyValuePair<Security, BaseData>> securitiesUpdateData,
             List<KeyValuePair<SubscriptionDataConfig, List<BaseData>>> consolidatorUpdateData,
@@ -107,7 +107,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="data">The data in this <see cref="TimeSlice"/></param>
         /// <param name="changes">The new changes that are seen in this time slice as a result of universe selection</param>
         /// <returns>A new <see cref="TimeSlice"/> containing the specified data</returns>
-        public static TimeSlice Create(DateTime utcDateTime, DateTimeZone algorithmTimeZone, CashBook cashBook, List<KeyValuePair<Security, List<BaseData>>> data, SecurityChanges changes)
+        public static TimeSlice Create(DateTime utcDateTime, DateTimeZone algorithmTimeZone, CashBook cashBook, List<DataFeedPacket> data, SecurityChanges changes)
         {
             int count = 0;
             var security = new List<KeyValuePair<Security, BaseData>>();
@@ -135,10 +135,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var delistings = new Delistings(algorithmTime);
             var symbolChanges = new SymbolChangedEvents(algorithmTime);
 
-            foreach (var kvp in data)
+            foreach (var packet in data)
             {
-                var list = kvp.Value;
-                var symbol = kvp.Key.Symbol;
+                var list = packet.Data;
+                var symbol = packet.Security.Symbol;
                 
                 // keep count of all data points
                 if (list.Count == 1 && list[0] is BaseDataCollection)
@@ -155,20 +155,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 for (int i = 0; i < list.Count; i++)
                 {
                     var baseData = list[i];
-                    if (!kvp.Key.SubscriptionDataConfig.IsInternalFeed)
+                    if (!packet.Security.SubscriptionDataConfig.IsInternalFeed)
                     {
                         // this is all the data that goes into the algorithm
                         allDataForAlgorithm.Add(baseData);
-                        if (kvp.Key.SubscriptionDataConfig.IsCustomData)
+                        if (packet.Security.SubscriptionDataConfig.IsCustomData)
                         {
                             // this is all the custom data
-                            custom.Add(new KeyValuePair<Security, IEnumerable<BaseData>>(kvp.Key, kvp.Value));
+                            custom.Add(new KeyValuePair<Security, IEnumerable<BaseData>>(packet.Security, list));
                         }
                     }
                     // don't add internal feed data to ticks/bars objects
                     if (baseData.DataType != MarketDataType.Auxiliary)
                     {
-                        if (!kvp.Key.SubscriptionDataConfig.IsInternalFeed)
+                        if (!packet.Security.SubscriptionDataConfig.IsInternalFeed)
                         {
                             // populate ticks and tradebars dictionaries with no aux data
                             if (baseData.DataType == MarketDataType.Tick)
@@ -209,7 +209,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     else if ((symbolChange = baseData as SymbolChangedEvent) != null)
                     {
                         // symbol changes is keyed by the requested symbol
-                        symbolChanges[kvp.Key.SubscriptionDataConfig.Symbol] = symbolChange;
+                        symbolChanges[packet.Security.SubscriptionDataConfig.Symbol] = symbolChange;
                     }
                 }
 
@@ -217,19 +217,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // and we need this data to update cash conversion rates, long term we should
                 // have Cash hold onto it's security, then he can update himself, or rather, just
                 // patch through calls to conversion rate to compue it on the fly using Security.Price
-                if (update != null && cashSecurities.Contains(kvp.Key.Symbol))
+                if (update != null && cashSecurities.Contains(packet.Security.Symbol))
                 {
                     foreach (var cashKvp in cashBook)
                     {
-                        if (cashKvp.Value.SecuritySymbol == kvp.Key.Symbol)
+                        if (cashKvp.Value.SecuritySymbol == packet.Security.Symbol)
                         {
                             cash.Add(new KeyValuePair<Cash, BaseData>(cashKvp.Value, update));
                         }
                     }
                 }
 
-                security.Add(new KeyValuePair<Security, BaseData>(kvp.Key, update));
-                consolidator.Add(new KeyValuePair<SubscriptionDataConfig, List<BaseData>>(kvp.Key.SubscriptionDataConfig, consolidatorUpdate));
+                security.Add(new KeyValuePair<Security, BaseData>(packet.Security, update));
+                consolidator.Add(new KeyValuePair<SubscriptionDataConfig, List<BaseData>>(packet.Security.SubscriptionDataConfig, consolidatorUpdate));
             }
 
             var slice = new Slice(algorithmTime, allDataForAlgorithm, tradeBars, ticks, splits, dividends, delistings, symbolChanges, allDataForAlgorithm.Count > 0);
