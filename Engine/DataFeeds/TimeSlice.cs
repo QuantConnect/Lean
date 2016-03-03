@@ -67,7 +67,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Gets all the custom data in this <see cref="TimeSlice"/>
         /// </summary>
-        public List<KeyValuePair<Security, List<BaseData>>> CustomData { get; private set; }
+        public List<KeyValuePair<Security, IEnumerable<BaseData>>> CustomData { get; private set; }
 
         /// <summary>
         /// Gets the changes to the data subscriptions as a result of universe selection
@@ -77,7 +77,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes a new <see cref="TimeSlice"/> containing the specified data
         /// </summary>
-        public TimeSlice(DateTime time, int dataPointCount, Slice slice, List<KeyValuePair<Security, List<BaseData>>> data, List<KeyValuePair<Cash, BaseData>> cashBookUpdateData, List<KeyValuePair<Security, BaseData>> securitiesUpdateData, List<KeyValuePair<SubscriptionDataConfig, List<BaseData>>> consolidatorUpdateData, List<KeyValuePair<Security, List<BaseData>>> customData, SecurityChanges securityChanges)
+        public TimeSlice(DateTime time,
+            int dataPointCount,
+            Slice slice,
+            List<KeyValuePair<Security, List<BaseData>>> data,
+            List<KeyValuePair<Cash, BaseData>> cashBookUpdateData,
+            List<KeyValuePair<Security, BaseData>> securitiesUpdateData,
+            List<KeyValuePair<SubscriptionDataConfig, List<BaseData>>> consolidatorUpdateData,
+            List<KeyValuePair<Security, IEnumerable<BaseData>>> customData,
+            SecurityChanges securityChanges)
         {
             Time = time;
             Data = data;
@@ -103,7 +111,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             int count = 0;
             var security = new List<KeyValuePair<Security, BaseData>>();
-            var custom = new List<KeyValuePair<Security, List<BaseData>>>();
+            var custom = new List<KeyValuePair<Security, IEnumerable<BaseData>>>();
             var consolidator = new List<KeyValuePair<SubscriptionDataConfig, List<BaseData>>>();
             var allDataForAlgorithm = new List<BaseData>(data.Count);
             var cash = new List<KeyValuePair<Cash, BaseData>>(cashBook.Count);
@@ -154,7 +162,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         if (kvp.Key.SubscriptionDataConfig.IsCustomData)
                         {
                             // this is all the custom data
-                            custom.Add(kvp);
+                            custom.Add(new KeyValuePair<Security, IEnumerable<BaseData>>(kvp.Key, kvp.Value));
                         }
                     }
                     // don't add internal feed data to ticks/bars objects
