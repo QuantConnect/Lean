@@ -847,6 +847,37 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new Heikin-Ashi indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose Heikin-Ashi we want</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The Heikin-Ashi indicator for the requested symbol over the specified period</returns>
+        public HeikinAshi HeikinAshi(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "HA", resolution);
+            var ha = new HeikinAshi(name);
+            RegisterIndicator(symbol, ha, resolution, selector);
+            return ha;
+        }
+
+        /// <summary>
+        /// Creates a new AverageDirectionalMovementIndexRating indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose ADXR we want</param>
+        /// <param name="period">The period over which to compute the ADXR</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The AverageDirectionalMovementIndexRating indicator for the requested symbol over the specified period</returns>
+        public AverageDirectionalMovementIndexRating ADXR(Symbol symbol, int period, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "ADXR" + period, resolution);
+            var adxr = new AverageDirectionalMovementIndexRating(name, period);
+            RegisterIndicator(symbol, adxr, resolution, selector);
+            return adxr;
+        }
+
+        /// <summary>
         /// Creates and registers a new consolidator to receive automatic updates at the specified resolution as well as configures
         /// the indicator to receive updates from the consolidator.
         /// </summary>

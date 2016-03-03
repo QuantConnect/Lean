@@ -322,6 +322,7 @@ namespace QuantConnect.Indicators
         public override void Reset()
         {
             base.Reset();
+            _previousInput = null;
             TrueRange.Reset();
             DirectionalMovementPlus.Reset();
             DirectionalMovementMinus.Reset();

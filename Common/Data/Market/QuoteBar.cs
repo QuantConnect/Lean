@@ -14,6 +14,8 @@
 */
 
 using System;
+using System.Globalization;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.Market
 {
@@ -23,6 +25,9 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public class QuoteBar : BaseData, IBar
     {
+        // scale factor used in QC equity/forex data files
+        private const decimal _scaleFactor = 1 / 10000m;
+
         /// <summary>
         /// Average bid size
         /// </summary>
@@ -177,10 +182,10 @@ namespace QuantConnect.Data.Market
         {
             Symbol = symbol;
             Time = time;
-            Bid = bid == null ? new Bar() : new Bar(bid.Open, bid.High, bid.Low, bid.Close);
-            Ask = ask == null ? new Bar() : new Bar(ask.Open, ask.High, ask.Low, ask.Close);
-            LastBidSize = lastBidSize;
-            LastAskSize = lastAskSize;
+            Bid = bid == null ? null : new Bar(bid.Open, bid.High, bid.Low, bid.Close);
+            Ask = ask == null ? null : new Bar(ask.Open, ask.High, ask.Low, ask.Close);
+            if (Bid != null) LastBidSize = lastBidSize;
+            if (Ask != null) LastAskSize = lastAskSize;
             Value = Close;
             Period = period ?? TimeSpan.FromMinutes(1);
             DataType = MarketDataType.QuoteBar;
@@ -197,9 +202,12 @@ namespace QuantConnect.Data.Market
         /// <param name="askSize">The size of the current ask, if available, if not, pass 0</param>
         public override void Update(decimal lastTrade, decimal bidPrice, decimal askPrice, decimal volume, decimal bidSize, decimal askSize)
         {
-            // update our bid and ask bars
-            Bid.Update(bidPrice);
-            Ask.Update(askPrice);
+            // update our bid and ask bars - handle null values, this is to give good values for midpoint OHLC
+            if (Bid == null && bidPrice != 0) Bid = new Bar();
+            if (Bid != null) Bid.Update(bidPrice);
+
+            if (Ask == null && askPrice != 0) Ask = new Bar();
+            if (Ask != null) Ask.Update(askPrice);
 
             if (bidSize > 0) 
             {
@@ -227,7 +235,61 @@ namespace QuantConnect.Data.Market
         /// <returns>Enumerable iterator for returning each line of the required data.</returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            throw new NotImplementedException("Equity quote bars data format has not yet been finalized.");
+            var quoteBar = new QuoteBar
+            {
+                Period = config.Increment,
+                Symbol = config.Symbol
+            };
+
+            var csv = line.ToCsv(10);
+            if (config.Resolution == Resolution.Daily || config.Resolution == Resolution.Hour)
+            {
+                // hourly and daily have different time format, and can use slow, robust c# parser.
+                quoteBar.Time = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+            }
+            else
+            {
+                // Using custom "ToDecimal" conversion for speed on high resolution data.
+                quoteBar.Time = date.Date.AddMilliseconds(csv[0].ToInt32()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+            }
+
+            // only create the bid if it exists in the file
+            if (csv[1].Length != 0 || csv[2].Length != 0 || csv[3].Length != 0 || csv[4].Length != 0)
+            {
+                quoteBar.Bid = new Bar
+                {
+                    Open = config.GetNormalizedPrice(csv[1].ToDecimal()*_scaleFactor),
+                    High = config.GetNormalizedPrice(csv[2].ToDecimal()*_scaleFactor),
+                    Low = config.GetNormalizedPrice(csv[3].ToDecimal()*_scaleFactor),
+                    Close = config.GetNormalizedPrice(csv[4].ToDecimal()*_scaleFactor)
+                };
+                quoteBar.LastBidSize = csv[5].ToInt64();
+            }
+            else
+            {
+                quoteBar.Bid = null;
+            }
+
+            // only create the ask if it exists in the file
+            if (csv[6].Length != 0 || csv[7].Length != 0 || csv[8].Length != 0 || csv[9].Length != 0)
+            {
+                quoteBar.Ask = new Bar
+                {
+                    Open = config.GetNormalizedPrice(csv[6].ToDecimal()*_scaleFactor),
+                    High = config.GetNormalizedPrice(csv[7].ToDecimal()*_scaleFactor),
+                    Low = config.GetNormalizedPrice(csv[8].ToDecimal()*_scaleFactor),
+                    Close = config.GetNormalizedPrice(csv[9].ToDecimal()*_scaleFactor)
+                };
+                quoteBar.LastAskSize = csv[10].ToInt64();
+            }
+            else
+            {
+                quoteBar.Ask = null;
+            }
+
+            quoteBar.Value = quoteBar.Close;
+
+            return quoteBar;
         }
 
         /// <summary>
@@ -240,8 +302,13 @@ namespace QuantConnect.Data.Market
         /// <returns>String source location of the file</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            // we have a design in github for options structure: https://github.com/QuantConnect/Lean/issues/166
-            throw new NotImplementedException("QuoteBar folder structure has not been implemented yet.");
+            if (isLiveMode)
+            {
+                return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.LocalFile);
+            }
+
+            var source = LeanData.GenerateZipFilePath(Constants.DataFolder, config.Symbol, date, config.Resolution, config.TickType);
+            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
 
         /// <summary>

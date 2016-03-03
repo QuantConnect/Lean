@@ -18,7 +18,7 @@ using System;
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// Event arguments for the <see cref="BaseDataSubscriptionFactory.ReaderError"/> event.
+    /// Event arguments for the <see cref="TextSubscriptionFactory.ReaderError"/> event.
     /// </summary>
     public sealed class ReaderErrorEventArgs : EventArgs
     {

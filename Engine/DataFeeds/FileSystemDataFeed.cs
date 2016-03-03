@@ -366,8 +366,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // load coarse data day by day
                 var coarse = from date in Time.EachTradeableDay(security, _algorithm.StartDate, _algorithm.EndDate)
                              let dateInDataTimeZone = date.ConvertTo(config.ExchangeTimeZone, config.DataTimeZone).Date
-                             let factory = new BaseDataSubscriptionFactory(config, dateInDataTimeZone, false)
                              let source = cf.GetSource(config, dateInDataTimeZone, false)
+                             let factory = SubscriptionFactory.ForSource(source, config, dateInDataTimeZone, false)
                              let coarseFundamentalForDate = factory.Read(source)
                              select new BaseDataCollection(date, config.Symbol, coarseFundamentalForDate);
 
