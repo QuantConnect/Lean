@@ -87,6 +87,7 @@ namespace QuantConnect.Brokerages
 
         //todo: support other currencies
         //todo: Checks for decimals are superfluous until quantity is changed from int to decimal
+        //todo: Implement maximum transaction size check
         /// <summary>
         /// Validates pending orders based on currency pair, order amount, security type
         /// </summary>
@@ -105,7 +106,7 @@ namespace QuantConnect.Brokerages
                     "This model only supports BTCUSD orders on a scale of 0.01 or more.");
 
                 return false;
-            }
+            }          
 
 
             return true;
