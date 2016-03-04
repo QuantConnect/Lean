@@ -15,8 +15,10 @@
 */
 
 using System;
+using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
+using Gecko;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Lean.Engine.Results;
@@ -37,7 +39,7 @@ namespace QuantConnect.Views.WinForms
     public class LeanEngineWinForm : Form, ILeanEngineWinFormView
     {
         private static Thread _leanEngineThread;
-
+        private GeckoWebBrowser _browser;
         //Setup Configuration:
         public static string IconPath = "../../Icons/";
 
@@ -52,6 +54,7 @@ namespace QuantConnect.Views.WinForms
         private ToolStripStatusLabel FormToolStripStatusStringLabel;
         private ToolStripStatusLabel StatisticsToolStripStatusLabel;
         private ToolStripProgressBar FormToolStripProgressBar;
+        private ToolStripContainer toolStripContainer1;
         private LeanEngineWinFormPresenter _presenter;
         
         /// <summary>
@@ -84,7 +87,12 @@ namespace QuantConnect.Views.WinForms
             //Trigger a timer event.
             _timer = new Timer { Interval = 1000 };
             _timer.Tick += TickerTick;
-
+            
+            _browser = new GeckoWebBrowser();
+            _browser.Dock = DockStyle.Fill;
+            _browser.Name = "browser";
+            //_browser.Size = new Size(300,300);
+            toolStripContainer1.ContentPanel.Controls.Add(_browser);
 
             //Setup Container Events:
             Load += OnLoad;
@@ -131,6 +139,12 @@ namespace QuantConnect.Views.WinForms
 
             //Load the Lean Engine
             Engine = LaunchLean();
+            var url = string.Format("https://www.quantconnect.com/terminal/embedded?user={0}&token={1}&bid={2}&pid={3}", 
+                Config.Get("job-user-id"),
+                Config.Get("job-channel"),
+                Config.Get("algorithm-type-name"),
+                Config.Get("job-project-id"));
+            _browser.Navigate(url);
         }
 
         /// <summary>
@@ -205,9 +219,11 @@ namespace QuantConnect.Views.WinForms
             this.MenuStrip = new System.Windows.Forms.MenuStrip();
             this.FileMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ExitMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripContainer1 = new System.Windows.Forms.ToolStripContainer();
             this.LogGroupBox.SuspendLayout();
             this.FormStatusStrip.SuspendLayout();
             this.MenuStrip.SuspendLayout();
+            this.toolStripContainer1.SuspendLayout();
             this.SuspendLayout();
             // 
             // LogGroupBox
@@ -298,9 +314,26 @@ namespace QuantConnect.Views.WinForms
             this.ExitMenuItem.Text = "Exit";
             this.ExitMenuItem.Click += new System.EventHandler(this.Exit);
             // 
+            // toolStripContainer1
+            // 
+            this.toolStripContainer1.BottomToolStripPanelVisible = false;
+            // 
+            // toolStripContainer1.ContentPanel
+            // 
+            this.toolStripContainer1.ContentPanel.Size = new System.Drawing.Size(1008, 469);
+            this.toolStripContainer1.LeftToolStripPanelVisible = false;
+            this.toolStripContainer1.Location = new System.Drawing.Point(0, 28);
+            this.toolStripContainer1.Name = "toolStripContainer1";
+            this.toolStripContainer1.RightToolStripPanelVisible = false;
+            this.toolStripContainer1.Size = new System.Drawing.Size(1008, 469);
+            this.toolStripContainer1.TabIndex = 2;
+            this.toolStripContainer1.Text = "toolStripContainer1";
+            this.toolStripContainer1.TopToolStripPanelVisible = false;
+            // 
             // LeanEngineWinForm
             // 
             this.ClientSize = new System.Drawing.Size(1008, 729);
+            this.Controls.Add(this.toolStripContainer1);
             this.Controls.Add(this.LogGroupBox);
             this.Controls.Add(this.MenuStrip);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -315,6 +348,8 @@ namespace QuantConnect.Views.WinForms
             this.FormStatusStrip.PerformLayout();
             this.MenuStrip.ResumeLayout(false);
             this.MenuStrip.PerformLayout();
+            this.toolStripContainer1.ResumeLayout(false);
+            this.toolStripContainer1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 

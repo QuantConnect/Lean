@@ -74,6 +74,11 @@
     "fxcm-password": "",
     "fxcm-account-id": "",
 
+    "job-channel": "",
+    "job-user-id": "",
+    "job-project-id": "",
+    "algorithm-type-name": "",
+
     // parameters to set in the algorithm (the below are just samples)
     "parameters": {
         "ema-fast": 10,

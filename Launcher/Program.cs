@@ -30,6 +30,7 @@ namespace QuantConnect.Lean.Launcher
     {
         private const string _collapseMessage = "Unhandled exception breaking past controls and causing collapse of algorithm node. This is likely a memory leak of an external dependency or the underlying OS terminating the LEAN engine.";
 
+        [STAThread]
         static void Main(string[] args)
         {
             //Initialize:
