@@ -29,8 +29,12 @@ namespace QuantConnect.Lean.Launcher
     public class Program
     {
         private const string _collapseMessage = "Unhandled exception breaking past controls and causing collapse of algorithm node. This is likely a memory leak of an external dependency or the underlying OS terminating the LEAN engine.";
+        
+        static void RunLeanEngineWinForm()
+        {
+            Application.Run(new Views.WinForms.LeanEngineWinForm());
+        }
 
-        [STAThread]
         static void Main(string[] args)
         {
             //Initialize:
@@ -41,7 +45,10 @@ namespace QuantConnect.Lean.Launcher
             if (Config.Get("environment") == "desktop")
             {
                 Application.EnableVisualStyles();
-                Application.Run(new Views.WinForms.LeanEngineWinForm());    
+                Thread thread = new Thread(RunLeanEngineWinForm);
+                thread.SetApartmentState(ApartmentState.STA);
+                thread.Start();
+                thread.Join(); 
             }
             else
             {

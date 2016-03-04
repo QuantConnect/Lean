@@ -103,6 +103,11 @@ namespace QuantConnect.Messaging
                     BacktestResultEvent(result);
                     break;
             }
+            
+            if (StreamingApi.IsEnabled)
+            {
+                StreamingApi.Transmit(_job.UserId, _job.Channel, packet);
+            }
 
         }
 

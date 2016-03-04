@@ -39,7 +39,7 @@ namespace QuantConnect.Views.WinForms
     public class LeanEngineWinForm : Form, ILeanEngineWinFormView
     {
         private static Thread _leanEngineThread;
-        private GeckoWebBrowser _browser;
+        public GeckoWebBrowser Browser;
         //Setup Configuration:
         public static string IconPath = "../../Icons/";
 
@@ -87,12 +87,9 @@ namespace QuantConnect.Views.WinForms
             //Trigger a timer event.
             _timer = new Timer { Interval = 1000 };
             _timer.Tick += TickerTick;
-            
-            _browser = new GeckoWebBrowser();
-            _browser.Dock = DockStyle.Fill;
-            _browser.Name = "browser";
-            //_browser.Size = new Size(300,300);
-            toolStripContainer1.ContentPanel.Controls.Add(_browser);
+
+            Browser = new GeckoWebBrowser { Dock = DockStyle.Fill, Name = "browser" };
+            toolStripContainer1.ContentPanel.Controls.Add(Browser);
 
             //Setup Container Events:
             Load += OnLoad;
@@ -139,12 +136,6 @@ namespace QuantConnect.Views.WinForms
 
             //Load the Lean Engine
             Engine = LaunchLean();
-            var url = string.Format("https://www.quantconnect.com/terminal/embedded?user={0}&token={1}&bid={2}&pid={3}", 
-                Config.Get("job-user-id"),
-                Config.Get("job-channel"),
-                Config.Get("algorithm-type-name"),
-                Config.Get("job-project-id"));
-            _browser.Navigate(url);
         }
 
         /// <summary>

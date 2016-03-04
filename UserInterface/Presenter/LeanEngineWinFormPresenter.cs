@@ -14,7 +14,9 @@
 */
 
 using System;
+using System.IO;
 using System.Windows.Forms;
+using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.Messaging;
 using QuantConnect.Packets;
@@ -58,6 +60,16 @@ namespace QuantConnect.Views.Presenter
                 {
                     _model.LogText += "STATISTICS:: " + pair.Key + " " + pair.Value;
                     Log.Trace("STATISTICS:: " + pair.Key + " " + pair.Value);
+                }
+
+                if (StreamingApi.IsEnabled)
+                {
+                     if ((LeanEngineWinForm) _view != null)
+                     {
+                         var url = string.Format("https://www.quantconnect.com/terminal/embedded?user={0}&token={1}&bid={2}&pid={3}",
+                             packet.UserId, Config.Get("api-access-token"), packet.BacktestId, packet.ProjectId);
+                         ((LeanEngineWinForm)_view).Browser.Navigate(url);
+                     }
                 }
             }
         }
