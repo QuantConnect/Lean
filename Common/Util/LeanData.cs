@@ -236,20 +236,26 @@ namespace QuantConnect.Util
                 case SecurityType.Option:
                     if (isHourOrDaily)
                     {
-                        return string.Format("{0}_{1}_{2}.csv",
+                        return string.Join("_",
                             symbol.ID.Symbol.ToLower(), // underlying
                             tickType.ToLower(),
-                            symbol.ID.OptionStyle.ToLower()
-                            );
+                            symbol.ID.OptionStyle.ToLower(),
+                            symbol.ID.OptionRight.ToLower(),
+                            Scale(symbol.ID.StrikePrice),
+                            symbol.ID.Date.ToString(DateFormat.EightCharacter)
+                            ) + ".csv";
                     }
 
-                    return string.Format("{0}_{1}_{2}_{3}_{4}.csv",
+                    return string.Join("_",
                         formattedDate,
                         symbol.ID.Symbol.ToLower(), // underlying
                         resolution.ToLower(),
                         tickType.ToLower(),
-                        symbol.ID.OptionStyle.ToLower()
-                        );
+                        symbol.ID.OptionStyle.ToLower(),
+                        symbol.ID.OptionRight.ToLower(),
+                        Scale(symbol.ID.StrikePrice),
+                        symbol.ID.Date.ToString(DateFormat.EightCharacter)
+                        ) + ".csv";
 
                 case SecurityType.Commodity:
                 case SecurityType.Future:
@@ -337,7 +343,7 @@ namespace QuantConnect.Util
         /// <summary>
         /// Creates the zip file name for a QC zip data file
         /// </summary>
-        public static string GenerateZipFileName(string symbol, SecurityType securityType, DateTime date, Resolution resolution)
+        public static string GenerateZipFileName(string symbol, SecurityType securityType, DateTime date, Resolution resolution, TickType? tickType = null)
         {
             if (resolution == Resolution.Hour || resolution == Resolution.Daily)
             {
@@ -345,11 +351,9 @@ namespace QuantConnect.Util
             }
 
             var zipFileName = date.ToString(DateFormat.EightCharacter);
-            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
-            {
-                return zipFileName + "_quote.zip";
-            }
-            return zipFileName + "_trade.zip";
+            tickType = tickType ?? (securityType == SecurityType.Forex || securityType == SecurityType.Cfd ? TickType.Quote : TickType.Trade);
+            var suffix = string.Format("_{0}.zip", tickType);
+            return zipFileName + suffix;
         }
 
         /// <summary>

@@ -144,16 +144,16 @@ namespace QuantConnect.Tests.Common.Util
                 new LeanDataTestParameters(Symbols.SPY, date, Resolution.Daily, TickType.Trade, "spy.zip", "spy.csv", "equity/usa/daily"),
 
                 // equity option trades
-                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Tick, TickType.Trade, "20160217_trade_american.zip", "20160217_spy_tick_trade_american.csv", "option/usa/tick/spy"),
-                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Tick, TickType.Quote, "20160217_quote_american.zip", "20160217_spy_tick_quote_american.csv", "option/usa/tick/spy"),
-                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Second, TickType.Trade, "20160217_trade_american.zip", "20160217_spy_second_trade_american.csv", "option/usa/second/spy"),
-                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Second, TickType.Quote, "20160217_quote_american.zip", "20160217_spy_second_quote_american.csv", "option/usa/second/spy"),
-                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Minute, TickType.Trade, "20160217_trade_american.zip", "20160217_spy_minute_trade_american.csv", "option/usa/minute/spy"),
-                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Minute, TickType.Quote, "20160217_quote_american.zip", "20160217_spy_minute_quote_american.csv", "option/usa/minute/spy"),
-                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Hour, TickType.Trade, "spy_trade_american.zip", "spy_trade_american.csv", "option/usa/hour"),
-                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Hour, TickType.Quote, "spy_quote_american.zip", "spy_quote_american.csv", "option/usa/hour"),
-                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Daily, TickType.Trade, "spy_trade_american.zip", "spy_trade_american.csv", "option/usa/daily"),
-                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Daily, TickType.Quote, "spy_quote_american.zip", "spy_quote_american.csv", "option/usa/daily"),
+                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Tick, TickType.Trade, "20160217_trade_american.zip", "20160217_spy_tick_trade_american_put_1920000_20160219.csv", "option/usa/tick/spy"),
+                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Tick, TickType.Quote, "20160217_quote_american.zip", "20160217_spy_tick_quote_american_put_1920000_20160219.csv", "option/usa/tick/spy"),
+                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Second, TickType.Trade, "20160217_trade_american.zip", "20160217_spy_second_trade_american_put_1920000_20160219.csv", "option/usa/second/spy"),
+                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Second, TickType.Quote, "20160217_quote_american.zip", "20160217_spy_second_quote_american_put_1920000_20160219.csv", "option/usa/second/spy"),
+                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Minute, TickType.Trade, "20160217_trade_american.zip", "20160217_spy_minute_trade_american_put_1920000_20160219.csv", "option/usa/minute/spy"),
+                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Minute, TickType.Quote, "20160217_quote_american.zip", "20160217_spy_minute_quote_american_put_1920000_20160219.csv", "option/usa/minute/spy"),
+                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Hour, TickType.Trade, "spy_trade_american.zip", "spy_trade_american_put_1920000_20160219.csv", "option/usa/hour"),
+                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Hour, TickType.Quote, "spy_quote_american.zip", "spy_quote_american_put_1920000_20160219.csv", "option/usa/hour"),
+                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Daily, TickType.Trade, "spy_trade_american.zip", "spy_trade_american_put_1920000_20160219.csv", "option/usa/daily"),
+                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Daily, TickType.Quote, "spy_quote_american.zip", "spy_quote_american_put_1920000_20160219.csv", "option/usa/daily"),
 
                 // forex
                 new LeanDataTestParameters(Symbols.EURUSD, date, Resolution.Tick, TickType.Quote, "20160217_quote.zip", "20160217_eurusd_tick_quote.csv", "forex/fxcm/tick/eurusd"),
