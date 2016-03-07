@@ -878,6 +878,22 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new KaufmanAdaptiveMovingAverage indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose KAMA we want</param>
+        /// <param name="period">The period over which to compute the KAMA</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The KaufmanAdaptiveMovingAverage indicator for the requested symbol over the specified period</returns>
+        public KaufmanAdaptiveMovingAverage KAMA(Symbol symbol, int period, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "KAMA" + period, resolution);
+            var kama = new KaufmanAdaptiveMovingAverage(name, period);
+            RegisterIndicator(symbol, kama, resolution, selector);
+            return kama;
+        }
+
+        /// <summary>
         /// Creates and registers a new consolidator to receive automatic updates at the specified resolution as well as configures
         /// the indicator to receive updates from the consolidator.
         /// </summary>
