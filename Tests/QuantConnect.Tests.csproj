@@ -172,6 +172,7 @@
     <Compile Include="Indicators\AccumulationDistributionOscillatorTests.cs" />
     <Compile Include="Indicators\AccumulationDistributionTests.cs" />
     <Compile Include="Indicators\AverageDirectionalIndexTests.cs" />
+    <Compile Include="Indicators\KaufmanAdaptiveMovingAverageTests.cs" />
     <Compile Include="Indicators\AverageDirectionalMovementIndexRatingTests.cs" />
     <Compile Include="Indicators\BalanceOfPowerTests.cs" />
     <Compile Include="Indicators\CandlestickPatterns\CandlestickPatternTests.cs" />
@@ -384,6 +385,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_heikin_ashi.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_kama.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_logr14.txt">
