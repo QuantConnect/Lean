@@ -104,6 +104,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="AddRemoveSecurityRegressionAlgorithm.py" />
+    <Content Include="UpdateOrderRegressionAlgorithm.py" />
     <Content Include="BasicTemplateAlgorithm.py" />
     <Content Include="CustomBenchmarkAlgorithm.py" />
     <Content Include="CustomBrokerageErrorHandlerAlgorithm.py" />
