@@ -52,7 +52,7 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
 
 
                 // Create an instance of the downloader
-                const string market = Market.Bitcoin;
+                const string market = Market.Bitfinex;
                 var downloader = new CryptoiqDownloader(args[2], useDivisor);
 
                 // Download the data

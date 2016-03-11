@@ -36,7 +36,7 @@ namespace QuantConnect
             Tuple.Create(FXCM, 2),
             Tuple.Create(Oanda, 3),
             Tuple.Create(Dukascopy, 4),
-            Tuple.Create(Bitcoin, 5)
+            Tuple.Create(Bitfinex, 5)
         };
 
         static Market()
@@ -72,7 +72,7 @@ namespace QuantConnect
         /// <summary>
         /// Bitcoin Market
         /// </summary>
-        public const string Bitcoin = "bitcoin";
+        public const string Bitfinex = "bitfinex";
 
         /// <summary>
         /// Adds the specified market to the map of available markets with the specified identifier.
