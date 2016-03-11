@@ -77,16 +77,16 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
                        var data = cl.DownloadString(request);
 
                         var mbtc = JsonConvert.DeserializeObject<List<CryptoiqBitcoin>>(data);
-                        mbtc = mbtc.OrderBy(m => m.time).ToList();
+                        mbtc = mbtc.OrderBy(m => m.Time).ToList();
                         foreach (var item in mbtc)
                         {
                             yield return new Tick
                             {
-                                Time = item.time,
+                                Time = item.Time,
                                 Symbol = symbol,
-                                Value = _useDivisor ? item.last / divisor: item.last,
-                                AskPrice = _useDivisor ? item.ask / divisor : item.ask,
-                                BidPrice = _useDivisor ? item.bid / divisor : item.bid,
+                                Value = _useDivisor ? item.Last / divisor: item.Last,
+                                AskPrice = _useDivisor ? item.Ask / divisor : item.Ask,
+                                BidPrice = _useDivisor ? item.Bid / divisor : item.Bid,
                                 TickType = QuantConnect.TickType.Quote
                             };
                         }
