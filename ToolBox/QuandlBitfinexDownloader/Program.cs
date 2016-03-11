@@ -41,7 +41,7 @@ namespace QuantConnect.ToolBox.QuandlBitfinexDownloader
                 bool useDivisor = bool.Parse(Config.Get("bitfinex-use-divisor", "false"));
 
                 // Create an instance of the downloader
-                const string market = Market.Bitcoin;
+                const string market = Market.Bitfinex;
                 var downloader = new QuandlBitfinexDownloader(args[1], useDivisor);
 
                 // Download the data
