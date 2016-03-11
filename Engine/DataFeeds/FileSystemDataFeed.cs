@@ -369,7 +369,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                              let source = cf.GetSource(config, dateInDataTimeZone, false)
                              let factory = SubscriptionFactory.ForSource(source, config, dateInDataTimeZone, false)
                              let coarseFundamentalForDate = factory.Read(source)
-                             select new BaseDataCollection(date, config.Symbol, coarseFundamentalForDate);
+                             select new BaseDataCollection(date.AddDays(1), config.Symbol, coarseFundamentalForDate);
 
                 
                 ScheduleEnumerator(coarse.GetEnumerator(), enqueueable, 5, 100000, 2);
