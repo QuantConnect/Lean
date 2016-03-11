@@ -29,17 +29,17 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
     {
 
         private string _exchange;
-        decimal _divisor;
+        decimal _scaleFactor;
 
         /// <summary>
         /// Creates instance of downloader
         /// </summary>
         /// <param name="exchange"></param>
-        /// <param name="divisor"></param>
-        public CryptoiqDownloader(string exchange = "bitfinex", decimal divisor = 100m)
+        /// <param name="scaleFactor"></param>
+        public CryptoiqDownloader(string exchange = "bitfinex", decimal scaleFactor = 1m)
         {
             _exchange = exchange;
-            _divisor = divisor;
+            _scaleFactor = scaleFactor;
         }
 
         /// <summary>
@@ -83,9 +83,9 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
                             {
                                 Time = item.Time,
                                 Symbol = symbol,
-                                Value = item.Last / _divisor,
-                                AskPrice = item.Ask / _divisor,
-                                BidPrice = item.Bid / _divisor,
+                                Value = item.Last / _scaleFactor,
+                                AskPrice = item.Ask / _scaleFactor,
+                                BidPrice = item.Bid / _scaleFactor,
                                 TickType = QuantConnect.TickType.Quote
                             };
                         }

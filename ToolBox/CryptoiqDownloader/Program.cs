@@ -48,12 +48,12 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
 
                 // Load settings from config.json
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
-                decimal divisor = decimal.Parse(Config.Get("bitfinex-divisor", "100"));
+                decimal scaleFactor = decimal.Parse(Config.Get("bitfinex-scaleFactor", "1"));
 
 
                 // Create an instance of the downloader
                 const string market = Market.Bitfinex;
-                var downloader = new CryptoiqDownloader(args[2], divisor);
+                var downloader = new CryptoiqDownloader(args[2], scaleFactor);
 
                 // Download the data
                 var symbolObject = Symbol.Create(args[3], SecurityType.Forex, market);
