@@ -18,6 +18,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
 using QuantConnect.Interfaces;
@@ -790,7 +791,7 @@ namespace QuantConnect.Lean.Engine.Results
                 var logDailyMax = allowance[1];
                 var logRemaining = Math.Min(logBacktestMax, allowance[2]); //Minimum of maxium backtest or remaining allowance.
                 var hitLimit = false;
-                var serialized = "";
+                var serialized = new StringBuilder();
 
                 var key = "backtests/" + job.UserId + "/" + job.ProjectId + "/" + job.AlgorithmId + "-log.txt";
                 remoteUrl += key;
@@ -799,7 +800,7 @@ namespace QuantConnect.Lean.Engine.Results
                 {
                     if ((logLength + line.Length) < logRemaining)
                     {
-                        serialized += line + "\r\n";
+                        serialized.Append(line + "\r\n");
                         logLength += line.Length;
                     }
                     else
@@ -822,15 +823,15 @@ namespace QuantConnect.Lean.Engine.Results
                             requestMore = "If you require more please briefly explain request for more allocation here: https://www.quantconnect.com/contact";
                         }
                         DebugMessage(requestMore);
-                        serialized += capNotice;
-                        serialized += requestMore;
+                        serialized.Append(capNotice);
+                        serialized.Append(requestMore);
                         hitLimit = true;
                         break;
                     }
                 }
 
                 //Save the log: Upload this file to S3:
-                _api.Store(serialized, key, StoragePermissions.Public);
+                _api.Store(serialized.ToString(), key, StoragePermissions.Public);
                 //Record the data usage:
                 _api.UpdateDailyLogUsed(job.UserId, job.AlgorithmId, remoteUrl, logLength, job.Channel, hitLimit);
             }

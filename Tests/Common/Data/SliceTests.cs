@@ -87,7 +87,7 @@ namespace QuantConnect.Tests.Common.Data
         }
 
         [Test]
-        public void AccessesGenericallyByType()
+        public void AccessesCustomGenericallyByType()
         {
             Quandl quandlSpy = new Quandl { Symbol = Symbols.SPY, Time = DateTime.Now };
             Quandl quandlAapl = new Quandl { Symbol = Symbols.AAPL, Time = DateTime.Now };
@@ -95,6 +95,29 @@ namespace QuantConnect.Tests.Common.Data
 
             DataDictionary<Quandl> quandlData = slice.Get<Quandl>();
             Assert.AreEqual(2, quandlData.Count);
+        }
+
+        [Test]
+        public void AccessesTickGenericallyByType()
+        {
+            Tick TickSpy = new Tick { Symbol = Symbols.SPY, Time = DateTime.Now };
+            Tick TickAapl = new Tick { Symbol = Symbols.AAPL, Time = DateTime.Now };
+            Slice slice = new Slice(DateTime.Now, new[] { TickSpy, TickAapl });
+
+            DataDictionary<Tick> TickData = slice.Get<Tick>();
+            Assert.AreEqual(2, TickData.Count);
+        }
+
+
+        [Test]
+        public void AccessesTradeBarGenericallyByType()
+        {
+            TradeBar TradeBarSpy = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.Now };
+            TradeBar TradeBarAapl = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now };
+            Slice slice = new Slice(DateTime.Now, new[] { TradeBarSpy, TradeBarAapl });
+
+            DataDictionary<TradeBar> TradeBarData = slice.Get<TradeBar>();
+            Assert.AreEqual(2, TradeBarData.Count);
         }
 
         [Test]

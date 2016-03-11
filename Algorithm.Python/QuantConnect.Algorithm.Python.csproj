@@ -104,6 +104,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="AddRemoveSecurityRegressionAlgorithm.py" />
+    <Content Include="UpdateOrderRegressionAlgorithm.py" />
     <Content Include="BasicTemplateAlgorithm.py" />
     <Content Include="CustomBenchmarkAlgorithm.py" />
     <Content Include="CustomBrokerageErrorHandlerAlgorithm.py" />
@@ -616,7 +617,9 @@
     <Content Include="Lib\_weakrefset.py" />
     <Content Include="Lib\__future__.py" />
     <Content Include="Lib\__phello__.foo.py" />
+    <Content Include="LimitFillRegressionAlgorithm.py" />
     <Content Include="MovingAverageCrossAlgorithm.py" />
+    <Content Include="RegressionAlgorithm.py" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
