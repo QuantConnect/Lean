@@ -38,11 +38,11 @@ namespace QuantConnect.ToolBox.QuandlBitfinexDownloader
             {
                 // Load settings from config.json
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
-                bool useDivisor = bool.Parse(Config.Get("bitfinex-use-divisor", "false"));
+                int divisor = int.Parse(Config.Get("bitfinex-divisor", "100"));
 
                 // Create an instance of the downloader
                 const string market = Market.Bitfinex;
-                var downloader = new QuandlBitfinexDownloader(args[1], useDivisor);
+                var downloader = new QuandlBitfinexDownloader(args[1], divisor);
 
                 // Download the data
                 var symbol = Symbol.Create("BTCUSD", SecurityType.Forex, market);
