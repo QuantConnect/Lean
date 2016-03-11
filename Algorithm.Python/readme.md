@@ -4,7 +4,6 @@ QuantConnect Python Algorithm Project:
 To run algorithms in Lean your primary modules must be called "main.py".
 
 Set your config "algorithm-language" property to "Python".
-Set your config "algorithm-location" property to "QuantConnect.Algorithm.Python.dll".
 
 WINDOWS:
 1. Install Iron Python: http://ironpython.codeplex.com/releases/view/169382

@@ -47,8 +47,7 @@ namespace QuantConnect.Tests
                 Config.Set("api-handler", "QuantConnect.Api.Api");
                 Config.Set("result-handler", "QuantConnect.Lean.Engine.Results.BacktestingResultHandler");
                 Config.Set("algorithm-language", language.ToString());
-                Config.Set("algorithm-location", "QuantConnect.Algorithm." + language + ".dll");
-
+                
                 using (Log.LogHandler = new CompositeLogHandler(new ILogHandler[]
                 {
                     new ConsoleLogHandler(),
