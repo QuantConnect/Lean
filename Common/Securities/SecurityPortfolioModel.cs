@@ -58,14 +58,18 @@ namespace QuantConnect.Securities
                 portfolio.CashBook[CashBook.AccountCurrency].AddAmount(-feeThisOrder);
 
                 // apply the funds using the current settlement model
-                security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, quoteCash.Symbol, -fill.FillQuantity * fill.FillPrice * security.SymbolProperties.ContractMultiplier / security.Leverage);
                 if (security.Type == SecurityType.Forex)
                 {
+                    security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, quoteCash.Symbol, -fill.FillQuantity * fill.FillPrice * security.SymbolProperties.ContractMultiplier);
                     // model forex fills as currency swaps
                     var forex = (Forex.Forex) security;
                     security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, forex.BaseCurrencySymbol, fill.FillQuantity);
                 }
-                
+                else
+                {
+                    security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, quoteCash.Symbol, -fill.FillQuantity * fill.FillPrice * security.SymbolProperties.ContractMultiplier / security.Leverage);
+                }
+
                 // did we close or open a position further?
                 closedPosition = isLong && fill.Direction == OrderDirection.Sell
                              || isShort && fill.Direction == OrderDirection.Buy;
