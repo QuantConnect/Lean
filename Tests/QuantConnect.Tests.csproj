@@ -71,6 +71,7 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="AlgorithmRunner.cs" />
+    <Compile Include="Algorithm\AlgorithmSetHoldingsTests.cs" />
     <Compile Include="Algorithm\AlgorithmTradingTests.cs" />
     <Compile Include="Brokerages\BrokerageTests.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmBrokerageDataQueueHandlerTests.cs" />
