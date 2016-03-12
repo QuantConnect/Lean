@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Common.Util
         {
             // since VersionHelper depends on Globals.Version, we'll rewrite it temporarily and then set it back
             string constantsDotVersion = Globals.Version;
-            var field = typeof (Globals).GetField("Version");
+            var field = typeof (Globals).GetProperty("Version");
             const string version = "1.2.3.4";
             field.SetValue(null, version);
 
