@@ -105,8 +105,9 @@ namespace QuantConnect.Securities
             //Get the order value from the non-abstract order classes (MarketOrder, LimitOrder, StopMarketOrder)
             //Market order is approximated from the current security price and set in the MarketOrder Method in QCAlgorithm.
             var orderFees = security.FeeModel.GetOrderFee(security, order);
-            
-            return order.GetValue(security)*GetInitialMarginRequirement(security) + orderFees;
+
+            var orderValue = order.GetValue(security) * GetInitialMarginRequirement(security);
+            return orderValue + Math.Sign(orderValue) * orderFees;
         }
 
         /// <summary>
