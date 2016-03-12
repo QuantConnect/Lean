@@ -148,7 +148,7 @@ namespace QuantConnect
         /// <summary>
         /// Shape or symbol for the marker in a scatter plot
         /// </summary>
-        public ScatterMarkerSymbol ScatterMarkerSymbol = ScatterMarkerSymbol.Circle;
+        public ScatterMarkerSymbol ScatterMarkerSymbol = ScatterMarkerSymbol.None;
 
         /// Get the index of the last fetch update request to only retrieve the "delta" of the previous request.
         private int _updatePosition;
@@ -169,7 +169,7 @@ namespace QuantConnect
             Unit = "$";
             Index = 0;
             Color = Color.Empty;
-            ScatterMarkerSymbol = ScatterMarkerSymbol.Circle;
+            ScatterMarkerSymbol = ScatterMarkerSymbol.None;
         }
 
         /// <summary>
@@ -184,7 +184,7 @@ namespace QuantConnect
             Index = 0;
             Unit = "$";
             Color = Color.Empty;
-            ScatterMarkerSymbol = ScatterMarkerSymbol.Circle;
+            ScatterMarkerSymbol = ScatterMarkerSymbol.None;
         }
 
         /// <summary>
@@ -200,7 +200,7 @@ namespace QuantConnect
             Index = index;
             Unit = "$";
             Color = Color.Empty;
-            ScatterMarkerSymbol = ScatterMarkerSymbol.Circle;
+            ScatterMarkerSymbol = ScatterMarkerSymbol.None;
         }
 
         /// <summary>
@@ -217,7 +217,7 @@ namespace QuantConnect
             Index = index;
             Unit = unit;
             Color = Color.Empty;
-            ScatterMarkerSymbol = ScatterMarkerSymbol.Circle;
+            ScatterMarkerSymbol = ScatterMarkerSymbol.None;
         }
 
         /// <summary>
@@ -234,7 +234,7 @@ namespace QuantConnect
             Unit = unit;
             Index = 0;
             Color = Color.Empty;
-            ScatterMarkerSymbol = ScatterMarkerSymbol.Circle;
+            ScatterMarkerSymbol = ScatterMarkerSymbol.None;
         }
 
         /// <summary>
@@ -252,7 +252,7 @@ namespace QuantConnect
             Unit = unit;
             Index = 0;
             Color = color;
-            ScatterMarkerSymbol = ScatterMarkerSymbol.Circle;
+            ScatterMarkerSymbol = ScatterMarkerSymbol.None;
         }
 
         /// <summary>
@@ -263,7 +263,7 @@ namespace QuantConnect
         /// <param name="unit">Unit of the serier</param>
         /// <param name="color">Color of the series</param>
         /// <param name="symbol">Symbol for the marker in a scatter plot series</param>
-        public Series(string name, SeriesType type, string unit, Color color, ScatterMarkerSymbol symbol = ScatterMarkerSymbol.Circle)
+        public Series(string name, SeriesType type, string unit, Color color, ScatterMarkerSymbol symbol = ScatterMarkerSymbol.None)
         {
             Name = name;
             Values = new List<ChartPoint>();
@@ -306,7 +306,12 @@ namespace QuantConnect
         /// <returns>List of the updates from the series</returns>
         public Series GetUpdates() 
         {
-            var copy = new Series(Name, SeriesType, Index, Unit);
+            var copy = new Series(Name, SeriesType, Index, Unit)
+            {
+                Color = Color,
+                ScatterMarkerSymbol = ScatterMarkerSymbol
+            };
+
             try
             {
                 //Add the updates since the last 
@@ -403,6 +408,9 @@ namespace QuantConnect
     [JsonConverter(typeof(StringEnumConverter))]
     public enum ScatterMarkerSymbol
     {
+        /// Circle symbol
+        [EnumMember(Value = "none")]
+        None,
         /// Circle symbol
         [EnumMember(Value = "circle")]
         Circle,

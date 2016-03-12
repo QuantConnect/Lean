@@ -416,7 +416,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             // convert the date to the data time zone 
             var dateInDataTimeZone = _tradeableDates.Current.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date;
-            var factory = new BaseDataSubscriptionFactory(_config, dateInDataTimeZone, _isLiveMode);
+            var factory = SubscriptionFactory.ForSource(source, _config, dateInDataTimeZone, _isLiveMode);
 
             // handle missing files
             factory.InvalidSource += (sender, args) =>
@@ -442,21 +442,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             };
 
-            // handle empty files/instantiation errors
-            factory.CreateStreamReaderError += (sender, args) =>
+            if (factory is TextSubscriptionFactory)
             {
-                Log.Error(string.Format("Failed to get StreamReader for data source({0}), symbol({1}). Skipping date({2}). Reader is null.", args.Source.Source, _mappedSymbol, args.Date.ToShortDateString()));
-                if (_config.IsCustomData)
+                // handle empty files/instantiation errors
+                var textSubscriptionFactory = (TextSubscriptionFactory)factory;
+                textSubscriptionFactory.CreateStreamReaderError += (sender, args) =>
                 {
-                    _resultHandler.ErrorMessage(string.Format("We could not fetch the requested data. This may not be valid data, or a failed download of custom data. Skipping source ({0}).", args.Source.Source));
-                }
-            };
+                    Log.Error(string.Format("Failed to get StreamReader for data source({0}), symbol({1}). Skipping date({2}). Reader is null.", args.Source.Source, _mappedSymbol, args.Date.ToShortDateString()));
+                    if (_config.IsCustomData)
+                    {
+                        _resultHandler.ErrorMessage(string.Format("We could not fetch the requested data. This may not be valid data, or a failed download of custom data. Skipping source ({0}).", args.Source.Source));
+                    }
+                };
 
-            // handle parser errors
-            factory.ReaderError += (sender, args) =>
-            {
-                _resultHandler.RuntimeError(string.Format("Error invoking {0} data reader. Line: {1} Error: {2}", _config.Symbol, args.Line, args.Exception.Message), args.Exception.StackTrace);
-            };
+                // handle parser errors
+                textSubscriptionFactory.ReaderError += (sender, args) =>
+                {
+                    _resultHandler.RuntimeError(string.Format("Error invoking {0} data reader. Line: {1} Error: {2}", _config.Symbol, args.Line, args.Exception.Message), args.Exception.StackTrace);
+                };
+            }
             return factory;
         }
 

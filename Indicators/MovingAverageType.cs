@@ -51,6 +51,10 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// The T3 moving average
         /// </summary>
-        T3
+        T3,
+        /// <summary>
+        /// The Kaufman Adaptive Moving Average
+        /// </summary>
+        Kama
     }
 }

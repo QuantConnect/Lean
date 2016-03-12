@@ -48,6 +48,9 @@ namespace QuantConnect.Tests.Indicators
             indicator = MovingAverageType.T3.AsIndicator(1);
             Assert.IsInstanceOf(typeof(T3MovingAverage), indicator);
 
+            indicator = MovingAverageType.Kama.AsIndicator(1);
+            Assert.IsInstanceOf(typeof(KaufmanAdaptiveMovingAverage), indicator);
+
             string name = string.Empty;
             indicator = MovingAverageType.Simple.AsIndicator(name, 1);
             Assert.IsInstanceOf(typeof(SimpleMovingAverage), indicator);
@@ -72,6 +75,9 @@ namespace QuantConnect.Tests.Indicators
 
             indicator = MovingAverageType.T3.AsIndicator(name, 1);
             Assert.IsInstanceOf(typeof(T3MovingAverage), indicator);
+
+            indicator = MovingAverageType.Kama.AsIndicator(name, 1);
+            Assert.IsInstanceOf(typeof(KaufmanAdaptiveMovingAverage), indicator);
         }
     }
 }

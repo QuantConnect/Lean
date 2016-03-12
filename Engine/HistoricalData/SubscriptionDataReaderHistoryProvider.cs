@@ -161,12 +161,12 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             while (true)
             {
                 var earlyBirdTicks = long.MaxValue;
-                var data = new List<KeyValuePair<Security, List<BaseData>>>();
+                var data = new List<DataFeedPacket>();
                 foreach (var subscription in subscriptions)
                 {
                     if (subscription.EndOfStream) continue;
 
-                    var cache = new KeyValuePair<Security, List<BaseData>>(subscription.Security, new List<BaseData>());
+                    var packet = new DataFeedPacket(subscription.Security);
 
                     var offsetProvider = subscription.OffsetProvider;
                     var currentOffsetTicks = offsetProvider.GetOffsetTicks(frontier);
@@ -176,7 +176,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                         // so we don't interfere with the enumerator's internal logic
                         var clone = subscription.Current.Clone(subscription.Current.IsFillForward);
                         clone.Time = clone.Time.RoundDown(subscription.Configuration.Increment);
-                        cache.Value.Add(clone);
+                        packet.Add(clone);
                         Interlocked.Increment(ref _dataPointCount);
                         if (!subscription.MoveNext())
                         {
@@ -184,7 +184,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                         }
                     }
                     // only add if we have data
-                    if (cache.Value.Count != 0) data.Add(cache);
+                    if (packet.Count != 0) data.Add(packet);
                     // udate our early bird ticks (next frontier time)
                     if (subscription.Current != null)
                     {

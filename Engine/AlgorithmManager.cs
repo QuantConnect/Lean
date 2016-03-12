@@ -708,7 +708,7 @@ namespace QuantConnect.Lean.Engine
                     try
                     {
                         // we need to recombine this slice into a time slice
-                        var paired = new List<KeyValuePair<Security, List<BaseData>>>();
+                        var paired = new List<DataFeedPacket>();
                         foreach (var symbol in slice.Keys)
                         {
                             var security = algorithm.Securities[symbol];
@@ -717,7 +717,7 @@ namespace QuantConnect.Lean.Engine
                             var ticks = data as List<Tick>;
                             if (ticks != null) list.AddRange(ticks);
                             else               list.Add(data);
-                            paired.Add(new KeyValuePair<Security, List<BaseData>>(security, list));
+                            paired.Add(new DataFeedPacket(security, list));
                         }
                         timeSlice = TimeSlice.Create(slice.Time.ConvertToUtc(timeZone), timeZone, algorithm.Portfolio.CashBook, paired, SecurityChanges.None);
                     }

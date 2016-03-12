@@ -17,6 +17,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.Market
 {
@@ -222,6 +223,7 @@ namespace QuantConnect.Data.Market
                 DataType = MarketDataType.Tick;
 
                 // Which security type is this data feed:
+                const decimal scaleFactor = 10000m;
                 switch (config.SecurityType)
                 {
                     case SecurityType.Equity:
@@ -229,7 +231,7 @@ namespace QuantConnect.Data.Market
                         var csv = line.ToCsv(6);
                         Symbol = config.Symbol;
                         Time = date.Date.AddMilliseconds(csv[0].ToInt64()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
-                        Value = config.GetNormalizedPrice(csv[1].ToDecimal() / 10000m);
+                        Value = config.GetNormalizedPrice(csv[1].ToDecimal() / scaleFactor);
                         TickType = TickType.Trade;
                         Quantity = csv[2].ToInt32();
                         if (csv.Count > 3)
@@ -251,6 +253,56 @@ namespace QuantConnect.Data.Market
                         BidPrice = csv[1].ToDecimal();
                         AskPrice = csv[2].ToDecimal();
                         Value = (BidPrice + AskPrice) / 2;
+                        break;
+                    }
+
+                    case SecurityType.Option:
+                    {
+                        var csv = line.ToCsv(7);
+                        TickType = config.TickType;
+                        Time = date.Date.AddMilliseconds(csv[0].ToInt64()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+                        Symbol = config.Symbol;
+
+                        if (TickType == TickType.Trade)
+                        {
+                            Value = config.GetNormalizedPrice(csv[1].ToDecimal()/scaleFactor);
+                            Quantity = csv[2].ToInt32();
+                            Exchange = csv[3];
+                            SaleCondition = csv[4];
+                            Suspicious = csv[5] == "1";
+                        }
+                        else
+                        {
+                            if (csv[1].Length != 0)
+                            {
+                                BidPrice = config.GetNormalizedPrice(csv[1].ToDecimal()/scaleFactor);
+                                BidSize = csv[2].ToInt32();
+                            }
+                            if (csv[3].Length != 0)
+                            {
+                                AskPrice = config.GetNormalizedPrice(csv[3].ToDecimal()/scaleFactor);
+                                AskSize = csv[4].ToInt32();
+                            }
+                            Exchange = csv[5];
+                            Suspicious = csv[6] == "1";
+
+                            if (BidPrice != 0)
+                            {
+                                if (AskPrice != 0)
+                                {
+                                    Value = (BidPrice + AskPrice)/2m;
+                                }
+                                else
+                                {
+                                    Value = BidPrice;
+                                }
+                            }
+                            else
+                            {
+                                Value = AskPrice;
+                            }
+                        }
+
                         break;
                     }
                 }
@@ -289,29 +341,13 @@ namespace QuantConnect.Data.Market
         /// <returns>String source location of the file to be opened with a stream</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            var dataType = TickType.Trade;
-
             if (isLiveMode)
             {
                 // Currently ticks aren't sourced through GetSource in live mode
                 return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.LocalFile);
             }
 
-            var dateFormat = "yyyyMMdd";
-            if (config.SecurityType == SecurityType.Forex || config.SecurityType == SecurityType.Cfd)
-            {
-                dataType = TickType.Quote;
-            }
-
-            var symbol = string.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol.Value : config.MappedSymbol;
-            var securityType = config.SecurityType.ToString().ToLower();
-            var market = config.Market.ToLower();
-            var resolution = config.Resolution.ToString().ToLower();
-            var file = date.ToString(dateFormat) + "_" + dataType.ToString().ToLower() + ".zip";
-
-            //Add in the market for equities/cfd/forex for internationalization support.
-            var source = Path.Combine(Constants.DataFolder, securityType, market, resolution, symbol.ToLower(), file);
-
+            var source = LeanData.GenerateZipFilePath(Constants.DataFolder, config.Symbol, date, config.Resolution, config.TickType);
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
 

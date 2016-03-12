@@ -57,6 +57,9 @@ namespace QuantConnect.Indicators
                 case MovingAverageType.T3:
                     return new T3MovingAverage(period);
 
+                case MovingAverageType.Kama:
+                    return new KaufmanAdaptiveMovingAverage(period);
+
                 default:
                     throw new ArgumentOutOfRangeException("movingAverageType");
             }
@@ -97,6 +100,9 @@ namespace QuantConnect.Indicators
 
                 case MovingAverageType.T3:
                     return new T3MovingAverage(name, period);
+
+                case MovingAverageType.Kama:
+                    return new KaufmanAdaptiveMovingAverage(name, period);
 
                 default:
                     throw new ArgumentOutOfRangeException("movingAverageType");

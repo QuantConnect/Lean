@@ -84,7 +84,8 @@ namespace QuantConnect.Data.Custom
         /// <returns></returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            var data = new Quandl();
+            // be sure to instantiate the correct type
+            var data = (Quandl) Activator.CreateInstance(GetType());
             data.Symbol = config.Symbol;
             var csv = line.Split(',');
 
