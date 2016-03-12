@@ -22,26 +22,31 @@ namespace QuantConnect
     /// <summary>
     /// Provides application level constant values
     /// </summary>
-    public static class Constants
+    public static class Globals
     {
-        private static readonly string DataFolderPath = Config.Get("data-folder", Config.Get("data-directory", @"../../../Data/"));
-
-        static Constants()
+        static Globals()
         {
+            Reset();
+        }
+
+        /// <summary>
+        /// The root directory of the data folder for this application
+        /// </summary>
+        public static string DataFolder { get; private set; }
+
+        /// <summary>
+        /// Resets global values with the Config data.
+        /// </summary>
+        public static void Reset ()
+        {
+            DataFolder = Config.Get("data-folder", Config.Get("data-directory", @"../../../Data/"));
+
             Version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
             var versionid = Config.Get("version-id");
             if (!string.IsNullOrWhiteSpace(versionid))
             {
                 Version += "." + versionid;
             }
-        }
-
-        /// <summary>
-        /// The root directory of the data folder for this application
-        /// </summary>
-        public static string DataFolder
-        {
-            get { return DataFolderPath; }
         }
 
         /// <summary>
@@ -52,6 +57,6 @@ namespace QuantConnect
         /// <summary>
         /// The version of lean
         /// </summary>
-        public static readonly string Version;
+        public static string Version { get; private set; }
     }
 }

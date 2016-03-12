@@ -45,7 +45,7 @@ namespace QuantConnect.Data.Auxiliary
 
         private static MapFileResolver GetMapFileResolver(string market)
         {
-            var mapFileDirectory = Path.Combine(Constants.DataFolder, "equity", market.ToLower(), "map_files");
+            var mapFileDirectory = Path.Combine(Globals.DataFolder, "equity", market.ToLower(), "map_files");
             if (!Directory.Exists(mapFileDirectory))
             {
                 // only write this message once per application instance

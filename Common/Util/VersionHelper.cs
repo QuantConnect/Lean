@@ -32,7 +32,7 @@ namespace QuantConnect.Util
         /// <returns>True if the specified version is older, false otherwise</returns>
         public static bool IsOlderVersion(string version)
         {
-            return CompareVersions(version, Constants.Version) < 0;
+            return CompareVersions(version, Globals.Version) < 0;
         }
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace QuantConnect.Util
         /// <returns>True if the specified version is newer, false otherwise</returns>
         public static bool IsNewerVersion(string version)
         {
-            return CompareVersions(version, Constants.Version) > 0;
+            return CompareVersions(version, Globals.Version) > 0;
         }
 
         /// <summary>
@@ -52,7 +52,7 @@ namespace QuantConnect.Util
         /// <returns>True if the specified version is equal, false otherwise</returns>
         public static bool IsEqualVersion(string version)
         {
-            return CompareVersions(version, Constants.Version) == 0;
+            return CompareVersions(version, Globals.Version) == 0;
         }
 
         /// <summary>
