@@ -58,7 +58,7 @@ namespace QuantConnect.Securities
                 portfolio.CashBook[CashBook.AccountCurrency].AddAmount(-feeThisOrder);
 
                 // apply the funds using the current settlement model
-                security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, quoteCash.Symbol, -fill.FillQuantity * fill.FillPrice * security.SymbolProperties.ContractMultiplier);
+                security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, quoteCash.Symbol, -fill.FillQuantity * fill.FillPrice * security.SymbolProperties.ContractMultiplier / security.Leverage);
                 if (security.Type == SecurityType.Forex)
                 {
                     // model forex fills as currency swaps
