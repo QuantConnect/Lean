@@ -71,11 +71,11 @@
     <Reference Include="System.Xml" />
     <Reference Include="TradingApi.Bitfinex, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>Brokerages\Bitfinex\TradingApi.Bitfinex.dll</HintPath>
+      <HintPath>..\Brokerages\Bitfinex\TradingApi.Bitfinex.dll</HintPath>
     </Reference>
     <Reference Include="TradingApi.ModelObjects, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>Brokerages\Bitfinex\TradingApi.ModelObjects.dll</HintPath>
+      <HintPath>..\Brokerages\Bitfinex\TradingApi.ModelObjects.dll</HintPath>
     </Reference>
     <Reference Include="websocket-sharp, Version=1.0.2.36589, Culture=neutral, PublicKeyToken=5660b08a1845a91e, processorArchitecture=MSIL">
       <HintPath>..\packages\WebSocketSharp.1.0.3-rc9\lib\websocket-sharp.dll</HintPath>
@@ -288,8 +288,6 @@
     <Content Include="TestData\ewz_candle_patterns.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Brokerages\Bitfinex\TradingApi.Bitfinex.dll" />
-    <Content Include="Brokerages\Bitfinex\TradingApi.ModelObjects.dll" />
     <Content Include="TestData\SampleMarketHoursDatabase.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
