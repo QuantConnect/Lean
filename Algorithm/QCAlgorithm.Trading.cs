@@ -632,7 +632,7 @@ namespace QuantConnect.Algorithm
                 var order = new MarketOrder(security.Symbol, orderQuantity, UtcTime);
                 marginRequired = security.MarginModel.GetInitialMarginRequiredForOrder(security, order);
 
-            } while (marginRequired > marginRemaining);
+            } while (marginRequired > marginRemaining || marginRequired > targetOrderValue);
 
             // add directionality back in
             return (direction == OrderDirection.Sell ? -1 : 1) * orderQuantity;
