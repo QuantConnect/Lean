@@ -365,7 +365,7 @@ namespace QuantConnect.Securities
                 foreach (var kvp in Securities)
                 {
                     var position = kvp.Value;
-                    if (position.Type != SecurityType.Forex) totalHoldingsValueWithoutForex += position.Holdings.HoldingsValue;
+                    if (position.Type != SecurityType.Forex) totalHoldingsValueWithoutForex += position.Holdings.HoldingsValue / position.Leverage;
                 }
 
                 return CashBook.TotalValueInAccountCurrency + UnsettledCashBook.TotalValueInAccountCurrency + totalHoldingsValueWithoutForex;
