@@ -44,7 +44,7 @@ namespace QuantConnect.Lean.Launcher
 
             //Name thread for the profiler:
             Thread.CurrentThread.Name = "Algorithm Analysis Thread";
-            Log.Trace("Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v" + Constants.Version + " Mode: " + mode);
+            Log.Trace("Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v" + Globals.Version + " Mode: " + mode);
             Log.Trace("Engine.Main(): Started " + DateTime.Now.ToShortTimeString());
             Log.Trace("Engine.Main(): Memory " + OS.ApplicationMemoryUsed + "Mb-App  " + +OS.TotalPhysicalMemoryUsed + "Mb-Used  " + OS.TotalPhysicalMemory + "Mb-Total");
 
@@ -98,7 +98,7 @@ namespace QuantConnect.Lean.Launcher
             // we also don't want to reprocess redelivered jobs
             if (VersionHelper.IsNotEqualVersion(job.Version) || job.Redelivered)
             {
-                Log.Error("Engine.Run(): Job Version: " + job.Version + "  Deployed Version: " + Constants.Version + " Redelivered: " + job.Redelivered);
+                Log.Error("Engine.Run(): Job Version: " + job.Version + "  Deployed Version: " + Globals.Version + " Redelivered: " + job.Redelivered);
                 //Tiny chance there was an uncontrolled collapse of a server, resulting in an old user task circulating.
                 //In this event kill the old algorithm and leave a message so the user can later review.
                 leanEngineSystemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, _collapseMessage);

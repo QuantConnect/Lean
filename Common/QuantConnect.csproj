@@ -138,7 +138,7 @@
     <Compile Include="Commands\OrderCommand.cs" />
     <Compile Include="Commands\QuitCommand.cs" />
     <Compile Include="Commands\UpdateOrderCommand.cs" />
-    <Compile Include="Constants.cs" />
+    <Compile Include="Globals.cs" />
     <Compile Include="Currencies.cs" />
     <Compile Include="Data\Auxiliary\FactorFile.cs" />
     <Compile Include="Data\Auxiliary\FactorFileRow.cs" />
