@@ -34,7 +34,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2015, 11, 10);
             SetEndDate(2016, 2, 20);
-            AddSecurity(SecurityType.Forex, BitcoinSymbol, Resolution.Tick, Market.Bitcoin, false, 3.3m, false);
+            AddSecurity(SecurityType.Forex, BitcoinSymbol, Resolution.Tick, Market.Bitfinex, false, 3.3m, false);
             SetCash("USD", 1000, 1m);
         }
 

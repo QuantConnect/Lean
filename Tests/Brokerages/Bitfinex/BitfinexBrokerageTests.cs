@@ -26,7 +26,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         #region Properties
         protected override Symbol Symbol
         {
-            get { return Symbol.Create("BTCUSD", SecurityType.Forex, Market.Bitcoin); }
+            get { return Symbol.Create("BTCUSD", SecurityType.Forex, Market.Bitfinex); }
         }
 
         /// <summary>

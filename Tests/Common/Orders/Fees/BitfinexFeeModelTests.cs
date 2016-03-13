@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         public void Setup()
         {
             unit = new BitfinexFeeModel();
-            symbol = Symbol.Create("BTCUSD", SecurityType.Forex, Market.Bitcoin);
+            symbol = Symbol.Create("BTCUSD", SecurityType.Forex, Market.Bitfinex);
 
             //hack: no parameterless constructors
             sub = (SubscriptionDataConfig)System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(SubscriptionDataConfig));

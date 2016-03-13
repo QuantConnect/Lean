@@ -16,7 +16,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
 
         BitfinexBrokerage unit;
         Mock<TradingApi.Bitfinex.BitfinexApi> mock = new Mock<TradingApi.Bitfinex.BitfinexApi>(It.IsAny<string>(), It.IsAny<string>());
-        protected Symbol symbol = Symbol.Create("BTCUSD", SecurityType.Forex, Market.Bitcoin);
+        protected Symbol symbol = Symbol.Create("BTCUSD", SecurityType.Forex, Market.Bitfinex);
 
         [SetUp()]
         public void Setup()
