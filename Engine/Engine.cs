@@ -205,7 +205,7 @@ namespace QuantConnect.Lean.Engine
                     threadRealTime.Start(); // RealTime scan time for time based events:
 
                     // Result manager scanning message queue: (started earlier)
-                    _algorithmHandlers.Results.DebugMessage(string.Format("Launching analysis for {0} with LEAN Engine v{1}", job.AlgorithmId, Constants.Version));
+                    _algorithmHandlers.Results.DebugMessage(string.Format("Launching analysis for {0} with LEAN Engine v{1}", job.AlgorithmId, Globals.Version));
 
                     try
                     {

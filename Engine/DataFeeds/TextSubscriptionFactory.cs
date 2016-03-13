@@ -188,8 +188,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IStreamReader HandleRemoteSourceFile(SubscriptionDataSource source)
         {
             // clean old files out of the cache
-            if (!Directory.Exists(Constants.Cache)) Directory.CreateDirectory(Constants.Cache);
-            foreach (var file in Directory.EnumerateFiles(Constants.Cache))
+            if (!Directory.Exists(Globals.Cache)) Directory.CreateDirectory(Globals.Cache);
+            foreach (var file in Directory.EnumerateFiles(Globals.Cache))
             {
                 if (File.GetCreationTime(file) < DateTime.Now.AddHours(-24)) File.Delete(file);
             }
@@ -197,7 +197,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             try
             {
                 // this will fire up a web client in order to download the 'source' file to the cache
-                return new RemoteFileSubscriptionStreamReader(source.Source, Constants.Cache);
+                return new RemoteFileSubscriptionStreamReader(source.Source, Globals.Cache);
             }
             catch (Exception err)
             {

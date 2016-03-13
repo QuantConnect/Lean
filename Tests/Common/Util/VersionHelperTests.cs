@@ -25,9 +25,9 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void CompareVersionsCorrectly()
         {
-            // since VersionHelper depends on Constants.Version, we'll rewrite it temporarily and then set it back
-            string constantsDotVersion = Constants.Version;
-            var field = typeof (Constants).GetField("Version");
+            // since VersionHelper depends on Globals.Version, we'll rewrite it temporarily and then set it back
+            string constantsDotVersion = Globals.Version;
+            var field = typeof (Globals).GetProperty("Version");
             const string version = "1.2.3.4";
             field.SetValue(null, version);
 

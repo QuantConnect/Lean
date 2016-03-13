@@ -60,7 +60,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                 }
             }
 
-            var dataDirectory = Constants.DataFolder;
+            var dataDirectory = Globals.DataFolder;
             if (config.TryGetValue("data-directory", out jtoken))
             {
                 dataDirectory = jtoken.Value<string>();

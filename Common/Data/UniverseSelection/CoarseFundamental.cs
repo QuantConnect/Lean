@@ -65,7 +65,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>String URL of source file.</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            var path = Path.Combine(Constants.DataFolder, "equity", config.Market, "fundamental", "coarse", date.ToString("yyyyMMdd") + ".csv");
+            var path = Path.Combine(Globals.DataFolder, "equity", config.Market, "fundamental", "coarse", date.ToString("yyyyMMdd") + ".csv");
             return new SubscriptionDataSource(path, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
 
