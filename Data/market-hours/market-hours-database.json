@@ -5253,7 +5253,7 @@
             "saturday": [ ],
             "holidays": [ ]
         },
-        "Forex-bitcoin-[*]": {
+        "Forex-bitfinex-[*]": {
             "dataTimeZone": "UTC",
             "exchangeTimeZone": "UTC",
             "sunday": [
