@@ -592,6 +592,9 @@ namespace QuantConnect.Algorithm
             // can't order it if we don't have data
             if (price == 0) return 0;
 
+            // if targeting zero, simply return the negative of the quantity
+            if (target == 0) return -security.Holdings.Quantity;
+
             // this is the value in dollars that we want our holdings to have
             var targetPortfolioValue = target*Portfolio.TotalPortfolioValue;
             var quantity = security.Holdings.Quantity;
@@ -604,36 +607,32 @@ namespace QuantConnect.Algorithm
             // determine the unit price in terms of the account currency
             var unitPrice = new MarketOrder(symbol, 1, UtcTime).GetValue(security);
 
-            // define lower and upper thresholds for the iteration
-            var lowerThreshold = targetOrderValue - unitPrice / 2;
-            var upperThreshold = targetOrderValue + unitPrice / 2;
+            // calculate the total margin available
+            var marginRemaining = Portfolio.GetMarginRemaining(symbol, direction);
+            if (marginRemaining <= 0) return 0;
 
-            // continue iterating while  we're still not within the specified thresholds
-            var iterations = 0;
+            // continue iterating while we do not have enough margin for the order
+            decimal marginRequired;
             var orderQuantity = 0;
-            decimal orderValue = 0;
-            while ((orderValue < lowerThreshold || orderValue > upperThreshold) && iterations < 10)
+
+            do
             {
-                // find delta from where we are to where we want to be
-                var delta = targetOrderValue - orderValue;
-                // use delta value to compute a change in quantity required
-                var deltaQuantity = (int)(delta / unitPrice);
+                if (orderQuantity == 0)
+                {
+                    // compute the initial order quantity
+                    orderQuantity = (int)(targetOrderValue / unitPrice);
+                }
+                else
+                {
+                    // decrease the order quantity
+                    orderQuantity--;
+                }
 
-                orderQuantity += deltaQuantity;
-
-                // recompute order fees
+                // calculate the margin required for the order
                 var order = new MarketOrder(security.Symbol, orderQuantity, UtcTime);
-                var fee = security.FeeModel.GetOrderFee(security, order);
+                marginRequired = security.MarginModel.GetInitialMarginRequiredForOrder(security, order);
 
-                orderValue = Math.Abs(order.GetValue(security)) + fee;
-
-                // we need to add the fee in as well, even though it's not value, it's still a cost for the transaction
-                // and we need to account for it to be sure we can make the trade produced by this method, imagine
-                // set holdings 100% with 1x leverage, but a high fee structure, it quickly becomes necessary to include
-                // otherwise the result of this function will be inactionable.
-
-                iterations++;
-            }
+            } while (marginRequired > marginRemaining || marginRequired > targetOrderValue);
 
             // add directionality back in
             return (direction == OrderDirection.Sell ? -1 : 1) * orderQuantity;
