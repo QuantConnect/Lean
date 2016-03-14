@@ -24,24 +24,51 @@ namespace QuantConnect.Tests.Algorithm
     [TestFixture]
     public class AlgorithmTradingTests
     {
+        public TestCaseData[] TestParameters
+        {
+            get
+            {
+                return new[]
+                {
+                    new TestCaseData(1m),
+                    new TestCaseData(2m),
+                    new TestCaseData(100m),
+                };
+            }
+        }
+
         /*****************************************************/
         //  Isostatic market conditions tests.
         /*****************************************************/
-        [Test]
-        public void SetHoldings_ZeroToLong()
+
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_ZeroToLong(decimal leverage)
         {
             Security msft;
-            var algo = GetAlgorithm(out msft);
+            var algo = GetAlgorithm(out msft, leverage);
             //Set price to $25 & Target 50%
             Update(msft, 25);
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
             Assert.AreEqual(2000, actual);
         }
-        [Test]
-        public void SetHoldings_ZeroToLong_HighConstantFeeStructure()
+
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_ZeroToLong_SmallConstantFeeStructure(decimal leverage)
         {
             Security msft;
-            var algo = GetAlgorithm(out msft, 10000);
+            var algo = GetAlgorithm(out msft, 1, 1);
+            //Set price to $25 & Target 50%
+            Update(msft, 25);
+            var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
+            // $1 in fees, so 1 share less than 2k from SetHoldings_ZeroToLong
+            Assert.AreEqual(1999, actual);
+        }
+
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_ZeroToLong_HighConstantFeeStructure(decimal leverage)
+        {
+            Security msft;
+            var algo = GetAlgorithm(out msft, 1, 10000);
             //Set price to $25 & Target 50%
             Update(msft, 25);
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
@@ -49,33 +76,44 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(1600, actual);
         }
 
-        [Test]
-        public void SetHoldings_ZeroToShort()
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_ZeroToShort(decimal leverage)
         {
             Security msft;
-            var algo = GetAlgorithm(out msft);
+            var algo = GetAlgorithm(out msft, 1);
             //Set price to $25 & Target 50%
             Update(msft, 25);
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -0.5m);
             Assert.AreEqual(-2000, actual);
         }
 
-        [Test]
-        public void SetHoldings_ZeroToShort_HighConstantFeeStructure()
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_ZeroToShort_SmallConstantFeeStructure(decimal leverage)
         {
             Security msft;
-            var algo = GetAlgorithm(out msft, 10000);
+            var algo = GetAlgorithm(out msft, 1, 1);
+            //Set price to $25 & Target 50%
+            Update(msft, 25);
+            var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -0.5m);
+            Assert.AreEqual(-1999, actual);
+        }
+
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_ZeroToShort_HighConstantFeeStructure(decimal leverage)
+        {
+            Security msft;
+            var algo = GetAlgorithm(out msft, 1, 10000);
             //Set price to $25 & Target 50%
             Update(msft, 25);
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -0.5m);
             Assert.AreEqual(-1600, actual);
         }
 
-        [Test]
-        public void SetHoldings_LongToLonger()
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_LongToLonger(decimal leverage)
         {
             Security msft;
-            var algo = GetAlgorithm(out msft);
+            var algo = GetAlgorithm(out msft, 1);
             //Set price to $25
             Update(msft, 25);
             //Half cash spent on 2000 MSFT shares.
@@ -86,11 +124,26 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(1000, actual);
         }
 
-        [Test]
-        public void SetHoldings_LongToLonger_HighConstantFeeStructure()
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_LongToLonger_SmallConstantFeeStructure(decimal leverage)
         {
             Security msft;
-            var algo = GetAlgorithm(out msft, 10000);
+            var algo = GetAlgorithm(out msft, 1, 1);
+            //Set price to $25
+            Update(msft, 25);
+            //Half cash spent on 2000 MSFT shares.
+            algo.Portfolio.SetCash(50000);
+            algo.Portfolio[Symbols.MSFT].SetHoldings(25, 2000);
+            //Calculate the new holdings:
+            var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.75m);
+            Assert.AreEqual(999, actual);
+        }
+
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_LongToLonger_HighConstantFeeStructure(decimal leverage)
+        {
+            Security msft;
+            var algo = GetAlgorithm(out msft, 1, 10000);
             //Set price to $25
             Update(msft, 25);
             //Half cash spent on 2000 MSFT shares.
@@ -101,11 +154,11 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(600, actual);
         }
 
-        [Test]
-        public void SetHoldings_LongerToLong()
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_LongerToLong(decimal leverage)
         {
             Security msft;
-            var algo = GetAlgorithm(out msft);
+            var algo = GetAlgorithm(out msft, 1);
             //Set price to $25
             Update(msft, 25);
             //75% cash spent on 3000 MSFT shares.
@@ -116,11 +169,26 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(-1000, actual);
         }
 
-        [Test]
-        public void SetHoldings_LongerToLong_HighConstantFeeStructure()
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_LongerToLong_SmallConstantFeeStructure(decimal leverage)
         {
             Security msft;
-            var algo = GetAlgorithm(out msft, 10000);
+            var algo = GetAlgorithm(out msft, 1, 1);
+            //Set price to $25
+            Update(msft, 25);
+            //75% cash spent on 3000 MSFT shares.
+            algo.Portfolio.SetCash(25000);
+            algo.Portfolio[Symbols.MSFT].SetHoldings(25, 3000);
+            //Sell all 2000 held:
+            var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
+            Assert.AreEqual(-999, actual);
+        }
+
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_LongerToLong_HighConstantFeeStructure(decimal leverage)
+        {
+            Security msft;
+            var algo = GetAlgorithm(out msft, 1, 10000);
             //Set price to $25
             Update(msft, 25);
             //75% cash spent on 3000 MSFT shares.
@@ -131,11 +199,11 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(-600, actual);
         }
 
-        [Test]
-        public void SetHoldings_LongToZero()
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_LongToZero(decimal leverage)
         {
             Security msft;
-            var algo = GetAlgorithm(out msft);
+            var algo = GetAlgorithm(out msft, 1);
             //Set price to $25
             Update(msft, 25);
             //Half cash spent on 2000 MSFT shares.
@@ -146,11 +214,11 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(-2000, actual);
         }
 
-        [Test]
-        public void SetHoldings_LongToZero_HighConstantFeeStructure()
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_LongToZero_SmallConstantFeeStructure(decimal leverage)
         {
             Security msft;
-            var algo = GetAlgorithm(out msft, 10000);
+            var algo = GetAlgorithm(out msft, 1, 1);
             //Set price to $25
             Update(msft, 25);
             //Half cash spent on 2000 MSFT shares.
@@ -158,14 +226,29 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, 2000);
             //Sell all 2000 held:
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0m);
-            Assert.AreEqual(-1600, actual);
+            Assert.AreEqual(-2000, actual);
         }
 
-        [Test]
-        public void SetHoldings_LongToShort()
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_LongToZero_HighConstantFeeStructure(decimal leverage)
         {
             Security msft;
-            var algo = GetAlgorithm(out msft);
+            var algo = GetAlgorithm(out msft, 1, 10000);
+            //Set price to $25
+            Update(msft, 25);
+            //Half cash spent on 2000 MSFT shares.
+            algo.Portfolio.SetCash(50000);
+            algo.Portfolio[Symbols.MSFT].SetHoldings(25, 2000);
+            //Sell all 2000 held:
+            var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0m);
+            Assert.AreEqual(-2000, actual);
+        }
+
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_LongToShort(decimal leverage)
+        {
+            Security msft;
+            var algo = GetAlgorithm(out msft, 1);
             //Set price to $25
             Update(msft, 25);
             //Half cash spent on 2000 MSFT shares.
@@ -177,11 +260,27 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(-4000, actual);
         }
 
-        [Test]
-        public void SetHoldings_LongToShort_HighConstantFeeStructure()
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_LongToShort_SmallConstantFeeStructure(decimal leverage)
         {
             Security msft;
-            var algo = GetAlgorithm(out msft, 10000);
+            var algo = GetAlgorithm(out msft, 1, 1);
+            //Set price to $25
+            Update(msft, 25);
+            //Half cash spent on 2000 MSFT shares.
+            algo.Portfolio.SetCash(50000);
+            algo.Portfolio[Symbols.MSFT].SetHoldings(25, 2000);
+
+            //Sell all 2000 held + -2000 to get to -50%
+            var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -0.5m);
+            Assert.AreEqual(-3999, actual);
+        }
+
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_LongToShort_HighConstantFeeStructure(decimal leverage)
+        {
+            Security msft;
+            var algo = GetAlgorithm(out msft, 1, 10000);
             //Set price to $25
             Update(msft, 25);
             //Half cash spent on 2000 MSFT shares.
@@ -193,11 +292,11 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(-3600, actual);
         }
 
-        [Test]
-        public void SetHoldings_ShortToZero()
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_ShortToZero(decimal leverage)
         {
             Security msft;
-            var algo = GetAlgorithm(out msft);
+            var algo = GetAlgorithm(out msft, 1);
             //Set price to $25
             Update(msft, 25);
             //Half cash spent on 2000 MSFT shares.
@@ -208,11 +307,11 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(2000, actual);
         }
 
-        [Test]
-        public void SetHoldings_ShortToZero_HighConstantFeeStructure()
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_ShortToZero_SmallConstantFeeStructure(decimal leverage)
         {
             Security msft;
-            var algo = GetAlgorithm(out msft, 10000);
+            var algo = GetAlgorithm(out msft, 1, 1);
             //Set price to $25
             Update(msft, 25);
             //Half cash spent on 2000 MSFT shares.
@@ -220,14 +319,29 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, -2000);
             //Buy 2000 to get to 0 holdings.
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0m);
-            Assert.AreEqual(1600, actual);
+            Assert.AreEqual(2000, actual);
         }
 
-        [Test]
-        public void SetHoldings_ShortToShorter()
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_ShortToZero_HighConstantFeeStructure(decimal leverage)
         {
             Security msft;
-            var algo = GetAlgorithm(out msft);
+            var algo = GetAlgorithm(out msft, 1, 10000);
+            //Set price to $25
+            Update(msft, 25);
+            //Half cash spent on 2000 MSFT shares.
+            algo.Portfolio.SetCash(150000);
+            algo.Portfolio[Symbols.MSFT].SetHoldings(25, -2000);
+            //Buy 2000 to get to 0 holdings.
+            var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0m);
+            Assert.AreEqual(2000, actual);
+        }
+
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_ShortToShorter(decimal leverage)
+        {
+            Security msft;
+            var algo = GetAlgorithm(out msft, 1);
             //Set price to $25
             Update(msft, 25);
             //Sold -2000 MSFT shares, +50k cash
@@ -244,11 +358,32 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(-1000, actual);
         }
 
-        [Test]
-        public void SetHoldings_ShortToShorter_HighConstantFeeStructure()
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_ShortToShorter_SmallConstantFeeStructure(decimal leverage)
         {
             Security msft;
-            var algo = GetAlgorithm(out msft, 10000);
+            var algo = GetAlgorithm(out msft, 1, 1);
+            //Set price to $25
+            Update(msft, 25);
+            //Sold -2000 MSFT shares, +50k cash
+            algo.Portfolio.SetCash(150000);
+            algo.Portfolio[Symbols.MSFT].SetHoldings(25, -2000);
+
+            // Cash: 150k
+            // MSFT: -50k
+            // TPV:  100k
+
+            // we should end with -3000 = -.75*(100k/25)
+
+            var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -0.75m);
+            Assert.AreEqual(-999, actual);
+        }
+
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_ShortToShorter_HighConstantFeeStructure(decimal leverage)
+        {
+            Security msft;
+            var algo = GetAlgorithm(out msft, 1, 10000);
             //Set price to $25
             Update(msft, 25);
             //Sold -2000 MSFT shares, +50k cash
@@ -265,11 +400,11 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(-600, actual);
         }
 
-        [Test]
-        public void SetHoldings_ShortToLong()
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_ShortToLong(decimal leverage)
         {
             Security msft;
-            var algo = GetAlgorithm(out msft);
+            var algo = GetAlgorithm(out msft, 1);
             //Set price to $25
             Update(msft, 25);
             //Sold -2000 MSFT shares, +50k cash
@@ -280,11 +415,26 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(4000, actual);
         }
 
-        [Test]
-        public void SetHoldings_ShortToLong_HighConstantFeeStructure()
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_ShortToLong_SmallConstantFeeStructure(decimal leverage)
         {
             Security msft;
-            var algo = GetAlgorithm(out msft, 10000);
+            var algo = GetAlgorithm(out msft, 1, 1);
+            //Set price to $25
+            Update(msft, 25);
+            //Sold -2000 MSFT shares, +50k cash
+            algo.Portfolio.SetCash(150000);
+            algo.Portfolio[Symbols.MSFT].SetHoldings(25, -2000);
+            // TPV: 150k - 50k = 100k*.5=50k @ 25 = 2000, so we need 4000 since we start at -2k
+            var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
+            Assert.AreEqual(3999, actual);
+        }
+
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_ShortToLong_HighConstantFeeStructure(decimal leverage)
+        {
+            Security msft;
+            var algo = GetAlgorithm(out msft, 1, 10000);
             //Set price to $25
             Update(msft, 25);
             //Sold -2000 MSFT shares, +50k cash
@@ -299,11 +449,12 @@ namespace QuantConnect.Tests.Algorithm
         /*****************************************************/
         //  Rising market conditions tests.
         /*****************************************************/
-        [Test]
-        public void SetHoldings_LongFixed_PriceRise()
+
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_LongFixed_PriceRise(decimal leverage)
         {
             Security msft;
-            var algo = GetAlgorithm(out msft);
+            var algo = GetAlgorithm(out msft, 1);
             //Set price to $25
             Update(msft, 25);
 
@@ -321,11 +472,35 @@ namespace QuantConnect.Tests.Algorithm
             //Need to sell $25k so 50% of $150k: $25k / $50-share = -500 shares
             Assert.AreEqual(-500, actual);
         }
-        [Test]
-        public void SetHoldings_LongFixed_PriceRise_HighConstantFeeStructure()
+
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_LongFixed_PriceRise_SmallConstantFeeStructure(decimal leverage)
         {
             Security msft;
-            var algo = GetAlgorithm(out msft, 10000);
+            var algo = GetAlgorithm(out msft, 1, 1);
+            //Set price to $25
+            Update(msft, 25);
+
+            //Half cash spent on 2000 MSFT shares.
+            algo.Portfolio.SetCash(50000);
+            algo.Portfolio[Symbols.MSFT].SetHoldings(25, 2000);
+
+            //Price rises to $50.
+            Update(msft, 50);
+
+            //Now: 2000 * 50 = $100k Holdings, $50k Cash: $150k.
+            //Calculate the new holdings for 50% MSFT::
+            var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
+
+            //Need to sell $25k so 50% of $150k: $25k / $50-share = -500 shares, -1 in fees
+            Assert.AreEqual(-499, actual);
+        }
+
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_LongFixed_PriceRise_HighConstantFeeStructure(decimal leverage)
+        {
+            Security msft;
+            var algo = GetAlgorithm(out msft, 1, 10000);
             //Set price to $25
             Update(msft, 25);
 
@@ -344,12 +519,11 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(-300, actual);
         }
 
-
-        [Test]
-        public void SetHoldings_LongToLonger_PriceRise()
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_LongToLonger_PriceRise(decimal leverage)
         {
             Security msft;
-            var algo = GetAlgorithm(out msft);
+            var algo = GetAlgorithm(out msft, 1);
             //Set price to $25
             Update(msft, 25);
             //Half cash spent on 2000 MSFT shares.
@@ -366,11 +540,34 @@ namespace QuantConnect.Tests.Algorithm
             //Need to buy to make position $112.5k == $12.5k / 50 = 250 shares
             Assert.AreEqual(250, actual);
         }
-        [Test]
-        public void SetHoldings_LongToLonger_PriceRise_HighConstantFeeStructure()
+
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_LongToLonger_PriceRise_SmallConstantFeeStructure(decimal leverage)
         {
             Security msft;
-            var algo = GetAlgorithm(out msft, 10000);
+            var algo = GetAlgorithm(out msft, 1, 1);
+            //Set price to $25
+            Update(msft, 25);
+            //Half cash spent on 2000 MSFT shares.
+            algo.Portfolio.SetCash(50000);
+            algo.Portfolio[Symbols.MSFT].SetHoldings(25, 2000);
+
+            //Price rises to $50.
+            Update(msft, 50);
+
+            //Now: 2000 * 50 = $100k Holdings, $50k Cash: $150k. MSFT is already 66% of holdings.
+            //Calculate the order for 75% MSFT:
+            var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.75m);
+
+            //Need to buy to make position $112.5k == $12.5k / 50 = 250 shares, -1 in fees = 49
+            Assert.AreEqual(249, actual);
+        }
+
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_LongToLonger_PriceRise_HighConstantFeeStructure(decimal leverage)
+        {
+            Security msft;
+            var algo = GetAlgorithm(out msft, 1, 10000);
             //Set price to $25
             Update(msft, 25);
             //Half cash spent on 2000 MSFT shares.
@@ -388,11 +585,11 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(50, actual);
         }
 
-        [Test]
-        public void SetHoldings_LongerToLong_PriceRise()
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_LongerToLong_PriceRise(decimal leverage)
         {
             Security msft;
-            var algo = GetAlgorithm(out msft);
+            var algo = GetAlgorithm(out msft, 1);
             //Set price to $25
             Update(msft, 25);
 
@@ -411,12 +608,11 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(-1250, actual);
         }
 
-
-        [Test]
-        public void SetHoldings_LongToShort_PriceRise()
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_LongToShort_PriceRise(decimal leverage)
         {
             Security msft;
-            var algo = GetAlgorithm(out msft);
+            var algo = GetAlgorithm(out msft, 1);
             //Set price to $25
             Update(msft, 25);
             //Half cash spent on 2000 MSFT shares.
@@ -433,11 +629,11 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(-3500, actual);
         }
 
-        [Test]
-        public void SetHoldings_ShortToShorter_PriceRise()
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_ShortToShorter_PriceRise(decimal leverage)
         {
             Security msft;
-            var algo = GetAlgorithm(out msft);
+            var algo = GetAlgorithm(out msft, 1);
             //Set price to $25
             Update(msft, 25);
             //Sold -2000 MSFT shares, +50k cash
@@ -459,12 +655,11 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(1250, actual);
         }
 
-
-        [Test]
-        public void SetHoldings_ShortToLong_PriceRise_ZeroValue()
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_ShortToLong_PriceRise_ZeroValue(decimal leverage)
         {
             Security msft;
-            var algo = GetAlgorithm(out msft);
+            var algo = GetAlgorithm(out msft, 1);
             //Set price to $25
             Update(msft, 25);
             //Sold -2000 MSFT shares, +50k cash
@@ -481,13 +676,13 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(2500, actual);
         }
 
-        [Test]
-        public void SetHoldings_ShortToLong_PriceRise()
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_ShortToLong_PriceRise(decimal leverage)
         {
             Security msft;
-            var algo = GetAlgorithm(out msft);
+            var algo = GetAlgorithm(out msft, 1);
             //Set price to $25
-            Update(msft, 2);
+            Update(msft, 25);
             //Sold -2000 MSFT shares, +50k cash
             algo.Portfolio.SetCash(150000);
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, -2000);
@@ -512,11 +707,12 @@ namespace QuantConnect.Tests.Algorithm
         /*****************************************************/
         //  Falling market conditions tests.
         /*****************************************************/
-        [Test]
-        public void SetHoldings_ShortFixed_PriceFall()
+
+        [Test, TestCaseSource("TestParameters")]
+        public void SetHoldings_ShortFixed_PriceFall(decimal leverage)
         {
             Security msft;
-            var algo = GetAlgorithm(out msft);
+            var algo = GetAlgorithm(out msft, 1);
             //Set price to $25
             Update(msft, 25);
             //Sold -2000 MSFT shares, +50k cash
@@ -643,22 +839,7 @@ namespace QuantConnect.Tests.Algorithm
         //}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        private QCAlgorithm GetAlgorithm(out Security msft, decimal fee = 0)
+        private QCAlgorithm GetAlgorithm(out Security msft, decimal leverage, decimal fee = 0)
         {
             //Initialize algorithm
             var algo = new QCAlgorithm();
@@ -666,9 +847,9 @@ namespace QuantConnect.Tests.Algorithm
             algo.SetCash(100000);
             algo.Securities[Symbols.MSFT].TransactionModel = new ConstantFeeTransactionModel(fee);
             msft = algo.Securities[Symbols.MSFT];
+            msft.SetLeverage(leverage);
             return algo;
         }
-
 
         private void Update(Security security, decimal close)
         {
