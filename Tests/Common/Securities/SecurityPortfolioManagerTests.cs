@@ -81,7 +81,7 @@ namespace QuantConnect.Tests.Common.Securities
             var subscriptions = new SubscriptionManager(TimeKeeper);
             var securities = new SecurityManager(TimeKeeper);
             var security = new Security(SecurityExchangeHours, subscriptions.Add(CASH, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
-            security.SetLeverage(10m);
+            security.SetLeverage(1m);
             securities.Add(CASH, security);
             var transactions = new SecurityTransactionManager(securities);
             var portfolio = new SecurityPortfolioManager(securities, transactions);
@@ -375,7 +375,7 @@ namespace QuantConnect.Tests.Common.Securities
             request.SetOrderId(0);
             orderProcessor.AddTicket(new OrderTicket(null, request));
             var sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, acceptedOrder);
-            Assert.IsTrue(sufficientCapital);
+            Assert.IsFalse(sufficientCapital);
 
             var rejectedOrder = new MarketOrder(Symbols.AAPL, 102, DateTime.Now) { Price = 100 };
             sufficientCapital = transactions.GetSufficientCapitalForOrder(portfolio, rejectedOrder);
@@ -469,6 +469,7 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.SetCash(1000);
             securities.Add(Symbols.AAPL, new QuantConnect.Securities.Equity.Equity(securityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.AAPL), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
             var security = securities[Symbols.AAPL];
+            security.SetLeverage(1);
             security.SettlementModel = new DelayedSettlementModel(3, TimeSpan.FromHours(8));
             Assert.AreEqual(0, security.Holdings.Quantity);
             Assert.AreEqual(1000, portfolio.Cash);

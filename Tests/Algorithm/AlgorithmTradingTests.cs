@@ -158,7 +158,7 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, 2000);
             //Sell all 2000 held:
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0m);
-            Assert.AreEqual(-1600, actual);
+            Assert.AreEqual(-2000, actual);
         }
 
         [Test]
@@ -220,7 +220,7 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, -2000);
             //Buy 2000 to get to 0 holdings.
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0m);
-            Assert.AreEqual(1600, actual);
+            Assert.AreEqual(2000, actual);
         }
 
         [Test]
@@ -666,6 +666,7 @@ namespace QuantConnect.Tests.Algorithm
             algo.SetCash(100000);
             algo.Securities[Symbols.MSFT].TransactionModel = new ConstantFeeTransactionModel(fee);
             msft = algo.Securities[Symbols.MSFT];
+            msft.SetLeverage(1);
             return algo;
         }
 

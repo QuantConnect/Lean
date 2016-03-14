@@ -105,8 +105,9 @@ namespace QuantConnect.Securities
             //Get the order value from the non-abstract order classes (MarketOrder, LimitOrder, StopMarketOrder)
             //Market order is approximated from the current security price and set in the MarketOrder Method in QCAlgorithm.
             var orderFees = security.FeeModel.GetOrderFee(security, order);
-            
-            return order.GetValue(security)*GetInitialMarginRequirement(security) + orderFees;
+
+            var orderValue = order.GetValue(security) * GetInitialMarginRequirement(security);
+            return orderValue + Math.Sign(orderValue) * orderFees;
         }
 
         /// <summary>
@@ -144,7 +145,7 @@ namespace QuantConnect.Securities
                     case OrderDirection.Buy:
                         return portfolio.MarginRemaining;
                     case OrderDirection.Sell:
-                        return security.MarginModel.GetMaintenanceMargin(security)*2 + portfolio.MarginRemaining;
+                        return security.Holdings.AbsoluteHoldingsValue * GetInitialMarginRequirement(security) * 2 + portfolio.Cash;
                 }
             }
             else if (holdings.IsShort)
@@ -152,7 +153,7 @@ namespace QuantConnect.Securities
                 switch (direction)
                 {
                     case OrderDirection.Buy:
-                        return security.MarginModel.GetMaintenanceMargin(security)*2 + portfolio.MarginRemaining;
+                        return security.Holdings.AbsoluteHoldingsValue * GetInitialMarginRequirement(security) * 2 + portfolio.Cash;
                     case OrderDirection.Sell:
                         return portfolio.MarginRemaining;
                 }
