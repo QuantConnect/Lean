@@ -26,7 +26,6 @@ namespace QuantConnect.ToolBox.QuandlBitfinexDownloader
         /// </summary>
         static void Main(string[] args)
         {
-
             if (args.Length != 2)
             {
                 Console.WriteLine("Usage: Downloader FROMDATE APIKEY");
@@ -38,11 +37,11 @@ namespace QuantConnect.ToolBox.QuandlBitfinexDownloader
             {
                 // Load settings from config.json
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
-                int divisor = int.Parse(Config.Get("bitfinex-divisor", "100"));
+                var scaleFactor = Config.GetInt("bitfinex-scale-factor", 100);
 
                 // Create an instance of the downloader
                 const string market = Market.Bitfinex;
-                var downloader = new QuandlBitfinexDownloader(args[1], divisor);
+                var downloader = new QuandlBitfinexDownloader(args[1], scaleFactor);
 
                 // Download the data
                 var symbol = Symbol.Create("BTCUSD", SecurityType.Forex, market);
@@ -51,7 +50,6 @@ namespace QuantConnect.ToolBox.QuandlBitfinexDownloader
                 // Save the data
                 var writer = new LeanDataWriter(Resolution.Daily, symbol, dataDirectory, TickType.Quote);
                 writer.Write(data);
-
             }
             catch (Exception err)
             {

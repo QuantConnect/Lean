@@ -14,14 +14,10 @@
 */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using Newtonsoft.Json;
-using System.Linq;
-using System.IO;
-using System.IO.Compression;
-using QuantConnect.Configuration;
 
 namespace QuantConnect.ToolBox.QuandlBitfinexDownloader
 {
@@ -30,14 +26,18 @@ namespace QuantConnect.ToolBox.QuandlBitfinexDownloader
     /// </summary>
     public class QuandlBitfinexDownloader : IDataDownloader
     {
+        private readonly string _apiKey;
+        private readonly decimal _scaleFactor;
 
-        string _apiKey;
-        decimal _divisor = 100m;
-
-        public QuandlBitfinexDownloader(string apiKey, int divisor = 100)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="QuandlBitfinexDownloader"/> class
+        /// </summary>
+        /// <param name="apiKey">The quandl api key</param>
+        /// <param name="scaleFactor">Scale factor used to scale the data, useful for changing the BTC units</param>
+        public QuandlBitfinexDownloader(string apiKey, int scaleFactor = 100)
         {
             _apiKey = apiKey;
-            _divisor = divisor;
+            _scaleFactor = scaleFactor;
         }
 
         /// <summary>
@@ -50,51 +50,43 @@ namespace QuantConnect.ToolBox.QuandlBitfinexDownloader
         /// <returns>Enumerable of base data for this symbol</returns>
         public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
-
             if (resolution != Resolution.Daily)
             {
                 throw new ArgumentException("Only daily data is currently supported.");
             }
 
-            string collapse = "daily";
+            const string collapse = "daily";
 
             var url = "https://www.quandl.com/api/v3/datasets/BCHARTS/BITFINEXUSD.csv?order=asc&collapse=" + collapse + "&api_key=" + _apiKey + "&start_date="
                 + startUtc.ToString("yyyy-MM-dd");
             using (var cl = new WebClient())
             {
-
                 var data = cl.DownloadString(url);
 
-                bool header = true;
-                foreach (string item in data.Split('\n'))
+                // skip the header line
+                foreach (var item in data.Split('\n').Skip(1))
                 {
-
-                    if (header)
+                    var line = item.Split(',');
+                    if (line.Length != 8)
                     {
-                        header = false;
                         continue;
                     }
 
-                    string[] line = item.Split(',');
-                    if (line.Count() == 8)
+                    var bar = new TradeBar
                     {
-                        var bar = new TradeBar
-                        {
-                            Time = DateTime.Parse(line[0]),
-                            Open = decimal.Parse(line[1]) / _divisor,
-                            High = decimal.Parse(line[2]) / _divisor,
-                            Low = decimal.Parse(line[3]) / _divisor,
-                            Close = decimal.Parse(line[4]) / _divisor,
-                            Value = decimal.Parse(line[7]) / _divisor,
-                            Volume = (long)(Math.Round(decimal.Parse(line[5]), 0) * _divisor),
-                            Symbol = symbol,
-                            DataType = MarketDataType.TradeBar,
-                            Period = new TimeSpan(24,0,0),
-                        };
-                        System.Diagnostics.Debug.WriteLine(line[0]);
-                        yield return bar;
-                    }
+                        Time = DateTime.Parse(line[0]),
+                        Open = decimal.Parse(line[1])/_scaleFactor,
+                        High = decimal.Parse(line[2])/_scaleFactor,
+                        Low = decimal.Parse(line[3])/_scaleFactor,
+                        Close = decimal.Parse(line[4])/_scaleFactor,
+                        Value = decimal.Parse(line[7])/_scaleFactor,
+                        Volume = (long) (decimal.Parse(line[5])*_scaleFactor),
+                        Symbol = symbol,
+                        DataType = MarketDataType.TradeBar,
+                        Period = Time.OneDay
+                    };
 
+                    yield return bar;
                 }
             }
 
