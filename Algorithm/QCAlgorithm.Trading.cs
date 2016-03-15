@@ -614,6 +614,8 @@ namespace QuantConnect.Algorithm
             // continue iterating while we do not have enough margin for the order
             decimal marginRequired;
             var orderQuantity = 0;
+            decimal orderValue;
+            decimal orderFees;
 
             do
             {
@@ -628,11 +630,15 @@ namespace QuantConnect.Algorithm
                     orderQuantity--;
                 }
 
-                // calculate the margin required for the order
+                // generate the order
                 var order = new MarketOrder(security.Symbol, orderQuantity, UtcTime);
+                orderValue = order.GetValue(security);
+                orderFees = security.FeeModel.GetOrderFee(security, order);
+
+                // calculate the margin required for the order
                 marginRequired = security.MarginModel.GetInitialMarginRequiredForOrder(security, order);
 
-            } while (marginRequired > marginRemaining || marginRequired > targetOrderValue);
+            } while (orderQuantity > 0 && (marginRequired > marginRemaining || orderValue + orderFees > targetOrderValue));
 
             // add directionality back in
             return (direction == OrderDirection.Sell ? -1 : 1) * orderQuantity;
