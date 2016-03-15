@@ -147,6 +147,9 @@
     <Compile Include="Bz2StreamProvider.cs" />
     <Compile Include="CoarseUniverseGenerator\Program.cs" />
     <Compile Include="ConsolidatorDataProcessor.cs" />
+    <Compile Include="CryptoiqDownloader\CryptoiqBitcoin.cs" />
+    <Compile Include="CryptoiqDownloader\CryptoiqDownloader.cs" />
+    <Compile Include="CryptoiqDownloader\Program.cs" />
     <Compile Include="DukascopyDownloader\DukascopyDataDownloader.cs" />
     <Compile Include="DukascopyDownloader\DukascopySymbolMapper.cs" />
     <Compile Include="DukascopyDownloader\Program.cs" />
