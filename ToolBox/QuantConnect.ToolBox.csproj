@@ -33,7 +33,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>QuantConnect.ToolBox.AlgoSeekOptionsConverter.Program</StartupObject>
+    <StartupObject>QuantConnect.ToolBox.QuandlBitfinexDownloader.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="IKVM.AWT.WinForms">
@@ -173,6 +173,8 @@
     <Compile Include="OandaDownloader\Program.cs" />
     <Compile Include="PipeDataProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QuandlBitfinexDownloader\Program.cs" />
+    <Compile Include="QuandlBitfinexDownloader\QuandlBitfinexDownloader.cs" />
     <Compile Include="QuantQuoteConverter\Program.cs" />
     <Compile Include="IDataDownloader.cs" />
     <Compile Include="RawFileProcessor.cs" />
