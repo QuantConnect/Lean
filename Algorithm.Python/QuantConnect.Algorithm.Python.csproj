@@ -105,6 +105,7 @@
   <ItemGroup>
     <Content Include="AddRemoveSecurityRegressionAlgorithm.py" />
     <Content Include="ParameterizedAlgorithm.py" />
+    <Content Include="UniverseSelectionRegressionAlgorithm.py" />
     <Content Include="UpdateOrderRegressionAlgorithm.py" />
     <Content Include="BasicTemplateAlgorithm.py" />
     <Content Include="CustomBenchmarkAlgorithm.py" />
