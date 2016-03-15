@@ -27,15 +27,14 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
     /// </summary>
     public class CryptoiqDownloader : IDataDownloader
     {
-
-        private string _exchange;
-        decimal _scaleFactor;
+        private readonly string _exchange;
+        private readonly decimal _scaleFactor;
 
         /// <summary>
-        /// Creates instance of downloader
+        /// Initializes a new instance of the <see cref="CryptoiqDownloader"/> class
         /// </summary>
-        /// <param name="exchange"></param>
-        /// <param name="scaleFactor"></param>
+        /// <param name="exchange">The bitcoin exchange</param>
+        /// <param name="scaleFactor">Scale factor used to scale the data, useful for changing the BTC units</param>
         public CryptoiqDownloader(string exchange = "bitfinex", decimal scaleFactor = 1m)
         {
             _exchange = exchange;
@@ -52,41 +51,35 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
         /// <returns>Enumerable of base data for this symbol</returns>
         public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
-
             if (resolution != Resolution.Tick)
             {
                 throw new ArgumentException("Only tick data is currently supported.");
             }
 
-
-            DateTime counter = startUtc;
-            int hour = 1;
-            var url = "http://cryptoiq.io/api/marketdata/ticker/{3}/{2}/{0}/{1}";
+            var hour = 1;
+            var counter = startUtc;
+            const string url = "http://cryptoiq.io/api/marketdata/ticker/{3}/{2}/{0}/{1}";
 
             while (counter <= endUtc)
             {
-                // Console.WriteLine(counter.ToString());
                 while (hour < 24)
                 {
-                    // Console.WriteLine(hour.ToString());
-                    string request = String.Format(url, counter.ToString("yyyy-MM-dd"), hour.ToString(), symbol.Value, _exchange);
-
                     using (var cl = new WebClient())
                     {
-                       var data = cl.DownloadString(request);
+                        var request = string.Format(url, counter.ToString("yyyy-MM-dd"), hour, symbol.Value, _exchange);
+                        var data = cl.DownloadString(request);
 
                         var mbtc = JsonConvert.DeserializeObject<List<CryptoiqBitcoin>>(data);
-                        mbtc = mbtc.OrderBy(m => m.Time).ToList();
-                        foreach (var item in mbtc)
+                        foreach (var item in mbtc.OrderBy(x => x.Time))
                         {
                             yield return new Tick
                             {
                                 Time = item.Time,
                                 Symbol = symbol,
-                                Value = item.Last / _scaleFactor,
-                                AskPrice = item.Ask / _scaleFactor,
-                                BidPrice = item.Bid / _scaleFactor,
-                                TickType = QuantConnect.TickType.Quote
+                                Value = item.Last/_scaleFactor,
+                                AskPrice = item.Ask/_scaleFactor,
+                                BidPrice = item.Bid/_scaleFactor,
+                                TickType = TickType.Quote
                             };
                         }
                         hour++;

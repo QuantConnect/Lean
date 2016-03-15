@@ -28,7 +28,7 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
         {
             if (args.Length == 3)
             {
-                args = new string[] { args[0], DateTime.UtcNow.ToString("yyyyMMdd"), args[1], args[2] };
+                args = new [] { args[0], DateTime.UtcNow.ToString("yyyyMMdd"), args[1], args[2] };
             }
             else if (args.Length < 4)
             {
@@ -36,8 +36,6 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
                 Console.WriteLine("FROMDATE = yyyymmdd");
                 Console.WriteLine("TODATE = yyyymmdd");
                 Environment.Exit(1);
-                //useful detault params
-                //args = new string[] { "20151110", DateTime.UtcNow.ToString("yyyyMMdd"), "bitfinex", "BTCUSD" };
             }
 
             try
@@ -48,8 +46,7 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
 
                 // Load settings from config.json
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
-                decimal scaleFactor = decimal.Parse(Config.Get("bitfinex-scale-factor", "1"));
-
+                var scaleFactor = Config.GetValue("bitfinex-scale-factor", 1m);
 
                 // Create an instance of the downloader
                 const string market = Market.Bitfinex;
@@ -62,7 +59,6 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
                 // Save the data
                 var writer = new LeanDataWriter(Resolution.Tick, symbolObject, dataDirectory, TickType.Quote);
                 writer.Write(data);
-
             }
             catch (Exception err)
             {

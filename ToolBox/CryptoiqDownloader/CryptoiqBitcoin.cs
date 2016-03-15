@@ -13,23 +13,41 @@
  * limitations under the License.
 */
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QuantConnect.ToolBox.CryptoiqDownloader
 {
-
+    /// <summary>
+    /// Defines the JSON response structure from the Cryptoiq API
+    /// </summary>
     public class CryptoiqBitcoin
     {
-
+        /// <summary>
+        /// The time of the tick
+        /// </summary>
         public DateTime Time;
+        /// <summary>
+        /// The ask price
+        /// </summary>
         public decimal Ask;
+        /// <summary>
+        /// The bid price
+        /// </summary>
         public decimal Bid;
+        /// <summary>
+        /// The price of the last trade
+        /// </summary>
         public decimal Last;
+        /// <summary>
+        /// The daily high
+        /// </summary>
         public decimal High;
+        /// <summary>
+        /// The daily low
+        /// </summary>
         public decimal Low;
+        /// <summary>
+        /// The daily running volume
+        /// </summary>
         public decimal Volume;
     }
 
