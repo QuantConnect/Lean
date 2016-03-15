@@ -144,8 +144,14 @@ namespace QuantConnect.Securities
                 {
                     case OrderDirection.Buy:
                         return portfolio.MarginRemaining;
+
                     case OrderDirection.Sell:
-                        return security.Holdings.AbsoluteHoldingsValue * GetInitialMarginRequirement(security) * 2 + portfolio.Cash;
+                        return 
+                            // portion of margin to close the existing position
+                            GetMaintenanceMargin(security) +
+                            // portion of margin to open the new position
+                            security.Holdings.AbsoluteHoldingsValue * GetInitialMarginRequirement(security) +
+                            portfolio.MarginRemaining;
                 }
             }
             else if (holdings.IsShort)
@@ -153,7 +159,13 @@ namespace QuantConnect.Securities
                 switch (direction)
                 {
                     case OrderDirection.Buy:
-                        return security.Holdings.AbsoluteHoldingsValue * GetInitialMarginRequirement(security) * 2 + portfolio.Cash;
+                        return
+                            // portion of margin to close the existing position
+                            GetMaintenanceMargin(security) +
+                            // portion of margin to open the new position
+                            security.Holdings.AbsoluteHoldingsValue * GetInitialMarginRequirement(security) +
+                            portfolio.MarginRemaining;
+
                     case OrderDirection.Sell:
                         return portfolio.MarginRemaining;
                 }
