@@ -128,7 +128,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Security security;
                 if (!_algorithm.Securities.TryGetValue(symbol, out security))
                 {
-                    security = SecurityManager.CreateSecurity(_algorithm.Portfolio, _algorithm.SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, _algorithm.SecurityInitializer,
+                    security = SecurityManager.CreateSecurity(_algorithm.Portfolio, _algorithm.SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, universe.SecurityInitializer,
                         symbol,
                         settings.Resolution,
                         settings.FillForward,
