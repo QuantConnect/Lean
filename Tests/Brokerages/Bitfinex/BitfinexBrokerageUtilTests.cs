@@ -12,6 +12,7 @@ using TradingApi.ModelObjects.Bitfinex.Json;
 using QuantConnect.Orders;
 using System.Reflection;
 using Moq;
+using TradingApi.Bitfinex;
 
 
 namespace QuantConnect.Tests.Brokerages.Bitfinex
@@ -21,6 +22,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
     {
 
         BitfinexBrokerage unit;
+        Mock<BitfinexApi> mock = new Mock<BitfinexApi>(It.IsAny<string>(), It.IsAny<string>());
 
         private enum BitfinexOrderType
         {
@@ -45,9 +47,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         [SetUp]
         public void Setup()
         {
-            Config.Set("bitfinex-api-secret", "abc");
-            Config.Set("bitfinex-api-key", "123");
-            unit = new BitfinexWebsocketsBrokerage();
+            unit = new BitfinexWebsocketsBrokerage("wss://localhost", new Mock<WebSocketWrapper>().Object, "abc", "123", "trading", mock.Object);
         }
 
         [Test()]
@@ -112,8 +112,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         public void MapOrderTypeTest()
         {
 
-            Config.Set("bitfinex-wallet", "exchange");
-            unit = new BitfinexBrokerage();
+            unit = new BitfinexBrokerage("", "", "exchange", mock.Object);
 
             var expected = GetDescriptionFromEnumValue(BitfinexOrderType.exchangeMarket);
             var actual = unit.MapOrderType(OrderType.Market);
@@ -129,8 +128,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
 
             Assert.Throws<Exception>(() => unit.MapOrderType(OrderType.StopLimit));
 
-            Config.Set("bitfinex-wallet", "trading");
-            unit = new BitfinexBrokerage();
+            unit = new BitfinexBrokerage("", "", "trading", mock.Object);
 
             expected = GetDescriptionFromEnumValue(BitfinexOrderType.market);
             actual = unit.MapOrderType(OrderType.Market);
@@ -150,8 +148,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         public void MapOrderTypeTest1()
         {
 
-            Config.Set("bitfinex-wallet", "exchange");
-            unit = new BitfinexBrokerage();
+            unit = new BitfinexBrokerage("", "", "exchange", mock.Object);
 
             var expected = OrderType.Market;
             var actual = unit.MapOrderType(GetDescriptionFromEnumValue(BitfinexOrderType.exchangeMarket));
@@ -169,8 +166,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
 
             Assert.Throws<Exception>(() => unit.MapOrderType(GetDescriptionFromEnumValue(BitfinexOrderType.market)));
 
-            Config.Set("bitfinex-wallet", "trading");
-            unit = new BitfinexBrokerage();
+            unit = new BitfinexBrokerage("", "", "trading", mock.Object);
 
             expected = OrderType.Market;
             actual = unit.MapOrderType(GetDescriptionFromEnumValue(BitfinexOrderType.market));

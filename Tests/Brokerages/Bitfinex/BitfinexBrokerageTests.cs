@@ -58,12 +58,13 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         public override void Setup()
         {
             base.Setup();
-            unit = new BitfinexWebsocketsBrokerage();
+
+            unit = (BitfinexBrokerage)new BitfinexBrokerageFactory().CreateBrokerage(null, null);
         }
 
         protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
         {
-            return new BitfinexWebsocketsBrokerage();
+            return new BitfinexBrokerageFactory().CreateBrokerage(null, null);
         }
 
         protected override decimal GetAskPrice(Symbol symbol)

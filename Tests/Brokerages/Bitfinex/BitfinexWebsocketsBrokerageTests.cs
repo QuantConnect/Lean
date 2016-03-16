@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using System.Reflection;
 using Moq;
 using QuantConnect.Configuration;
+using TradingApi.Bitfinex;
 
 namespace QuantConnect.Brokerages.Bitfinex.Tests
 {
@@ -24,11 +25,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
         [SetUp()]
         public void Setup()
         {
-            Config.Set("bitfinex-api-secret", "abc");
-            Config.Set("bitfinex-api-key", "123");
-            unit = new BitfinexWebsocketsBrokerage();
-            //DI would be preferable here
-            unit.WebSocket = mock.Object;
+            unit = new BitfinexWebsocketsBrokerage("wss://localhost", mock.Object, "abc", "123", "trading", new Mock<BitfinexApi>(It.IsAny<string>(), It.IsAny<string>()).Object);
         }
 
         [Test()]
@@ -165,7 +162,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
 
             mock.Setup(m => m.Connect()).Verifiable();
 
-            var brokerageMock = new Mock<BitfinexWebsocketsBrokerage>();
+            var brokerageMock = new Mock<BitfinexWebsocketsBrokerage>("wss://localhost", mock.Object, "abc", "123", "trading", new Mock<BitfinexApi>(It.IsAny<string>(), It.IsAny<string>()).Object);
 
             brokerageMock.Setup(m => m.Unsubscribe(null, null)).Verifiable();
             brokerageMock.Setup(m => m.Subscribe(null, null)).Verifiable();
