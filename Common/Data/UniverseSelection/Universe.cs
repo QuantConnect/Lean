@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -31,6 +32,8 @@ namespace QuantConnect.Data.UniverseSelection
         /// Gets a value indicating that no change to the universe should be made
         /// </summary>
         public static readonly UnchangedUniverse Unchanged = UnchangedUniverse.Instance;
+
+        private HashSet<Symbol> _previousSelections; 
 
         private readonly ConcurrentDictionary<Symbol, Member> _securities;
 
@@ -90,6 +93,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="securityInitializer">Initializes securities when they're added to the universe</param>
         protected Universe(SubscriptionDataConfig config, ISecurityInitializer securityInitializer = null)
         {
+            _previousSelections = new HashSet<Symbol>();
             _securities = new ConcurrentDictionary<Symbol, Member>();
 
             Configuration = config;
@@ -117,6 +121,30 @@ namespace QuantConnect.Data.UniverseSelection
                 }
             }
             return false;
+        }
+
+        /// <summary>
+        /// Performs universe selection using the data specified
+        /// </summary>
+        /// <param name="utcTime">The current utc time</param>
+        /// <param name="data">The symbols to remain in the universe</param>
+        /// <returns>The data that passes the filter</returns>
+        public IEnumerable<Symbol> PerformSelection(DateTime utcTime, IEnumerable<BaseData> data)
+        {
+            var result = SelectSymbols(utcTime, data);
+            if (ReferenceEquals(result, Unchanged))
+            {
+                return Unchanged;
+            }
+
+            var selections = result.ToHashSet();
+            var hasDiffs = _previousSelections.Except(selections).Union(selections.Except(_previousSelections)).Any();
+            _previousSelections = selections;
+            if (!hasDiffs)
+            {
+                return Unchanged;
+            }
+            return selections;
         }
 
         /// <summary>
