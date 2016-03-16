@@ -25,8 +25,6 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Cfd;
-using QuantConnect.Securities.Forex;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.TransactionHandlers
@@ -820,11 +818,16 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 Log.Debug("BrokerageTransactionHandler.HandleOrderEvent(): " + fill);
                 Interlocked.Exchange(ref _lastFillTimeTicks, DateTime.Now.Ticks);
+
+                // set the price currency on the fill and on the order
+                var security = _algorithm.Securities[fill.Symbol];
+                fill.FillPriceCurrency = security.SymbolProperties.QuoteCurrency;
+                order.PriceCurrency = fill.FillPriceCurrency;
+
                 try
                 {
                     _algorithm.Portfolio.ProcessFill(fill);
 
-                    var security = _algorithm.Securities[fill.Symbol];
                     var conversionRate = security.QuoteCurrency.ConversionRate;
 
                     _algorithm.TradeBuilder.ProcessFill(fill, conversionRate);

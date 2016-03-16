@@ -17,8 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Cfd;
-using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Orders
 {
@@ -46,11 +44,16 @@ namespace QuantConnect.Orders
         /// Symbol of the Asset
         /// </summary>
         public Symbol Symbol { get; internal set; }
-        
+
         /// <summary>
         /// Price of the Order.
         /// </summary>
         public decimal Price { get; internal set; }
+
+        /// <summary>
+        /// Currency for the order price
+        /// </summary>
+        public string PriceCurrency { get; internal set; }
 
         /// <summary>
         /// Time the order was created.
@@ -130,6 +133,7 @@ namespace QuantConnect.Orders
         {
             Time = new DateTime();
             Price = 0;
+            PriceCurrency = string.Empty;
             Quantity = 0;
             Symbol = Symbol.Empty;
             Status = OrderStatus.None;
@@ -151,6 +155,7 @@ namespace QuantConnect.Orders
         {
             Time = time;
             Price = 0;
+            PriceCurrency = string.Empty;
             Quantity = quantity;
             Symbol = symbol;
             Status = OrderStatus.None;
@@ -231,6 +236,7 @@ namespace QuantConnect.Orders
             order.ContingentId = ContingentId;
             order.Duration = Duration;
             order.Price = Price;
+            order.PriceCurrency = PriceCurrency;
             order.Quantity = Quantity;
             order.Status = Status;
             order.Symbol = Symbol;

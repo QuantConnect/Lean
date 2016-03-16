@@ -14,6 +14,7 @@
 */
 
 using System;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Orders
 {
@@ -51,6 +52,11 @@ namespace QuantConnect.Orders
         /// Fill price information about the order
         /// </summary>
         public decimal FillPrice;
+
+        /// <summary>
+        /// Currency for the fill price
+        /// </summary>
+        public string FillPriceCurrency;
 
         /// <summary>
         /// Number of shares of the order that was filled in this event.
@@ -101,6 +107,7 @@ namespace QuantConnect.Orders
             Status = status;
             Direction = direction;
             FillPrice = fillPrice;
+            FillPriceCurrency = string.Empty;
             FillQuantity = fillQuantity;
             OrderFee = Math.Abs(orderFee);
             Message = message;
@@ -123,6 +130,7 @@ namespace QuantConnect.Orders
             //Initialize to zero, manually set fill quantity
             FillQuantity = 0;
             FillPrice = 0;
+            FillPriceCurrency = string.Empty;
 
             UtcTime = utcTime;
             OrderFee = Math.Abs(orderFee);
@@ -140,10 +148,10 @@ namespace QuantConnect.Orders
         {
             var message = FillQuantity == 0 
                 ? string.Format("OrderID: {0} Symbol: {1} Status: {2}", OrderId, Symbol, Status) 
-                : string.Format("OrderID: {0} Symbol: {1} Status: {2} Quantity: {3} FillPrice: {4}", OrderId, Symbol, Status, FillQuantity, FillPrice, OrderFee);
+                : string.Format("OrderID: {0} Symbol: {1} Status: {2} Quantity: {3} FillPrice: {4} {5}", OrderId, Symbol, Status, FillQuantity, FillPrice, FillPriceCurrency);
 
             // attach the order fee so it ends up in logs properly
-            if (OrderFee != 0m) message += message + " OrderFee: " + OrderFee;
+            if (OrderFee != 0m) message += string.Format(" OrderFee: {0} {1}", OrderFee, CashBook.AccountCurrency);
             
             return message;
         }
