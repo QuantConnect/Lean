@@ -8,6 +8,7 @@ using NUnit.Framework;
 using Moq;
 using QuantConnect.Configuration;
 using TradingApi.ModelObjects.Bitfinex.Json;
+using TradingApi.ModelObjects;
 namespace QuantConnect.Brokerages.Bitfinex.Tests
 {
     [TestFixture()]
@@ -150,6 +151,29 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
         public void GetCashBalanceTest()
         {
 
+        }
+
+        [Test()]
+        public void SubscribeTest()
+        {
+            unit.Connect();
+            var response = new BitfinexPublicTickerGet
+            {
+                Ask = "1",
+                Bid = "2",
+                High = "3",
+                LastPrice = "4",
+                Low = "5",
+                Mid = "6",
+                Timestamp = "7",
+                Volume = "8"
+            };
+            mock.Setup(m => m.GetPublicTicker(BtcInfo.PairTypeEnum.btcusd, BtcInfo.BitfinexUnauthenicatedCallsEnum.pubticker)).Returns(response);
+            unit.Subscribe(null, null);
+            System.Threading.Thread.Sleep(9000);
+            var actual = unit.GetNextTicks();
+            unit.Unsubscribe(null, null);
+            Assert.AreEqual(2, actual.Count());
         }
 
     }

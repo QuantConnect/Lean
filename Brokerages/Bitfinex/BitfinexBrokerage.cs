@@ -394,7 +394,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             var task = Task.Run(() => { this.RequestTicker(); }, _tickerToken.Token);
         }
 
-        private void RequestTicker()
+        private async Task RequestTicker()
         {
             var response = _restClient.GetPublicTicker(TradingApi.ModelObjects.BtcInfo.PairTypeEnum.btcusd, TradingApi.ModelObjects.BtcInfo.BitfinexUnauthenicatedCallsEnum.pubticker);
             lock (Ticks)
@@ -413,8 +413,8 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
             if (!_tickerToken.IsCancellationRequested)
             {
-                Thread.Sleep(8000);
-                RequestTicker();
+                await Task.Delay(8000, _tickerToken.Token);
+                await RequestTicker();
             }
         }
 
