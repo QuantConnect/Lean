@@ -26,7 +26,7 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class DonchianChannel : TradeBarIndicator
     {
-        private TradeBar _previousInput;
+        private TradeBarBase _previousInput;
         /// <summary>
         /// Gets the upper band of the Donchian Channel.
         /// </summary>
@@ -73,7 +73,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator, which by convention is the mean value of the upper band and lower band.</returns>
-        protected override decimal ComputeNextValue(TradeBar input)
+        protected override decimal ComputeNextValue(TradeBarBase input)
         {
             if (_previousInput != null)
             {

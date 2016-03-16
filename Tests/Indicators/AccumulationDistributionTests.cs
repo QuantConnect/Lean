@@ -20,9 +20,9 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class AccumulationDistributionTests : CommonIndicatorTests<TradeBar>
+    public class AccumulationDistributionTests : CommonIndicatorTests<TradeBarBase>
     {
-        protected override IndicatorBase<TradeBar> CreateIndicator()
+        protected override IndicatorBase<TradeBarBase> CreateIndicator()
         {
             return new AccumulationDistribution("AD");
         }

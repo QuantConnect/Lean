@@ -22,7 +22,7 @@ namespace QuantConnect.Indicators
     /// 
     /// This type is more of a shim/typedef to reduce the need to refer to things as IndicatorBase&lt;TradeBar&gt;
     /// </summary>
-    public abstract class TradeBarIndicator : IndicatorBase<TradeBar>
+    public abstract class TradeBarIndicator : IndicatorBase<TradeBarBase>
     {
         /// <summary>
         /// Creates a new TradeBarIndicator with the specified name

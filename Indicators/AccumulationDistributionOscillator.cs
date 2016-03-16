@@ -68,7 +68,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(TradeBar input)
+        protected override decimal ComputeNextValue(TradeBarBase input)
         {
             _ad.Update(input);
             _emaFast.Update(_ad.Current);

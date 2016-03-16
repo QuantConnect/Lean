@@ -29,22 +29,22 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// The Tenkan-sen component of the Ichimoku indicator
         /// </summary>
-        public IndicatorBase<TradeBar> Tenkan { get; private set; }
+        public IndicatorBase<TradeBarBase> Tenkan { get; private set; }
 
         /// <summary>
         /// The Kijun-sen component of the Ichimoku indicator
         /// </summary>
-        public IndicatorBase<TradeBar> Kijun { get; private set; }
+        public IndicatorBase<TradeBarBase> Kijun { get; private set; }
 
         /// <summary>
         /// The Senkou A Span component of the Ichimoku indicator
         /// </summary>
-        public IndicatorBase<TradeBar> SenkouA { get; private set; }
+        public IndicatorBase<TradeBarBase> SenkouA { get; private set; }
 
         /// <summary>
         /// The Senkou B Span component of the Ichimoku indicator
         /// </summary>
-        public IndicatorBase<TradeBar> SenkouB { get; private set; }
+        public IndicatorBase<TradeBarBase> SenkouB { get; private set; }
 
         /// <summary>
         /// The Tenkan-sen Maximum component of the Ichimoku indicator
@@ -112,9 +112,9 @@ namespace QuantConnect.Indicators
             DelayedMinimumSenkouB = new Delay(name + "DelayedMin", senkouBDelayPeriod);
 
 
-            SenkouA = new FunctionalIndicator<TradeBar>(
+            SenkouA = new FunctionalIndicator<TradeBarBase>(
                 name + "_SenkouA",
-                input => computeSenkouA(senkouAPeriod, input),
+                input => computeSenkouA(senkouAPeriod),
                 senkouA => DelayedTenkanSenkouA.IsReady && DelayedKijunSenkouA.IsReady,
                 () =>
                 {
@@ -122,9 +122,9 @@ namespace QuantConnect.Indicators
                     Kijun.Reset();
                 });
 
-            SenkouB = new FunctionalIndicator<TradeBar>(
+            SenkouB = new FunctionalIndicator<TradeBarBase>(
                 name + "_SenkouB",
-                input => computeSenkouB(senkouBPeriod, input),
+                input => computeSenkouB(senkouBPeriod),
                 senkouA => DelayedMaximumSenkouB.IsReady && DelayedMinimumSenkouB.IsReady,
                 () =>
                 {
@@ -133,9 +133,9 @@ namespace QuantConnect.Indicators
                 });
 
 
-            Tenkan = new FunctionalIndicator<TradeBar>(
+            Tenkan = new FunctionalIndicator<TradeBarBase>(
                 name + "_Tenkan",
-                input => ComputeTenkan(tenkanPeriod, input),
+                input => ComputeTenkan(tenkanPeriod),
                 tenkan => TenkanMaximum.IsReady && TenkanMinimum.IsReady,
                 () =>
                 {
@@ -143,9 +143,9 @@ namespace QuantConnect.Indicators
                     TenkanMinimum.Reset();
                 });
 
-            Kijun = new FunctionalIndicator<TradeBar>(
+            Kijun = new FunctionalIndicator<TradeBarBase>(
                 name + "_Kijun",
-                input => ComputeKijun(kijunPeriod, input),
+                input => ComputeKijun(kijunPeriod),
                 kijun => KijunMaximum.IsReady && KijunMinimum.IsReady,
                 () =>
                 {
@@ -154,26 +154,26 @@ namespace QuantConnect.Indicators
                 });
         }
 
-        private decimal computeSenkouB(int period, TradeBar input)
+        private decimal computeSenkouB(int period)
         {
             var senkouB = DelayedMaximumSenkouB.Samples >= period ? (DelayedMaximumSenkouB + DelayedMinimumSenkouB) / 2 : new decimal(0.0);
             return senkouB;
         }
 
-        private decimal computeSenkouA(int period, TradeBar input)
+        private decimal computeSenkouA(int period)
         {
             var senkouA = DelayedKijunSenkouA.Samples >= period ? (DelayedTenkanSenkouA + DelayedKijunSenkouA) / 2 : new decimal(0.0);
             return senkouA;
         }
 
-        private decimal ComputeTenkan(int period, TradeBar input)
+        private decimal ComputeTenkan(int period)
         {
             var tenkan = TenkanMaximum.Samples >= period ? (TenkanMaximum.Current.Value + TenkanMinimum.Current.Value) / 2 : new decimal(0.0);
 
             return tenkan;
         }
 
-        private decimal ComputeKijun(int period, TradeBar input)
+        private decimal ComputeKijun(int period)
         {
             var kijun = KijunMaximum.Samples >= period ? (KijunMaximum + KijunMinimum) / 2 : new decimal(0.0);
             return kijun;
@@ -192,10 +192,8 @@ namespace QuantConnect.Indicators
         /// Computes the next value of this indicator from the given state
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
-        protected override decimal ComputeNextValue(TradeBar input)
+        protected override decimal ComputeNextValue(TradeBarBase input)
         {
-
-
             TenkanMaximum.Update(input.Time, input.High);
             TenkanMinimum.Update(input.Time, input.Low);
             Tenkan.Update(input);

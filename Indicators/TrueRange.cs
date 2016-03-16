@@ -27,7 +27,7 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class TrueRange : TradeBarIndicator
     {
-        private TradeBar _previousInput;
+        private TradeBarBase _previousInput;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TrueRange"/> class using the specified name.
@@ -51,7 +51,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(TradeBar input)
+        protected override decimal ComputeNextValue(TradeBarBase input)
         {
             if (!IsReady)
             {
