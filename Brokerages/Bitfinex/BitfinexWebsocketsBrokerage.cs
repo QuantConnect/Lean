@@ -163,7 +163,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 if (!this.IsConnected || (DateTime.UtcNow - _heartbeatCounter).TotalSeconds > _heartBeatTimeout)
                 {
-                    Log.Trace("Heartbeat timeout. Reconnecting");
+                    Log.Trace("BitfinexWebsocketsBrokerage.CheckConnection(): Heartbeat timeout. Reconnecting");
                     Reconnect();
                 }
                 await Task.Delay(TimeSpan.FromSeconds(10), _checkConnectionToken.Token);

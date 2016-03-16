@@ -84,7 +84,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                     {
                         throw new Exception("Failed to authenticate with ws gateway");
                     }
-                    Log.Trace("Successful wss auth");
+                    Log.Trace("BitfinexWebsocketsBrokerage.OnMessage(): Successful wss auth");
                 }
                 else if (raw.@event == "info" && raw.code == "20051")
                 {
@@ -100,7 +100,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                     Authenticate();
                 }
 
-                Log.Trace(e.Data);
+                Log.Trace("BitfinexWebsocketsBrokerage.OnMessage(): " + e.Data);
             }
             catch (Exception ex)
             {

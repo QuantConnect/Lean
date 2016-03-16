@@ -156,13 +156,13 @@ namespace QuantConnect.Brokerages.Bitfinex
                     });
 
                     OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Bitfinex Order Event") { Status = OrderStatus.Submitted });
-                    Log.Trace("Order completed successfully orderid:" + response.OrderId.ToString());
+                    Log.Trace("BitfinexBrokerage.PlaceOrder(): Order completed successfully orderid:" + response.OrderId.ToString());
                     return true;
                 }
             }
 
             OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Bitfinex Order Event") { Status = OrderStatus.Invalid });
-            Log.Trace("Order failed Order Id: " + order.Id + " timestamp:" + order.Time + " quantity: " + order.Quantity.ToString());
+            Log.Trace("BitfinexBrokerage.PlaceOrder(): Order failed Order Id: " + order.Id + " timestamp:" + order.Time + " quantity: " + order.Quantity.ToString());
             return false;
         }
 
@@ -213,7 +213,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             try
             {
-                Log.Trace("CancelOrder(): Symbol: " + order.Symbol.Value + " Quantity: " + order.Quantity);
+                Log.Trace("BitfinexBrokerage.CancelOrder(): Symbol: " + order.Symbol.Value + " Quantity: " + order.Quantity);
 
                 foreach (var id in order.BrokerId)
                 {
