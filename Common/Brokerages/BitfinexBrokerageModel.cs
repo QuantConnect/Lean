@@ -25,6 +25,8 @@ using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Configuration;
+using System.Linq;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Brokerages
 {
@@ -50,7 +52,8 @@ namespace QuantConnect.Brokerages
 
             if (_wallet == "exchange" && accountType == AccountType.Margin)
             {
-                throw new ArgumentException("Exchange wallet does not allow margin trades");
+                accountType = AccountType.Cash;
+                Log.Trace("Exchange wallet does not allow margin trades. Defaulting to cash");
             }
 
         }
@@ -62,7 +65,7 @@ namespace QuantConnect.Brokerages
         /// <returns></returns>
         public override decimal GetLeverage(Security security)
         {
-            return this.AccountType == AccountType.Margin ? 3.3m : 0;
+            return this.AccountType == AccountType.Margin ? 3.3m : 1;
         }
 
         /// <summary>
