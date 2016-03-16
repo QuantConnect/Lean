@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using QuantConnect.Util;
 using QuantConnect.Interfaces;
 using QuantConnect.Configuration;
+using TradingApi.Bitfinex;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
@@ -56,8 +57,6 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 return new Dictionary<string, string>
                 {
-                    { "bitfinex-api-secret", Config.Get("bitfinex-api-secret") },
-                    { "bitfinex-api-key", Config.Get("bitfinex-api-key") }
                 };
             }
         }
@@ -78,7 +77,27 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <returns></returns>
         public override Interfaces.IBrokerage CreateBrokerage(Packets.LiveNodePacket job, Interfaces.IAlgorithm algorithm)
         {
-            var brokerage = new BitfinexWebsocketsBrokerage();
+
+            string apiSecret = Config.Get("bitfinex-api-secret");
+            string apiKey = Config.Get("bitfinex-api-key");
+            string wallet = Config.Get("bitfinex-wallet");
+
+            if (string.IsNullOrEmpty(apiSecret))
+                throw new Exception("Missing bitfinex-api-secret in config.json");
+
+            if (string.IsNullOrEmpty(apiKey))
+                throw new Exception("Missing bitfinex-api-key in config.json");
+
+            if (string.IsNullOrEmpty(wallet))
+                throw new Exception("Missing bitfinex-wallet in config.json");
+
+            string url = Config.Get("bitfinex-wss", "wss://api2.bitfinex.com:3000/ws");
+
+            var restClient = new BitfinexApi(apiSecret, apiKey);
+
+            var webSocketClient = new WebSocketWrapper();
+
+            var brokerage = new BitfinexWebsocketsBrokerage(url, webSocketClient, apiKey, apiSecret, wallet, restClient);
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
 
             return brokerage;

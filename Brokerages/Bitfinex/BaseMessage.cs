@@ -31,12 +31,12 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <summary>
         /// Stored Keys for message
         /// </summary>
-        protected string[] allKeys { get; set; }
+        protected string[] AllKeys { get; set; }
 
         /// <summary>
         /// Stores values of message
         /// </summary>
-        protected string[] allValues { get; set; }
+        protected string[] AllValues { get; set; }
 
         /// <summary>
         /// Creates base message instance
@@ -44,7 +44,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <param name="values"></param>
         public BaseMessage(string[] values)
         {
-            allValues = values;
+            AllValues = values;
         }
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <returns></returns>
         public string GetString(string key)
         {
-            return allValues[Array.IndexOf(allKeys, key)];
+            return AllValues[Array.IndexOf(AllKeys, key)];
         }
 
         /// <summary>
@@ -64,7 +64,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <returns></returns>
         public decimal GetDecimal(string key)
         {
-            return decimal.Parse(allValues[Array.IndexOf(allKeys, key)]);
+            return decimal.Parse(AllValues[Array.IndexOf(AllKeys, key)]);
         }
 
         /// <summary>
@@ -74,11 +74,11 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <returns></returns>
         public decimal GetDecimalFromScientific(string key)
         {
-            if (allValues[Array.IndexOf(allKeys, key)] == null)
+            if (AllValues[Array.IndexOf(AllKeys, key)] == null)
             {
                 return 0m;
             }
-            string value = allValues[Array.IndexOf(allKeys, key)].Trim('-');
+            string value = AllValues[Array.IndexOf(AllKeys, key)].Trim('-');
             return Decimal.Parse(value, System.Globalization.NumberStyles.AllowExponent | System.Globalization.NumberStyles.AllowDecimalPoint);
         }
 
@@ -89,7 +89,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <returns></returns>
         public int GetInt(string key)
         {
-            return int.Parse(allValues[Array.IndexOf(allKeys, key)]);
+            return int.Parse(AllValues[Array.IndexOf(AllKeys, key)]);
         }
 
         /// <summary>
@@ -100,7 +100,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         public int TryGetInt(string key)
         {
             int parsed;
-            if (int.TryParse(allValues[Array.IndexOf(allKeys, key)], out parsed))
+            if (int.TryParse(AllValues[Array.IndexOf(AllKeys, key)], out parsed))
             {
                 return parsed;
             }
@@ -115,7 +115,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         public decimal TryGetDecimal(string key)
         {
             decimal parsed;
-            if (decimal.TryParse(allValues[Array.IndexOf(allKeys, key)], out parsed))
+            if (decimal.TryParse(AllValues[Array.IndexOf(AllKeys, key)], out parsed))
             {
                 return parsed;
             }
@@ -129,7 +129,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <returns></returns>
         public DateTime GetDateTime(string key)
         {
-            return Time.UnixTimeStampToDateTime(double.Parse(allValues[Array.IndexOf(allKeys, key)]));
+            return Time.UnixTimeStampToDateTime(double.Parse(AllValues[Array.IndexOf(AllKeys, key)]));
         }
 
 

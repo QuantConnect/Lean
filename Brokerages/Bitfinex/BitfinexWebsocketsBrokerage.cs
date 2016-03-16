@@ -26,6 +26,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using TradingApi.Bitfinex;
 using WebSocketSharp;
 
 namespace QuantConnect.Brokerages.Bitfinex
@@ -44,21 +45,18 @@ namespace QuantConnect.Brokerages.Bitfinex
         CancellationTokenSource _checkConnectionToken;
         DateTime _heartbeatCounter = DateTime.UtcNow;
         const int _heartBeatTimeout = 30;
+        IWebSocket _webSocket;
+        object _cashLock = new object();
         #endregion
-
-        /// <summary>
-        /// Websocket client wrapper
-        /// </summary>
-        public IWebSocket WebSocket { get; set; }
 
         /// <summary>
         /// Create Brokerage instance
         /// </summary>
-        public BitfinexWebsocketsBrokerage()
-            : base()
+        public BitfinexWebsocketsBrokerage(string url, IWebSocket websocket, string apiKey, string apiSecret, string wallet, BitfinexApi restClient)
+            : base(apiKey, apiSecret, wallet, restClient)
         {
-            WebSocket = new WebSocketWrapper();
-            WebSocket.Initialize((Config.Get("bitfinex-wss", "wss://api2.bitfinex.com:3000/ws")));
+            _webSocket = websocket;
+            _webSocket.Initialize(url);
         }
 
         /// <summary>
@@ -74,11 +72,11 @@ namespace QuantConnect.Brokerages.Bitfinex
                 this.Connect();
             }
 
-            WebSocket.Send(JsonConvert.SerializeObject(new
+            _webSocket.Send(JsonConvert.SerializeObject(new
             {
                 @event = "subscribe",
                 channel = "ticker",
-                pair = this.symbol.Value
+                pair = this.Symbol.Value
             }));
 
         }
@@ -101,7 +99,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             try
             {
-                WebSocket.Send(JsonConvert.SerializeObject(new
+                _webSocket.Send(JsonConvert.SerializeObject(new
                 {
                     @event = "unsubscribe",
                     channelId = id,
@@ -119,7 +117,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// </summary>
         public override bool IsConnected
         {
-            get { return WebSocket.IsAlive; }
+            get { return _webSocket.IsAlive; }
         }
 
         /// <summary>
@@ -127,14 +125,14 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// </summary>
         public override void Connect()
         {
-            WebSocket.Connect();
+            _webSocket.Connect();
             if (this._checkConnectionTask == null || this._checkConnectionTask.IsFaulted || this._checkConnectionTask.IsCanceled || this._checkConnectionTask.IsCompleted)
             {
                 this._checkConnectionTask = Task.Run(() => CheckConnection());
                 this._checkConnectionToken = new CancellationTokenSource();
             }
             this._channelId.Clear();
-            WebSocket.OnMessage(OnMessage);
+            _webSocket.OnMessage(OnMessage);
             this.Authenticate();
         }
 
@@ -145,7 +143,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             this.UnAuthenticate();
             _checkConnectionToken.Cancel();
-            this.WebSocket.Close();
+            this._webSocket.Close();
         }
 
         /// <summary>
@@ -166,7 +164,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 if (!this.IsConnected || (DateTime.UtcNow - _heartbeatCounter).TotalSeconds > _heartBeatTimeout)
                 {
-                    Log.Trace("Heartbeat timeout. Reconnecting");
+                    Log.Trace("BitfinexWebsocketsBrokerage.CheckConnection(): Heartbeat timeout. Reconnecting");
                     Reconnect();
                 }
                 await Task.Delay(TimeSpan.FromSeconds(10), _checkConnectionToken.Token);
@@ -180,12 +178,12 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 this.UnAuthenticate();
                 this.Unsubscribe(null, null);
-                WebSocket.Close();
+                _webSocket.Close();
             }
             catch (Exception)
             {
             }
-            WebSocket.Connect();
+            _webSocket.Connect();
             this.Subscribe(null, null);
             this.Authenticate();
         }

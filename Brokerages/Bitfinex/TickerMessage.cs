@@ -35,7 +35,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         public TickerMessage(string[] values)
             : base(values)
         {
-            allKeys = new string[] { "CHANNEL_ID", "BID", "BID_SIZE", "ASK", "ASK_SIZE", "DAILY_CHANGE", "DAILY_CHANGE_PERC", "LAST_PRICE", "VOLUME", "HIGH", "LOW" };
+            AllKeys = new string[] { "CHANNEL_ID", "BID", "BID_SIZE", "ASK", "ASK_SIZE", "DAILY_CHANGE", "DAILY_CHANGE_PERC", "LAST_PRICE", "VOLUME", "HIGH", "LOW" };
 
             CHANNEL_ID = GetInt("CHANNEL_ID");
             BID = GetDecimal("BID");

@@ -43,19 +43,19 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <summary>
         /// Ticks collection
         /// </summary>
-        protected List<Tick> ticks = new List<Tick>();
+        protected List<Tick> Ticks = new List<Tick>();
         CancellationTokenSource _tickerToken;
         /// <summary>
         /// Divisor for prices. Scales prices/volumes to allow trades on 0.01 of unit
         /// </summary>
-        protected decimal divisor = 100;
+        protected decimal ScaleFactor = 100;
         readonly object _fillLock = new object();
         const string buy = "buy";
         const string sell = "sell";
         /// <summary>
         /// Currently limited to BTCUSD
         /// </summary>
-        protected Symbol symbol = Symbol.Create("BTCUSD", SecurityType.Forex, Market.Bitfinex);
+        protected Symbol Symbol = Symbol.Create("BTCUSD", SecurityType.Forex, Market.Bitfinex);
         /// <summary>
         /// List of known orders
         /// </summary>
@@ -63,55 +63,38 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <summary>
         /// List of filled orders
         /// </summary>
-        protected readonly FixedSizeHashQueue<int> filledOrderIDs = new FixedSizeHashQueue<int>(10000);
+        protected readonly FixedSizeHashQueue<int> FilledOrderIDs = new FixedSizeHashQueue<int>(10000);
         /// <summary>
         /// List of unknown orders
         /// </summary>
-        protected readonly FixedSizeHashQueue<int> unknownOrderIDs = new FixedSizeHashQueue<int>(1000);
+        protected readonly FixedSizeHashQueue<int> UnknownOrderIDs = new FixedSizeHashQueue<int>(1000);
         /// <summary>
         /// Name of wallet
         /// </summary>
-        protected string wallet;
+        protected string Wallet;
         const string _exchange = "bitfinex";
         /// <summary>
         /// Api Key
         /// </summary>
-        protected string apiKey;
+        protected string ApiKey;
         /// <summary>
         /// Api Secret
         /// </summary>
-        protected string apiSecret;
+        protected string ApiSecret;
+
+        TradingApi.Bitfinex.BitfinexApi _restClient;
         #endregion
-
-        public TradingApi.Bitfinex.BitfinexApi RestClient { get; set; }
-
 
         /// <summary>
         /// Create bitfinex brokerage
         /// </summary>
-        public BitfinexBrokerage()
+        public BitfinexBrokerage(string apiKey, string apiSecret, string wallet, BitfinexApi restClient)
             : base("bitfinex")
         {
-            this.Initialize();
-        }
-
-        private void Initialize()
-        {
-
-            //todo: also stored in BrokerageData
-            apiSecret = Config.Get("bitfinex-api-secret");
-            apiKey = Config.Get("bitfinex-api-key");
-
-            wallet = Config.Get("bitfinex-wallet", "exchange");
-
-            if (string.IsNullOrEmpty(apiSecret))
-                throw new Exception("Missing ApiSecret in config.json");
-
-            if (string.IsNullOrEmpty(apiKey))
-                throw new Exception("Missing ApiKey in config.json");
-
-            RestClient = new BitfinexApi(apiSecret, apiKey);
-
+            ApiKey = apiKey;
+            ApiSecret = apiSecret;
+            Wallet = wallet;
+            _restClient = restClient;
         }
 
         /// <summary>
@@ -126,14 +109,14 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             if (order is StopMarketOrder)
             {
-                return ((StopMarketOrder)order).StopPrice * divisor;
+                return ((StopMarketOrder)order).StopPrice * ScaleFactor;
             }
             else if (order is LimitOrder)
             {
-                return ((LimitOrder)order).LimitPrice * divisor;
+                return ((LimitOrder)order).LimitPrice * ScaleFactor;
             }
 
-            return order.Price <= 0 ? order.Id : (order.Price * divisor);
+            return order.Price <= 0 ? order.Id : (order.Price * ScaleFactor);
         }
 
         /// <summary>
@@ -147,7 +130,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             Authenticate();
             var newOrder = new BitfinexNewOrderPost
             {
-                Amount = ((order.Quantity < 0 ? order.Quantity * -1 : order.Quantity) / divisor).ToString(),
+                Amount = ((order.Quantity < 0 ? order.Quantity * -1 : order.Quantity) / ScaleFactor).ToString(),
                 Price = GetPrice(order).ToString(),
                 Symbol = order.Symbol.Value,
                 Type = MapOrderType(order.Type),
@@ -155,7 +138,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 Side = order.Quantity > 0 ? buy : sell
             };
 
-            var response = RestClient.SendOrder(newOrder);
+            var response = _restClient.SendOrder(newOrder);
 
             if (response != null)
             {
@@ -165,21 +148,21 @@ namespace QuantConnect.Brokerages.Bitfinex
                     {
                         Id = order.Id,
                         BrokerId = new List<string> { response.OrderId.ToString() },
-                        Price = order.Price / divisor,
-                        Quantity = order.Quantity * (int)divisor,
+                        Price = order.Price / ScaleFactor,
+                        Quantity = order.Quantity * (int)ScaleFactor,
                         Status = OrderStatus.Submitted,
                         Symbol = order.Symbol,
                         Time = order.Time,
                     });
 
                     OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Bitfinex Order Event") { Status = OrderStatus.Submitted });
-                    Log.Trace("Order completed successfully orderid:" + response.OrderId.ToString());
+                    Log.Trace("BitfinexBrokerage.PlaceOrder(): Order completed successfully orderid:" + response.OrderId.ToString());
                     return true;
                 }
             }
 
             OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Bitfinex Order Event") { Status = OrderStatus.Invalid });
-            Log.Trace("Order failed Order Id: " + order.Id + " timestamp:" + order.Time + " quantity: " + order.Quantity.ToString());
+            Log.Trace("BitfinexBrokerage.PlaceOrder(): Order failed Order Id: " + order.Id + " timestamp:" + order.Time + " quantity: " + order.Quantity.ToString());
             return false;
         }
 
@@ -196,15 +179,15 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 var post = new BitfinexCancelReplacePost
                 {
-                    Amount = (order.Quantity / divisor).ToString(),
+                    Amount = (order.Quantity / ScaleFactor).ToString(),
                     CancelOrderId = int.Parse(id),
                     Symbol = order.Symbol.Value,
-                    Price = order.Price <= 0 ? order.Id.ToString() : (order.Price * divisor).ToString(),
+                    Price = order.Price <= 0 ? order.Id.ToString() : (order.Price * ScaleFactor).ToString(),
                     Type = MapOrderType(order.Type),
                     Exchange = _exchange,
                     Side = order.Quantity > 0 ? buy : sell
                 };
-                var response = RestClient.CancelReplaceOrder(post);
+                var response = _restClient.CancelReplaceOrder(post);
                 if (response.OrderId == 0)
                 {
                     hasFaulted = true;
@@ -230,11 +213,11 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             try
             {
-                Log.Trace("CancelOrder(): Symbol: " + order.Symbol.Value + " Quantity: " + order.Quantity);
+                Log.Trace("BitfinexBrokerage.CancelOrder(): Symbol: " + order.Symbol.Value + " Quantity: " + order.Quantity);
 
                 foreach (var id in order.BrokerId)
                 {
-                    var response = RestClient.CancelOrder(int.Parse(id));
+                    var response = _restClient.CancelOrder(int.Parse(id));
                     if (response.Id > 0)
                     {
                         Order cached;
@@ -282,22 +265,22 @@ namespace QuantConnect.Brokerages.Bitfinex
 
             try
             {
-                var response = RestClient.GetActiveOrders();
+                var response = _restClient.GetActiveOrders();
                 if (response != null)
                 {
                     foreach (var item in response)
                     {
                         list.Add(new BitfinexOrder
                         {
-                            Quantity = Convert.ToInt32(decimal.Parse(item.OriginalAmount) * divisor),
+                            Quantity = Convert.ToInt32(decimal.Parse(item.OriginalAmount) * ScaleFactor),
                             BrokerId = new List<string> { item.Id.ToString() },
-                            Symbol = symbol,
+                            Symbol = Symbol,
                             Time = Time.UnixTimeStampToDateTime(double.Parse(item.Timestamp)),
-                            Price = decimal.Parse(item.Price) / divisor,
+                            Price = decimal.Parse(item.Price) / ScaleFactor,
                             Status = MapOrderStatus(item),
-                            OriginalAmount = decimal.Parse(item.OriginalAmount) * divisor,
-                            RemainingAmount = decimal.Parse(item.RemainingAmount) * divisor,
-                            ExecutedAmount = decimal.Parse(item.ExecutedAmount) * divisor
+                            OriginalAmount = decimal.Parse(item.OriginalAmount) * ScaleFactor,
+                            RemainingAmount = decimal.Parse(item.RemainingAmount) * ScaleFactor,
+                            ExecutedAmount = decimal.Parse(item.ExecutedAmount) * ScaleFactor
                         });
                     }
                 }
@@ -341,19 +324,19 @@ namespace QuantConnect.Brokerages.Bitfinex
 
             var list = new List<Holding>();
 
-            var response = RestClient.GetActivePositions();
+            var response = _restClient.GetActivePositions();
             foreach (var item in response)
             {
-                var ticker = RestClient.GetPublicTicker(TradingApi.ModelObjects.BtcInfo.PairTypeEnum.btcusd, TradingApi.ModelObjects.BtcInfo.BitfinexUnauthenicatedCallsEnum.pubticker);
+                var ticker = _restClient.GetPublicTicker(TradingApi.ModelObjects.BtcInfo.PairTypeEnum.btcusd, TradingApi.ModelObjects.BtcInfo.BitfinexUnauthenicatedCallsEnum.pubticker);
                 list.Add(new Holding
                 {
                     Symbol = Symbol.Create(item.Symbol, SecurityType.Forex, Market.Bitfinex),
-                    Quantity = decimal.Parse(item.Amount) * divisor,
+                    Quantity = decimal.Parse(item.Amount) * ScaleFactor,
                     Type = SecurityType.Forex,
-                    CurrencySymbol = "B",
-                    ConversionRate = (decimal.Parse(ticker.Mid) / divisor),
-                    MarketPrice = (decimal.Parse(ticker.Mid) / divisor),
-                    AveragePrice = (decimal.Parse(item.Base) / divisor),
+                    CurrencySymbol = "BTC",
+                    ConversionRate = (decimal.Parse(ticker.Mid) / ScaleFactor),
+                    MarketPrice = (decimal.Parse(ticker.Mid) / ScaleFactor),
+                    AveragePrice = (decimal.Parse(item.Base) / ScaleFactor),
                 });
             }
             return list;
@@ -368,10 +351,10 @@ namespace QuantConnect.Brokerages.Bitfinex
         public override List<Securities.Cash> GetCashBalance()
         {
             var list = new List<Securities.Cash>();
-            var response = RestClient.GetBalances();
+            var response = _restClient.GetBalances();
             foreach (var item in response)
             {
-                if (item.Type == wallet)
+                if (item.Type == Wallet)
                 {
                     if (item.Currency == "usd")
                     {
@@ -379,8 +362,8 @@ namespace QuantConnect.Brokerages.Bitfinex
                     }
                     else
                     {
-                        var ticker = RestClient.GetPublicTicker(TradingApi.ModelObjects.BtcInfo.PairTypeEnum.btcusd, TradingApi.ModelObjects.BtcInfo.BitfinexUnauthenicatedCallsEnum.pubticker);
-                        list.Add(new Securities.Cash("BTC", item.Amount * divisor, decimal.Parse(ticker.Mid) / divisor));
+                        var ticker = _restClient.GetPublicTicker(TradingApi.ModelObjects.BtcInfo.PairTypeEnum.btcusd, TradingApi.ModelObjects.BtcInfo.BitfinexUnauthenicatedCallsEnum.pubticker);
+                        list.Add(new Securities.Cash("BTC", item.Amount * ScaleFactor, decimal.Parse(ticker.Mid) / ScaleFactor));
                     }
                 }
             }
@@ -393,10 +376,10 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <returns></returns>
         public IEnumerable<Data.BaseData> GetNextTicks()
         {
-            lock (ticks)
+            lock (Ticks)
             {
-                var copy = ticks.ToArray();
-                ticks.Clear();
+                var copy = Ticks.ToArray();
+                Ticks.Clear();
                 return copy;
             }
         }
@@ -411,27 +394,27 @@ namespace QuantConnect.Brokerages.Bitfinex
             var task = Task.Run(() => { this.RequestTicker(); }, _tickerToken.Token);
         }
 
-        private void RequestTicker()
+        private async Task RequestTicker()
         {
-            var response = RestClient.GetPublicTicker(TradingApi.ModelObjects.BtcInfo.PairTypeEnum.btcusd, TradingApi.ModelObjects.BtcInfo.BitfinexUnauthenicatedCallsEnum.pubticker);
-            lock (ticks)
+            var response = _restClient.GetPublicTicker(TradingApi.ModelObjects.BtcInfo.PairTypeEnum.btcusd, TradingApi.ModelObjects.BtcInfo.BitfinexUnauthenicatedCallsEnum.pubticker);
+            lock (Ticks)
             {
-                ticks.Add(new Tick
+                Ticks.Add(new Tick
                 {
-                    AskPrice = decimal.Parse(response.Ask) / divisor,
-                    BidPrice = decimal.Parse(response.Bid) / divisor,
+                    AskPrice = decimal.Parse(response.Ask) / ScaleFactor,
+                    BidPrice = decimal.Parse(response.Bid) / ScaleFactor,
                     Time = Time.UnixTimeStampToDateTime(double.Parse(response.Timestamp)),
-                    Value = decimal.Parse(response.LastPrice) / divisor,
+                    Value = decimal.Parse(response.LastPrice) / ScaleFactor,
                     TickType = TickType.Quote,
-                    Symbol = symbol,
+                    Symbol = Symbol,
                     DataType = MarketDataType.Tick,
-                    Quantity = (int)(Math.Round(decimal.Parse(response.Volume), 2) * divisor)
+                    Quantity = (int)(Math.Round(decimal.Parse(response.Volume), 2) * ScaleFactor)
                 });
             }
             if (!_tickerToken.IsCancellationRequested)
             {
-                Thread.Sleep(8000);
-                RequestTicker();
+                await Task.Delay(8000, _tickerToken.Token);
+                await RequestTicker();
             }
         }
 
