@@ -129,7 +129,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="utcTime">The current utc time</param>
         /// <param name="data">The symbols to remain in the universe</param>
         /// <returns>The data that passes the filter</returns>
-        public IEnumerable<Symbol> PerformSelection(DateTime utcTime, IEnumerable<BaseData> data)
+        public IEnumerable<Symbol> PerformSelection(DateTime utcTime, BaseDataCollection data)
         {
             var result = SelectSymbols(utcTime, data);
             if (ReferenceEquals(result, Unchanged))
@@ -153,7 +153,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="utcTime">The current utc time</param>
         /// <param name="data">The symbols to remain in the universe</param>
         /// <returns>The data that passes the filter</returns>
-        public abstract IEnumerable<Symbol> SelectSymbols(DateTime utcTime, IEnumerable<BaseData> data);
+        public abstract IEnumerable<Symbol> SelectSymbols(DateTime utcTime, BaseDataCollection data);
 
         /// <summary>
         /// Determines whether or not the specified

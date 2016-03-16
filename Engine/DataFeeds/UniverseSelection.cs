@@ -61,7 +61,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var settings = universe.UniverseSettings;
 
             // perform initial filtering and limit the result
-            var selectSymbolsResult = universe.PerformSelection(dateTimeUtc, universeData.Data);
+            var selectSymbolsResult = universe.PerformSelection(dateTimeUtc, universeData);
 
             // check for no changes first
             if (ReferenceEquals(selectSymbolsResult, Universe.Unchanged))

@@ -173,7 +173,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="utcTime">The curren utc time</param>
         /// <param name="data">The symbols to remain in the universe</param>
         /// <returns>The data that passes the filter</returns>
-        public override IEnumerable<Symbol> SelectSymbols(DateTime utcTime, IEnumerable<BaseData> data)
+        public override IEnumerable<Symbol> SelectSymbols(DateTime utcTime, BaseDataCollection data)
         {
             return _selector(utcTime);
         }
