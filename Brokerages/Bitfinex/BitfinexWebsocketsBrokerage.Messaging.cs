@@ -135,7 +135,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             if (data.Length > 0)
             {
-                lock (_cash)
+                lock (_cashLock)
                 {
                     _cash.Clear();
                     for (int i = 0; i < data.Length; i++)

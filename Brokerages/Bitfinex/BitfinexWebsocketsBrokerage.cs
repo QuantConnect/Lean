@@ -46,6 +46,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         DateTime _heartbeatCounter = DateTime.UtcNow;
         const int _heartBeatTimeout = 30;
         IWebSocket _webSocket;
+        object _cashLock = new object();
         #endregion
 
         /// <summary>
