@@ -84,11 +84,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _controller = new ParallelRunnerController(threadCount);
             _controller.Start(_cancellationTokenSource.Token);
 
-            var ffres = Time.OneSecond;
+            var ffres = Time.OneMinute;
             _fillForwardResolution = Ref.Create(() => ffres, res => ffres = res);
-
-            // find the minimum resolution, ignoring ticks
-            ffres = ResolveFillForwardResolution(algorithm);
 
             // wire ourselves up to receive notifications when universes are added/removed
             algorithm.UniverseManager.CollectionChanged += (sender, args) =>
@@ -211,8 +208,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="utcEndTime">The end time of the subscription</param>
         public bool AddSubscription(Universe universe, Security security, DateTime utcStartTime, DateTime utcEndTime)
         {
-            _fillForwardResolution.Value = ResolveFillForwardResolution(_algorithm);
-
             var subscription = CreateSubscription(universe, _resultHandler, security, utcStartTime, utcEndTime, _fillForwardResolution);
             if (subscription == null)
             {
@@ -230,7 +225,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             _changes += SecurityChanges.Added(security);
 
-            _fillForwardResolution.Value = ResolveFillForwardResolution(_algorithm);
+            UpdateFillForwardResolution();
 
             return true;
         }
@@ -252,7 +247,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             _changes += SecurityChanges.Removed(sub.Security);
 
-            _fillForwardResolution.Value = ResolveFillForwardResolution(_algorithm);
+            UpdateFillForwardResolution();
             return true;
         }
 
@@ -394,6 +389,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, startTimeUtc, endTimeUtc);
             var subscription = new Subscription(universe, security, enumerator, timeZoneOffsetProvider, startTimeUtc, endTimeUtc, true);
             _subscriptions.AddOrUpdate(subscription.Security.Symbol, subscription);
+
+            UpdateFillForwardResolution();
         }
 
         /// <summary>
@@ -405,14 +402,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _cancellationTokenSource.Cancel();
         }
 
-        private static TimeSpan ResolveFillForwardResolution(IAlgorithm algorithm)
+        /// <summary>
+        /// Updates the fill forward resolution by checking all existing subscriptions and
+        /// selecting the smallest resoluton not equal to tick
+        /// </summary>
+        private void UpdateFillForwardResolution()
         {
-            return algorithm.SubscriptionManager.Subscriptions
-                .Where(x => !x.IsInternalFeed)
-                .Select(x => x.Resolution)
-                .Union(algorithm.UniverseManager.Select(x => x.Value.UniverseSettings.Resolution))
+            _fillForwardResolution.Value = _subscriptions
+                .Select(x => x.Value.Configuration.Resolution)
                 .Where(x => x != Resolution.Tick)
-                .DefaultIfEmpty(Resolution.Second)
+                .DefaultIfEmpty(Resolution.Minute)
                 .Min().ToTimeSpan();
         }
 
