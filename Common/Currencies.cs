@@ -251,7 +251,7 @@ namespace QuantConnect
             {"NOK", "kr"},
             {"PLN", "zł"},
             {"SAR", "﷼"},
-            {"SEK", "kr"},
+            {"SEK", "kr"},  
             {"THB", "฿"},
             {"TRY", "₺"},
             {"TWD", "NT$"},
