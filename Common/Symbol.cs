@@ -61,7 +61,9 @@ namespace QuantConnect
                     sid = SecurityIdentifier.GenerateCfd(ticker, market);
                     break;
                 case SecurityType.Option:
-                    throw new NotSupportedException("This method does not support SecurityType.Option. Please invoke Symbol.CreateOption instead.");
+                    alias = alias ?? "?" + ticker.ToUpper();
+                    sid = SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, ticker, market, 0, default(OptionRight), default(OptionStyle));
+                    break;
                 case SecurityType.Commodity:
                 case SecurityType.Future:
                 default:
@@ -86,7 +88,10 @@ namespace QuantConnect
         public static Symbol CreateOption(string underlying, string market, OptionStyle style, OptionRight right, decimal strike, DateTime expiry, string alias = null)
         {
             var sid = SecurityIdentifier.GenerateOption(expiry, underlying, market, strike, right, style);
-            alias = alias ?? string.Format("{0}_{1}_{2}_{3}", underlying, right.ToString()[0], strike.SmartRounding(), expiry.ToString("yyyyMMdd"));
+            var sym = sid.Symbol;
+            if (sym.Length > 5) sym += " ";
+            // format spec: http://www.optionsclearing.com/components/docs/initiatives/symbology/symbology_initiative_v1_8.pdf
+            alias = alias ?? string.Format("{0,-6}{1}{2}{3:00000000}", sym, sid.Date.ToString(DateFormat.SixCharacter), sid.OptionRight.ToString()[0], sid.StrikePrice * 1000m);
             return new Symbol(sid, alias);
         }
 
