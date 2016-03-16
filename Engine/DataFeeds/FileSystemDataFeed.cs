@@ -109,7 +109,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             Subscription subscription;
                             if (_subscriptions.TryGetValue(universe.Configuration.Symbol, out subscription))
                             {
-                                RemoveSubscription(subscription);
+                                RemoveSubscription(subscription.Configuration.Symbol);
                             }
                         }
                         break;
@@ -234,21 +234,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             return true;
         }
-
         /// <summary>
         /// Removes the subscription from the data feed, if it exists
         /// </summary>
-        /// <param name="subscription">The subscription to be removed</param>
-        public bool RemoveSubscription(Subscription subscription)
+        /// <param name="symbol">The symbol of the subscription to be removed</param>
+        /// <returns>True if the subscription was successfully removed, false otherwise</returns>
+        public bool RemoveSubscription(Symbol symbol)
         {
             Subscription sub;
-            if (!_subscriptions.TryRemove(subscription.Security.Symbol, out sub))
+            if (!_subscriptions.TryRemove(symbol, out sub))
             {
-                Log.Error("FileSystemDataFeed.RemoveSubscription(): Unable to remove: " + subscription.Security.Symbol.ToString());
+                Log.Error("FileSystemDataFeed.RemoveSubscription(): Unable to remove: " + symbol.ToString());
                 return false;
             }
 
-            Log.Debug("FileSystemDataFeed.RemoveSubscription(): Removed " + subscription.Security.Symbol.ToString());
+            Log.Debug("FileSystemDataFeed.RemoveSubscription(): Removed " + symbol.ToString());
 
             _changes += SecurityChanges.Removed(sub.Security);
 

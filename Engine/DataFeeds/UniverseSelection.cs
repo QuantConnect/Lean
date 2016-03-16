@@ -110,7 +110,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // so we can make direct edits to the security here
                     subscription.Security.Cache.Reset();
 
-                    if (_dataFeed.RemoveSubscription(subscription))
+                    if (_dataFeed.RemoveSubscription(subscription.Configuration.Symbol))
                     {
                         universe.RemoveMember(dateTimeUtc, subscription.Security);
                     }
