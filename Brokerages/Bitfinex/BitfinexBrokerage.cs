@@ -333,7 +333,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                     Symbol = Symbol.Create(item.Symbol, SecurityType.Forex, Market.Bitfinex),
                     Quantity = decimal.Parse(item.Amount) * ScaleFactor,
                     Type = SecurityType.Forex,
-                    CurrencySymbol = "B",
+                    CurrencySymbol = "BTC",
                     ConversionRate = (decimal.Parse(ticker.Mid) / ScaleFactor),
                     MarketPrice = (decimal.Parse(ticker.Mid) / ScaleFactor),
                     AveragePrice = (decimal.Parse(item.Base) / ScaleFactor),
