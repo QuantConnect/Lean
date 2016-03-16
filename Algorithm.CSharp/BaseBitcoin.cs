@@ -24,7 +24,6 @@ namespace QuantConnect.Algorithm.CSharp
 
         public BaseBitcoin()
         {
-            Portfolio = new BitfinexSecurityPortfolioManager(Securities, Transactions);
             SetBrokerageModel(BrokerageName.BitfinexBrokerage, AccountType.Margin);
             SetTimeZone(DateTimeZone.Utc);
             Transactions.MarketOrderFillTimeout = new TimeSpan(0, 0, 20);
@@ -32,6 +31,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void Initialize()
         {
+            Portfolio.MarginCallModel = new BitfinexMarginCallModel(Portfolio);
             SetStartDate(2015, 11, 10);
             SetEndDate(2016, 2, 20);
             AddSecurity(SecurityType.Forex, BitcoinSymbol, Resolution.Tick, Market.Bitfinex, false, 3.3m, false);

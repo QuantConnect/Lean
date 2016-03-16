@@ -534,7 +534,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="issueMarginCallWarning">Set to true if a warning should be issued to the algorithm</param>
         /// <returns>True for a margin call on the holdings.</returns>
-        public virtual List<SubmitOrderRequest> ScanForMarginCall(out bool issueMarginCallWarning)
+        public List<SubmitOrderRequest> ScanForMarginCall(out bool issueMarginCallWarning)
         {
             issueMarginCallWarning = false;
 

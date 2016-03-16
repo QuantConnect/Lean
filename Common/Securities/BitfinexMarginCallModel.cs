@@ -40,8 +40,25 @@ namespace QuantConnect.Securities
         /// <param name="generatedMarginCallOrders">These are the margin call orders that were generated
         /// by individual security margin models.</param>
         /// <returns>Empty collection</returns>
-        public virtual List<OrderTicket> ExecuteMarginCall(IEnumerable<SubmitOrderRequest> generatedMarginCallOrders)
+        public override List<OrderTicket> ExecuteMarginCall(IEnumerable<SubmitOrderRequest> generatedMarginCallOrders)
         {
+
+            //Portfolio is below maximum leverage so do nothing
+            var averageHoldingsLeverage = Portfolio.TotalAbsoluteHoldingsCost / Portfolio.TotalMarginUsed;
+            if (averageHoldingsLeverage <= 3.3m)
+            {
+                return new List<OrderTicket>();
+            }
+
+            //Will liquidate if position to equity ratio > 15%. We begin to liquidate when Ticker to Position price ratio > 1.14            
+            foreach (var security in Portfolio.Securities.Values.Where(x => x.Holdings.Quantity != 0 && x.Price != 0))
+            {
+                decimal ratio = security.Holdings.Price / security.Holdings.AveragePrice;
+                if ((security.Holdings.IsShort && ratio > 1.14m) || (security.Holdings.IsLong && ratio < 0.88m))
+                {
+                    return base.ExecuteMarginCall(generatedMarginCallOrders);
+                }
+            }
             return new List<OrderTicket>();
         }
     }
