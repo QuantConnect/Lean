@@ -78,42 +78,34 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var additions = new List<Security>();
             var removals = new List<Security>();
 
-            // determine which data subscriptions need to be removed for this market
-            foreach (var subscription in _dataFeed.Subscriptions)
+            // determine which data subscriptions need to be removed from this universe
+            foreach (var member in universe.Members.Values)
             {
-                // universes can only remove members of their own
-                if (!universe.ContainsMember(subscription.Security)) continue;
-
-                // never remove universe selection subscriptions
-                if (subscription.IsUniverseSelectionSubscription) continue;
-
-                var config = subscription.Configuration;
-
-                // never remove internal feeds
-                if (config.IsInternalFeed) continue;
+                var config = member.SubscriptionDataConfig;
 
                 // if we've selected this subscription again, keep it
                 if (selections.Contains(config.Symbol)) continue;
 
                 // don't remove if the universe wants to keep him in
-                if (!universe.CanRemoveMember(dateTimeUtc, subscription.Security)) continue;
+                if (!universe.CanRemoveMember(dateTimeUtc, member)) continue;
 
-                // let the algorithm know this security has been removed from the universe
-                removals.Add(subscription.Security);
+                // remove the member - this marks this member as not being
+                // selected by the universe, but it may remain in the universe
+                // until open orders are closed and the security is liquidated
+                removals.Add(member);
 
                 // but don't physically remove it from the algorithm if we hold stock or have open orders against it
                 var openOrders = _algorithm.Transactions.GetOrders(x => x.Status.IsOpen() && x.Symbol == config.Symbol);
-                if (!subscription.Security.HoldStock && !openOrders.Any())
+                if (!member.HoldStock && !openOrders.Any())
                 {
+                    // safe to remove the member from the universe
+                    universe.RemoveMember(dateTimeUtc, member);
+
                     // we need to mark this security as untradeable while it has no data subscription
                     // it is expected that this function is called while in sync with the algo thread,
                     // so we can make direct edits to the security here
-                    subscription.Security.Cache.Reset();
-
-                    if (_dataFeed.RemoveSubscription(subscription.Configuration.Symbol))
-                    {
-                        universe.RemoveMember(dateTimeUtc, subscription.Security);
-                    }
+                    member.Cache.Reset();
+                    _dataFeed.RemoveSubscription(member.Symbol);
                 }
             }
 
