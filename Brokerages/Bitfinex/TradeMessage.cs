@@ -36,32 +36,32 @@ namespace QuantConnect.Brokerages.Bitfinex
             : base(values)
         {
 
-            if (allValues.Length == 11)
+            if (AllValues.Length == 11)
             {
-                allKeys = new string[] { "TRD_SEQ", "TRD_ID","TRD_PAIR","TRD_TIMESTAMP", "TRD_ORD_ID",  "TRD_AMOUNT_EXECUTED",
+                AllKeys = new string[] { "TRD_SEQ", "TRD_ID","TRD_PAIR","TRD_TIMESTAMP", "TRD_ORD_ID",  "TRD_AMOUNT_EXECUTED",
             "TRD_PRICE_EXECUTED", "ORD_TYPE", "ORD_PRICE", "FEE", "FEE_CURRENCY" };
             }
             else
             {
-                allKeys = new string[] { "TRD_SEQ", "TRD_PAIR","TRD_TIMESTAMP", "TRD_ORD_ID",  "TRD_AMOUNT_EXECUTED",
+                AllKeys = new string[] { "TRD_SEQ", "TRD_PAIR","TRD_TIMESTAMP", "TRD_ORD_ID",  "TRD_AMOUNT_EXECUTED",
             "TRD_PRICE_EXECUTED", "ORD_TYPE", "ORD_PRICE" };
             }
 
 
 
-            TRD_SEQ = allValues[Array.IndexOf(allKeys, "TRD_SEQ")];
-            TRD_PAIR = allValues[Array.IndexOf(allKeys, "TRD_PAIR")];
+            TRD_SEQ = AllValues[Array.IndexOf(AllKeys, "TRD_SEQ")];
+            TRD_PAIR = AllValues[Array.IndexOf(AllKeys, "TRD_PAIR")];
             TRD_TIMESTAMP = GetDateTime("TRD_TIMESTAMP");
             TRD_ORD_ID = GetInt("TRD_ORD_ID");
             TRD_AMOUNT_EXECUTED = GetDecimal("TRD_AMOUNT_EXECUTED");
             TRD_PRICE_EXECUTED = GetDecimal("TRD_PRICE_EXECUTED");
-            ORD_TYPE = allValues[Array.IndexOf(allKeys, "ORD_TYPE")];
+            ORD_TYPE = AllValues[Array.IndexOf(AllKeys, "ORD_TYPE")];
             ORD_PRICE = GetDecimal("ORD_PRICE");
-            if (allValues.Length == 11)
+            if (AllValues.Length == 11)
             {
                 TRD_ID = TryGetInt("TRD_ID");
                 FEE = GetDecimalFromScientific("FEE");
-                FEE_CURRENCY = allValues[Array.IndexOf(allKeys, "FEE_CURRENCY")];
+                FEE_CURRENCY = AllValues[Array.IndexOf(AllKeys, "FEE_CURRENCY")];
             }
         }
 

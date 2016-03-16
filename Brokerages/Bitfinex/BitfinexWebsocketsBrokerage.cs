@@ -78,7 +78,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 @event = "subscribe",
                 channel = "ticker",
-                pair = this.symbol.Value
+                pair = this.Symbol.Value
             }));
 
         }

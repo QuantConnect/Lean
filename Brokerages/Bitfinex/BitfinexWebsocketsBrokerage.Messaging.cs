@@ -112,20 +112,20 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             var data = JsonConvert.DeserializeObject<string[]>(response);
             var msg = new TickerMessage(data);
-            lock (ticks)
+            lock (Ticks)
             {
-                ticks.Add(new Tick
+                Ticks.Add(new Tick
                 {
-                    AskPrice = msg.ASK / divisor,
-                    BidPrice = msg.BID / divisor,
-                    AskSize = (long)Math.Round(msg.ASK_SIZE * divisor, 0),
-                    BidSize = (long)Math.Round(msg.BID_SIZE * divisor, 0),
+                    AskPrice = msg.ASK / ScaleFactor,
+                    BidPrice = msg.BID / ScaleFactor,
+                    AskSize = (long)Math.Round(msg.ASK_SIZE * ScaleFactor, 0),
+                    BidSize = (long)Math.Round(msg.BID_SIZE * ScaleFactor, 0),
                     Time = DateTime.UtcNow,
-                    Value = msg.LAST_PRICE / divisor,
+                    Value = msg.LAST_PRICE / ScaleFactor,
                     TickType = TickType.Quote,
-                    Symbol = symbol,
+                    Symbol = Symbol,
                     DataType = MarketDataType.Tick,
-                    Quantity = (int)(Math.Round(msg.VOLUME, 2) * divisor)
+                    Quantity = (int)(Math.Round(msg.VOLUME, 2) * ScaleFactor)
                 });
             }
         }
@@ -157,19 +157,19 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 var fill = new OrderEvent
                 (
-                    cached.First().Key, symbol, msg.TRD_TIMESTAMP, MapOrderStatus(msg),
+                    cached.First().Key, Symbol, msg.TRD_TIMESTAMP, MapOrderStatus(msg),
                     msg.TRD_AMOUNT_EXECUTED > 0 ? OrderDirection.Buy : OrderDirection.Sell,
-                    msg.TRD_PRICE_EXECUTED / divisor, (int)(msg.TRD_AMOUNT_EXECUTED * divisor),
-                    msg.FEE / divisor, "Bitfinex Fill Event"
+                    msg.TRD_PRICE_EXECUTED / ScaleFactor, (int)(msg.TRD_AMOUNT_EXECUTED * ScaleFactor),
+                    msg.FEE / ScaleFactor, "Bitfinex Fill Event"
                 );
-                fill.FillPrice = msg.TRD_PRICE_EXECUTED / divisor;
+                fill.FillPrice = msg.TRD_PRICE_EXECUTED / ScaleFactor;
 
                 if (msg.FEE_CURRENCY == "BTC")
                 {
-                    msg.FEE = (msg.FEE * msg.TRD_PRICE_EXECUTED) / divisor;
+                    msg.FEE = (msg.FEE * msg.TRD_PRICE_EXECUTED) / ScaleFactor;
                 }
 
-                filledOrderIDs.Add(cached.First().Key);
+                FilledOrderIDs.Add(cached.First().Key);
 
                 if (fill.Status == OrderStatus.Filled)
                 {
@@ -180,7 +180,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
             else
             {
-                unknownOrderIDs.Add(brokerId);
+                UnknownOrderIDs.Add(brokerId);
             }
         }
 
@@ -190,13 +190,13 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// </summary>
         protected override void Authenticate()
         {
-            string key = apiKey;
+            string key = ApiKey;
             string payload = "AUTH" + DateTime.UtcNow.Ticks.ToString();
             WebSocket.Send(JsonConvert.SerializeObject(new
             {
                 @event = "auth",
                 apiKey = key,
-                authSig = GetHexHashSignature(payload, apiSecret),
+                authSig = GetHexHashSignature(payload, ApiSecret),
                 authPayload = payload
             }));
         }

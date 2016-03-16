@@ -33,9 +33,9 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <param name="values"></param>
         public WalletMessage(string[] values) : base(values)
         {
-            this.allKeys = new string[] { "WLT_NAME", "WLT_CURRENCY", "WLT_BALANCE", "WLT_INTEREST_UNSETTLED" };
+            this.AllKeys = new string[] { "WLT_NAME", "WLT_CURRENCY", "WLT_BALANCE", "WLT_INTEREST_UNSETTLED" };
 
-            WLT_CURRENCY = allValues[Array.IndexOf(allKeys, "WLT_CURRENCY")];
+            WLT_CURRENCY = AllValues[Array.IndexOf(AllKeys, "WLT_CURRENCY")];
             WLT_BALANCE = GetDecimal("WLT_BALANCE");
         }
 

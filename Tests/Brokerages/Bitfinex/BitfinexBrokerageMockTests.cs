@@ -16,7 +16,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
 
         BitfinexBrokerage unit;
         Mock<TradingApi.Bitfinex.BitfinexApi> mock = new Mock<TradingApi.Bitfinex.BitfinexApi>(It.IsAny<string>(), It.IsAny<string>());
-        protected Symbol symbol = Symbol.Create("BTCUSD", SecurityType.Forex, Market.Bitfinex);
+        protected Symbol Symbol = Symbol.Create("BTCUSD", SecurityType.Forex, Market.Bitfinex);
 
         [SetUp()]
         public void Setup()
@@ -37,7 +37,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
             };
             mock.Setup(m => m.SendOrder(It.IsAny<BitfinexNewOrderPost>())).Returns(response);
 
-            bool actual = unit.PlaceOrder(new Orders.MarketOrder(symbol, 100, DateTime.UtcNow));
+            bool actual = unit.PlaceOrder(new Orders.MarketOrder(Symbol, 100, DateTime.UtcNow));
 
             Assert.IsTrue(actual);
 
@@ -49,7 +49,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
             };
 
             response.OrderId = 0;
-            actual = unit.PlaceOrder(new Orders.MarketOrder(symbol, 100, DateTime.UtcNow));
+            actual = unit.PlaceOrder(new Orders.MarketOrder(Symbol, 100, DateTime.UtcNow));
             Assert.IsFalse(actual);
 
             unit.OrderStatusChanged += (s, e) =>
@@ -91,7 +91,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
             };
             mock.Setup(m => m.CancelOrder(brokerId)).Returns(response);
 
-            bool actual = unit.CancelOrder(new Orders.MarketOrder(symbol, 100, DateTime.UtcNow) { BrokerId = new List<string> { brokerId.ToString() } });
+            bool actual = unit.CancelOrder(new Orders.MarketOrder(Symbol, 100, DateTime.UtcNow) { BrokerId = new List<string> { brokerId.ToString() } });
 
             Assert.IsTrue(actual);
 
@@ -103,7 +103,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
             };
 
             brokerId = 0;
-            actual = unit.CancelOrder(new Orders.MarketOrder(symbol, 100, DateTime.UtcNow) { BrokerId = new List<string> { brokerId.ToString() } });
+            actual = unit.CancelOrder(new Orders.MarketOrder(Symbol, 100, DateTime.UtcNow) { BrokerId = new List<string> { brokerId.ToString() } });
             Assert.IsFalse(actual);
         }
 
