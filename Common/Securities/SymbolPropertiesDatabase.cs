@@ -122,7 +122,7 @@ namespace QuantConnect.Securities
 
             key = new SecurityDatabaseKey(
                 market: csv[0], 
-                symbol: string.IsNullOrEmpty(csv[1]) ? null : csv[1], 
+                symbol: csv[1], 
                 securityType: (SecurityType)Enum.Parse(typeof(SecurityType), csv[2], true));
 
             return new SymbolProperties(
