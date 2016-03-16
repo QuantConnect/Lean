@@ -28,6 +28,18 @@ namespace QuantConnect.Brokerages.Bitfinex
     public class TradeMessage : BaseMessage
     {
 
+        const int _trd_seq = 0;
+        int _trd_id;
+        int _trd_pair;
+        int _trd_timestamp;
+        int _trd_ord_id;
+        int _trd_amount_executed;
+        int _trd_price_executed;
+        int _ord_type;
+        int _ord_price;
+        int _fee;
+        int _fee_currency;
+
         /// <summary>
         /// Constructor for Trade Message
         /// </summary>
@@ -38,30 +50,42 @@ namespace QuantConnect.Brokerages.Bitfinex
 
             if (AllValues.Length == 11)
             {
-                AllKeys = new string[] { "TRD_SEQ", "TRD_ID","TRD_PAIR","TRD_TIMESTAMP", "TRD_ORD_ID",  "TRD_AMOUNT_EXECUTED",
-            "TRD_PRICE_EXECUTED", "ORD_TYPE", "ORD_PRICE", "FEE", "FEE_CURRENCY" };
+                _trd_id = 1;
+                _trd_pair = 2;
+                _trd_timestamp = 3;
+                _trd_ord_id = 4;
+                _trd_amount_executed = 5;
+                _trd_price_executed = 6;
+                _ord_type = 7;
+                _ord_price = 8;
+                _fee = 9;
+                _fee_currency = 9;
+
             }
             else
             {
-                AllKeys = new string[] { "TRD_SEQ", "TRD_PAIR","TRD_TIMESTAMP", "TRD_ORD_ID",  "TRD_AMOUNT_EXECUTED",
-            "TRD_PRICE_EXECUTED", "ORD_TYPE", "ORD_PRICE" };
+                _trd_pair = 1;
+                _trd_timestamp = 2;
+                _trd_ord_id = 3;
+                _trd_amount_executed = 4;
+                _trd_price_executed = 5;
+                _ord_type = 6;
+                _ord_price = 7;
             }
 
-
-
-            TRD_SEQ = AllValues[Array.IndexOf(AllKeys, "TRD_SEQ")];
-            TRD_PAIR = AllValues[Array.IndexOf(AllKeys, "TRD_PAIR")];
-            TRD_TIMESTAMP = GetDateTime("TRD_TIMESTAMP");
-            TRD_ORD_ID = GetInt("TRD_ORD_ID");
-            TRD_AMOUNT_EXECUTED = GetDecimal("TRD_AMOUNT_EXECUTED");
-            TRD_PRICE_EXECUTED = GetDecimal("TRD_PRICE_EXECUTED");
-            ORD_TYPE = AllValues[Array.IndexOf(AllKeys, "ORD_TYPE")];
-            ORD_PRICE = GetDecimal("ORD_PRICE");
+            TRD_SEQ = AllValues[_trd_seq];
+            TRD_PAIR = AllValues[_trd_pair];
+            TRD_TIMESTAMP = GetDateTime(_trd_timestamp);
+            TRD_ORD_ID = GetInt(_trd_ord_id);
+            TRD_AMOUNT_EXECUTED = GetDecimal(_trd_amount_executed);
+            TRD_PRICE_EXECUTED = GetDecimal(_trd_price_executed);
+            ORD_TYPE = AllValues[_ord_type];
+            ORD_PRICE = GetDecimal(_ord_price);
             if (AllValues.Length == 11)
             {
-                TRD_ID = TryGetInt("TRD_ID");
-                FEE = GetDecimalFromScientific("FEE");
-                FEE_CURRENCY = AllValues[Array.IndexOf(AllKeys, "FEE_CURRENCY")];
+                TRD_ID = TryGetInt(_trd_id);
+                FEE = GetDecimalFromScientific(_fee);
+                FEE_CURRENCY = AllValues[_fee_currency];
             }
         }
 

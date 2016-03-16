@@ -28,6 +28,18 @@ namespace QuantConnect.Brokerages.Bitfinex
     public class TickerMessage : BaseMessage
     {
 
+        const int _channel_id = 0;
+        const int _bid = 1;
+        const int _bid_size = 2;
+        const int _ask = 3;
+        const int _ask_size = 4;
+        const int _daily_change = 5;
+        const int _daily_change_perc = 6;
+        const int _last_price = 7;
+        const int _volume = 8;
+        const int _high = 9;
+        const int _low = 10;
+
         /// <summary>
         /// Ticker Message constructor
         /// </summary>
@@ -35,19 +47,17 @@ namespace QuantConnect.Brokerages.Bitfinex
         public TickerMessage(string[] values)
             : base(values)
         {
-            AllKeys = new string[] { "CHANNEL_ID", "BID", "BID_SIZE", "ASK", "ASK_SIZE", "DAILY_CHANGE", "DAILY_CHANGE_PERC", "LAST_PRICE", "VOLUME", "HIGH", "LOW" };
-
-            CHANNEL_ID = GetInt("CHANNEL_ID");
-            BID = GetDecimal("BID");
-            BID_SIZE = TryGetDecimal("BID_SIZE");
-            ASK = GetDecimal("ASK");
-            ASK_SIZE = TryGetDecimal("ASK_SIZE");
-            DAILY_CHANGE = GetDecimal("DAILY_CHANGE");
-            DAILY_CHANGE_PERC = GetDecimal("DAILY_CHANGE_PERC");
-            LAST_PRICE = GetDecimal("LAST_PRICE");
-            VOLUME = GetDecimal("VOLUME");
-            HIGH = GetDecimal("HIGH");
-            LOW = GetDecimal("LOW");
+            CHANNEL_ID = GetInt(_channel_id);
+            BID = GetDecimal(_bid);
+            BID_SIZE = TryGetDecimal(_bid_size);
+            ASK = GetDecimal(_ask);
+            ASK_SIZE = TryGetDecimal(_ask_size);
+            DAILY_CHANGE = GetDecimal(_daily_change);
+            DAILY_CHANGE_PERC = GetDecimal(_daily_change_perc);
+            LAST_PRICE = GetDecimal(_last_price);
+            VOLUME = GetDecimal(_volume);
+            HIGH = GetDecimal(_high);
+            LOW = GetDecimal(_low);
         }
 
         /// <summary>
