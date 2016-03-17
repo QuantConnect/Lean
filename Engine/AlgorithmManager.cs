@@ -167,8 +167,8 @@ namespace QuantConnect.Lean.Engine
             //Go through the subscription types and create invokers to trigger the event handlers for each custom type:
             foreach (var config in algorithm.SubscriptionManager.Subscriptions) 
             {
-                //If type is a tradebar, combine tradebars and ticks into unified array:
-                if (config.Type.Name != "TradeBar" && config.Type.Name != "Tick" && !config.IsInternalFeed) 
+                //If type is a custom feed, check for a dedicated event handler
+                if (config.IsCustomData) 
                 {
                     //Get the matching method for this event handler - e.g. public void OnData(Quandl data) { .. }
                     var genericMethod = (algorithm.GetType()).GetMethod("OnData", new[] { config.Type });
@@ -884,8 +884,5 @@ namespace QuantConnect.Lean.Engine
                 Log.Error(err);
             }
         }
-
-
-    } // End of AlgorithmManager
-
-} // End of Namespace.
+    }
+}
