@@ -48,7 +48,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <summary>
         /// Divisor for prices. Scales prices/volumes to allow trades on 0.01 of unit
         /// </summary>
-        protected decimal ScaleFactor = 100;
+        protected decimal ScaleFactor = 1;
         readonly object _fillLock = new object();
         const string buy = "buy";
         const string sell = "sell";
@@ -88,13 +88,14 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <summary>
         /// Create bitfinex brokerage
         /// </summary>
-        public BitfinexBrokerage(string apiKey, string apiSecret, string wallet, BitfinexApi restClient)
+        public BitfinexBrokerage(string apiKey, string apiSecret, string wallet, BitfinexApi restClient, decimal scaleFactor)
             : base("bitfinex")
         {
             ApiKey = apiKey;
             ApiSecret = apiSecret;
             Wallet = wallet;
             _restClient = restClient;
+            ScaleFactor = scaleFactor;
         }
 
         /// <summary>

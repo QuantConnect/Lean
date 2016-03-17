@@ -21,9 +21,8 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
 
         [SetUp()]
         public void Setup()
-        {
-            //DI would be preferable here           
-            unit = new BitfinexBrokerage("abc", "123", "trading", mock.Object);
+        {     
+            unit = new BitfinexBrokerage("abc", "123", "trading", mock.Object, 100m);
         }
 
         [Test()]

@@ -81,6 +81,8 @@ namespace QuantConnect.Brokerages.Bitfinex
             string apiSecret = Config.Get("bitfinex-api-secret");
             string apiKey = Config.Get("bitfinex-api-key");
             string wallet = Config.Get("bitfinex-wallet");
+            //it's desirable to throw an exception here when failing parse
+            decimal scaleFactor = decimal.Parse(Config.Get("bitfinex-scale-factor", "1"));
 
             if (string.IsNullOrEmpty(apiSecret))
                 throw new Exception("Missing bitfinex-api-secret in config.json");
@@ -97,7 +99,7 @@ namespace QuantConnect.Brokerages.Bitfinex
 
             var webSocketClient = new WebSocketWrapper();
 
-            var brokerage = new BitfinexWebsocketsBrokerage(url, webSocketClient, apiKey, apiSecret, wallet, restClient);
+            var brokerage = new BitfinexWebsocketsBrokerage(url, webSocketClient, apiKey, apiSecret, wallet, restClient, scaleFactor);
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
 
             return brokerage;

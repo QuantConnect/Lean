@@ -52,8 +52,8 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <summary>
         /// Create Brokerage instance
         /// </summary>
-        public BitfinexWebsocketsBrokerage(string url, IWebSocket websocket, string apiKey, string apiSecret, string wallet, BitfinexApi restClient)
-            : base(apiKey, apiSecret, wallet, restClient)
+        public BitfinexWebsocketsBrokerage(string url, IWebSocket websocket, string apiKey, string apiSecret, string wallet, BitfinexApi restClient, decimal scaleFactor)
+            : base(apiKey, apiSecret, wallet, restClient, scaleFactor)
         {
             _webSocket = websocket;
             _webSocket.Initialize(url);
