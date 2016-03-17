@@ -22,6 +22,7 @@ using NodaTime.TimeZones;
 using QuantConnect.Benchmarks;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Notifications;
@@ -32,6 +33,7 @@ using QuantConnect.Securities;
 using QuantConnect.Securities.Cfd;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
+using QuantConnect.Securities.Option;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
 using SecurityTypeMarket = System.Tuple<QuantConnect.SecurityType, string>;
@@ -1229,6 +1231,52 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates and adds a new equity <see cref="Option"/> security to the algorithm
+        /// </summary>
+        /// <param name="underlying">The underlying equity symbol</param>
+        /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
+        /// <param name="market">The equity's market, <seealso cref="Market"/>. Default is <see cref="Market.USA"/></param>
+        /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
+        /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
+        /// <returns>The new <see cref="Option"/> security</returns>
+        public Option AddOption(string underlying, Resolution resolution = Resolution.Minute, string market = Market.USA, bool fillDataForward = true, decimal leverage = 0m)
+        {
+            if (market == null)
+            {
+                if (!BrokerageModel.DefaultMarkets.TryGetValue(SecurityType.Option, out market))
+                {
+                    throw new Exception("No default market set for security type: " + SecurityType.Option);
+                }
+            }
+
+            Symbol canonicalSymbol;
+            var alias = "?" + underlying;
+            if (!SymbolCache.TryGetSymbol(alias, out canonicalSymbol))
+            {
+                canonicalSymbol = QuantConnect.Symbol.Create(underlying, SecurityType.Option, market, alias);
+            }
+
+            var marketHoursEntry = _marketHoursDatabase.GetEntry(market, underlying, SecurityType.Option);
+            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(market, underlying, SecurityType.Option, CashBook.AccountCurrency);
+            var canonicalSecurity = (Option) SecurityManager.CreateSecurity(typeof (ZipEntryName), Portfolio, SubscriptionManager,
+                marketHoursEntry.ExchangeHours, marketHoursEntry.DataTimeZone, symbolProperties, SecurityInitializer, canonicalSymbol, resolution,
+                fillDataForward, leverage, false, false, false, true, false);
+            canonicalSecurity.IsTradable = false;
+            Securities.Add(canonicalSecurity);
+
+            // add this security to the user defined universe
+            Universe universe;
+            if (!UniverseManager.TryGetValue(canonicalSymbol, out universe))
+            {
+                var settings = new UniverseSettings(resolution, leverage, false, false, TimeSpan.Zero);
+                universe = new OptionChainUniverse(canonicalSecurity, settings, SecurityInitializer);
+                UniverseManager.Add(canonicalSymbol, universe);
+            }
+
+            return canonicalSecurity;
+        }
+
+        /// <summary>
         /// Creates and adds a new <see cref="Forex"/> security to the algorithm
         /// </summary>
         /// <param name="ticker">The currency pair</param>
@@ -1335,8 +1383,6 @@ namespace QuantConnect.Algorithm
 
             //Add this to the data-feed subscriptions
             var symbolObject = new Symbol(SecurityIdentifier.GenerateBase(symbol, Market.USA), symbol);
-
-            // only used in CFD security type, for now
             var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(Market.USA, symbol, SecurityType.Base, CashBook.AccountCurrency);
 
             //Add this new generic data as a tradeable security: 
