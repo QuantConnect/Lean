@@ -59,7 +59,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 _ord_type = 7;
                 _ord_price = 8;
                 _fee = 9;
-                _fee_currency = 9;
+                _fee_currency = 10;
 
             }
             else
