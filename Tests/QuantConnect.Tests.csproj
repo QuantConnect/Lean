@@ -168,6 +168,7 @@
     <Compile Include="Engine\DataFeeds\Enumerators\FrontierAwareEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\LiveFillForwardEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\RateLimitEnumeratorTests.cs" />
+    <Compile Include="Engine\DataFeeds\Enumerators\SynchronizingEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\TradeBarBuilderEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\FillForwardEnumeratorTest.cs" />
     <Compile Include="Engine\DataFeeds\RemoteFileBaseData.cs" />

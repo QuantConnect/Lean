@@ -182,6 +182,7 @@
     <Compile Include="DataFeeds\Enumerators\RateLimitEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\RefreshEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\SubscriptionFilterEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\SynchronizingEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\TradeBarBuilderEnumerator.cs" />
     <Compile Include="DataFeeds\ITimeProvider.cs" />
     <Compile Include="DataFeeds\ManualTimeProvider.cs" />
