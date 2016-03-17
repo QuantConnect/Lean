@@ -125,7 +125,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                     TickType = TickType.Quote,
                     Symbol = Symbol,
                     DataType = MarketDataType.Tick,
-                    Quantity = (int)(Math.Round(msg.VOLUME, 2) * ScaleFactor)
+                    Quantity = (int)(Math.Round(msg.VOLUME * ScaleFactor, 2))
                 });
             }
         }
