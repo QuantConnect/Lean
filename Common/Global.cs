@@ -300,7 +300,9 @@ namespace QuantConnect
         /// Data associated with an instrument
         Auxiliary,
         /// QuoteBar market data type [Bid(OHLC), Ask(OHLC) and Mid(OHLC) summary bar]
-        QuoteBar
+        QuoteBar,
+        /// Option chain data
+        OptionChain
     }
 
     /// <summary>
