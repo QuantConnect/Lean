@@ -129,10 +129,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             var algorithmTime = utcDateTime.ConvertFromUtc(algorithmTimeZone);
             var tradeBars = new TradeBars(algorithmTime);
+            var quoteBars = new QuoteBars(algorithmTime);
             var ticks = new Ticks(algorithmTime);
             var splits = new Splits(algorithmTime);
             var dividends = new Dividends(algorithmTime);
             var delistings = new Delistings(algorithmTime);
+            var optionChains = new OptionChains(algorithmTime);
             var symbolChanges = new SymbolChangedEvents(algorithmTime);
 
             foreach (var packet in data)
@@ -172,7 +174,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         if (!packet.Security.SubscriptionDataConfig.IsInternalFeed)
                         {
-                            PopulateDataDictionaries(baseData, ticks, tradeBars);
+                            PopulateDataDictionaries(baseData, ticks, tradeBars, quoteBars, optionChains);
 
                             // this is data used to update consolidators
                             consolidatorUpdate.Add(baseData);
@@ -226,7 +228,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
-            var slice = new Slice(algorithmTime, allDataForAlgorithm, tradeBars, ticks, splits, dividends, delistings, symbolChanges, allDataForAlgorithm.Count > 0);
+            var slice = new Slice(algorithmTime, allDataForAlgorithm, tradeBars, quoteBars, ticks, optionChains, splits, dividends, delistings, symbolChanges, allDataForAlgorithm.Count > 0);
 
             return new TimeSlice(utcDateTime, count, slice, data, cash, security, consolidator, custom, changes);
         }
@@ -234,7 +236,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Adds the specified <see cref="BaseData"/> instance to the appropriate <see cref="DataDictionary{T}"/>
         /// </summary>
-        private static void PopulateDataDictionaries(BaseData baseData, Ticks ticks, TradeBars tradeBars)
+        private static void PopulateDataDictionaries(BaseData baseData, Ticks ticks, TradeBars tradeBars, QuoteBars quoteBars, OptionChains optionChains)
         {
             var symbol = baseData.Symbol;
 
@@ -253,6 +255,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 case MarketDataType.TradeBar:
                     tradeBars[symbol] = (TradeBar) baseData;
+                    break;
+
+                case MarketDataType.QuoteBar:
+                    quoteBars[symbol] = (QuoteBar) baseData;
+                    break;
+
+                case MarketDataType.OptionChain:
+                    optionChains[symbol] = (OptionChain) baseData;
                     break;
             }
         }
