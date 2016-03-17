@@ -33,7 +33,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>QuantConnect.ToolBox.AlgoSeekOptionsConverter.Program</StartupObject>
+    <StartupObject>QuantConnect.ToolBox.CryptoiqDownloader.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="IKVM.AWT.WinForms">
@@ -147,6 +147,9 @@
     <Compile Include="Bz2StreamProvider.cs" />
     <Compile Include="CoarseUniverseGenerator\Program.cs" />
     <Compile Include="ConsolidatorDataProcessor.cs" />
+    <Compile Include="CryptoiqDownloader\CryptoiqBitcoin.cs" />
+    <Compile Include="CryptoiqDownloader\CryptoiqDownloader.cs" />
+    <Compile Include="CryptoiqDownloader\Program.cs" />
     <Compile Include="DukascopyDownloader\DukascopyDataDownloader.cs" />
     <Compile Include="DukascopyDownloader\DukascopySymbolMapper.cs" />
     <Compile Include="DukascopyDownloader\Program.cs" />
@@ -173,6 +176,8 @@
     <Compile Include="OandaDownloader\Program.cs" />
     <Compile Include="PipeDataProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QuandlBitfinexDownloader\Program.cs" />
+    <Compile Include="QuandlBitfinexDownloader\QuandlBitfinexDownloader.cs" />
     <Compile Include="QuantQuoteConverter\Program.cs" />
     <Compile Include="IDataDownloader.cs" />
     <Compile Include="RawFileProcessor.cs" />

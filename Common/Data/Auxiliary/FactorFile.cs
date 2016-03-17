@@ -44,7 +44,7 @@ namespace QuantConnect.Data.Auxiliary
         }
 
         /// <summary>
-        /// Reads a FactorFile in from the <see cref="Constants.DataFolder"/>.
+        /// Reads a FactorFile in from the <see cref="Globals.DataFolder"/>.
         /// </summary>
         public static FactorFile Read(string permtick, string market)
         {
@@ -87,7 +87,7 @@ namespace QuantConnect.Data.Auxiliary
         public static bool HasScalingFactors(string permtick, string market)
         {
             // check for factor files
-            var path = Path.Combine(Constants.DataFolder, "equity", market, "factor_files", permtick.ToLower() + ".csv");
+            var path = Path.Combine(Globals.DataFolder, "equity", market, "factor_files", permtick.ToLower() + ".csv");
             if (File.Exists(path))
             {
                 return true;

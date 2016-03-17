@@ -21,25 +21,50 @@ from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
+from QuantConnect.Parameters import *
 
 
-class BasicTemplateAlgorithm(QCAlgorithm):
-    '''Basic template algorithm simply initializes the date range and cash'''
+class ParameterizedAlgorithm(QCAlgorithm):
+    def __init__(self):
+        # The values 100 and 200 are just default values
+        # that only used if the parameters do not exist
+        self.FastPeriod = 100
+        self.SlowPeriod = 200
+        self.Fast = None
+        self.Slow = None
+
 
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
         
-        self.SetStartDate(2013,10,07)  #Set Start Date
-        self.SetEndDate(2013,10,11)    #Set End Date
+        self.SetStartDate(2013, 10, 07)  #Set Start Date
+        self.SetEndDate(2013, 10, 11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.AddSecurity(SecurityType.Equity, "SPY", Resolution.Second)
+        self.AddSecurity(SecurityType.Equity, "SPY")
 
+        # Receive parameters from the Job
+        fastPeriod = self.GetParameter("ema-fast")
+        slowPeriod = self.GetParameter("ema-slow")
+        if fastPeriod is not None: self.FastPeriod = int(fastPeriod)
+        if slowPeriod is not None: self.SlowPeriod = int(slowPeriod)
+        
+        self.Fast = self.EMA("SPY", self.FastPeriod);
+        self.Slow = self.EMA("SPY", self.SlowPeriod);
+
+        
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         
         Arguments:
-            data: Slice object keyed by symbol containing the stock data
+            data: TradeBars IDictionary object with your stock data
         '''
-        if not self.Portfolio.Invested:
+        
+        # wait for our indicators to ready
+        if not self.Fast.IsReady or not self.Slow.IsReady:
+            return
+
+        if self.Fast.Current.Value > self.Slow.Current.Value * 1.001:
             self.SetHoldings("SPY", 1)
+        elif self.Fast.Current.Value < self.Slow.Current.Value * 0.999:
+            self.Liquidate("SPY")

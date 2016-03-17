@@ -223,7 +223,7 @@ namespace QuantConnect
                 {"Total RAM (MB)",        TotalPhysicalMemory.ToString()},
                 {"Used Disk Space (MB)", DriveSpaceUsed.ToString() },
                 {"Total Disk Space (MB)", DriveTotalSpace.ToString() },
-                {"LEAN Version", "v" + Constants.Version}
+                {"LEAN Version", "v" + Globals.Version}
             };
         }
     } // End OS Class

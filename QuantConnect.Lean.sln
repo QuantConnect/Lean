@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+VisualStudioVersion = 12.0.40629.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Lean.Launcher", "Launcher\QuantConnect.Lean.Launcher.csproj", "{09E7B916-E58B-4021-BD8B-C10B4446E226}"
 EndProject
@@ -47,8 +47,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Algorithm.CSha
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "QuantConnect.Algorithm.VisualBasic", "Algorithm.VisualBasic\QuantConnect.Algorithm.VisualBasic.vbproj", "{AF8F124B-B441-4AA7-92B7-CEA72BDB4118}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Algorithm.Python", "Algorithm.Python\QuantConnect.Algorithm.Python.csproj", "{48289996-CE56-4EDF-B451-4A2B1519EBC3}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Algorithm.Java", "Algorithm.Java\QuantConnect.Algorithm.Java.csproj", "{61097E9E-EB20-4677-B394-CE0682B9D610}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{93A63A28-9326-4E26-9930-0FDBC26B9A91}"
@@ -64,6 +62,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{09E7B916-E58B-4021-BD8B-C10B4446E226}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{09E7B916-E58B-4021-BD8B-C10B4446E226}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{09E7B916-E58B-4021-BD8B-C10B4446E226}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{09E7B916-E58B-4021-BD8B-C10B4446E226}.Release|Any CPU.Build.0 = Release|Any CPU
 		{12156F46-D07E-4E3D-AD2B-7409E82AB62F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{12156F46-D07E-4E3D-AD2B-7409E82AB62F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{12156F46-D07E-4E3D-AD2B-7409E82AB62F}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -132,18 +134,12 @@ Global
 		{AF8F124B-B441-4AA7-92B7-CEA72BDB4118}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AF8F124B-B441-4AA7-92B7-CEA72BDB4118}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AF8F124B-B441-4AA7-92B7-CEA72BDB4118}.Release|Any CPU.Build.0 = Release|Any CPU
-		{48289996-CE56-4EDF-B451-4A2B1519EBC3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{48289996-CE56-4EDF-B451-4A2B1519EBC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{61097E9E-EB20-4677-B394-CE0682B9D610}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{61097E9E-EB20-4677-B394-CE0682B9D610}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AC9A142C-B485-44D7-91FF-015C22C43D05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AC9A142C-B485-44D7-91FF-015C22C43D05}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AC9A142C-B485-44D7-91FF-015C22C43D05}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AC9A142C-B485-44D7-91FF-015C22C43D05}.Release|Any CPU.Build.0 = Release|Any CPU
-		{09E7B916-E58B-4021-BD8B-C10B4446E226}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{09E7B916-E58B-4021-BD8B-C10B4446E226}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{09E7B916-E58B-4021-BD8B-C10B4446E226}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{09E7B916-E58B-4021-BD8B-C10B4446E226}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

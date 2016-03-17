@@ -23,17 +23,29 @@ from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
 
 
-class BasicTemplateAlgorithm(QCAlgorithm):
-    '''Basic template algorithm simply initializes the date range and cash'''
+class DailyAlgorithm(QCAlgorithm):
+    '''Uses daily data and a simple moving average cross to place trades and an ema for stop placement'''
+
+    def __init__(self):
+        self.lastAction = None
+        self.macd = None
+        self.ema = None
+
 
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
         
-        self.SetStartDate(2013,10,07)  #Set Start Date
-        self.SetEndDate(2013,10,11)    #Set End Date
+        self.SetStartDate(2013,01,01)  #Set Start Date
+        self.SetEndDate(2014,01,01)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.AddSecurity(SecurityType.Equity, "SPY", Resolution.Second)
+        self.AddSecurity(SecurityType.Equity, "SPY", Resolution.Daily)
+        self.AddSecurity(SecurityType.Equity, "IBM", Resolution.Hour)
+        self.Securities["IBM"].SetLeverage(1.0)
+
+        self.macd = self.MACD("SPY", 12, 26, 9, MovingAverageType.Wilders, Resolution.Daily, Field.Close)
+        self.ema = self.EMA("IBM", 15*6, Resolution.Hour, Field.SevenBar)
+
 
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
@@ -41,5 +53,14 @@ class BasicTemplateAlgorithm(QCAlgorithm):
         Arguments:
             data: Slice object keyed by symbol containing the stock data
         '''
-        if not self.Portfolio.Invested:
-            self.SetHoldings("SPY", 1)
+        if not self.macd.IsReady: return
+        if not data.ContainsKey("IBM"): return
+        if self.lastAction is not None and self.lastAction.Date == self.Time.Date: return
+        
+        self.lastAction = self.Time
+        holding = self.Portfolio["SPY"]
+
+        if holding.Quantity <= 0 and self.macd.Current.Value > self.macd.Signal.Current.Value and data["IBM"].Price > self.ema.Current.Value:
+            self.SetHoldings("IBM", 0.25)
+        elif holding.Quantity >= 0 and self.macd.Current.Value < self.macd.Signal.Current.Value and data["IBM"].Price < self.ema.Current.Value:
+            self.SetHoldings("IBM", -0.25)

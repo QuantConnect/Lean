@@ -352,7 +352,7 @@ namespace QuantConnect.Util
 
             var zipFileName = date.ToString(DateFormat.EightCharacter);
             tickType = tickType ?? (securityType == SecurityType.Forex || securityType == SecurityType.Cfd ? TickType.Quote : TickType.Trade);
-            var suffix = string.Format("_{0}.zip", tickType);
+            var suffix = string.Format("_{0}.zip", tickType.Value.ToLower());
             return zipFileName + suffix;
         }
 

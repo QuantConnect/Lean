@@ -70,7 +70,7 @@ namespace QuantConnect
         public const string Dukascopy = "dukascopy";
 
         /// <summary>
-        /// Bitfinex Market
+        /// Bitfinex market
         /// </summary>
         public const string Bitfinex = "bitfinex";
 
