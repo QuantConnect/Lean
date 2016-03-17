@@ -60,6 +60,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 case FileFormat.Csv:
                     return new TextSubscriptionFactory(config, date, isLiveMode);
 
+                case FileFormat.ZipEntryName:
+                    return new ZipEntryNameSubscriptionFactory(config, date, isLiveMode);
+
                 default:
                     throw new NotImplementedException("SubscriptionFactory.ForSource(" + source + ") has not been implemented yet.");
             }

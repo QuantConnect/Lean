@@ -147,6 +147,7 @@
     <Compile Include="Data\Auxiliary\LocalDiskMapFileProvider.cs" />
     <Compile Include="Data\Auxiliary\MapFileResolver.cs" />
     <Compile Include="Data\Auxiliary\MapFileRow.cs" />
+    <Compile Include="Data\Auxiliary\ZipEntryName.cs" />
     <Compile Include="Data\Consolidators\BaseDataConsolidator.cs" />
     <Compile Include="Data\Consolidators\DynamicDataConsolidator.cs" />
     <Compile Include="Data\Consolidators\PeriodCountConsolidatorBase.cs" />

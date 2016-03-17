@@ -172,6 +172,7 @@
     <Compile Include="Engine\DataFeeds\FuncDataQueueHandler.cs" />
     <Compile Include="Engine\DataFeeds\LiveTradingDataFeedTests.cs" />
     <Compile Include="Engine\DataFeeds\Transport\LocalFileSubscriptionStreamReaderTests.cs" />
+    <Compile Include="Engine\DataFeeds\ZipEntryNameSubsciptionFactoryTests.cs" />
     <Compile Include="Engine\DefaultBrokerageMessageHandler.cs" />
     <Compile Include="Engine\FactorFileTests.cs" />
     <Compile Include="Engine\RealTime\ScheduledEventTests.cs" />
@@ -264,6 +265,9 @@
     <None Include="app.config" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
+    </None>
+    <None Include="TestData\20151224_quote_american.zip">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="TestData\CashTestingStrategy.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
