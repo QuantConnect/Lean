@@ -184,6 +184,8 @@
     <Compile Include="Data\SubscriptionDataSource.cs" />
     <Compile Include="Data\UniverseSelection\CoarseFundamental.cs" />
     <Compile Include="Data\UniverseSelection\BaseDataCollection.cs" />
+    <Compile Include="Data\UniverseSelection\OptionChainUniverse.cs" />
+    <Compile Include="Data\UniverseSelection\OptionChainUniverseDataCollection.cs" />
     <Compile Include="Data\UniverseSelection\UserDefinedUniverse.cs" />
     <Compile Include="Data\UniverseSelection\FuncUniverse.cs" />
     <Compile Include="Data\UniverseSelection\Universe.cs" />

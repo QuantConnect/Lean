@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -16,63 +16,57 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Data.UniverseSelection
 {
     /// <summary>
-    /// This type exists for transport of data as a single packet
+    /// Defines the universe selection data type for <see cref="OptionChainUniverse"/>
     /// </summary>
-    public class BaseDataCollection : BaseData
+    public class OptionChainUniverseDataCollection : BaseDataCollection
     {
-        private DateTime _endTime;
+        /// <summary>
+        /// The option chain's underlying price data
+        /// </summary>
+        public BaseData Underlying { get; set; }
 
         /// <summary>
-        /// Gets the data list
+        /// Gets or sets the contracts selected by the universe
         /// </summary>
-        public List<BaseData> Data { get; set; }
-
+        public HashSet<Symbol> FilteredContracts { get; set; }
+        
         /// <summary>
-        /// Gets or sets the end time of this data
+        /// Initializes a new default instance of the <see cref="OptionChainUniverseDataCollection"/> c;ass
         /// </summary>
-        public override DateTime EndTime
-        {
-            get { return _endTime; }
-            set { _endTime = value; }
-        }
-
-        /// <summary>
-        /// Initializes a new default instance of the <see cref="BaseDataCollection"/> c;ass
-        /// </summary>
-        public BaseDataCollection()
+        public OptionChainUniverseDataCollection()
             : this(DateTime.MinValue, Symbol.Empty)
         {
+            FilteredContracts = new HashSet<Symbol>();
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BaseDataCollection"/> class
+        /// Initializes a new instance of the <see cref="OptionChainUniverseDataCollection"/> class
         /// </summary>
         /// <param name="time">The time of this data</param>
         /// <param name="symbol">A common identifier for all data in this packet</param>
         /// <param name="data">The data to add to this collection</param>
-        public BaseDataCollection(DateTime time, Symbol symbol, IEnumerable<BaseData> data = null)
-            : this(time, time, symbol, data)
+        /// <param name="underlying">The option chain's underlying price data</param>
+        public OptionChainUniverseDataCollection(DateTime time, Symbol symbol, IEnumerable<BaseData> data = null, BaseData underlying = null)
+            : this(time, time, symbol, data, underlying)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BaseDataCollection"/> class
+        /// Initializes a new instance of the <see cref="OptionChainUniverseDataCollection"/> class
         /// </summary>
         /// <param name="time">The start time of this data</param>
         /// <param name="endTime">The end time of this data</param>
         /// <param name="symbol">A common identifier for all data in this packet</param>
         /// <param name="data">The data to add to this collection</param>
-        public BaseDataCollection(DateTime time, DateTime endTime, Symbol symbol, IEnumerable<BaseData> data = null)
+        /// <param name="underlying">The option chain's underlying price data</param>
+        public OptionChainUniverseDataCollection(DateTime time, DateTime endTime, Symbol symbol, IEnumerable<BaseData> data = null, BaseData underlying = null)
+            : base(time, endTime, symbol, data)
         {
-            Symbol = symbol;
-            Time = time;
-            _endTime = endTime;
-            Data = data != null ? data.ToList() : new List<BaseData>();
+            Underlying = underlying;
         }
 
         /// <summary>
@@ -84,7 +78,16 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>A clone of the current object</returns>
         public override BaseData Clone()
         {
-            return new BaseDataCollection(Time, EndTime, Symbol, Data);
+            return new OptionChainUniverseDataCollection
+            {
+                Underlying = Underlying,
+                Symbol = Symbol,
+                Time = Time,
+                EndTime = EndTime,
+                Data = Data,
+                DataType = DataType,
+                FilteredContracts = FilteredContracts
+            };
         }
     }
 }
