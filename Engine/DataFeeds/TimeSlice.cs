@@ -170,23 +170,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         if (!packet.Security.SubscriptionDataConfig.IsInternalFeed)
                         {
-                            // populate ticks and tradebars dictionaries with no aux data
-                            switch (baseData.DataType)
-                            {
-                                case MarketDataType.Tick:
-                                    List<Tick> ticksList;
-                                    if (!ticks.TryGetValue(symbol, out ticksList))
-                                    {
-                                        ticksList = new List<Tick> {(Tick) baseData};
-                                        ticks[symbol] = ticksList;
-                                    }
-                                    ticksList.Add((Tick) baseData);
-                                    break;
-
-                                case MarketDataType.TradeBar:
-                                    tradeBars[symbol] = (TradeBar) baseData;
-                                    break;
-                            }
+                            PopulateDataDictionaries(baseData, ticks, tradeBars);
 
                             // this is data used to update consolidators
                             consolidatorUpdate.Add(baseData);
@@ -237,6 +221,32 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var slice = new Slice(algorithmTime, allDataForAlgorithm, tradeBars, ticks, splits, dividends, delistings, symbolChanges, allDataForAlgorithm.Count > 0);
 
             return new TimeSlice(utcDateTime, count, slice, data, cash, security, consolidator, custom, changes);
+        }
+
+        /// <summary>
+        /// Adds the specified <see cref="BaseData"/> instance to the appropriate <see cref="DataDictionary{T}"/>
+        /// </summary>
+        private static void PopulateDataDictionaries(BaseData baseData, Ticks ticks, TradeBars tradeBars)
+        {
+            var symbol = baseData.Symbol;
+
+            // populate data dictionaries
+            switch (baseData.DataType)
+            {
+                case MarketDataType.Tick:
+                    List<Tick> ticksList;
+                    if (!ticks.TryGetValue(symbol, out ticksList))
+                    {
+                        ticksList = new List<Tick> {(Tick) baseData};
+                        ticks[symbol] = ticksList;
+                    }
+                    ticksList.Add((Tick) baseData);
+                    break;
+
+                case MarketDataType.TradeBar:
+                    tradeBars[symbol] = (TradeBar) baseData;
+                    break;
+            }
         }
     }
 }
