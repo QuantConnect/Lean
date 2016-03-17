@@ -151,6 +151,8 @@ namespace QuantConnect.Lean.Engine
 
             // Algorithm 2.0 data accessors
             var hasOnDataTradeBars = AddMethodInvoker<TradeBars>(algorithm, methodInvokers);
+            var hasOnDataQuoteBars = AddMethodInvoker<QuoteBars>(algorithm, methodInvokers);
+            var hasOnDataOptionChains = AddMethodInvoker<OptionChains>(algorithm, methodInvokers);
             var hasOnDataTicks = AddMethodInvoker<Ticks>(algorithm, methodInvokers);
 
             // dividend and split events
@@ -541,6 +543,8 @@ namespace QuantConnect.Lean.Engine
                 try
                 {
                     if (hasOnDataTradeBars && timeSlice.Slice.Bars.Count > 0) methodInvokers[typeof(TradeBars)](algorithm, timeSlice.Slice.Bars);
+                    if (hasOnDataQuoteBars && timeSlice.Slice.QuoteBars.Count > 0) methodInvokers[typeof(QuoteBars)](algorithm, timeSlice.Slice.QuoteBars);
+                    if (hasOnDataOptionChains && timeSlice.Slice.OptionChains.Count > 0) methodInvokers[typeof(OptionChains)](algorithm, timeSlice.Slice.OptionChains);
                     if (hasOnDataTicks && timeSlice.Slice.Ticks.Count > 0) methodInvokers[typeof(Ticks)](algorithm, timeSlice.Slice.Ticks);
                 }
                 catch (Exception err)

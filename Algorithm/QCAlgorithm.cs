@@ -580,7 +580,6 @@ namespace QuantConnect.Algorithm
         /// <param name="changes"></param>
         public virtual void OnSecuritiesChanged(SecurityChanges changes)
         {
-            
         }
 
         // <summary>
@@ -593,10 +592,28 @@ namespace QuantConnect.Algorithm
         //}
 
         // <summary>
+        // Event - v2.0 QUOTEBAR EVENT HANDLER: (Pattern) Basic template for user to override when requesting quotebar data.
+        // </summary>
+        // <param name="data"></param>
+        //public void OnData(QuoteBars data)
+        //{
+        //
+        //}
+
+        // <summary>
         // Event - v2.0 TICK EVENT HANDLER: (Pattern) Basic template for user to override when requesting tick data.
         // </summary>
         // <param name="data">List of Tick Data</param>
         //public void OnData(Ticks data)
+        //{
+        //
+        //}
+
+        // <summary>
+        // Event - v2.0 OPTIONCHAIN EVENT HANDLER: (Pattern) Basic template for user to override when requesting option data.
+        // </summary>
+        // <param name="data">List of Tick Data</param>
+        //public void OnData(OptionChains data)
         //{
         //
         //}
