@@ -47,6 +47,10 @@ namespace QuantConnect.Brokerages.Bitfinex
         const int _heartBeatTimeout = 30;
         IWebSocket _webSocket;
         object _cashLock = new object();
+        JsonSerializerSettings settings = new JsonSerializerSettings
+        {
+            FloatParseHandling = FloatParseHandling.Decimal
+        };
         #endregion
 
         /// <summary>

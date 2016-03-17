@@ -80,11 +80,11 @@ namespace QuantConnect.Brokerages.Bitfinex
             TRD_AMOUNT_EXECUTED = GetDecimal(_trd_amount_executed);
             TRD_PRICE_EXECUTED = GetDecimal(_trd_price_executed);
             ORD_TYPE = AllValues[_ord_type];
-            ORD_PRICE = GetDecimal(_ord_price);
+            ORD_PRICE = TryGetDecimal(_ord_price);
             if (AllValues.Length == 11)
             {
                 TRD_ID = TryGetInt(_trd_id);
-                FEE = GetDecimalFromScientific(_fee);
+                FEE = TryGetDecimal(_fee);
                 FEE_CURRENCY = AllValues[_fee_currency];
             }
         }

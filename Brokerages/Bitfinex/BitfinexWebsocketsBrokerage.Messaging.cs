@@ -39,7 +39,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             try
             {
-                var raw = JsonConvert.DeserializeObject<dynamic>(e.Data);
+                var raw = JsonConvert.DeserializeObject<dynamic>(e.Data, settings);
 
                 if (raw.Type == Newtonsoft.Json.Linq.JTokenType.Array)
                 {
@@ -110,7 +110,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         
         private void PopulateTicker(string response)
         {
-            var data = JsonConvert.DeserializeObject<string[]>(response);
+            var data = JsonConvert.DeserializeObject<string[]>(response, settings);
             var msg = new TickerMessage(data);
             lock (Ticks)
             {

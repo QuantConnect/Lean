@@ -70,16 +70,26 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <summary>
         /// Returns typed value from untyped json array
         /// </summary>
+        /// <remarks>This should not be necessary if Json serialization settings are used</remarks>
         /// <param name="key"></param>
         /// <returns></returns>
-        public decimal GetDecimalFromScientific(int key)
+        public decimal TryGetDecimalFromScientific(int key)
         {
             if (AllValues[key] == null)
             {
                 return 0m;
             }
-            string value = AllValues[key].Trim('-');
-            return Decimal.Parse(value, System.Globalization.NumberStyles.AllowExponent | System.Globalization.NumberStyles.AllowDecimalPoint);
+
+            decimal parsed;
+            try
+            {
+                parsed = Decimal.Parse(AllValues[key], System.Globalization.NumberStyles.AllowExponent | System.Globalization.NumberStyles.AllowDecimalPoint);
+            }
+            catch (Exception)
+            {
+                return 0m;
+            }
+            return parsed;
         }
 
         /// <summary>
@@ -119,7 +129,9 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 return parsed;
             }
-            return 0m;
+
+            decimal scientific = this.TryGetDecimalFromScientific(key);
+            return scientific;
         }
 
         /// <summary>
