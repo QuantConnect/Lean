@@ -417,6 +417,19 @@ namespace QuantConnect
         /// <returns>Stream reader of the first file contents in the zip file</returns>
         public static StreamReader Unzip(string filename, out ZipFile zip)
         {
+            return Unzip(filename, null, out zip);
+        }
+
+        /// <summary>
+        /// Streams a local zip file using a streamreader.
+        /// Important: the caller must call Dispose() on the returned ZipFile instance.
+        /// </summary>
+        /// <param name="filename">Location of the original zip file</param>
+        /// <param name="zipEntryName">The zip entry name to open a reader for. Specify null to access the first entry</param>
+        /// <param name="zip">The ZipFile instance to be returned to the caller</param>
+        /// <returns>Stream reader of the first file contents in the zip file</returns>
+        public static StreamReader Unzip(string filename, string zipEntryName, out ZipFile zip)
+        {
             StreamReader reader = null;
             zip = null;
 
@@ -427,8 +440,13 @@ namespace QuantConnect
                     try
                     {
                         zip = new ZipFile(filename);
+                        var entry = zip.FirstOrDefault(x => zipEntryName == null || string.Compare(x.FileName, zipEntryName, StringComparison.OrdinalIgnoreCase) == 0);
+                        if (entry == null)
+                        {
+                            throw new ArgumentException("Unable to locate zip entry with name: " + zipEntryName);
+                        }
 
-                        reader = new StreamReader(zip[0].OpenReader());
+                        reader = new StreamReader(entry.OpenReader());
                     }
                     catch (Exception err)
                     {
@@ -447,7 +465,7 @@ namespace QuantConnect
                 Log.Error(err, "File: " + filename);
             }
             return reader;
-        } // End UnZip
+        }
 
         /// <summary>
         /// Streams the unzipped file as key value pairs of file name to file contents.
