@@ -171,6 +171,7 @@
     <Compile Include="Engine\DataFeeds\RestApiBaseData.cs" />
     <Compile Include="Engine\DataFeeds\FuncDataQueueHandler.cs" />
     <Compile Include="Engine\DataFeeds\LiveTradingDataFeedTests.cs" />
+    <Compile Include="Engine\DataFeeds\Transport\LocalFileSubscriptionStreamReaderTests.cs" />
     <Compile Include="Engine\DefaultBrokerageMessageHandler.cs" />
     <Compile Include="Engine\FactorFileTests.cs" />
     <Compile Include="Engine\RealTime\ScheduledEventTests.cs" />
