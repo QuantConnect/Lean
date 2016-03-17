@@ -78,8 +78,24 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
             {
                 Assert.AreEqual("BTCUSD", e.Symbol.Value);
                 Assert.AreEqual(300, e.FillQuantity);
-                Assert.AreEqual(0.04, e.FillPrice);
-                Assert.AreEqual(0.06, e.OrderFee);
+                Assert.AreEqual(0.04m, e.FillPrice);
+                Assert.AreEqual(0.06m, e.OrderFee);
+                Assert.AreEqual(Orders.OrderStatus.Filled, e.Status);
+            };
+
+            //test exponent
+            json = "[0,\"tu\", [\"abc123\",\"1\",\"BTCUSD\",\"1453989092 \",\"" + brokerId + "\",\"3\",\"4\",\"<ORD_TYPE>\",\"5\",\"0.000006\",\"USD\"]]";
+
+            unit.CachedOrderIDs.TryAdd(1, new BitfinexOrder { BrokerId = new List<string> { brokerId } });
+
+            unit.OnMessage(unit, GetArgs(json));
+
+            unit.OrderStatusChanged += (s, e) =>
+            {
+                Assert.AreEqual("BTCUSD", e.Symbol.Value);
+                Assert.AreEqual(300, e.FillQuantity);
+                Assert.AreEqual(0.04m, e.FillPrice);
+                Assert.AreEqual(0.00000006m, e.OrderFee);
                 Assert.AreEqual(Orders.OrderStatus.Filled, e.Status);
             };
 
@@ -99,7 +115,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
             {
                 Assert.AreEqual("BTCUSD", e.Symbol.Value);
                 Assert.AreEqual(200, e.FillQuantity);
-                Assert.AreEqual(0.04, e.FillPrice);
+                Assert.AreEqual(0.04m, e.FillPrice);
                 Assert.AreEqual(0, e.OrderFee);
                 Assert.AreEqual(Orders.OrderStatus.PartiallyFilled, e.Status);
             };
@@ -123,6 +139,25 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
             var actual = unit.GetNextTicks().First();
             Assert.AreEqual("BTCUSD", actual.Symbol.Value);
             Assert.AreEqual(0.01m, actual.Price);
+
+            //should not serialize into exponent
+            json = "[\"0\",\"0.01\",\"0.01\",\"0.01\",\"0.01\",\"0.01\",\"0.0000001\",\"1\",\"0.01\",\"0.01\",\"0.01\"]";
+
+            unit.OnMessage(unit, GetArgs(json));
+
+            actual = unit.GetNextTicks().First();
+            Assert.AreEqual("BTCUSD", actual.Symbol.Value);
+            Assert.AreEqual(0.01m, actual.Price);
+
+            //should not fail due to parse error on superfluous field
+            json = "[\"0\",\"0.01\",\"0.01\",\"0.01\",\"0.01\",\"0.01\",\"abc\",\"1\",\"0.01\",\"0.01\",\"0.01\"]";
+
+            unit.OnMessage(unit, GetArgs(json));
+
+            actual = unit.GetNextTicks().First();
+            Assert.AreEqual("BTCUSD", actual.Symbol.Value);
+            Assert.AreEqual(0.01m, actual.Price);
+
         }
 
         [Test()]
