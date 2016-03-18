@@ -396,13 +396,13 @@ namespace QuantConnect.Algorithm
             {
                 var nextMarketClose = security.Exchange.Hours.GetNextMarketClose(security.LocalTime, false);
                 // must be submitted with at least 10 minutes in trading day, add buffer allow order submission
-                var latestSubmissionTime = nextMarketClose.AddMinutes(-10.75);
+                var latestSubmissionTime = nextMarketClose.AddMinutes(-15.50);
                 if (!security.Exchange.ExchangeOpen || Time > latestSubmissionTime)
                 {
-                    // tell the user we require an 11 minute buffer, on minute data in live a user will receive the 3:49->3:50 bar at 3:50,
-                    // this is already too late to submit one of these orders, so make the user do it at the 3:48->3:49 bar so it's submitted
-                    // to the brokerage before 3:50.
-                    return OrderResponse.Error(request, OrderResponseErrorCode.MarketOnCloseOrderTooLate, "MarketOnClose orders must be placed with at least a 11 minute buffer before market close.");
+                    // tell the user we require a 16 minute buffer, on minute data in live a user will receive the 3:44->3:45 bar at 3:45,
+                    // this is already too late to submit one of these orders, so make the user do it at the 3:43->3:44 bar so it's submitted
+                    // to the brokerage before 3:45.
+                    return OrderResponse.Error(request, OrderResponseErrorCode.MarketOnCloseOrderTooLate, "MarketOnClose orders must be placed with at least a 16 minute buffer before market close.");
                 }
             }
 
