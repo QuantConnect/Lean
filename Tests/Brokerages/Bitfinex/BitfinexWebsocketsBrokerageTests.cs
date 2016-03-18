@@ -161,7 +161,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
         public void OnMessageTickerTest()
         {
 
-            string json = "{\"event\":\"subscribed\",\"channel\":\"ticker\",\"chanId\":\"0\"}";
+            string json = "{\"event\":\"subscribed\",\"channel\":\"ticker\",\"chanId\":\"0\",\"pair\":\"btcusd\"}";
 
             unit.OnMessage(unit, GetArgs(json));
 
@@ -197,7 +197,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
         public void OnMessageTickerTest2()
         {
 
-            string json = "{\"event\":\"subscribed\",\"channel\":\"ticker\",\"chanId\":\"2\"}";
+            string json = "{\"event\":\"subscribed\",\"channel\":\"ticker\",\"chanId\":\"2\",\"pair\":\"btcusd\"}";
 
             unit.OnMessage(unit, GetArgs(json));
 
