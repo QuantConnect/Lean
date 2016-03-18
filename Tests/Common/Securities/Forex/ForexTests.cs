@@ -61,5 +61,14 @@ namespace QuantConnect.Tests.Common.Securities.Forex
             Assert.AreEqual("EUR", forex.BaseCurrencySymbol);
             Assert.AreEqual("USD", forex.QuoteCurrency.Symbol);
         }
+
+        [Test]
+        public void ConstructorBitfinexMarginModel()
+        {
+            var config = new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create("BTCUSD", SecurityType.Forex, Market.Bitfinex), Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true);
+            var forex = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours.AlwaysOpen(config.DataTimeZone), new Cash("usd", 0, 0), config, SymbolProperties.GetDefault("usd"));
+            Assert.IsInstanceOf<BitfinexSecurityMarginModel>(forex.MarginModel);
+        }
+
     }
 }

@@ -263,7 +263,6 @@
     <Compile Include="Securities\ISecurityInitializer.cs" />
     <Compile Include="Securities\ISettlementModel.cs" />
     <Compile Include="Securities\LocalMarketHours.cs" />
-    <Compile Include="Securities\BitfinexMarginCallModel.cs" />
     <Compile Include="Securities\MarketHoursSegment.cs" />
     <Compile Include="Securities\MarketHoursState.cs" />
     <Compile Include="Securities\PatternDayTradingMarginModel.cs" />
@@ -276,6 +275,7 @@
     <Compile Include="Securities\IOrderProvider.cs" />
     <Compile Include="Securities\ISecurityPortfolioModel.cs" />
     <Compile Include="Securities\MarginCallModel.cs" />
+    <Compile Include="Securities\BitfinexSecurityMarginModel.cs" />
     <Compile Include="Securities\SecurityPortfolioModel.cs" />
     <Compile Include="Securities\SecurityMarginModel.cs" />
     <Compile Include="Securities\ImmediateSettlementModel.cs" />

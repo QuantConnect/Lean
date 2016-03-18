@@ -222,6 +222,7 @@
     <Compile Include="Indicators\StochasticTests.cs" />
     <Compile Include="Queues\FileCommandQueueHandlerTests.cs" />
     <Compile Include="RegressionTests.cs" />
+    <Compile Include="Securities\BitfinexSecurityMarginModelTests.cs" />
     <Compile Include="Symbols.cs" />
     <Compile Include="TestExtensions.cs" />
     <Compile Include="Indicators\LinearWeightedMovingAverageTests.cs" />

@@ -84,6 +84,7 @@
     "bitfinex-api-secret": "",
     "bitfinex-api-key": "",
     "bitfinex-wss":  "wss://api2.bitfinex.com:3000/ws",
+    "bitfinex-scale-factor":  "100",
 
     "environments": {
 
@@ -138,7 +139,7 @@
             "live-mode": "true",
             "live-mode-brokerage": "PaperBrokerage",
             "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
-            "result-handler": "QuantConnect.Lean.Engine.Results.ConsoleResultHandler",
+            "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
             "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
             "data-queue-handler": "QuantConnect.Brokerages.Bitfinex.BitfinexBrokerage",
             "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
