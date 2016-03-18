@@ -107,6 +107,7 @@
     <Content Include="DailyAlgorithm.py" />
     <Content Include="ParameterizedAlgorithm.py" />
     <Content Include="DropboxUniverseSelectionAlgorithm.py" />
+    <Content Include="UniverseSelectionDefinitionsAlgorithm.py" />
     <Content Include="UniverseSelectionRegressionAlgorithm.py" />
     <Content Include="UpdateOrderRegressionAlgorithm.py" />
     <Content Include="BasicTemplateAlgorithm.py" />
