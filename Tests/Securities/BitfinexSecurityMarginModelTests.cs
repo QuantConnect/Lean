@@ -39,7 +39,7 @@ namespace QuantConnect.Securities.Tests
             security.Holdings.UpdateMarketPrice(price);
             security.SetMarketPrice(new Tick { Value = price });
             security.SetLocalTimeKeeper(new LocalTimeKeeper(DateTime.UtcNow, NodaTime.DateTimeZone.Utc));
-            var actual = unit.GenerateMarginCallOrder(security, 1000, 1001);
+            var actual = unit.GenerateMarginCallOrder(security, 1000, 1101);
             Assert.AreEqual(1, actual.Quantity);
         }
 
