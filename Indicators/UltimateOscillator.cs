@@ -57,13 +57,13 @@ namespace QuantConnect.Indicators
             : base(name)
         {
             _period = Math.Max(Math.Max(period1, period2), period3);
-            _trueRange = new TrueRange("TR");
-            _sumBuyingPressure1 = new Sum(period1);
-            _sumBuyingPressure2 = new Sum(period2);
-            _sumBuyingPressure3 = new Sum(period3);
-            _sumTrueRange1 = new Sum(period1);
-            _sumTrueRange2 = new Sum(period2);
-            _sumTrueRange3 = new Sum(period3);
+            _trueRange = new TrueRange(name + "_TR");
+            _sumBuyingPressure1 = new Sum(name + "_BP1", period1);
+            _sumBuyingPressure2 = new Sum(name + "_BP2", period2);
+            _sumBuyingPressure3 = new Sum(name + "_BP3", period3);
+            _sumTrueRange1 = new Sum(name + "_TR1", period1);
+            _sumTrueRange2 = new Sum(name + "_TR2", period2);
+            _sumTrueRange3 = new Sum(name + "_TR3", period3);
         }
 
         /// <summary>
