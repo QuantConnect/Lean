@@ -399,17 +399,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private ISubscriptionFactory CreateSubscriptionFactory(SubscriptionDataSource source)
         {
-            switch (source.Format)
-            {
-                case FileFormat.Csv:
-                    return HandleCsvFileFormat(source);
-
-                case FileFormat.Binary:
-                    throw new NotSupportedException("Binary file format is not supported");
-
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            return SubscriptionFactory.ForSource(source, _config, _tradeableDates.Current, _isLiveMode);
         }
 
         private ISubscriptionFactory HandleCsvFileFormat(SubscriptionDataSource source)

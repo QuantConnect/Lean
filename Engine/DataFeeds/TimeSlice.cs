@@ -171,19 +171,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         if (!packet.Security.SubscriptionDataConfig.IsInternalFeed)
                         {
                             // populate ticks and tradebars dictionaries with no aux data
-                            if (baseData.DataType == MarketDataType.Tick)
+                            switch (baseData.DataType)
                             {
-                                List<Tick> ticksList;
-                                if (!ticks.TryGetValue(symbol, out ticksList))
-                                {
-                                    ticksList = new List<Tick> {(Tick) baseData};
-                                    ticks[symbol] = ticksList;
-                                }
-                                ticksList.Add((Tick) baseData);
-                            }
-                            else if (baseData.DataType == MarketDataType.TradeBar)
-                            {
-                                tradeBars[symbol] = (TradeBar) baseData;
+                                case MarketDataType.Tick:
+                                    List<Tick> ticksList;
+                                    if (!ticks.TryGetValue(symbol, out ticksList))
+                                    {
+                                        ticksList = new List<Tick> {(Tick) baseData};
+                                        ticks[symbol] = ticksList;
+                                    }
+                                    ticksList.Add((Tick) baseData);
+                                    break;
+
+                                case MarketDataType.TradeBar:
+                                    tradeBars[symbol] = (TradeBar) baseData;
+                                    break;
                             }
 
                             // this is data used to update consolidators

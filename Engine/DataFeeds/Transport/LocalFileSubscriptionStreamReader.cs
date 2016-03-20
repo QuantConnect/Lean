@@ -31,11 +31,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// Initializes a new instance of the <see cref="LocalFileSubscriptionStreamReader"/> class.
         /// </summary>
         /// <param name="source">The local file to be read</param>
-        public LocalFileSubscriptionStreamReader(string source)
+        /// <param name="entryName">Specifies the zip entry to be opened. Leave null if not applicable,
+        /// or to open the first zip entry found regardless of name</param>
+        public LocalFileSubscriptionStreamReader(string source, string entryName = null)
         {
             // unzip if necessary
             _streamReader = source.GetExtension() == ".zip"
-                ? Compression.Unzip(source, out _zipFile)
+                ? Compression.Unzip(source, entryName, out _zipFile)
                 : new StreamReader(source);
         }
 

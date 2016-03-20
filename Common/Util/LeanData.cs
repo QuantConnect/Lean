@@ -371,6 +371,42 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Creates a symbol from the specified zip entry name
+        /// </summary>
+        /// <param name="securityType">The security type of the output symbol</param>
+        /// <param name="resolution">The resolution of the data source producing the zip entry name</param>
+        /// <param name="zipEntryName">The zip entry name to be parsed</param>
+        /// <returns>A new symbol representing the zip entry name</returns>
+        public static Symbol ReadSymbolFromZipEntry(SecurityType securityType, Resolution resolution, string zipEntryName)
+        {
+            var isHourlyOrDaily = resolution == Resolution.Hour || resolution == Resolution.Daily;
+            switch (securityType)
+            {
+                case SecurityType.Option:
+                    var parts = zipEntryName.Replace(".csv", string.Empty).Split('_');
+                    if (isHourlyOrDaily)
+                    {
+                        var style = (OptionStyle)Enum.Parse(typeof(OptionStyle), parts[2], true);
+                        var right = (OptionRight)Enum.Parse(typeof(OptionRight), parts[3], true);
+                        var strike = decimal.Parse(parts[4]) / 10000m;
+                        var expiry = DateTime.ParseExact(parts[5], DateFormat.EightCharacter, null);
+                        return Symbol.CreateOption(parts[0], Market.USA, style, right, strike, expiry);
+                    }
+                    else
+                    {
+                        var style = (OptionStyle)Enum.Parse(typeof(OptionStyle), parts[4], true);
+                        var right = (OptionRight)Enum.Parse(typeof(OptionRight), parts[5], true);
+                        var strike = decimal.Parse(parts[6]) / 10000m;
+                        var expiry = DateTime.ParseExact(parts[7], DateFormat.EightCharacter, null);
+                        return Symbol.CreateOption(parts[1], Market.USA, style, right, strike, expiry);
+                    }
+
+                default:
+                    throw new NotImplementedException("ReadSymbolFromZipEntry is not implemented for " + securityType + " " + resolution);
+            }
+        }
+
+        /// <summary>
         /// Scale and convert the resulting number to deci-cents int.
         /// </summary>
         private static long Scale(decimal value)
