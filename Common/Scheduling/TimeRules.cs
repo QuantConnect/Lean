@@ -155,20 +155,20 @@ namespace QuantConnect.Scheduling
         }
 
         /// <summary>
-        /// Specifies an event should fire at the market close +- <paramref name="minuteBeforeClose"/>
+        /// Specifies an event should fire at the market close +- <paramref name="minutesBeforeClose"/>
         /// </summary>
         /// <param name="symbol">The symbol whose market close we want an event for</param>
-        /// <param name="minuteBeforeClose">The time before market close that the event should fire</param>
+        /// <param name="minutesBeforeClose">The time before market close that the event should fire</param>
         /// <param name="extendedMarketClose">True to use extended market close, false to use regular market close</param>
         /// <returns>A time rule that fires the specified number of minutes before the symbol's market close</returns>
-        public ITimeRule BeforeMarketClose(Symbol symbol, double minuteBeforeClose = 0, bool extendedMarketClose = false)
+        public ITimeRule BeforeMarketClose(Symbol symbol, double minutesBeforeClose = 0, bool extendedMarketClose = false)
         {
             var security = GetSecurity(symbol);
 
             var type = extendedMarketClose ? "ExtendedMarketClose" : "MarketClose";
-            var name = string.Format("{0}: {1} min before {2}", security.Symbol, minuteBeforeClose.ToString("0.##"), type);
+            var name = string.Format("{0}: {1} min before {2}", security.Symbol, minutesBeforeClose.ToString("0.##"), type);
 
-            var timeBeforeClose = TimeSpan.FromMinutes(minuteBeforeClose);
+            var timeBeforeClose = TimeSpan.FromMinutes(minutesBeforeClose);
             Func<IEnumerable<DateTime>, IEnumerable<DateTime>> applicator = dates =>
                 from date in dates
                 where security.Exchange.DateIsOpen(date)

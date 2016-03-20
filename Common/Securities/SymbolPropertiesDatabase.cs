@@ -73,7 +73,7 @@ namespace QuantConnect.Securities
             {
                 if (_dataFolderSymbolPropertiesDatabase == null)
                 {
-                    var directory = Path.Combine(Constants.DataFolder, "symbol-properties");
+                    var directory = Path.Combine(Globals.DataFolder, "symbol-properties");
                     _dataFolderSymbolPropertiesDatabase = FromCsvFile(Path.Combine(directory, "symbol-properties-database.csv"));
                 }
             }
@@ -122,7 +122,7 @@ namespace QuantConnect.Securities
 
             key = new SecurityDatabaseKey(
                 market: csv[0], 
-                symbol: string.IsNullOrEmpty(csv[1]) ? null : csv[1], 
+                symbol: csv[1], 
                 securityType: (SecurityType)Enum.Parse(typeof(SecurityType), csv[2], true));
 
             return new SymbolProperties(

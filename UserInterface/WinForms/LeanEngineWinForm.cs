@@ -53,7 +53,7 @@ namespace QuantConnect.Views.WinForms
             _resultsHandler = engine.AlgorithmHandlers.Results;
 
             //Create Form:
-            Text = "QuantConnect Lean Algorithmic Trading Engine: v" + Constants.Version;
+            Text = "QuantConnect Lean Algorithmic Trading Engine: v" + Globals.Version;
             Size = new Size(1024,768);
             MinimumSize = new Size(1024, 768);
             CenterToScreen();

@@ -65,7 +65,7 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public static IEnumerable<FactorFileRow> Read(string permtick, string market)
         {
-            string path = Path.Combine(Constants.DataFolder, "equity", market, "factor_files", permtick.ToLower() + ".csv");
+            string path = Path.Combine(Globals.DataFolder, "equity", market, "factor_files", permtick.ToLower() + ".csv");
             return File.ReadAllLines(path).Where(l => !string.IsNullOrWhiteSpace(l)).Select(Parse);
         }
 

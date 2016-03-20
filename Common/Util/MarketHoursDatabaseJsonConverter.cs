@@ -174,7 +174,7 @@ namespace QuantConnect.Util
                 SetSegmentsForDay(hours, DayOfWeek.Thursday, out Thursday);
                 SetSegmentsForDay(hours, DayOfWeek.Friday, out Friday);
                 SetSegmentsForDay(hours, DayOfWeek.Saturday, out Saturday);
-                Holidays = hours.Holidays.Select(x => x.ToShortDateString()).ToList();
+                Holidays = hours.Holidays.Select(x => x.ToString("M/d/yyyy")).ToList();
             }
 
             /// <summary>

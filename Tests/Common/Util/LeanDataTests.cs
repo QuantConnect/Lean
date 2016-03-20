@@ -51,7 +51,7 @@ namespace QuantConnect.Tests.Common.Util
         [Test, TestCaseSource("GetLeanDataTestParameters")]
         public void GenerateZipFilePath(LeanDataTestParameters parameters)
         {
-            var path = LeanData.GenerateZipFilePath(Constants.DataFolder, parameters.Symbol, parameters.Date, parameters.Resolution, parameters.TickType);
+            var path = LeanData.GenerateZipFilePath(Globals.DataFolder, parameters.Symbol, parameters.Date, parameters.Resolution, parameters.TickType);
             Assert.AreEqual(parameters.ExpectedZipFilePath, path);
         }
 
@@ -110,9 +110,27 @@ namespace QuantConnect.Tests.Common.Util
         {
             var source = parameters.Data.GetSource(parameters.Config, parameters.Data.Time.Date, false);
             var normalizedSourcePath = new FileInfo(source.Source).FullName;
-            var zipFilePath = LeanData.GenerateZipFilePath(Constants.DataFolder, parameters.Data.Symbol, parameters.Data.Time.Date, parameters.Resolution, parameters.TickType);
+            var zipFilePath = LeanData.GenerateZipFilePath(Globals.DataFolder, parameters.Data.Symbol, parameters.Data.Time.Date, parameters.Resolution, parameters.TickType);
             var normalizeZipFilePath = new FileInfo(zipFilePath).FullName;
+            var indexOfHash = normalizedSourcePath.LastIndexOf("#", StringComparison.Ordinal);
+            if (indexOfHash > 0)
+            {
+                normalizedSourcePath = normalizedSourcePath.Substring(0, indexOfHash);
+            }
             Assert.AreEqual(normalizeZipFilePath, normalizedSourcePath);
+        }
+
+        [Test, TestCaseSource("GetLeanDataTestParameters")]
+        public void GetSource(LeanDataTestParameters parameters)
+        {
+            var factory = (BaseData)Activator.CreateInstance(parameters.BaseDataType);
+            var source = factory.GetSource(parameters.Config, parameters.Date, false);
+            var expected = parameters.ExpectedZipFilePath;
+            if (parameters.SecurityType == SecurityType.Option)
+            {
+                expected += "#" + parameters.ExpectedZipEntryName;
+            }
+            Assert.AreEqual(expected, source.Source);
         }
 
         private static void AssertBarsAreEqual(IBar expected, IBar actual)
@@ -228,6 +246,8 @@ namespace QuantConnect.Tests.Common.Util
             public readonly DateTime Date;
             public readonly Resolution Resolution;
             public readonly TickType TickType;
+            public readonly Type BaseDataType;
+            public readonly SubscriptionDataConfig Config;
             public readonly string ExpectedZipFileName;
             public readonly string ExpectedZipEntryName;
             public readonly string ExpectedRelativeZipFilePath;
@@ -243,9 +263,16 @@ namespace QuantConnect.Tests.Common.Util
                 ExpectedZipFileName = expectedZipFileName;
                 ExpectedZipEntryName = expectedZipEntryName;
                 ExpectedRelativeZipFilePath = Path.Combine(expectedRelativeZipFileDirectory, expectedZipFileName).Replace("/", Path.DirectorySeparatorChar.ToString());
-                ExpectedZipFilePath = Path.Combine(Constants.DataFolder, ExpectedRelativeZipFilePath);
+                ExpectedZipFilePath = Path.Combine(Globals.DataFolder, ExpectedRelativeZipFilePath);
 
                 Name = SecurityType + "_" + resolution;
+
+                BaseDataType = resolution == Resolution.Tick ? typeof(Tick) : typeof(TradeBar);
+                if (symbol.ID.SecurityType == SecurityType.Option && resolution != Resolution.Tick)
+                {
+                    BaseDataType = typeof(QuoteBar);
+                }
+                Config = new SubscriptionDataConfig(BaseDataType, symbol, resolution, TimeZones.NewYork, TimeZones.NewYork, true, false, false, false, tickType);
             }
         }
 
