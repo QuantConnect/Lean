@@ -128,9 +128,8 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <returns></returns>
         public static OrderStatus MapOrderStatus(TradeMessage msg)
         {
-            if (msg.FEE > 0)
+            if (Math.Abs(msg.FEE) != 0)
             {
-                //todo: maybe still partially filled?
                 return OrderStatus.Filled;
             }
 
