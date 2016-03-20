@@ -99,7 +99,7 @@ namespace QuantConnect.Brokerages.Bitfinex
 
             var webSocketClient = new WebSocketWrapper();
 
-            var brokerage = new BitfinexWebsocketsBrokerage(url, webSocketClient, apiKey, apiSecret, wallet, restClient, scaleFactor);
+            var brokerage = new BitfinexWebsocketsBrokerage(url, webSocketClient, apiKey, apiSecret, wallet, restClient, scaleFactor, algorithm.Portfolio);
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
 
             return brokerage;

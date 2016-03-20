@@ -9,6 +9,8 @@ using Moq;
 using QuantConnect.Configuration;
 using TradingApi.ModelObjects.Bitfinex.Json;
 using TradingApi.ModelObjects;
+using QuantConnect.Securities;
+
 namespace QuantConnect.Brokerages.Bitfinex.Tests
 {
     [TestFixture()]
@@ -22,7 +24,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
         [SetUp()]
         public void Setup()
         {     
-            unit = new BitfinexBrokerage("abc", "123", "trading", mock.Object, 100m);
+            unit = new BitfinexBrokerage("abc", "123", "trading", mock.Object, 100m, new Mock<ISecurityProvider>().Object);
         }
 
         [Test()]

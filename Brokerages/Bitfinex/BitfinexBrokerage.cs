@@ -81,14 +81,17 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// Api Secret
         /// </summary>
         protected string ApiSecret;
-
         TradingApi.Bitfinex.BitfinexApi _restClient;
+        /// <summary>
+        /// Security Provider
+        /// </summary>
+        protected ISecurityProvider SecurityProvider;
         #endregion
 
         /// <summary>
         /// Create bitfinex brokerage
         /// </summary>
-        public BitfinexBrokerage(string apiKey, string apiSecret, string wallet, BitfinexApi restClient, decimal scaleFactor)
+        public BitfinexBrokerage(string apiKey, string apiSecret, string wallet, BitfinexApi restClient, decimal scaleFactor, ISecurityProvider securityProvider)
             : base("bitfinex")
         {
             ApiKey = apiKey;
@@ -96,6 +99,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             Wallet = wallet;
             _restClient = restClient;
             ScaleFactor = scaleFactor;
+            SecurityProvider = securityProvider;
         }
 
         /// <summary>
@@ -129,9 +133,31 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             //todo: wait for callback from auth before posting
             Authenticate();
+            List<Orders.Order> list = new List<Orders.Order> { order };
+
+            int quantity = (int)Math.Floor(SecurityProvider.GetHoldingsQuantity(order.Symbol));
+            Orders.Order crossOrder = null;
+            if (OrderCrossesZero(order, quantity))
+            {
+                crossOrder = order.Clone();
+                var firstOrderQuantity = -quantity;
+                var secondOrderQuantity = order.Quantity - firstOrderQuantity;
+                crossOrder.Quantity = secondOrderQuantity;
+                order.Quantity = firstOrderQuantity;
+                list.Add(crossOrder);
+            }
+
+            return this.PlaceOrder(order, crossOrder);
+        }
+
+        private bool PlaceOrder(Orders.Order order, Orders.Order crossOrder = null)
+        {
+
+            int totalQuantity = order.Quantity + (crossOrder != null ? crossOrder.Quantity : 0);
+
             var newOrder = new BitfinexNewOrderPost
             {
-                Amount = ((order.Quantity < 0 ? order.Quantity * -1 : order.Quantity) / ScaleFactor).ToString(),
+                Amount = (Math.Abs(order.Quantity) / ScaleFactor).ToString(),
                 Price = GetPrice(order).ToString(),
                 Symbol = order.Symbol.Value,
                 Type = MapOrderType(order.Type),
@@ -141,30 +167,43 @@ namespace QuantConnect.Brokerages.Bitfinex
 
             var response = _restClient.SendOrder(newOrder);
 
-            if (response != null)
+            if (response != null && response.OrderId != 0)
             {
-                if (response.OrderId != 0)
+                if (CachedOrderIDs.ContainsKey(order.Id))
                 {
-                    UpdateCachedOpenOrder(order.Id, new BitfinexOrder
+                    CachedOrderIDs[order.Id].BrokerId.Add(response.OrderId.ToString());
+                }
+                else
+                {
+                    CachedOrderIDs.TryAdd(order.Id, new BitfinexOrder
                     {
                         Id = order.Id,
                         BrokerId = new List<string> { response.OrderId.ToString() },
                         Price = order.Price / ScaleFactor,
-                        Quantity = order.Quantity * (int)ScaleFactor,
+                        Quantity = totalQuantity * (int)ScaleFactor,
                         Status = OrderStatus.Submitted,
                         Symbol = order.Symbol,
                         Time = order.Time,
                     });
-
-                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Bitfinex Order Event") { Status = OrderStatus.Submitted });
-                    Log.Trace("BitfinexBrokerage.PlaceOrder(): Order completed successfully orderid:" + response.OrderId.ToString());
-                    return true;
                 }
-            }
+                if (crossOrder != null && crossOrder.Status != OrderStatus.Submitted)
+                {
+                    order.Status = OrderStatus.Submitted;
+                    //switching active order
+                    PlaceOrder(crossOrder, order);
+                }
 
-            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Bitfinex Order Event") { Status = OrderStatus.Invalid });
-            Log.Trace("BitfinexBrokerage.PlaceOrder(): Order failed Order Id: " + order.Id + " timestamp:" + order.Time + " quantity: " + order.Quantity.ToString());
-            return false;
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Bitfinex Order Event") { Status = OrderStatus.Submitted });
+                Log.Trace("BitfinexBrokerage.PlaceOrder(): Order completed successfully orderid:" + order.Id.ToString());
+            }
+            else
+            {
+                //todo: maybe only secondary of cross order failed and order will partially fill.
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Bitfinex Order Event") { Status = OrderStatus.Invalid });
+                Log.Trace("BitfinexBrokerage.PlaceOrder(): Order failed Order Id: " + order.Id + " timestamp:" + order.Time + " quantity: " + order.Quantity.ToString());
+                return false;
+            }
+            return true;
         }
 
         /// <summary>
@@ -447,6 +486,23 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// </summary>
         protected virtual void Authenticate()
         { }
+
+        /// <summary>
+        /// Determines whether or not the specified order will bring us across the zero line for holdings
+        /// </summary>
+        protected bool OrderCrossesZero(Order order, decimal quantity)
+        {
+            if (quantity > 0 && order.Quantity < 0)
+            {
+                return (quantity + order.Quantity) < 0;
+            }
+            else if (quantity < 0 && order.Quantity > 0)
+            {
+                return (quantity + order.Quantity) > 0;
+            }
+            return false;
+        }
+
 
     }
 

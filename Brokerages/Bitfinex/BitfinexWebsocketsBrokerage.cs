@@ -17,6 +17,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Securities;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -56,8 +57,9 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <summary>
         /// Create Brokerage instance
         /// </summary>
-        public BitfinexWebsocketsBrokerage(string url, IWebSocket websocket, string apiKey, string apiSecret, string wallet, BitfinexApi restClient, decimal scaleFactor)
-            : base(apiKey, apiSecret, wallet, restClient, scaleFactor)
+        public BitfinexWebsocketsBrokerage(string url, IWebSocket websocket, string apiKey, string apiSecret, string wallet, BitfinexApi restClient,
+            decimal scaleFactor, ISecurityProvider securityProvider)
+            : base(apiKey, apiSecret, wallet, restClient, scaleFactor, securityProvider)
         {
             _webSocket = websocket;
             _webSocket.Initialize(url);
