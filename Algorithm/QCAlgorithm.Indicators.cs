@@ -900,7 +900,7 @@ namespace QuantConnect.Algorithm
         /// <param name="period">The period over which to compute the MIDPOINT</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
-        /// <returns>The KaufmanAdaptiveMovingAverage indicator for the requested symbol over the specified period</returns>
+        /// <returns>The MidPoint indicator for the requested symbol over the specified period</returns>
         public MidPoint MIDPOINT(Symbol symbol, int period, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
         {
             var name = CreateIndicatorName(symbol, "MIDPOINT" + period, resolution);
