@@ -127,7 +127,7 @@ namespace QuantConnect.Tests.Indicators
         /// <param name="targetColumn">The column with the correct answers</param>
         /// <param name="epsilon">The maximum delta between expected and actual</param>
         public static void TestIndicator<T>(IndicatorBase<T> indicator, string externalDataFilename, string targetColumn, double epsilon = 1e-3)
-            where T : VolumeBar, new()
+            where T : VolumeBar
         {
             TestIndicator(indicator, externalDataFilename, targetColumn, (i, expected) => Assert.AreEqual(expected, (double)i.Current.Value, epsilon, "Failed at " + i.Current.Time.ToString("o")));
         }
@@ -156,7 +156,7 @@ namespace QuantConnect.Tests.Indicators
         /// <param name="targetColumn">The column with the correct answers</param>
         /// <param name="customAssertion">Sets custom assertion logic, parameter is the indicator, expected value from the file</param>
         public static void TestIndicator<T>(IndicatorBase<T> indicator, string externalDataFilename, string targetColumn, Action<IndicatorBase<T>, double> customAssertion)
-            where T : VolumeBar, new()
+            where T : VolumeBar
         {
             bool first = true;
             int targetIndex = -1;
@@ -179,17 +179,15 @@ namespace QuantConnect.Tests.Indicators
                     continue;
                 }
 
-                var tradebar = new T()
-                {
-                    Time = Time.ParseDate(parts[0]),
-                    Open = parts[1].ToDecimal(),
-                    High = parts[2].ToDecimal(),
-                    Low = parts[3].ToDecimal(),
-                    Close = parts[4].ToDecimal(),
-                    Volume = fileHasVolume ? long.Parse(parts[5], NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture) : 0
-                };
+                var volumeBar = (T)Activator.CreateInstance(typeof(T), true);
+                volumeBar.Time = Time.ParseDate(parts[0]);
+                volumeBar.Open = parts[1].ToDecimal();
+                volumeBar.High = parts[2].ToDecimal();
+                volumeBar.Low = parts[3].ToDecimal();
+                volumeBar.Close = parts[4].ToDecimal();
+                volumeBar.Volume = fileHasVolume ? long.Parse(parts[5], NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture) : 0;
 
-                indicator.Update(tradebar);
+                indicator.Update(volumeBar);
 
                 if (!indicator.IsReady || parts[targetIndex].Trim() == string.Empty)
                 {
