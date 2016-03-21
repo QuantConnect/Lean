@@ -21,9 +21,9 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class AverageDirectionalMovementIndexRatingTests : CommonIndicatorTests<TradeBarBase>
+    public class AverageDirectionalMovementIndexRatingTests : CommonIndicatorTests<VolumeBar>
     {
-        protected override IndicatorBase<TradeBarBase> CreateIndicator()
+        protected override IndicatorBase<VolumeBar> CreateIndicator()
         {
             return new AverageDirectionalMovementIndexRating(14);
         }
@@ -38,7 +38,7 @@ namespace QuantConnect.Tests.Indicators
             get { return "ADXR_14"; }
         }
 
-        protected override Action<IndicatorBase<TradeBarBase>, double> Assertion
+        protected override Action<IndicatorBase<VolumeBar>, double> Assertion
         {
             get { return (indicator, expected) => Assert.AreEqual(expected, (double)indicator.Current.Value, 1.0); }
         }

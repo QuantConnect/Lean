@@ -26,7 +26,7 @@ namespace QuantConnect.Indicators
     /// HA_High[0] = MAX(High[0], HA_Open[0], HA_Close[0])
     /// HA_Low[0] = MIN(Low[0], HA_Open[0], HA_Close[0])
     /// </summary>
-    public class HeikinAshi : IndicatorBase<TradeBarBase>
+    public class HeikinAshi : IndicatorBase<VolumeBar>
     {
         /// <summary>
         /// Gets the Heikin-Ashi Open
@@ -90,7 +90,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns> A new value for this indicator </returns>
-        protected override decimal ComputeNextValue(TradeBarBase input)
+        protected override decimal ComputeNextValue(VolumeBar input)
         {
             if (!IsReady)
             {

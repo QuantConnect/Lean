@@ -7,7 +7,7 @@ using MathNet.Numerics.Providers.LinearAlgebra.OpenBlas;
 
 namespace QuantConnect.Data.Market
 {
-    public class TradeBarBase : BaseData, IBar
+    public class VolumeBar : BaseData, IBar
     {
         public virtual decimal Open
         {

@@ -20,9 +20,9 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class TrueRangeTests : CommonIndicatorTests<TradeBarBase>
+    public class TrueRangeTests : CommonIndicatorTests<VolumeBar>
     {
-        protected override IndicatorBase<TradeBarBase> CreateIndicator()
+        protected override IndicatorBase<VolumeBar> CreateIndicator()
         {
             return new TrueRange("TR");
         }

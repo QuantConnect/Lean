@@ -88,7 +88,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(TradeBarBase input)
+        protected override decimal ComputeNextValue(VolumeBar input)
         {
             decimal typicalPrice = (input.High + input.Low + input.Close)/3.0m;
             decimal moneyFlow = typicalPrice*input.Volume;

@@ -46,7 +46,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(TradeBarBase input)
+        protected override decimal ComputeNextValue(VolumeBar input)
         {
             var range = input.High - input.Low;
             return range > 0 ? (input.Close - input.Open) / range : 0m;

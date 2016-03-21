@@ -127,7 +127,7 @@ namespace QuantConnect.Tests.Indicators
         /// <param name="targetColumn">The column with the correct answers</param>
         /// <param name="epsilon">The maximum delta between expected and actual</param>
         public static void TestIndicator<T>(IndicatorBase<T> indicator, string externalDataFilename, string targetColumn, double epsilon = 1e-3)
-            where T : TradeBarBase, new()
+            where T : VolumeBar, new()
         {
             TestIndicator(indicator, externalDataFilename, targetColumn, (i, expected) => Assert.AreEqual(expected, (double)i.Current.Value, epsilon, "Failed at " + i.Current.Time.ToString("o")));
         }
@@ -156,7 +156,7 @@ namespace QuantConnect.Tests.Indicators
         /// <param name="targetColumn">The column with the correct answers</param>
         /// <param name="customAssertion">Sets custom assertion logic, parameter is the indicator, expected value from the file</param>
         public static void TestIndicator<T>(IndicatorBase<T> indicator, string externalDataFilename, string targetColumn, Action<IndicatorBase<T>, double> customAssertion)
-            where T : TradeBarBase, new()
+            where T : VolumeBar, new()
         {
             bool first = true;
             int targetIndex = -1;
@@ -207,7 +207,7 @@ namespace QuantConnect.Tests.Indicators
         /// </summary>
         /// <param name="indicator">The indicator under test</param>
         /// <param name="externalDataFilename">The external CSV file name</param>
-        public static void TestIndicatorReset(IndicatorBase<TradeBarBase> indicator, string externalDataFilename)
+        public static void TestIndicatorReset(IndicatorBase<VolumeBar> indicator, string externalDataFilename)
         {
             foreach (var data in GetTradeBarStream(externalDataFilename, false))
             {
