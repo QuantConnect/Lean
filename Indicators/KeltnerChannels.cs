@@ -23,7 +23,7 @@ namespace QuantConnect.Indicators
     /// This indicator creates a moving average (middle band) with an upper band and lower band
     /// fixed at k average true range multiples away from the middle band.  
     /// </summary>
-    public class KeltnerChannels : TradeBarIndicator
+    public class KeltnerChannels : VolumeBarIndicator
     {
         private readonly decimal _k;
 

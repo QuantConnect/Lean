@@ -23,7 +23,7 @@ namespace QuantConnect.Indicators
     /// multiplied by 100. Once the Fast Stochastics %K is calculated the Slow Stochastic %K is calculated by the average/smoothed price of
     /// of the Fast %K with the given period. The Slow Stochastics %D is then derived from the Slow Stochastics %K with the given period.
     /// </summary>
-    public class Stochastic : TradeBarIndicator
+    public class Stochastic : VolumeBarIndicator
     {
         private readonly IndicatorBase<IndicatorDataPoint> _maximum;
         private readonly IndicatorBase<IndicatorDataPoint> _mininum;

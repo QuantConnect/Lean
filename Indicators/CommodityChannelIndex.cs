@@ -29,7 +29,7 @@ namespace QuantConnect.Indicators
     ///     typical price. Second, take the absolute values of these numbers. Third,
     ///     sum the absolute values. Fourth, divide by the total number of periods (20).
     /// </summary>
-    public class CommodityChannelIndex : TradeBarIndicator
+    public class CommodityChannelIndex : VolumeBarIndicator
     {
         /// <summary>This constant is used to ensure that CCI values fall between +100 and -100, 70% to 80% of the time</summary>
         private const decimal _k = 0.015m;

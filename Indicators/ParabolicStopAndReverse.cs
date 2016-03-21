@@ -22,7 +22,7 @@ namespace QuantConnect.Indicators
     /// Parabolic SAR Indicator 
     /// Based on TA-Lib implementation
     /// </summary>
-    public class ParabolicStopAndReverse : TradeBarIndicator
+    public class ParabolicStopAndReverse : VolumeBarIndicator
     {
         private bool _isLong;
         private VolumeBar _previousBar;

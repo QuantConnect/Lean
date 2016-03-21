@@ -24,7 +24,7 @@ namespace QuantConnect.Indicators
     /// The primary output value of the indicator is the mean of the upper and lower band for 
     /// the given timeframe.
     /// </summary>
-    public class DonchianChannel : TradeBarIndicator
+    public class DonchianChannel : VolumeBarIndicator
     {
         private VolumeBar _previousInput;
         /// <summary>

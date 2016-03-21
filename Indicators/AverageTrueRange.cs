@@ -28,7 +28,7 @@ namespace QuantConnect.Indicators
     ///   ABS(High - PreviousClose)
     ///   ABS(Low  - PreviousClose)
     /// </summary>
-    public class AverageTrueRange : TradeBarIndicator
+    public class AverageTrueRange : VolumeBarIndicator
     {
         /// <summary>This indicator is used to smooth the TrueRange computation</summary>
         /// <remarks>This is not exposed publicly since it is the same value as this indicator, meaning

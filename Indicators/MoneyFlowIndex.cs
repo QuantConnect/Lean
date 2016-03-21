@@ -32,7 +32,7 @@ namespace QuantConnect.Indicators
     ///     
     ///     Money Flow Index = 100 x  Positve Money Flow / ( Positve Money Flow + Negative Money Flow)
     /// </summary>
-    public class MoneyFlowIndex : TradeBarIndicator
+    public class MoneyFlowIndex : VolumeBarIndicator
     {
         /// <summary>The sum of positive money flow to compute money flow ratio</summary>
         public IndicatorBase<IndicatorDataPoint> PositiveMoneyFlow { get; private set; }

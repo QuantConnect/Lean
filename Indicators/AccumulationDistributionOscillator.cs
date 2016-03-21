@@ -23,7 +23,7 @@ namespace QuantConnect.Indicators
     /// The Accumulation/Distribution Oscillator is calculated using the following formula:
     /// ADOSC = EMA(fast,AD) - EMA(slow,AD)
     /// </summary>
-    public class AccumulationDistributionOscillator : TradeBarIndicator
+    public class AccumulationDistributionOscillator : VolumeBarIndicator
     {
         private readonly int _period;
         private readonly AccumulationDistribution _ad;

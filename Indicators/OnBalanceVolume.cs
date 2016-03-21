@@ -24,7 +24,7 @@ namespace QuantConnect.Indicators
     /// If the current close price is higher the volume of that day is added to the OBV, while a lower close price will
     /// result in negative value.
     /// </summary>
-    public class OnBalanceVolume : TradeBarIndicator
+    public class OnBalanceVolume : VolumeBarIndicator
     {
         private VolumeBar _previousInput;
 

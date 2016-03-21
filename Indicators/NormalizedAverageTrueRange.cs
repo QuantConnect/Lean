@@ -22,7 +22,7 @@ namespace QuantConnect.Indicators
     /// The Normalized Average True Range is calculated with the following formula:
     /// NATR = (ATR(period) / Close) * 100
     /// </summary>
-    public class NormalizedAverageTrueRange : TradeBarIndicator
+    public class NormalizedAverageTrueRange : VolumeBarIndicator
     {
         private readonly int _period;
         private readonly TrueRange _tr;

@@ -25,7 +25,7 @@ namespace QuantConnect.Indicators
     /// value2 = distance from yesterday's close to today's high.
     /// value3 = distance from yesterday's close to today's low.    
     /// </summary>
-    public class TrueRange : TradeBarIndicator
+    public class TrueRange : VolumeBarIndicator
     {
         private VolumeBar _previousInput;
 

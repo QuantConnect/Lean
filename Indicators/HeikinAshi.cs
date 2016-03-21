@@ -26,7 +26,7 @@ namespace QuantConnect.Indicators
     /// HA_High[0] = MAX(High[0], HA_Open[0], HA_Close[0])
     /// HA_Low[0] = MIN(Low[0], HA_Open[0], HA_Close[0])
     /// </summary>
-    public class HeikinAshi : IndicatorBase<VolumeBar>
+    public class HeikinAshi : VolumeBarIndicator
     {
         /// <summary>
         /// Gets the Heikin-Ashi Open

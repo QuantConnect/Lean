@@ -23,7 +23,7 @@ namespace QuantConnect.Indicators
     /// is positive, and a negative trend bias is present when the oscillator is negative. AroonUp/Down
     /// values over 75 identify strong trends in their respective direction.
     /// </summary>
-    public class AroonOscillator : TradeBarIndicator
+    public class AroonOscillator : VolumeBarIndicator
     {
         /// <summary>
         /// Gets the AroonUp indicator

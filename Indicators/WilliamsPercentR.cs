@@ -23,7 +23,7 @@ namespace QuantConnect.Indicators
     /// The symbol is said to be oversold when the oscillator is below -80%,
     /// and overbought when the oscillator is above -20%. 
     /// </summary>
-    public class WilliamsPercentR : TradeBarIndicator
+    public class WilliamsPercentR : VolumeBarIndicator
     {
         /// <summary>
         /// Gets the Maximum indicator

@@ -24,7 +24,7 @@ namespace QuantConnect.Indicators
     /// Senkou A Span: (Tenkan-sen + Kijun-sen )/ 2 from a specific number of periods ago (normally 26)
     /// Senkou B Span: (Highest High + Lowest Low) / 2 for the specific period (normally 52), from a specific number of periods ago (normally 26)
     /// </summary>
-    public class IchimokuKinkoHyo : TradeBarIndicator
+    public class IchimokuKinkoHyo : VolumeBarIndicator
     {
         /// <summary>
         /// The Tenkan-sen component of the Ichimoku indicator
