@@ -894,6 +894,22 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new MidPoint indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose MIDPOINT we want</param>
+        /// <param name="period">The period over which to compute the MIDPOINT</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The KaufmanAdaptiveMovingAverage indicator for the requested symbol over the specified period</returns>
+        public MidPoint MIDPOINT(Symbol symbol, int period, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "MIDPOINT" + period, resolution);
+            var midpoint = new MidPoint(name, period);
+            RegisterIndicator(symbol, midpoint, resolution, selector);
+            return midpoint;
+        }
+
+        /// <summary>
         /// Creates and registers a new consolidator to receive automatic updates at the specified resolution as well as configures
         /// the indicator to receive updates from the consolidator.
         /// </summary>
