@@ -627,6 +627,7 @@
     <Content Include="LimitFillRegressionAlgorithm.py" />
     <Content Include="MovingAverageCrossAlgorithm.py" />
     <Content Include="RegressionAlgorithm.py" />
+    <Content Include="UserDefinedUniverseAlgorithm.py" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
