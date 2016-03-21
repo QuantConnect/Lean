@@ -232,7 +232,8 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
 
             mock.Setup(m => m.Connect()).Verifiable();
 
-            var brokerageMock = new Mock<BitfinexWebsocketsBrokerage>("wss://localhost", mock.Object, "abc", "123", "trading", new Mock<BitfinexApi>(It.IsAny<string>(), It.IsAny<string>()).Object, 100m);
+            var brokerageMock = new Mock<BitfinexWebsocketsBrokerage>("wss://localhost", mock.Object, "abc", "123", "trading", new Mock<BitfinexApi>(It.IsAny<string>(), 
+                It.IsAny<string>()).Object, 100m, new Mock<ISecurityProvider>().Object);
 
             brokerageMock.Setup(m => m.Unsubscribe(null, null)).Verifiable();
             brokerageMock.Setup(m => m.Subscribe(null, null)).Verifiable();

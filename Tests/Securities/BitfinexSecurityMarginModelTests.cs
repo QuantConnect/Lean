@@ -8,6 +8,9 @@ using NUnit.Framework;
 using Moq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Tests.Brokerages.Bitfinex;
+
+
 namespace QuantConnect.Securities.Tests
 {
     [TestFixture()]
@@ -20,7 +23,7 @@ namespace QuantConnect.Securities.Tests
         [Test()]
         public void GenerateMarginCallOrderLongTest()
         {
-            var security = GetSecurity();
+            var security = BitfinexTestsHelpers.GetSecurity();
             security.Holdings.SetHoldings(400, 100);
             decimal price = 299m;
             security.Holdings.UpdateMarketPrice(price);
@@ -33,7 +36,7 @@ namespace QuantConnect.Securities.Tests
         [Test()]
         public void GenerateMarginCallOrderShortTest()
         {
-            var security = GetSecurity();
+            var security = BitfinexTestsHelpers.GetSecurity();
             security.Holdings.SetHoldings(400, -100);
             decimal price = 631m;
             security.Holdings.UpdateMarketPrice(price);
@@ -43,15 +46,6 @@ namespace QuantConnect.Securities.Tests
             Assert.AreEqual(1, actual.Quantity);
         }
 
-        private Security GetSecurity()
-        {
-            return new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.Utc), CreateConfig(), new Cash(CashBook.AccountCurrency, 1000, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
-        }
-
-        private static SubscriptionDataConfig CreateConfig()
-        {
-            return new SubscriptionDataConfig(typeof(TradeBar), "BTCUSD", Resolution.Minute, TimeZones.Utc, TimeZones.Utc, false, true, false);
-        }
 
 
     }

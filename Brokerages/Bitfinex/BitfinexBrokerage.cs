@@ -133,7 +133,6 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             //todo: wait for callback from auth before posting
             Authenticate();
-            List<Orders.Order> list = new List<Orders.Order> { order };
 
             int quantity = (int)Math.Floor(SecurityProvider.GetHoldingsQuantity(order.Symbol));
             Orders.Order crossOrder = null;
@@ -144,7 +143,6 @@ namespace QuantConnect.Brokerages.Bitfinex
                 var secondOrderQuantity = order.Quantity - firstOrderQuantity;
                 crossOrder.Quantity = secondOrderQuantity;
                 order.Quantity = firstOrderQuantity;
-                list.Add(crossOrder);
             }
 
             return this.PlaceOrder(order, crossOrder);
@@ -190,7 +188,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 {
                     order.Status = OrderStatus.Submitted;
                     //switching active order
-                    PlaceOrder(crossOrder, order);
+                    return PlaceOrder(crossOrder, order);
                 }
 
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Bitfinex Order Event") { Status = OrderStatus.Submitted });
