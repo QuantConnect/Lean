@@ -187,14 +187,44 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         }
 
         [Test()]
-        public void MapOrderStatusTest1()
+        public void MapOrderStatusFromBrokerageTest()
         {
-            var msg = new TradeMessage(new string[] { "<TRD_SEQ>", "<TRD_ID>", "<TRD_PAIR>", "1", "2", "3", "4", "<ORD_TYPE>", "5", "0", "<FEE_CURRENCY>" });
-            var actual = BitfinexBrokerage.MapOrderStatus(msg);
+            unit = new BitfinexBrokerage("", "", "exchange", mock.Object, 1m, new Mock<ISecurityProvider>().Object);
+
+            unit.CachedOrderIDs.AddOrUpdate(1, new MarketOrder
+            {
+                BrokerId = new List<string> { "1" }
+            });
+
+            var msg = new TradeMessage(new string[] { "<TRD_SEQ>", "<TRD_ID>", "<TRD_PAIR>", "1", "1", "3", "4", "<ORD_TYPE>", "5", "0", "<FEE_CURRENCY>" });
+            var actual = unit.MapOrderStatus(msg);
             Assert.AreEqual(OrderStatus.PartiallyFilled, actual);
 
             msg.FEE = 1m;
-            actual = BitfinexBrokerage.MapOrderStatus(msg);
+            actual = unit.MapOrderStatus(msg);
+            Assert.AreEqual(OrderStatus.Filled, actual);
+        }
+
+        [Test()]
+        public void MapOrderStatusFromBrokerageZeroCrossTest()
+        {
+            unit = new BitfinexBrokerage("", "", "exchange", mock.Object, 1m, new Mock<ISecurityProvider>().Object);
+
+            unit.CachedOrderIDs.AddOrUpdate(1, new MarketOrder
+            {
+                BrokerId = new List<string> { "1", "2" },
+            });
+
+            var msg = new TradeMessage(new string[] { "<TRD_SEQ>", "<TRD_ID>", "<TRD_PAIR>", "1", "1", "3", "4", "<ORD_TYPE>", "5", "0", "<FEE_CURRENCY>" });
+            var actual = unit.MapOrderStatus(msg);
+            Assert.AreEqual(OrderStatus.PartiallyFilled, actual);
+
+            msg.FEE = 1m;
+            actual = unit.MapOrderStatus(msg);
+            Assert.AreEqual(OrderStatus.PartiallyFilled, actual);
+
+            msg.TRD_ORD_ID = 2;
+            actual = unit.MapOrderStatus(msg);
             Assert.AreEqual(OrderStatus.Filled, actual);
         }
 

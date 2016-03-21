@@ -155,6 +155,7 @@ namespace QuantConnect.Brokerages.Bitfinex
 
             if (cached.Count() > 0 && cached.First().Value != null)
             {
+
                 if (msg.FEE_CURRENCY == "BTC")
                 {
                     msg.FEE = Math.Abs(msg.FEE) * msg.TRD_PRICE_EXECUTED;
