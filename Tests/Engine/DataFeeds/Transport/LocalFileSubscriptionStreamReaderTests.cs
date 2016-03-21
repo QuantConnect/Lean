@@ -11,28 +11,28 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
 */
 
-namespace QuantConnect.Data
+using System.IO;
+using NUnit.Framework;
+using QuantConnect.Lean.Engine.DataFeeds.Transport;
+
+namespace QuantConnect.Tests.Engine.DataFeeds.Transport
 {
-    /// <summary>
-    /// Specifies the format of data in a subscription
-    /// </summary>
-    public enum FileFormat
+    [TestFixture]
+    public class LocalFileSubscriptionStreamReaderTests
     {
-        /// <summary>
-        /// Comma separated values
-        /// </summary>
-        Csv,
-
-        /// <summary>
-        /// Binary file data
-        /// </summary>
-        Binary,
-
-        /// <summary>
-        /// Only the zip entry names are read in as symbols
-        /// </summary>
-        ZipEntryName
+        [Test]
+        public void ReadsFromSpecificZipEntry()
+        {
+            var source = Path.Combine("TestData", "multizip.zip");
+            const string entryName = "multizip/three.txt";
+            using (var reader = new LocalFileSubscriptionStreamReader(source, entryName))
+            {
+                var line = reader.ReadLine();
+                Assert.AreEqual("3", line);
+            }
+        }
     }
 }

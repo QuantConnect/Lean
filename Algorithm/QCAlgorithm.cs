@@ -130,7 +130,6 @@ namespace QuantConnect.Algorithm
             UniverseManager = new UniverseManager();
             Universe = new UniverseDefinitions(this);
             UniverseSettings = new UniverseSettings(Resolution.Minute, 2m, true, false, TimeSpan.FromDays(1));
-            _userDefinedUniverses = new Dictionary<SecurityTypeMarket, UserDefinedUniverse>();
 
             // initialize our scheduler, this acts as a liason to the real time handler
             Schedule = new ScheduleManager(Securities, TimeZone);
@@ -1255,10 +1254,9 @@ namespace QuantConnect.Algorithm
 
                 // liquidate if invested
                 if (security.Invested) Liquidate(security.Symbol);
-
-                UserDefinedUniverse universe;
-                var key = new SecurityTypeMarket(symbol.ID.SecurityType, symbol.ID.Market);
-                if (_userDefinedUniverses.TryGetValue(key, out universe))
+                
+                var universe = UniverseManager.Values.OfType<UserDefinedUniverse>().FirstOrDefault(x => x.Members.ContainsKey(symbol));
+                if (universe != null)
                 {
                     return universe.Remove(symbol);
                 }

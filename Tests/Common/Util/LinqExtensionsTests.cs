@@ -13,26 +13,26 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Data
+using System.Collections.Generic;
+using System.Linq;
+using NUnit.Framework;
+using QuantConnect.Util;
+
+namespace QuantConnect.Tests.Common.Util
 {
-    /// <summary>
-    /// Specifies the format of data in a subscription
-    /// </summary>
-    public enum FileFormat
+    [TestFixture]
+    public class LinqExtensionsTests
     {
-        /// <summary>
-        /// Comma separated values
-        /// </summary>
-        Csv,
+        [Test]
+        public void ExceptProducesSameResultsAsEnumerableExcept()
+        {
+            var enumerable = Enumerable.Range(0, 100);
+            var set = new HashSet<int>(Enumerable.Range(40, 20));
 
-        /// <summary>
-        /// Binary file data
-        /// </summary>
-        Binary,
+            var expected = Enumerable.Except(enumerable, set);
+            var actual = LinqExtensions.Except(enumerable, set);
 
-        /// <summary>
-        /// Only the zip entry names are read in as symbols
-        /// </summary>
-        ZipEntryName
+            CollectionAssert.AreEqual(expected, actual);
+        }
     }
 }

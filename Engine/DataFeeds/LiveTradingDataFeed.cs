@@ -114,10 +114,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Task.Run(() => _customExchange.Start(_cancellationTokenSource.Token));
 
             // this value will be modified via calls to AddSubscription/RemoveSubscription
-            var ffres = Time.OneSecond;
+            var ffres = Time.OneMinute;
             _fillForwardResolution = Ref.Create(() => ffres, v => ffres = v);
-
-            ffres = ResolveFillForwardResolution(algorithm);
 
             // wire ourselves up to receive notifications when universes are added/removed
             var start = _timeProvider.GetUtcNow();
@@ -129,6 +127,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         foreach (var universe in args.NewItems.OfType<Universe>())
                         {
                             _subscriptions[universe.Configuration.Symbol] = CreateUniverseSubscription(universe, start, Time.EndOfTime);
+                            UpdateFillForwardResolution();
                         }
                         break;
 
@@ -138,7 +137,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             Subscription subscription;
                             if (_subscriptions.TryGetValue(universe.Configuration.Symbol, out subscription))
                             {
-                                RemoveSubscription(subscription);
+                                RemoveSubscription(subscription.Configuration.Symbol);
                             }
                         }
                         break;
@@ -184,8 +183,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // as notifications, used in universe selection
             _changes += SecurityChanges.Added(security);
 
-            // update our fill forward resolution setting
-            _fillForwardResolution.Value = ResolveFillForwardResolution(_algorithm);
+            UpdateFillForwardResolution();
 
             return true;
         }
@@ -193,10 +191,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Removes the subscription from the data feed, if it exists
         /// </summary>
-        /// <param name="subscription">The subscription to be removed</param>
+        /// <param name="symbol">The symbol of the subscription to be removed</param>
         /// <returns>True if the subscription was successfully removed, false otherwise</returns>
-        public bool RemoveSubscription(Subscription subscription)
+        public bool RemoveSubscription(Symbol symbol)
         {
+            // remove the subscription from our collection
+            Subscription subscription;
+            if (!_subscriptions.TryRemove(symbol, out subscription))
+            {
+                return false;
+            }
+
             var security = subscription.Security;
 
             // remove the subscriptions
@@ -211,25 +216,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _exchange.RemoveDataHandler(security.Symbol);
             }
 
-            // remove the subscription from our collection
-            Subscription sub;
-            if (_subscriptions.TryRemove(subscription.Security.Symbol, out sub))
-            {
-                sub.Dispose();
-            }
-            else
-            {
-                return false;
-            }
+            subscription.Dispose();
 
             Log.Trace("LiveTradingDataFeed.RemoveSubscription(): Removed " + security.Symbol.ToString());
 
             // keep track of security changes, we emit these to the algorithm
             // as notications, used in universe selection
             _changes += SecurityChanges.Removed(security);
-
-            // update our fill forward resolution setting
-            _fillForwardResolution.Value = ResolveFillForwardResolution(_algorithm);
+            
+            UpdateFillForwardResolution();
 
             return true;
         }
@@ -330,7 +325,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     try
                     {
-                        RemoveSubscription(kvp.Value);
+                        RemoveSubscription(kvp.Value.Configuration.Symbol);
                     }
                     catch (Exception err)
                     {
@@ -572,14 +567,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Log.Trace("LiveTradingDataFeed.GetNextTicksEnumerator(): Exiting enumerator thread...");
         }
 
-        private static TimeSpan ResolveFillForwardResolution(IAlgorithm algorithm)
+        /// <summary>
+        /// Updates the fill forward resolution by checking all existing subscriptions and
+        /// selecting the smallest resoluton not equal to tick
+        /// </summary>
+        private void UpdateFillForwardResolution()
         {
-            return algorithm.SubscriptionManager.Subscriptions
-                .Where(x => !x.IsInternalFeed)
-                .Select(x => x.Resolution)
-                .Union(algorithm.UniverseManager.Select(x => x.Value.UniverseSettings.Resolution))
+            _fillForwardResolution.Value = _subscriptions
+                .Select(x => x.Value.Configuration.Resolution)
                 .Where(x => x != Resolution.Tick)
-                .DefaultIfEmpty(Resolution.Second)
+                .DefaultIfEmpty(Resolution.Minute)
                 .Min().ToTimeSpan();
         }
 

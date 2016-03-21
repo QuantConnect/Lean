@@ -51,7 +51,7 @@ namespace QuantConnect.Algorithm
             universeSettings = universeSettings ?? _algorithm.UniverseSettings;
             var symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA);
             var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, true);
-            return new FuncUniverse(config, universeSettings, selectionData => (
+            return new FuncUniverse(config, universeSettings, _algorithm.SecurityInitializer, selectionData => (
                 from c in selectionData.OfType<CoarseFundamental>()
                 orderby c.DollarVolume descending 
                 select c.Symbol).Take(count)
@@ -71,7 +71,7 @@ namespace QuantConnect.Algorithm
             universeSettings = universeSettings ?? _algorithm.UniverseSettings;
             var symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA);
             var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, true);
-            return new FuncUniverse(config, universeSettings, selectionData => (
+            return new FuncUniverse(config, universeSettings, _algorithm.SecurityInitializer, selectionData => (
                 from c in selectionData.OfType<CoarseFundamental>()
                 orderby c.DollarVolume descending 
                 select c.Symbol).Take(count)
@@ -91,7 +91,7 @@ namespace QuantConnect.Algorithm
             universeSettings = universeSettings ?? _algorithm.UniverseSettings;
             var symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA);
             var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, true);
-            return new FuncUniverse(config, universeSettings, selectionData =>
+            return new FuncUniverse(config, universeSettings, _algorithm.SecurityInitializer, selectionData =>
             {
                 var list = selectionData as IReadOnlyList<CoarseFundamental> ?? selectionData.OfType<CoarseFundamental>().ToList();
 
@@ -120,7 +120,7 @@ namespace QuantConnect.Algorithm
             universeSettings = universeSettings ?? _algorithm.UniverseSettings;
             var symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA);
             var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, true);
-            return new FuncUniverse(config, universeSettings, selectionData =>
+            return new FuncUniverse(config, universeSettings, _algorithm.SecurityInitializer, selectionData =>
             {
                 var list = selectionData as IReadOnlyList<CoarseFundamental> ?? selectionData.OfType<CoarseFundamental>().ToList();
 
