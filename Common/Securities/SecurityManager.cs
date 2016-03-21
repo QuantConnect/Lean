@@ -323,8 +323,6 @@ namespace QuantConnect.Securities
             bool addToSymbolCache = true,
             bool isFilteredSubscription = true)
         {
-            var sid = symbol.ID;
-
             // add the symbol to our cache
             if (addToSymbolCache) SymbolCache.Set(symbol.Value, symbol);
 
@@ -337,6 +335,10 @@ namespace QuantConnect.Securities
             {
                 case SecurityType.Equity:
                     security = new Equity.Equity(exchangeHours, config, securityPortfolioManager.CashBook[CashBook.AccountCurrency], symbolProperties);
+                    break;
+
+                case SecurityType.Option:
+                    security = new Option.Option(exchangeHours, config, securityPortfolioManager.CashBook[CashBook.AccountCurrency], symbolProperties);
                     break;
 
                 case SecurityType.Forex:
