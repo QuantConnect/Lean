@@ -105,6 +105,7 @@
   <ItemGroup>
     <Content Include="AddRemoveSecurityRegressionAlgorithm.py" />
     <Content Include="DailyAlgorithm.py" />
+    <Content Include="MarketOnOpenOnCloseAlgorithm.py" />
     <Content Include="ParameterizedAlgorithm.py" />
     <Content Include="DropboxUniverseSelectionAlgorithm.py" />
     <Content Include="UniverseSelectionRegressionAlgorithm.py" />
