@@ -111,6 +111,7 @@
     <Content Include="ParameterizedAlgorithm.py" />
     <Content Include="DropboxUniverseSelectionAlgorithm.py" />
     <Content Include="CoarseFundamentalTop5Algorithm.py" />
+    <Content Include="QuandlImporterAlgorithm.py" />
     <Content Include="UniverseSelectionDefinitionsAlgorithm.py" />
     <Content Include="UniverseSelectionRegressionAlgorithm.py" />
     <Content Include="UpdateOrderRegressionAlgorithm.py" />
