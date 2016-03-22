@@ -203,6 +203,7 @@
     <Compile Include="Indicators\TrueRangeTests.cs" />
     <Compile Include="Indicators\TripleExponentialMovingAverageTests.cs" />
     <Compile Include="Indicators\TriangularMovingAverageTests.cs" />
+    <Compile Include="Indicators\UltimateOscillatorTests.cs" />
     <Compile Include="Indicators\VarianceTests.cs" />
     <Compile Include="Indicators\WilliamsPercentRTests.cs" />
     <Compile Include="Indicators\RateOfChangePercentTests.cs" />
@@ -436,6 +437,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_trima.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_ultosc.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_var.txt">
