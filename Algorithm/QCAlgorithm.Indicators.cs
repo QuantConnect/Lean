@@ -910,6 +910,24 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new UltimateOscillator indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose ULTOSC we want</param>
+        /// <param name="period1">The first period over which to compute the ULTOSC</param>
+        /// <param name="period2">The second period over which to compute the ULTOSC</param>
+        /// <param name="period3">The third period over which to compute the ULTOSC</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The UltimateOscillator indicator for the requested symbol over the specified period</returns>
+        public UltimateOscillator ULTOSC(Symbol symbol, int period1, int period2, int period3, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, string.Format("ULTOSC({0},{1},{2})", period1, period2, period3), resolution);
+            var ultosc = new UltimateOscillator(name, period1, period2, period3);
+            RegisterIndicator(symbol, ultosc, resolution, selector);
+            return ultosc;
+        }
+
+        /// <summary>
         /// Creates and registers a new consolidator to receive automatic updates at the specified resolution as well as configures
         /// the indicator to receive updates from the consolidator.
         /// </summary>
