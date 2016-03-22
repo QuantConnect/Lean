@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from datetime import date
+from datetime import date, timedelta
 
 from clr import AddReference
 AddReference("System")
@@ -40,11 +40,11 @@ class QuandlImporterAlgorithm(QCAlgorithm):
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        today = date.today()
+        yesterday = date.today() - timedelta(1)
 
-        self.SetStartDate(2013,1,1)                          #Set Start Date
-        self.SetEndDate(today.year, today.month, today.day)  #Set End Date
-        self.SetCash(25000)                                  #Set Strategy Cash
+        self.SetStartDate(2013,1,1)                                      #Set Start Date
+        self.SetEndDate(yesterday.year, yesterday.month, yesterday.day)  #Set End Date
+        self.SetCash(25000)                                              #Set Strategy Cash
         self.AddData[Quandl](self.__quandlCode, Resolution.Daily)
         self.__sma = self.SMA(self.__quandlCode, 14)
 
