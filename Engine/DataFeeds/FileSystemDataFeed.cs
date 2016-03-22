@@ -317,8 +317,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var exchangeHours = marketHoursDatabase.GetExchangeHours(config);
 
-            // create a canonical security object
-            var security = new Security(exchangeHours, config, _algorithm.Portfolio.CashBook[CashBook.AccountCurrency], SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            Security security;
+            if (!_algorithm.Securities.TryGetValue(config.Symbol, out security))
+            {
+                // create a canonical security object if it doesn't exist
+                security = new Security(exchangeHours, config, _algorithm.Portfolio.CashBook[CashBook.AccountCurrency], SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            }
 
             var localStartTime = startTimeUtc.ConvertFromUtc(security.Exchange.TimeZone);
             var localEndTime = endTimeUtc.ConvertFromUtc(security.Exchange.TimeZone);
