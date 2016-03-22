@@ -944,6 +944,22 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new MidPrice indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose MIDPRICE we want</param>
+        /// <param name="period">The period over which to compute the MIDPRICE</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The MidPrice indicator for the requested symbol over the specified period</returns>
+        public MidPrice MIDPRICE(Symbol symbol, int period, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "MIDPRICE" + period, resolution);
+            var midprice = new MidPrice(name, period);
+            RegisterIndicator(symbol, midprice, resolution, selector);
+            return midprice;
+        }
+
+        /// <summary>
         /// Creates and registers a new consolidator to receive automatic updates at the specified resolution as well as configures
         /// the indicator to receive updates from the consolidator.
         /// </summary>

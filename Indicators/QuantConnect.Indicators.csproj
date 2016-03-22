@@ -126,6 +126,7 @@
     <Compile Include="KeltnerChannels.cs" />
     <Compile Include="LeastSquaresMovingAverage.cs" />
     <Compile Include="LogReturn.cs" />
+    <Compile Include="MidPrice.cs" />
     <Compile Include="MidPoint.cs" />
     <Compile Include="Momersion.cs" />
     <Compile Include="NormalizedAverageTrueRange.cs" />
