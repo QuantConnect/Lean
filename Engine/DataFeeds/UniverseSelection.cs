@@ -106,6 +106,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // so we can make direct edits to the security here
                     member.Cache.Reset();
                     _dataFeed.RemoveSubscription(member.Symbol);
+                    
+                    // remove symbol mappings for symbols removed from universes
+                    SymbolCache.TryRemove(member.Symbol);
                 }
             }
 
