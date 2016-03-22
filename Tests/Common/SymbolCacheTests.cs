@@ -83,5 +83,27 @@ namespace QuantConnect.Tests.Common
             var ticker = SymbolCache.GetTicker(symbol);
             Assert.AreEqual(symbol.ID.ToString(), ticker);
         }
+
+        [Test]
+        public void TryRemoveSymbolRemovesSymbolMappings()
+        {
+            string ticker;
+            Symbol symbol;
+            SymbolCache.Set("SPY", Symbols.SPY);
+            Assert.IsTrue(SymbolCache.TryRemove(Symbols.SPY));
+            Assert.IsFalse(SymbolCache.TryGetSymbol("SPY", out symbol));
+            Assert.IsFalse(SymbolCache.TryGetTicker(Symbols.SPY, out ticker));
+        }
+
+        [Test]
+        public void TryRemoveTickerRemovesSymbolMappings()
+        {
+            string ticker;
+            Symbol symbol;
+            SymbolCache.Set("SPY", Symbols.SPY);
+            Assert.IsTrue(SymbolCache.TryRemove("SPY"));
+            Assert.IsFalse(SymbolCache.TryGetSymbol("SPY", out symbol));
+            Assert.IsFalse(SymbolCache.TryGetTicker(Symbols.SPY, out ticker));
+        }
     }
 }

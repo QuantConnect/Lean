@@ -86,6 +86,28 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Removes the mapping for the specified symbol from the cache
+        /// </summary>
+        /// <param name="symbol">The symbol whose mappings are to be removed</param>
+        /// <returns>True if the symbol mapping were removed from the cache</returns>
+        public static bool TryRemove(Symbol symbol)
+        {
+            string ticker;
+            return _cache.Tickers.TryRemove(symbol, out ticker) && _cache.Symbols.TryRemove(ticker, out symbol);
+        }
+
+        /// <summary>
+        /// Removes the mapping for the specified symbol from the cache
+        /// </summary>
+        /// <param name="ticker">The ticker whose mappings are to be removed</param>
+        /// <returns>True if the symbol mapping were removed from the cache</returns>
+        public static bool TryRemove(string ticker)
+        {
+            Symbol symbol;
+            return _cache.Symbols.TryRemove(ticker, out symbol) && _cache.Tickers.TryRemove(symbol, out ticker);
+        }
+
+        /// <summary>
         /// Clears the current caches
         /// </summary>
         public static void Clear()
