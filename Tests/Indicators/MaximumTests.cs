@@ -20,8 +20,23 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class MaximumTests
+    public class MaximumTests : CommonIndicatorTests<IndicatorDataPoint>
     {
+        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
+        {
+            return new Maximum(5);
+        }
+
+        protected override string TestFileName
+        {
+            get { return "spy_max.txt"; }
+        }
+
+        protected override string TestColumnName
+        {
+            get { return "MAX_5"; }
+        }
+
         [Test]
         public void ComputesCorrectly()
         {

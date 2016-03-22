@@ -20,8 +20,23 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class MinimumTests
+    public class MinimumTests : CommonIndicatorTests<IndicatorDataPoint>
     {
+        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
+        {
+            return new Minimum(5);
+        }
+
+        protected override string TestFileName
+        {
+            get { return "spy_min.txt"; }
+        }
+
+        protected override string TestColumnName
+        {
+            get { return "MIN_5"; }
+        }
+
         [Test]
         public void ComputesCorrectly()
         {
