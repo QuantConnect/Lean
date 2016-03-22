@@ -200,6 +200,7 @@
     <Compile Include="Indicators\ParabolicStopAndReverseTests.cs" />
     <Compile Include="Indicators\T3MovingAverageTests.cs" />
     <Compile Include="Indicators\RateOfChangeRatioTests.cs" />
+    <Compile Include="Indicators\TrixTests.cs" />
     <Compile Include="Indicators\TrueRangeTests.cs" />
     <Compile Include="Indicators\TripleExponentialMovingAverageTests.cs" />
     <Compile Include="Indicators\TriangularMovingAverageTests.cs" />
@@ -440,6 +441,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_ultosc.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_trix.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_var.txt">
