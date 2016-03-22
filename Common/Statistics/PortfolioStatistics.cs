@@ -217,7 +217,7 @@ namespace QuantConnect.Statistics
         /// <returns>Decimal fraction for annual compounding performance</returns>
         private static decimal CompoundingAnnualPerformance(decimal startingCapital, decimal finalCapital, decimal years)
         {
-            return years == 0 ? 0 : (decimal)Math.Pow((double)finalCapital / (double)startingCapital, (1 / (double)years)) - 1;
+            return (years == 0 ? 0d : Math.Pow((double)finalCapital / (double)startingCapital, 1 / (double)years) - 1).SafeDecimalCast();
         }
 
         /// <summary>
