@@ -160,6 +160,30 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(1, list[0]);
         }
 
+        [Test]
+        public void SafeDecimalCasts()
+        {
+            var input = 2d;
+            var output = input.SafeDecimalCast();
+            Assert.AreEqual(2m, output);
+        }
+
+        [Test]
+        public void SafeDecimalCastRespectsUpperBound()
+        {
+            var input = (double) decimal.MaxValue;
+            var output = input.SafeDecimalCast();
+            Assert.AreEqual(decimal.MaxValue, output);
+        }
+
+        [Test]
+        public void SafeDecimalCastRespectsLowerBound()
+        {
+            var input = (double) decimal.MinValue;
+            var output = input.SafeDecimalCast();
+            Assert.AreEqual(decimal.MinValue, output);
+        }
+
         private class Super<T>
         {
         }

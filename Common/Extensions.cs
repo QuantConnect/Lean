@@ -186,6 +186,19 @@ namespace QuantConnect
             return (decimal)d.RoundToSignificantDigits(7);
         }
 
+        /// <summary>
+        /// Casts the specified input value to a decimal while acknowledging the overflow conditions
+        /// </summary>
+        /// <param name="input">The value to be cast</param>
+        /// <returns>The input value as a decimal, if the value is too large or to small to be represented
+        /// as a decimal, then the closest decimal value will be returned</returns>
+        public static decimal SafeDecimalCast(this double input)
+        {
+            if (input <= (double) decimal.MinValue) return decimal.MinValue;
+            if (input >= (double) decimal.MaxValue) return decimal.MaxValue;
+            return (decimal) input;
+        }
+
         private static decimal Normalize(decimal input)
         {
             // http://stackoverflow.com/a/7983330/1582922
