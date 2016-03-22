@@ -137,6 +137,29 @@ namespace QuantConnect.Tests.Common.Util
             CollectionAssert.AreEqual(expected, actual);
         }
 
+        [Test]
+        public void DictionaryAddsItemToExistsList()
+        {
+            const int key = 0;
+            var list = new List<int> {1, 2};
+            var dictionary = new Dictionary<int, List<int>> {{key, list}};
+            Extensions.Add(dictionary, key, 3);
+            Assert.AreEqual(3, list.Count);
+            Assert.AreEqual(3, list[2]);
+        }
+
+        [Test]
+        public void DictionaryAddCreatesNewList()
+        {
+            const int key = 0;
+            var dictionary = new Dictionary<int, List<int>>();
+            Extensions.Add(dictionary, key, 1);
+            Assert.IsTrue(dictionary.ContainsKey(key));
+            var list = dictionary[key];
+            Assert.AreEqual(1, list.Count);
+            Assert.AreEqual(1, list[0]);
+        }
+
         private class Super<T>
         {
         }
