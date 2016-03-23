@@ -110,15 +110,15 @@ namespace QuantConnect.Tests.Algorithm
         [Test, TestCaseSource("TestParameters")]
         public void Run(Position initialPosition, Position finalPosition, FeeType feeType, PriceMovement priceMovement, int leverage)
         {
-            Console.WriteLine("----------");
-            Console.WriteLine("PARAMETERS");
-            Console.WriteLine("Initial position: " + initialPosition);
-            Console.WriteLine("Final position: " + finalPosition);
-            Console.WriteLine("Fee type: " + feeType);
-            Console.WriteLine("Price movement: " + priceMovement);
-            Console.WriteLine("Leverage: " + leverage);
-            Console.WriteLine("----------");
-            Console.WriteLine();
+            //Console.WriteLine("----------");
+            //Console.WriteLine("PARAMETERS");
+            //Console.WriteLine("Initial position: " + initialPosition);
+            //Console.WriteLine("Final position: " + finalPosition);
+            //Console.WriteLine("Fee type: " + feeType);
+            //Console.WriteLine("Price movement: " + priceMovement);
+            //Console.WriteLine("Leverage: " + leverage);
+            //Console.WriteLine("----------");
+            //Console.WriteLine();
 
             var algorithm = new QCAlgorithm();
 
@@ -147,13 +147,13 @@ namespace QuantConnect.Tests.Algorithm
                 freeMargin = algorithm.Portfolio.GetMarginRemaining(_symbol, orderDirection);
                 requiredMargin = security.MarginModel.GetInitialMarginRequiredForOrder(security, order);
 
-                Console.WriteLine("Current price: " + security.Price);
-                Console.WriteLine("Target percentage: " + targetPercentage);
-                Console.WriteLine("Order direction: " + orderDirection);
-                Console.WriteLine("Order quantity: " + orderQuantity);
-                Console.WriteLine("Free margin: " + freeMargin);
-                Console.WriteLine("Required margin: " + requiredMargin);
-                Console.WriteLine();
+                //Console.WriteLine("Current price: " + security.Price);
+                //Console.WriteLine("Target percentage: " + targetPercentage);
+                //Console.WriteLine("Order direction: " + orderDirection);
+                //Console.WriteLine("Order quantity: " + orderQuantity);
+                //Console.WriteLine("Free margin: " + freeMargin);
+                //Console.WriteLine("Required margin: " + requiredMargin);
+                //Console.WriteLine();
 
                 Assert.That(Math.Abs(requiredMargin) <= freeMargin);
 
@@ -161,9 +161,9 @@ namespace QuantConnect.Tests.Algorithm
                 fill = new OrderEvent(order, DateTime.UtcNow, orderFee) { FillPrice = security.Price, FillQuantity = orderQuantity };
                 algorithm.Portfolio.ProcessFill(fill);
 
-                Console.WriteLine("Portfolio.Cash: " + algorithm.Portfolio.Cash);
-                Console.WriteLine("Portfolio.TotalPortfolioValue: " + algorithm.Portfolio.TotalPortfolioValue);
-                Console.WriteLine();
+                //Console.WriteLine("Portfolio.Cash: " + algorithm.Portfolio.Cash);
+                //Console.WriteLine("Portfolio.TotalPortfolioValue: " + algorithm.Portfolio.TotalPortfolioValue);
+                //Console.WriteLine();
 
                 if (priceMovement == PriceMovement.RisingSmall)
                 {
@@ -190,13 +190,13 @@ namespace QuantConnect.Tests.Algorithm
             freeMargin = algorithm.Portfolio.GetMarginRemaining(_symbol, orderDirection);
             requiredMargin = security.MarginModel.GetInitialMarginRequiredForOrder(security, order);
 
-            Console.WriteLine("Current price: " + security.Price);
-            Console.WriteLine("Target percentage: " + targetPercentage);
-            Console.WriteLine("Order direction: " + orderDirection);
-            Console.WriteLine("Order quantity: " + orderQuantity);
-            Console.WriteLine("Free margin: " + freeMargin);
-            Console.WriteLine("Required margin: " + requiredMargin);
-            Console.WriteLine();
+            //Console.WriteLine("Current price: " + security.Price);
+            //Console.WriteLine("Target percentage: " + targetPercentage);
+            //Console.WriteLine("Order direction: " + orderDirection);
+            //Console.WriteLine("Order quantity: " + orderQuantity);
+            //Console.WriteLine("Free margin: " + freeMargin);
+            //Console.WriteLine("Required margin: " + requiredMargin);
+            //Console.WriteLine();
 
             Assert.That(Math.Abs(requiredMargin) <= freeMargin);
 
@@ -204,9 +204,9 @@ namespace QuantConnect.Tests.Algorithm
             fill = new OrderEvent(order, DateTime.UtcNow, orderFee) { FillPrice = security.Price, FillQuantity = orderQuantity };
             algorithm.Portfolio.ProcessFill(fill);
 
-            Console.WriteLine("Portfolio.Cash: " + algorithm.Portfolio.Cash);
-            Console.WriteLine("Portfolio.TotalPortfolioValue: " + algorithm.Portfolio.TotalPortfolioValue);
-            Console.WriteLine();
+            //Console.WriteLine("Portfolio.Cash: " + algorithm.Portfolio.Cash);
+            //Console.WriteLine("Portfolio.TotalPortfolioValue: " + algorithm.Portfolio.TotalPortfolioValue);
+            //Console.WriteLine();
         }
 
         private static void Update(Security security, decimal price)
