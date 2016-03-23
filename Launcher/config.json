@@ -137,11 +137,11 @@
 
         "live-bitfinex-paper": {
             "live-mode": "true",
-            "live-mode-brokerage": "PaperBrokerage",
+            "live-mode-brokerage": "BitfinexWebsocketsPaperBrokerage",
             "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
             "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
             "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
-            "data-queue-handler": "QuantConnect.Brokerages.Bitfinex.BitfinexBrokerage",
+            "data-queue-handler": "QuantConnect.Brokerages.Bitfinex.BitfinexWebsocketsPaperBrokerage",
             "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
             "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"
         },

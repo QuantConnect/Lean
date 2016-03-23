@@ -176,10 +176,12 @@
     <Compile Include="Bitfinex\BaseMessage.cs" />
     <Compile Include="Bitfinex\BitfinexBrokerage.cs" />
     <Compile Include="Bitfinex\BitfinexBrokerage.Util.cs" />
+    <Compile Include="Bitfinex\BitfinexWebsocketsPaperBrokerageFactory.cs" />
     <Compile Include="Bitfinex\BitfinexBrokerageFactory.cs" />
     <Compile Include="Bitfinex\BitfinexOrder.cs" />
     <Compile Include="Bitfinex\BitfinexWebsocketsBrokerage.cs" />
     <Compile Include="Bitfinex\BitfinexWebsocketsBrokerage.Messaging.cs" />
+    <Compile Include="Bitfinex\BitfinexWebsocketsPaperBrokerage.cs" />
     <Compile Include="Bitfinex\IWebSocket.cs" />
     <Compile Include="Bitfinex\TickerMessage.cs" />
     <Compile Include="Bitfinex\TradeMessage.cs" />
