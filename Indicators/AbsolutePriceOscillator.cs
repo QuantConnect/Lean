@@ -17,7 +17,7 @@ namespace QuantConnect.Indicators
 {
     /// <summary>
     /// This indicator computes the Absolute Price Oscillator (APO)
-    /// The Accumulation/Distribution is calculated using the following formula:
+    /// The Absolute Price Oscillator is calculated using the following formula:
     /// APO[i] = FastMA[i] - SlowMA[i]
     /// </summary>
     public class AbsolutePriceOscillator : IndicatorBase<IndicatorDataPoint>
