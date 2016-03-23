@@ -613,30 +613,36 @@ namespace QuantConnect.Algorithm
 
             // continue iterating while we do not have enough margin for the order
             decimal marginRequired;
-            var orderQuantity = 0;
             decimal orderValue;
             decimal orderFees;
+            var feeToPriceRatio = 0;
+
+            // compute the initial order quantity
+            var orderQuantity = (int)(targetOrderValue / unitPrice);
+            var iterations = 0;
 
             do
             {
-                if (orderQuantity == 0)
+                // decrease the order quantity
+                if (iterations > 0)
                 {
-                    // compute the initial order quantity
-                    orderQuantity = (int)(targetOrderValue / unitPrice);
-                }
-                else
-                {
-                    // decrease the order quantity
-                    orderQuantity--;
+                    // if fees are high relative to price, we reduce the order quantity faster
+                    if (feeToPriceRatio > 0)
+                        orderQuantity -= feeToPriceRatio;
+                    else
+                        orderQuantity--;
                 }
 
                 // generate the order
                 var order = new MarketOrder(security.Symbol, orderQuantity, UtcTime);
                 orderValue = order.GetValue(security);
                 orderFees = security.FeeModel.GetOrderFee(security, order);
+                feeToPriceRatio = (int)(orderFees / unitPrice);
 
                 // calculate the margin required for the order
                 marginRequired = security.MarginModel.GetInitialMarginRequiredForOrder(security, order);
+
+                iterations++;
 
             } while (orderQuantity > 0 && (marginRequired > marginRemaining || orderValue + orderFees > targetOrderValue));
 
