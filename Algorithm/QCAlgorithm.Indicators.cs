@@ -960,6 +960,24 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new AbsolutePriceOscillator indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose APO we want</param>
+        /// <param name="fastPeriod">The fast moving average period</param>
+        /// <param name="slowPeriod">The slow moving average period</param>
+        /// <param name="movingAverageType">The type of moving average to use</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The AbsolutePriceOscillator indicator for the requested symbol over the specified period</returns>
+        public AbsolutePriceOscillator APO(Symbol symbol, int fastPeriod, int slowPeriod, MovingAverageType movingAverageType, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, string.Format("APO({0},{1})", fastPeriod, slowPeriod), resolution);
+            var apo = new AbsolutePriceOscillator(name, fastPeriod, slowPeriod, movingAverageType);
+            RegisterIndicator(symbol, apo, resolution, selector);
+            return apo;
+        }
+
+        /// <summary>
         /// Creates and registers a new consolidator to receive automatic updates at the specified resolution as well as configures
         /// the indicator to receive updates from the consolidator.
         /// </summary>
