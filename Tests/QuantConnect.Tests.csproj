@@ -199,6 +199,7 @@
     <Compile Include="Indicators\NormalizedAverageTrueRangeTests.cs" />
     <Compile Include="Indicators\OnBalanceVolumeTest.cs" />
     <Compile Include="Indicators\ParabolicStopAndReverseTests.cs" />
+    <Compile Include="Indicators\PercentagePriceOscillatorTests.cs" />
     <Compile Include="Indicators\T3MovingAverageTests.cs" />
     <Compile Include="Indicators\RateOfChangeRatioTests.cs" />
     <Compile Include="Indicators\TrixTests.cs" />
@@ -433,6 +434,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_parabolic_SAR.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_ppo.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_t3.txt">
