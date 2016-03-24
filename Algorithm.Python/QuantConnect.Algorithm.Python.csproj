@@ -631,6 +631,7 @@
     <Content Include="MovingAverageCrossAlgorithm.py" />
     <Content Include="RegressionAlgorithm.py" />
     <Content Include="UserDefinedUniverseAlgorithm.py" />
+    <Content Include="WarmupAlgorithm.py" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
