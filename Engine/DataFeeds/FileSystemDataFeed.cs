@@ -117,7 +117,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             };
         }
 
-        private Subscription CreateSubscription(Universe universe, IResultHandler resultHandler, Security security, DateTime startTimeUtc, DateTime endTimeUtc, IReadOnlyRef<TimeSpan> fillForwardResolution)
+        private Subscription CreateSubscription(Universe universe, Security security, DateTime startTimeUtc, DateTime endTimeUtc)
         {
             var config = security.SubscriptionDataConfig;
             var localStartTime = startTimeUtc.ConvertFromUtc(security.Exchange.TimeZone);
@@ -137,17 +137,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (config.SecurityType == SecurityType.Equity) mapFileResolver = _mapFileProvider.Get(config.Market);
 
             // ReSharper disable once PossibleMultipleEnumeration
-            IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, resultHandler, mapFileResolver, _factorFileProvider, tradeableDates, false);
+            IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, mapFileResolver, _factorFileProvider, tradeableDates, false);
 
             // optionally apply fill forward logic, but never for tick data
             if (config.FillDataForward && config.Resolution != Resolution.Tick)
             {
-                enumerator = new FillForwardEnumerator(enumerator, security.Exchange, fillForwardResolution,
+                enumerator = new FillForwardEnumerator(enumerator, security.Exchange, _fillForwardResolution,
                     security.IsExtendedMarketHours, localEndTime, config.Resolution.ToTimeSpan());
             }
 
             // finally apply exchange/user filters
-            enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(resultHandler, enumerator, security, localEndTime);
+            enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(_resultHandler, enumerator, security, localEndTime);
 
             var enqueueable = new EnqueueableEnumerator<BaseData>(true);
 
@@ -208,7 +208,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="utcEndTime">The end time of the subscription</param>
         public bool AddSubscription(Universe universe, Security security, DateTime utcStartTime, DateTime utcEndTime)
         {
-            var subscription = CreateSubscription(universe, _resultHandler, security, utcStartTime, utcEndTime, _fillForwardResolution);
+            var subscription = CreateSubscription(universe, security, utcStartTime, utcEndTime);
             if (subscription == null)
             {
                 // subscription will be null when there's no tradeable dates for the security between the requested times, so
