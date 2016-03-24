@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Market
     /// TradeBar class for second and minute resolution data: 
     /// An OHLC implementation of the QuantConnect BaseData class with parameters for candles.
     /// </summary>
-    public class TradeBar : BaseData, IBar
+    public class TradeBar : VolumeBar
     {
         // scale factor used in QC equity/forex data files
         private const decimal _scaleFactor = 1/10000m;
@@ -39,12 +39,16 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Volume:
         /// </summary>
-        public long Volume { get; set; }
+        public override long Volume
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Opening price of the bar: Defined as the price at the start of the time period.
         /// </summary>
-        public decimal Open
+        public override decimal Open
         {
             get { return _open; }
             set
@@ -57,7 +61,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// High price of the TradeBar during the time period.
         /// </summary>
-        public decimal High
+        public override decimal High
         {
             get { return _high; }
             set
@@ -70,7 +74,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Low price of the TradeBar during the time period.
         /// </summary>
-        public decimal Low
+        public override decimal Low
         {
             get { return _low; }
             set
@@ -83,7 +87,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Closing price of the TradeBar. Defined as the price at Start Time + TimeSpan.
         /// </summary>
-        public decimal Close
+        public override decimal Close
         {
             get { return Value; }
             set

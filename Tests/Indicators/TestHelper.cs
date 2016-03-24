@@ -126,7 +126,8 @@ namespace QuantConnect.Tests.Indicators
         /// <param name="externalDataFilename"></param>
         /// <param name="targetColumn">The column with the correct answers</param>
         /// <param name="epsilon">The maximum delta between expected and actual</param>
-        public static void TestIndicator(IndicatorBase<TradeBar> indicator, string externalDataFilename, string targetColumn, double epsilon = 1e-3)
+        public static void TestIndicator<T>(IndicatorBase<T> indicator, string externalDataFilename, string targetColumn, double epsilon = 1e-3)
+            where T : VolumeBar
         {
             TestIndicator(indicator, externalDataFilename, targetColumn, (i, expected) => Assert.AreEqual(expected, (double)i.Current.Value, epsilon, "Failed at " + i.Current.Time.ToString("o")));
         }
@@ -154,7 +155,8 @@ namespace QuantConnect.Tests.Indicators
         /// <param name="externalDataFilename">The external CSV file name</param>
         /// <param name="targetColumn">The column with the correct answers</param>
         /// <param name="customAssertion">Sets custom assertion logic, parameter is the indicator, expected value from the file</param>
-        public static void TestIndicator(IndicatorBase<TradeBar> indicator, string externalDataFilename, string targetColumn, Action<IndicatorBase<TradeBar>, double> customAssertion)
+        public static void TestIndicator<T>(IndicatorBase<T> indicator, string externalDataFilename, string targetColumn, Action<IndicatorBase<T>, double> customAssertion)
+            where T : VolumeBar
         {
             bool first = true;
             int targetIndex = -1;
@@ -177,17 +179,15 @@ namespace QuantConnect.Tests.Indicators
                     continue;
                 }
 
-                var tradebar = new TradeBar
-                {
-                    Time = Time.ParseDate(parts[0]),
-                    Open = parts[1].ToDecimal(),
-                    High = parts[2].ToDecimal(),
-                    Low = parts[3].ToDecimal(),
-                    Close = parts[4].ToDecimal(),
-                    Volume = fileHasVolume ? long.Parse(parts[5], NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture) : 0
-                };
+                var volumeBar = (T)Activator.CreateInstance(typeof(T), true);
+                volumeBar.Time = Time.ParseDate(parts[0]);
+                volumeBar.Open = parts[1].ToDecimal();
+                volumeBar.High = parts[2].ToDecimal();
+                volumeBar.Low = parts[3].ToDecimal();
+                volumeBar.Close = parts[4].ToDecimal();
+                volumeBar.Volume = fileHasVolume ? long.Parse(parts[5], NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture) : 0;
 
-                indicator.Update(tradebar);
+                indicator.Update(volumeBar);
 
                 if (!indicator.IsReady || parts[targetIndex].Trim() == string.Empty)
                 {
@@ -197,6 +197,26 @@ namespace QuantConnect.Tests.Indicators
                 double expected = double.Parse(parts[targetIndex], CultureInfo.InvariantCulture);
                 customAssertion.Invoke(indicator, expected);
             }
+        }
+
+        /// <summary>
+        /// Tests a reset of the specified indicator after processing external data using the specified comma delimited text file.
+        /// The 'Close' column will be fed to the indicator as input
+        /// </summary>
+        /// <param name="indicator">The indicator under test</param>
+        /// <param name="externalDataFilename">The external CSV file name</param>
+        public static void TestIndicatorReset(IndicatorBase<VolumeBar> indicator, string externalDataFilename)
+        {
+            foreach (var data in GetTradeBarStream(externalDataFilename, false))
+            {
+                indicator.Update(data);
+            }
+
+            Assert.IsTrue(indicator.IsReady);
+
+            indicator.Reset();
+
+            AssertIndicatorIsInDefaultState(indicator);
         }
 
         /// <summary>

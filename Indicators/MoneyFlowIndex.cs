@@ -32,7 +32,7 @@ namespace QuantConnect.Indicators
     ///     
     ///     Money Flow Index = 100 x  Positve Money Flow / ( Positve Money Flow + Negative Money Flow)
     /// </summary>
-    public class MoneyFlowIndex : TradeBarIndicator
+    public class MoneyFlowIndex : VolumeBarIndicator
     {
         /// <summary>The sum of positive money flow to compute money flow ratio</summary>
         public IndicatorBase<IndicatorDataPoint> PositiveMoneyFlow { get; private set; }
@@ -88,7 +88,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(TradeBar input)
+        protected override decimal ComputeNextValue(VolumeBar input)
         {
             decimal typicalPrice = (input.High + input.Low + input.Close)/3.0m;
             decimal moneyFlow = typicalPrice*input.Volume;

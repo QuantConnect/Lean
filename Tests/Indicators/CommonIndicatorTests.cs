@@ -22,7 +22,7 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     public abstract class CommonIndicatorTests<T> 
-        where T : BaseData, new()
+        where T : BaseData
     {
         [Test]
         public virtual void ComparesAgainstExternalData()
@@ -46,8 +46,8 @@ namespace QuantConnect.Tests.Indicators
             var indicator = CreateIndicator();
             if (indicator is IndicatorBase<IndicatorDataPoint>)
                 TestHelper.TestIndicatorReset(indicator as IndicatorBase<IndicatorDataPoint>, TestFileName);
-            else if (indicator is IndicatorBase<TradeBar>)
-                TestHelper.TestIndicatorReset(indicator as IndicatorBase<TradeBar>, TestFileName);
+            else if (indicator is IndicatorBase<VolumeBar>)
+                TestHelper.TestIndicatorReset(indicator as IndicatorBase<VolumeBar>, TestFileName);
             else
                 throw new NotSupportedException("ResetsProperly: Unsupported indicator data type: " + typeof(T));
         }
@@ -59,8 +59,8 @@ namespace QuantConnect.Tests.Indicators
         {
             if (indicator is IndicatorBase<IndicatorDataPoint>)
                 TestHelper.TestIndicator(indicator as IndicatorBase<IndicatorDataPoint>, TestFileName, TestColumnName, Assertion as Action<IndicatorBase<IndicatorDataPoint>, double>);
-            else if (indicator is IndicatorBase<TradeBar>)
-                TestHelper.TestIndicator(indicator as IndicatorBase<TradeBar>, TestFileName, TestColumnName, Assertion as Action<IndicatorBase<TradeBar>, double>);
+            else if (indicator is IndicatorBase<VolumeBar>)
+                TestHelper.TestIndicator(indicator as IndicatorBase<VolumeBar>, TestFileName, TestColumnName, Assertion as Action<IndicatorBase<VolumeBar>, double>);
             else
                 throw new NotSupportedException("RunTestIndicator: Unsupported indicator data type: " + typeof(T));
         }

@@ -20,46 +20,70 @@ namespace QuantConnect.Data.Market
     /// <summary>
     /// Represents a bar sectioned not by time, but by some amount of movement in a value (for example, Closing price moving in $10 bar sizes)
     /// </summary>
-    public class RenkoBar : BaseData
+    public class RenkoBar : VolumeBar
     {
         /// <summary>
         /// Gets the height of the bar
         /// </summary>
-        public decimal BrickSize { get; private set; }
+        public decimal BrickSize
+        {
+            get;
+            private set;
+        }
 
         /// <summary>
         /// Gets the opening value that started this bar.
         /// </summary>
-        public decimal Open { get; private set; }
+        public override decimal Open
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets the closing value or the current value if the bar has not yet closed.
         /// </summary>
-        public decimal Close
+        public override decimal Close
         {
             get { return Value; }
-            private set { Value = value; }
+            set { Value = value; }
         }
 
         /// <summary>
         /// Gets the highest value encountered during this bar
         /// </summary>
-        public decimal High { get; private set; }
+        public override decimal High
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets the lowest value encountered during this bar
         /// </summary>
-        public decimal Low { get; private set; }
+        public override decimal Low
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets the volume of trades during the bar.
         /// </summary>
-        public long Volume { get; private set; }
+        public override long Volume
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets the end time of this renko bar or the most recent update time if it <see cref="IsClosed"/>
         /// </summary>
-        public override DateTime EndTime { get; set; }
+        public override DateTime EndTime
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets the end time of this renko bar or the most recent update time if it <see cref="IsClosed"/>

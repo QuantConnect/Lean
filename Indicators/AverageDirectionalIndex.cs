@@ -25,17 +25,17 @@ namespace QuantConnect.Indicators
     /// From these accumulated values we are therefore able to derived the 'Positive Directional Index' (+DI) and 'Negative Directional Index' (-DI)
     /// which is used to calculate the Average Directional Index.
     /// </summary>
-    public class AverageDirectionalIndex : IndicatorBase<TradeBar>
+    public class AverageDirectionalIndex : IndicatorBase<VolumeBar>
     {
-        private TradeBar _previousInput;
+        private VolumeBar _previousInput;
 
         private readonly int _period;
 
-        private IndicatorBase<TradeBar> TrueRange { get; set; }
+        private IndicatorBase<VolumeBar> TrueRange { get; set; }
 
-        private IndicatorBase<TradeBar> DirectionalMovementPlus { get; set; }
+        private IndicatorBase<VolumeBar> DirectionalMovementPlus { get; set; }
 
-        private IndicatorBase<TradeBar> DirectionalMovementMinus { get; set; }
+        private IndicatorBase<VolumeBar> DirectionalMovementMinus { get; set; }
 
         private IndicatorBase<IndicatorDataPoint> SmoothedDirectionalMovementPlus { get; set; }
 
@@ -69,7 +69,7 @@ namespace QuantConnect.Indicators
         {
             _period = period;
 
-            TrueRange = new FunctionalIndicator<TradeBar>(name + "_TrueRange",
+            TrueRange = new FunctionalIndicator<VolumeBar>(name + "_TrueRange",
                 currentBar =>
                 {
                     var value = ComputeTrueRange(currentBar);
@@ -78,7 +78,7 @@ namespace QuantConnect.Indicators
                 isReady => _previousInput != null
                 );
 
-            DirectionalMovementPlus = new FunctionalIndicator<TradeBar>(name + "_PositiveDirectionalMovement",
+            DirectionalMovementPlus = new FunctionalIndicator<VolumeBar>(name + "_PositiveDirectionalMovement",
                 currentBar =>
                 {
                     var value = ComputePositiveDirectionalMovement(currentBar);
@@ -88,7 +88,7 @@ namespace QuantConnect.Indicators
                 );
 
 
-            DirectionalMovementMinus = new FunctionalIndicator<TradeBar>(name + "_NegativeDirectionalMovement",
+            DirectionalMovementMinus = new FunctionalIndicator<VolumeBar>(name + "_NegativeDirectionalMovement",
                 currentBar =>
                 {
                     var value = ComputeNegativeDirectionalMovement(currentBar);
@@ -210,7 +210,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input.</param>
         /// <returns></returns>
-        private decimal ComputeTrueRange(TradeBar input)
+        private decimal ComputeTrueRange(VolumeBar input)
         {
             var trueRange = new decimal(0.0);
 
@@ -226,7 +226,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input.</param>
         /// <returns></returns>
-        private decimal ComputePositiveDirectionalMovement(TradeBar input)
+        private decimal ComputePositiveDirectionalMovement(VolumeBar input)
         {
             var postiveDirectionalMovement = new decimal(0.0);
 
@@ -248,7 +248,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input.</param>
         /// <returns></returns>
-        private decimal ComputeNegativeDirectionalMovement(TradeBar input)
+        private decimal ComputeNegativeDirectionalMovement(VolumeBar input)
         {
             var negativeDirectionalMovement = new decimal(0.0);
 
@@ -270,7 +270,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(TradeBar input)
+        protected override decimal ComputeNextValue(VolumeBar input)
         {
             TrueRange.Update(input);
             DirectionalMovementPlus.Update(input);

@@ -24,9 +24,9 @@ namespace QuantConnect.Indicators
     /// If the current close price is higher the volume of that day is added to the OBV, while a lower close price will
     /// result in negative value.
     /// </summary>
-    public class OnBalanceVolume : TradeBarIndicator
+    public class OnBalanceVolume : VolumeBarIndicator
     {
-        private TradeBar _previousInput;
+        private VolumeBar _previousInput;
 
         /// <summary>
         /// Initializes a new instance of the Indicator class using the specified name.
@@ -50,7 +50,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns> A new value for this indicator </returns>
-        protected override decimal ComputeNextValue(TradeBar input)
+        protected override decimal ComputeNextValue(VolumeBar input)
         {
             var obv = Current.Value;
 

@@ -22,7 +22,7 @@ namespace QuantConnect.Indicators
     /// The Accumulation/Distribution is calculated using the following formula:
     /// AD = AD + ((Close - Low) - (High - Close)) / (High - Low) * Volume
     /// </summary>
-    public class AccumulationDistribution : TradeBarIndicator
+    public class AccumulationDistribution : VolumeBarIndicator
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="AccumulationDistribution"/> class using the specified name.
@@ -46,7 +46,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(TradeBar input)
+        protected override decimal ComputeNextValue(VolumeBar input)
         {
             var range = input.High - input.Low;
             return Current.Value + (range > 0 ? ((input.Close - input.Low) - (input.High - input.Close)) / range * input.Volume : 0m);
