@@ -20,11 +20,8 @@ namespace QuantConnect.Indicators
     /// The Percentage Price Oscillator is calculated using the following formula:
     /// PPO[i] = 100 * (FastMA[i] - SlowMA[i]) / SlowMA[i]
     /// </summary>
-    public class PercentagePriceOscillator : IndicatorBase<IndicatorDataPoint>
+    public class PercentagePriceOscillator : AbsolutePriceOscillator
     {
-        private readonly IndicatorBase<IndicatorDataPoint> _fast;
-        private readonly IndicatorBase<IndicatorDataPoint> _slow;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="PercentagePriceOscillator"/> class using the specified name and parameters.
         /// </summary> 
@@ -33,10 +30,8 @@ namespace QuantConnect.Indicators
         /// <param name="slowPeriod">The slow moving average period</param>
         /// <param name="movingAverageType">The type of moving average to use</param>
         public PercentagePriceOscillator(string name, int fastPeriod, int slowPeriod, MovingAverageType movingAverageType = MovingAverageType.Simple)
-            : base(name)
+            : base(name, fastPeriod, slowPeriod, movingAverageType)
         {
-            _fast = movingAverageType.AsIndicator(fastPeriod);
-            _slow = movingAverageType.AsIndicator(slowPeriod);
         }
 
         /// <summary>
@@ -51,34 +46,15 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Gets a flag indicating when this indicator is ready and fully initialized
-        /// </summary>
-        public override bool IsReady
-        {
-            get { return _fast.IsReady && _slow.IsReady; }
-        }
-
-        /// <summary>
         /// Computes the next value of this indicator from the given state
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
-            _fast.Update(input);
-            _slow.Update(input);
+            var value = base.ComputeNextValue(input);
 
-            return (IsReady && _slow != 0m) ? 100 * (_fast - _slow) / _slow : 0m;
-        }
-
-        /// <summary>
-        /// Resets this indicator to its initial state
-        /// </summary>
-        public override void Reset()
-        {
-            _fast.Reset();
-            _slow.Reset();
-            base.Reset();
+            return (IsReady && Slow != 0) ? 100 * value / Slow : 0m;
         }
     }
 }
