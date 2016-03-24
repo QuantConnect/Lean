@@ -20,11 +20,11 @@ namespace QuantConnect.Indicators
     /// The Absolute Price Oscillator is calculated using the following formula:
     /// APO[i] = FastMA[i] - SlowMA[i]
     /// </summary>
-    public class AbsolutePriceOscillator : IndicatorBase<IndicatorDataPoint>
+    /// <remarks>
+    /// The Absolute Price Oscillator is the same as a MACD with the signal period equal to the slow period.
+    /// </remarks>
+    public class AbsolutePriceOscillator : MovingAverageConvergenceDivergence
     {
-        private readonly IndicatorBase<IndicatorDataPoint> _fast;
-        private readonly IndicatorBase<IndicatorDataPoint> _slow;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="AbsolutePriceOscillator"/> class using the specified name and parameters.
         /// </summary> 
@@ -33,10 +33,8 @@ namespace QuantConnect.Indicators
         /// <param name="slowPeriod">The slow moving average period</param>
         /// <param name="movingAverageType">The type of moving average to use</param>
         public AbsolutePriceOscillator(string name, int fastPeriod, int slowPeriod, MovingAverageType movingAverageType = MovingAverageType.Simple)
-            : base(name)
+            : base(name, fastPeriod, slowPeriod, slowPeriod, movingAverageType)
         {
-            _fast = movingAverageType.AsIndicator(fastPeriod);
-            _slow = movingAverageType.AsIndicator(slowPeriod);
         }
 
         /// <summary>
@@ -48,37 +46,6 @@ namespace QuantConnect.Indicators
         public AbsolutePriceOscillator(int fastPeriod, int slowPeriod, MovingAverageType movingAverageType = MovingAverageType.Simple)
             : this(string.Format("APO({0},{1})", fastPeriod, slowPeriod), fastPeriod, slowPeriod, movingAverageType)
         {
-        }
-
-        /// <summary>
-        /// Gets a flag indicating when this indicator is ready and fully initialized
-        /// </summary>
-        public override bool IsReady
-        {
-            get { return _fast.IsReady && _slow.IsReady; }
-        }
-
-        /// <summary>
-        /// Computes the next value of this indicator from the given state
-        /// </summary>
-        /// <param name="input">The input given to the indicator</param>
-        /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IndicatorDataPoint input)
-        {
-            _fast.Update(input);
-            _slow.Update(input);
-
-            return IsReady ? _fast - _slow : input;
-        }
-
-        /// <summary>
-        /// Resets this indicator to its initial state
-        /// </summary>
-        public override void Reset()
-        {
-            _fast.Reset();
-            _slow.Reset();
-            base.Reset();
         }
     }
 }
