@@ -1,53 +1,65 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using WebSocketSharp;
 
-namespace QuantConnect.Brokerages
+namespace QuantConnect.Brokerages.Bitfinex
 {
+
     /// <summary>
-    /// Specifices what transaction model and submit/execution rules to use
+    /// Wrapper for WebSocketSharp to enhance testability
     /// </summary>
-    public enum BrokerageName
+    public interface IWebSocket
     {
-        /// <summary>
-        /// Transaction and submit/execution rules will be the default as initialized
-        /// </summary>
-        Default,
 
         /// <summary>
-        /// Transaction and submit/execution rules will use interactive brokers models
+        /// Wraps constructor
         /// </summary>
-        InteractiveBrokersBrokerage,
+        /// <param name="url"></param>
+        void Initialize(string url);
 
         /// <summary>
-        /// Transaction and submit/execution rules will use tradier models
+        /// Wraps send method
         /// </summary>
-        TradierBrokerage,
+        /// <param name="data"></param>
+        void Send(string data);
 
         /// <summary>
-        /// Transaction and submit/execution rules will use oanda models
+        /// Wraps Connect method
         /// </summary>
-        OandaBrokerage,
+        void Connect();
 
         /// <summary>
-        /// Transaction and submit/execution rules will use fxcm models
+        /// Wraps message event handler setter
         /// </summary>
-        FxcmBrokerage,
+        /// <param name="handler"></param>
+        void OnMessage(EventHandler<WebSocketSharp.MessageEventArgs> handler);
 
         /// <summary>
-        /// Transaction and submit/execution rules will use Bitfinex models
+        /// Wraps Close method
         /// </summary>
-        BitfinexBrokerage
+        void Close();
+
+        /// <summary>
+        /// Wraps IsAlive
+        /// </summary>
+        bool IsAlive { get; }
+
     }
 }

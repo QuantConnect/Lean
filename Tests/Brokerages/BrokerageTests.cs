@@ -56,7 +56,7 @@ namespace QuantConnect.Tests.Brokerages
         #region Test initialization and cleanup
 
         [SetUp]
-        public void Setup()
+        public virtual void Setup()
         {
             Log.Trace("");
             Log.Trace("");
@@ -162,7 +162,7 @@ namespace QuantConnect.Tests.Brokerages
                     else
                     {
                         var accountHoldings = brokerage.GetAccountHoldings().ToDictionary(x => x.Symbol);
-                        if (accountHoldings.ContainsKey(args.Symbol))
+                        if (accountHoldings.ContainsKey(args.Symbol) && _securityProvider.TryGetValue(args.Symbol, out security))
                         {
                             _securityProvider[args.Symbol].Holdings.SetHoldings(args.FillPrice, args.FillQuantity);
                         }
@@ -529,7 +529,7 @@ namespace QuantConnect.Tests.Brokerages
                 Assert.Fail("Brokerage failed to place the order: " + order);
             }
             requiredStatusEvent.WaitOneAssertFail((int) (1000*secondsTimeout), "Expected every order to fire a submitted or invalid status event");
-            desiredStatusEvent.WaitOneAssertFail((int) (1000*secondsTimeout), "OrderStatus " + expectedStatus + " was not encountered within the timeout.");
+            desiredStatusEvent.WaitOneAssertFail((int) (1000*secondsTimeout), "OrderStatus " + expectedStatus + " was not encountered within the timeout. Order Id:" + order.Id);
 
             Brokerage.OrderStatusChanged -= brokerageOnOrderStatusChanged;
 

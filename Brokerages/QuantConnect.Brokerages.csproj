@@ -156,6 +156,16 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="TradingApi.Bitfinex">
+      <HintPath>Bitfinex\TradingApi.Bitfinex.dll</HintPath>
+    </Reference>
+    <Reference Include="TradingApi.ModelObjects">
+      <HintPath>Bitfinex\TradingApi.ModelObjects.dll</HintPath>
+    </Reference>
+    <Reference Include="websocket-sharp, Version=1.0.2.36589, Culture=neutral, PublicKeyToken=5660b08a1845a91e, processorArchitecture=MSIL">
+      <HintPath>..\packages\WebSocketSharp.1.0.3-rc9\lib\websocket-sharp.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
@@ -163,6 +173,21 @@
     </Compile>
     <Compile Include="Backtesting\BacktestingBrokerage.cs" />
     <Compile Include="Backtesting\BacktestingBrokerageFactory.cs" />
+    <Compile Include="Bitfinex\BaseMessage.cs" />
+    <Compile Include="Bitfinex\BitfinexBrokerage.Messaging.cs" />
+    <Compile Include="Bitfinex\BitfinexBrokerage.cs" />
+    <Compile Include="Bitfinex\BitfinexBrokerage.Util.cs" />
+    <Compile Include="Bitfinex\BitfinexWebsocketsPaperBrokerageFactory.cs" />
+    <Compile Include="Bitfinex\BitfinexBrokerageFactory.cs" />
+    <Compile Include="Bitfinex\BitfinexOrder.cs" />
+    <Compile Include="Bitfinex\BitfinexWebsocketsBrokerage.cs" />
+    <Compile Include="Bitfinex\BitfinexWebsocketsBrokerage.Messaging.cs" />
+    <Compile Include="Bitfinex\BitfinexWebsocketsPaperBrokerage.cs" />
+    <Compile Include="Bitfinex\IWebSocket.cs" />
+    <Compile Include="Bitfinex\TickerMessage.cs" />
+    <Compile Include="Bitfinex\TradeMessage.cs" />
+    <Compile Include="Bitfinex\WalletMessage.cs" />
+    <Compile Include="Bitfinex\WebSocketWrapper.cs" />
     <Compile Include="Brokerage.cs" />
     <Compile Include="BrokerageException.cs" />
     <Compile Include="BrokerageFactory.cs" />
@@ -253,6 +278,10 @@
     <None Include="Fxcm\QuantConnect.Fxcm.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Bitfinex\TradingApi.Bitfinex.dll" />
+    <Content Include="Bitfinex\TradingApi.ModelObjects.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
