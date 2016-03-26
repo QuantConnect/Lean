@@ -130,7 +130,7 @@ namespace QuantConnect.Orders
             //Initialize to zero, manually set fill quantity
             FillQuantity = 0;
             FillPrice = 0;
-            FillPriceCurrency = string.Empty;
+            FillPriceCurrency = order.PriceCurrency;
 
             UtcTime = utcTime;
             OrderFee = Math.Abs(orderFee);
