@@ -337,6 +337,8 @@ namespace QuantConnect.Brokerages.Fxcm
                     // existing order
                     if (!OrderIsBeingProcessed(orderStatus.getCode()))
                     {
+                        order.PriceCurrency = message.getCurrency();
+
                         var orderEvent = new OrderEvent(order, DateTime.UtcNow, 0)
                         {
                             Status = ConvertOrderStatus(orderStatus),
@@ -358,6 +360,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 {
                     _mapFxcmOrderIdsToOrders[orderId] = order;
                     order.BrokerId.Add(orderId);
+                    order.PriceCurrency = message.getCurrency();
 
                     // new order
                     var orderEvent = new OrderEvent(order, DateTime.UtcNow, 0)

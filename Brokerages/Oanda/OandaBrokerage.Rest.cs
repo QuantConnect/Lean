@@ -137,6 +137,8 @@ namespace QuantConnect.Brokerages.Oanda
                 if (data.transaction.type == "ORDER_FILLED")
                 {
                     var qcOrder = _orderProvider.GetOrderByBrokerageId(data.transaction.orderId);
+                    qcOrder.PriceCurrency = _securityProvider.GetSecurity(qcOrder.Symbol).SymbolProperties.QuoteCurrency;
+
                     const int orderFee = 0;
                     var fill = new OrderEvent(qcOrder, DateTime.UtcNow, orderFee, "Oanda Fill Event")
                     {
