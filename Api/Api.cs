@@ -12,38 +12,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
+
 using System;
+using System.Collections.Generic;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
-using QuantConnect.Packets;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Api
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Cloud algorithm activity controls
     /// </summary>
     public class Api : IApi
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
+        private static readonly MarketHoursDatabase MarketHoursDatabase = MarketHoursDatabase.FromDataFolder();
 
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
-
-        /******************************************************** 
-        * CLASS METHODS:
-        *********************************************************/
         /// <summary>
         /// Initialize the API.
         /// </summary>
-        public void Initialize()
+        public virtual void Initialize()
         {
             //Nothing to initialize in the local copy of the engine.
         }
@@ -54,9 +42,9 @@ namespace QuantConnect.Api
         /// <param name="userId">User ID</param>
         /// <param name="userToken">User API token</param>
         /// <returns>int[3] iUserBacktestLimit, iUserDailyLimit, remaining</returns>
-        public int[] ReadLogAllowance(int userId, string userToken) 
+        public virtual int[] ReadLogAllowance(int userId, string userToken) 
         {
-            return new[] { Int32.MaxValue, Int32.MaxValue, Int32.MaxValue };
+            return new[] { int.MaxValue, int.MaxValue, int.MaxValue };
         }
 
         /// <summary>
@@ -69,7 +57,7 @@ namespace QuantConnect.Api
         /// <param name="userToken">User access token</param>
         /// <param name="hitLimit">Boolean signifying hit log limit</param>
         /// <returns>Number of bytes remaining</returns>
-        public void UpdateDailyLogUsed(int userId, string backtestId, string url, int length, string userToken, bool hitLimit = false)
+        public virtual void UpdateDailyLogUsed(int userId, string backtestId, string url, int length, string userToken, bool hitLimit = false)
         {
             //
         }
@@ -78,8 +66,9 @@ namespace QuantConnect.Api
         /// Get the algorithm status from the user with this algorithm id.
         /// </summary>
         /// <param name="algorithmId">String algorithm id we're searching for.</param>
+        /// <param name="userId">The user id of the algorithm</param>
         /// <returns>Algorithm status enum</returns>
-        public AlgorithmControl GetAlgorithmStatus(string algorithmId)
+        public virtual AlgorithmControl GetAlgorithmStatus(string algorithmId, int userId)
         {
             return new AlgorithmControl();
         }
@@ -91,7 +80,7 @@ namespace QuantConnect.Api
         /// <param name="algorithmId">String algorithm id we're setting.</param>
         /// <param name="message">Message for the algorithm status event</param>
         /// <returns>Algorithm status enum</returns>
-        public void SetAlgorithmStatus(string algorithmId, AlgorithmStatus status, string message = "")
+        public virtual void SetAlgorithmStatus(string algorithmId, AlgorithmStatus status, string message = "")
         {
             //
         }
@@ -109,27 +98,55 @@ namespace QuantConnect.Api
         /// <param name="volume">Volume traded</param>
         /// <param name="trades">Total trades since inception</param>
         /// <param name="sharpe">Sharpe ratio since inception</param>
-        public void SendStatistics(string algorithmId, decimal unrealized, decimal fees, decimal netProfit, decimal holdings, decimal equity, decimal netReturn, decimal volume, int trades, double sharpe)
+        public virtual void SendStatistics(string algorithmId, decimal unrealized, decimal fees, decimal netProfit, decimal holdings, decimal equity, decimal netReturn, decimal volume, int trades, double sharpe)
         {
             // 
         }
 
         /// <summary>
-        /// Get the calendar open hours for the today.
+        /// Get the calendar open hours for the date.
         /// </summary>
-        public MarketToday MarketToday(SecurityType type)
+        public virtual IEnumerable<MarketHoursSegment> MarketToday(DateTime time, Symbol symbol)
         {
-            return new MarketToday();
+            if (Config.GetBool("force-exchange-always-open"))
+            {
+                yield return MarketHoursSegment.OpenAllDay();
+                yield break;
+            }
+
+            var hours = MarketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.ID.SecurityType);
+            foreach (var segment in hours.MarketHours[time.DayOfWeek].Segments)
+            {
+                yield return segment;
+            }
         }
 
         /// <summary>
         /// Store logs with these authentication type
         /// </summary>
-        public void Store(string data, string location, StoragePermissions permissions, bool async = false)
+        public virtual void Store(string data, string location, StoragePermissions permissions, bool async = false)
         {
             //
         }
 
-    } // End usage controls class
+        /// <summary>
+        /// Send an email to the user associated with the specified algorithm id
+        /// </summary>
+        /// <param name="algorithmId">The algorithm id</param>
+        /// <param name="subject">The email subject</param>
+        /// <param name="body">The email message body</param>
+        public virtual void SendUserEmail(string algorithmId, string subject, string body)
+        {
+            //
+        }
 
-} // End QC Namespace
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
+        public virtual void Dispose()
+        {
+            // NOP
+        }
+    }
+}

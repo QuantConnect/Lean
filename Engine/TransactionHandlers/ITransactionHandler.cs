@@ -14,12 +14,12 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using System.Collections.Concurrent;
-using System.Collections.Generic;
+using System.ComponentModel.Composition;
+using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Orders;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.TransactionHandlers
 {
@@ -27,13 +27,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
     /// Transaction handlers define how the transactions are processed and set the order fill information.
     /// The pass this information back to the algorithm portfolio and ensure the cash and portfolio are synchronized.
     /// </summary>
-    /// <remarks>A new transaction handler is required for each each brokerage endpoint.</remarks>
-    public interface ITransactionHandler
+    [InheritedExport(typeof(ITransactionHandler))]
+    public interface ITransactionHandler : IOrderProcessor
     {
-        /******************************************************** 
-        * INTERFACE PROPERTIES
-        *********************************************************/
-
         /// <summary>
         /// Boolean flag indicating the thread is busy. 
         /// False indicates it is completely finished processing and ready to be terminated.
@@ -44,15 +40,18 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Boolean flag signalling the handler is ready and all orders have been processed.
+        /// Gets the permanent storage for all orders
         /// </summary>
-        bool Ready
+        ConcurrentDictionary<int, Order> Orders
         {
             get;
         }
-        /******************************************************** 
-        * INTERFACE METHODS
-        *********************************************************/
+
+        /// <summary>
+        /// Initializes the transaction handler for the specified algorithm using the specified brokerage implementation
+        /// </summary>
+        void Initialize(IAlgorithm algorithm, IBrokerage brokerage, IResultHandler resultHandler);
+
         /// <summary>
         /// Primary thread entry point to launch the transaction thread.
         /// </summary>

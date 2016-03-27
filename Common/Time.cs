@@ -13,28 +13,67 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using NodaTime;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 
 namespace QuantConnect 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Time helper class collection for working with trading dates
     /// </summary>
-    public class Time 
+    public static class Time
     {
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
+        /// <summary>
+        /// Provides a value far enough in the future the current computer hardware will have decayed :)
+        /// </summary>
+        /// <value>
+        /// new DateTime(2050, 12, 31)
+        /// </value>
+        public static readonly DateTime EndOfTime = new DateTime(2050, 12, 31);
+
+        /// <summary>
+        /// Provides a value far enough in the past that can be used as a lower bound on dates
+        /// </summary>
+        /// <value>
+        /// DateTime.FromOADate(0)
+        /// </value>
+        public static readonly DateTime BeginningOfTime = DateTime.FromOADate(0);
+
+        /// <summary>
+        /// Provides a value large enough that we won't hit the limit, while small enough
+        /// we can still do math against it without checking everywhere for <see cref="TimeSpan.MaxValue"/>
+        /// </summary>
+        public static readonly TimeSpan MaxTimeSpan = TimeSpan.FromDays(1000*365);
+
+        /// <summary>
+        /// One Day TimeSpan Period Constant
+        /// </summary>
+        public static readonly TimeSpan OneDay = TimeSpan.FromDays(1);
+
+        /// <summary>
+        /// One Hour TimeSpan Period Constant
+        /// </summary>
+        public static readonly TimeSpan OneHour = TimeSpan.FromHours(1);
+        
+        /// <summary>
+        /// One Minute TimeSpan Period Constant
+        /// </summary>
+        public static readonly TimeSpan OneMinute = TimeSpan.FromMinutes(1);
+
+        /// <summary>
+        /// One Second TimeSpan Period Constant
+        /// </summary>
+        public static readonly TimeSpan OneSecond = TimeSpan.FromSeconds(1);
+
+        /// <summary>
+        /// One Millisecond TimeSpan Period Constant
+        /// </summary>
+        public static readonly TimeSpan OneMillisecond = TimeSpan.FromMilliseconds(1);
+
         /// <summary>
         /// Live charting is sensitive to timezone so need to convert the local system time to a UTC and display in browser as UTC.
         /// </summary>
@@ -43,16 +82,33 @@ namespace QuantConnect
             private readonly DateTime utcDateTime;
             private readonly TimeZoneInfo timeZone;
 
+            /// <summary>
+            /// Initializes a new instance of the <see cref="QuantConnect.Time.DateTimeWithZone"/> struct.
+            /// </summary>
+            /// <param name="dateTime">Date time.</param>
+            /// <param name="timeZone">Time zone.</param>
             public DateTimeWithZone(DateTime dateTime, TimeZoneInfo timeZone)
             {
                 utcDateTime = TimeZoneInfo.ConvertTimeToUtc(dateTime, timeZone);
                 this.timeZone = timeZone;
             }
 
+            /// <summary>
+            /// Gets the universal time.
+            /// </summary>
+            /// <value>The universal time.</value>
             public DateTime UniversalTime { get { return utcDateTime; } }
 
+            /// <summary>
+            /// Gets the time zone.
+            /// </summary>
+            /// <value>The time zone.</value>
             public TimeZoneInfo TimeZone { get { return timeZone; } }
 
+            /// <summary>
+            /// Gets the local time.
+            /// </summary>
+            /// <value>The local time.</value>
             public DateTime LocalTime
             {
                 get
@@ -61,7 +117,9 @@ namespace QuantConnect
                 }
             }
         }
-        
+
+        private static readonly DateTime EpochTime = new DateTime(1970, 1, 1, 0, 0, 0, 0);
+
         /// <summary>
         /// Create a C# DateTime from a UnixTimestamp
         /// </summary>
@@ -69,16 +127,16 @@ namespace QuantConnect
         /// <returns>C# date timeobject</returns>
         public static DateTime UnixTimeStampToDateTime(double unixTimeStamp) 
         {
-            var time = DateTime.Now;
+            DateTime time;
             try 
             {
                 // Unix timestamp is seconds past epoch
-                time = new DateTime(1970, 1, 1, 0, 0, 0, 0);
-                time = time.AddSeconds(unixTimeStamp);
+                time = EpochTime.AddSeconds(unixTimeStamp);
             }
             catch (Exception err)
             {
-                Log.Error("Time.UnixTimeStampToDateTime(): " + unixTimeStamp + err.Message);
+                Log.Error(err, "UnixTimeStamp: " + unixTimeStamp);
+                time = DateTime.Now;
             }
             return time;
         }
@@ -97,7 +155,7 @@ namespace QuantConnect
             } 
             catch (Exception err) 
             {
-                Log.Error("Time.DateTimeToUnixTimeStamp(): " + time.ToOADate() + err.Message);
+                Log.Error(err, time.ToString("o"));
             }
             return timestamp;
         }
@@ -109,6 +167,21 @@ namespace QuantConnect
         public static double TimeStamp() 
         {
             return DateTimeToUnixTimeStamp(DateTime.UtcNow);
+        }
+        
+        /// <summary>
+        /// Returns the timespan with the larger value
+        /// </summary>
+        public static TimeSpan Max(TimeSpan one, TimeSpan two)
+        {
+            return TimeSpan.FromTicks(Math.Max(one.Ticks, two.Ticks));
+        }
+        /// <summary>
+        /// Returns the timespan with the smaller value
+        /// </summary>
+        public static TimeSpan Min(TimeSpan one, TimeSpan two)
+        {
+            return TimeSpan.FromTicks(Math.Min(one.Ticks, two.Ticks));
         }
 
         /// <summary>
@@ -145,7 +218,7 @@ namespace QuantConnect
             }
             catch (Exception err)
             {
-                Log.Error("Time.ParseDate(): " + err.Message);
+                Log.Error(err);
             }
             
             return DateTime.Now;
@@ -172,17 +245,88 @@ namespace QuantConnect
         /// <param name="from">Start date</param>
         /// <param name="thru">End date</param>
         /// <returns>Enumerable date range</returns>
-        public static IEnumerable<DateTime> EachTradeableDay(SecurityManager securities, DateTime from, DateTime thru) 
+        public static IEnumerable<DateTime> EachTradeableDay(ICollection<Security> securities, DateTime from, DateTime thru)
         {
-            for (var day = from.Date; day.Date <= thru.Date; day = day.AddDays(1)) 
+            for (var day = from.Date; day.Date <= thru.Date; day = day.AddDays(1))
             {
-                if (TradableDate(securities, day)) 
+                if (TradableDate(securities, day))
                 {
                     yield return day;
                 }
-            }   
+            }
         }
 
+
+        /// <summary>
+        /// Define an enumerable date range of tradeable dates - skip the holidays and weekends when securities in this algorithm don't trade.
+        /// </summary>
+        /// <param name="security">The security to get tradeable dates for</param>
+        /// <param name="from">Start date</param>
+        /// <param name="thru">End date</param>
+        /// <returns>Enumerable date range</returns>
+        public static IEnumerable<DateTime> EachTradeableDay(Security security, DateTime from, DateTime thru)
+        {
+            return EachTradeableDay(security.Exchange.Hours, from, thru);
+        }
+
+
+        /// <summary>
+        /// Define an enumerable date range of tradeable dates - skip the holidays and weekends when securities in this algorithm don't trade.
+        /// </summary>
+        /// <param name="exchange">The security to get tradeable dates for</param>
+        /// <param name="from">Start date</param>
+        /// <param name="thru">End date</param>
+        /// <returns>Enumerable date range</returns>
+        public static IEnumerable<DateTime> EachTradeableDay(SecurityExchangeHours exchange, DateTime from, DateTime thru)
+        {
+            for (var day = from.Date; day.Date <= thru.Date; day = day.AddDays(1))
+            {
+                if (exchange.IsDateOpen(day))
+                {
+                    yield return day;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Define an enumerable date range of tradeable dates but expressed in a different time zone.
+        /// </summary>
+        /// <remarks>
+        /// This is mainly used to bridge the gap between exchange time zone and data time zone for file written to disk. The returned
+        /// enumerable of dates is gauranteed to be the same size or longer than those generated via <see cref="EachTradeableDay(ICollection{Security},DateTime,DateTime)"/>
+        /// </remarks>
+        /// <param name="exchange">The exchange hours</param>
+        /// <param name="from">The start time in the exchange time zone</param>
+        /// <param name="thru">The end time in the exchange time zone (inclusive of the final day)</param>
+        /// <param name="timeZone">The timezone to project the dates into (inclusive of the final day)</param>
+        /// <param name="includeExtendedMarketHours">True to include extended market hours trading in the search, false otherwise</param>
+        /// <returns></returns>
+        public static IEnumerable<DateTime> EachTradeableDayInTimeZone(SecurityExchangeHours exchange, DateTime from, DateTime thru, DateTimeZone timeZone, bool includeExtendedMarketHours = true)
+        {
+            var currentExchangeTime = from;
+            thru = thru.Date.AddDays(1); // we want to include the full thru date
+            while (currentExchangeTime < thru)
+            {
+                // take steps of max size of one day in the data time zone
+                var currentInTimeZone = currentExchangeTime.ConvertTo(exchange.TimeZone, timeZone);
+                var currentInTimeZoneEod = currentInTimeZone.Date.AddDays(1);
+
+                // don't pass the end
+                if (currentInTimeZoneEod.ConvertTo(timeZone, exchange.TimeZone) > thru)
+                {
+                    currentInTimeZoneEod = thru.ConvertTo(exchange.TimeZone, timeZone);
+                }
+
+                // perform market open checks in the exchange time zone
+                var currentExchangeTimeEod = currentInTimeZoneEod.ConvertTo(timeZone, exchange.TimeZone);
+                if (exchange.IsOpen(currentExchangeTime, currentExchangeTimeEod, includeExtendedMarketHours))
+                {
+                    yield return currentInTimeZone.Date;
+                }
+
+                currentExchangeTime = currentInTimeZoneEod.ConvertTo(timeZone, exchange.TimeZone);
+            }
+        } 
 
         /// <summary>
         /// Make sure this date is not a holiday, or weekend for the securities in this algorithm.
@@ -190,21 +334,20 @@ namespace QuantConnect
         /// <param name="securities">Security manager from the algorithm</param>
         /// <param name="day">DateTime to check if trade-able.</param>
         /// <returns>True if tradeable date</returns>
-        public static bool TradableDate(SecurityManager securities, DateTime day) 
+        public static bool TradableDate(IEnumerable<Security> securities, DateTime day)
         {
-            var tradeable = false;
-            try 
+            try
             {
-                foreach (var security in securities.Values)
+                foreach (var security in securities)
                 {
-                    if (security.Exchange.DateIsOpen(day)) tradeable = true;
+                    if (security.Exchange.IsOpenDuringBar(day.Date, day.Date.AddDays(1), security.IsExtendedMarketHours)) return true;
                 }
-            } 
+            }
             catch (Exception err)
             {
-                Log.Error("Time.TradeableDate(): " + err.Message);
+                Log.Error(err);
             }
-            return tradeable;
+            return false;
         }
 
 
@@ -215,15 +358,15 @@ namespace QuantConnect
         /// <param name="start">Start of Date Loop</param>
         /// <param name="finish">End of Date Loop</param>
         /// <returns>Number of dates</returns>
-        public static int TradeableDates(SecurityManager securities, DateTime start, DateTime finish)
+        public static int TradeableDates(ICollection<Security> securities, DateTime start, DateTime finish)
         {
             var count = 0;
             Log.Trace("Time.TradeableDates(): Security Count: " + securities.Count);
             try 
             {
-                foreach (var day in Time.EachDay(start, finish)) 
+                foreach (var day in EachDay(start, finish)) 
                 {
-                    if (Time.TradableDate(securities, day)) 
+                    if (TradableDate(securities, day)) 
                     {
                         count++;
                     }
@@ -231,11 +374,38 @@ namespace QuantConnect
             } 
             catch (Exception err) 
             {
-                Log.Error("Time.TradeableDates(): " + err.Message);
+                Log.Error(err);
             }
             return count;
         }
 
+        /// <summary>
+        /// Determines the start time required to produce the requested number of bars and the given size
+        /// </summary>
+        /// <param name="exchange">The exchange used to test for market open hours</param>
+        /// <param name="end">The end time of the last bar over the requested period</param>
+        /// <param name="barSize">The length of each bar</param>
+        /// <param name="barCount">The number of bars requested</param>
+        /// <param name="extendedMarketHours">True to allow extended market hours bars, otherwise false for only normal market hours</param>
+        /// <returns>The start time that would provide the specified number of bars ending at the specified end time, rounded down by the requested bar size</returns>
+        public static DateTime GetStartTimeForTradeBars(SecurityExchangeHours exchange, DateTime end, TimeSpan barSize, int barCount, bool extendedMarketHours)
+        {
+            if (barSize <= TimeSpan.Zero)
+            {
+                throw new ArgumentException("barSize must be greater than TimeSpan.Zero", "barSize");
+            }
 
-    } // End Time Class
-} // End QC Namespace
+            var current = end.RoundDown(barSize);
+            for (int i = 0; i < barCount;)
+            {
+                var previous = current;
+                current = current - barSize;
+                if (exchange.IsOpen(current, previous, extendedMarketHours))
+                {
+                    i++;
+                }
+            }
+            return current;
+        }
+    }
+}

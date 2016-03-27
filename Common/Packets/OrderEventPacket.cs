@@ -14,27 +14,17 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using Newtonsoft.Json;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Packets
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Order event packet for passing updates on the state of an order to the portfolio. 
     /// </summary>
     /// <remarks>As an order is updated in pieces/partial fills the order fill price is passed back to the Algorithm Portfolio method</remarks>
     public class OrderEventPacket : Packet
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         /// <summary>
         /// Order event object
         /// </summary>
@@ -47,9 +37,6 @@ namespace QuantConnect.Packets
         [JsonProperty(PropertyName = "sAlgorithmID")]
         public string AlgorithmId;
 
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Default constructor for JSON
         /// </summary>

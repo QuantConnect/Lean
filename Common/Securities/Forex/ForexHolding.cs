@@ -13,48 +13,21 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
-using QuantConnect.Securities.Interfaces;
-
 namespace QuantConnect.Securities.Forex 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// FOREX holdings implementation of the base securities class
     /// </summary>
     /// <seealso cref="SecurityHolding"/>
     public class ForexHolding : SecurityHolding 
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
-
-        /******************************************************** 
-        * CONSTRUCTOR/DELEGATE DEFINITIONS
-        *********************************************************/
-
         /// <summary>
         /// Forex Holding Class
         /// </summary>
-        public ForexHolding(string symbol, decimal leverage, ISecurityTransactionModel transactionModel)
-            : base(symbol, SecurityType.Forex, leverage, transactionModel)
+        /// <param name="security">The forex security being held</param>
+        public ForexHolding(Forex security)
+            : base(security)
         {
-            //Nothing to do.
         }
-
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
-            
-
-        /******************************************************** 
-        * CLASS METHODS 
-        *********************************************************/
-            
-    } // End Forex Holdings:
-} //End Namespace
+    }
+}

@@ -13,17 +13,10 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using System;
 
 namespace QuantConnect.Orders
 {
-    /******************************************************** 
-    * ORDER EVENT CLASS DEFINITION
-    *********************************************************/
     /// <summary>
     /// Order Event - Messaging class signifying a change in an order state and record the change in the user's algorithm portfolio 
     /// </summary>
@@ -37,12 +30,22 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Easy access to the order symbol associated with this event.
         /// </summary>
-        public string Symbol;
+        public Symbol Symbol;
+
+        /// <summary>
+        /// The date and time of this event (UTC).
+        /// </summary>
+        public DateTime UtcTime;
 
         /// <summary>
         /// Status message of the order.
         /// </summary>
         public OrderStatus Status;
+
+        /// <summary>
+        /// The fee associated with the order (always positive value).
+        /// </summary>
+        public decimal OrderFee;
 
         /// <summary>
         /// Fill price information about the order
@@ -70,10 +73,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public OrderDirection Direction
         {
-            get
-            {
-                return (FillQuantity > 0) ? OrderDirection.Buy : OrderDirection.Sell;
-            }
+            get; private set;
         }
 
         /// <summary>
@@ -82,39 +82,51 @@ namespace QuantConnect.Orders
         public string Message;
 
         /// <summary>
-        /// Order Constructor.
+        /// Order Event Constructor.
         /// </summary>
-        /// <param name="id">Id of the parent order</param>
+        /// <param name="orderId">Id of the parent order</param>
         /// <param name="symbol">Asset Symbol</param>
+        /// <param name="utcTime">Date/time of this event</param>
         /// <param name="status">Status of the order</param>
+        /// <param name="direction">The direction of the order this event belongs to</param>
         /// <param name="fillPrice">Fill price information if applicable.</param>
         /// <param name="fillQuantity">Fill quantity</param>
+        /// <param name="orderFee">The order fee</param>
         /// <param name="message">Message from the exchange</param>
-        public OrderEvent(int id = 0, string symbol = "", OrderStatus status = OrderStatus.None, decimal fillPrice = 0, int fillQuantity = 0, string message = "")
+        public OrderEvent(int orderId, Symbol symbol, DateTime utcTime, OrderStatus status, OrderDirection direction, decimal fillPrice, int fillQuantity, decimal orderFee, string message = "")
         {
-            OrderId = id;
-            Status = status;
-            FillPrice = fillPrice;
-            Message = message;
-            FillQuantity = fillQuantity;
+            OrderId = orderId;
             Symbol = symbol;
+            UtcTime = utcTime;
+            Status = status;
+            Direction = direction;
+            FillPrice = fillPrice;
+            FillQuantity = fillQuantity;
+            OrderFee = Math.Abs(orderFee);
+            Message = message;
         }
 
         /// <summary>
         /// Helper Constructor using Order to Initialize.
         /// </summary>
         /// <param name="order">Order for this order status</param>
+        /// <param name="utcTime">Date/time of this event</param>
+        /// <param name="orderFee">The order fee</param>
         /// <param name="message">Message from exchange or QC.</param>
-        public OrderEvent(Order order, string message = "") 
+        public OrderEvent(Order order, DateTime utcTime, decimal orderFee, string message = "") 
         {
             OrderId = order.Id;
-            Status = order.Status;
-            Message = message;
             Symbol = order.Symbol;
+            Status = order.Status;
+            Direction = order.Direction;
 
             //Initialize to zero, manually set fill quantity
             FillQuantity = 0;
             FillPrice = 0;
+
+            UtcTime = utcTime;
+            OrderFee = Math.Abs(orderFee);
+            Message = message;
         }
 
         /// <summary>
@@ -126,7 +138,23 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return string.Format("OrderID: {0} Symbol: {1} Status: {2}", OrderId, Symbol, Status);
+            var message = FillQuantity == 0 
+                ? string.Format("OrderID: {0} Symbol: {1} Status: {2}", OrderId, Symbol, Status) 
+                : string.Format("OrderID: {0} Symbol: {1} Status: {2} Quantity: {3} FillPrice: {4}", OrderId, Symbol, Status, FillQuantity, FillPrice, OrderFee);
+
+            // attach the order fee so it ends up in logs properly
+            if (OrderFee != 0m) message += message + " OrderFee: " + OrderFee;
+            
+            return message;
+        }
+
+        /// <summary>
+        /// Returns a clone of the current object.
+        /// </summary>
+        /// <returns>The new clone object</returns>
+        public OrderEvent Clone()
+        {
+            return (OrderEvent)MemberwiseClone();
         }
     }
 

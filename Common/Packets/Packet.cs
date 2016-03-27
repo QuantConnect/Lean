@@ -14,10 +14,6 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -121,6 +117,15 @@ namespace QuantConnect.Packets
         OrderEvent,
 
         /// Boolean true/false success
-        Success
+        Success,
+
+        /// History live job packets
+        History,
+
+        /// Result from a command
+        CommandResult,
+
+        /// Hook from git hub
+        GitHubHook
     }
 }

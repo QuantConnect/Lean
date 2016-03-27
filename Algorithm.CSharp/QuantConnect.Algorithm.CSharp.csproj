@@ -1,0 +1,137 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{39A81C16-A1E8-425E-A8F2-1433ADB80228}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>QuantConnect.Algorithm.CSharp</RootNamespace>
+    <AssemblyName>QuantConnect.Algorithm.CSharp</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <LangVersion>5</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="NodaTime, Version=1.3.0.0, Culture=neutral, PublicKeyToken=4226afe0d9b296d1, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\NodaTime.1.3.1\lib\net35-Client\NodaTime.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AddRemoveSecurityRegressionAlgorithm.cs" />
+    <Compile Include="BasicTemplateAlgorithm.cs" />
+    <Compile Include="Benchmarks\EmptyMinute400EquityAlgorithm.cs" />
+    <Compile Include="Benchmarks\Symbols.cs" />
+    <Compile Include="CoarseUniverseTop5DollarVolumeAlgorithm.cs" />
+    <Compile Include="CustomBenchmarkAlgorithm.cs" />
+    <Compile Include="CustomBrokerageMessageHandlerAlgorithm.cs" />
+    <Compile Include="CustomDataRegressionAlgorithm.cs" />
+    <Compile Include="CustomDataUniverseAlgorithm.cs" />
+    <Compile Include="CustomModelsAlgorithm.cs" />
+    <Compile Include="CustomSecurityInitializerAlgorithm.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DelistingEventsAlgorithm.cs" />
+    <Compile Include="DropboxBaseDataUniverseSelectionAlgorithm.cs" />
+    <Compile Include="EquitiesLabAlgorithm.cs" />
+    <Compile Include="HistoryAlgorithm.cs" />
+    <Compile Include="HistoryAndWarmupRegressionAlgorithm.cs" />
+    <Compile Include="LimitFillRegressionAlgorithm.cs" />
+    <Compile Include="BasicTemplateFillForwardAlgorithm.cs" />
+    <Compile Include="BenchmarkAlgorithm.cs" />
+    <Compile Include="BrokerageModelAlgorithm.cs" />
+    <Compile Include="BubbleAlgorithm.cs" />
+    <Compile Include="CustomChartingAlgorithm.cs" />
+    <Compile Include="CustomDataBitcoinAlgorithm.cs" />
+    <Compile Include="CustomDataNIFTYAlgorithm.cs" />
+    <Compile Include="DailyAlgorithm.cs" />
+    <Compile Include="DataConsolidationAlgorithm.cs" />
+    <Compile Include="DisplacedMovingAverageRibbon.cs" />
+    <Compile Include="DividendAlgorithm.cs" />
+    <Compile Include="ETFGlobalRotationAlgorithm.cs" />
+    <Compile Include="IndicatorSuiteAlgorithm.cs" />
+    <Compile Include="LiveFeaturesAlgorithm.cs" />
+    <Compile Include="OpeningBreakoutAlgorithm.cs" />
+    <Compile Include="DropboxUniverseSelectionAlgorithm.cs" />
+    <Compile Include="ParameterizedAlgorithm.cs" />
+    <Compile Include="UniverseSelectionDefinitionsAlgorithm.cs" />
+    <Compile Include="UserDefinedUniverseAlgorithm.cs" />
+    <Compile Include="WarmupAlgorithm.cs" />
+    <Compile Include="WarmupHistoryAlgorithm.cs" />
+    <Compile Include="MACDTrendAlgorithm.cs" />
+    <Compile Include="MarginCallEventsAlgorithm.cs" />
+    <Compile Include="MarketOnOpenOnCloseAlgorithm.cs" />
+    <Compile Include="MovingAverageCrossAlgorithm.cs" />
+    <Compile Include="MultipleSymbolConsolidationAlgorithm.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QuandlFuturesDataAlgorithm.cs" />
+    <Compile Include="QuandlImporterAlgorithm.cs" />
+    <Compile Include="RegressionAlgorithm.cs" />
+    <Compile Include="RenkoConsolidatorAlgorithm.cs" />
+    <Compile Include="ScheduledEventsAlgorithm.cs" />
+    <Compile Include="StressSymbolsAlgorithm.cs" />
+    <Compile Include="StressSymbols.cs" />
+    <Compile Include="TickDataFilteringAlgorithm.cs" />
+    <Compile Include="EmaCrossUniverseSelectionAlgorithm.cs" />
+    <Compile Include="UniverseSelectionRegressionAlgorithm.cs" />
+    <Compile Include="UpdateOrderLiveTestAlgorithm.cs" />
+    <Compile Include="UpdateOrderRegressionAlgorithm.cs" />
+    <Compile Include="OrderTicketDemoAlgorithm.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">
+      <Project>{3240aca4-bdd4-4d24-ac36-bbb651c39212}</Project>
+      <Name>QuantConnect.Algorithm</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Common\QuantConnect.csproj">
+      <Project>{2545c0b4-fabb-49c9-8dd1-9ad7ee23f86b}</Project>
+      <Name>QuantConnect</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Indicators\QuantConnect.Indicators.csproj">
+      <Project>{73fb2522-c3ed-4e47-8e3d-afad48a6b888}</Project>
+      <Name>QuantConnect.Indicators</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

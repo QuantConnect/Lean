@@ -13,6 +13,7 @@
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
+    <LangVersion>5</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -32,15 +33,37 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CloneExtensions, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\CloneExtensions.1.2\lib\portable-net40+sl50+win+wp80\CloneExtensions.dll</HintPath>
+    </Reference>
+    <Reference Include="Ionic.Zip, Version=1.9.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\DotNetZip.1.9.3\lib\net20\Ionic.Zip.dll</HintPath>
+    </Reference>
     <Reference Include="Krs.Ats.IBNet, Version=9.66.0.31, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Krs.Ats.IBNet.9.66.0.31\lib\net20\Krs.Ats.IBNet.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="NodaTime">
+      <HintPath>..\packages\NodaTime.1.3.1\lib\net35-Client\NodaTime.dll</HintPath>
+    </Reference>
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
     </Reference>
+    <Reference Include="QuantConnect.Fxcm, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Brokerages\Fxcm\QuantConnect.Fxcm.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -48,12 +71,160 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Algorithm\Test_Cash.cs" />
-    <None Include="Algorithm\Test_LiveAlgorithm.cs" />
-    <None Include="Algorithm\Test_MixedAssets.cs" />
-    <None Include="Algorithm\Test_OnEndOfDay.cs" />
-    <None Include="Algorithm\Test_SetHolding.cs" />
+    <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="AlgorithmRunner.cs" />
+    <Compile Include="Algorithm\AlgorithmTradingTests.cs" />
+    <Compile Include="Brokerages\BrokerageTests.cs" />
+    <Compile Include="Brokerages\Fxcm\FxcmBrokerageDataQueueHandlerTests.cs" />
+    <Compile Include="Brokerages\Fxcm\FxcmBrokerageTests.cs" />
+    <Compile Include="Brokerages\Fxcm\FxcmLimitOrderTestParameters.cs" />
+    <Compile Include="Brokerages\Fxcm\FxcmStopMarketOrderTestParameters.cs" />
+    <Compile Include="Brokerages\Fxcm\FxcmSymbolMapperTests.cs" />
+    <Compile Include="Brokerages\SecurityProvider.cs" />
+    <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageDataQueueHandlerTest.cs" />
+    <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersOrderTests.cs" />
+    <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersSymbolMapperTests.cs" />
+    <Compile Include="Brokerages\LimitOrderTestParameters.cs" />
+    <Compile Include="Brokerages\MarketOrderTestParameters.cs" />
+    <Compile Include="Brokerages\Oanda\OandaBrokerageDataQueueHandlerTests.cs" />
+    <Compile Include="Brokerages\Oanda\OandaBrokerageTests.cs" />
+    <Compile Include="Brokerages\Oanda\OandaSymbolMapperTests.cs" />
+    <Compile Include="Brokerages\OrderProvider.cs" />
+    <Compile Include="Brokerages\OrderTestParameters.cs" />
+    <Compile Include="Brokerages\StopLimitOrderTestParameters.cs" />
+    <Compile Include="Brokerages\StopMarketOrderTestParameters.cs" />
+    <Compile Include="Brokerages\Tradier\TradierBrokerageSerializationTests.cs" />
+    <Compile Include="Brokerages\Tradier\TradierBrokerageTests.cs" />
+    <Compile Include="Common\CurrenciesTests.cs" />
+    <Compile Include="Common\Data\Auxiliary\LocalDiskFactorFileProviderTests.cs" />
+    <Compile Include="Common\Data\Auxiliary\LocalDiskMapFileProviderTests.cs" />
+    <Compile Include="Common\Data\Market\BarTests.cs" />
+    <Compile Include="Common\Data\Market\TickTests.cs" />
+    <Compile Include="Common\Data\Market\TradeBarTests.cs" />
+    <Compile Include="Common\Data\QuoteBarConsolidatorTests.cs" />
+    <Compile Include="Common\Data\SliceTests.cs" />
+    <Compile Include="Common\Data\SubscriptionDataSourceTests.cs" />
+    <Compile Include="Common\Data\TickQuoteBarConsolidatorTests.cs" />
+    <Compile Include="Common\MarketTests.cs" />
+    <Compile Include="Common\Orders\Fills\PartialMarketFillModelTests.cs" />
+    <Compile Include="Common\Orders\OrderJsonConverterTests.cs" />
+    <Compile Include="Common\Orders\OrderTests.cs" />
+    <Compile Include="Common\Parameters\ParameterAttributeTests.cs" />
+    <Compile Include="Common\Scheduling\DateRulesTests.cs" />
+    <Compile Include="Common\Scheduling\ScheduledEventTests.cs" />
+    <Compile Include="Common\Scheduling\TimeRulesTests.cs" />
+    <Compile Include="Common\Securities\CashBookTests.cs" />
+    <Compile Include="Common\Securities\CashTests.cs" />
+    <Compile Include="Common\Securities\Cfd\CfdTests.cs" />
+    <Compile Include="Common\Securities\Equity\EquityTransactionModelTests.cs" />
+    <Compile Include="Common\Securities\Forex\ForexTests.cs" />
+    <Compile Include="Common\Securities\Forex\ForexTransactionModelTests.cs" />
+    <Compile Include="Common\Securities\DelayedSettlementModelTests.cs" />
+    <Compile Include="Common\Securities\ImmediateSettlementModelTests.cs" />
+    <Compile Include="Common\Securities\LocalMarketHoursTests.cs" />
+    <Compile Include="Common\Securities\MarketHoursDatabaseTests.cs" />
+    <Compile Include="Common\Securities\PatternDayTradingMarginModelTests.cs" />
+    <Compile Include="Common\Securities\SecurityDatabaseKeyTests.cs" />
+    <Compile Include="Common\Securities\SecurityExchangeHoursTests.cs" />
+    <Compile Include="Common\Securities\SecurityIdentifierTests.cs" />
+    <Compile Include="Common\Securities\SecurityManagerTests.cs" />
+    <Compile Include="Common\Securities\SecurityPortfolioModelTests.cs" />
+    <Compile Include="Common\Securities\SecurityTests.cs" />
+    <Compile Include="Common\Securities\SecurityTransactionModelTests.cs" />
+    <Compile Include="Common\Securities\UniverseManagerTests.cs" />
+    <Compile Include="Common\SeriesTests.cs" />
+    <Compile Include="Common\SymbolCacheTests.cs" />
+    <Compile Include="Common\SymbolTests.cs" />
+    <Compile Include="Common\Statistics\TradeStatisticsTests.cs" />
+    <Compile Include="Common\Statistics\TradeBuilderTests.cs" />
+    <Compile Include="Common\TimeKeeperTests.cs" />
+    <Compile Include="Common\TimeTests.cs" />
+    <Compile Include="Common\TimeZoneOffsetProviderTests.cs" />
+    <Compile Include="Common\TimeZonesTest.cs" />
+    <Compile Include="Common\Util\BusyBlockingCollectionTests.cs" />
+    <Compile Include="Common\Util\ColorJsonConverterTests.cs" />
+    <Compile Include="Common\Util\LeanDataTests.cs" />
+    <Compile Include="Common\Util\LinqExtensionsTests.cs" />
+    <Compile Include="Common\Util\MarketHoursDatabaseJsonConverterTests.cs" />
+    <Compile Include="Common\Util\MemoizingEnumerableTests.cs" />
+    <Compile Include="Common\Util\ObjectActivatorTests.cs" />
+    <Compile Include="Common\Util\ObjectToListJsonConverterTests.cs" />
+    <Compile Include="Common\Util\ReaderWriterLockSlimExtensionsTests.cs" />
+    <Compile Include="Common\Util\VersionHelperTests.cs" />
+    <Compile Include="Common\Util\WhoCalledMeTests.cs" />
+    <Compile Include="Compression\CompressionTests.cs" />
+    <Compile Include="Configuration\ConfigTests.cs" />
+    <Compile Include="Engine\DataFeeds\AlgorithmStub.cs" />
+    <Compile Include="Engine\DataFeeds\Auxiliary\MapFileResolverTests.cs" />
+    <Compile Include="Engine\DataFeeds\BaseDataExchangeTests.cs" />
+    <Compile Include="Engine\DataFeeds\Enumerators\BaseDataCollectionAggregatorEnumeratorTests.cs" />
+    <Compile Include="Engine\DataFeeds\Enumerators\EnqueableEnumeratorTests.cs" />
+    <Compile Include="Engine\DataFeeds\Enumerators\FastForwardEnumeratorTests.cs" />
+    <Compile Include="Engine\DataFeeds\Enumerators\FrontierAwareEnumeratorTests.cs" />
+    <Compile Include="Engine\DataFeeds\Enumerators\LiveFillForwardEnumeratorTests.cs" />
+    <Compile Include="Engine\DataFeeds\Enumerators\RateLimitEnumeratorTests.cs" />
+    <Compile Include="Engine\DataFeeds\Enumerators\TradeBarBuilderEnumeratorTests.cs" />
+    <Compile Include="Engine\DataFeeds\FillForwardEnumeratorTest.cs" />
+    <Compile Include="Engine\DataFeeds\RemoteFileBaseData.cs" />
+    <Compile Include="Engine\DataFeeds\RestApiBaseData.cs" />
+    <Compile Include="Engine\DataFeeds\FuncDataQueueHandler.cs" />
+    <Compile Include="Engine\DataFeeds\LiveTradingDataFeedTests.cs" />
+    <Compile Include="Engine\DataFeeds\Transport\LocalFileSubscriptionStreamReaderTests.cs" />
+    <Compile Include="Engine\DataFeeds\ZipEntryNameSubsciptionFactoryTests.cs" />
+    <Compile Include="Engine\DefaultBrokerageMessageHandler.cs" />
+    <Compile Include="Engine\FactorFileTests.cs" />
+    <Compile Include="Engine\RealTime\ScheduledEventTests.cs" />
+    <Compile Include="Engine\TestResultHandler.cs" />
+    <Compile Include="Indicators\AbsolutePriceOscillatorTests.cs" />
+    <Compile Include="Indicators\AccumulationDistributionOscillatorTests.cs" />
+    <Compile Include="Indicators\AccumulationDistributionTests.cs" />
+    <Compile Include="Indicators\AverageDirectionalIndexTests.cs" />
+    <Compile Include="Indicators\KaufmanAdaptiveMovingAverageTests.cs" />
+    <Compile Include="Indicators\AverageDirectionalMovementIndexRatingTests.cs" />
+    <Compile Include="Indicators\BalanceOfPowerTests.cs" />
+    <Compile Include="Indicators\CandlestickPatterns\CandlestickPatternTests.cs" />
+    <Compile Include="Indicators\ChandeMomentumOscillatorTests.cs" />
+    <Compile Include="Indicators\CommonIndicatorTests.cs" />
+    <Compile Include="Indicators\DonchianChannelTest.cs" />
+    <Compile Include="Indicators\DoubleExponentialMovingAverageTests.cs" />
+    <Compile Include="Indicators\HeikinAshiTests.cs" />
+    <Compile Include="Indicators\IchimokuKinkoHyoTests.cs" />
+    <Compile Include="Indicators\KeltnerChannelsTests.cs" />
+    <Compile Include="Indicators\LeastSquaresMovingAverageTest.cs" />
+    <Compile Include="Indicators\LogReturnTests.cs" />
+    <Compile Include="Indicators\MidPriceTests.cs" />
+    <Compile Include="Indicators\MidPointTests.cs" />
+    <Compile Include="Indicators\MomersionTests.cs" />
+    <Compile Include="Indicators\NormalizedAverageTrueRangeTests.cs" />
+    <Compile Include="Indicators\OnBalanceVolumeTest.cs" />
+    <Compile Include="Indicators\ParabolicStopAndReverseTests.cs" />
+    <Compile Include="Indicators\PercentagePriceOscillatorTests.cs" />
+    <Compile Include="Indicators\T3MovingAverageTests.cs" />
+    <Compile Include="Indicators\RateOfChangeRatioTests.cs" />
+    <Compile Include="Indicators\TrixTests.cs" />
+    <Compile Include="Indicators\TrueRangeTests.cs" />
+    <Compile Include="Indicators\TripleExponentialMovingAverageTests.cs" />
+    <Compile Include="Indicators\TriangularMovingAverageTests.cs" />
+    <Compile Include="Indicators\UltimateOscillatorTests.cs" />
+    <Compile Include="Indicators\VarianceTests.cs" />
+    <Compile Include="Indicators\WilliamsPercentRTests.cs" />
+    <Compile Include="Indicators\RateOfChangePercentTests.cs" />
+    <Compile Include="Indicators\RateOfChangeTests.cs" />
+    <Compile Include="Indicators\StochasticTests.cs" />
+    <Compile Include="Queues\FileCommandQueueHandlerTests.cs" />
+    <Compile Include="RegressionTests.cs" />
+    <Compile Include="Symbols.cs" />
+    <Compile Include="TestExtensions.cs" />
+    <Compile Include="Indicators\LinearWeightedMovingAverageTests.cs" />
+    <None Include="RegressionAlgorithms\Test_Cash.cs" />
+    <None Include="RegressionAlgorithms\Test_LiveAlgorithm.cs" />
+    <None Include="RegressionAlgorithms\Test_MixedAssets.cs" />
+    <None Include="RegressionAlgorithms\Test_OnEndOfDay.cs" />
+    <None Include="RegressionAlgorithms\Test_SetHolding.cs" />
     <Compile Include="AssemblyInitialize.cs" />
+    <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageFactoryTests.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageTests.cs" />
     <Compile Include="Common\Data\BaseDataConsolidatorTests.cs" />
     <Compile Include="Common\Data\DynamicDataConsolidatorTests.cs" />
@@ -63,7 +234,9 @@
     <Compile Include="Common\Data\TickConsolidatorTests.cs" />
     <Compile Include="Common\Data\TradeBarConsolidatorTests.cs" />
     <Compile Include="Common\OSTests.cs" />
+    <Compile Include="Common\Securities\SecurityPortfolioManagerTests.cs" />
     <Compile Include="Common\SeriesSamplerTests.cs" />
+    <Compile Include="Common\Util\ComposerTests.cs" />
     <Compile Include="Common\Util\ExpressionBuilderTests.cs" />
     <Compile Include="Common\Util\ExtensionsTests.cs" />
     <Compile Include="Common\Util\FuncTextWriterTests.cs" />
@@ -95,20 +268,67 @@
     <Compile Include="Indicators\TestHelper.cs" />
     <Compile Include="Logging\FileLogHandlerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <None Include="packages.config" />
+    <None Include="app.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="TestData\20151224_quote_american.zip">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="TestData\CashTestingStrategy.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <Content Include="TestData\eurusd_candle_patterns.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\ewz_candle_patterns.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\SampleMarketHoursDatabase.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="TestData\multizip.zip">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="TestData\spy_with_ichimoku.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="TestData\spy_with_keltner.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Adapters\" />
     <Folder Include="API\" />
-    <Folder Include="Config\" />
-    <Folder Include="Engine\" />
     <Folder Include="Messaging\" />
     <Folder Include="Tasks\" />
+    <Folder Include="UserInterface\" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Algorithm.CSharp\QuantConnect.Algorithm.CSharp.csproj">
+      <Project>{39a81c16-a1e8-425e-a8f2-1433adb80228}</Project>
+      <Name>QuantConnect.Algorithm.CSharp</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Algorithm.FSharp\QuantConnect.Algorithm.FSharp.fsproj">
+      <Project>{7702711a-0c09-40d4-b151-e308d1520738}</Project>
+      <Name>QuantConnect.Algorithm.FSharp</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Algorithm.VisualBasic\QuantConnect.Algorithm.VisualBasic.vbproj">
+      <Project>{af8f124b-b441-4aa7-92b7-cea72bdb4118}</Project>
+      <Name>QuantConnect.Algorithm.VisualBasic</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\AlgorithmFactory\QuantConnect.AlgorithmFactory.csproj">
+      <Project>{e99d056a-b6fb-48d2-9f7c-683c54cebbf9}</Project>
+      <Name>QuantConnect.AlgorithmFactory</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">
+      <Project>{3240ACA4-BDD4-4D24-AC36-BBB651C39212}</Project>
+      <Name>QuantConnect.Algorithm</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Api\QuantConnect.Api.csproj">
+      <Project>{c5d44209-49a0-4505-a870-043c5ef5fddf}</Project>
+      <Name>QuantConnect.Api</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Brokerages\QuantConnect.Brokerages.csproj">
       <Project>{2D3E13CF-2D14-4180-A42D-F0A13AF0ADE2}</Project>
       <Name>QuantConnect.Brokerages</Name>
@@ -117,25 +337,53 @@
       <Project>{2545C0B4-FABB-49C9-8DD1-9AD7EE23F86B}</Project>
       <Name>QuantConnect</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Compression\QuantConnect.Compression.csproj">
+      <Project>{bc3bc77e-0502-43db-a727-b94f9765d74b}</Project>
+      <Name>QuantConnect.Compression</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Configuration\QuantConnect.Configuration.csproj">
       <Project>{0AEB4EA3-28C8-476E-89FD-926F06590B4C}</Project>
       <Name>QuantConnect.Configuration</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Engine\QuantConnect.Lean.Engine.csproj">
+      <Project>{12156f46-d07e-4e3d-ad2b-7409e82ab62f}</Project>
+      <Name>QuantConnect.Lean.Engine</Name>
     </ProjectReference>
     <ProjectReference Include="..\Indicators\QuantConnect.Indicators.csproj">
       <Project>{73fb2522-c3ed-4e47-8e3d-afad48a6b888}</Project>
       <Name>QuantConnect.Indicators</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Interfaces\QuantConnect.Interfaces.csproj">
-      <Project>{338F614C-4CD7-418A-BD31-8C6A8690CFBF}</Project>
-      <Name>QuantConnect.Interfaces</Name>
+    <ProjectReference Include="..\Launcher\QuantConnect.Lean.Launcher.csproj">
+      <Project>{09e7b916-e58b-4021-bd8b-c10b4446e226}</Project>
+      <Name>QuantConnect.Lean.Launcher</Name>
     </ProjectReference>
     <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj">
       <Project>{01911409-86BE-4E7D-9947-DF714138610D}</Project>
       <Name>QuantConnect.Logging</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Messaging\QuantConnect.Messaging.csproj">
+      <Project>{f2e90e2d-ba25-40e2-b39a-0ba31e68f7f8}</Project>
+      <Name>QuantConnect.Messaging</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Queues\QuantConnect.Queues.csproj">
+      <Project>{d6633172-1368-4df6-9444-825c3e00c819}</Project>
+      <Name>QuantConnect.Queues</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="TestData\spy_10_min.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_ad.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_adxr.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_ad_osc.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_apo.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_aroon_oscillator.txt">
@@ -147,10 +395,76 @@
     <Content Include="TestData\spy_bollinger_bands.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="TestData\spy_bop.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_candle_patterns.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_cmo.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_dema.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_heikin_ashi.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_kama.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_logr14.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_max.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="TestData\spy_mfi.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="TestData\spy_midpoint.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_midprice.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_min.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_natr.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_ohlcv.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="TestData\spy_parabolic_SAR.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_ppo.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_t3.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_rocr.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_tr.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_tema.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_trima.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_ultosc.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_trix.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_var.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_with_adx.txt">
@@ -178,6 +492,24 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_with_williamsR14.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\test_cash_equity.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\test_cash_fills.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\test_forex_equity.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\test_forex_fills.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\test_forex_fills_jwb_quantity.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\test_forex_fills_mch_quantity.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

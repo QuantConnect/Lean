@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using System;
 using QuantConnect.Data.Market;
 
@@ -60,6 +61,12 @@ namespace QuantConnect.Data.Consolidators
         {
         }
 
+        /// <summary>
+        /// Aggregates the new 'data' into the 'workingBar'. The 'workingBar' will be
+        /// null following the event firing
+        /// </summary>
+        /// <param name="workingBar">The bar we're building, null if the event was just fired and we're starting a new trade bar</param>
+        /// <param name="data">The new data</param>
         protected override void AggregateBar(ref TradeBar workingBar, BaseData data)
         {
             if (workingBar == null)
@@ -67,7 +74,7 @@ namespace QuantConnect.Data.Consolidators
                 workingBar = new TradeBar
                 {
                     Symbol = data.Symbol,
-                    Time = data.Time,
+                    Time = GetRoundedBarTime(data.Time),
                     Close = data.Value,
                     High = data.Value,
                     Low = data.Value,

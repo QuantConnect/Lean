@@ -13,22 +13,18 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Interfaces;
 
-
 namespace QuantConnect.Securities 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// A base vehicle properties class for providing a common interface to all assets in QuantConnect.
     /// </summary>
@@ -38,31 +34,36 @@ namespace QuantConnect.Securities
     /// </remarks>
     public class Security 
     {
+        private LocalTimeKeeper _localTimeKeeper;
+        private readonly SubscriptionDataConfig _config;
 
-        /******************************************************** 
-        * CLASS PRIVATE VARIABLES
-        *********************************************************/
-        private string _symbol = "";
-        private SecurityType _type = SecurityType.Equity;
-        private Resolution _resolution = Resolution.Second;
-        private bool _isFillDataForward = false;
-        private bool _isExtendedMarketHours = false;
-        private bool _isDynamicallyLoadedData = false;
-
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
         /// <summary>
-        /// String symbol for the asset.
+        /// <see cref="Symbol"/> for the asset.
         /// </summary>
-        public string Symbol 
+        public Symbol Symbol 
         {
             get 
             {
-                return _symbol;
+                return _config.Symbol;
             }
         }
-        
+
+        /// <summary>
+        /// Gets the Cash object used for converting the quote currency to the account currency
+        /// </summary>
+        public Cash QuoteCurrency
+        {
+            get; private set;
+        }
+
+        /// <summary>
+        /// Gets the symbol properties for this security
+        /// </summary>
+        public SymbolProperties SymbolProperties
+        {
+            get; private set;
+        }
+
         /// <summary>
         /// Type of the security.
         /// </summary>
@@ -73,7 +74,7 @@ namespace QuantConnect.Securities
         {
             get 
             {
-                return _type;
+                return _config.SecurityType;
             }
         }
 
@@ -85,7 +86,7 @@ namespace QuantConnect.Securities
         {
             get 
             {
-                return _resolution;
+                return _config.Resolution;
             }
         }
 
@@ -96,7 +97,7 @@ namespace QuantConnect.Securities
         {
             get 
             {
-                return _isFillDataForward;
+                return _config.FillDataForward;
             }
         }
 
@@ -107,8 +108,16 @@ namespace QuantConnect.Securities
         {
             get 
             {
-                return _isExtendedMarketHours;
+                return _config.ExtendedMarketHours;
             }
+        }
+
+        /// <summary>
+        /// Gets the subscription configuration for this security
+        /// </summary>
+        public SubscriptionDataConfig SubscriptionDataConfig
+        {
+            get { return _config; }
         }
 
         /// <summary>
@@ -127,14 +136,17 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <seealso cref="EquityCache"/>
         /// <seealso cref="ForexCache"/>
-        public virtual SecurityCache Cache { get; set; }
+        public SecurityCache Cache
+        {
+            get; set;
+        }
 
         /// <summary>
         /// Holdings class contains the portfolio, cash and processes order fills.
         /// </summary>
         /// <seealso cref="EquityHolding"/>
         /// <seealso cref="ForexHolding"/>
-        public virtual SecurityHolding Holdings
+        public SecurityHolding Holdings
         {
             get; 
             set;
@@ -145,7 +157,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <seealso cref="EquityExchange"/>
         /// <seealso cref="ForexExchange"/>
-        public virtual SecurityExchange Exchange
+        public SecurityExchange Exchange
         {
             get;
             set;
@@ -158,7 +170,91 @@ namespace QuantConnect.Securities
         /// <remarks>This is ignored in live trading and the real fill prices are used instead</remarks>
         /// <seealso cref="EquityTransactionModel"/>
         /// <seealso cref="ForexTransactionModel"/>
+        [Obsolete("Security.Model has been made obsolete, use Security.TransactionModel instead.")]
         public virtual ISecurityTransactionModel Model
+        {
+            get { return TransactionModel; }
+            set { TransactionModel = value; }
+        }
+
+        /// <summary>
+        /// Transaction model class implements the fill models for the security. If the user does not define a model the default
+        /// model is used for this asset class.
+        /// </summary>
+        /// <remarks>This is ignored in live trading and the real fill prices are used instead</remarks>
+        /// <seealso cref="EquityTransactionModel"/>
+        /// <seealso cref="ForexTransactionModel"/>
+        public ISecurityTransactionModel TransactionModel
+        {
+            // these methods provided for backwards compatibility
+            get
+            {
+                // check if the FillModel/FeeModel/Slippage models are all the same reference
+                if (FillModel is ISecurityTransactionModel 
+                 && ReferenceEquals(FillModel, FeeModel)
+                 && ReferenceEquals(FeeModel, SlippageModel))
+                {
+                    return (ISecurityTransactionModel) FillModel;
+                }
+                return new SecurityTransactionModel(FillModel, FeeModel, SlippageModel);
+            }
+            set
+            {
+                FeeModel = value;
+                FillModel = value;
+                SlippageModel = value;
+            }
+        }
+
+        /// <summary>
+        /// Fee model used to compute order fees for this security
+        /// </summary>
+        public IFeeModel FeeModel
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Fill model used to produce fill events for this security
+        /// </summary>
+        public IFillModel FillModel
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Slippage model use to compute slippage of market orders
+        /// </summary>
+        public ISlippageModel SlippageModel
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets the portfolio model used by this security
+        /// </summary>
+        public ISecurityPortfolioModel PortfolioModel
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets the margin model used for this security
+        /// </summary>
+        public ISecurityMarginModel MarginModel
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets the settlement model used for this security
+        /// </summary>
+        public ISettlementModel SettlementModel
         {
             get; 
             set;
@@ -171,56 +267,74 @@ namespace QuantConnect.Securities
         /// <remarks>TradeBars (seconds and minute bars) are prefiltered to ensure the ticks which build the bars are realistically tradeable</remarks>
         /// <seealso cref="EquityDataFilter"/>
         /// <seealso cref="ForexDataFilter"/>
-        public virtual ISecurityDataFilter DataFilter
+        public ISecurityDataFilter DataFilter
         {
             get; 
             set;
         }
 
-        /******************************************************** 
-        * CONSTRUCTOR/DELEGATE DEFINITIONS
-        *********************************************************/
         /// <summary>
         /// Construct a new security vehicle based on the user options.
         /// </summary>
-        public Security(string symbol, SecurityType type, Resolution resolution, bool fillDataForward, decimal leverage, bool extendedMarketHours, bool isDynamicallyLoadedData = false) 
+        public Security(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, Cash quoteCurrency, SymbolProperties symbolProperties)
+            : this(config,
+                quoteCurrency,
+                symbolProperties,
+                new SecurityExchange(exchangeHours),
+                new SecurityCache(),
+                new SecurityPortfolioModel(),
+                new ImmediateFillModel(),
+                new InteractiveBrokersFeeModel(),
+                new SpreadSlippageModel(),
+                new ImmediateSettlementModel(),
+                new SecurityMarginModel(1m),
+                new SecurityDataFilter())
         {
-            //Set Basics:
-            _symbol = symbol;
-            _type = type;
-            _resolution = resolution;
-            _isFillDataForward = fillDataForward;
-            _isExtendedMarketHours = extendedMarketHours;
-            _isDynamicallyLoadedData = isDynamicallyLoadedData;
-
-            //Setup Transaction Model for this Asset
-            switch (type) 
-            { 
-                case SecurityType.Equity:
-                    Model = new EquityTransactionModel();
-                    DataFilter = new EquityDataFilter();
-                    break;
-                case SecurityType.Forex:
-                    Model = new ForexTransactionModel();
-                    DataFilter = new ForexDataFilter();
-                    break;
-                case SecurityType.Base:
-                    Model = new SecurityTransactionModel();
-                    DataFilter = new SecurityDataFilter();
-                    break;
-            }
-
-            //Holdings for new Vehicle:
-            Cache = new SecurityCache();
-            Holdings = new SecurityHolding(symbol, type, leverage, Model);
-            Exchange = new SecurityExchange();
         }
 
+        /// <summary>
+        /// Construct a new security vehicle based on the user options.
+        /// </summary>
+        protected Security(SubscriptionDataConfig config,
+            Cash quoteCurrency,
+            SymbolProperties symbolProperties,
+            SecurityExchange exchange,
+            SecurityCache cache,
+            ISecurityPortfolioModel portfolioModel,
+            IFillModel fillModel,
+            IFeeModel feeModel,
+            ISlippageModel slippageModel,
+            ISettlementModel settlementModel,
+            ISecurityMarginModel marginModel,
+            ISecurityDataFilter dataFilter
+            )
+        {
 
+            if (symbolProperties == null)
+            {
+                throw new ArgumentNullException("symbolProperties", "Security requires a valid SymbolProperties instance.");
+            }
 
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
+            if (symbolProperties.QuoteCurrency != quoteCurrency.Symbol)
+            {
+                throw new ArgumentException("symbolProperties.QuoteCurrency must match the quoteCurrency.Symbol");
+            }
+
+            _config = config;
+            QuoteCurrency = quoteCurrency;
+            SymbolProperties = symbolProperties;
+            Cache = cache;
+            Exchange = exchange;
+            DataFilter = dataFilter;
+            PortfolioModel = portfolioModel;
+            MarginModel = marginModel;
+            FillModel = fillModel;
+            FeeModel = feeModel;
+            SlippageModel = slippageModel;
+            SettlementModel = settlementModel;
+            Holdings = new SecurityHolding(this);
+        }
+
         /// <summary>
         /// Read only property that checks if we currently own stock in the company.
         /// </summary>
@@ -247,11 +361,15 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Local time for this market 
         /// </summary>
-        public virtual DateTime Time 
+        public virtual DateTime LocalTime
         {
-            get 
+            get
             {
-                return Exchange.Time;
+                if (_localTimeKeeper == null)
+                {
+                    throw new Exception("Security.SetLocalTimeKeeper(LocalTimeKeeper) must be called in order to use the LocalTime property.");
+                }
+                return _localTimeKeeper.LocalTime;
             }
         }
 
@@ -284,26 +402,17 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Use QuantConnect data source flag, or is the security a user imported object
-        /// </summary>
-        public virtual bool IsDynamicallyLoadedData 
-        {
-            get
-            {
-                return _isDynamicallyLoadedData;
-            }
-        }
-
-        /// <summary>
         /// If this uses tradebar data, return the most recent high.
         /// </summary>
         public virtual decimal High {
             get 
             { 
                 var data = GetLastData();
-                if (data.DataType == MarketDataType.TradeBar) 
+
+                var bar = data as TradeBar;
+                if (bar != null) 
                 {
-                    return ((TradeBar)data).High;
+                    return bar.High;
                 }
                 return data.Value;
             }
@@ -316,9 +425,11 @@ namespace QuantConnect.Securities
             get 
             {
                 var data = GetLastData();
-                if (data.DataType == MarketDataType.TradeBar) 
+
+                var bar = data as TradeBar;
+                if (bar != null)
                 {
-                    return ((TradeBar)data).Low;
+                    return bar.Low;
                 }
                 return data.Value;
             }
@@ -343,14 +454,15 @@ namespace QuantConnect.Securities
         public virtual decimal Open {
             get {
                 var data = GetLastData();
-                if (data.DataType == MarketDataType.TradeBar) 
+
+                var bar = data as TradeBar;
+                if (bar != null)
                 {
-                    return ((TradeBar)data).Open;
+                    return bar.Open;
                 }
                 return data.Value;
             }
         }
-
 
         /// <summary>
         /// Access to the volume of the equity today
@@ -360,17 +472,16 @@ namespace QuantConnect.Securities
             get
             {
                 var data = GetLastData();
-                if (data.DataType == MarketDataType.TradeBar)
+
+                var bar = data as TradeBar;
+                if (bar != null)
                 {
-                    return ((TradeBar)data).Volume;
+                    return bar.Volume;
                 }
                 return 0;
             }
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Get the last price update set to the security.
         /// </summary>
@@ -381,19 +492,32 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Sets the <see cref="LocalTimeKeeper"/> to be used for this <see cref="Security"/>.
+        /// This is the source of this instance's time.
+        /// </summary>
+        /// <param name="localTimeKeeper">The source of this <see cref="Security"/>'s time.</param>
+        public void SetLocalTimeKeeper(LocalTimeKeeper localTimeKeeper)
+        {
+            _localTimeKeeper = localTimeKeeper;
+            Exchange.SetLocalDateTimeFrontier(localTimeKeeper.LocalTime);
+
+            _localTimeKeeper.TimeUpdated += (sender, args) =>
+            {
+                //Update the Exchange/Timer:
+                Exchange.SetLocalDateTimeFrontier(args.Time);
+            };
+        }
+
+        /// <summary>
         /// Update any security properties based on the lastest market data and time
         /// </summary>
         /// <param name="data">New data packet from LEAN</param>
-        /// <param name="frontier">Time frontier / where we are in time.</param>
-        public void Update(DateTime frontier, BaseData data) 
-        { 
-            //Update the Exchange/Timer:
-            Exchange.SetDateTimeFrontier(frontier);
-
+        public void SetMarketPrice(BaseData data) 
+        {
             //Add new point to cache:
             if (data == null) return;
             Cache.AddData(data);
-            Holdings.UpdatePrice(data.Value);
+            Holdings.UpdateMarketPrice(data.Value);
         }
 
         /// <summary>
@@ -402,9 +526,27 @@ namespace QuantConnect.Securities
         /// <param name="leverage">Leverage for this asset</param>
         public void SetLeverage(decimal leverage)
         {
-            Holdings.SetLeverage(leverage);
+            MarginModel.SetLeverage(this, leverage);
         }
 
-    } // End Security
+        /// <summary>
+        /// Sets the data normalization mode to be used by this security
+        /// </summary>
+        public void SetDataNormalizationMode(DataNormalizationMode mode)
+        {
+            _config.DataNormalizationMode = mode;
+        }
 
-} // End QC Namespace
+        /// <summary>
+        /// Returns a string that represents the current object.
+        /// </summary>
+        /// <returns>
+        /// A string that represents the current object.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        public override string ToString()
+        {
+            return Symbol.ToString();
+        }
+    }
+}

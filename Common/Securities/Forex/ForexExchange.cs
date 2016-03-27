@@ -13,164 +13,40 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
-using System;
-
 namespace QuantConnect.Securities.Forex 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Forex exchange class - information and helper tools for forex exchange properties
     /// </summary>
     /// <seealso cref="SecurityExchange"/>
-    public class ForexExchange : SecurityExchange {
-
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
-        private TimeSpan _marketOpen = TimeSpan.FromHours(0);
-        private TimeSpan _marketClose = TimeSpan.FromDays(1).Subtract(TimeSpan.FromTicks(1));
-
-        /******************************************************** 
-        * CLASS CONSTRUCTION
-        *********************************************************/
-        /// <summary>
-        /// Initialise forex exchange exchange
-        /// </summary>
-        public ForexExchange() : 
-            base() {
-        }
-
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
-        /// <summary>
-        /// Override the base ExchangeOpen property with FXCM Market Hours
-        /// </summary>
-        public override bool ExchangeOpen
-        {
-            get
-            {
-                return DateTimeIsOpen(Time);
-            }
-        }
-
-
+    public class ForexExchange : SecurityExchange
+    {
         /// <summary>
         /// Number of trading days per year for this security, used for performance statistics.
         /// </summary>
         public override int TradingDaysPerYear
         {
-            get
-            {
-                // 365 - Saturdays = 313;
-                return 313;
-            }
-        }
-
-
-        /// <summary>
-        /// Check this date time is open for the forex market.
-        /// </summary>
-        /// <param name="dateToCheck">time of day</param>
-        /// <returns>true if open</returns>
-        public override bool DateTimeIsOpen(DateTime dateToCheck)
-        {
-            if (!DateIsOpen(dateToCheck))
-                return false;
-
-            if (dateToCheck.DayOfWeek == DayOfWeek.Friday && dateToCheck.TimeOfDay.TotalHours >= 16)
-                return false;
-
-            if (dateToCheck.DayOfWeek == DayOfWeek.Sunday && dateToCheck.TimeOfDay.TotalHours < 17)
-                return false;
-
-            return true;
-        }
-
-
-        /// <summary>
-        /// Check if this datetime is open for the FXCM markets:
-        /// </summary>
-        /// <param name="dateToCheck">Datetime date to analyse</param>
-        /// <returns>Boolean true if market is open</returns>
-        public override bool DateIsOpen(DateTime dateToCheck)
-        {
-            //FXCM closed on Saturday
-            if (dateToCheck.DayOfWeek == DayOfWeek.Saturday)
-                return false;
-
-            //Otherwise all other days at least partially open
-            return true;
-        }
-
-
-        /// <summary>
-        /// FOREX market opening time: midnight on week days, 5pm on Sunday
-        /// </summary>
-        public override TimeSpan MarketOpen
-        {
-            get { return _marketOpen; }
-            set { _marketOpen = value; }
+            // 365 - Saturdays = 313;
+            get { return 313; }
         }
 
         /// <summary>
-        /// FOREX market closing time: officially no closing time the FX markets are open over midnight.
+        /// Initializes a new instance of the <see cref="ForexExchange"/> class using market hours
+        /// derived from the market-hours-database for the FXCM Forex market
         /// </summary>
-        public override TimeSpan MarketClose
+        public ForexExchange()
+            : base(MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.FXCM, null, SecurityType.Forex, TimeZones.NewYork))
         {
-            get { return _marketClose; }
-            set { _marketClose = value; }
         }
-
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
-        /// <summary>
-        /// Time of day the market opens.
-        /// </summary>
-        /// <param name="time">DateTime object for this date</param>
-        /// <returns>DateTime the market is considered open</returns>
-        public override DateTime TimeOfDayOpen(DateTime time)
-        {
-            switch (time.DayOfWeek)
-            {
-                case DayOfWeek.Saturday:
-                    return time.Date.AddDays(1);
-                case DayOfWeek.Sunday:
-                    return time.Date.AddHours(17);
-                default:
-                    //Default to midnight, start of day.
-                    return time.Date;
-            }
-        }
-
 
         /// <summary>
-        /// Time of day the market closes.
+        /// Initializes a new instance of the <see cref="ForexExchange"/> class using the specified
+        /// exchange hours to determine open/close times
         /// </summary>
-        /// <param name="time">DateTime object for this date</param>
-        /// <returns>DateTime the market day is considered closed</returns>
-        public override DateTime TimeOfDayClosed(DateTime time)
+        /// <param name="exchangeHours">Contains the weekly exchange schedule plus holidays</param>
+        public ForexExchange(SecurityExchangeHours exchangeHours)
+            : base(exchangeHours)
         {
-            switch (time.DayOfWeek)
-            {
-                //Friday's close 1600.
-                case DayOfWeek.Friday:
-                    return time.Date.AddHours(16);
-                //Saturday never open.
-                case DayOfWeek.Saturday:
-                    return time.Date;
-                default:
-                    //Default to midnight, start of *next* day: ie. never closed.
-                    return time.Date.AddDays(1);
-            }
         }
-    } //End of ForexExchange
-
-} //End Namespace
+    }
+}

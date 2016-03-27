@@ -13,72 +13,73 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using QuantConnect.Logging;
 
 namespace QuantConnect.Configuration
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Configuration class loads the required external setup variables to launch the Lean engine.
     /// </summary>
     public static class Config
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         //Location of the configuration file.
-        private const string _config = "config.json";
+        private const string ConfigurationFileName = "config.json";
 
-        //Has the configuration been loaded from disk:
-        private static bool _loaded;
-
-        /// Initialize the settings array and its defaults:
-        private static Dictionary<string, string> _settings = new Dictionary<string, string>
+        private static readonly Lazy<JObject> Settings = new Lazy<JObject>(() =>
         {
-            //User configurable: Select which algorithm the engine can run.
-            {"algorithm-type-name", "BasicTemplateAlgorithm"},
-
-            //Engine code:
-            {"local", "true"},
-            {"live-mode", "false"},
-            {"messaging-handler", "QuantConnect.Messaging.Messaging"},
-            {"queue-handler", "QuantConnect.Queues.Queues"},
-            {"api-handler", "QuantConnect.Api.Api"}
-        };
-
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
-
-        /******************************************************** 
-        * CLASS METHODS:
-        *********************************************************/
-        /// <summary>
-        /// Initialize the configuration file and if it doesnt exist create one with the default values above.
-        /// </summary>
-        private static void Initialize()
-        {
-            var file = "";
-			
-			if (_loaded) return;
-
-            // if we find the configuration, load it, otherwise just stick with the defaults in _settings
-            if (File.Exists(_config))
+            // initialize settings inside a lazy for free thread-safe, one-time initialization
+            if (!File.Exists(ConfigurationFileName))
             {
-                file = File.ReadAllText(_config);
-                _settings = JsonConvert.DeserializeObject<Dictionary<string, string>>(file);
+                return new JObject
+                {
+                    {"algorithm-type-name", "BasicTemplateAlgorithm"},
+                    {"live-mode", false},
+                    {"data-folder", "../../../Data/"},
+                    {"messaging-handler", "QuantConnect.Messaging.Messaging"},
+                    {"queue-handler", "QuantConnect.Queues.Queues"},
+                    {"api-handler", "QuantConnect.Api.Api"},
+                    {"setup-handler", "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler"},
+                    {"result-handler", "QuantConnect.Lean.Engine.Results.BacktestingResultHandler"},
+                    {"data-feed-handler", "QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed"},
+                    {"real-time-handler", "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler"},
+                    {"transaction-handler", "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"}
+                };
             }
 
-            _loaded = true;
+            return JObject.Parse(File.ReadAllText(ConfigurationFileName));
+        });
+
+        /// <summary>
+        /// Gets the currently selected environment. If sub-environments are defined,
+        /// they'll be returned as {env1}.{env2}
+        /// </summary>
+        /// <returns>The fully qualified currently selected environment</returns>
+        public static string GetEnvironment()
+        {
+            var environments = new List<string>();
+            JToken currentEnvironment = Settings.Value;
+            var env = currentEnvironment["environment"];
+            while (currentEnvironment != null && env != null)
+            {
+                var currentEnv = env.Value<string>();
+                environments.Add(currentEnv);
+                var moreEnvironments = currentEnvironment["environments"];
+                if (moreEnvironments == null)
+                {
+                    break;
+                }
+
+                currentEnvironment = moreEnvironments[currentEnv];
+                env = currentEnvironment["environment"];
+            }
+            return string.Join(".", environments);
         }
         
         /// <summary>
@@ -89,26 +90,47 @@ namespace QuantConnect.Configuration
         /// <returns>String value of the configuration setting or empty string if nothing found.</returns>
         public static string Get(string key, string defaultValue = "")
         {
-            var value = "";
-            try
-            {
-                if (!_loaded) Initialize();
+            // special case environment requests
+            if (key == "environment") return GetEnvironment();
 
-                if (_settings != null && _settings.ContainsKey(key))
-                {
-                    value = _settings[key];
-                }
-                else
-                {
-                    value = defaultValue;
-                    Log.Trace("Config.Get(): Configuration key not found. Key: " + key);
-                }
-            }
-            catch (Exception err)
+            var token = GetToken(Settings.Value, key);
+            if (token == null)
             {
-                Log.Error("Config.Get(): " + err.Message);
+                Log.Trace(string.Format("Config.Get(): Configuration key not found. Key: {0} - Using default value: {1}", key, defaultValue));
+                return defaultValue;
             }
-            return value;
+            return token.ToString();
+        }
+
+        /// <summary>
+        /// Gets the underlying JToken for the specified key
+        /// </summary>
+        public static JToken GetToken(string key)
+        {
+            return GetToken(Settings.Value, key);
+        }
+
+        /// <summary>
+        /// Sets a configuration value. This is really only used to help testing. The key heye can be
+        /// specified as {environment}.key to set a value on a specific environment
+        /// </summary>
+        /// <param name="key">The key to be set</param>
+        /// <param name="value">The new value</param>
+        public static void Set(string key, string value)
+        {
+            JToken environment = Settings.Value;
+            while (key.Contains("."))
+            {
+                var envName = key.Substring(0, key.IndexOf("."));
+                key = key.Substring(key.IndexOf(".") + 1);
+                var environments = environment["environments"];
+                if (environments == null)
+                {
+                    environment["environments"] = environments = new JObject();
+                }
+                environment = environments[envName];
+            }
+            environment[key] = value;
         }
 
         /// <summary>
@@ -154,19 +176,204 @@ namespace QuantConnect.Configuration
         /// <returns>Converted value of the config setting.</returns>
         public static T GetValue<T>(string key, T defaultValue = default(T))
         {
-            var value = Get(key);
-            if (string.IsNullOrEmpty(value))
+            // special case environment requests
+            if (key == "environment" && typeof (T) == typeof (string)) return (T) (object) GetEnvironment();
+
+            var token = GetToken(Settings.Value, key);
+            if (token == null)
             {
-                Log.Trace("Config.GetValue(): " + key + " - Using default value: " + defaultValue);
+                Log.Trace(string.Format("Config.GetValue(): {0} - Using default value: {1}", key, defaultValue));
                 return defaultValue;
             }
 
-            var type = typeof (T);
+            var type = typeof(T);
+            string value;
+            try
+            {
+                value = token.Value<string>();
+            }
+            catch (Exception err)
+            {
+                value = token.ToString();
+            }
+
             if (type.IsEnum)
             {
                 return (T) Enum.Parse(type, value);
             }
-            return (T)Convert.ChangeType(value, type);
+
+            if (typeof(IConvertible).IsAssignableFrom(type))
+            {
+                return (T) Convert.ChangeType(value, type);
+            }
+
+            // try and find a static parse method
+            try
+            {
+                var parse = type.GetMethod("Parse", new[]{typeof(string)});
+                if (parse != null)
+                {
+                    var result = parse.Invoke(null, new object[] {value});
+                    return (T) result;
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Trace("Config.GetValue<{0}>({1},{2}): Failed to parse: {3}. Using default value.", typeof (T).Name, key, defaultValue, value);
+                Log.Error(err);
+                return defaultValue;
+            }
+
+            try
+            {
+                return JsonConvert.DeserializeObject<T>(value);
+            }
+            catch (Exception err)
+            {
+                Log.Trace("Config.GetValue<{0}>({1},{2}): Failed to JSON deserialize: {3}. Using default value.", typeof(T).Name, key, defaultValue, value);
+                Log.Error(err);
+                return defaultValue;
+            }
+        }
+
+        /// <summary>
+        /// Tries to find the specified key and parse it as a T, using
+        /// default(T) if unable to locate the key or unable to parse it
+        /// </summary>
+        /// <typeparam name="T">The desired output type</typeparam>
+        /// <param name="key">The configuration key</param>
+        /// <param name="value">The output value</param>
+        /// <returns>True on successful parse, false when output value is default(T)</returns>
+        public static bool TryGetValue<T>(string key, out T value)
+        {
+            return TryGetValue(key, default(T), out value);
+        }
+
+        /// <summary>
+        /// Tries to find the specified key and parse it as a T, using
+        /// defaultValue if unable to locate the key or unable to parse it
+        /// </summary>
+        /// <typeparam name="T">The desired output type</typeparam>
+        /// <param name="key">The configuration key</param>
+        /// <param name="defaultValue">The default value to use on key not found or unsuccessful parse</param>
+        /// <param name="value">The output value</param>
+        /// <returns>True on successful parse, false when output value is defaultValue</returns>
+        public static bool TryGetValue<T>(string key, T defaultValue, out T value)
+        {
+            try
+            {
+                value = GetValue(key, defaultValue);
+                return true;
+            }
+            catch
+            {
+                value = defaultValue;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Write the contents of the serialized configuration back to the disk.
+        /// </summary>
+        public static void Write()
+        {
+            if (!Settings.IsValueCreated) return;
+            var serialized = JsonConvert.SerializeObject(Settings.Value, Formatting.Indented);
+            File.WriteAllText("config.json", serialized);
+        }
+
+        /// <summary>
+        /// Flattens the jobject with respect to the selected environment and then
+        /// removes the 'environments' node
+        /// </summary>
+        /// <param name="overrideEnvironment">The environment to use</param>
+        /// <returns>The flattened JObject</returns>
+        public static JObject Flatten(string overrideEnvironment)
+        {
+            return Flatten(Settings.Value, overrideEnvironment);
+        }
+
+        /// <summary>
+        /// Flattens the jobject with respect to the selected environment and then
+        /// removes the 'environments' node
+        /// </summary>
+        /// <param name="config">The configuration represented as a JObject</param>
+        /// <param name="overrideEnvironment">The environment to use</param>
+        /// <returns>The flattened JObject</returns>
+        public static JObject Flatten(JObject config, string overrideEnvironment)
+        {
+            var clone = (JObject)config.DeepClone();
+
+            // remove the environment declaration
+            var environmentProperty = clone.Property("environment");
+            if (environmentProperty != null) environmentProperty.Remove();
+
+            if (!string.IsNullOrEmpty(overrideEnvironment))
+            {
+                var environmentSections = overrideEnvironment.Split('.');
+
+                for (int i = 0; i < environmentSections.Length; i++)
+                {
+                    var env = string.Join(".environments.", environmentSections.Where((x, j) => j <= i));
+
+                    var environments = config["environments"];
+                    if (!(environments is JObject)) continue;
+
+                    var settings = ((JObject) environments).SelectToken(env);
+                    if (settings == null) continue;
+
+                    // copy values for the selected environment to the root
+                    foreach (var token in settings)
+                    {
+                        var path = Path.GetExtension(token.Path);
+                        var dot = path.IndexOf(".", StringComparison.InvariantCulture);
+                        if (dot != -1) path = path.Substring(dot + 1);
+
+                        // remove if already exists on clone
+                        var jProperty = clone.Property(path);
+                        if (jProperty != null) jProperty.Remove();
+
+                        var value = (token is JProperty ? ((JProperty) token).Value : token).ToString();
+                        clone.Add(path, value);
+                    }
+                }
+            }
+
+            // remove all environments
+            var environmentsProperty = clone.Property("environments");
+            if (environmentsProperty != null) environmentsProperty.Remove();
+
+            return clone;
+        }
+
+        private static JToken GetToken(JToken settings, string key)
+        {
+            return GetToken(settings, key, settings.SelectToken(key));
+        }
+
+        private static JToken GetToken(JToken settings, string key, JToken current)
+        {
+            var environmentSetting = settings.SelectToken("environment");
+            if (environmentSetting != null)
+            {
+                var environmentSettingValue = environmentSetting.Value<string>();
+                if (!string.IsNullOrWhiteSpace(environmentSettingValue))
+                {
+                    var environment = settings.SelectToken("environments." + environmentSettingValue);
+                    var setting = environment.SelectToken(key);
+                    if (setting != null)
+                    {
+                        current = setting;
+                    }
+                    // allows nesting of environments, live.tradier, live.interactive, ect...
+                    return GetToken(environment, key, current);
+                }
+            }
+            if (current == null)
+            {
+                return settings.SelectToken(key);
+            }
+            return current;
         }
     }
 }

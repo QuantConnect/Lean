@@ -13,79 +13,180 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
+using NodaTime;
 using QuantConnect.Data.Consolidators;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Data
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Subscription data required including the type of data.
     /// </summary>
-    public struct SubscriptionDataConfig
+    public class SubscriptionDataConfig
     {
-        /******************************************************** 
-        * STRUCT PUBLIC VARIABLES
-        *********************************************************/
+        private Symbol _symbol;
+        private string _mappedSymbol;
+        private readonly SecurityIdentifier _sid;
+
+        /// <summary>
         /// Type of data
-        public Type Type;
+        /// </summary>
+        public readonly Type Type;
+
+        /// <summary>
         /// Security type of this data subscription
-        public SecurityType Security;
-        /// Symbol of the asset we're requesting.
-        public string Symbol;
+        /// </summary>
+        public readonly SecurityType SecurityType;
+
+        /// <summary>
+        /// Symbol of the asset we're requesting: this is really a perm tick!!
+        /// </summary>
+        public Symbol Symbol
+        {
+            get { return _symbol; }
+        }
+
+        /// <summary>
+        /// Trade or quote data
+        /// </summary>
+        public readonly TickType TickType;
+
+        /// <summary>
         /// Resolution of the asset we're requesting, second minute or tick
-        public Resolution Resolution;
+        /// </summary>
+        public readonly Resolution Resolution;
+
+        /// <summary>
         /// Timespan increment between triggers of this data:
-        public TimeSpan Increment;
+        /// </summary>
+        public readonly TimeSpan Increment;
+
+        /// <summary>
         /// True if wish to send old data when time gaps in data feed.
-        public bool FillDataForward;
+        /// </summary>
+        public readonly bool FillDataForward;
+
+        /// <summary>
         /// Boolean Send Data from between 4am - 8am (Equities Setting Only)
-        public bool ExtendedMarketHours;
-        /// True if the data type has OHLC properties, even if dynamic data
-        public readonly bool IsTradeBar;
-        /// True if the data type has a Volume property, even if it is dynamic data
-        public readonly bool HasVolume;
+        /// </summary>
+        public readonly bool ExtendedMarketHours;
 
+        /// <summary>
+        /// True if this subscription was added for the sole purpose of providing currency conversion rates via <see cref="CashBook.EnsureCurrencyDataFeeds"/>
+        /// </summary>
+        public readonly bool IsInternalFeed;
+
+        /// <summary>
+        /// True if this subscription is for custom user data, false for QC data
+        /// </summary>
+        public readonly bool IsCustomData;
+
+        /// <summary>
+        /// The sum of dividends accrued in this subscription, used for scaling total return prices
+        /// </summary>
+        public decimal SumOfDividends;
+
+        /// <summary>
+        /// Gets the normalization mode used for this subscription
+        /// </summary>
+        public DataNormalizationMode DataNormalizationMode = DataNormalizationMode.Adjusted;
+
+        /// <summary>
         /// Price Scaling Factor:
+        /// </summary>
         public decimal PriceScaleFactor;
-        ///Symbol Mapping: When symbols change over time (e.g. CHASE-> JPM) need to update the symbol requested.
-        public string MappedSymbol;
-        ///Consolidators that are registred with this subscription
-        public List<IDataConsolidator> Consolidators; 
 
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
+        /// <summary>
+        /// Symbol Mapping: When symbols change over time (e.g. CHASE-> JPM) need to update the symbol requested.
+        /// </summary>
+        public string MappedSymbol
+        {
+            get { return _mappedSymbol; }
+            set
+            {
+                _mappedSymbol = value;
+                _symbol = new Symbol(_sid, value);
+            }
+        }
+
+        /// <summary>
+        /// Gets the market / scope of the symbol
+        /// </summary>
+        public readonly string Market;
+
+        /// <summary>
+        /// Gets the data time zone for this subscription
+        /// </summary>
+        public readonly DateTimeZone DataTimeZone;
+
+        /// <summary>
+        /// Gets the exchange time zone for this subscription
+        /// </summary>
+        public readonly DateTimeZone ExchangeTimeZone;
+
+        /// <summary>
+        /// Consolidators that are registred with this subscription
+        /// </summary>
+        public readonly HashSet<IDataConsolidator> Consolidators;
+
         /// <summary>
         /// Constructor for Data Subscriptions
         /// </summary>
         /// <param name="objectType">Type of the data objects.</param>
-        /// <param name="securityType">SecurityType Enum Set Equity/FOREX/Futures etc.</param>
         /// <param name="symbol">Symbol of the asset we're requesting</param>
         /// <param name="resolution">Resolution of the asset we're requesting</param>
+        /// <param name="dataTimeZone">The time zone the raw data is time stamped in</param>
+        /// <param name="exchangeTimeZone">Specifies the time zone of the exchange for the security this subscription is for. This
+        /// is this output time zone, that is, the time zone that will be used on BaseData instances</param>
         /// <param name="fillForward">Fill in gaps with historical data</param>
         /// <param name="extendedHours">Equities only - send in data from 4am - 8pm</param>
-        public SubscriptionDataConfig(Type objectType, SecurityType securityType, string symbol, Resolution resolution, bool fillForward, bool extendedHours, bool isTradeBar, bool hasVolume)
+        /// <param name="isInternalFeed">Set to true if this subscription is added for the sole purpose of providing currency conversion rates,
+        /// setting this flag to true will prevent the data from being sent into the algorithm's OnData methods</param>
+        /// <param name="isCustom">True if this is user supplied custom data, false for normal QC data</param>
+        /// <param name="tickType">Specifies if trade or quote data is subscribed</param>
+        public SubscriptionDataConfig(Type objectType,
+            Symbol symbol,
+            Resolution resolution,
+            DateTimeZone dataTimeZone,
+            DateTimeZone exchangeTimeZone,
+            bool fillForward,
+            bool extendedHours,
+            bool isInternalFeed,
+            bool isCustom = false,
+            TickType? tickType = null)
         {
             Type = objectType;
-            Security = securityType;
+            SecurityType = symbol.ID.SecurityType;
             Resolution = resolution;
-            Symbol = symbol;
+            _sid = symbol.ID;
             FillDataForward = fillForward;
             ExtendedMarketHours = extendedHours;
-            IsTradeBar = isTradeBar;
-            HasVolume = hasVolume;
             PriceScaleFactor = 1;
-            MappedSymbol = symbol;
-            Consolidators = new List<IDataConsolidator>();
+            MappedSymbol = symbol.Value;
+            IsInternalFeed = isInternalFeed;
+            IsCustomData = isCustom;
+            Market = symbol.ID.Market;
+            DataTimeZone = dataTimeZone;
+            ExchangeTimeZone = exchangeTimeZone;
+            Consolidators = new HashSet<IDataConsolidator>();
+
+            if (!tickType.HasValue)
+            {
+                TickType = TickType.Trade;
+                if (SecurityType == SecurityType.Forex || SecurityType == SecurityType.Cfd)
+                {
+                    TickType = TickType.Quote;
+                }
+            }
+            else
+            {
+                TickType = tickType.Value;
+            }
 
             switch (resolution)
             {
@@ -112,23 +213,70 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Update the price scaling factor for this subscription:
-        /// -> Used for backwards scaling _equity_ prices to adjust for splits and dividends. Unused
+        /// Copy constructor with overrides
         /// </summary>
-        public void SetPriceScaleFactor(decimal newFactor) 
+        /// <param name="config">The config to copy, then overrides are applied and all option</param>
+        /// <param name="objectType">Type of the data objects.</param>
+        /// <param name="symbol">Symbol of the asset we're requesting</param>
+        /// <param name="resolution">Resolution of the asset we're requesting</param>
+        /// <param name="dataTimeZone">The time zone the raw data is time stamped in</param>
+        /// <param name="exchangeTimeZone">Specifies the time zone of the exchange for the security this subscription is for. This
+        /// is this output time zone, that is, the time zone that will be used on BaseData instances</param>
+        /// <param name="fillForward">Fill in gaps with historical data</param>
+        /// <param name="extendedHours">Equities only - send in data from 4am - 8pm</param>
+        /// <param name="isInternalFeed">Set to true if this subscription is added for the sole purpose of providing currency conversion rates,
+        /// setting this flag to true will prevent the data from being sent into the algorithm's OnData methods</param>
+        /// <param name="isCustom">True if this is user supplied custom data, false for normal QC data</param>
+        /// <param name="tickType">Specifies if trade or quote data is subscribed</param>
+        public SubscriptionDataConfig(SubscriptionDataConfig config,
+            Type objectType = null,
+            Symbol symbol = null,
+            Resolution? resolution = null,
+            DateTimeZone dataTimeZone = null,
+            DateTimeZone exchangeTimeZone = null,
+            bool? fillForward = null,
+            bool? extendedHours = null,
+            bool? isInternalFeed = null,
+            bool? isCustom = null,
+            TickType? tickType = null)
+            : this(
+            objectType ?? config.Type,
+            symbol ?? config.Symbol,
+            resolution ?? config.Resolution,
+            dataTimeZone ?? config.DataTimeZone, 
+            exchangeTimeZone ?? config.ExchangeTimeZone,
+            fillForward ?? config.FillDataForward,
+            extendedHours ?? config.ExtendedMarketHours,
+            isInternalFeed ?? config.IsInternalFeed,
+            isCustom ?? config.IsCustomData,
+            tickType ?? config.TickType
+            )
         {
-            PriceScaleFactor = newFactor;
         }
 
         /// <summary>
-        /// Update the mapped symbol stored here: 
+        /// Normalizes the specified price based on the DataNormalizationMode
         /// </summary>
-        /// <param name="newSymbol"></param>
-        public void SetMappedSymbol(string newSymbol) 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public decimal GetNormalizedPrice(decimal price)
         {
-            MappedSymbol = newSymbol;
+            switch (DataNormalizationMode)
+            {
+                case DataNormalizationMode.Raw:
+                    return price;
+                
+                // the price scale factor will be set accordingly based on the mode in update scale factors
+                case DataNormalizationMode.Adjusted:
+                case DataNormalizationMode.SplitAdjusted:
+                    return price*PriceScaleFactor;
+                
+                case DataNormalizationMode.TotalReturn:
+                    return (price*PriceScaleFactor) + SumOfDividends;
+                
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
-    } // End Base Data Class
-
-} // End QC Namespace
+    }
+}

@@ -13,39 +13,23 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
-using System.Threading;
-using System.Text;
 using System.Collections;
-using System.Diagnostics;
-using System.IO;
+using System.Text;
+using System.Threading;
 
 namespace QuantConnect.Logging 
 {
-
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Logging management class.
     /// </summary>
     public static class Log
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         private static string _lastTraceText = "";
         private static string _lastErrorText = "";
         private static bool _debuggingEnabled;
         private static int _level = 1;
-        private static ILogHandler _logHandler;
-
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
+        private static ILogHandler _logHandler = new ConsoleLogHandler();
 
         /// <summary>
         /// Gets or sets the ILogHandler instance used as the global logging implementation.
@@ -56,7 +40,6 @@ namespace QuantConnect.Logging
             set { _logHandler = value; }
         }
 
-
         /// <summary>
         /// Global flag whether to enable debugging logging:
         /// </summary>
@@ -65,7 +48,6 @@ namespace QuantConnect.Logging
             get { return _debuggingEnabled; }
             set { _debuggingEnabled = value; }
         }
-
 
         /// <summary>
         /// Set the minimum message level:
@@ -76,9 +58,6 @@ namespace QuantConnect.Logging
             set { _level = value; }
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Log error
         /// </summary>
@@ -98,6 +77,29 @@ namespace QuantConnect.Logging
             }
         }
 
+        /// <summary>
+        /// Log error. This overload is usefull when exceptions are being thrown from within an anonymous function.
+        /// </summary>
+        /// <param name="method">The method identifier to be used</param>
+        /// <param name="exception">The exception to be logged</param>
+        /// <param name="message">An optional message to be logged, if null/whitespace the messge text will be extracted</param>
+        /// <param name="overrideMessageFloodProtection">Force sending a message, overriding the "do not flood" directive</param>
+        private static void Error(string method, Exception exception, string message = null, bool overrideMessageFloodProtection = false)
+        {
+            message = method + "(): " + (message ?? string.Empty) + " " + exception;
+            Error(message, overrideMessageFloodProtection);
+        }
+
+        /// <summary>
+        /// Log error
+        /// </summary>
+        /// <param name="exception">The exception to be logged</param>
+        /// <param name="message">An optional message to be logged, if null/whitespace the messge text will be extracted</param>
+        /// <param name="overrideMessageFloodProtection">Force sending a message, overriding the "do not flood" directive</param>
+        public static void Error(Exception exception, string message = null, bool overrideMessageFloodProtection = false)
+        {
+            Error(WhoCalledMe.GetMethodName(1), exception, message, overrideMessageFloodProtection);
+        }
 
         /// <summary>
         /// Log trace
@@ -114,6 +116,22 @@ namespace QuantConnect.Logging
             {
                 Console.WriteLine("Log.Trace(): Error writing trace: "  +err.Message);
             }
+        }
+
+        /// <summary>
+        /// Writes the message in normal text
+        /// </summary>
+        public static void Trace(string format, params object[] args)
+        {
+            Trace(string.Format(format, args));
+        }
+
+        /// <summary>
+        /// Writes the message in red
+        /// </summary>
+        public static void Error(string format, params object[] args)
+        {
+            Error(string.Format(format, args));
         }
 
         /// <summary>

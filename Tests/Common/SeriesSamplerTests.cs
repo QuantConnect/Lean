@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Linq;
 using NUnit.Framework;
 
 namespace QuantConnect.Tests.Common
@@ -25,12 +26,12 @@ namespace QuantConnect.Tests.Common
         public void ReturnsIdentityOnSinglePoint()
         {
             var series = new Series {Name = "name"};
-            var reference = DateTime.Now;
+            var reference = DateTime.Now.ToUniversalTime();
             series.AddPoint(reference, 1m);
 
             var sampler = new SeriesSampler(TimeSpan.FromDays(1));
 
-            var sampled = sampler.Sample(series, reference, reference);
+            var sampled = sampler.Sample(series, reference.AddSeconds(-1), reference.AddSeconds(1));
             Assert.AreEqual(1, sampled.Values.Count);
             Assert.AreEqual(series.Values[0].x, sampled.Values[0].x);
             Assert.AreEqual(series.Values[0].y, sampled.Values[0].y);
@@ -108,6 +109,59 @@ namespace QuantConnect.Tests.Common
 
             Assert.AreEqual(series.Values[2].x, sampled.Values[2].x);
             Assert.AreEqual(series.Values[2].y, sampled.Values[2].y);
+        }
+
+        [Test]
+        public void HandlesDuplicateTimes()
+        {
+            var series = new Series();
+            series.Values.Add(new ChartPoint(DateTime.Today, 1m));
+            series.Values.Add(new ChartPoint(DateTime.Today, 2m));
+            series.Values.Add(new ChartPoint(DateTime.Today.AddDays(1), 3m));
+
+            var sampler = new SeriesSampler(TimeSpan.FromDays(1));
+            var sampled = sampler.Sample(series, DateTime.Today, DateTime.Today.AddDays(1));
+
+            // sampler will only produce one value at the time
+            // it was also respect the latest value
+
+            Assert.AreEqual(2, sampled.Values.Count);
+            foreach (var pair in series.Values.Skip(1).Zip<ChartPoint, ChartPoint, Tuple<ChartPoint, ChartPoint>>(sampled.Values, Tuple.Create))
+            {
+                Assert.AreEqual(pair.Item1.x, pair.Item2.x);
+                Assert.AreEqual(pair.Item1.y, pair.Item2.y);
+            }
+        }
+
+        [Test]
+        public void DoesNotSampleScatterPlots()
+        {
+            var scatter = new Series("scatter", SeriesType.Scatter, 0, "$");
+            scatter.AddPoint(DateTime.Today, 1m);
+            scatter.AddPoint(DateTime.Today, 3m);
+            scatter.AddPoint(DateTime.Today.AddSeconds(1), 1.5m);
+            scatter.AddPoint(DateTime.Today.AddSeconds(0.5), 1.5m);
+
+            var sampler = new SeriesSampler(TimeSpan.FromMilliseconds(1));
+            var sampled = sampler.Sample(scatter, DateTime.Today, DateTime.Today.AddDays(1));
+            foreach (var pair in scatter.Values.Zip<ChartPoint, ChartPoint, Tuple<ChartPoint, ChartPoint>>(sampled.Values, Tuple.Create))
+            {
+                Assert.AreEqual(pair.Item1.x, pair.Item2.x);
+                Assert.AreEqual(pair.Item1.y, pair.Item2.y);
+            }
+        }
+
+        [Test]
+        public void EmitsEmptySeriesWithSinglePointOutsideOfStartStop()
+        {
+            var series = new Series { Name = "name" };
+            var reference = DateTime.Now;
+            series.AddPoint(reference.AddSeconds(-1), 1m);
+
+            var sampler = new SeriesSampler(TimeSpan.FromDays(1));
+
+            var sampled = sampler.Sample(series, reference, reference);
+            Assert.AreEqual(0, sampled.Values.Count);
         }
     }
 }

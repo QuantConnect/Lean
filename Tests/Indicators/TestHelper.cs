@@ -12,17 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Globalization;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
-
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -101,7 +101,7 @@ namespace QuantConnect.Tests.Indicators
                     continue;
                 }
 
-                decimal close = decimal.Parse(parts[closeIndex]);
+                decimal close = decimal.Parse(parts[closeIndex], CultureInfo.InvariantCulture);
                 DateTime date = Time.ParseDate(parts[0]);
 
                 var data = new IndicatorDataPoint(date, close);
@@ -112,7 +112,7 @@ namespace QuantConnect.Tests.Indicators
                     continue;
                 }
 
-                double expected = double.Parse(parts[targetIndex]);
+                double expected = double.Parse(parts[targetIndex], CultureInfo.InvariantCulture);
                 customAssertion.Invoke(indicator, expected);
             }
         }
@@ -145,12 +145,13 @@ namespace QuantConnect.Tests.Indicators
         {
             TestIndicator(indicator, externalDataFilename, targetColumn, (i, expected) => Assert.AreEqual(expected, selector(indicator), epsilon, "Failed at " + i.Current.Time.ToString("o")));
         }
+
         /// <summary>
-        /// Compare the specified indicator against external data using the specificied comma delimited text file.
+        /// Compare the specified indicator against external data using the specified comma delimited text file.
         /// The 'Close' column will be fed to the indicator as input
         /// </summary>
         /// <param name="indicator">The indicator under test</param>
-        /// <param name="externalDataFilename"></param>
+        /// <param name="externalDataFilename">The external CSV file name</param>
         /// <param name="targetColumn">The column with the correct answers</param>
         /// <param name="customAssertion">Sets custom assertion logic, parameter is the indicator, expected value from the file</param>
         public static void TestIndicator(IndicatorBase<TradeBar> indicator, string externalDataFilename, string targetColumn, Action<IndicatorBase<TradeBar>, double> customAssertion)
@@ -183,7 +184,7 @@ namespace QuantConnect.Tests.Indicators
                     High = parts[2].ToDecimal(),
                     Low = parts[3].ToDecimal(),
                     Close = parts[4].ToDecimal(),
-                    Volume = fileHasVolume ? long.Parse(parts[5], NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint) : 0
+                    Volume = fileHasVolume ? long.Parse(parts[5], NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture) : 0
                 };
 
                 indicator.Update(tradebar);
@@ -193,9 +194,51 @@ namespace QuantConnect.Tests.Indicators
                     continue;
                 }
 
-                double expected = double.Parse(parts[targetIndex]);
+                double expected = double.Parse(parts[targetIndex], CultureInfo.InvariantCulture);
                 customAssertion.Invoke(indicator, expected);
             }
+        }
+
+        /// <summary>
+        /// Tests a reset of the specified indicator after processing external data using the specified comma delimited text file.
+        /// The 'Close' column will be fed to the indicator as input
+        /// </summary>
+        /// <param name="indicator">The indicator under test</param>
+        /// <param name="externalDataFilename">The external CSV file name</param>
+        public static void TestIndicatorReset(IndicatorBase<TradeBar> indicator, string externalDataFilename)
+        {
+            foreach (var data in GetTradeBarStream(externalDataFilename, false))
+            {
+                indicator.Update(data);
+            }
+
+            Assert.IsTrue(indicator.IsReady);
+
+            indicator.Reset();
+
+            AssertIndicatorIsInDefaultState(indicator);
+        }
+
+        /// <summary>
+        /// Tests a reset of the specified indicator after processing external data using the specified comma delimited text file.
+        /// The 'Close' column will be fed to the indicator as input
+        /// </summary>
+        /// <param name="indicator">The indicator under test</param>
+        /// <param name="externalDataFilename">The external CSV file name</param>
+        public static void TestIndicatorReset(IndicatorBase<IndicatorDataPoint> indicator, string externalDataFilename)
+        {
+            var date = DateTime.Today;
+
+            foreach (var data in GetTradeBarStream(externalDataFilename, false))
+            {
+                indicator.Update(date, data.Close);
+            }
+
+            Assert.IsTrue(indicator.IsReady);
+
+            indicator.Reset();
+
+            AssertIndicatorIsInDefaultState(indicator);
         }
 
         public static IEnumerable<IReadOnlyDictionary<string, string>> GetCsvFileStream(string externalDataFilename)
@@ -216,6 +259,9 @@ namespace QuantConnect.Tests.Indicators
             }
         }
 
+        /// <summary>
+        /// Gets a stream of trade bars from the specified file
+        /// </summary>
         public static IEnumerable<TradeBar> GetTradeBarStream(string externalDataFilename, bool fileHasVolume = true)
         {
             return GetCsvFileStream(externalDataFilename).Select(values => new TradeBar
@@ -225,7 +271,7 @@ namespace QuantConnect.Tests.Indicators
                 High = values.GetCsvValue("high").ToDecimal(),
                 Low = values.GetCsvValue("low").ToDecimal(),
                 Close = values.GetCsvValue("close").ToDecimal(),
-                Volume = fileHasVolume ? long.Parse(values.GetCsvValue("volume"), NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint) : 0
+                Volume = fileHasVolume ? long.Parse(values.GetCsvValue("volume"), NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture) : 0
             });
         }
 
@@ -240,6 +286,34 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(DateTime.MinValue, indicator.Current.Time);
             Assert.AreEqual(0, indicator.Samples);
             Assert.IsFalse(indicator.IsReady);
+
+            var fields = indicator.GetType().GetProperties()
+                .Where(x => x.PropertyType.IsSubclassOfGeneric(typeof(IndicatorBase<T>)) ||
+                            x.PropertyType.IsSubclassOfGeneric(typeof(IndicatorBase<TradeBar>)) ||
+                            x.PropertyType.IsSubclassOfGeneric(typeof(IndicatorBase<IndicatorDataPoint>)));
+            foreach (var field in fields)
+            {
+                var subIndicator = field.GetValue(indicator);
+
+                if (subIndicator == null || 
+                    subIndicator is ConstantIndicator<T> || 
+                    subIndicator is ConstantIndicator<TradeBar> ||
+                    subIndicator is ConstantIndicator<IndicatorDataPoint>) 
+                    continue;
+
+                if (field.PropertyType.IsSubclassOfGeneric(typeof (IndicatorBase<T>)))
+                {
+                    AssertIndicatorIsInDefaultState(subIndicator as IndicatorBase<T>);
+                }
+                else if (field.PropertyType.IsSubclassOfGeneric(typeof(IndicatorBase<TradeBar>)))
+                {
+                    AssertIndicatorIsInDefaultState(subIndicator as IndicatorBase<TradeBar>);
+                }
+                else if (field.PropertyType.IsSubclassOfGeneric(typeof(IndicatorBase<IndicatorDataPoint>)))
+                {
+                    AssertIndicatorIsInDefaultState(subIndicator as IndicatorBase<IndicatorDataPoint>);
+                }
+            }
         }
 
         /// <summary>

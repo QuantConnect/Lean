@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Globalization;
 using QuantConnect.Data;
 
 namespace QuantConnect.Indicators
@@ -31,9 +32,9 @@ namespace QuantConnect.Indicators
         /// <param name="time">The time associated with the value</param>
         /// <param name="value">The value to use to update this indicator</param>
         /// <returns>True if this indicator is ready, false otherwise</returns>
-        public static void Update(this IndicatorBase<IndicatorDataPoint> indicator, DateTime time, decimal value)
+        public static bool Update(this IndicatorBase<IndicatorDataPoint> indicator, DateTime time, decimal value)
         {
-            indicator.Update(new IndicatorDataPoint(time, value));
+            return indicator.Update(new IndicatorDataPoint(time, value));
         }
 
         /// <summary>
@@ -44,8 +45,9 @@ namespace QuantConnect.Indicators
         /// <param name="first">The indicator that sends data via DataConsolidated even to the second</param>
         /// <param name="waitForFirstToReady">True to only send updates to the second if first.IsReady returns true, false to alway send updates to second</param>
         /// <returns>The reference to the second indicator to allow for method chaining</returns>
-        public static IndicatorBase<IndicatorDataPoint> Of<T>(this IndicatorBase<IndicatorDataPoint> second, IndicatorBase<T> first, bool waitForFirstToReady = true)
+        public static TSecond Of<T, TSecond>(this TSecond second, IndicatorBase<T> first, bool waitForFirstToReady = true)
             where T : BaseData
+            where TSecond : IndicatorBase<IndicatorDataPoint>
         {
             first.Updated += (sender, consolidated) =>
             {
@@ -57,6 +59,21 @@ namespace QuantConnect.Indicators
             };
 
             return second;
+        }
+
+        /// <summary>
+        /// Creates a new CompositeIndicator such that the result will be the sum of the left and the constant
+        /// </summary>
+        /// <remarks>
+        /// value = left + constant
+        /// </remarks>
+        /// <param name="left">The left indicator</param>
+        /// <param name="constant">The addend</param>
+        /// <returns>The sum of the left and right indicators</returns>
+        public static CompositeIndicator<IndicatorDataPoint> Plus(this IndicatorBase<IndicatorDataPoint> left, decimal constant)
+        {
+            var constantIndicator = new ConstantIndicator<IndicatorDataPoint>(constant.ToString(CultureInfo.InvariantCulture), constant);
+            return left.Plus(constantIndicator);
         }
 
         /// <summary>
@@ -89,6 +106,21 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
+        /// Creates a new CompositeIndicator such that the result will be the difference of the left and constant
+        /// </summary>
+        /// <remarks>
+        /// value = left - constant
+        /// </remarks>
+        /// <param name="left">The left indicator</param>
+        /// <param name="constant">The subtrahend</param>
+        /// <returns>The difference of the left and right indicators</returns>
+        public static CompositeIndicator<IndicatorDataPoint> Minus(this IndicatorBase<IndicatorDataPoint> left, decimal constant)
+        {
+            var constantIndicator = new ConstantIndicator<IndicatorDataPoint>(constant.ToString(CultureInfo.InvariantCulture), constant);
+            return left.Minus(constantIndicator);
+        }
+
+        /// <summary>
         /// Creates a new CompositeIndicator such that the result will be the difference of the left and right
         /// </summary>
         /// <remarks>
@@ -118,6 +150,21 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
+        /// Creates a new CompositeIndicator such that the result will be the ratio of the left to the constant
+        /// </summary>
+        /// <remarks>
+        /// value = left/constant
+        /// </remarks>
+        /// <param name="left">The left indicator</param>
+        /// <param name="constant">The constant value denominator</param>
+        /// <returns>The ratio of the left to the right indicator</returns>
+        public static CompositeIndicator<IndicatorDataPoint> Over(this IndicatorBase<IndicatorDataPoint> left, decimal constant)
+        {
+            var constantIndicator = new ConstantIndicator<IndicatorDataPoint>(constant.ToString(CultureInfo.InvariantCulture), constant);
+            return left.Over(constantIndicator);
+        }
+
+        /// <summary>
         /// Creates a new CompositeIndicator such that the result will be the ratio of the left to the right
         /// </summary>
         /// <remarks>
@@ -144,6 +191,21 @@ namespace QuantConnect.Indicators
         public static CompositeIndicator<IndicatorDataPoint> Over(this IndicatorBase<IndicatorDataPoint> left, IndicatorBase<IndicatorDataPoint> right, string name)
         {
             return new CompositeIndicator<IndicatorDataPoint>(name, left, right, (l, r) => l / r);
+        }
+
+        /// <summary>
+        /// Creates a new CompositeIndicator such that the result will be the product of the left and the constant
+        /// </summary>
+        /// <remarks>
+        /// value = left*constant
+        /// </remarks>
+        /// <param name="left">The left indicator</param>
+        /// <param name="constant">The constant value to multiple by</param>
+        /// <returns>The product of the left to the right indicators</returns>
+        public static CompositeIndicator<IndicatorDataPoint> Times(this IndicatorBase<IndicatorDataPoint> left, decimal constant)
+        {
+            var constantIndicator = new ConstantIndicator<IndicatorDataPoint>(constant.ToString(CultureInfo.InvariantCulture), constant);
+            return left.Times(constantIndicator);
         }
 
         /// <summary>

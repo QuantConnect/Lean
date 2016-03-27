@@ -12,31 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
+
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 
 namespace QuantConnect.Algorithm
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     public partial class QCAlgorithm
     {
-        /******************************************************** 
-        * CLASS PRIVATE VARIABLES
-        *********************************************************/
         private Dictionary<string, Chart> _charts = new Dictionary<string, Chart>();
         private Dictionary<string, string> _runtimeStatistics = new Dictionary<string, string>();
 
-        /******************************************************** 
-        * CLASS PUBLIC PROPERTIES
-        *********************************************************/
         /// <summary>
         /// Access to the runtime statistics property. User provided statistics.
         /// </summary>
@@ -49,9 +38,6 @@ namespace QuantConnect.Algorithm
             }
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Add a Chart object to algorithm collection
         /// </summary>
@@ -182,7 +168,8 @@ namespace QuantConnect.Algorithm
                 _charts.Add(chart, new Chart(chart)); 
             }
 
-            if (!_charts[chart].Series.ContainsKey(series)) 
+            var thisChart = _charts[chart];
+            if (!thisChart.Series.ContainsKey(series)) 
             {
                 //Number of series in total.
                 var seriesCount = (from x in _charts.Values select x.Series.Count).Sum();
@@ -194,12 +181,13 @@ namespace QuantConnect.Algorithm
                 }
 
                 //If we don't have the series, create it:
-                _charts[chart].AddSeries(new Series(series));
+                thisChart.AddSeries(new Series(series, SeriesType.Line, 0, "$"));
             }
 
-            if (_charts[chart].Series[series].Values.Count < 4000 || _liveMode)
+            var thisSeries = thisChart.Series[series];
+            if (thisSeries.Values.Count < 4000 || _liveMode)
             {
-                _charts[chart].Series[series].AddPoint(Time, value, _liveMode);
+                thisSeries.AddPoint(Time, value, _liveMode);
             }
             else 
             {
@@ -219,6 +207,43 @@ namespace QuantConnect.Algorithm
             foreach (var indicator in indicators)
             {
                 Plot(chart, indicator.Name, indicator);
+            }
+        }
+
+        /// <summary>
+        /// Automatically plots each indicator when a new value is available
+        /// </summary>
+        public void PlotIndicator<T>(string chart, params IndicatorBase<T>[] indicators)
+            where T : BaseData
+        {
+            foreach (var i in indicators)
+            {
+                // copy loop variable for usage in closure
+                var ilocal = i;
+                i.Updated += (sender, args) =>
+                {
+                    Plot(chart, ilocal);
+                };
+            }
+        }
+
+        /// <summary>
+        /// Automatically plots each indicator when a new value is available, optionally waiting for indicator.IsReady to return true
+        /// </summary>
+        public void PlotIndicator<T>(string chart, bool waitForReady, params IndicatorBase<T>[] indicators)
+            where T : BaseData
+        {
+            foreach (var i in indicators)
+            {
+                // copy loop variable for usage in closure
+                var ilocal = i;
+                i.Updated += (sender, args) =>
+                {
+                    if (!waitForReady || ilocal.IsReady)
+                    {
+                        Plot(chart, ilocal);
+                    }
+                };
             }
         }
 
@@ -273,11 +298,25 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Get the chart updates by fetch the recent points added and return for dynamic plotting.
         /// </summary>
+        /// <param name="clearChartData"></param>
         /// <returns>List of chart updates since the last request</returns>
         /// <remarks>GetChartUpdates returns the latest updates since previous request.</remarks>
-        public List<Chart> GetChartUpdates()
+        public List<Chart> GetChartUpdates(bool clearChartData = false)
         {
-            return _charts.Values.Select(chart => chart.GetUpdates()).ToList();
+            var updates = _charts.Values.Select(chart => chart.GetUpdates()).ToList();
+
+            if (clearChartData)
+            {
+                // we can clear this data out after getting updates to prevent unnecessary memory usage
+                foreach (var chart in _charts)
+                {
+                    foreach (var series in chart.Value.Series)
+                    {
+                        series.Value.Purge();
+                    }
+                }
+            }
+            return updates;
         }
 
     } // End Partial Algorithm Template - Plotting.

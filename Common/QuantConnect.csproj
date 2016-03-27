@@ -14,8 +14,9 @@
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
-    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\LeanCloud\</SolutionDir>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
+    <LangVersion>5</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -84,13 +85,23 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="MathNet.Numerics, Version=3.5.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\MathNet.Numerics.3.5.0\lib\net40\MathNet.Numerics.dll</HintPath>
+    <Reference Include="CloneExtensions">
+      <HintPath>..\packages\CloneExtensions.1.2\lib\portable-net40+sl50+win+wp80\CloneExtensions.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+    <Reference Include="Fasterflect">
+      <HintPath>..\packages\fasterflect.2.1.3\lib\net40\Fasterflect.dll</HintPath>
+    </Reference>
+    <Reference Include="MathNet.Numerics, Version=3.7.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\packages\MathNet.Numerics.3.7.0\lib\net40\MathNet.Numerics.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="NodaTime, Version=1.3.0.0, Culture=neutral, PublicKeyToken=4226afe0d9b296d1, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\NodaTime.1.3.1\lib\net35-Client\NodaTime.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -98,6 +109,7 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Numerics" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -105,23 +117,169 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Benchmarks\FuncBenchmark.cs" />
+    <Compile Include="Benchmarks\IBenchmark.cs" />
+    <Compile Include="Benchmarks\SecurityBenchmark.cs" />
+    <Compile Include="Brokerages\BrokerageName.cs" />
+    <Compile Include="Brokerages\DefaultBrokerageModel.cs" />
+    <Compile Include="Brokerages\FxcmBrokerageModel.cs" />
+    <Compile Include="Brokerages\OandaTransactionModel.cs" />
+    <Compile Include="Brokerages\FxcmTransactionModel.cs" />
+    <Compile Include="Brokerages\IBrokerageMessageHandler.cs" />
+    <Compile Include="Brokerages\IBrokerageModel.cs" />
+    <Compile Include="Brokerages\InteractiveBrokersBrokerageModel.cs" />
+    <Compile Include="Brokerages\OandaBrokerageModel.cs" />
+    <Compile Include="Brokerages\TradierBrokerageModel.cs" />
+    <Compile Include="Commands\AddSecurityCommand.cs" />
+    <Compile Include="Commands\AlgorithmStatusCommand.cs" />
+    <Compile Include="Commands\CancelOrderCommand.cs" />
+    <Compile Include="Commands\ICommand.cs" />
+    <Compile Include="Commands\LiquidateCommand.cs" />
+    <Compile Include="Commands\OrderCommand.cs" />
+    <Compile Include="Commands\QuitCommand.cs" />
+    <Compile Include="Commands\UpdateOrderCommand.cs" />
+    <Compile Include="Globals.cs" />
+    <Compile Include="Currencies.cs" />
+    <Compile Include="Data\Auxiliary\FactorFile.cs" />
+    <Compile Include="Data\Auxiliary\FactorFileRow.cs" />
+    <Compile Include="Data\Auxiliary\LocalDiskFactorFileProvider.cs" />
+    <Compile Include="Data\Auxiliary\MapFile.cs" />
+    <Compile Include="Data\Auxiliary\LocalDiskMapFileProvider.cs" />
+    <Compile Include="Data\Auxiliary\MapFileResolver.cs" />
+    <Compile Include="Data\Auxiliary\MapFileRow.cs" />
+    <Compile Include="Data\Auxiliary\ZipEntryName.cs" />
     <Compile Include="Data\Consolidators\BaseDataConsolidator.cs" />
     <Compile Include="Data\Consolidators\DynamicDataConsolidator.cs" />
+    <Compile Include="Data\Consolidators\PeriodCountConsolidatorBase.cs" />
+    <Compile Include="Data\Consolidators\QuoteBarConsolidator.cs" />
     <Compile Include="Data\Consolidators\RenkoConsolidator.cs" />
     <Compile Include="Data\Consolidators\TickConsolidator.cs" />
+    <Compile Include="Data\Consolidators\TickQuoteBarConsolidator.cs" />
     <Compile Include="Data\Consolidators\TradeBarConsolidatorBase.cs" />
+    <Compile Include="Data\FileFormat.cs" />
+    <Compile Include="Data\HistoryRequest.cs" />
+    <Compile Include="Data\Market\Bar.cs" />
+    <Compile Include="Data\Market\DataDictionary.cs" />
+    <Compile Include="Data\Market\Delisting.cs" />
+    <Compile Include="Data\Market\Delistings.cs" />
+    <Compile Include="Data\Market\Dividend.cs" />
+    <Compile Include="Data\Market\Dividends.cs" />
+    <Compile Include="Data\Market\IBar.cs" />
+    <Compile Include="Data\Market\QuoteBar.cs" />
     <Compile Include="Data\Market\RenkoBar.cs" />
+    <Compile Include="Brokerages\BrokerageMessageEvent.cs" />
+    <Compile Include="Brokerages\BrokerageMessageType.cs" />
+    <Compile Include="Data\Market\Split.cs" />
+    <Compile Include="Data\Market\Splits.cs" />
+    <Compile Include="Data\Market\SymbolChangedEvent.cs" />
+    <Compile Include="Data\Market\SymbolChangedEvents.cs" />
+    <Compile Include="Data\Slice.cs" />
+    <Compile Include="Data\SliceExtensions.cs" />
+    <Compile Include="Data\SubscriptionDataSource.cs" />
+    <Compile Include="Data\UniverseSelection\CoarseFundamental.cs" />
+    <Compile Include="Data\UniverseSelection\BaseDataCollection.cs" />
+    <Compile Include="Data\UniverseSelection\UserDefinedUniverse.cs" />
+    <Compile Include="Data\UniverseSelection\FuncUniverse.cs" />
+    <Compile Include="Data\UniverseSelection\Universe.cs" />
+    <Compile Include="Data\UniverseSelection\SecurityChanges.cs" />
+    <Compile Include="Data\UniverseSelection\UniverseSettings.cs" />
+    <Compile Include="Field.cs" />
+    <Compile Include="Interfaces\IAlgorithm.cs" />
+    <Compile Include="Interfaces\IApi.cs" />
+    <Compile Include="Interfaces\IBrokerage.cs" />
+    <Compile Include="Interfaces\IBrokerageFactory.cs" />
+    <Compile Include="Interfaces\ICommandQueueHandler.cs" />
+    <Compile Include="Interfaces\IDataQueueHandler.cs" />
+    <Compile Include="Interfaces\IFactorFileProvider.cs" />
+    <Compile Include="Interfaces\IHistoryProvider.cs" />
+    <Compile Include="Interfaces\IJobQueueHandler.cs" />
+    <Compile Include="Interfaces\IMapFileProvider.cs" />
+    <Compile Include="Interfaces\IMessagingHandler.cs" />
+    <Compile Include="LocalTimeKeeper.cs" />
+    <Compile Include="Market.cs" />
     <Compile Include="Notifications\Notification.cs" />
     <Compile Include="Notifications\NotificationManager.cs" />
+    <Compile Include="Orders\CancelOrderRequest.cs" />
+    <Compile Include="Orders\Fees\ConstantFeeModel.cs" />
+    <Compile Include="Orders\Fees\InteractiveBrokersFeeModel.cs" />
+    <Compile Include="Orders\Fees\FxcmFeeModel.cs" />
+    <Compile Include="Orders\Fees\IFeeModel.cs" />
+    <Compile Include="Orders\Fills\ImmediateFillModel.cs" />
+    <Compile Include="Orders\Fills\IFillModel.cs" />
+    <Compile Include="Orders\MarketOnCloseOrder.cs" />
+    <Compile Include="Orders\MarketOnOpenOrder.cs" />
+    <Compile Include="Orders\OrderField.cs" />
+    <Compile Include="Orders\OrderJsonConverter.cs" />
+    <Compile Include="Orders\OrderRequest.cs" />
+    <Compile Include="Orders\OrderRequestStatus.cs" />
+    <Compile Include="Orders\OrderRequestType.cs" />
+    <Compile Include="Orders\OrderResponse.cs" />
+    <Compile Include="Orders\OrderResponseErrorCode.cs" />
+    <Compile Include="Orders\OrderExtensions.cs" />
+    <Compile Include="Orders\OrderTicket.cs" />
+    <Compile Include="Orders\Slippage\ConstantSlippageModel.cs" />
+    <Compile Include="Orders\Slippage\SpreadSlippageModel.cs" />
+    <Compile Include="Orders\Slippage\ISlippageModel.cs" />
     <Compile Include="Orders\StopLimitOrder.cs" />
     <Compile Include="Orders\StopMarketOrder.cs" />
     <Compile Include="Orders\LimitOrder.cs" />
     <Compile Include="Orders\MarketOrder.cs" />
     <Compile Include="Orders\OrderTypes.cs" />
-    <Compile Include="Orders\OrderErrors.cs" />
+    <Compile Include="Orders\OrderError.cs" />
+    <Compile Include="Orders\SubmitOrderRequest.cs" />
+    <Compile Include="Orders\UpdateOrderFields.cs" />
+    <Compile Include="Orders\UpdateOrderRequest.cs" />
+    <Compile Include="Packets\CommandResultPacket.cs" />
+    <Compile Include="Packets\Controls.cs" />
     <Compile Include="Packets\HandledErrorPacket.cs" />
-    <Compile Include="Data\Test\FakeTradeBarCustom.cs" />
-    <Compile Include="Securities\IOrderIDMapping.cs" />
+    <Compile Include="Packets\HistoryPacket.cs" />
+    <Compile Include="Parameters\ParameterAttribute.cs" />
+    <Compile Include="Properties\SharedAssemblyInfo.cs" />
+    <Compile Include="Scheduling\CompositeTimeRule.cs" />
+    <Compile Include="Scheduling\DateRules.cs" />
+    <Compile Include="Scheduling\FluentScheduledEventBuilder.cs" />
+    <Compile Include="Scheduling\FuncDateRule.cs" />
+    <Compile Include="Scheduling\IDateRule.cs" />
+    <Compile Include="Scheduling\IEventSchedule.cs" />
+    <Compile Include="Scheduling\ITimeRule.cs" />
+    <Compile Include="Scheduling\ScheduledEvent.cs" />
+    <Compile Include="Scheduling\ScheduleManager.cs" />
+    <Compile Include="Scheduling\FuncTimeRule.cs" />
+    <Compile Include="Scheduling\TimeRules.cs" />
+    <Compile Include="Securities\BrokerageModelSecurityInitializer.cs" />
+    <Compile Include="Securities\Cash.cs" />
+    <Compile Include="Securities\CashBook.cs" />
+    <Compile Include="Securities\Cfd\Cfd.cs" />
+    <Compile Include="Securities\Cfd\CfdCache.cs" />
+    <Compile Include="Securities\Cfd\CfdDataFilter.cs" />
+    <Compile Include="Securities\Cfd\CfdExchange.cs" />
+    <Compile Include="Securities\Cfd\CfdHolding.cs" />
+    <Compile Include="Securities\ConstantFeeTransactionModel.cs" />
+    <Compile Include="Securities\DelayedSettlementModel.cs" />
+    <Compile Include="Securities\FuncSecurityInitializer.cs" />
+    <Compile Include="Securities\ISecurityInitializer.cs" />
+    <Compile Include="Securities\ISettlementModel.cs" />
+    <Compile Include="Securities\LocalMarketHours.cs" />
+    <Compile Include="Securities\MarketHoursSegment.cs" />
+    <Compile Include="Securities\MarketHoursState.cs" />
+    <Compile Include="Securities\PatternDayTradingMarginModel.cs" />
+    <Compile Include="Securities\SecurityDatabaseKey.cs" />
+    <Compile Include="Securities\SecurityExchangeHours.cs" />
+    <Compile Include="Securities\MarketHoursDatabase.cs" />
+    <Compile Include="Securities\ISecurityProvider.cs" />
+    <Compile Include="Securities\IOrderProcessor.cs" />
+    <Compile Include="Securities\ISecurityMarginModel.cs" />
+    <Compile Include="Securities\IOrderProvider.cs" />
+    <Compile Include="Securities\ISecurityPortfolioModel.cs" />
+    <Compile Include="Securities\MarginCallModel.cs" />
+    <Compile Include="Securities\SecurityPortfolioModel.cs" />
+    <Compile Include="Securities\SecurityMarginModel.cs" />
+    <Compile Include="Securities\ImmediateSettlementModel.cs" />
+    <Compile Include="Securities\SymbolProperties.cs" />
+    <Compile Include="Securities\SymbolPropertiesDatabase.cs" />
+    <Compile Include="Securities\UniverseManager.cs" />
+    <Compile Include="Securities\UnsettledCashAmount.cs" />
+    <Compile Include="SecurityIdentifier.cs" />
     <Compile Include="SeriesSampler.cs" />
     <Compile Include="Data\Custom\Quandl.cs" />
     <Compile Include="Data\DynamicData.cs" />
@@ -145,7 +303,6 @@
     <Compile Include="Packets\Packet.cs" />
     <Compile Include="Packets\RuntimeErrorPacket.cs" />
     <Compile Include="Packets\SecurityTypesPacket .cs" />
-    <Compile Include="Queues.cs" />
     <Compile Include="Data\BaseData.cs" />
     <Compile Include="Data\IBaseData.cs" />
     <Compile Include="Data\SubscriptionDataConfig.cs" />
@@ -159,7 +316,6 @@
     <Compile Include="Extensions.cs" />
     <Compile Include="Orders\Order.cs" />
     <Compile Include="Securities\AccountEvent.cs" />
-    <Compile Include="Securities\PortfolioEvent.cs" />
     <Compile Include="Securities\Equity\EquityCache.cs" />
     <Compile Include="Securities\Equity\EquityDataFilter.cs" />
     <Compile Include="Securities\Forex\ForexCache.cs" />
@@ -184,16 +340,57 @@
     <Compile Include="Securities\SecurityPortfolioManager.cs" />
     <Compile Include="Securities\SecurityTransactionManager.cs" />
     <Compile Include="OS.cs" />
+    <Compile Include="Statistics\AlgorithmPerformance.cs" />
+    <Compile Include="Statistics\PortfolioStatistics.cs" />
+    <Compile Include="Statistics\StatisticsBuilder.cs" />
+    <Compile Include="Statistics\StatisticsResults.cs" />
+    <Compile Include="Statistics\TradeStatistics.cs" />
     <Compile Include="Statistics\Statistics.cs" />
-    <Compile Include="Realtime.cs" />
+    <Compile Include="RealTimeSynchronizedTimer.cs" />
+    <Compile Include="Symbol.cs" />
+    <Compile Include="Statistics\Trade.cs" />
+    <Compile Include="Statistics\TradeBuilder.cs" />
+    <Compile Include="Statistics\TradeEnums.cs" />
+    <Compile Include="SymbolCache.cs" />
+    <Compile Include="SymbolJsonConverter.cs" />
+    <Compile Include="SymbolValueJsonConverter.cs" />
     <Compile Include="Time.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TimeKeeper.cs" />
+    <Compile Include="TimeUpdatedEventArgs.cs" />
+    <Compile Include="TimeZoneOffsetProvider.cs" />
+    <Compile Include="TimeZones.cs" />
+    <Compile Include="Util\BusyBlockingCollection.cs" />
+    <Compile Include="Util\CircularQueue.cs" />
+    <Compile Include="Util\Composer.cs" />
     <Compile Include="Util\ExpressionBuilder.cs" />
+    <Compile Include="Util\FixedSizeQueue.cs" />
+    <Compile Include="Util\FixedSizeHashQueue.cs" />
+    <Compile Include="Util\FuncParallelRunnerWorkItem.cs" />
     <Compile Include="Util\FuncTextWriter.cs" />
+    <Compile Include="Util\IParallelRunnerWorkItem.cs" />
+    <Compile Include="Util\LeanData.cs" />
+    <Compile Include="Util\MarketHoursDatabaseJsonConverter.cs" />
+    <Compile Include="Util\ParallelRunner.cs" />
+    <Compile Include="Util\ParallelRunnerWorker.cs" />
+    <Compile Include="Util\ColorJsonConverter.cs" />
+    <Compile Include="Util\SecurityIdentifierJsonConverter.cs" />
+    <Compile Include="Util\TypeChangeJsonConverter.cs" />
     <Compile Include="Util\LinqExtensions.cs" />
+    <Compile Include="Util\MemoizingEnumerable.cs" />
+    <Compile Include="Util\NullStringValueConverter.cs" />
     <Compile Include="Util\ObjectActivator.cs" />
+    <Compile Include="Util\ReaderWriterLockSlimExtensions.cs" />
+    <Compile Include="Util\Ref.cs" />
+    <Compile Include="Util\SingleValueListConverter.cs" />
+    <Compile Include="Util\VersionHelper.cs" />
+    <Compile Include="Util\XElementExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Configuration\QuantConnect.Configuration.csproj">
+      <Project>{0aeb4ea3-28c8-476e-89fd-926f06590b4c}</Project>
+      <Name>QuantConnect.Configuration</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj">
       <Project>{01911409-86BE-4E7D-9947-DF714138610D}</Project>
       <Name>QuantConnect.Logging</Name>

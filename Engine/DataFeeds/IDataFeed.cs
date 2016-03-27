@@ -14,15 +14,13 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using QuantConnect.Data;
-using QuantConnect.Data.Market;
+using System.ComponentModel.Composition;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Packets;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -30,62 +28,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <summary>
     /// Datafeed interface for creating custom datafeed sources.
     /// </summary>
-    public interface IDataFeed
+    [InheritedExport(typeof(IDataFeed))]
+    public interface IDataFeed : IEnumerable<TimeSlice>
     {
-        /******************************************************** 
-        * INTERFACE PROPERTIES
-        *********************************************************/
         /// <summary>
-        /// List of the subscription the algorithm has requested. Subscriptions contain the type, sourcing information and manage the enumeration of data.
+        /// Gets all of the current subscriptions this data feed is processing
         /// </summary>
-        List<SubscriptionDataConfig> Subscriptions
+        IEnumerable<Subscription> Subscriptions
         {
             get;
-        }
-
-
-        /// <summary>
-        /// Prices of the datafeed this instant for dynamically updating security values (and calculation of the total portfolio value in realtime).
-        /// </summary>
-        /// <remarks>Indexed in order of the subscriptions</remarks>
-        List<decimal> RealtimePrices
-        {
-            get;
-        }
-
-            /// <summary>
-        /// Cross-threading queues so the datafeed pushes data into the queue and the primary algorithm thread reads it out.
-        /// </summary>
-        ConcurrentQueue<List<BaseData>>[] Bridge
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Boolean flag indicating there is no more data in any of our subscriptions.
-        /// </summary>
-        bool EndOfBridges
-        {
-            get;
-        }
-
-        /// <summary>
-        /// Array of boolean flags indicating the data status for each queue/subscription we're tracking.
-        /// </summary>
-        bool[] EndOfBridge
-        {
-            get;
-        }
-
-        /// <summary>
-        /// Set the source of the data we're requesting for the type-readers to know where to get data from.
-        /// </summary>
-        /// <remarks>Live or Backtesting Datafeed</remarks>
-        DataFeedEndpoint DataFeed
-        {
-            get;
-            set;
         }
 
         /// <summary>
@@ -97,36 +48,35 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// The most advanced moment in time for which the data feed has completed loading data
+        /// Initializes the data feed for the specified job and algorithm
         /// </summary>
-        DateTime LoadedDataFrontier { get; }
+        void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider);
 
         /// <summary>
-        /// Data has completely loaded and we don't expect any more.
+        /// Adds a new subscription to provide data for the specified security.
         /// </summary>
-        bool LoadingComplete
-        {
-            get;
-        }
+        /// <param name="universe">The universe the subscription is to be added to</param>
+        /// <param name="security">The security to add a subscription for</param>
+        /// <param name="utcStartTime">The start time of the subscription</param>
+        /// <param name="utcEndTime">The end time of the subscription</param>
+        /// <returns>True if the subscription was created and added successfully, false otherwise</returns>
+        bool AddSubscription(Universe universe, Security security, DateTime utcStartTime, DateTime utcEndTime);
 
-        /******************************************************** 
-        * INTERFACE METHODS
-        *********************************************************/
+        /// <summary>
+        /// Removes the subscription from the data feed, if it exists
+        /// </summary>
+        /// <param name="symbol">The symbol of the subscription to be removed</param>
+        /// <returns>True if the subscription was successfully removed, false otherwise</returns>
+        bool RemoveSubscription(Symbol symbol);
+
         /// <summary>
         /// Primary entry point.
         /// </summary>
         void Run();
 
-
         /// <summary>
         /// External controller calls to signal a terminate of the thread.
         /// </summary>
         void Exit();
-
-
-        /// <summary>
-        /// Purge all remaining data in the thread.
-        /// </summary>
-        void PurgeData();
     }
 }

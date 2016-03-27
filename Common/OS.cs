@@ -13,28 +13,19 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Diagnostics;
+using System.IO;
 
 namespace QuantConnect 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Operating systems class for managing anything that is operation system specific.
     /// </summary>
     /// <remarks>Good design should remove the need for this function. Over time it should disappear.</remarks>
     public static class OS 
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         private static PerformanceCounter _ramTotalCounter;
         private static PerformanceCounter _ramAvailableBytes;
         private static PerformanceCounter _cpuUsageCounter;
@@ -61,9 +52,6 @@ namespace QuantConnect
             }
         }
 
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
         /// <summary>
         /// Memory free on the machine available for use:
         /// </summary>
@@ -234,7 +222,8 @@ namespace QuantConnect
                 {"Used RAM (MB)",        TotalPhysicalMemoryUsed.ToString()},
                 {"Total RAM (MB)",        TotalPhysicalMemory.ToString()},
                 {"Used Disk Space (MB)", DriveSpaceUsed.ToString() },
-                {"Total Disk Space (MB)", DriveTotalSpace.ToString() }
+                {"Total Disk Space (MB)", DriveTotalSpace.ToString() },
+                {"LEAN Version", "v" + Globals.Version}
             };
         }
     } // End OS Class

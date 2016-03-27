@@ -14,25 +14,15 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using Newtonsoft.Json;
 
 namespace QuantConnect.Packets
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Simple log message instruction from the lean engine.
     /// </summary>
     public class LogPacket : Packet
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         /// <summary>
         /// Log message to the users console:
         /// </summary>
@@ -45,9 +35,6 @@ namespace QuantConnect.Packets
         [JsonProperty(PropertyName = "sAlgorithmID")]
         public string AlgorithmId;
 
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Default constructor for JSON
         /// </summary>

@@ -13,16 +13,11 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Orders
 {
-    /******************************************************** 
-    * ORDER CLASS DEFINITION
-    *********************************************************/
     /// <summary>
     /// Limit order type definition
     /// </summary>
@@ -31,18 +26,14 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Limit price for this order.
         /// </summary>
-        public decimal LimitPrice;
-
+        public decimal LimitPrice { get; internal set; }
 
         /// <summary>
-        /// Value of the order at limit price if a limit order
+        /// Limit Order Type
         /// </summary>
-        public override decimal Value
+        public override OrderType Type
         {
-            get
-            {
-                return Convert.ToDecimal(Quantity) * LimitPrice;
-            }
+            get { return OrderType.Limit; }
         }
 
         /// <summary>
@@ -50,23 +41,20 @@ namespace QuantConnect.Orders
         /// </summary>
         public LimitOrder()
         {
-            Type = OrderType.Limit;
         }
 
         /// <summary>
         /// New limit order constructor
         /// </summary>
         /// <param name="symbol">Symbol asset we're seeking to trade</param>
-        /// <param name="type">Type of the security order</param>
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
         /// <param name="time">Time the order was placed</param>
         /// <param name="limitPrice">Price the order should be filled at if a limit order</param>
         /// <param name="tag">User defined data tag for this order</param>
-        public LimitOrder(string symbol, int quantity, decimal limitPrice, DateTime time, string tag = "", SecurityType type = SecurityType.Base) :
-            base(symbol, quantity, OrderType.Limit, time, 0, tag, type)
+        public LimitOrder(Symbol symbol, int quantity, decimal limitPrice, DateTime time, string tag = "")
+            : base(symbol, quantity, time, tag)
         {
             LimitPrice = limitPrice;
-            Type = OrderType.Limit;
 
             if (tag == "")
             {
@@ -74,6 +62,62 @@ namespace QuantConnect.Orders
                 Tag = "Limit Price: " + limitPrice.ToString("C");
             }
         }
-    }
 
-} // End QC Namespace:
+        /// <summary>
+        /// Gets the order value in units of the security's quote currency
+        /// </summary>
+        /// <param name="security">The security matching this order's symbol</param>
+        protected override decimal GetValueImpl(Security security)
+        {
+            // selling, so higher price will be used
+            if (Quantity < 0)
+            {
+                return Quantity*Math.Max(LimitPrice, security.Price);
+            }
+
+            // buying, so lower price will be used
+            if (Quantity > 0)
+            {
+                return Quantity*Math.Min(LimitPrice, security.Price);
+            }
+
+            return 0m;
+        }
+
+        /// <summary>
+        /// Modifies the state of this order to match the update request
+        /// </summary>
+        /// <param name="request">The request to update this order object</param>
+        public override void ApplyUpdateOrderRequest(UpdateOrderRequest request)
+        {
+            base.ApplyUpdateOrderRequest(request);
+            if (request.LimitPrice.HasValue)
+            {
+                LimitPrice = request.LimitPrice.Value;
+            }
+        }
+
+        /// <summary>
+        /// Returns a string that represents the current object.
+        /// </summary>
+        /// <returns>
+        /// A string that represents the current object.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        public override string ToString()
+        {
+            return string.Format("{0} at limit {1}", base.ToString(), LimitPrice.SmartRounding());
+        }
+
+        /// <summary>
+        /// Creates a deep-copy clone of this order
+        /// </summary>
+        /// <returns>A copy of this order</returns>
+        public override Order Clone()
+        {
+            var order = new LimitOrder {LimitPrice = LimitPrice};
+            CopyTo(order);
+            return order;
+        }
+    }
+}

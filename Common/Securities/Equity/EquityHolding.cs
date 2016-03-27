@@ -13,47 +13,21 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
-using QuantConnect.Securities.Interfaces;
-
 namespace QuantConnect.Securities.Equity
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Holdings class for equities securities: no specific properties here but it is a placeholder for future equities specific behaviours.
     /// </summary>
     /// <seealso cref="SecurityHolding"/>
     public class EquityHolding : SecurityHolding 
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
-
-        /******************************************************** 
-        * CONSTRUCTOR/DELEGATE DEFINITIONS
-        *********************************************************/
-
         /// <summary>
         /// Constructor for equities holdings.
         /// </summary>
-        public EquityHolding(string symbol, decimal leverage, ISecurityTransactionModel transactionModel)
-            : base(symbol, SecurityType.Equity, leverage,  transactionModel)
+        /// <param name="security">The security being held</param>
+        public EquityHolding(Security security)
+            : base(security)
         {
         }
-
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
-            
-
-        /******************************************************** 
-        * CLASS METHODS 
-        *********************************************************/
-
-    } // End Equity Holdings:
-} //End Namespace
+    }
+}

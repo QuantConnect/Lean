@@ -13,15 +13,8 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 namespace QuantConnect.Orders
 {
-    /******************************************************** 
-    * ORDER CLASS DEFINITION
-    *********************************************************/
     /// <summary>
     /// Type of the order: market, limit or stop
     /// </summary>
@@ -45,7 +38,17 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Stop limit order type - trigger fill once pass the stop price; but limit fill to limit price.
         /// </summary>
-        StopLimit
+        StopLimit,
+
+        /// <summary>
+        /// Market on open type - executed on exchange open
+        /// </summary>
+        MarketOnOpen,
+
+        /// <summary>
+        /// Market on close type - executed on exchange close
+        /// </summary>
+        MarketOnClose
     }
 
 
@@ -65,6 +68,12 @@ namespace QuantConnect.Orders
         /// </summary>
         Day
         */
+
+        /// <summary>
+        /// Order valid until a custom set date time value.
+        /// </summary>
+        Custom
+        
     }
 
 
@@ -86,6 +95,10 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Default Value - No Order Direction
         /// </summary>
+        /// <remarks>
+        /// Unfortunately this does not have a value of zero because
+        /// there are backtests saved that reference the values in this order
+        /// </remarks>
         Hold
     }
 
@@ -98,42 +111,37 @@ namespace QuantConnect.Orders
         /// <summary>
         /// New order pre-submission to the order processor.
         /// </summary>
-        New,
-
-        /// <summary>
-        /// Order flagged for updating the inmarket order.
-        /// </summary>
-        Update,
+        New = 0,
 
         /// <summary>
         /// Order submitted to the market
         /// </summary>
-        Submitted,
+        Submitted = 1,
 
         /// <summary>
         /// Partially filled, In Market Order.
         /// </summary>
-        PartiallyFilled,
+        PartiallyFilled = 2,
 
         /// <summary>
         /// Completed, Filled, In Market Order.
         /// </summary>
-        Filled,
+        Filled = 3,
 
         /// <summary>
         /// Order cancelled before it was filled
         /// </summary>
-        Canceled,
+        Canceled = 5,
 
         /// <summary>
         /// No Order State Yet
         /// </summary>
-        None,
+        None = 6,
 
         /// <summary>
         /// Order invalidated before it hit the market (e.g. insufficient capital)..
         /// </summary>
-        Invalid
+        Invalid = 7
     }
 
 } // End QC Namespace:

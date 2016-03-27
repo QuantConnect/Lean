@@ -14,80 +14,86 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using System;
 using System.Threading;
+using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
+using QuantConnect.Packets;
 
 namespace QuantConnect.Lean.Engine
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Algorithm status monitor reads the central command directive for this algorithm/backtest. When it detects
     /// the backtest has been deleted or cancelled the backtest is aborted.
     /// </summary>
     public class StateCheck
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
-
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
-
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
-
         /// DB Ping Class
         public class Ping
         {
             // set to true to break while loop in Run()
-            private static bool _exitTriggered;
+            private ManualResetEventSlim _exitEvent;
+
+            private readonly AlgorithmNodePacket _job;
+            private readonly AlgorithmManager _algorithmManager;
+            private readonly IApi _api;
+            private readonly IResultHandler _resultHandler;
+            private readonly IMessagingHandler _messagingHandler;
+
+            /// <summary>
+            /// Creates an instance of the <see cref="Ping"/> class
+            /// </summary>
+            public Ping(AlgorithmManager algorithmManager, IApi api, IResultHandler resultHandler, IMessagingHandler messagingHandler, AlgorithmNodePacket job)
+            {
+                _api = api;
+                _job = job;
+                _resultHandler = resultHandler;
+                _messagingHandler = messagingHandler;
+                _algorithmManager = algorithmManager;
+                _exitEvent = new ManualResetEventSlim(false);
+            }
 
             /// DB Ping Run Method:
-            public static void Run()
+            public void Run()
             {
-                //Don't run at all if local.
-                if (Engine.IsLocal) return;
-
-                while (!_exitTriggered)
+                while (!_exitEvent.Wait(1000))
                 {
-                    if (AlgorithmManager.AlgorithmId != "" && AlgorithmManager.QuitState == false)
+                    try
                     {
-                        try
+                        if (_algorithmManager.AlgorithmId != "" && _algorithmManager.QuitState == false)
                         {
                             //Get the state from the central server:
-                            var state = Engine.Api.GetAlgorithmStatus(AlgorithmManager.AlgorithmId);
-                            Log.Debug("StateCheck.Ping.Run(): Algorithm Status: " + state.Status + " Subscription: " + state.ChartSubscription);
+                            var state = _api.GetAlgorithmStatus(_algorithmManager.AlgorithmId, _job.UserId);
 
                             //Set state via get/set method:
-                            AlgorithmManager.SetStatus(state.Status);
+                            _algorithmManager.SetStatus(state.Status);
 
                             //Set which chart the user is look at, so we can reduce excess messaging (e.g. trading 100 symbols, only send 1).
-                            Engine.ResultHandler.SetChartSubscription(state.ChartSubscription);
-                        }
-                        catch (Exception err) 
-                        {
-                            Log.Error("StateCheck.Run(): Error in state check: " + err.Message);
+                            _resultHandler.SetChartSubscription(state.ChartSubscription);
+
+                            _messagingHandler.HasSubscribers = state.HasSubscribers;
                         }
                     }
-                    Thread.Sleep(1000);
+                    catch (ThreadAbortException)
+                    {
+                        return;
+                    }
+                    catch (Exception err)
+                    {
+                        Log.Error(err);
+                    }
                 }
+
+                Log.Trace("StateCheck.Ping.Run(): Exited thread.");
             }
 
             /// <summary>
             /// Send an exit signal to the thread
             /// </summary>
-            public static void Exit()
+            public void Exit()
             {
-                _exitTriggered = true;
+                _exitEvent.Set();
             }
         }
     }

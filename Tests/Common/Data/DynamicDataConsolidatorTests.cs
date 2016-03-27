@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Common.Data
         public void AggregatesTimeValuePairsWithOutVolumeProperly()
         {
             TradeBar newTradeBar = null;
-            var consolidator = new DynamicDataConsolidator(4, false, false);
+            var consolidator = new DynamicDataConsolidator(4);
             consolidator.DataConsolidated += (sender, tradeBar) =>
             {
                 newTradeBar = tradeBar;
@@ -36,7 +36,7 @@ namespace QuantConnect.Tests.Common.Data
             var reference = DateTime.Today;
             var bar1 = new CustomData
             {
-                Symbol = "SPY",
+                Symbol = Symbols.SPY,
                 Time = reference,
                 Value = 5
             };
@@ -45,7 +45,7 @@ namespace QuantConnect.Tests.Common.Data
 
             var bar2 = new CustomData
             {
-                Symbol = "SPY",
+                Symbol = Symbols.SPY,
                 Time = reference.AddHours(1),
                 Value = 10
             };
@@ -53,7 +53,7 @@ namespace QuantConnect.Tests.Common.Data
             Assert.IsNull(newTradeBar);
             var bar3 = new CustomData
             {
-                Symbol = "SPY",
+                Symbol = Symbols.SPY,
                 Time = reference.AddHours(2),
                 Value = 1
             };
@@ -62,14 +62,14 @@ namespace QuantConnect.Tests.Common.Data
 
             var bar4 = new CustomData
             {
-                Symbol = "SPY",
+                Symbol = Symbols.SPY,
                 Time = reference.AddHours(3),
                 Value = 9
             };
             consolidator.Update(bar4);
             Assert.IsNotNull(newTradeBar);
 
-            Assert.AreEqual("SPY", newTradeBar.Symbol);
+            Assert.AreEqual(Symbols.SPY, newTradeBar.Symbol);
             Assert.AreEqual(bar1.Time, newTradeBar.Time);
             Assert.AreEqual(bar1.Value, newTradeBar.Open);
             Assert.AreEqual(bar2.Value, newTradeBar.High);
@@ -82,7 +82,7 @@ namespace QuantConnect.Tests.Common.Data
         public void AggregatesTimeValuePairsWithVolumeProperly()
         {
             TradeBar newTradeBar = null;
-            var consolidator = new DynamicDataConsolidator(4, false, true);
+            var consolidator = new DynamicDataConsolidator(4);
             consolidator.DataConsolidated += (sender, tradeBar) =>
             {
                 newTradeBar = tradeBar;
@@ -90,7 +90,7 @@ namespace QuantConnect.Tests.Common.Data
             var reference = DateTime.Today;
             dynamic bar1 = new CustomData
             {
-                Symbol = "SPY",
+                Symbol = Symbols.SPY,
                 Time = reference,
                 Value = 5,
             };
@@ -101,7 +101,7 @@ namespace QuantConnect.Tests.Common.Data
 
             dynamic bar2 = new CustomData
             {
-                Symbol = "SPY",
+                Symbol = Symbols.SPY,
                 Time = reference.AddHours(1),
                 Value = 10
             };
@@ -111,7 +111,7 @@ namespace QuantConnect.Tests.Common.Data
             Assert.IsNull(newTradeBar);
             dynamic bar3 = new CustomData
             {
-                Symbol = "SPY",
+                Symbol = Symbols.SPY,
                 Time = reference.AddHours(2),
                 Value = 1
             };
@@ -122,7 +122,7 @@ namespace QuantConnect.Tests.Common.Data
 
             dynamic bar4 = new CustomData
             {
-                Symbol = "SPY",
+                Symbol = Symbols.SPY,
                 Time = reference.AddHours(3),
                 Value = 9
             };
@@ -131,7 +131,7 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.Update(bar4);
             Assert.IsNotNull(newTradeBar);
 
-            Assert.AreEqual("SPY", newTradeBar.Symbol);
+            Assert.AreEqual(Symbols.SPY, newTradeBar.Symbol);
             Assert.AreEqual(bar1.Time, newTradeBar.Time);
             Assert.AreEqual(bar1.Value, newTradeBar.Open);
             Assert.AreEqual(bar2.Value, newTradeBar.High);
@@ -144,7 +144,7 @@ namespace QuantConnect.Tests.Common.Data
         public void AggregatesTradeBarsWithVolumeProperly()
         {
             TradeBar consolidated = null;
-            var consolidator = new DynamicDataConsolidator(3, true, true);
+            var consolidator = new DynamicDataConsolidator(3);
             consolidator.DataConsolidated += (sender, bar) =>
             {
                 consolidated = bar;
@@ -152,7 +152,7 @@ namespace QuantConnect.Tests.Common.Data
 
             var reference = DateTime.Today;
             dynamic bar1 = new CustomData();
-            bar1.Symbol = "SPY";
+            bar1.Symbol = Symbols.SPY;
             bar1.Time = reference;
             bar1.Open = 10;
             bar1.High = 100m;
@@ -161,7 +161,7 @@ namespace QuantConnect.Tests.Common.Data
             bar1.Volume = 75L;
 
             dynamic bar2 = new CustomData();
-            bar2.Symbol = "SPY";
+            bar2.Symbol = Symbols.SPY;
             bar2.Time = reference.AddHours(1);
             bar2.Open = 50m;
             bar2.High = 123m;
@@ -170,7 +170,7 @@ namespace QuantConnect.Tests.Common.Data
             bar2.Volume = 100L;
 
             dynamic bar3 = new CustomData();
-            bar3.Symbol = "SPY";
+            bar3.Symbol = Symbols.SPY;
             bar3.Time = reference.AddHours(1);
             bar3.Open = 75m;
             bar3.High = 100m;
@@ -187,7 +187,7 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.Update(bar3);
 
             Assert.IsNotNull(consolidated);
-            Assert.AreEqual("SPY", consolidated.Symbol);
+            Assert.AreEqual(Symbols.SPY, consolidated.Symbol);
             Assert.AreEqual(bar1.Open, consolidated.Open);
             Assert.AreEqual(Math.Max(bar1.High, Math.Max(bar2.High, bar3.High)), consolidated.High);
             Assert.AreEqual(Math.Min(bar1.Low, Math.Min(bar2.Low, bar3.Low)), consolidated.Low);
@@ -199,7 +199,7 @@ namespace QuantConnect.Tests.Common.Data
         public void AggregatesTradeBarsWithOutVolumeProperly()
         {
             TradeBar consolidated = null;
-            var consolidator = new DynamicDataConsolidator(3, true, false);
+            var consolidator = new DynamicDataConsolidator(3);
             consolidator.DataConsolidated += (sender, bar) =>
             {
                 consolidated = bar;
@@ -207,7 +207,7 @@ namespace QuantConnect.Tests.Common.Data
 
             var reference = DateTime.Today;
             dynamic bar1 = new CustomData();
-            bar1.Symbol = "SPY";
+            bar1.Symbol = Symbols.SPY;
             bar1.Time = reference;
             bar1.Open = 10;
             bar1.High = 100m;
@@ -215,7 +215,7 @@ namespace QuantConnect.Tests.Common.Data
             bar1.Close = 50m;
 
             dynamic bar2 = new CustomData();
-            bar2.Symbol = "SPY";
+            bar2.Symbol = Symbols.SPY;
             bar2.Time = reference.AddHours(1);
             bar2.Open = 50m;
             bar2.High = 123m;
@@ -223,7 +223,7 @@ namespace QuantConnect.Tests.Common.Data
             bar2.Close = 75m;
 
             dynamic bar3 = new CustomData();
-            bar3.Symbol = "SPY";
+            bar3.Symbol = Symbols.SPY;
             bar3.Time = reference.AddHours(1);
             bar3.Open = 75m;
             bar3.High = 100m;
@@ -239,7 +239,7 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.Update(bar3);
 
             Assert.IsNotNull(consolidated);
-            Assert.AreEqual("SPY", consolidated.Symbol);
+            Assert.AreEqual(Symbols.SPY, consolidated.Symbol);
             Assert.AreEqual(bar1.Open, consolidated.Open);
             Assert.AreEqual(Math.Max(bar1.High, Math.Max(bar2.High, bar3.High)), consolidated.High);
             Assert.AreEqual(Math.Min(bar1.Low, Math.Min(bar2.Low, bar3.Low)), consolidated.Low);
@@ -247,23 +247,14 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(0, consolidated.Volume);
         }
 
-        [Test]
-        [ExpectedException(typeof (Exception), MatchType = MessageMatch.Contains, ExpectedMessage = "missing: open, high, low, close, volume")]
-        public void ThrowsErrorWhenDataShapeIsNotExpected()
-        {
-            var consolidator = new DynamicDataConsolidator(1, true, true);
-            var data = new CustomData();
-            consolidator.Update(data);
-        }
-
         private class CustomData : DynamicData
         {
-            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed)
+            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
             {
                 throw new NotImplementedException();
             }
 
-            public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
+            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
                 throw new NotImplementedException();
             }

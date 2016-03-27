@@ -13,89 +13,50 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
-using QuantConnect.Securities.Interfaces;
+using System;
+using QuantConnect.Data;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.Slippage;
 
 namespace QuantConnect.Securities.Equity 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Equity Security Type : Extension of the underlying Security class for equity specific behaviours.
     /// </summary>
     /// <seealso cref="Security"/>
     public class Equity : Security
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
-        
-        /******************************************************** 
-        * CONSTRUCTOR/DELEGATE DEFINITIONS
-        *********************************************************/
+        /// <summary>
+        /// The default number of days required to settle an equity sale
+        /// </summary>
+        public const int DefaultSettlementDays = 3;
+
+        /// <summary>
+        /// The default time of day for settlement
+        /// </summary>
+        public static readonly TimeSpan DefaultSettlementTime = new TimeSpan(8, 0, 0);
+
         /// <summary>
         /// Construct the Equity Object
         /// </summary>
-        public Equity(string symbol, Resolution resolution, bool fillDataForward, decimal leverage, bool extendedMarketHours, bool isDynamicallyLoadedData = false) :
-            base(symbol, SecurityType.Equity, resolution, fillDataForward, leverage, extendedMarketHours, isDynamicallyLoadedData) 
+        public Equity(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, Cash quoteCurrency, SymbolProperties symbolProperties)
+            : base(
+                config,
+                quoteCurrency,
+                symbolProperties,
+                new EquityExchange(exchangeHours),
+                new EquityCache(),
+                new SecurityPortfolioModel(),
+                new ImmediateFillModel(),
+                new InteractiveBrokersFeeModel(),
+                new ConstantSlippageModel(0m),
+                new ImmediateSettlementModel(),
+                new SecurityMarginModel(2m),
+                new EquityDataFilter()
+                )
         {
-            //Holdings for new Vehicle:
-            Cache = new EquityCache();
-            Holdings = new EquityHolding(symbol, leverage, this.Model);
-            Exchange = new EquityExchange();
-
-            //Set the Equity Transaction Model
-            Model = new EquityTransactionModel();
+            Holdings = new EquityHolding(this);
         }
-
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
-        /// <summary>
-        /// Equity cache class for caching data, charting and orders.
-        /// </summary>
-        public new EquityCache Cache 
-        {
-            get { return (EquityCache)base.Cache; }
-            set { base.Cache = value; }
-        }
-
-        /// <summary>
-        /// Equity holdings class for managing cash, quantity held, portfolio
-        /// </summary>
-        public new EquityHolding Holdings 
-        {
-            get { return (EquityHolding)base.Holdings; }
-            set { base.Holdings = value; }
-        }
-
-        /// <summary>
-        /// Equity exchange class for manaing time open and close.
-        /// </summary>
-        public new EquityExchange Exchange 
-        {
-            get { return (EquityExchange)base.Exchange; }
-            set { base.Exchange = value; }
-        }
-
-        /// <summary>
-        /// Equity security transaction and fill models
-        /// </summary>
-        public new ISecurityTransactionModel Model 
-        {
-            get { return (EquityTransactionModel)base.Model; }
-            set { base.Model = value; }
-        }
-
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
-
-
-    } // End Market
-
-} // End QC Namespace
+    }
+}

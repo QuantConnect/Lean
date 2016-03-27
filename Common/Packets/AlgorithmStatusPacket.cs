@@ -14,10 +14,6 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -28,9 +24,6 @@ namespace QuantConnect.Packets
     /// </summary>
     public class AlgorithmStatusPacket : Packet
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         /// <summary>
         /// Current algorithm status
         /// </summary>
@@ -51,32 +44,41 @@ namespace QuantConnect.Packets
         public string Message;
 
         /// <summary>
-        /// Algorithm Id associated with this status package
+        /// Algorithm Id associated with this status packet
         /// </summary>
         [JsonProperty(PropertyName = "sAlgorithmID")]
         public string AlgorithmId;
 
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
+        /// <summary>
+        /// Project Id associated with this status packet
+        /// </summary>
+        [JsonProperty(PropertyName = "iProjectID")]
+        public int ProjectId;
+
+        /// <summary>
+        /// The current state of the channel
+        /// </summary>
+        [JsonProperty(PropertyName = "sChannelStatus")]
+        public string ChannelStatus;
+
         /// <summary>
         /// Default constructor for JSON
         /// </summary>
         public AlgorithmStatusPacket()
-            : base (PacketType.AlgorithmStatus)
-        { }
+            : base(PacketType.AlgorithmStatus)
+        {
+        }
 
         /// <summary>
         /// Initialize algorithm state packet:
         /// </summary>
-        public AlgorithmStatusPacket(string algorithmId, AlgorithmStatus status, string message = "")
+        public AlgorithmStatusPacket(string algorithmId, int projectId, AlgorithmStatus status, string message = "")
             : base (PacketType.AlgorithmStatus)
         {
             Status = status;
+            ProjectId = projectId;
             AlgorithmId = algorithmId;
             Message = message;
-        }
-    
-    } // End Work Packet:
-
-} // End of Namespace:
+        }   
+    }
+}

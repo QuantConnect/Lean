@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using System;
 using System.Collections.Generic;
 
@@ -42,17 +43,26 @@ namespace QuantConnect
         /// <returns>The sampled series</returns>
         public Series Sample(Series series, DateTime start, DateTime stop)
         {
-            var sampled = new Series(series.Name, series.SeriesType);
+            var sampled = new Series(series.Name, series.SeriesType, series.Index, series.Unit);
 
-            if (series.Values.Count < 2)
+            // chart point times are always in universal, so force it here as well
+            double nextSample = Time.DateTimeToUnixTimeStamp(start.ToUniversalTime());
+            double unixStopDate = Time.DateTimeToUnixTimeStamp(stop.ToUniversalTime());
+
+            // we can't sample a single point and it doesn't make sense to sample scatter plots
+            // in this case just copy the raw data
+            if (series.Values.Count < 2 || series.SeriesType == SeriesType.Scatter)
             {
-                // return new instance, but keep the same data
-                sampled.Values.AddRange(series.Values);
+                // we can minimally verify we're within the start/stop interval
+                foreach (var point in series.Values)
+                {
+                    if (point.x >= nextSample && point.x <= unixStopDate)
+                    {
+                        sampled.Values.Add(point);
+                    }
+                }
                 return sampled;
             }
-
-            double nextSample = Time.DateTimeToUnixTimeStamp(start);
-            double unixStopDate = Time.DateTimeToUnixTimeStamp(stop);
 
             var enumerator = series.Values.GetEnumerator();
 
@@ -122,7 +132,7 @@ namespace QuantConnect
             var sampledCharts = new Dictionary<string, Chart>();
             foreach (var chart in charts.Values)
             {
-                var sampledChart = new Chart(chart.Name, chart.ChartType);
+                var sampledChart = new Chart(chart.Name);
                 sampledCharts.Add(sampledChart.Name, sampledChart);
                 foreach (var series in chart.Series.Values)
                 {
@@ -139,6 +149,13 @@ namespace QuantConnect
         private static decimal Interpolate(ChartPoint previous, ChartPoint current, long target)
         {
             var deltaTicks = current.x - previous.x;
+
+            // if they're at the same time return the current value
+            if (deltaTicks == 0)
+            {
+                return current.y;
+            }
+
             double percentage = (target - previous.x) / (double)deltaTicks;
 
             //  y=mx+b

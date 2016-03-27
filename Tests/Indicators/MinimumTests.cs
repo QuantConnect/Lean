@@ -20,15 +20,30 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class MinimumTests
+    public class MinimumTests : CommonIndicatorTests<IndicatorDataPoint>
     {
+        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
+        {
+            return new Minimum(5);
+        }
+
+        protected override string TestFileName
+        {
+            get { return "spy_min.txt"; }
+        }
+
+        protected override string TestColumnName
+        {
+            get { return "MIN_5"; }
+        }
+
         [Test]
         public void ComputesCorrectly()
         {
             var min = new Minimum(3);
 
             var reference = DateTime.UtcNow;
-            
+
             min.Update(reference, 1m);
             Assert.AreEqual(1m, min.Current.Value);
             Assert.AreEqual(0, min.PeriodsSinceMinimum);
@@ -50,8 +65,8 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(2, min.PeriodsSinceMinimum);
 
             min.Update(reference.AddDays(5), 3m);
-            Assert.AreEqual(-1m, min.Current.Value);
-            Assert.AreEqual(3, min.PeriodsSinceMinimum);
+            Assert.AreEqual(0m, min.Current.Value);
+            Assert.AreEqual(1, min.PeriodsSinceMinimum);
 
             min.Update(reference.AddDays(6), 2m);
             Assert.AreEqual(0m, min.Current.Value);

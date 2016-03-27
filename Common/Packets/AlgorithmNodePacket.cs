@@ -14,27 +14,16 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
-using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Packets
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Algorithm Node Packet is a work task for the Lean Engine
     /// </summary>
     public class AlgorithmNodePacket : Packet
     {
-
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Default constructor for the algorithm node:
         /// </summary>
@@ -43,9 +32,6 @@ namespace QuantConnect.Packets
             : base(type)
         { }
 
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         /// <summary>
         /// User Id placing request
         /// </summary>
@@ -87,6 +73,12 @@ namespace QuantConnect.Packets
         public UserPlan UserPlan = UserPlan.Free;
 
         /// <summary>
+        /// Language flag: Currently represents IL code or Dynamic Scripted Types.
+        /// </summary>
+        [JsonProperty(PropertyName = "eLanguage")]
+        public Language Language = Language.CSharp;
+
+        /// <summary>
         /// Server type for the deployment (512, 1024, 2048)
         /// </summary>
         [JsonProperty(PropertyName = "sServerType")]
@@ -101,8 +93,8 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Version number identifier for the lean engine.
         /// </summary>
-        [JsonProperty(PropertyName = "dtVersion")]
-        public DateTime Version;
+        [JsonProperty(PropertyName = "sVersion")]
+        public string Version;
 
         /// <summary>
         /// An algorithm packet which has already been run and is being redelivered on this node.
@@ -124,35 +116,22 @@ namespace QuantConnect.Packets
         public string RequestSource = "WebIDE";
 
         /// <summary>
-        /// DataFeed plugin name to select for the task
+        /// The maximum amount of RAM (in MB) this algorithm is allowed to utilize
         /// </summary>
-        [JsonProperty(PropertyName = "eDataEndpoint")]
-        public DataFeedEndpoint DataEndpoint = DataFeedEndpoint.Backtesting;
+        [JsonProperty(PropertyName = "iMaxRamAllocation")]
+        public int RamAllocation;
 
         /// <summary>
-        /// Transaction handler plugin to select for task
+        /// Specifies values to control algorithm limits
         /// </summary>
-        [JsonProperty(PropertyName = "eTransactionEndpoint")]
-        public TransactionHandlerEndpoint TransactionEndpoint = TransactionHandlerEndpoint.Backtesting;
+        [JsonProperty(PropertyName = "oControls")]
+        public Controls Controls;
 
         /// <summary>
-        /// Result endpoint plugin to select for task
+        /// The parameter values used to set algorithm parameters
         /// </summary>
-        [JsonProperty(PropertyName = "eResultEndpoint")]
-        public ResultHandlerEndpoint ResultEndpoint = ResultHandlerEndpoint.Backtesting;
-
-        /// <summary>
-        /// Setup handler endpoint for this task
-        /// </summary>
-        [JsonProperty(PropertyName = "eSetupEndpoint")]
-        public SetupHandlerEndpoint SetupEndpoint = SetupHandlerEndpoint.Backtesting;
-
-        /// <summary>
-        /// Realtime events handler for this task
-        /// </summary>
-        [JsonProperty(PropertyName = "eRealTimeEndpoint")]
-        public RealTimeEndpoint RealTimeEndpoint = RealTimeEndpoint.Backtesting;
-
+        [JsonProperty(PropertyName = "aParameters")]
+        public Dictionary<string, string> Parameters = new Dictionary<string, string>();
     } // End Node Packet:
 
 } // End of Namespace:

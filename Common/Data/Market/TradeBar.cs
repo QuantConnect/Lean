@@ -13,13 +13,12 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using System;
 using System.Globalization;
+using System.IO;
+using System.Threading;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.Market
 {
@@ -27,11 +26,16 @@ namespace QuantConnect.Data.Market
     /// TradeBar class for second and minute resolution data: 
     /// An OHLC implementation of the QuantConnect BaseData class with parameters for candles.
     /// </summary>
-    public class TradeBar : BaseData
+    public class TradeBar : BaseData, IBar
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
+        // scale factor used in QC equity/forex data files
+        private const decimal _scaleFactor = 1/10000m;
+
+        private int _initialized;
+        private decimal _open;
+        private decimal _high;
+        private decimal _low;
+
         /// <summary>
         /// Volume:
         /// </summary>
@@ -40,17 +44,41 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Opening price of the bar: Defined as the price at the start of the time period.
         /// </summary>
-        public decimal Open { get; set; }
+        public decimal Open
+        {
+            get { return _open; }
+            set
+            {
+                Initialize(value);
+                _open = value;
+            }
+        }
 
         /// <summary>
         /// High price of the TradeBar during the time period.
         /// </summary>
-        public decimal High { get; set; }
+        public decimal High
+        {
+            get { return _high; }
+            set
+            {
+                Initialize(value);
+                _high = value;
+            }
+        }
 
         /// <summary>
         /// Low price of the TradeBar during the time period.
         /// </summary>
-        public decimal Low { get; set; }
+        public decimal Low
+        {
+            get { return _low; }
+            set
+            {
+                Initialize(value);
+                _low = value;
+            }
+        }
 
         /// <summary>
         /// Closing price of the TradeBar. Defined as the price at Start Time + TimeSpan.
@@ -58,35 +86,44 @@ namespace QuantConnect.Data.Market
         public decimal Close
         {
             get { return Value; }
-            set { Value = value; }
+            set
+            {
+                Initialize(value);
+                Value = value;
+            }
         }
+
+        /// <summary>
+        /// The closing time of this bar, computed via the Time and Period
+        /// </summary>
+        public override DateTime EndTime
+        {
+            get { return Time + Period; }
+            set { Period = value - Time; } 
+        }
+
+        /// <summary>
+        /// The period of this trade bar, (second, minute, daily, ect...)
+        /// </summary>
+        public TimeSpan Period { get; set; }
 
         //In Base Class: Alias of Closing:
         //public decimal Price;
 
         //Symbol of Asset.
-        //In Base Class: public string Symbol;
+        //In Base Class: public Symbol Symbol;
 
         //In Base Class: DateTime Of this TradeBar
         //public DateTime Time;
 
-        /******************************************************** 
-        * CLASS CONSTRUCTORS
-        *********************************************************/
         /// <summary>
         /// Default initializer to setup an empty tradebar.
         /// </summary>
         public TradeBar()
         {
-            Symbol = "";
-            Time = new DateTime();
-            Value = 0;
+            Symbol = Symbol.Empty;
             DataType = MarketDataType.TradeBar;
-            Open = 0; 
-            High = 0;
-            Low = 0; 
-            Close = 0;
-            Volume = 0;
+            Period = TimeSpan.FromMinutes(1);
         }
 
         /// <summary>
@@ -94,8 +131,9 @@ namespace QuantConnect.Data.Market
         /// Return a new instance with the same values as this original.
         /// </summary>
         /// <param name="original">Original tradebar object we seek to clone</param>
-        public TradeBar(TradeBar original) 
+        public TradeBar(TradeBar original)
         {
+            DataType = MarketDataType.TradeBar;
             Time = new DateTime(original.Time.Ticks);
             Symbol = original.Symbol;
             Value = original.Close;
@@ -104,51 +142,8 @@ namespace QuantConnect.Data.Market
             Low = original.Low;
             Close = original.Close;
             Volume = original.Volume;
-        }
-
-        /// <summary>
-        /// Parse a line from CSV data sources into our trade bars.
-        /// </summary>
-        /// <param name="config">Configuration class object for this data subscription</param>
-        /// <param name="baseDate">Base date of this tradebar line</param>
-        /// <param name="line">CSV line from source data file</param>
-        /// <param name="datafeed">Datafeed this csv line is sourced from (backtesting or live)</param>
-        public TradeBar(SubscriptionDataConfig config, string line,  DateTime baseDate, DataFeedEndpoint datafeed = DataFeedEndpoint.Backtesting)
-        {
-            try
-            {
-                //Parse the data into a trade bar:
-                var csv = line.Split(',');
-                const decimal scaleFactor = 10000m;
-                Symbol = config.Symbol;
-
-                switch (config.Security)
-                {
-                    //Equity File Data Format:
-                    case SecurityType.Equity:
-                        Time = baseDate.Date.AddMilliseconds(Convert.ToInt32(csv[0]));
-                        Open = (csv[1].ToDecimal() / scaleFactor) * config.PriceScaleFactor;  //  Convert.ToDecimal(csv[1]) / scaleFactor;
-                        High = (csv[2].ToDecimal() / scaleFactor) * config.PriceScaleFactor;  // Using custom "ToDecimal" conversion for speed.
-                        Low = (csv[3].ToDecimal() / scaleFactor) * config.PriceScaleFactor;
-                        Close = (csv[4].ToDecimal() / scaleFactor) * config.PriceScaleFactor;
-                        Volume = Convert.ToInt64(csv[5]);
-                        break;
-
-                    //FOREX has a different data file format:
-                    case SecurityType.Forex:
-                        Time = DateTime.ParseExact(csv[0], "yyyyMMdd HH:mm:ss.ffff", CultureInfo.InvariantCulture);
-                        Open = csv[1].ToDecimal();
-                        High = csv[2].ToDecimal();
-                        Low = csv[3].ToDecimal();
-                        Close = csv[4].ToDecimal();
-                        break;
-                }
-                //base.Value = Close;
-            }
-            catch (Exception err)
-            {
-                Log.Error("DataModels: TradeBar(): Error Initializing - " + config.Security + " - " + err.Message + " - " + line);
-            }
+            Period = original.Period;
+            _initialized = 1;
         }
 
         /// <summary>
@@ -161,75 +156,266 @@ namespace QuantConnect.Data.Market
         /// <param name="low">Decimal Low Price of this bar</param>
         /// <param name="close">Decimal Close price of this bar</param>
         /// <param name="volume">Volume sum over day</param>
-        public TradeBar(DateTime time, string symbol, decimal open, decimal high, decimal low, decimal close, long volume)
+        /// <param name="period">The period of this bar, specify null for default of 1 minute</param>
+        public TradeBar(DateTime time, Symbol symbol, decimal open, decimal high, decimal low, decimal close, long volume, TimeSpan? period = null)
         {
-            base.Time = time;
-            base.Symbol = symbol;
-            base.Value = close;
+            Time = time;
+            Symbol = symbol;
+            Value = close;
             Open = open;
             High = high;
             Low = low;
             Close = close;
             Volume = volume;
+            Period = period ?? TimeSpan.FromMinutes(1);
+            DataType = MarketDataType.TradeBar;
+            _initialized = 1;
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// TradeBar Reader: Fetch the data from the QC storage and feed it line by line into the engine.
         /// </summary>
-        /// <param name="datafeed">Destination for the this datafeed - live or backtesting</param>
         /// <param name="config">Symbols, Resolution, DataType, </param>
         /// <param name="line">Line from the data file requested</param>
         /// <param name="date">Date of this reader request</param>
+        /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>Enumerable iterator for returning each line of the required data.</returns>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed) 
+        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode) 
         {
-            //Initialize:
-            var tradeBar = new TradeBar();
-
             //Handle end of file:
             if (line == null)
             {
                 return null;
             }
 
-            //Select the URL source of the data depending on where the system is trading.
-            switch (datafeed)
+            if (isLiveMode)
             {
-                //Amazon S3 Backtesting Data:
-                case DataFeedEndpoint.Backtesting:
-                    //Create a new instance of our tradebar:
-                    tradeBar = new TradeBar(config, line, date, datafeed);
-                    break;
-
-                //Localhost Data Source
-                case DataFeedEndpoint.FileSystem:
-                    //Create a new instance of our tradebar:
-                    tradeBar = new TradeBar(config, line, date, datafeed);
-                    break;
-
-                //QuantConnect Live Tick Stream:
-                case DataFeedEndpoint.LiveTrading:
-                    break;
+                return new TradeBar();
             }
 
-            //Return initialized TradeBar:
+            try
+            {
+                switch (config.SecurityType)
+                {
+                    //Equity File Data Format:
+                    case SecurityType.Equity:
+                        return ParseEquity<TradeBar>(config, line, date);
+
+                    //FOREX has a different data file format:
+                    case SecurityType.Forex:
+                        return ParseForex<TradeBar>(config, line, date);
+
+                    case SecurityType.Cfd:
+                        return ParseCfd<TradeBar>(config, line, date);
+
+                    case SecurityType.Option:
+                        return ParseOption<TradeBar>(config, line, date);
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err, "SecurityType: " + config.SecurityType + " Line: " + line);
+            }
+
+            // if we couldn't parse it above return a default instance
+            return new TradeBar{Symbol = config.Symbol, Period = config.Increment};
+        }
+
+        /// <summary>
+        /// Parses the trade bar data line assuming QC data formats
+        /// </summary>
+        public static TradeBar Parse(SubscriptionDataConfig config, string line, DateTime baseDate)
+        {
+            switch (config.SecurityType)
+            {
+                case SecurityType.Equity:
+                    return ParseEquity(config, line, baseDate);
+
+                case SecurityType.Forex:
+                    return ParseForex(config, line, baseDate);
+
+                case SecurityType.Cfd:
+                    return ParseCfd(config, line, baseDate);
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Parses equity trade bar data into the specified tradebar type, useful for custom types with OHLCV data deriving from TradeBar
+        /// </summary>
+        /// <typeparam name="T">The requested output type, must derive from TradeBar</typeparam>
+        /// <param name="config">Symbols, Resolution, DataType, </param>
+        /// <param name="line">Line from the data file requested</param>
+        /// <param name="date">Date of this reader request</param>
+        /// <returns></returns>
+        public static T ParseEquity<T>(SubscriptionDataConfig config, string line, DateTime date)
+            where T : TradeBar, new()
+        {
+            var tradeBar = new T
+            {
+                Symbol = config.Symbol,
+                Period = config.Increment
+            };
+
+            var csv = line.ToCsv(6);
+            if (config.Resolution == Resolution.Daily || config.Resolution == Resolution.Hour)
+            {
+                // hourly and daily have different time format, and can use slow, robust c# parser.
+                tradeBar.Time = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+            }
+            else
+            {
+                // Using custom "ToDecimal" conversion for speed on high resolution data.
+                tradeBar.Time = date.Date.AddMilliseconds(csv[0].ToInt32()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+            }
+
+            tradeBar.Open = config.GetNormalizedPrice(csv[1].ToDecimal()*_scaleFactor);
+            tradeBar.High = config.GetNormalizedPrice(csv[2].ToDecimal()*_scaleFactor);
+            tradeBar.Low = config.GetNormalizedPrice(csv[3].ToDecimal()*_scaleFactor);
+            tradeBar.Close = config.GetNormalizedPrice(csv[4].ToDecimal()*_scaleFactor);
+            tradeBar.Volume = csv[5].ToInt64();
+
             return tradeBar;
         }
 
-
         /// <summary>
-        /// Implement the Clone Method for the TradeBar:
+        /// Parses equity trade bar data into the specified tradebar type, useful for custom types with OHLCV data deriving from TradeBar
         /// </summary>
+        /// <param name="config">Symbols, Resolution, DataType, </param>
+        /// <param name="line">Line from the data file requested</param>
+        /// <param name="date">Date of this reader request</param>
         /// <returns></returns>
-        public override BaseData Clone()
+        public static TradeBar ParseEquity(SubscriptionDataConfig config, string line, DateTime date)
         {
-            //Cleanest way to clone an object is to create a new instance using itself as the arguement.
-            return new TradeBar(this);
+            return ParseEquity<TradeBar>(config, line, date);
         }
 
+        /// <summary>
+        /// Parses forex trade bar data into the specified tradebar type, useful for custom types with OHLCV data deriving from TradeBar
+        /// </summary>
+        /// <typeparam name="T">The requested output type, must derive from TradeBar</typeparam>
+        /// <param name="config">Symbols, Resolution, DataType, </param>
+        /// <param name="line">Line from the data file requested</param>
+        /// <param name="date">The base data used to compute the time of the bar since the line specifies a milliseconds since midnight</param>
+        /// <returns></returns>
+        public static T ParseForex<T>(SubscriptionDataConfig config, string line, DateTime date)
+            where T : TradeBar, new()
+        {
+            var tradeBar = new T
+            {
+                Symbol = config.Symbol,
+                Period = config.Increment
+            };
+
+            var csv = line.ToCsv(5);
+            if (config.Resolution == Resolution.Daily || config.Resolution == Resolution.Hour)
+            {
+                // hourly and daily have different time format, and can use slow, robust c# parser.
+                tradeBar.Time = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+            }
+            else
+            {
+                //Fast decimal conversion
+                tradeBar.Time = date.Date.AddMilliseconds(csv[0].ToInt32()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+            }
+
+            tradeBar.Open = csv[1].ToDecimal();
+            tradeBar.High = csv[2].ToDecimal();
+            tradeBar.Low = csv[3].ToDecimal();
+            tradeBar.Close = csv[4].ToDecimal();
+
+            return tradeBar;
+        }
+
+        /// <summary>
+        /// Parses forex trade bar data into the specified tradebar type, useful for custom types with OHLCV data deriving from TradeBar
+        /// </summary>
+        /// <param name="config">Symbols, Resolution, DataType, </param>
+        /// <param name="line">Line from the data file requested</param>
+        /// <param name="date">The base data used to compute the time of the bar since the line specifies a milliseconds since midnight</param>
+        /// <returns></returns>
+        public static TradeBar ParseForex(SubscriptionDataConfig config, string line, DateTime date)
+        {
+            return ParseForex<TradeBar>(config, line, date);
+        }
+
+        /// <summary>
+        /// Parses CFD trade bar data into the specified tradebar type, useful for custom types with OHLCV data deriving from TradeBar
+        /// </summary>
+        /// <typeparam name="T">The requested output type, must derive from TradeBar</typeparam>
+        /// <param name="config">Symbols, Resolution, DataType, </param>
+        /// <param name="line">Line from the data file requested</param>
+        /// <param name="date">The base data used to compute the time of the bar since the line specifies a milliseconds since midnight</param>
+        /// <returns></returns>
+        public static T ParseCfd<T>(SubscriptionDataConfig config, string line, DateTime date)
+            where T : TradeBar, new()
+        {
+            // CFD has the same data format as Forex
+            return ParseForex<T>(config, line, date);
+        }
+
+        /// <summary>
+        /// Parses CFD trade bar data into the specified tradebar type, useful for custom types with OHLCV data deriving from TradeBar
+        /// </summary>
+        /// <param name="config">Symbols, Resolution, DataType, </param>
+        /// <param name="line">Line from the data file requested</param>
+        /// <param name="date">The base data used to compute the time of the bar since the line specifies a milliseconds since midnight</param>
+        /// <returns></returns>
+        public static TradeBar ParseCfd(SubscriptionDataConfig config, string line, DateTime date)
+        {
+            return ParseCfd<TradeBar>(config, line, date);
+        }
+
+        /// <summary>
+        /// Parses CFD trade bar data into the specified tradebar type, useful for custom types with OHLCV data deriving from TradeBar
+        /// </summary>
+        /// <typeparam name="T">The requested output type, must derive from TradeBar</typeparam>
+        /// <param name="config">Symbols, Resolution, DataType, </param>
+        /// <param name="line">Line from the data file requested</param>
+        /// <param name="date">The base data used to compute the time of the bar since the line specifies a milliseconds since midnight</param>
+        /// <returns></returns>
+        public static T ParseOption<T>(SubscriptionDataConfig config, string line, DateTime date)
+            where T : TradeBar, new()
+        {
+            var tradeBar = new T
+            {
+                Period = config.Increment,
+                Symbol = config.Symbol
+            };
+
+            var csv = line.ToCsv(6);
+            if (config.Resolution == Resolution.Daily || config.Resolution == Resolution.Hour)
+            {
+                // hourly and daily have different time format, and can use slow, robust c# parser.
+                tradeBar.Time = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+            }
+            else
+            {
+                // Using custom "ToDecimal" conversion for speed on high resolution data.
+                tradeBar.Time = date.Date.AddMilliseconds(csv[0].ToInt32()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+            }
+
+            tradeBar.Open = config.GetNormalizedPrice(csv[1].ToDecimal() * _scaleFactor);
+            tradeBar.High = config.GetNormalizedPrice(csv[2].ToDecimal() * _scaleFactor);
+            tradeBar.Low = config.GetNormalizedPrice(csv[3].ToDecimal() * _scaleFactor);
+            tradeBar.Close = config.GetNormalizedPrice(csv[4].ToDecimal() * _scaleFactor);
+            tradeBar.Volume = csv[5].ToInt64();
+
+            return tradeBar;
+        }
+
+        /// <summary>
+        /// Parses CFD trade bar data into the specified tradebar type, useful for custom types with OHLCV data deriving from TradeBar
+        /// </summary>
+        /// <param name="config">Symbols, Resolution, DataType, </param>
+        /// <param name="line">Line from the data file requested</param>
+        /// <param name="date">The base data used to compute the time of the bar since the line specifies a milliseconds since midnight</param>
+        /// <returns></returns>
+        public static TradeBar ParseOption(SubscriptionDataConfig config, string line, DateTime date)
+        {
+            return ParseOption<TradeBar>(config, line, date);
+        }
 
         /// <summary>
         /// Update the tradebar - build the bar from this pricing information:
@@ -238,19 +424,18 @@ namespace QuantConnect.Data.Market
         /// <param name="bidPrice">Current bid price (not used) </param>
         /// <param name="askPrice">Current asking price (not used) </param>
         /// <param name="volume">Volume of this trade</param>
-        public override void Update(decimal lastTrade, decimal bidPrice, decimal askPrice, decimal volume)
+        /// <param name="bidSize">The size of the current bid, if available</param>
+        /// <param name="askSize">The size of the current ask, if available</param>
+        public override void Update(decimal lastTrade, decimal bidPrice, decimal askPrice, decimal volume, decimal bidSize, decimal askSize)
         {
-            //Assumed not set yet. Will fail for custom time series where "price" $0 is a possibility.
-            if (Open == 0) Open = lastTrade;
+            Initialize(lastTrade);
             if (lastTrade > High) High = lastTrade;
             if (lastTrade < Low) Low = lastTrade;
             //Volume is the total summed volume of trades in this bar:
             Volume += Convert.ToInt32(volume);
             //Always set the closing price;
             Close = lastTrade;
-            Value = lastTrade;
         }
-
 
         /// <summary>
         /// Get Source for Custom Data File
@@ -258,41 +443,43 @@ namespace QuantConnect.Data.Market
         /// </summary>
         /// <param name="config">Configuration object</param>
         /// <param name="date">Date of this source request if source spread across multiple files</param>
-        /// <param name="datafeed">Source of the datafeed</param>
+        /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>String source location of the file</returns>
-        public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
+        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            var source = "";
-            var dataType = TickType.Trade;
-
-            switch (datafeed)
+            if (isLiveMode)
             {
-                //Backtesting S3 Endpoint:
-                case DataFeedEndpoint.Backtesting:
-                case DataFeedEndpoint.FileSystem:
-
-                    var dateFormat = "yyyyMMdd";
-                    if (config.Security == SecurityType.Forex)
-                    {
-                        dataType = TickType.Quote;
-                        dateFormat = "yyMMdd";
-                    }
-
-                    var symbol = String.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol : config.MappedSymbol; 
-                    source = @"../../../Data/" + config.Security.ToString().ToLower();
-                    source += @"/" + config.Resolution.ToString().ToLower() + @"/" + symbol.ToLower() + @"/";
-                    source += date.ToString(dateFormat) + "_" + dataType.ToString().ToLower() + ".zip";
-                    break;
-
-                //Live Trading Endpoint: Fake, not actually used but need for consistency with backtesting system. Set to "" so will not use subscription reader.
-                case DataFeedEndpoint.LiveTrading:
-                    source = "";
-                    break;
+                return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.LocalFile);
             }
-            return source;
+
+            var source = LeanData.GenerateZipFilePath(Globals.DataFolder, config.Symbol, date, config.Resolution, config.TickType);
+            if (config.SecurityType == SecurityType.Option)
+            {
+                source += "#" + LeanData.GenerateZipEntryName(config.Symbol, date, config.Resolution, config.TickType);
+            }
+            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
 
+        /// <summary>
+        /// Return a new instance clone of this object
+        /// </summary>
+        public override BaseData Clone()
+        {
+            return (BaseData)MemberwiseClone();
+        }
 
-
-    } // End Trade Bar Class
+        /// <summary>
+        /// Initializes this bar with a first data point
+        /// </summary>
+        /// <param name="value">The seed value for this bar</param>
+        private void Initialize(decimal value)
+        {
+            if (Interlocked.CompareExchange(ref _initialized, 1, 0) == 0)
+            {
+                _open = value;
+                _low = value;
+                _high = value;
+            }
+        }
+    }
 }

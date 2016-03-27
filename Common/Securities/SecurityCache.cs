@@ -13,17 +13,10 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using QuantConnect.Data;
 
 namespace QuantConnect.Securities 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Base class caching caching spot for security data and any other temporary properties.
     /// </summary>
@@ -32,25 +25,16 @@ namespace QuantConnect.Securities
     /// This comment made in a remark to prevent obsolete errors in all users algorithms
     /// </remarks>
     public class SecurityCache 
-    {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/       
+    { 
         // Last data for this security
         private BaseData _lastData;
 
-        /******************************************************** 
-        * CONSTRUCTOR/DELEGATE DEFINITIONS
-        *********************************************************/
         /// <summary>
         /// Create a new cache for this security
         /// </summary>
         public SecurityCache() 
         { }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Add a new market data point to the local security cache for the current market price.
         /// </summary>

@@ -14,621 +14,362 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.ComponentModel.Composition.Hosting;
 using System.Diagnostics;
-using System.Globalization;
+using System.Linq;
 using System.Threading;
-using QuantConnect.Brokerages.Backtesting;
-using QuantConnect.Configuration;
+using QuantConnect.Brokerages;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Lean.Engine.RealTime;
-using QuantConnect.Lean.Engine.Results;
-using QuantConnect.Lean.Engine.Setup;
-using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Lean.Engine 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// LEAN ALGORITHMIC TRADING ENGINE: ENTRY POINT.
     /// 
     /// The engine loads new tasks, create the algorithms and threads, and sends them 
     /// to Algorithm Manager to be executed. It is the primary operating loop.
     /// </summary>
-    public class Engine 
+    public class Engine
     {
-        /******************************************************** 
-        * CLASS PRIVATE VARIABLES
-        *********************************************************/
-        private static bool _liveMode = Config.GetBool("live-mode");
-        private static bool _local = Config.GetBool("local");
-        private static DateTime _version;
-        private static IBrokerage _brokerage;
-        private const string _collapseMessage = "Unhandled exception breaking past controls and causing collapse of algorithm node. This is likely a memory leak of an external dependency or the underlying OS terminating the LEAN engine.";
-
-        /******************************************************** 
-        * CLASS PUBLIC VARIABLES
-        *********************************************************/
-        /// <summary>
-        /// Datafeed handler creates local, live, historical data feed management all through specific dedicated DLL's.
-        /// </summary>
-        public static IDataFeed DataFeed;
+        private readonly bool _liveMode;
+        private readonly LeanEngineSystemHandlers _systemHandlers;
+        private readonly LeanEngineAlgorithmHandlers _algorithmHandlers;
 
         /// <summary>
-        /// Result handler pushes result messages to live API, backtesting API or console for local.
+        /// Gets the configured system handlers for this engine instance
         /// </summary>
-        public static IResultHandler ResultHandler;
-
-        /// <summary>
-        /// Transaction handler pushes trades to historical models, or live market with brokerage.
-        /// </summary>
-        public static ITransactionHandler TransactionHandler;
-
-        /// <summary>
-        /// Setup handler initializes all backtest requirements and sets up the algorithms internal state.
-        /// </summary>
-        public static ISetupHandler SetupHandler;
-
-        /// <summary>
-        /// RealTime events handlers trigger function callbacks at specific times during the day for the algorithms. 
-        /// Works for backtests and live trading.
-        /// </summary>
-        public static IRealTimeHandler RealTimeHandler;
-
-        /// <summary>
-        /// Brokerage class holds manages the connection, transaction processing and data retrieval from specific broker endpoints.
-        /// </summary>
-        public static IBrokerage Brokerage
+        public LeanEngineSystemHandlers SystemHandlers
         {
-            get
-            {
-                return _brokerage;
-            }
+            get { return _systemHandlers; }
         }
 
         /// <summary>
-        /// Notification/messaging handler for pushing messages to the proper endpoint.
+        /// Gets the configured algorithm handlers for this engine instance
         /// </summary>
-        public static IMessagingHandler Notify;
-
-        /// <summary>
-        /// Task requester / job queue handler for running the next algorithm task.
-        /// </summary>
-        public static IQueueHandler Queue;
-
-        /// <summary>
-        /// Algorithm API handler for setting the per user restrictions on algorithm behaviour where applicable.
-        /// </summary>
-        public static IApi Api;
-
-        /// <summary>
-        /// Version of the engine that is running. This is required for retiring old processing 
-        /// and live trading nodes during live trading.
-        /// </summary>
-        public static DateTime Version
+        public LeanEngineAlgorithmHandlers AlgorithmHandlers
         {
-            get { return _version; }
-        }
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
-        /// <summary>
-        /// Are we operating this as a local independent node, independent of the cloud.
-        /// Running on a local algorithm, and local datasources.
-        /// </summary>
-        public static bool IsLocal
-        {
-            get
-            {
-                return _local;
-            }
+            get { return _algorithmHandlers;}
         }
 
         /// <summary>
-        /// Instance is a micro tagged qc.live.v3 for live use only:
-        /// -> Monitor the live job queue, not the backtest queue:
+        /// Initializes a new instance of the <see cref="Engine"/> class using the specified handlers
         /// </summary>
-        public static bool LiveMode
+        /// <param name="systemHandlers">The system handlers for controlling acquisition of jobs, messaging, and api calls</param>
+        /// <param name="algorithmHandlers">The algorithm handlers for managing algorithm initialization, data, results, transaction, and real time events</param>
+        /// <param name="liveMode">True when running in live mode, false otherwises</param>
+        public Engine(LeanEngineSystemHandlers systemHandlers, LeanEngineAlgorithmHandlers algorithmHandlers, bool liveMode)
         {
-            get
-            {
-                return _liveMode;
-            }
+            _liveMode = liveMode;
+            _systemHandlers = systemHandlers;
+            _algorithmHandlers = algorithmHandlers;
         }
 
         /// <summary>
-        /// Maximum allowable ram for an algorithm
+        /// Runs a single backtest/live job from the job queue
         /// </summary>
-        public static int MaximumRamAllocation
+        /// <param name="job">The algorithm job to be processed</param>
+        /// <param name="assemblyPath">The path to the algorithm's assembly</param>
+        public void Run(AlgorithmNodePacket job, string assemblyPath)
         {
-            get
-            {
-                //Total Physical Ram Available:
-                var allocation = 1024;
-                var ram = Convert.ToInt32(OS.TotalPhysicalMemory);
-                
-                if (ram < allocation)
-                {
-                    allocation = ram - 200;
-                }
-
-                if (_liveMode) allocation -= 50;
-
-                Log.Trace("Engine.MaximumRamAllocation(): Allocated: " + allocation);
-
-                return allocation;
-            }
-        }
-
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
-        /// <summary>
-        /// Primary Analysis Thread:
-        /// </summary>
-        public static void Main(string[] args) 
-        {
-            // pick an implementation of ILogHandler for the application
-            Log.LogHandler = IsLocal 
-                ? (ILogHandler) new ConsoleLogHandler() 
-                : new FileLogHandler("log.txt");
-
-            //Initialize:
-            var algorithmPath = "";
-            AlgorithmNodePacket job = null;
-            var timer = Stopwatch.StartNew();
             var algorithm = default(IAlgorithm);
-            _version = DateTime.ParseExact(Config.Get("version", DateTime.Now.ToString(DateFormat.UI)), DateFormat.UI, CultureInfo.InvariantCulture);
-            
-            //Name thread for the profiler:
-            Thread.CurrentThread.Name = "Algorithm Analysis Thread";
-            Log.Trace("Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v" + _version);
-            Log.Trace("Engine.Main(): Started " + DateTime.Now.ToShortTimeString());
-            Log.Trace("Engine.Main(): Memory " + OS.ApplicationMemoryUsed + "Mb-App  " + +OS.TotalPhysicalMemoryUsed + "Mb-Used  " + OS.TotalPhysicalMemory + "Mb-Total");
-
-            //Import external libraries specific to physical server location (cloud/local)
-            var catalog = new AggregateCatalog();
-            catalog.Catalogs.Add(new DirectoryCatalog(AppDomain.CurrentDomain.BaseDirectory));
-            var container = new CompositionContainer(catalog);
-            try
-            {
-                // grab the right export based on configuration
-                Notify = container.GetExportedValueByTypeName<IMessagingHandler>(Config.Get("messaging-handler"));
-                Queue = container.GetExportedValueByTypeName<IQueueHandler>(Config.Get("queue-handler"));
-                Api = container.GetExportedValueByTypeName<IApi>(Config.Get("api-handler")); 
-            } 
-            catch (CompositionException compositionException)
-            { Log.Error("Engine.Main(): Failed to load library: " + compositionException); 
-            }
-
-            //Setup packeting, queue and controls system: These don't do much locally.
-            Api.Initialize();
-            Notify.Initialize();
-            Queue.Initialize(_liveMode);
+            var algorithmManager = new AlgorithmManager(_liveMode);
 
             //Start monitoring the backtest active status:
-            var statusPingThread = new Thread(StateCheck.Ping.Run);
+            var statusPing = new StateCheck.Ping(algorithmManager, _systemHandlers.Api, _algorithmHandlers.Results, _systemHandlers.Notify, job);
+            var statusPingThread = new Thread(statusPing.Run);
             statusPingThread.Start();
 
-            do 
+            try
             {
+                //Reset thread holders.
+                var initializeComplete = false;
+                Thread threadFeed = null;
+                Thread threadTransactions = null;
+                Thread threadResults = null;
+                Thread threadRealTime = null;
+
+                //-> Initialize messaging system
+                _systemHandlers.Notify.SetAuthentication(job);
+
+                //-> Set the result handler type for this algorithm job, and launch the associated result thread.
+                _algorithmHandlers.Results.Initialize(job, _systemHandlers.Notify, _systemHandlers.Api, _algorithmHandlers.DataFeed, _algorithmHandlers.Setup, _algorithmHandlers.Transactions);
+
+                threadResults = new Thread(_algorithmHandlers.Results.Run, 0) {Name = "Result Thread"};
+                threadResults.Start();
+
+                IBrokerage brokerage = null;
                 try
                 {
-                    //Reset algo manager internal variables preparing for a new algorithm.
-                    AlgorithmManager.ResetManager();
+                    // Save algorithm to cache, load algorithm instance:
+                    algorithm = _algorithmHandlers.Setup.CreateAlgorithmInstance(assemblyPath, job.Language);
 
-                    //Reset thread holders.
-                    var initializeComplete = false;
-                    Thread threadFeed = null;
-                    Thread threadTransactions = null;
-                    Thread threadResults = null;
-                    Thread threadRealTime = null;
+                    // Initialize the brokerage
+                    brokerage = _algorithmHandlers.Setup.CreateBrokerage(job, algorithm);
 
-                    do
+                    // Initialize the data feed before we initialize so he can intercept added securities/universes via events
+                    _algorithmHandlers.DataFeed.Initialize(algorithm, job, _algorithmHandlers.Results, _algorithmHandlers.MapFileProvider, _algorithmHandlers.FactorFileProvider);
+
+                    // initialize command queue system
+                    _algorithmHandlers.CommandQueue.Initialize(job, algorithm);
+
+                    // set the history provider before setting up the algorithm
+                    _algorithmHandlers.HistoryProvider.Initialize(job, _algorithmHandlers.MapFileProvider, _algorithmHandlers.FactorFileProvider, progress =>
                     {
-                        //-> Pull job from QuantConnect job queue, or, pull local build:
-                        job = Queue.NextJob(out algorithmPath); // Blocking.
-
-                        if (!IsLocal && LiveMode && (job.Version < Version || (job.Version == Version && job.Redelivered)))
+                        // send progress updates to the result handler only during initialization
+                        if (!algorithm.GetLocked() || algorithm.IsWarmingUp)
                         {
-                            //Tiny chance there was an uncontrolled collapse of a server, resulting in an old user task circulating.
-                            //In this event kill the old algorithm and leave a message so the user can later review.
-                            Queue.AcknowledgeJob(job);
-                            Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, _collapseMessage);
-                            Notify.SetChannel(job.Channel);
-                            Notify.RuntimeError(job.AlgorithmId, _collapseMessage);
-                            job = null;
+                            _algorithmHandlers.Results.SendStatusUpdate(AlgorithmStatus.History, 
+                                string.Format("Processing history {0}%...", progress));
                         }
-                    } while (job == null);
-                    
+                    });
+                    algorithm.HistoryProvider = _algorithmHandlers.HistoryProvider;
 
-                    //-> Initialize messaging system
-                    Notify.SetChannel(job.Channel);
+                    // initialize the default brokerage message handler
+                    algorithm.BrokerageMessageHandler = new DefaultBrokerageMessageHandler(algorithm, job, _algorithmHandlers.Results, _systemHandlers.Api);
 
+                    //Initialize the internal state of algorithm and job: executes the algorithm.Initialize() method.
+                    initializeComplete = _algorithmHandlers.Setup.Setup(algorithm, brokerage, job, _algorithmHandlers.Results, _algorithmHandlers.Transactions, _algorithmHandlers.RealTime);
+
+                    // set this again now that we've actually added securities
+                    _algorithmHandlers.Results.SetAlgorithm(algorithm);
+
+                    //If there are any reasons it failed, pass these back to the IDE.
+                    if (!initializeComplete || algorithm.ErrorMessages.Count > 0 || _algorithmHandlers.Setup.Errors.Count > 0)
+                    {
+                        initializeComplete = false;
+                        //Get all the error messages: internal in algorithm and external in setup handler.
+                        var errorMessage = String.Join(",", algorithm.ErrorMessages);
+                        errorMessage += String.Join(",", _algorithmHandlers.Setup.Errors);
+                        Log.Error("Engine.Run(): " + errorMessage);
+                        _algorithmHandlers.Results.RuntimeError(errorMessage);
+                        _systemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, errorMessage);
+                    }
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err);
+                    var runtimeMessage = "Algorithm.Initialize() Error: " + err.Message + " Stack Trace: " + err.StackTrace;
+                    _algorithmHandlers.Results.RuntimeError(runtimeMessage, err.StackTrace);
+                    _systemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, runtimeMessage);
+                }
+
+                //-> Using the job + initialization: load the designated handlers:
+                if (initializeComplete)
+                {
                     //-> Reset the backtest stopwatch; we're now running the algorithm.
-                    timer.Restart();
+                    var startTime = DateTime.Now;
 
-                    //-> Create SetupHandler to configure internal algorithm state:
-                    SetupHandler = GetSetupHandler(job.SetupEndpoint);
+                    //Set algorithm as locked; set it to live mode if we're trading live, and set it to locked for no further updates.
+                    algorithm.SetAlgorithmId(job.AlgorithmId);
+                    algorithm.SetLocked();
 
-                    //-> Set the result handler type for this algorithm job, and launch the associated result thread.
-                    ResultHandler = GetResultHandler(job);
-                    threadResults = new Thread(ResultHandler.Run, 0) {Name = "Result Thread"};
-                    threadResults.Start();
+                    //Load the associated handlers for transaction and realtime events:
+                    _algorithmHandlers.Transactions.Initialize(algorithm, brokerage, _algorithmHandlers.Results);
+                    _algorithmHandlers.RealTime.Setup(algorithm, job, _algorithmHandlers.Results, _systemHandlers.Api);
+
+                    // wire up the brokerage message handler
+                    brokerage.Message += (sender, message) =>
+                    {
+                        algorithm.BrokerageMessageHandler.Handle(message);
+
+                        // fire brokerage message events
+                        algorithm.OnBrokerageMessage(message);
+                        switch (message.Type)
+                        {
+                            case BrokerageMessageType.Disconnect:
+                                algorithm.OnBrokerageDisconnect();
+                                break;
+                            case BrokerageMessageType.Reconnect:
+                                algorithm.OnBrokerageReconnect();
+                                break;
+                        }
+                    };
+
+                    //Send status to user the algorithm is now executing.
+                    _algorithmHandlers.Results.SendStatusUpdate(AlgorithmStatus.Running);
+
+                    //Launch the data, transaction and realtime handlers into dedicated threads
+                    threadFeed = new Thread(_algorithmHandlers.DataFeed.Run) {Name = "DataFeed Thread"};
+                    threadTransactions = new Thread(_algorithmHandlers.Transactions.Run) {Name = "Transaction Thread"};
+                    threadRealTime = new Thread(_algorithmHandlers.RealTime.Run) {Name = "RealTime Thread"};
+
+                    //Launch the data feed, result sending, and transaction models/handlers in separate threads.
+                    threadFeed.Start(); // Data feed pushing data packets into thread bridge; 
+                    threadTransactions.Start(); // Transaction modeller scanning new order requests
+                    threadRealTime.Start(); // RealTime scan time for time based events:
+
+                    // Result manager scanning message queue: (started earlier)
+                    _algorithmHandlers.Results.DebugMessage(string.Format("Launching analysis for {0} with LEAN Engine v{1}", job.AlgorithmId, Globals.Version));
 
                     try
                     {
-                        // Save algorithm to cache, load algorithm instance:
-                        algorithm = SetupHandler.CreateAlgorithmInstance(algorithmPath);
+                        //Create a new engine isolator class 
+                        var isolator = new Isolator();
 
-                        //Initialize the internal state of algorithm and job: executes the algorithm.Initialize() method.
-                        initializeComplete = SetupHandler.Setup(algorithm, out _brokerage, job);
-
-                        //If there are any reasons it failed, pass these back to the IDE.
-                        if (!initializeComplete || algorithm.ErrorMessages.Count > 0 || SetupHandler.Errors.Count > 0)
+                        // Execute the Algorithm Code:
+                        var complete = isolator.ExecuteWithTimeLimit(_algorithmHandlers.Setup.MaximumRuntime, algorithmManager.TimeLoopWithinLimits, () =>
                         {
-                            initializeComplete = false;
-                            //Get all the error messages: internal in algorithm and external in setup handler.
-                            var errorMessage = String.Join(",", algorithm.ErrorMessages);
-                            errorMessage += String.Join(",", SetupHandler.Errors);
-                            throw new Exception(errorMessage);
+                            try
+                            {
+                                //Run Algorithm Job:
+                                // -> Using this Data Feed, 
+                                // -> Send Orders to this TransactionHandler, 
+                                // -> Send Results to ResultHandler.
+                                algorithmManager.Run(job, algorithm, _algorithmHandlers.DataFeed, _algorithmHandlers.Transactions, _algorithmHandlers.Results, _algorithmHandlers.RealTime, _algorithmHandlers.CommandQueue, isolator.CancellationToken);
+                            }
+                            catch (Exception err)
+                            {
+                                //Debugging at this level is difficult, stack trace needed.
+                                Log.Error(err);
+                                algorithm.RunTimeError = err;
+                                algorithmManager.SetStatus(AlgorithmStatus.RuntimeError);
+                                return;
+                            }
+
+                            Log.Trace("Engine.Run(): Exiting Algorithm Manager");
+                        }, job.RamAllocation);
+
+                        if (!complete)
+                        {
+                            Log.Error("Engine.Main(): Failed to complete in time: " + _algorithmHandlers.Setup.MaximumRuntime.ToString("F"));
+                            throw new Exception("Failed to complete algorithm within " + _algorithmHandlers.Setup.MaximumRuntime.ToString("F")
+                                + " seconds. Please make it run faster.");
+                        }
+
+                        // Algorithm runtime error:
+                        if (algorithm.RunTimeError != null)
+                        {
+                            throw algorithm.RunTimeError;
                         }
                     }
                     catch (Exception err)
                     {
-                        var runtimeMessage = "Algorithm.Initialize() Error: " + err.Message + " Stack Trace: " + err.StackTrace;
-                        ResultHandler.RuntimeError(runtimeMessage, err.StackTrace);
-                        Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, runtimeMessage);
+                        //Error running the user algorithm: purge datafeed, send error messages, set algorithm status to failed.
+                        Log.Error(err, "Breaking out of parent try catch:");
+                        if (_algorithmHandlers.DataFeed != null) _algorithmHandlers.DataFeed.Exit();
+                        if (_algorithmHandlers.Results != null)
+                        {
+                            var message = "Runtime Error: " + err.Message;
+                            Log.Trace("Engine.Run(): Sending runtime error to user...");
+                            _algorithmHandlers.Results.LogMessage(message);
+                            _algorithmHandlers.Results.RuntimeError(message, err.StackTrace);
+                            _systemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, message + " Stack Trace: " + err.StackTrace);
+                        }
                     }
 
-                    //-> Using the job + initialization: load the designated handlers:
-                    if (initializeComplete)
+                    try
                     {
-                        //Set algorithm as locked; set it to live mode if we're trading live, and set it to locked for no further updates.
-                        algorithm.SetAlgorithmId(job.AlgorithmId);
-                        algorithm.SetLiveMode(LiveMode);
-                        algorithm.SetLocked();
-
-                        //Load the associated handlers for data, transaction and realtime events:
-                        ResultHandler.SetAlgorithm(algorithm);
-                        DataFeed            = GetDataFeedHandler(algorithm, job);
-                        TransactionHandler  = GetTransactionHandler(algorithm, _brokerage, ResultHandler, job);
-                        RealTimeHandler     = GetRealTimeHandler(algorithm, _brokerage, DataFeed, ResultHandler, job);
-
-                        //Set the error handlers for the brokerage asynchronous errors.
-                        SetupHandler.SetupErrorHandler(ResultHandler, _brokerage);
-
-                        //Send status to user the algorithm is now executing.
-                        ResultHandler.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Running);
-
-                        //Launch the data, transaction and realtime handlers into dedicated threads
-                        threadFeed = new Thread(DataFeed.Run, 0) {Name = "DataFeed Thread"};
-                        threadTransactions = new Thread(TransactionHandler.Run, 0) {Name = "Transaction Thread"};
-                        threadRealTime = new Thread(RealTimeHandler.Run, 0) {Name = "RealTime Thread"};
-
-                        //Launch the data feed, result sending, and transaction models/handlers in separate threads.
-                        threadFeed.Start(); // Data feed pushing data packets into thread bridge; 
-                        threadTransactions.Start(); // Transaction modeller scanning new order requests
-                        threadRealTime.Start(); // RealTime scan time for time based events:
-                        // Result manager scanning message queue: (started earlier)
+                        var trades = algorithm.TradeBuilder.ClosedTrades;
+                        var charts = new Dictionary<string, Chart>(_algorithmHandlers.Results.Charts);
+                        var orders = new Dictionary<int, Order>(_algorithmHandlers.Transactions.Orders);
+                        var holdings = new Dictionary<string, Holding>();
+                        var banner = new Dictionary<string, string>();
+                        var statisticsResults = new StatisticsResults();
 
                         try
                         {
-                            // Execute the Algorithm Code:
-                            var complete = Isolator.ExecuteWithTimeLimit(SetupHandler.MaximumRuntime, () =>
+                            //Generates error when things don't exist (no charting logged, runtime errors in main algo execution)
+                            const string strategyEquityKey = "Strategy Equity";
+                            const string equityKey = "Equity";
+                            const string dailyPerformanceKey = "Daily Performance";
+                            const string benchmarkKey = "Benchmark";
+
+                            // make sure we've taken samples for these series before just blindly requesting them
+                            if (charts.ContainsKey(strategyEquityKey) &&
+                                charts[strategyEquityKey].Series.ContainsKey(equityKey) &&
+                                charts[strategyEquityKey].Series.ContainsKey(dailyPerformanceKey))
                             {
-                                try
-                                {
-                                    //Run Algorithm Job:
-                                    // -> Using this Data Feed, 
-                                    // -> Send Orders to this TransactionHandler, 
-                                    // -> Send Results to ResultHandler.
-                                    AlgorithmManager.Run(job, algorithm, DataFeed, TransactionHandler, ResultHandler, SetupHandler, RealTimeHandler);
-                                }
-                                catch (Exception err)
-                                {
-                                    //Debugging at this level is difficult, stack trace needed.
-                                    Log.Error("Engine.Run(): Error in Algo Manager: " + err.Message + " ST >> " + err.StackTrace);
-                                }
+                                var equity = charts[strategyEquityKey].Series[equityKey].Values;
+                                var performance = charts[strategyEquityKey].Series[dailyPerformanceKey].Values;
+                                var profitLoss = new SortedDictionary<DateTime, decimal>(algorithm.Transactions.TransactionRecord);
+                                var totalTransactions = algorithm.Transactions.GetOrders(x => x.Status.IsFill()).Count();
+                                var benchmark = charts[benchmarkKey].Series[benchmarkKey].Values;
 
-                                Log.Trace("Engine.Run(): Exiting Algorithm Manager");
-
-                            }, MaximumRamAllocation);
-
-                            if (!complete)
-                            {
-                                Log.Error("Engine.Main(): Failed to complete in time: " + SetupHandler.MaximumRuntime.ToString("F"));
-                                throw new Exception("Failed to complete algorithm within " + SetupHandler.MaximumRuntime.ToString("F") + " seconds. Please make it run faster.");
-                            }
-
-                            // Algorithm runtime error:
-                            if (AlgorithmManager.RunTimeError != null)
-                            {
-                                throw AlgorithmManager.RunTimeError;
+                                statisticsResults = StatisticsBuilder.Generate(trades, profitLoss, equity, performance, benchmark,
+                                    _algorithmHandlers.Setup.StartingPortfolioValue, algorithm.Portfolio.TotalFees, totalTransactions);
                             }
                         }
                         catch (Exception err)
                         {
-                            //Error running the user algorithm: purge datafeed, send error messages, set algorithm status to failed.
-                            Log.Error("Engine.Run(): Breaking out of parent try-catch: " + err.Message + " " + err.StackTrace);
-                            if (DataFeed != null) DataFeed.Exit();
-                            if (ResultHandler != null)
-                            {
-                                var message = "Runtime Error: " + err.Message;
-                                Log.Trace("Engine.Run(): Sending runtime error to user...");
-                                ResultHandler.LogMessage(message);
-                                ResultHandler.RuntimeError(message, err.StackTrace);
-                                Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, message + " Stack Trace: " + err.StackTrace);
-                            }
+                            Log.Error(err, "Error generating statistics packet");
                         }
 
-                        //Send result data back: this entire code block could be rewritten.
-                        // todo: - Split up statistics class, its enormous. 
-                        // todo: - Make a dedicated Statistics.Benchmark class.
-                        // todo: - Move all creation and transmission of statistics out of primary engine loop.
-                        // todo: - Statistics.Generate(algorithm, resulthandler, transactionhandler);
+                        //Diagnostics Completed, Send Result Packet:
+                        var totalSeconds = (DateTime.Now - startTime).TotalSeconds;
+                        var dataPoints = algorithmManager.DataPoints + _algorithmHandlers.HistoryProvider.DataPointCount;
+                        _algorithmHandlers.Results.DebugMessage(
+                            string.Format("Algorithm Id:({0}) completed in {1} seconds at {2}k data points per second. Processing total of {3} data points.",
+                                job.AlgorithmId, totalSeconds.ToString("F2"), ((dataPoints/(double) 1000)/totalSeconds).ToString("F0"),
+                                dataPoints.ToString("N0")));
 
-                        try
-                        {
-                            var charts = new Dictionary<string, Chart>(ResultHandler.Charts);
-                            var orders = new Dictionary<int, Order>(algorithm.Transactions.Orders);
-                            var holdings = new Dictionary<string, Holding>();
-                            var statistics = new Dictionary<string, string>();
-                            var banner = new Dictionary<string, string>();
-
-                            try
-                            {
-                                //Generates error when things don't exist (no charting logged, runtime errors in main algo execution)
-                                const string strategyEquityKey = "Strategy Equity";
-                                const string equityKey = "Equity";
-                                const string dailyPerformanceKey = "Daily Performance";
-
-                                // make sure we've taken samples for these series before just blindly requesting them
-                                if (charts.ContainsKey(strategyEquityKey) &&
-                                    charts[strategyEquityKey].Series.ContainsKey(equityKey) &&
-                                    charts[strategyEquityKey].Series.ContainsKey(dailyPerformanceKey))
-                                {
-                                    var equity = charts[strategyEquityKey].Series[equityKey].Values;
-                                    var performance = charts[strategyEquityKey].Series[dailyPerformanceKey].Values;
-                                    var profitLoss =
-                                        new SortedDictionary<DateTime, decimal>(algorithm.Transactions.TransactionRecord);
-                                    statistics = Statistics.Statistics.Generate(equity, profitLoss, performance,
-                                        SetupHandler.StartingCapital, 252);
-                                }
-                            }
-                            catch (Exception err)
-                            {
-                                Log.Error("Algorithm.Node.Engine(): Error generating statistics packet: " + err.Message);
-                            }
-
-                            //Diagnostics Completed, Send Result Packet:
-                            ResultHandler.DebugMessage("Algorithm Id:(" + job.AlgorithmId + ") completed analysis in " + timer.Elapsed.TotalSeconds.ToString("F2") + " seconds");
-                            ResultHandler.SendFinalResult(job, orders, algorithm.Transactions.TransactionRecord, holdings, statistics, banner);
-                        }
-                        catch (Exception err)
-                        {
-                            Log.Error("Engine.Main(): Error sending analysis result: " + err.Message + "  ST >> " + err.StackTrace);
-                        }
-
-                        //Before we return, send terminate commands to close up the threads 
-                        timer.Stop(); //Algorithm finished running.
-                        TransactionHandler.Exit();
-                        DataFeed.Exit();
-                        RealTimeHandler.Exit();
+                        _algorithmHandlers.Results.SendFinalResult(job, orders, algorithm.Transactions.TransactionRecord, holdings, statisticsResults, banner);
                     }
-
-                    //Close result handler:
-                    ResultHandler.Exit();
-
-                    //Wait for the threads to complete:
-                    var ts = Stopwatch.StartNew();
-                    while ((ResultHandler.IsActive || (TransactionHandler != null && TransactionHandler.IsActive) || (DataFeed != null && DataFeed.IsActive)) && ts.ElapsedMilliseconds < 30 * 1000)
+                    catch (Exception err)
                     {
-                        Thread.Sleep(100); Log.Trace("Waiting for threads to exit...");
+                        Log.Error(err, "Error sending analysis results");
                     }
-                    if (threadFeed != null && threadFeed.IsAlive) threadFeed.Abort();
-                    if (threadTransactions != null && threadTransactions.IsAlive) threadTransactions.Abort();
-                    if (threadResults != null && threadResults.IsAlive) threadResults.Abort();
-                    Log.Trace("Engine.Main(): Analysis Completed and Results Posted.");
+
+                    //Before we return, send terminate commands to close up the threads
+                    _algorithmHandlers.Transactions.Exit();
+                    _algorithmHandlers.DataFeed.Exit();
+                    _algorithmHandlers.RealTime.Exit();
                 }
-                catch (Exception err)
+
+                //Close result handler:
+                _algorithmHandlers.Results.Exit();
+                statusPing.Exit();
+
+                //Wait for the threads to complete:
+                var ts = Stopwatch.StartNew();
+                while ((_algorithmHandlers.Results.IsActive 
+                    || (_algorithmHandlers.Transactions != null && _algorithmHandlers.Transactions.IsActive) 
+                    || (_algorithmHandlers.DataFeed != null && _algorithmHandlers.DataFeed.IsActive)
+                    || (_algorithmHandlers.RealTime != null && _algorithmHandlers.RealTime.IsActive))
+                    && ts.ElapsedMilliseconds < 30*1000)
                 {
-                    Log.Error("Engine.Main(): Error running algorithm: " + err.Message + " >> " + err.StackTrace);
+                    Thread.Sleep(100);
+                    Log.Trace("Waiting for threads to exit...");
                 }
-                finally 
+
+                //Terminate threads still in active state.
+                if (threadFeed != null && threadFeed.IsAlive) threadFeed.Abort();
+                if (threadTransactions != null && threadTransactions.IsAlive) threadTransactions.Abort();
+                if (threadResults != null && threadResults.IsAlive) threadResults.Abort();
+                if (statusPingThread != null && statusPingThread.IsAlive) statusPingThread.Abort();
+
+                if (brokerage != null)
                 {
-                    //Delete the message from the job queue:
-                    Queue.AcknowledgeJob(job);
-                    Log.Trace("Engine.Main(): Packet removed from queue: " + job.AlgorithmId);
-
-                    //No matter what for live mode; make sure we've set algorithm status in the API for "not running" conditions:
-                    if (LiveMode && AlgorithmManager.State != AlgorithmStatus.Running && AlgorithmManager.State != AlgorithmStatus.RuntimeError) 
-                        Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmManager.State);
-                    
-                    //Attempt to clean up ram usage:
-                    GC.Collect();
+                    Log.Trace("Engine.Run(): Disconnecting from brokerage...");
+                    brokerage.Disconnect();
                 }
-                //If we're running locally will execute just once.
-            } while (!IsLocal);
-
-            // Send the exit signal and then kill the thread
-            StateCheck.Ping.Exit();
-            
-            // Make the console window pause so we can read log output before exiting and killing the application completely
-            Console.ReadKey();
-
-            //Finally if ping thread still not complete, kill.
-            if (statusPingThread != null && statusPingThread.IsAlive) statusPingThread.Abort();
-
-            if (Log.LogHandler != null)
+                if (_algorithmHandlers.Setup != null)
+                {
+                    Log.Trace("Engine.Run(): Disposing of setup handler...");
+                    _algorithmHandlers.Setup.Dispose();
+                }
+                Log.Trace("Engine.Main(): Analysis Completed and Results Posted.");
+            }
+            catch (Exception err)
             {
-                Log.LogHandler.Dispose();
+                Log.Error(err, "Error running algorithm");
             }
-        }
-
-
-
-        /// <summary>
-        /// Get an instance of the data feed handler we're requesting for this work.
-        /// </summary>
-        /// <param name="algorithm">User algorithm to scan for securities</param>
-        /// <param name="job">Algorithm Node Packet</param>
-        /// <returns>Class matching IDataFeed Interface</returns>
-        private static IDataFeed GetDataFeedHandler(IAlgorithm algorithm, AlgorithmNodePacket job)
-        {
-            var df = default(IDataFeed);
-            switch (job.DataEndpoint) 
+            finally
             {
-                //default:
-                ////Backtesting:
-                case DataFeedEndpoint.Backtesting:
-                    df = new BacktestingDataFeed(algorithm, (BacktestNodePacket)job);
-                    Log.Trace("Engine.GetDataFeedHandler(): Selected Backtesting Datafeed");
-                    break;
+                //No matter what for live mode; make sure we've set algorithm status in the API for "not running" conditions:
+                if (_liveMode && algorithmManager.State != AlgorithmStatus.Running && algorithmManager.State != AlgorithmStatus.RuntimeError)
+                    _systemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, algorithmManager.State);
 
-                //Operation from local files:
-                case DataFeedEndpoint.FileSystem:
-                    df = new FileSystemDataFeed(algorithm, (BacktestNodePacket)job);
-                    Log.Trace("Engine.GetDataFeedHandler(): Selected FileSystem Datafeed");
-                    break;
-
-                //Live Trading Data Source:
-                case DataFeedEndpoint.LiveTrading:
-                    df = new PaperTradingDataFeed(algorithm, (LiveNodePacket)job);
-                    Log.Trace("Engine.GetDataFeedHandler(): Selected LiveTrading Datafeed");
-                    break;
-
-                case DataFeedEndpoint.Test:
-                    var feed = new TestLiveTradingDataFeed(algorithm, (LiveNodePacket)job);
-                    df = feed;
-                    Log.Trace("Engine.GetDataFeedHandler(): Selected Test Datafeed at " + feed.FastForward + "x");
-                    break;
+                _algorithmHandlers.Results.Exit();
+                _algorithmHandlers.DataFeed.Exit();
+                _algorithmHandlers.Transactions.Exit();
+                _algorithmHandlers.RealTime.Exit();
             }
-            return df;
-        }
-
-        /// <summary>
-        /// Select the realtime event handler set in the job.
-        /// </summary>
-        private static IRealTimeHandler GetRealTimeHandler(IAlgorithm algorithm, IBrokerage brokerage, IDataFeed feed, IResultHandler results, AlgorithmNodePacket job)
-        {
-            var rth = default(IRealTimeHandler);
-            switch (job.RealTimeEndpoint)
-            { 
-                //Don't fire based on system time but virtualized backtesting time.
-                case RealTimeEndpoint.Backtesting:
-                    Log.Trace("Engine.GetRealTimeHandler(): Selected Backtesting RealTimeEvent Handler");
-                    rth = new BacktestingRealTimeHandler(algorithm, job);
-                    break;
-
-                // Fire events based on real system clock time.
-                case RealTimeEndpoint.LiveTrading:
-                    Log.Trace("Engine.GetRealTimeHandler(): Selected LiveTrading RealTimeEvent Handler");
-                    rth = new LiveTradingRealTimeHandler(algorithm, feed, results);
-                    break;
-            }
-            return rth;
-        }
-
-
-        /// <summary>
-        /// Get an instance of the transaction handler set by the task.
-        /// </summary>
-        /// <param name="algorithm">Algorithm instance</param>
-        /// <param name="job">Algorithm job packet</param>
-        /// <param name="brokerage">Brokerage instance to avoid access token duplication</param>
-        /// <param name="results">Results array for sending order events.</param>
-        /// <returns>Class matching ITransactionHandler interface</returns>
-        private static ITransactionHandler GetTransactionHandler(IAlgorithm algorithm, IBrokerage brokerage, IResultHandler results, AlgorithmNodePacket job)
-        {
-            ITransactionHandler th;
-            switch (job.TransactionEndpoint)
-            {
-                //Operation from local files:
-                default:
-                    th = new BacktestingTransactionHandler(algorithm, brokerage as BacktestingBrokerage);
-                    Log.Trace("Engine.GetTransactionHandler(): Selected Backtesting Transaction Models.");
-                    break;
-            }
-            return th;
-        }
-
-        /// <summary>
-        /// Get an instance of the data feed handler we're requesting for this work.
-        /// </summary>
-        /// <param name="job">Algorithm Node Packet</param>
-        /// <returns>Class Matching IResultHandler Inteface</returns>
-        private static IResultHandler GetResultHandler(AlgorithmNodePacket job)
-        {
-            var rh = default(IResultHandler);
-            if (IsLocal) return new ConsoleResultHandler(job);
-
-            switch (job.ResultEndpoint)
-            {
-                //Local backtesting and live trading result handler route messages to the local console.
-                case ResultHandlerEndpoint.Console:
-                    Log.Trace("Engine.GetResultHandler(): Selected Console Output.");
-                    rh = new ConsoleResultHandler((BacktestNodePacket)job);
-                    break;
-
-                // Backtesting route messages to user browser.
-                case ResultHandlerEndpoint.Backtesting:
-                    Log.Trace("Engine.GetResultHandler(): Selected Backtesting API Result Endpoint.");
-                    rh = new BacktestingResultHandler((BacktestNodePacket)job);
-                    break;
-
-                // Live trading route messages to user's browser.
-                case ResultHandlerEndpoint.LiveTrading:
-                    Log.Trace("Engine.GetResultHandler(): Selected Live Trading API Result Endpoint.");
-                    rh = new LiveTradingResultHandler((LiveNodePacket)job);
-                    break;
-            }
-            return rh;
-        }
-
-
-        /// <summary>
-        /// Get the setup handler for this algorithm, depending on its use case.
-        /// </summary>
-        /// <param name="setupMethod">Setup handler</param>
-        /// <returns>Instance of a setup handler:</returns>
-        private static ISetupHandler GetSetupHandler(SetupHandlerEndpoint setupMethod)
-        {
-            var sh = default(ISetupHandler);
-            if (IsLocal) return new ConsoleSetupHandler();
-
-            switch (setupMethod)
-            {
-                //Setup console handler:
-                case SetupHandlerEndpoint.Console:
-                    sh = new ConsoleSetupHandler();
-                    Log.Trace("Engine.GetSetupHandler(): Selected Console Algorithm Setup Handler.");
-                    break;
-                //Default, backtesting result handler:
-                case SetupHandlerEndpoint.Backtesting:
-                    sh = new BacktestingSetupHandler();
-                    Log.Trace("Engine.GetSetupHandler(): Selected Backtesting Algorithm Setup Handler.");
-                    break;
-                case SetupHandlerEndpoint.PaperTrading:
-                    sh = new PaperTradingSetupHandler();
-                    Log.Trace("Engine.GetSetupHandler(): Selected PaperTrading Algorithm Setup Handler.");
-                    break;
-            }
-            return sh;
         }
     } // End Algorithm Node Core Thread
-    
 } // End Namespace

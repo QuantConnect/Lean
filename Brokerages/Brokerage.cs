@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -29,12 +30,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Event that fires each time an order is filled
         /// </summary>
-        public event EventHandler<OrderEvent> OrderEvent;
-
-        /// <summary>
-        /// Event that fires each time portfolio holdings have changed
-        /// </summary>
-        public event EventHandler<PortfolioEvent> PortfolioChanged;
+        public event EventHandler<OrderEvent> OrderStatusChanged;
 
         /// <summary>
         /// Event that fires each time a user's brokerage account is changed
@@ -44,7 +40,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Event that fires when an error is encountered in the brokerage
         /// </summary>
-        public event EventHandler<Exception> Error;
+        public event EventHandler<BrokerageMessageEvent> Message;
 
         /// <summary>
         /// Gets the name of the brokerage
@@ -104,33 +100,14 @@ namespace QuantConnect.Brokerages
         {
             try
             {
-                Log.Trace("Brokerage.OnOrderEvent(): " + e);
+                Log.Debug("Brokerage.OnOrderEvent(): " + e);
 
-                var handler = OrderEvent;
+                var handler = OrderStatusChanged;
                 if (handler != null) handler(this, e);
             }
-            catch (Exception error)
+            catch (Exception err)
             {
-                Log.Error("Brokerage.OnOrderEvent(): Caught Error: " + error.Message);
-            }
-        }
-
-        /// <summary>
-        /// Event invocator for the PortfolioChanged event
-        /// </summary>
-        /// <param name="e">The PortfolioEvent</param>
-        protected virtual void OnPortfolioChanged(PortfolioEvent e)
-        {
-            try
-            {
-                Log.Trace("Brokerage.OnPortfolioChanged(): " + e);
-
-                var handler = PortfolioChanged;
-                if (handler != null) handler(this, e);
-            }
-            catch (Exception error)
-            {
-                Log.Error("Brokerage.OnPortfolioChanged(): Caught Error: " + error.Message);
+                Log.Error(err);
             }
         }
 
@@ -147,29 +124,55 @@ namespace QuantConnect.Brokerages
                 var handler = AccountChanged;
                 if (handler != null) handler(this, e);
             }
-            catch (Exception error)
+            catch (Exception err)
             {
-                Log.Error("Brokerage.OnAccountChanged(): Caught Error: " + error.Message);
+                Log.Error(err);
             }
         }
 
         /// <summary>
-        /// Event invocator for the Error event
+        /// Event invocator for the Message event
         /// </summary>
         /// <param name="e">The error</param>
-        protected virtual void OnError(Exception e)
+        protected virtual void OnMessage(BrokerageMessageEvent e)
         {
             try
             {
-                Log.Error("Brokerage.OnError(): " + e.Message);
+                if (e.Type == BrokerageMessageType.Error)
+                {
+                    Log.Error("Brokerage.OnMessage(): " + e);
+                }
+                else
+                {
+                    Log.Trace("Brokerage.OnMessage(): " + e);
+                }
 
-                var handler = Error;
+                var handler = Message;
                 if (handler != null) handler(this, e);
             }
-            catch (Exception ex)
+            catch (Exception err)
             {
-                Log.Error("Brokerage.OnError(): Caught Error: " + ex.Message);
+                Log.Error(err);
             }
         }
+
+        /// <summary>
+        /// Gets all open orders on the account. 
+        /// NOTE: The order objects returned do not have QC order IDs.
+        /// </summary>
+        /// <returns>The open orders returned from IB</returns>
+        public abstract List<Order> GetOpenOrders();
+
+        /// <summary>
+        /// Gets all holdings for the account
+        /// </summary>
+        /// <returns>The current holdings from the account</returns>
+        public abstract List<Holding> GetAccountHoldings();
+
+        /// <summary>
+        /// Gets the current cash balance for each currency held in the brokerage account
+        /// </summary>
+        /// <returns>The current cash balance for each currency available for trading</returns>
+        public abstract List<Cash> GetCashBalance();
     }
 }

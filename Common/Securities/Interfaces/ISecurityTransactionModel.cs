@@ -13,113 +13,21 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
-using System;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
 
-namespace QuantConnect.Securities.Interfaces 
+namespace QuantConnect.Securities.Interfaces
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Security transaction model interface for QuantConnect security objects
     /// </summary>
     /// <seealso cref="EquityTransactionModel"/>
     /// <seealso cref="ForexTransactionModel"/>
-    public interface ISecurityTransactionModel
+    public interface ISecurityTransactionModel : IFillModel, IFeeModel, ISlippageModel
     {
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
-        /// <summary>
-        /// Model the slippage on a market order: fixed percentage of order price
-        /// </summary>
-        /// <param name="asset">Asset we're trading this order</param>
-        /// <param name="order">Order to update</param>
-        OrderEvent MarketFill(Security asset, MarketOrder order);
-
-
-        /// <summary>
-        /// Stop Market Fill Model. Return an order event with the fill details.
-        /// </summary>
-        /// <param name="asset">Asset we're trading this order</param>
-        /// <param name="order">Stop Order to Check, return filled if true</param>
-        OrderEvent StopMarketFill(Security asset, StopMarketOrder order);
-
-
-        /// <summary>
-        /// Stop Limit Fill Model. Return an order event with the fill details.
-        /// </summary>
-        /// <param name="asset"></param>
-        /// <param name="order"></param>
-        /// <returns></returns>
-        OrderEvent StopLimitFill(Security asset, StopLimitOrder order);
-
-
-        /// <summary>
-        /// Limit Fill Model. Return an order event with the fill details.
-        /// </summary>
-        /// <param name="asset">Stock Object to use to help model limit fill</param>
-        /// <param name="order">Order to fill. Alter the values directly if filled.</param>
-        OrderEvent LimitFill(Security asset, LimitOrder order);
-
-
-        /// <summary>
-        /// Slippage Model. Return a decimal cash slippage approximation on the order.
-        /// </summary>
-        decimal GetSlippageApproximation(Security asset, Order order);
-
-
-        /// <summary>
-        /// Fee Model. Return the decimal fees from one order. Currently defaults to interactive
-        /// </summary>
-        /// <param name="quantity">Quantity for this Order</param>
-        /// <param name="price">Average Price for this Order</param>
-        /// <returns>Decimal value of the Order Fee</returns>
-        decimal GetOrderFee(decimal quantity, decimal price);
-
-
-        /// <summary>
-        /// Perform neccessary check to see if the model has been filled, appoximate the best we can.
-        /// </summary>
-        /// <param name="asset">Asset we're trading this order</param>
-        /// <param name="order">Order class to check if filled.</param>
-        [Obsolete("Fill(Security, Order) method has been made obsolete, use fill methods directly instead (e.g. MarketFill(security, marketOrder)).")]
-        OrderEvent Fill(Security asset, Order order);
-
-
-        /// <summary>
-        /// Model the slippage on a market order: fixed percentage of order price
-        /// </summary>
-        /// <param name="asset">Asset we're trading this order</param>
-        /// <param name="order">Order to update</param>
-        [Obsolete("MarketFill(Security, Order) method has been made obsolete, use MarketFill(Security, MarketOrder) method instead.")]
-        OrderEvent MarketFill(Security asset, Order order);
-
-
-        /// <summary>
-        /// Check if the model has stopped out our position yet: (Stop Market Order Type)
-        /// </summary>
-        /// <param name="asset">Asset we're trading this order</param>
-        /// <param name="order">Stop Order to Check, return filled if true</param>
-        [Obsolete("StopFill(Security, Order) method has been made obsolete, use StopMarketFill(Security, StopMarketOrder) method instead.")]
-        OrderEvent StopFill(Security asset, Order order);
-
-
-        /// <summary>
-        /// Model for a limit fill.
-        /// </summary>
-        /// <param name="asset">Stock Object to use to help model limit fill</param>
-        /// <param name="order">Order to fill. Alter the values directly if filled.</param>
-        [Obsolete("LimitFill(Security, Order) method has been made obsolete, use LimitFill(Security, LimitOrder) method instead.")]
-        OrderEvent LimitFill(Security asset, Order order);
-
-    } // End Algorithm Transaction Model Interface
-
-} // End QC Namespace
+    }
+}

@@ -14,26 +14,16 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using Newtonsoft.Json;
 
 namespace QuantConnect.Packets
 {
-    /******************************************************** 
-    * QUANTCONNECT WORKER QUEUE BASE CLASS:
-    *********************************************************/
     /// <summary>
     /// Algorithm runtime error packet from the lean engine. 
     /// This is a managed error which stops the algorithm execution.
     /// </summary>
     public class RuntimeErrorPacket : Packet
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         /// <summary>
         /// Runtime error message from the exception
         /// </summary>
@@ -52,9 +42,6 @@ namespace QuantConnect.Packets
         [JsonProperty(PropertyName = "sStackTrace")]
         public string StackTrace;
 
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Default constructor for JSON
         /// </summary>

@@ -13,45 +13,37 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Linq;
+using System.Threading;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Securities 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Algorithm Transactions Manager - Recording Transactions
     /// </summary>
-    public class SecurityTransactionManager : IOrderIDMapping
+    public class SecurityTransactionManager : IOrderProvider
     {
-        /******************************************************** 
-        * CLASS PRIVATE VARIABLES
-        *********************************************************/
-        private SecurityManager _securities;
-        private ConcurrentDictionary<int, Order> _orders = new ConcurrentDictionary<int, Order>();
-        private ConcurrentQueue<Order> _orderQueue = new ConcurrentQueue<Order>();
-        private ConcurrentDictionary<int, List<OrderEvent>> _orderEvents = new ConcurrentDictionary<int, List<OrderEvent>>();
-        private Dictionary<DateTime, decimal> _transactionRecord = new Dictionary<DateTime, decimal>();
-        private int _orderId = 1;
-        private decimal _minimumOrderSize = 0;
-        private int _minimumOrderQuantity = 1;
+        private int _orderId;
+        private readonly SecurityManager _securities;
+        private const decimal _minimumOrderSize = 0;
+        private const int _minimumOrderQuantity = 1;
+        private TimeSpan _marketOrderFillTimeout = TimeSpan.FromSeconds(5);
 
-        /******************************************************** 
-        * CLASS PUBLIC VARIABLES
-        *********************************************************/
+        private IOrderProcessor _orderProcessor;
+        private Dictionary<DateTime, decimal> _transactionRecord;
 
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
+        /// <summary>
+        /// Gets the time the security information was last updated
+        /// </summary>
+        public DateTime UtcTime
+        {
+            get { return _securities.UtcTime; }
+        }
+        
         /// <summary>
         /// Initialise the transaction manager for holding and processing orders.
         /// </summary>
@@ -60,70 +52,8 @@ namespace QuantConnect.Securities
             //Private reference for processing transactions
             _securities = security;
 
-            //Initialise the Order Cache -- Its a mirror of the TransactionHandler.
-            _orders = new ConcurrentDictionary<int, Order>();
-
-            //Temporary Holding Queue of Orders to be Processed.
-            _orderQueue = new ConcurrentQueue<Order>();
-
-            // Internal order events storage.
-            _orderEvents = new ConcurrentDictionary<int, List<OrderEvent>>();
-
-            //Interal storage for transaction records:
+            //Internal storage for transaction records:
             _transactionRecord = new Dictionary<DateTime, decimal>();
-        }
-
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
-        /// <summary>
-        /// Queue for holding all orders sent for processing.
-        /// </summary>
-        /// <remarks>Potentially for long term algorithms this will be a memory hog. Should consider dequeuing orders after a 1 day timeout</remarks>
-        public ConcurrentDictionary<int, Order> Orders 
-        {
-            get 
-            {
-                return _orders;
-            }
-            set
-            {
-                _orders = value;
-            }
-        }
-
-        /// <summary>
-        /// Temporary storage for orders while waiting to process via transaction handler. Once processed they are added to the primary order queue.
-        /// </summary>
-        /// <seealso cref="Orders"/>
-        public ConcurrentQueue<Order> OrderQueue
-        {
-            get
-            {
-                return _orderQueue;
-            }
-            set 
-            {
-                _orderQueue = value;
-            }
-        }
-
-        /// <summary>
-        /// Order event storage - a list of the order events attached to each order
-        /// </summary>
-        /// <remarks>Seems like a huge memory hog and may be removed, leaving OrderEvents to be disposable classes with no track record.</remarks>
-        /// <seealso cref="Orders"/>
-        /// <seealso cref="OrderQueue"/>
-        public ConcurrentDictionary<int, List<OrderEvent>> OrderEvents
-        {
-            get
-            {
-                return _orderEvents;
-            }
-            set 
-            {
-                _orderEvents = value;
-            }
         }
 
         /// <summary>
@@ -165,7 +95,6 @@ namespace QuantConnect.Securities
             }
         }
 
-
         /// <summary>
         /// Get the last order id.
         /// </summary>
@@ -177,124 +106,135 @@ namespace QuantConnect.Securities
             }
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
+        /// <summary>
+        /// Configurable timeout for market order fills
+        /// </summary>
+        /// <remarks>Default value is 5 seconds</remarks>
+        public TimeSpan MarketOrderFillTimeout
+        {
+            get
+            {
+                return _marketOrderFillTimeout;
+            }
+            set
+            {
+                _marketOrderFillTimeout = value;
+            }
+        }
+
+        /// <summary>
+        /// Processes the order request
+        /// </summary>
+        /// <param name="request">The request to be processed</param>
+        /// <returns>The order ticket for the request</returns>
+        public OrderTicket ProcessRequest(OrderRequest request)
+        {
+            var submit = request as SubmitOrderRequest;
+            if (submit != null)
+            {
+                submit.SetOrderId(GetIncrementOrderId());
+            }
+            return _orderProcessor.Process(request);
+        }
+
         /// <summary>
         /// Add an order to collection and return the unique order id or negative if an error.
         /// </summary>
-        /// <param name="order">New order object to add to processing list</param>
+        /// <param name="request">A request detailing the order to be submitted</param>
         /// <returns>New unique, increasing orderid</returns>
-        public virtual int AddOrder(Order order) 
+        public OrderTicket AddOrder(SubmitOrderRequest request)
         {
-            try 
-            {
-                //Ensure its flagged as a new order for the transaction handler.
-                order.Id = _orderId++;
-                order.Status = OrderStatus.New;
-                //Add the order to the cache to monitor
-                OrderQueue.Enqueue(order);
-            }
-            catch (Exception err)
-            {
-                Log.Error("Algorithm.Transaction.AddOrder(): " + err.Message);
-            }
-            return order.Id;
+            return ProcessRequest(request);
         }
 
         /// <summary>
         /// Update an order yet to be filled such as stop or limit orders.
         /// </summary>
-        /// <param name="order">Order to Update</param>
+        /// <param name="request">Request detailing how the order should be updated</param>
         /// <remarks>Does not apply if the order is already fully filled</remarks>
-        /// <returns>
-        ///     Id of the order we modified or 
-        ///     -5 if the order was already filled or cancelled
-        ///     -6 if the order was not found in the cache
-        /// </returns>
-        public int UpdateOrder(Order order) 
+        public OrderTicket UpdateOrder(UpdateOrderRequest request)
         {
-            try 
-            {
-                //Update the order from the behaviour
-                var id = order.Id;
-                order.Time = _securities[order.Symbol].Time;
-
-                //Validate order:
-                if (order.Price == 0 || order.Quantity == 0) return -1;
-
-                if (_orders.ContainsKey(id))
-                {
-                    //-> If its already filled return false; can't be updated
-                    if (_orders[id].Status == OrderStatus.Filled || _orders[id].Status == OrderStatus.Canceled)
-                    {
-                        return -5;
-                    }
-
-                    //Flag the order to be resubmitted.
-                    order.Status = OrderStatus.Update;
-                    _orders[id] = order;
-
-                    //Send the order to transaction handler for update to be processed.
-                    OrderQueue.Enqueue(order);
-                } 
-                else 
-                {
-                    //-> Its not in the orders cache, shouldn't get here
-                    return -6;
-                }
-            } 
-            catch (Exception err) 
-            {
-                Log.Error("Algorithm.Transactions.UpdateOrder(): " + err.Message);
-                return -7;
-            }
-            return 0;
+            return ProcessRequest(request);
         }
 
         /// <summary>
         /// Added alias for RemoveOrder - 
         /// </summary>
         /// <param name="orderId">Order id we wish to cancel</param>
-        public virtual void CancelOrder(int orderId)
+        public OrderTicket CancelOrder(int orderId)
         {
-            RemoveOrder(orderId);
+            return RemoveOrder(orderId);
+        }
+
+        /// <summary>
+        /// Cancels all open orders for the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol whose orders are to be cancelled</param>
+        /// <returns>List containing the cancelled order tickets</returns>
+        public List<OrderTicket> CancelOpenOrders(Symbol symbol)
+        {
+            var cancelledOrders = new List<OrderTicket>();
+            foreach (var ticket in GetOrderTickets(x => x.Symbol == symbol && x.Status.IsOpen()))
+            {
+                ticket.Cancel();
+                cancelledOrders.Add(ticket);
+            }
+            return cancelledOrders;
         }
 
         /// <summary>
         /// Remove this order from outstanding queue: user is requesting a cancel.
         /// </summary>
         /// <param name="orderId">Specific order id to remove</param>
-        public virtual void RemoveOrder(int orderId) 
+        public OrderTicket RemoveOrder(int orderId)
         {
-            try
-            {
-                //Error check
-                if (!Orders.ContainsKey(orderId)) 
-                {
-                    Log.Error("Security.TransactionManager.RemoveOutstandingOrder(): Cannot find this id.");
-                    return;
-                }
-
-                var order = Orders[orderId];
-                if (order.Status != OrderStatus.Submitted && order.Type != OrderType.Market) 
-                {
-                    Log.Error("Security.TransactionManager.RemoveOutstandingOrder(): Order already filled");
-                    return;
-                }
-
-                //Update the status of the order
-                order.Status = OrderStatus.Canceled;
-
-                //Send back to queue to be reprocessed with new status
-                OrderQueue.Enqueue(order);
-            }
-            catch (Exception err)
-            {
-                Log.Error("TransactionManager.RemoveOrder(): " + err.Message);
-            }
+            return ProcessRequest(new CancelOrderRequest(_securities.UtcTime, orderId, string.Empty));
         }
 
+        /// <summary>
+        /// Gets and enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/>
+        /// </summary>
+        /// <param name="filter">The filter predicate used to find the required order tickets</param>
+        /// <returns>An enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
+        public IEnumerable<OrderTicket> GetOrderTickets(Func<OrderTicket, bool> filter = null)
+        {
+            return _orderProcessor.GetOrderTickets(filter ?? (x => true));
+        }
+
+        /// <summary>
+        /// Gets the order ticket for the specified order id. Returns null if not found
+        /// </summary>
+        /// <param name="orderId">The order's id</param>
+        /// <returns>The order ticket with the specified id, or null if not found</returns>
+        public OrderTicket GetOrderTicket(int orderId)
+        {
+            return _orderProcessor.GetOrderTicket(orderId);
+        }
+
+        /// <summary>
+        /// Wait for a specific order to be either Filled, Invalid or Canceled
+        /// </summary>
+        /// <param name="orderId">The id of the order to wait for</param>
+        /// <returns>True if we successfully wait for the fill, false if we were unable
+        /// to wait. This may be because it is not a market order or because the timeout
+        /// was reached</returns>
+        public bool WaitForOrder(int orderId)
+        {
+            var orderTicket = GetOrderTicket(orderId);
+            if (orderTicket == null)
+            {
+                Log.Error("SecurityTransactionManager.WaitForOrder(): Unable to locate ticket for order: " + orderId);
+                return false;
+            }
+
+            if (!orderTicket.OrderClosed.WaitOne(_marketOrderFillTimeout))
+            {
+                Log.Error("SecurityTransactionManager.WaitForOrder(): Order did not fill within {0} seconds.", _marketOrderFillTimeout.TotalSeconds);
+                return false;
+            }
+
+            return true;
+        }
 
         /// <summary>
         /// Get a list of all open orders.
@@ -302,14 +242,26 @@ namespace QuantConnect.Securities
         /// <returns>List of open orders.</returns>
         public List<Order> GetOpenOrders()
         {
-            var openOrders = (from order in Orders.Values
-                where (order.Status == OrderStatus.Submitted ||
-                       order.Status == OrderStatus.New)
-                select order).ToList();
+            return _orderProcessor.GetOrders(x => x.Status.IsOpen()).ToList();
+        }
 
-            return openOrders;
-        } 
+        /// <summary>
+        /// Get a list of all open orders for a symbol.
+        /// </summary>
+        /// <param name="symbol">The symbol for which to return the orders</param>
+        /// <returns>List of open orders.</returns>
+        public List<Order> GetOpenOrders(Symbol symbol)
+        {
+            return _orderProcessor.GetOrders(x => x.Symbol == symbol && x.Status.IsOpen()).ToList();
+        }
 
+        /// <summary>
+        /// Gets the current number of orders that have been processed
+        /// </summary>
+        public int OrdersCount
+        {
+            get { return _orderProcessor.OrdersCount; }
+        }
 
         /// <summary>
         /// Get the order by its id
@@ -318,26 +270,7 @@ namespace QuantConnect.Securities
         /// <returns>The order with the specified id, or null if no match is found</returns>
         public Order GetOrderById(int orderId)
         {
-            Order order = null;
-            try
-            {
-                if (!Orders.TryGetValue(orderId, out order))
-                {
-                    var pending = OrderQueue.ToList();
-
-                    var pendingOrder = (from o in pending 
-                                        where o.Id == orderId 
-                                        select o).FirstOrDefault();
-
-                    return pendingOrder;
-                }
-                return order;
-            }
-            catch (Exception err)
-            {
-                Log.Error("TransactionManager.GetOrderById(): " + err.Message);
-            }
-            return order;
+            return _orderProcessor.GetOrderById(orderId);
         }
 
         /// <summary>
@@ -345,24 +278,19 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="brokerageId">The brokerage id to fetch</param>
         /// <returns>The first order matching the brokerage id, or null if no match is found</returns>
-        public Order GetOrderByBrokerageId(int brokerageId)
+        public Order GetOrderByBrokerageId(string brokerageId)
         {
-            try
-            {
-                // first check the order queue since orders are moved from OrderQueue to Orders
-                var order = OrderQueue.FirstOrDefault(x => x.BrokerId.Contains(brokerageId));
-                if (order != null)
-                {
-                    return order;
-                }
+            return _orderProcessor.GetOrderByBrokerageId(brokerageId);
+        }
 
-                return Orders.FirstOrDefault(x => x.Value.BrokerId.Contains(brokerageId)).Value;
-            }
-            catch (Exception err)
-            {
-                Log.Error("TransactionManager.GetOrderByBrokerageId(): " + err.Message);
-                return null;
-            }
+        /// <summary>
+        /// Gets all orders matching the specified filter
+        /// </summary>
+        /// <param name="filter">Delegate used to filter the orders</param>
+        /// <returns>All open orders this order provider currently holds</returns>
+        public IEnumerable<Order> GetOrders(Func<Order, bool> filter)
+        {
+            return _orderProcessor.GetOrders(filter);
         }
 
         /// <summary>
@@ -373,43 +301,31 @@ namespace QuantConnect.Securities
         /// <returns>True if suficient capital.</returns>
         public bool GetSufficientCapitalForOrder(SecurityPortfolioManager portfolio, Order order)
         {
-            var increasingPosition = true;
-            var currentAbsoluteHoldings = _securities[order.Symbol].Holdings.AbsoluteQuantity;
-            var newAbsoluteHoldings = Math.Abs(order.Quantity + _securities[order.Symbol].Holdings.Quantity);
-            if (newAbsoluteHoldings < currentAbsoluteHoldings) increasingPosition = false;
+            // short circuit the div 0 case
+            if (order.Quantity == 0) return true;
 
-            if (increasingPosition && Math.Abs(GetOrderCashImpact(order)) > portfolio.GetFreeCash(order.Symbol, order.Direction))
+            var security = _securities[order.Symbol];
+
+            var ticket = GetOrderTicket(order.Id);
+            if (ticket == null)
             {
-                //Log.Debug("Symbol: " + order.Symbol + " Direction: " + order.Direction.ToString() + " Quantity: " + order.Quantity);
-                //Log.Debug("GetOrderRequiredBuyingPower(): " + Math.Abs(GetOrderRequiredBuyingPower(order)) + " PortfolioGetBuyingPower(): " + portfolio.GetBuyingPower(order.Symbol, order.Direction)); 
-                Log.Error(string.Format("Transactions.GetSufficientCapitalForOrder(): Id: {0}, Cash Impact: {1}, Free Cash: {2}", order.Id, GetOrderCashImpact(order), portfolio.GetFreeCash(order.Symbol, order.Direction)));
+                Log.Error("SecurityTransactionManager.GetSufficientCapitalForOrder(): Null order ticket for id: " + order.Id);
+                return false;
+            }
+
+            var freeMargin = security.MarginModel.GetMarginRemaining(portfolio, security, order.Direction);
+            var initialMarginRequiredForOrder = security.MarginModel.GetInitialMarginRequiredForOrder(security, order);
+
+            // pro-rate the initial margin required for order based on how much has already been filled
+            var percentUnfilled = (Math.Abs(order.Quantity) - Math.Abs(ticket.QuantityFilled))/Math.Abs(order.Quantity);
+            var initialMarginRequiredForRemainderOfOrder = percentUnfilled*initialMarginRequiredForOrder;
+
+            if (Math.Abs(initialMarginRequiredForRemainderOfOrder) > freeMargin)
+            {
+                Log.Error(string.Format("SecurityTransactionManager.GetSufficientCapitalForOrder(): Id: {0}, Initial Margin: {1}, Free Margin: {2}", order.Id, initialMarginRequiredForOrder, freeMargin));
                 return false;
             }
             return true;
-        }
-
-        /// <summary>
-        /// Using leverage property of security find the required cash for this order.
-        /// </summary>
-        /// <param name="order">Order to check</param>
-        /// <returns>decimal cash required to purchase order</returns>
-        private decimal GetOrderCashImpact(Order order)
-        {
-            try
-            {
-                //Get the order value from the non-abstract order classes (MarketOrder, LimitOrder, StopMarketOrder)
-                //Market order is approximated from the current security price and set in the MarketOrder Method in QCAlgorithm.
-                var orderFees = _securities[order.Symbol].Model.GetOrderFee(order.Quantity, order.Price);
-
-                //Return the total cash impact for the order, including fees:
-                return Math.Abs(order.Value) / _securities[order.Symbol].Leverage + orderFees; 
-            } 
-            catch(Exception err)
-            {
-                Log.Error("Security.TransactionManager.GetOrderCashImpact(): " + err.Message);
-            }
-            //Prevent all orders if leverage is 0.
-            return decimal.MaxValue;
         }
 
         /// <summary>
@@ -418,9 +334,24 @@ namespace QuantConnect.Securities
         /// <returns>New unique int order id.</returns>
         public int GetIncrementOrderId()
         {
-            return _orderId++;
+            return Interlocked.Increment(ref _orderId);
         }
 
-    } // End Algorithm Transaction Filling Classes
+        /// <summary>
+        /// Sets the <see cref="IOrderProvider"/> used for fetching orders for the algorithm
+        /// </summary>
+        /// <param name="orderProvider">The <see cref="IOrderProvider"/> to be used to manage fetching orders</param>
+        public void SetOrderProcessor(IOrderProcessor orderProvider)
+        {
+            _orderProcessor = orderProvider;
+        }
 
-} // End QC Namespace
+        /// <summary>
+        /// Returns true when the specified order is in a completed state
+        /// </summary>
+        private static bool Completed(Order order)
+        {
+            return order.Status == OrderStatus.Filled || order.Status == OrderStatus.PartiallyFilled || order.Status == OrderStatus.Invalid || order.Status == OrderStatus.Canceled;
+        }
+    }
+}

@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using System;
 using QuantConnect.Data.Market;
 
@@ -64,7 +65,7 @@ namespace QuantConnect.Data.Consolidators
                 workingBar = new TradeBar
                 {
                     Symbol = data.Symbol,
-                    Time = data.Time,
+                    Time = GetRoundedBarTime(data.Time),
                     Close = data.Value,
                     High = data.Value,
                     Low = data.Value,

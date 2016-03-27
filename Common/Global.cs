@@ -1,4 +1,4 @@
-﻿/*
+﻿﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,87 +13,130 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using Newtonsoft.Json;
-using QuantConnect.Logging;
+using Newtonsoft.Json.Converters;
+using QuantConnect.Securities;
+using QuantConnect.Securities.Cfd;
+using QuantConnect.Securities.Forex;
 
 namespace QuantConnect
 {
-    /********************************************************
-    * GLOBAL CONST
-    *********************************************************/
     /// <summary>
     /// Shortcut date format strings
     /// </summary>
     public static class DateFormat
     {
         /// Year-Month-Date 6 Character Date Representation
-        public static string SixCharacter = "yyMMdd";
+        public const string SixCharacter = "yyMMdd";
         /// YYYY-MM-DD Eight Character Date Representation
-        public static string EightCharacter = "yyyyMMdd";
+        public const string EightCharacter = "yyyyMMdd";
+        /// Daily and hourly time format
+        public const string TwelveCharacter = "yyyyMMdd HH:mm";
         /// JSON Format Date Representation
         public static string JsonFormat = "yyyy-MM-ddThh:mm:ss";
         /// MySQL Format Date Representation
         public const string DB = "yyyy-MM-dd HH:mm:ss";
         /// QuantConnect UX Date Representation
         public const string UI = "yyyy-MM-dd HH:mm:ss";
-        /// EXT Web Date Representation
-        public const string EXT = "yyyy-MM-dd HH:mm:ss";
         /// en-US format
         public const string US = "M/d/yyyy h:mm:ss tt";
+        /// Date format of QC forex data
+        public const string Forex = "yyyyMMdd HH:mm:ss.ffff";
     }
 
-
-    /********************************************************
-    * GLOBAL STRUCT DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Singular holding of assets from backend live nodes:
     /// </summary>
-    [JsonObjectAttribute]
+    [JsonObject]
     public class Holding
     {
         /// Symbol of the Holding:
-        public string Symbol = "";
+        public Symbol Symbol = Symbol.Empty;
 
-        /// Average Price of our Holding
+        /// Type of the security
+        public SecurityType Type;
+
+        /// The currency symbol of the holding, such as $
+        public string CurrencySymbol;
+
+        /// Average Price of our Holding in the currency the symbol is traded in
         public decimal AveragePrice;
 
         /// Quantity of Symbol We Hold.
         public decimal Quantity;
 
-        /// Current Market Price of the Asset
+        /// Current Market Price of the Asset in the currency the symbol is traded in
         public decimal MarketPrice;
+
+        /// Current market conversion rate into the account currency
+        public decimal ConversionRate;
 
         /// Create a new default holding:
         public Holding()
-        { }
+        {
+            CurrencySymbol = "$";
+            ConversionRate = 1m;
+        }
 
         /// <summary>
         /// Create a simple JSON holdings from a Security holding class.
         /// </summary>
-        /// <param name="holding">Holdings object we'll use to initialize the transport</param>
-        /// <param name="type">Type of the asset holding</param>
-        public Holding(Securities.SecurityHolding holding, SecurityType type)
+        /// <param name="security">The security instance</param>
+        public Holding(Security security)
+             : this()
         {
+            var holding = security.Holdings;
+
             Symbol = holding.Symbol;
+            Type = holding.Type;
             Quantity = holding.Quantity;
+            CurrencySymbol = Currencies.CurrencySymbols[security.QuoteCurrency.Symbol];
+            ConversionRate = security.QuoteCurrency.ConversionRate;
 
             var rounding = 2;
-            if (type == SecurityType.Forex) rounding = 4;
+            if (holding.Type == SecurityType.Forex || holding.Type == SecurityType.Cfd)
+            {
+                rounding = 5;
+            }
 
             AveragePrice = Math.Round(holding.AveragePrice, rounding);
             MarketPrice = Math.Round(holding.Price, rounding);
         }
+
+        /// <summary>
+        /// Clones this instance
+        /// </summary>
+        /// <returns>A new Holding object with the same values as this one</returns>
+        public Holding Clone()
+        {
+            return new Holding
+            {
+                AveragePrice = AveragePrice,
+                Symbol = Symbol,
+                Type = Type,
+                Quantity = Quantity,
+                MarketPrice = MarketPrice,
+                ConversionRate  = ConversionRate,
+                CurrencySymbol = CurrencySymbol
+            };
+        }
+
+        /// <summary>
+        /// Writes out the properties of this instance to string
+        /// </summary>
+        public override string ToString()
+        {
+            if (ConversionRate == 1.0m)
+            {
+                return string.Format("{0}: {1} @ {2}{3} - Market: {2}{4}", Symbol, Quantity, CurrencySymbol, AveragePrice, MarketPrice);
+            }
+            return string.Format("{0}: {1} @ {2}{3} - Market: {2}{4} - Conversion: {5}", Symbol, Quantity, CurrencySymbol, AveragePrice, MarketPrice, ConversionRate);
+        }
     }
 
-    /********************************************************
-    * GLOBAL ENUMS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Processing runmode of the backtest.
     /// </summary>
@@ -112,21 +155,37 @@ namespace QuantConnect
     /// <summary>
     /// Multilanguage support enum: which language is this project for the interop bridge converter.
     /// </summary>
+    [JsonConverter(typeof(StringEnumConverter))]
     public enum Language
     {
         /// <summary>
         /// C# Language Project
         /// </summary>
+        [EnumMember(Value = "C#")]
         CSharp,
+
+        /// <summary>
+        /// FSharp Project
+        /// </summary>
+        [EnumMember(Value = "F#")]
+        FSharp,
+
+        /// <summary>
+        /// Visual Basic Project
+        /// </summary>
+        [EnumMember(Value = "VB")]
+        VisualBasic,
 
         /// <summary>
         /// Java Language Project
         /// </summary>
+        [EnumMember(Value = "Ja")]
         Java,
 
         /// <summary>
         /// Python Language Project
         /// </summary>
+        [EnumMember(Value = "Py")]
         Python
     }
 
@@ -203,7 +262,28 @@ namespace QuantConnect
         /// <summary>
         /// Future Security Type
         /// </summary>
-        Future
+        Future,
+
+        /// <summary>
+        /// Contract For a Difference Security Type.
+        /// </summary>
+        Cfd
+    }
+
+    /// <summary>
+    /// Account type: margin or cash
+    /// </summary>
+    public enum AccountType
+    {
+        /// <summary>
+        /// Margin account type
+        /// </summary>
+        Margin,
+
+        /// <summary>
+        /// Cash account type
+        /// </summary>
+        Cash
     }
 
     /// <summary>
@@ -216,7 +296,11 @@ namespace QuantConnect
         /// TradeBar market data type (OHLC summary bar)
         TradeBar,
         /// Tick market data type (price-time pair)
-        Tick
+        Tick,
+        /// Data associated with an instrument
+        Auxiliary,
+        /// QuoteBar market data type [Bid(OHLC), Ask(OHLC) and Mid(OHLC) summary bar]
+        QuoteBar
     }
 
     /// <summary>
@@ -230,60 +314,8 @@ namespace QuantConnect
         FileSystem,
         /// Getting datafeed from a QC-Live-Cloud
         LiveTrading,
-        /// Test live data feed
-        Test
-    }
-
-    /// <summary>
-    /// Realtime events handler options for handling realtime events in the algorithm
-    /// </summary>
-    public enum RealTimeEndpoint
-    {
-        /// Backtesting Faked RealTime Events
-        Backtesting,
-        /// Live Trading RealTime Events
-        LiveTrading
-    }
-
-    /// <summary>
-    /// Result events handler options for processing algorithm messages
-    /// </summary>
-    public enum ResultHandlerEndpoint
-    {
-        /// Send Results to the Backtesting Web Application
-        Backtesting,
-        /// Send the Results to the Local Console
-        Console,
-        /// Send Results to the Live Web Application
-        LiveTrading,
-    }
-
-    /// <summary>
-    /// Setup handler options for setting up algorithm state and the livetrading/backtest requirements.
-    /// </summary>
-    public enum SetupHandlerEndpoint
-    {
-        /// Configure algorithm+job for backtesting:
-        Backtesting,
-        /// Configure algorithm+job for the console:
-        Console,
-        /// Paper trading algorithm+job internal state configuration
-        PaperTrading
-    }
-
-    /// <summary>
-    /// Transaction handler options for selecting who processes the transactions
-    /// </summary>
-    public enum TransactionHandlerEndpoint
-    {
-        /// Use Backtesting Models to Process Transactions
-        Backtesting
-        /*
-        /// Use Interactive Brokers to Process Transactions
-        InteractiveBrokers,
-        /// Use FXCM to Process Transactions
-        FXCM
-        */
+        /// Database
+        Database
     }
 
     /// <summary>
@@ -311,6 +343,22 @@ namespace QuantConnect
     }
 
     /// <summary>
+    /// Specifies the type of <see cref="QuantConnect.Data.Market.Delisting"/> data
+    /// </summary>
+    public enum DelistingType
+    {
+        /// <summary>
+        /// Specifies a warning of an imminent delisting
+        /// </summary>
+        Warning = 0,
+
+        /// <summary>
+        /// Specifies the symbol has been delisted
+        /// </summary>
+        Delisted = 1
+    }
+
+    /// <summary>
     /// Resolution of data requested.
     /// </summary>
     /// <remarks>Always sort the enum from the smallest to largest resolution</remarks>
@@ -329,6 +377,38 @@ namespace QuantConnect
     }
 
     /// <summary>
+    /// Specifies the different types of options
+    /// </summary>
+    public enum OptionRight
+    {
+        /// <summary>
+        /// A call option, the right to buy at the strike price
+        /// </summary>
+        Call,
+
+        /// <summary>
+        /// A put option, the right to sell at the strike price
+        /// </summary>
+        Put
+    }
+
+    /// <summary>
+    /// Specifies the style of an option
+    /// </summary>
+    public enum OptionStyle
+    {
+        /// <summary>
+        /// American style options are able to be exercised at any time on or before the expiration date
+        /// </summary>
+        American,
+
+        /// <summary>
+        /// European style options are able to be exercised on the expiration date only.
+        /// </summary>
+        European
+    }
+
+    /// <summary>
     /// Wrapper for algorithm status enum to include the charting subscription.
     /// </summary>
     public class AlgorithmControl
@@ -338,6 +418,8 @@ namespace QuantConnect
         /// </summary>
         public AlgorithmControl()
         {
+            // default to true, API can override
+            HasSubscribers = true;
             Status = AlgorithmStatus.Running;
             ChartSubscription = "Strategy Equity";
         }
@@ -351,6 +433,11 @@ namespace QuantConnect
         /// Currently requested chart.
         /// </summary>
         public string ChartSubscription;
+
+        /// <summary>
+        /// True if there's subscribers on the channel
+        /// </summary>
+        public bool HasSubscribers;
     }
 
     /// <summary>
@@ -358,8 +445,6 @@ namespace QuantConnect
     /// </summary>
     public enum AlgorithmStatus
     {
-        /// User initiated a quit request
-        Quit,           //0
         /// Error compiling algorithm at start
         DeployError,    //1
         /// Waiting for a server
@@ -377,9 +462,35 @@ namespace QuantConnect
         /// Runtime Error Stoped Algorithm
         RuntimeError,    //8
         /// Error in the algorithm id (not used).
-        Invalid
+        Invalid,
+        /// The algorithm is logging into the brokerage
+        LoggingIn,
+        /// The algorithm is initializing
+        Initializing,
+        /// History status update
+        History
     }
 
+    /// <summary>
+    /// Specifies where a subscription's data comes from
+    /// </summary>
+    public enum SubscriptionTransportMedium
+    {
+        /// <summary>
+        /// The subscription's data comes from disk
+        /// </summary>
+        LocalFile,
+
+        /// <summary>
+        /// The subscription's data is downloaded from a remote source
+        /// </summary>
+        RemoteFile,
+
+        /// <summary>
+        /// The subscription's data comes from a rest call that is polled and returns a single line/data point of information
+        /// </summary>
+        Rest
+    }
 
     /// <summary>
     /// enum Period - Enum of all the analysis periods, AS integers. Reference "Period" Array to access the values
@@ -416,10 +527,29 @@ namespace QuantConnect
         SixHours = 21600
     }
 
+    /// <summary>
+    /// Specifies how data is normalized before being sent into an algorithm
+    /// </summary>
+    public enum DataNormalizationMode
+    {
+        /// <summary>
+        /// The raw price with dividends added to cash book
+        /// </summary>
+        Raw,
+        /// <summary>
+        /// The adjusted prices with splits and dividendends factored in
+        /// </summary>
+        Adjusted,
+        /// <summary>
+        /// The adjusted prices with only splits factored in, dividends paid out to the cash book
+        /// </summary>
+        SplitAdjusted,
+        /// <summary>
+        /// The split adjusted price plus dividends
+        /// </summary>
+        TotalReturn
+    }
 
-    /********************************************************
-    * GLOBAL MARKETS
-    *********************************************************/
     /// <summary>
     /// Global Market Short Codes and their full versions: (used in tick objects)
     /// </summary>
@@ -456,6 +586,20 @@ namespace QuantConnect
         };
     }
 
+    /// <summary>
+    /// Defines the different channel status values
+    /// </summary>
+    public static class ChannelStatus
+    {
+        /// <summary>
+        /// The channel is empty
+        /// </summary>
+        public const string Vacated = "channel_vacated";
+        /// <summary>
+        /// The channel has subscribers
+        /// </summary>
+        public const string Occupied = "channel_occupied";
+    }
 
     /// <summary>
     /// US Public Holidays - Not Tradeable:
@@ -465,7 +609,7 @@ namespace QuantConnect
         /// <summary>
         /// Public Holidays
         /// </summary>
-        public static List<DateTime> Dates = new List<DateTime>()
+        public static readonly HashSet<DateTime> Dates = new HashSet<DateTime>
         {
             /* New Years Day*/
             new DateTime(1998, 01, 01),
@@ -608,7 +752,7 @@ namespace QuantConnect
             new DateTime(2015, 07, 03),
             new DateTime(2016, 07, 04),
 
-            /* Labour Day */
+            /* Labor Day */
             new DateTime(1998, 09, 07),
             new DateTime(1999, 09, 06),
             new DateTime(2000, 09, 04),
@@ -650,7 +794,7 @@ namespace QuantConnect
             new DateTime(2015, 11, 26),
             new DateTime(2016, 11, 24),
 
-            /* Christmas 1998-2014 */
+            /* Christmas */
             new DateTime(1998, 12, 25),
             new DateTime(1999, 12, 24),
             new DateTime(2000, 12, 25),
@@ -672,4 +816,4 @@ namespace QuantConnect
             new DateTime(2016, 12, 25)
         };
     }
-} // End QC Namespace:
+}

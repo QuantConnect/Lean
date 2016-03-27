@@ -13,67 +13,38 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
-using QuantConnect.Securities.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Securities 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// SecurityHolding is a base class for purchasing and holding a market item which manages the asset portfolio
     /// </summary>
     public class SecurityHolding
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         //Working Variables
-        private decimal _averagePrice = 0;
-        private int     _quantity = 0;
-        private decimal _price = 0;
-        private decimal _leverage = 1;
-        private readonly string  _symbol = "";
-        private readonly SecurityType _securityType;
-        private decimal _totalSaleVolume = 0;
-        private decimal _profit = 0;
-        private decimal _lastTradeProfit = 0;
-        private decimal _totalFees = 0;
-        private ISecurityTransactionModel _model;
-
-        /******************************************************** 
-        * CONSTRUCTOR DEFINITION
-        *********************************************************/
+        private decimal _averagePrice;
+        private int     _quantity;
+        private decimal _price;
+        private decimal _totalSaleVolume;
+        private decimal _profit;
+        private decimal _lastTradeProfit;
+        private decimal _totalFees;
+        private readonly Security _security;
 
         /// <summary>
         /// Create a new holding class instance setting the initial properties to $0.
         /// </summary>
-        public SecurityHolding(string symbol, decimal leverage, ISecurityTransactionModel transactionModel)
-            : this(symbol, SecurityType.Equity, leverage, transactionModel)
+        /// <param name="security">The security being held</param>
+        public SecurityHolding(Security security)
         {
-        }
-
-        /// <summary>
-        /// Create a new holding class instance setting the initial properties to $0.
-        /// </summary>
-        public SecurityHolding(string symbol, SecurityType type, decimal leverage, ISecurityTransactionModel transactionModel)
-        {
-            _model = transactionModel;
-            _symbol = symbol;
-            _leverage = leverage;
-            _securityType = type;
+            _security = security;
             //Total Sales Volume for the day
             _totalSaleVolume = 0;
             _lastTradeProfit = 0;
         }
 
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
         /// <summary>
         /// Average price of the security holdings.
         /// </summary>
@@ -84,7 +55,6 @@ namespace QuantConnect.Securities
                 return _averagePrice;
             }
         }
-
 
         /// <summary>
         /// Quantity of the security held.
@@ -99,15 +69,25 @@ namespace QuantConnect.Securities
             }
         }
 
-
         /// <summary>
         /// Symbol identifier of the underlying security.
         /// </summary>
-        public string Symbol
+        public Symbol Symbol
         {
             get
             {
-                return _symbol;
+                return _security.Symbol;
+            }
+        }
+
+        /// <summary>
+        /// The security type of the symbol
+        /// </summary>
+        public SecurityType Type
+        {
+            get
+            {
+                return _security.Type;
             }
         }
 
@@ -118,9 +98,10 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return _leverage;
+                return _security.MarginModel.GetLeverage(_security);
             }
         }
+        
 
         /// <summary>
         /// Acquisition cost of the security total holdings.
@@ -129,7 +110,7 @@ namespace QuantConnect.Securities
         {
             get 
             {
-                return AveragePrice * Convert.ToDecimal(Quantity);
+                return AveragePrice * Convert.ToDecimal(Quantity) * _security.QuoteCurrency.ConversionRate * _security.SymbolProperties.ContractMultiplier;
             }
         }
 
@@ -138,10 +119,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual decimal UnleveredHoldingsCost
         {
-            get
-            {
-                return AveragePrice * Convert.ToDecimal(Quantity) / Leverage;
-            }
+            get { return HoldingsCost/Leverage; }
         }
 
         /// <summary>
@@ -156,7 +134,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Absolute holdings cost for current holdings.
+        /// Absolute holdings cost for current holdings in units of the account's currency
         /// </summary>
         /// <seealso cref="HoldingsCost"/>
         public virtual decimal AbsoluteHoldingsCost 
@@ -183,10 +161,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual decimal HoldingsValue
         {
-            get
-            {
-                return _price * Convert.ToDecimal(Quantity);
-            }
+            get { return _price*Convert.ToDecimal(Quantity)*_security.QuoteCurrency.ConversionRate*_security.SymbolProperties.ContractMultiplier; }
         }
 
         /// <summary>
@@ -195,12 +170,9 @@ namespace QuantConnect.Securities
         /// <seealso cref="HoldingsValue"/>
         public virtual decimal AbsoluteHoldingsValue
         {
-            get
-            {
-                return Math.Abs(HoldingsValue);
-            }
+            get { return Math.Abs(HoldingsValue); }
         }
-        
+
         /// <summary>
         /// Boolean flat indicating if we hold any of the security
         /// </summary>
@@ -228,23 +200,17 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The total transaction volume for this security since the algorithm started.
         /// </summary>
-        public virtual decimal TotalSaleVolume 
+        public virtual decimal TotalSaleVolume
         {
-            get 
-            {
-                return _totalSaleVolume;
-            }
+            get { return _totalSaleVolume; }
         }
 
         /// <summary>
         /// Total fees for this company since the algorithm started.
         /// </summary>
-        public virtual decimal TotalFees 
+        public virtual decimal TotalFees
         {
-            get 
-            {
-                return _totalFees;
-            }
+            get { return _totalFees; }
         }
 
         /// <summary>
@@ -298,12 +264,9 @@ namespace QuantConnect.Securities
         /// Calculate the total profit for this security.
         /// </summary>
         /// <seealso cref="NetProfit"/>
-        public virtual decimal Profit 
+        public virtual decimal Profit
         {
-            get 
-            {
-                return _profit;
-            }
+            get { return _profit; }
         }
 
         /// <summary>
@@ -320,19 +283,25 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Unrealized profit of this security when absolute quantity held is more than zero.
+        /// Gets the unrealized profit as a percenage of holdings cost
         /// </summary>
-        public virtual decimal UnrealizedProfit 
+        public decimal UnrealizedProfitPercent
         {
-            get 
+            get
             {
-                return TotalCloseProfit();
+                if (AbsoluteHoldingsCost == 0) return 0m;
+                return UnrealizedProfit/AbsoluteHoldingsCost;
             }
         }
 
-        /******************************************************** 
-        * CLASS METHODS 
-        *********************************************************/
+        /// <summary>
+        /// Unrealized profit of this security when absolute quantity held is more than zero.
+        /// </summary>
+        public virtual decimal UnrealizedProfit
+        {
+            get { return TotalCloseProfit(); }
+        }
+
         /// <summary>
         /// Adds a fee to the running total of total fees.
         /// </summary>
@@ -352,10 +321,10 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Adds a new sale value to the running total trading volume.
+        /// Adds a new sale value to the running total trading volume in terms of the account currency
         /// </summary>
         /// <param name="saleValue"></param>
-        public void AddNewSale(decimal saleValue) 
+        public void AddNewSale(decimal saleValue)
         {
             _totalSaleVolume += saleValue;
         }
@@ -379,19 +348,10 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Set the leverage for this security.
-        /// </summary>
-        /// <param name="leverage">Decimal leverage</param>
-        public virtual void SetLeverage(decimal leverage)
-        {
-            _leverage = leverage;
-        }
-
-        /// <summary>
         /// Update local copy of closing price value.
         /// </summary>
         /// <param name="closingPrice">Price of the underlying asset to be used for calculating market price / portfolio value</param>
-        public virtual void UpdatePrice(decimal closingPrice)
+        public virtual void UpdateMarketPrice(decimal closingPrice)
         {
             _price = closingPrice;
         }
@@ -402,33 +362,16 @@ namespace QuantConnect.Securities
         /// <remarks>Does not use the transaction model for market fills but should.</remarks>
         public virtual decimal TotalCloseProfit() 
         {
-            decimal gross = 0, net = 0;
-            decimal orderFee = 0;
-
-            if (AbsoluteQuantity > 0) 
+            if (AbsoluteQuantity == 0)
             {
-                orderFee = _model.GetOrderFee(AbsoluteQuantity, _price);
-            }
-
-            if (IsLong) 
-            {
-                //if we're long on a position, profit from selling off $10,000 stock:
-                gross = (_price - AveragePrice) * AbsoluteQuantity;
-            } 
-            else if (IsShort) 
-            {
-                //if we're short on a position, profit from buying $10,000 stock:
-                gross = (AveragePrice - _price) * AbsoluteQuantity;
-            } 
-            else 
-            {
-                //no holdings, 0 profit.
                 return 0;
             }
 
-            net = gross - orderFee;
+            // this is in the account currency
+            var marketOrder = new MarketOrder(_security.Symbol, -Quantity, _security.LocalTime.ConvertToUtc(_security.Exchange.TimeZone));
+            var orderFee = _security.FeeModel.GetOrderFee(_security, marketOrder);
 
-            return net;
+            return (Price - AveragePrice)*Quantity*_security.QuoteCurrency.ConversionRate*_security.SymbolProperties.ContractMultiplier - orderFee;
         }
     }
-} //End Namespace
+}

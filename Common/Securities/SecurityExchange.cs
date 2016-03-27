@@ -13,146 +13,80 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using NodaTime;
+using QuantConnect.Util;
 
 namespace QuantConnect.Securities
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Base exchange class providing information and helper tools for reading the current exchange situation
     /// </summary>
     public class SecurityExchange 
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
-        private DateTime _frontier;
-        private TimeSpan _marketOpen = TimeSpan.FromHours(0);
-        private TimeSpan _marketClose = TimeSpan.FromHours(24).Subtract(TimeSpan.FromTicks(1));
+        private DateTime _localFrontier;
+        private SecurityExchangeHours _exchangeHours;
 
-        /******************************************************** 
-        * CLASS CONSTRUCTION
-        *********************************************************/
         /// <summary>
-        /// Initialise the exchange for this vehicle.
+        /// Gets the <see cref="SecurityExchangeHours"/> for this exchange
         /// </summary>
-        public SecurityExchange() 
-        { }
-        
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
-        /// <summary>
-        /// Timezone for the exchange
-        /// </summary>
-        public string TimeZone 
+        public SecurityExchangeHours Hours
         {
-            get;
-            set;
+            get { return _exchangeHours; }
         }
 
         /// <summary>
-        /// Default market open time 00:00
+        /// Gets the time zone for this exchange
         /// </summary>
-        public virtual TimeSpan MarketOpen
+        public DateTimeZone TimeZone 
         {
-            get { return _marketOpen; }
-            set { _marketOpen = value; }
+            get { return _exchangeHours.TimeZone; }
         }
-
-        /// <summary>
-        /// Default market closing time 24:00
-        /// </summary>
-        public virtual TimeSpan MarketClose
-        {
-            get { return _marketClose; }
-            set { _marketClose = value; }
-        }
-
 
         /// <summary>
         /// Number of trading days per year for this security. By default the market is open 365 days per year.
         /// </summary>
         /// <remarks>Used for performance statistics to calculate sharpe ratio accurately</remarks>
-        public virtual int TradingDaysPerYear 
+        public virtual int TradingDaysPerYear
         {
-            get 
-            {
-                return 365;
-            }
+            get { return 365; }
         }
-
 
         /// <summary>
         /// Time from the most recent data
         /// </summary>
-        public DateTime Time 
+        public DateTime LocalTime
         {
-            get 
-            {
-                return _frontier;
-            }
+            get { return _localFrontier; }
         }
-
 
         /// <summary>
         /// Boolean property for quickly testing if the exchange is open.
         /// </summary>
-        public virtual bool ExchangeOpen 
+        public bool ExchangeOpen
         {
-            get 
-            { 
-                return DateTimeIsOpen(Time); 
-            }
+            get { return _exchangeHours.IsOpen(_localFrontier, false); }
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
-        /// Check if we are past a certain time: simple method for wrapping datetime.
+        /// Initializes a new instance of the <see cref="SecurityExchange"/> class using the specified
+        /// exchange hours to determine open/close times
         /// </summary>
-        public bool TimeIsPast(int iHour, int iMin, int iSec = 0) {
-
-            if (Time.Hour > iHour) {
-                return true;
-            
-            } else if (Time.Hour < iHour) {
-                return false;
-            
-            } else if (Time.Hour == iHour) {
-                if (Time.Minute > iMin) {
-                    return true;
-
-                } else if (Time.Minute < iMin) {
-                    return false;
-
-                } else if (Time.Minute == iMin) {
-                    //Minute Equal, Check Seconds.
-                    if (Time.Second >= iSec) {
-                        return true;
-                    } else if (Time.Second < iSec) {
-                        return false;
-                    }
-                }
-            }
-            return false;
+        /// <param name="exchangeHours">Contains the weekly exchange schedule plus holidays</param>
+        public SecurityExchange(SecurityExchangeHours exchangeHours)
+        {
+            _exchangeHours = exchangeHours;
         }
 
-
-
         /// <summary>
-        /// Set the current datetime:
+        /// Set the current datetime in terms of the exchange's local time zone
         /// </summary>
-        /// <param name="newTime">Most recent data tick</param>
-        public void SetDateTimeFrontier(DateTime newTime) 
+        /// <param name="newLocalTime">Most recent data tick</param>
+        public void SetLocalDateTimeFrontier(DateTime newLocalTime) 
         {
-            _frontier = newTime;
+            _localFrontier = newLocalTime;
         }
 
         /// <summary>
@@ -161,32 +95,9 @@ namespace QuantConnect.Securities
         /// <remarks>This is useful for first checking the date list, and then the market hours to save CPU cycles</remarks>
         /// <param name="dateToCheck">Date to check</param>
         /// <returns>Return true if the exchange is open for this date</returns>
-        public virtual bool DateIsOpen(DateTime dateToCheck)
+        public bool DateIsOpen(DateTime dateToCheck)
         {
-            return true;
-        }
-
-        /// <summary>
-        /// Time of day the market opens.
-        /// </summary>
-        /// <param name="time">DateTime object for this date</param>
-        /// <returns>DateTime the market is considered open</returns>
-        public virtual DateTime TimeOfDayOpen(DateTime time) 
-        {
-            //Default to midnight, start of day.
-            return time.Date;
-        }
-
-        
-        /// <summary>
-        /// Time of day the market closes.
-        /// </summary>
-        /// <param name="time">DateTime object for this date</param>
-        /// <returns>DateTime the market day is considered closed</returns>
-        public virtual DateTime TimeOfDayClosed(DateTime time)
-        {
-            //Default to midnight, start of *next* day.
-            return time.Date.AddDays(1);
+            return _exchangeHours.IsDateOpen(dateToCheck);
         }
 
         /// <summary>
@@ -194,22 +105,38 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="dateTime">DateTime to check</param>
         /// <returns>Boolean true if the market is open</returns>
-        public virtual bool DateTimeIsOpen(DateTime dateTime)
+        public bool DateTimeIsOpen(DateTime dateTime)
         {
-            return DateIsOpen(dateTime);
+            return _exchangeHours.IsOpen(dateTime, false);
         }
-
 
         /// <summary>
-        /// Check if the object is open including the *Extended* market hours
+        /// Determines if the exchange was open at any time between start and stop
         /// </summary>
-        /// <param name="time">Current time of day</param>
-        /// <returns>True if we are in extended or primary marketing hours.</returns>
-        public virtual bool DateTimeIsExtendedOpen(DateTime time)
+        public bool IsOpenDuringBar(DateTime barStartTime, DateTime barEndTime, bool isExtendedMarketHours)
         {
-            return DateIsOpen(time);
+            return _exchangeHours.IsOpen(barStartTime, barEndTime, isExtendedMarketHours);
         }
-    } //End of MarketExchange
 
+        /// <summary>
+        /// Sets the regular market hours for the specified days If no days are specified then
+        /// all days will be updated.
+        /// </summary>
+        /// <param name="marketHoursSegments">Specifies each segment of the market hours, such as premarket/market/postmark</param>
+        /// <param name="days">The days of the week to set these times for</param>
+        public void SetMarketHours(IEnumerable<MarketHoursSegment> marketHoursSegments, params DayOfWeek[] days)
+        {
+            if (days.IsNullOrEmpty()) days = Enum.GetValues(typeof(DayOfWeek)).OfType<DayOfWeek>().ToArray();
+            
+            var marketHours = _exchangeHours.MarketHours.ToDictionary();
+            marketHoursSegments = marketHoursSegments as IList<MarketHoursSegment> ?? marketHoursSegments.ToList();
+            foreach (var day in days)
+            {
+                marketHours[day] = new LocalMarketHours(day, marketHoursSegments);
+            }
 
-} //End Namespace
+            // create a new exchange hours instance for the new hours
+            _exchangeHours = new SecurityExchangeHours(_exchangeHours.TimeZone, _exchangeHours.Holidays, marketHours);
+        }
+    }
+}

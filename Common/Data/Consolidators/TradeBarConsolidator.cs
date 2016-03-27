@@ -66,20 +66,27 @@ namespace QuantConnect.Data.Consolidators
         {
         }
 
+        /// <summary>
+        /// Aggregates the new 'data' into the 'workingBar'. The 'workingBar' will be
+        /// null following the event firing
+        /// </summary>
+        /// <param name="workingBar">The bar we're building, null if the event was just fired and we're starting a new trade bar</param>
+        /// <param name="data">The new data</param>
         protected override void AggregateBar(ref TradeBar workingBar, TradeBar data)
         {
             if (workingBar == null)
             {
                 workingBar = new TradeBar
                 {
-                    Time = data.Time,
+                    Time = GetRoundedBarTime(data.Time),
                     Symbol = data.Symbol,
                     Open = data.Open,
                     High = data.High,
                     Low = data.Low,
                     Close = data.Close,
                     Volume = data.Volume,
-                    DataType = MarketDataType.TradeBar
+                    DataType = MarketDataType.TradeBar,
+                    Period = data.Period
                 };
             }
             else
@@ -87,6 +94,7 @@ namespace QuantConnect.Data.Consolidators
                 //Aggregate the working bar
                 workingBar.Close = data.Close;
                 workingBar.Volume += data.Volume;
+                workingBar.Period += data.Period;
                 if (data.Low < workingBar.Low) workingBar.Low = data.Low;
                 if (data.High > workingBar.High) workingBar.High = data.High;
             }

@@ -14,10 +14,6 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
@@ -26,17 +22,11 @@ using QuantConnect.Orders;
 
 namespace QuantConnect.Packets
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Live result packet from a lean engine algorithm.
     /// </summary>
     public class LiveResultPacket : Packet 
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         /// <summary>
         /// User Id sending result packet
         /// </summary>
@@ -79,9 +69,6 @@ namespace QuantConnect.Packets
         [JsonProperty(PropertyName = "dProcessingTime")]
         public double ProcessingTime = 0;
 
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Default constructor for JSON Serialization
         /// </summary>
@@ -110,10 +97,9 @@ namespace QuantConnect.Packets
             } 
             catch (Exception err)
             {
-                Log.Trace("LiveResultPacket(): Error converting json: " + err.Message);
+                Log.Trace("LiveResultPacket(): Error converting json: " + err);
             }
         }
-
 
         /// <summary>
         /// Compose Live Result Data Packet - With tradable dates
@@ -135,7 +121,7 @@ namespace QuantConnect.Packets
                 Channel = job.Channel;
             }
             catch (Exception err) {
-                Log.Error("LiveResultPacket.Constructor: " + err.Message);
+                Log.Error(err);
             }
         }
     } // End Queue Packet:

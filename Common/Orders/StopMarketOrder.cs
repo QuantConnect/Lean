@@ -13,16 +13,11 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Orders
 {
-    /******************************************************** 
-    * ORDER CLASS DEFINITION
-    *********************************************************/
     /// <summary>
     /// Stop Market Order Type Definition
     /// </summary>
@@ -34,14 +29,11 @@ namespace QuantConnect.Orders
         public decimal StopPrice;
 
         /// <summary>
-        /// Value of the order at stop price
+        /// StopMarket Order Type
         /// </summary>
-        public override decimal Value
+        public override OrderType Type
         {
-            get
-            {
-                return Convert.ToDecimal(Quantity) * StopPrice;
-            }
+            get { return OrderType.StopMarket; }
         }
 
         /// <summary>
@@ -49,23 +41,20 @@ namespace QuantConnect.Orders
         /// </summary>
         public StopMarketOrder()
         {
-            Type = OrderType.StopMarket;
         }
 
         /// <summary>
         /// New Stop Market Order constructor - 
         /// </summary>
         /// <param name="symbol">Symbol asset we're seeking to trade</param>
-        /// <param name="type">Type of the security order</param>
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
         /// <param name="time">Time the order was placed</param>
         /// <param name="stopPrice">Price the order should be filled at if a limit order</param>
         /// <param name="tag">User defined data tag for this order</param>
-        public StopMarketOrder(string symbol, int quantity, decimal stopPrice, DateTime time, string tag = "", SecurityType type = SecurityType.Base) :
-            base(symbol, quantity, OrderType.StopMarket, time, 0, tag, type)
+        public StopMarketOrder(Symbol symbol, int quantity, decimal stopPrice, DateTime time, string tag = "")
+            : base(symbol, quantity, time, tag)
         {
             StopPrice = stopPrice;
-            Type = OrderType.StopMarket;
 
             if (tag == "")
             {
@@ -73,6 +62,62 @@ namespace QuantConnect.Orders
                 Tag = "Stop Price: " + stopPrice.ToString("C");
             }
         }
-    }
 
-} // End QC Namespace:
+        /// <summary>
+        /// Gets the order value in units of the security's quote currency
+        /// </summary>
+        /// <param name="security">The security matching this order's symbol</param>
+        protected override decimal GetValueImpl(Security security)
+        {
+            // selling, so higher price will be used
+            if (Quantity < 0)
+            {
+                return Quantity*Math.Max(StopPrice, security.Price);
+            }
+
+            // buying, so lower price will be used
+            if (Quantity > 0)
+            {
+                return Quantity*Math.Min(StopPrice, security.Price);
+            }
+
+            return 0m;
+        }
+
+        /// <summary>
+        /// Modifies the state of this order to match the update request
+        /// </summary>
+        /// <param name="request">The request to update this order object</param>
+        public override void ApplyUpdateOrderRequest(UpdateOrderRequest request)
+        {
+            base.ApplyUpdateOrderRequest(request);
+            if (request.StopPrice.HasValue)
+            {
+                StopPrice = request.StopPrice.Value;
+            }
+        }
+
+        /// <summary>
+        /// Returns a string that represents the current object.
+        /// </summary>
+        /// <returns>
+        /// A string that represents the current object.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        public override string ToString()
+        {
+            return string.Format("{0} at stop {1}", base.ToString(), StopPrice.SmartRounding());
+        }
+
+        /// <summary>
+        /// Creates a deep-copy clone of this order
+        /// </summary>
+        /// <returns>A copy of this order</returns>
+        public override Order Clone()
+        {
+            var order = new StopMarketOrder {StopPrice = StopPrice};
+            CopyTo(order);
+            return order;
+        }
+    }
+}

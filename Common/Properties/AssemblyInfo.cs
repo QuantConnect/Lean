@@ -5,13 +5,13 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("qc.common")]
-[assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("qc.common")]
-[assembly: AssemblyCopyright("Copyright ©  2012")]
-[assembly: AssemblyTrademark("")]
+[assembly: AssemblyTitle("QuantConnect.Common")]
+//[assembly: AssemblyDescription("")]
+//[assembly: AssemblyConfiguration("")]
+//[assembly: AssemblyCompany("")]
+//[assembly: AssemblyProduct("QuantConnect.Common")]
+//[assembly: AssemblyCopyright("Copyright ©  2015")]
+//[assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
@@ -32,5 +32,13 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+//[assembly: AssemblyVersion("1.0.0.0")]
+//[assembly: AssemblyFileVersion("1.0.0.0")]
+
+// some things we want to expose to other parts of the engine but to not allow
+// algorithms to have access. this certainly isn't the ideal, but we'd like
+// to not compile break existing user algorithm's, but instead allow them to
+// throw the exception in a backtest and see how to use the new order system.
+[assembly: InternalsVisibleTo("QuantConnect.Brokerages")]
+[assembly: InternalsVisibleTo("QuantConnect.Lean.Engine")]
+[assembly: InternalsVisibleTo("QuantConnect.Tests")]

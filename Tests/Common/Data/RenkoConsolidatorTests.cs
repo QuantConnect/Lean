@@ -112,7 +112,7 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(0m, bar.Low);
             Assert.IsTrue(bar.IsClosed);
             Assert.AreEqual(reference, bar.Start);
-            Assert.AreEqual(reference.AddSeconds(2), bar.End);
+            Assert.AreEqual(reference.AddSeconds(2), bar.EndTime);
 
             bar = null;
 
@@ -136,7 +136,7 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(0m, bar.Low);
             Assert.IsTrue(bar.IsClosed);
             Assert.AreEqual(reference.AddSeconds(2), bar.Start);
-            Assert.AreEqual(reference.AddSeconds(6), bar.End);
+            Assert.AreEqual(reference.AddSeconds(6), bar.EndTime);
 
             bar = null;
 
@@ -174,7 +174,7 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(-1m, bar.Low);
             Assert.IsTrue(bar.IsClosed);
             Assert.AreEqual(reference.AddSeconds(6), bar.Start);
-            Assert.AreEqual(reference.AddSeconds(10), bar.End);
+            Assert.AreEqual(reference.AddSeconds(10), bar.EndTime);
 
             // ReSharper restore HeuristicUnreachableCode
         }

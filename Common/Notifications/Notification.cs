@@ -12,14 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
+
 namespace QuantConnect.Notifications
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Local/desktop implementation of messaging system for Lean Engine.
     /// </summary>

@@ -13,90 +13,73 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
-using QuantConnect.Securities.Interfaces;
+using System;
+using QuantConnect.Data;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.Slippage;
 
 namespace QuantConnect.Securities.Forex 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// FOREX Security Object Implementation for FOREX Assets
     /// </summary>
     /// <seealso cref="Security"/>
-    public class Forex : Security 
+    public class Forex : Security
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
-
-
-        /******************************************************** 
-        * CONSTRUCTOR/DELEGATE DEFINITIONS
-        *********************************************************/
         /// <summary>
         /// Constructor for the forex security
         /// </summary>
-        public Forex(string symbol, Resolution resolution, bool fillDataForward, decimal leverage, bool extendedMarketHours, bool isDynamicallyLoadedData = false) :
-            base(symbol, SecurityType.Forex, resolution, fillDataForward, leverage, extendedMarketHours, isDynamicallyLoadedData)
+        /// <param name="exchangeHours">Defines the hours this exchange is open</param>
+        /// <param name="quoteCurrency">The cash object that represent the quote currency</param>
+        /// <param name="config">The subscription configuration for this security</param>
+        /// <param name="symbolProperties">The symbol properties for this security</param>
+        public Forex(SecurityExchangeHours exchangeHours, Cash quoteCurrency, SubscriptionDataConfig config, SymbolProperties symbolProperties)
+            : base(config,
+                quoteCurrency,
+                symbolProperties,
+                new ForexExchange(exchangeHours),
+                new ForexCache(),
+                new SecurityPortfolioModel(),
+                new ImmediateFillModel(),
+                new InteractiveBrokersFeeModel(),
+                new SpreadSlippageModel(),
+                new ImmediateSettlementModel(),
+                new SecurityMarginModel(50m),
+                new ForexDataFilter()
+                )
         {
-            //Holdings for new Vehicle:
-            Cache = new ForexCache();
-            Holdings = new ForexHolding(symbol, leverage, this.Model);
-            Exchange = new ForexExchange();
-            Model = new ForexTransactionModel();
-        }
+            Holdings = new ForexHolding(this);
 
-
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
-        /// <summary>
-        /// Forex cache class for caching pricing data and charts
-        /// </summary>
-        public new ForexCache Cache 
-        {
-            get { return (ForexCache)base.Cache; }
-            set { base.Cache = value; }
-        }
-
-        /// <summary>
-        /// Forex holdings class models the cash quantity held and portfolio
-        /// </summary>
-        public new ForexHolding Holdings
-        {
-            get { return (ForexHolding)base.Holdings; }
-            set { base.Holdings = value; }
+            // decompose the symbol into each currency pair
+            string baseCurrencySymbol, quoteCurrencySymbol;
+            DecomposeCurrencyPair(config.Symbol.Value, out baseCurrencySymbol, out quoteCurrencySymbol);
+            BaseCurrencySymbol = baseCurrencySymbol;
         }
 
         /// <summary>
-        /// Forex exchange class monitors the open and close market times.
+        /// Gets the currency acquired by going long this currency pair
         /// </summary>
-        public new ForexExchange Exchange
-        {
-            get { return (ForexExchange)base.Exchange; }
-            set { base.Exchange = value; }
-        }
+        /// <remarks>
+        /// For example, the EUR/USD has a base currency of the euro, and as a result
+        /// of going long the EUR/USD a trader is acquiring euros in exchange for US dollars
+        /// </remarks>
+        public string BaseCurrencySymbol { get; private set; }
 
         /// <summary>
-        /// Forex security transaction and fill models
+        /// Decomposes the specified currency pair into a base and quote currency provided as out parameters
         /// </summary>
-        public new ISecurityTransactionModel Model
+        /// <param name="currencyPair">The input currency pair to be decomposed, for example, "EURUSD"</param>
+        /// <param name="baseCurrency">The output base currency</param>
+        /// <param name="quoteCurrency">The output quote currency</param>
+        public static void DecomposeCurrencyPair(string currencyPair, out string baseCurrency, out string quoteCurrency)
         {
-            get { return (ForexTransactionModel)base.Model; }
-            set { base.Model = value; }
+            if (currencyPair == null || currencyPair.Length != 6)
+            {
+                throw new ArgumentException("Currency pairs must be exactly 6 characters: " + currencyPair);
+            }
+            baseCurrency = currencyPair.Substring(0, 3);
+            quoteCurrency = currencyPair.Substring(3);
         }
-
-
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
-
-
-    } // End Market
-
-} // End QC Namespace
+    }
+}

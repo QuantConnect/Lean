@@ -12,34 +12,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
+
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 
 namespace QuantConnect.Notifications
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Local/desktop implementation of messaging system for Lean Engine.
     /// </summary>
     public class NotificationManager
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
-        private bool _liveMode;
         private int _count;
-        private readonly int _rateLimit = 30;
         private DateTime _resetTime;
+        private const int _rateLimit = 30;
+        private readonly bool _liveMode;
 
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
         /// <summary>
         /// Public access to the messages
         /// </summary>
@@ -48,18 +36,15 @@ namespace QuantConnect.Notifications
             get; set;
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Initialize the messaging system
         /// </summary>
         public NotificationManager(bool liveMode)
         {
-            _liveMode = liveMode;
-            Messages = new ConcurrentQueue<Notification>();
             _count = 0;
+            _liveMode = liveMode;
             _resetTime = DateTime.Now;
+            Messages = new ConcurrentQueue<Notification>();
         }
 
         /// <summary>

@@ -14,69 +14,52 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Historical datafeed stream reader for processing files on a local disk.
     /// </summary>
     /// <remarks>Filesystem datafeeds are incredibly fast</remarks>
     public class FileSystemDataFeed : IDataFeed
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
-        // Set types in public area to speed up:
         private IAlgorithm _algorithm;
-        private BacktestNodePacket _job;
-        private bool _endOfStreams = false;
-        private int _subscriptions = 0;
-        private int _bridgeMax = 500000;
-        private bool _exitTriggered = false;
-
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
-        /// <summary>
-        /// List of the subscription the algorithm has requested. Subscriptions contain the type, sourcing information and manage the enumeration of data.
-        /// </summary>
-        public List<SubscriptionDataConfig> Subscriptions { get; private set; }
-
-
-        public List<decimal> RealtimePrices { get; private set; } 
+        private ParallelRunnerController _controller;
+        private IResultHandler _resultHandler;
+        private Ref<TimeSpan> _fillForwardResolution;
+        private SecurityChanges _changes = SecurityChanges.None;
+        private IMapFileProvider _mapFileProvider;
+        private IFactorFileProvider _factorFileProvider;
+        private ConcurrentDictionary<Symbol, Subscription> _subscriptions;
+        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        private UniverseSelection _universeSelection;
+        private DateTime _frontierUtc;
 
         /// <summary>
-        /// Cross-threading queues so the datafeed pushes data into the queue and the primary algorithm thread reads it out.
+        /// Gets all of the current subscriptions this data feed is processing
         /// </summary>
-        public ConcurrentQueue<List<BaseData>>[] Bridge { get; set; }
-
-        /// <summary>
-        /// Stream created from the configuration settings.
-        /// </summary>
-        public SubscriptionDataReader[] SubscriptionReaderManagers { get; set; }
-
-        /// <summary>
-        /// Set the source of the data we're requesting for the type-readers to know where to get data from.
-        /// </summary>
-        /// <remarks>Live or Backtesting Datafeed</remarks>
-        public DataFeedEndpoint DataFeed { get; set; }
+        public IEnumerable<Subscription> Subscriptions
+        {
+            get { return _subscriptions.Select(x => x.Value); }
+        }
 
         /// <summary>
         /// Flag indicating the hander thread is completely finished and ready to dispose.
@@ -84,433 +67,457 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public bool IsActive { get; private set; }
 
         /// <summary>
-        /// Flag indicating the file system has loaded all files.
+        /// Initializes the data feed for the specified job and algorithm
         /// </summary>
-        public bool LoadingComplete { get; private set; }
-
-        /// <summary>
-        /// Furthest point in time that the data has loaded into the bridges.
-        /// </summary>
-        public DateTime LoadedDataFrontier { get; private set; }
-
-        /// <summary>
-        /// Signifying no more data across all bridges
-        /// </summary>
-        public bool EndOfBridges 
+        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider)
         {
-            get 
+            _algorithm = algorithm;
+            _resultHandler = resultHandler;
+            _mapFileProvider = mapFileProvider;
+            _factorFileProvider = factorFileProvider;
+            _subscriptions = new ConcurrentDictionary<Symbol, Subscription>();
+            _universeSelection = new UniverseSelection(this, algorithm, job.Controls);
+            _cancellationTokenSource = new CancellationTokenSource();
+
+            IsActive = true;
+            var threadCount = Math.Max(1, Math.Min(4, Environment.ProcessorCount - 3));
+            _controller = new ParallelRunnerController(threadCount);
+            _controller.Start(_cancellationTokenSource.Token);
+
+            var ffres = Time.OneMinute;
+            _fillForwardResolution = Ref.Create(() => ffres, res => ffres = res);
+
+            // wire ourselves up to receive notifications when universes are added/removed
+            algorithm.UniverseManager.CollectionChanged += (sender, args) =>
             {
-                for (var i = 0; i < Bridge.Length; i++)
+                switch (args.Action)
                 {
-                    if (Bridge[i].Count != 0 || EndOfBridge[i] != true || _endOfStreams != true)
+                    case NotifyCollectionChangedAction.Add:
+                        foreach (var universe in args.NewItems.OfType<Universe>())
+                        {
+                            var start = _frontierUtc != DateTime.MinValue ? _frontierUtc : _algorithm.StartDate.ConvertToUtc(_algorithm.TimeZone);
+                            AddUniverseSubscription(universe, start, _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone));
+                        }
+                        break;
+
+                    case NotifyCollectionChangedAction.Remove:
+                        foreach (var universe in args.OldItems.OfType<Universe>())
+                        {
+                            Subscription subscription;
+                            if (_subscriptions.TryGetValue(universe.Configuration.Symbol, out subscription))
+                            {
+                                RemoveSubscription(subscription.Configuration.Symbol);
+                            }
+                        }
+                        break;
+
+                    default:
+                        throw new NotImplementedException("The specified action is not implemented: " + args.Action);
+                }
+            };
+        }
+
+        private Subscription CreateSubscription(Universe universe, IResultHandler resultHandler, Security security, DateTime startTimeUtc, DateTime endTimeUtc, IReadOnlyRef<TimeSpan> fillForwardResolution)
+        {
+            var config = security.SubscriptionDataConfig;
+            var localStartTime = startTimeUtc.ConvertFromUtc(security.Exchange.TimeZone);
+            var localEndTime = endTimeUtc.ConvertFromUtc(security.Exchange.TimeZone);
+
+            var tradeableDates = Time.EachTradeableDay(security, localStartTime, localEndTime);
+
+            // ReSharper disable once PossibleMultipleEnumeration
+            if (!tradeableDates.Any())
+            {
+                _algorithm.Error(string.Format("No data loaded for {0} because there were no tradeable dates for this security.", security.Symbol));
+                return null;
+            }
+
+            // get the map file resolver for this market
+            var mapFileResolver = MapFileResolver.Empty;
+            if (config.SecurityType == SecurityType.Equity) mapFileResolver = _mapFileProvider.Get(config.Market);
+
+            // ReSharper disable once PossibleMultipleEnumeration
+            IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, resultHandler, mapFileResolver, _factorFileProvider, tradeableDates, false);
+
+            // optionally apply fill forward logic, but never for tick data
+            if (config.FillDataForward && config.Resolution != Resolution.Tick)
+            {
+                enumerator = new FillForwardEnumerator(enumerator, security.Exchange, fillForwardResolution,
+                    security.IsExtendedMarketHours, localEndTime, config.Resolution.ToTimeSpan());
+            }
+
+            // finally apply exchange/user filters
+            enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(resultHandler, enumerator, security, localEndTime);
+
+            var enqueueable = new EnqueueableEnumerator<BaseData>(true);
+
+            // add this enumerator to our exchange
+            ScheduleEnumerator(enumerator, enqueueable, GetLowerThreshold(config.Resolution), GetUpperThreshold(config.Resolution));
+
+            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, startTimeUtc, endTimeUtc);
+            var subscription = new Subscription(universe, security, enqueueable, timeZoneOffsetProvider, startTimeUtc, endTimeUtc, false);
+            return subscription;
+        }
+
+        private void ScheduleEnumerator(IEnumerator<BaseData> enumerator, EnqueueableEnumerator<BaseData> enqueueable, int lowerThreshold, int upperThreshold, int firstLoopCount = 5)
+        {
+            // schedule the work on the controller
+            var firstLoop = true;
+            FuncParallelRunnerWorkItem workItem = null;
+            workItem = new FuncParallelRunnerWorkItem(() => enqueueable.Count < lowerThreshold, () =>
+            {
+                var count = 0;
+                while (enumerator.MoveNext())
+                {
+                    // drop the data into the back of the enqueueable
+                    enqueueable.Enqueue(enumerator.Current);
+
+                    count++;
+
+                    // special behavior for first loop to spool up quickly
+                    if (firstLoop && count > firstLoopCount)
                     {
-                        return false;
+                        // there's more data in the enumerator, reschedule to run again
+                        firstLoop = false;
+                        _controller.Schedule(workItem);
+                        return;
+                    }
+
+                    // stop executing if we've dequeued more than the lower threshold or have
+                    // more total that upper threshold in the enqueueable's queue
+                    if (count > lowerThreshold || enqueueable.Count > upperThreshold)
+                    {
+                        // there's more data in the enumerator, reschedule to run again
+                        _controller.Schedule(workItem);
+                        return;
                     }
                 }
-                return true;
-            }
+
+                // we made it here because MoveNext returned false, stop the enqueueable and don't reschedule
+                enqueueable.Stop();
+            });
+            _controller.Schedule(workItem);
         }
 
         /// <summary>
-        /// End of Stream for Each Bridge:
+        /// Adds a new subscription to provide data for the specified security.
         /// </summary>
-        public bool[] EndOfBridge { get; set; }
-
-        /// <summary>
-        /// Frontiers for each fill forward high water mark
-        /// </summary>
-        public DateTime[] FillForwardFrontiers;
-
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
-        /// <summary>
-        /// Create a new backtesting data feed.
-        /// </summary>
-        /// <param name="algorithm">Instance of the algorithm</param>
-        /// <param name="job">Algorithm work task</param>
-        public FileSystemDataFeed(IAlgorithm algorithm, BacktestNodePacket job)
+        /// <param name="universe">The universe the subscription is to be added to</param>
+        /// <param name="security">The security to add a subscription for</param>
+        /// <param name="utcStartTime">The start time of the subscription</param>
+        /// <param name="utcEndTime">The end time of the subscription</param>
+        public bool AddSubscription(Universe universe, Security security, DateTime utcStartTime, DateTime utcEndTime)
         {
-            Subscriptions = algorithm.SubscriptionManager.Subscriptions;
-            _subscriptions = Subscriptions.Count;
-
-            //Public Properties:
-            DataFeed = DataFeedEndpoint.FileSystem;
-            IsActive = true;
-            Bridge = new ConcurrentQueue<List<BaseData>>[_subscriptions];
-            EndOfBridge = new bool[_subscriptions];
-            SubscriptionReaderManagers = new SubscriptionDataReader[_subscriptions];
-            FillForwardFrontiers = new DateTime[_subscriptions];
-            RealtimePrices = new List<decimal>(_subscriptions);
-
-            //Class Privates:
-            _job = job;
-            _algorithm = algorithm;
-            _endOfStreams = false;
-            _bridgeMax = _bridgeMax / _subscriptions; //Set the bridge maximum count:
-        }
-
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
-        /// <summary>
-        /// Initialize activators to invoke types in the algorithm
-        /// </summary>
-        private void ResetActivators()
-        {
-            for (var i = 0; i < _subscriptions; i++)
+            var subscription = CreateSubscription(universe, _resultHandler, security, utcStartTime, utcEndTime, _fillForwardResolution);
+            if (subscription == null)
             {
-                //Create a new instance in the dictionary:
-                Bridge[i] = new ConcurrentQueue<List<BaseData>>();
-                EndOfBridge[i] = false;
-                SubscriptionReaderManagers[i] = new SubscriptionDataReader(Subscriptions[i], _algorithm.Securities[Subscriptions[i].Symbol], DataFeed, _job.PeriodStart, _job.PeriodFinish);
-                FillForwardFrontiers[i] = new DateTime();
+                // subscription will be null when there's no tradeable dates for the security between the requested times, so
+                // don't even try to load the data
+                return false;
             }
+
+            Log.Debug("FileSystemDataFeed.AddSubscription(): Added " + security.Symbol.ID + " Start: " + utcStartTime + " End: " + utcEndTime);
+
+            _subscriptions.AddOrUpdate(subscription.Security.Symbol,  subscription);
+
+            // prime the pump, run method checks current before move next calls
+            //PrimeSubscriptionPump(subscription, true);
+
+            _changes += SecurityChanges.Added(security);
+
+            UpdateFillForwardResolution();
+
+            return true;
         }
-
-
         /// <summary>
-        /// Get the number of active streams still EndOfBridge array.
+        /// Removes the subscription from the data feed, if it exists
         /// </summary>
-        /// <returns>Count of the number of streams with data</returns>
-        private int GetActiveStreams() 
+        /// <param name="symbol">The symbol of the subscription to be removed</param>
+        /// <returns>True if the subscription was successfully removed, false otherwise</returns>
+        public bool RemoveSubscription(Symbol symbol)
         {
-            //Get the number of active streams:
-            var activeStreams = (from stream in EndOfBridge
-                                 where stream == false
-                                 select stream).Count();
-            return activeStreams;
-        }
-
-
-        /// <summary>
-        /// Calculate the minimum increment to scan for data based on the data requested.
-        /// </summary>
-        /// <param name="includeTick">When true the subscriptions include a tick data source, meaning there is almost no increment.</param>
-        /// <returns>Timespan to jump the data source so it efficiently orders the results</returns>
-        private TimeSpan CalculateIncrement(bool includeTick) 
-        {
-            var increment = TimeSpan.FromDays(1);
-            foreach (var config in Subscriptions) 
+            Subscription sub;
+            if (!_subscriptions.TryRemove(symbol, out sub))
             {
-                switch (config.Resolution)
-                { 
-                    //Hourly TradeBars:
-                    case Resolution.Hour:
-                        if (increment > TimeSpan.FromHours(1)) 
-                        {
-                            increment = TimeSpan.FromHours(1);
-                        }
-                        break;
-
-                    //Minutely TradeBars:
-                    case Resolution.Minute:
-                        if (increment > TimeSpan.FromMinutes(1))
-                        {
-                            increment = TimeSpan.FromMinutes(1);
-                        }
-                        break;
-
-                    //Secondly Bars:
-                    case Resolution.Second:
-                        if (increment > TimeSpan.FromSeconds(1)) 
-                        {
-                            increment = TimeSpan.FromSeconds(1);
-                        }
-                        break;
-
-                    //Ticks: No increment; just fire each data piece in as they happen.
-                    case Resolution.Tick:
-                        if (increment > TimeSpan.FromMilliseconds(1) && includeTick)
-                        {
-                            increment = new TimeSpan(0, 0, 0, 0, 1);
-                        }
-                        break;
-                }
+                Log.Error("FileSystemDataFeed.RemoveSubscription(): Unable to remove: " + symbol.ToString());
+                return false;
             }
-            return increment;
+
+            Log.Debug("FileSystemDataFeed.RemoveSubscription(): Removed " + symbol.ToString());
+
+            _changes += SecurityChanges.Removed(sub.Security);
+
+            UpdateFillForwardResolution();
+            return true;
         }
 
-
-        
         /// <summary>
         /// Main routine for datafeed analysis.
         /// </summary>
         /// <remarks>This is a hot-thread and should be kept extremely lean. Modify with caution.</remarks>
         public void Run()
         {
-            //Initialize Parameters:
-            long earlyBirdTicks = 0;
-            var subscriptions = SubscriptionReaderManagers.Length;
-            // this is really the next frontier in the future
-            var frontier = new DateTime();
-            var tradeBarIncrements = TimeSpan.FromDays(1);
-            var increment = TimeSpan.FromDays(1);
-            var activeStreams = subscriptions;
-
-
-            //Initialize Activators:
-            ResetActivators();
-
-            //Calculate the increment based on the subscriptions:
-            tradeBarIncrements = CalculateIncrement(includeTick: false);     //TradeBars get fillforward, larger increments.
-            increment = CalculateIncrement(includeTick: true);               //Include ticks for small increment for frontier calcs.
-
-            //Loop over each date in the job
-            foreach (var date in Time.EachTradeableDay(_algorithm.Securities, _job.PeriodStart, _job.PeriodFinish))
+            try
             {
-                //Update the source-URL from the BaseData, reset the frontier to today. Update the source URL once per day.
-                frontier = date.Add(increment); //Frontier is in the future and looks back to all the data produced so far.
-                activeStreams = subscriptions;
-                //Log.Debug("FileSystemDataFeed.Run(): Date Changed: " + date.ToShortDateString());
-
-                //Initialize the feeds to this date:
-                for (var i = 0; i < subscriptions; i++) 
-                {
-                    //Don't refresh source when we know the market is closed for this security:
-                    //if (SubscriptionReaderManagers[i].MarketOpen(date)) { }
-                    var success = SubscriptionReaderManagers[i].RefreshSource(date);
-
-                    //If we know the market is closed for security then can declare bridge closed.
-                    if (success) {
-                        EndOfBridge[i] = false;
-                    } else {
-                        EndOfBridge[i] = true;
-                    }
-                }
-
-                //Pause the DataFeed
-                var bridgeFullCount = 1;
-                var bridgeZeroCount = 0;
-                var active = GetActiveStreams();
-                //Log.Debug("FileSystemDataFeed.Run(): Active Streams: " + active);
-
-                //Pause here while bridges are full and the 
-                while (bridgeFullCount > 0 && ((subscriptions - active) == bridgeZeroCount) && !_exitTriggered) 
-                {
-                    bridgeFullCount = (from bridge in Bridge where bridge.Count >= _bridgeMax select bridge).Count();
-                    bridgeZeroCount = (from bridge in Bridge where bridge.Count == 0 select bridge).Count();
-                    Thread.Sleep(5);
-                }
-
-                if (_exitTriggered) break;
-
-                // for each smallest resolution
-                while ((frontier.Date == date.Date || frontier == date.Date.AddDays(1)) && !_exitTriggered)
-                {
-                    var cache = new List<BaseData>[subscriptions];
-                    
-                    //Reset Loop:
-                    earlyBirdTicks = 0;
-
-                    //Go over all the subscriptions, one by one add a minute of data to the bridge.
-                    for (var i = 0; i < subscriptions; i++)
-                    {
-                        //Get the reader manager:
-                        var manager = SubscriptionReaderManagers[i];
-
-                        //End of the manager stream set flag to end bridge: also if the EOB flag set, from the refresh source method above
-                        if (manager.EndOfStream || EndOfBridge[i])
-                        {
-                            EndOfBridge[i] = true;
-                            activeStreams = GetActiveStreams();
-                            if (activeStreams == 0)
-                            {
-                                frontier = frontier.Date + TimeSpan.FromDays(1);
-                                //if (frontier.ToString("yyyy-MMM-dd") == "2013-May-03") System.Diagnostics.Debugger.Break();
-                                //Log.Debug("FileSystemDataFeed.Run(): No Active Streams; moving to next day.");
-                            }
-                            continue;
-                        }
-
-                        //Initialize data store:
-                        cache[i] = new List<BaseData>();
-
-                        //Add the last iteration to the new list: only if it falls into this time category
-                        //Log.Debug("FileSystemDataFeed.Run(): Entering cache builder: current: " + manager.Current.Time.ToLongTimeString());
-                        while (manager.Current.Time < frontier) //.RoundUp(increment)
-                        {
-                            cache[i].Add(manager.Current);
-                            //Log.Debug("FileSystemDataFeed.Run(): Adding feed.Current to cache: frontier: " +  frontier.ToLongTimeString());
-                            if (!manager.MoveNext()) break;
-                        }
-
-                        //Save the next earliest time from the bridges: only if we're not filling forward.
-                        if (manager.Current != null)
-                        {
-                            if (earlyBirdTicks == 0 || manager.Current.Time.Ticks < earlyBirdTicks)
-                            {
-                                earlyBirdTicks = manager.Current.Time.Ticks;
-                            }
-                        }
-                    }
-
-                    if (activeStreams == 0)
-                    {
-                        break;
-                    }
-
-
-                    //Add all the lists to the bridge, release the bridge
-                    //we push all the data up to this frontier into the bridge at once
-                    for (var i = 0; i < subscriptions; i++)
-                    {
-                        if (cache[i] != null && cache[i].Count > 0)
-                        {
-                            FillForwardFrontiers[i] = cache[i][0].Time;
-                            Bridge[i].Enqueue(cache[i]);
-                        }
-                        ProcessFillForward(SubscriptionReaderManagers[i], i, tradeBarIncrements);
-                    }
-
-                    //This will let consumers know we have loaded data up to this date
-                    //So that the data stream doesn't pull off data from the same time period in different events
-                    LoadedDataFrontier = frontier;
-
-                    if (earlyBirdTicks > 0 && earlyBirdTicks > frontier.Ticks) {
-                        //Jump increment to the nearest second, in the future: Round down, add increment
-                        frontier = (new DateTime(earlyBirdTicks)).RoundDown(increment) + increment;
-                    }
-                    else 
-                    {
-                        //Otherwise step one forward.
-                        frontier += increment;  
-                    }
-
-                } // End of This Day.
-
-                if (_exitTriggered) break;
-
-            } // End of All Days:
-
-            Log.Trace(DataFeed + ".Run(): Data Feed Completed.");
-            LoadingComplete = true;
-
-            //Make sure all bridges empty before declaring "end of bridge":
-            while (!EndOfBridges && !_exitTriggered)
-            {
-                for (var i = 0; i < subscriptions; i++)
-                {
-                    if (Bridge[i].Count == 0 && SubscriptionReaderManagers[i].EndOfStream)
-                    {
-                        EndOfBridge[i] = true;
-                    }
-                    //Log.Trace("FileSystemDataFeed.Run(): Bridge: " + i + " Count: " + Bridge[i].Count + " EOS: " + SubscriptionReaderManagers[i].EndOfStream.ToString() + " EOB:" + EndOfBridge[i].ToString());
-                }
-                if (GetActiveStreams() == 0) _endOfStreams = true;
-                Thread.Sleep(100);
+                _controller.WaitHandle.WaitOne();
             }
-
-            //Close up all streams:
-            for (var i = 0; i < Subscriptions.Count; i++)
+            catch (Exception err)
             {
-                SubscriptionReaderManagers[i].Dispose();
+                Log.Error("FileSystemDataFeed.Run(): Encountered an error: " + err.Message); 
+                if (!_cancellationTokenSource.IsCancellationRequested)
+                {
+                    _cancellationTokenSource.Cancel();
+                }
             }
-
-            Log.Trace(DataFeed + ".Run(): Ending Thread... ");
-            IsActive = false;
+            finally
+            {
+                Log.Trace("FileSystemDataFeed.Run(): Ending Thread... ");
+                if (_controller != null) _controller.Dispose();
+                IsActive = false;
+            }
         }
 
+        private DateTime GetInitialFrontierTime()
+        {
+            var frontier = DateTime.MaxValue;
+            foreach (var subscription in Subscriptions)
+            {
+                var current = subscription.Current;
+                if (current == null)
+                {
+                    continue;
+                }
+
+                // we need to initialize both the frontier time and the offset provider, in order to do
+                // this we'll first convert the current.EndTime to UTC time, this will allow us to correctly
+                // determine the offset in ticks using the OffsetProvider, we can then use this to recompute
+                // the UTC time. This seems odd, but is necessary given Noda time's lenient mapping, the
+                // OffsetProvider exists to give forward marching mapping
+
+                // compute the initial frontier time
+                var currentEndTimeUtc = current.EndTime.ConvertToUtc(subscription.TimeZone);
+                var endTime = current.EndTime.Ticks - subscription.OffsetProvider.GetOffsetTicks(currentEndTimeUtc);
+                if (endTime < frontier.Ticks)
+                {
+                    frontier = new DateTime(endTime);
+                }
+            }
+
+            if (frontier == DateTime.MaxValue)
+            {
+                frontier = _algorithm.StartDate.ConvertToUtc(_algorithm.TimeZone);
+            }
+            return frontier;
+        }
 
         /// <summary>
-        /// If this is a fillforward subscription, look at the previous time, and current time, and add new 
-        /// objects to queue until current time to fill up the gaps.
+        /// Adds a new subscription for universe selection
         /// </summary>
-        /// <param name="manager">Subscription to process</param>
-        /// <param name="i">Subscription position in the bridge ( which queue are we pushing data to )</param>
-        /// <param name="increment">Timespan increment to jump the fillforward results</param>
-        void ProcessFillForward(SubscriptionDataReader manager, int i, TimeSpan increment)
+        /// <param name="universe">The universe to add a subscription for</param>
+        /// <param name="startTimeUtc">The start time of the subscription in utc</param>
+        /// <param name="endTimeUtc">The end time of the subscription in utc</param>
+        public void AddUniverseSubscription(Universe universe, DateTime startTimeUtc, DateTime endTimeUtc)
         {
-            // If previous == null cannot fill forward nothing there to move forward (e.g. cases where file not found on first file).
-            if (!Subscriptions[i].FillDataForward || manager.Previous == null) return;
+            // TODO : Consider moving the creating of universe subscriptions to a separate, testable class
 
-            //Last tradebar and the current one we're about to add to queue:
-            var previous = manager.Previous;
-            var current = manager.Current;
+            // grab the relevant exchange hours
+            var config = universe.Configuration;
 
-            //Initialize the frontier:
-            if (FillForwardFrontiers[i].Ticks == 0) FillForwardFrontiers[i] = previous.Time;
+            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+            var exchangeHours = marketHoursDatabase.GetExchangeHours(config);
 
-            //Data ended before the market closed: premature ending flag - continue filling forward until market close.
-            if (manager.EndOfStream && manager.MarketOpen(current.Time))
+            // create a canonical security object
+            var security = new Security(exchangeHours, config, _algorithm.Portfolio.CashBook[CashBook.AccountCurrency], SymbolProperties.GetDefault(CashBook.AccountCurrency));
+
+            var localStartTime = startTimeUtc.ConvertFromUtc(security.Exchange.TimeZone);
+            var localEndTime = endTimeUtc.ConvertFromUtc(security.Exchange.TimeZone);
+
+            // define our data enumerator
+            IEnumerator<BaseData> enumerator;
+
+            var tradeableDates = Time.EachTradeableDay(security, localStartTime, localEndTime);
+
+            var userDefined = universe as UserDefinedUniverse;
+            if (userDefined != null)
             {
-                //Make sure we only fill forward to end of *today* -- don't fill forward tomorrow just because its also open.
-                var processingDate = FillForwardFrontiers[i].Date;
+                // spoof a tick on the requested interval to trigger the universe selection function
+                enumerator = userDefined.GetTriggerTimes(startTimeUtc, endTimeUtc, marketHoursDatabase)
+                    .Select(x => new Tick { Time = x, Symbol = config.Symbol }).GetEnumerator();
 
-                //Premature end of stream: fill manually until market closed.
-                for (var date = FillForwardFrontiers[i] + increment; (manager.MarketOpen(date) && date.Date == processingDate); date = date + increment)
-                {
-                    var cache = new List<BaseData>(1);
-                    var fillforward = current.Clone(true);
-                    fillforward.Time = date;
-                    FillForwardFrontiers[i] = date;
-                    cache.Add(fillforward);
-                    Bridge[i].Enqueue(cache);
-                }
-                return;
+                // route these custom subscriptions through the exchange for buffering
+                var enqueueable = new EnqueueableEnumerator<BaseData>(true);
+
+                // add this enumerator to our exchange
+                ScheduleEnumerator(enumerator, enqueueable, GetLowerThreshold(config.Resolution), GetUpperThreshold(config.Resolution));
+
+                enumerator = enqueueable;
+            }
+            else if (config.Type == typeof (CoarseFundamental))
+            {
+                var cf = new CoarseFundamental();
+
+                var enqueueable = new EnqueueableEnumerator<BaseData>(true);
+
+                // load coarse data day by day
+                var coarse = from date in Time.EachTradeableDay(security, _algorithm.StartDate, _algorithm.EndDate)
+                             let dateInDataTimeZone = date.ConvertTo(config.ExchangeTimeZone, config.DataTimeZone).Date
+                             let source = cf.GetSource(config, dateInDataTimeZone, false)
+                             let factory = SubscriptionFactory.ForSource(source, config, dateInDataTimeZone, false)
+                             let coarseFundamentalForDate = factory.Read(source)
+                             select new BaseDataCollection(date.AddDays(1), config.Symbol, coarseFundamentalForDate);
+
+                
+                ScheduleEnumerator(coarse.GetEnumerator(), enqueueable, 5, 100000, 2);
+
+                enumerator = enqueueable;
+            }
+            else
+            {
+                // normal reader for all others
+                enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, MapFileResolver.Empty, _factorFileProvider, tradeableDates, false);
+
+                // route these custom subscriptions through the exchange for buffering
+                var enqueueable = new EnqueueableEnumerator<BaseData>(true);
+
+                // add this enumerator to our exchange
+                ScheduleEnumerator(enumerator, enqueueable, GetLowerThreshold(config.Resolution), GetUpperThreshold(config.Resolution));
+
+                enumerator = enqueueable;
             }
 
-            //Once per increment, add a new cache to the Bridge: 
-            //If the current.Time is before market close, (e.g. suspended trading at 2pm) the date is always greater than currentTime and fillforward never runs.
-            //In this circumstance we need to keep looping till market/extended hours close even if no data. 
-            for (var date = FillForwardFrontiers[i] + increment; (date < current.Time); date = date + increment)
-            {
-                //If we don't want aftermarket data, rewind it backwards until the market closes.
-                if (!Subscriptions[i].ExtendedMarketHours) 
-                {
-                    if (!manager.MarketOpen(date)) 
-                    {
-                        // Move fill forward so we don't waste time in this tight loop.
-                        //Question is where to shuffle the date? 
-                        // --> If BEFORE market open, shuffle forward.
-                        // --> If AFTER market close, and current.Time after market close, quit loop.
-                        date = current.Time;
-                        do 
-                        {
-                            date = date - increment;
-                        } while (manager.MarketOpen(date));
-                        continue;
-                    }
-                } 
-                else  
-                { 
-                    //If we've asked for extended hours, and the security is no longer inside extended market hours, skip:
-                    if (!manager.ExtendedMarketOpen(date))
-                    {
-                        continue;
-                    }
-                }
+            // create the subscription
+            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, startTimeUtc, endTimeUtc);
+            var subscription = new Subscription(universe, security, enumerator, timeZoneOffsetProvider, startTimeUtc, endTimeUtc, true);
+            _subscriptions.AddOrUpdate(subscription.Security.Symbol, subscription);
 
-                var cache = new List<BaseData>(1);
-                var fillforward = previous.Clone(true);
-                fillforward.Time = date;
-                FillForwardFrontiers[i] = date;
-                cache.Add(fillforward);
-                Bridge[i].Enqueue(cache);
-            }
+            UpdateFillForwardResolution();
         }
-
 
         /// <summary>
         /// Send an exit signal to the thread.
         /// </summary>
         public void Exit()
         {
-            _exitTriggered = true;
-            PurgeData();
+            Log.Trace("FileSystemDataFeed.Exit(): Exit triggered.");
+            _cancellationTokenSource.Cancel();
+        }
+
+        /// <summary>
+        /// Updates the fill forward resolution by checking all existing subscriptions and
+        /// selecting the smallest resoluton not equal to tick
+        /// </summary>
+        private void UpdateFillForwardResolution()
+        {
+            _fillForwardResolution.Value = _subscriptions
+                .Select(x => x.Value.Configuration.Resolution)
+                .Where(x => x != Resolution.Tick)
+                .DefaultIfEmpty(Resolution.Minute)
+                .Min().ToTimeSpan();
+        }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through the collection.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="T:System.Collections.Generic.IEnumerator`1"/> that can be used to iterate through the collection.
+        /// </returns>
+        /// <filterpriority>1</filterpriority>
+        public IEnumerator<TimeSlice> GetEnumerator()
+        {
+            // compute initial frontier time
+            _frontierUtc = GetInitialFrontierTime();
+            Log.Trace(string.Format("FileSystemDataFeed.GetEnumerator(): Begin: {0} UTC", _frontierUtc));
+
+            var syncer = new SubscriptionSynchronizer(_universeSelection);
+            syncer.SubscriptionFinished += (sender, subscription) =>
+            {
+                if (subscription.EndOfStream && _subscriptions.TryRemove(subscription.Security.Symbol, out subscription))
+                {
+                    Log.Debug(string.Format("FileSystemDataFeed.GetEnumerator(): Finished subscription: {0} at {1} UTC", subscription.Security.Symbol.ID, _frontierUtc));
+                    subscription.Dispose();
+                }
+            };
+
+            while (!_cancellationTokenSource.IsCancellationRequested)
+            {
+                TimeSlice timeSlice;
+                DateTime nextFrontier;
+
+                try
+                {
+                    timeSlice = syncer.Sync(_frontierUtc, Subscriptions, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, out nextFrontier);
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err);
+                    continue;
+                }
+                
+                // syncer returns MaxValue on failure/end of data
+                if (timeSlice.Time != DateTime.MaxValue)
+                {
+                    yield return timeSlice;
+
+                    // end of data signal
+                    if (nextFrontier == DateTime.MaxValue) break;
+
+                    _frontierUtc = nextFrontier;    
+                }
+                else if (timeSlice.SecurityChanges == SecurityChanges.None)
+                {
+                    // there's no more data to pull off, we're done (frontier is max value and no security changes)
+                    break;
+                }
+            }
+
+            //Close up all streams:
+            foreach (var subscription in Subscriptions)
+            {
+                subscription.Dispose();
+            }
+
+            Log.Trace(string.Format("FileSystemDataFeed.Run(): Data Feed Completed at {0} UTC", _frontierUtc));
+        }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through a collection.
+        /// </summary>
+        /// <returns>
+        /// An <see cref="T:System.Collections.IEnumerator"/> object that can be used to iterate through the collection.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
 
 
-        /// <summary>
-        /// Loop over all the queues and clear them to fast-quit this thread and return to main.
-        /// </summary>
-        public void PurgeData()
+        private int GetLowerThreshold(Resolution resolution)
         {
-            foreach (var t in Bridge)
+            switch (resolution)
             {
-                t.Clear();
+                case Resolution.Tick: return 500;
+                case Resolution.Second: return 250;
+                case Resolution.Minute: return 100;
+                case Resolution.Hour: return 18;
+                case Resolution.Daily: return 5;
+                default:
+                    throw new ArgumentOutOfRangeException("resolution", resolution, null);
             }
         }
 
-    } // End FileSystem Local Feed Class:
-} // End Namespace
+        private int GetUpperThreshold(Resolution resolution)
+        {
+            switch (resolution)
+            {
+                case Resolution.Tick: return 10000;
+                case Resolution.Second: return 5000;
+                case Resolution.Minute: return 1200;
+                case Resolution.Hour: return 100;
+                case Resolution.Daily: return 50;
+                default:
+                    throw new ArgumentOutOfRangeException("resolution", resolution, null);
+            }
+        }
+    }
+}

@@ -13,16 +13,11 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Orders
 {
-    /******************************************************** 
-    * ORDER CLASS DEFINITION
-    *********************************************************/
     /// <summary>
     /// Stop Market Order Type Definition
     /// </summary>
@@ -31,27 +26,24 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Stop price for this stop market order.
         /// </summary>
-        public decimal StopPrice;
+        public decimal StopPrice { get; internal set; }
 
         /// <summary>
         /// Signal showing the "StopLimitOrder" has been converted into a Limit Order
         /// </summary>
-        public bool StopTriggered = false;
+        public bool StopTriggered { get; internal set; }
 
         /// <summary>
         /// Limit price for the stop limit order
         /// </summary>
-        public decimal LimitPrice;
+        public decimal LimitPrice { get; internal set; }
 
         /// <summary>
-        /// Maximum value of the order at is the stop limit price
+        /// StopLimit Order Type
         /// </summary>
-        public override decimal Value
+        public override OrderType Type
         {
-            get
-            {
-                return Convert.ToDecimal(Quantity) * LimitPrice;
-            }
+            get { return OrderType.StopLimit; }
         }
 
         /// <summary>
@@ -59,25 +51,22 @@ namespace QuantConnect.Orders
         /// </summary>
         public StopLimitOrder()
         {
-            Type = OrderType.StopLimit;
         }
 
         /// <summary>
         /// New Stop Market Order constructor - 
         /// </summary>
         /// <param name="symbol">Symbol asset we're seeking to trade</param>
-        /// <param name="type">Type of the security order</param>
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
         /// <param name="limitPrice">Maximum price to fill the order</param>
         /// <param name="time">Time the order was placed</param>
         /// <param name="stopPrice">Price the order should be filled at if a limit order</param>
         /// <param name="tag">User defined data tag for this order</param>
-        public StopLimitOrder(string symbol, int quantity, decimal stopPrice, decimal limitPrice, DateTime time, string tag = "", SecurityType type = SecurityType.Base) :
-            base(symbol, quantity, OrderType.StopLimit, time, 0, tag, type)
+        public StopLimitOrder(Symbol symbol, int quantity, decimal stopPrice, decimal limitPrice, DateTime time, string tag = "")
+            : base(symbol, quantity, time, tag)
         {
             StopPrice = stopPrice;
             LimitPrice = limitPrice;
-            Type = OrderType.StopLimit;
 
             if (tag == "")
             {
@@ -85,6 +74,66 @@ namespace QuantConnect.Orders
                 Tag = "Stop Price: " + stopPrice.ToString("C") + " Limit Price: " + limitPrice.ToString("C");
             }
         }
-    }
 
-} // End QC Namespace:
+        /// <summary>
+        /// Gets the order value in units of the security's quote currency
+        /// </summary>
+        /// <param name="security">The security matching this order's symbol</param>
+        protected override decimal GetValueImpl(Security security)
+        {
+            // selling, so higher price will be used
+            if (Quantity < 0)
+            {
+                return Quantity*Math.Max(LimitPrice, security.Price);
+            }
+
+            // buying, so lower price will be used
+            if (Quantity > 0)
+            {
+                return Quantity*Math.Min(LimitPrice, security.Price);
+            }
+
+            return 0m;
+        }
+
+        /// <summary>
+        /// Modifies the state of this order to match the update request
+        /// </summary>
+        /// <param name="request">The request to update this order object</param>
+        public override void ApplyUpdateOrderRequest(UpdateOrderRequest request)
+        {
+            base.ApplyUpdateOrderRequest(request);
+            if (request.StopPrice.HasValue)
+            {
+                StopPrice = request.StopPrice.Value;
+            }
+            if (request.LimitPrice.HasValue)
+            {
+                LimitPrice = request.LimitPrice.Value;
+            }
+        }
+
+        /// <summary>
+        /// Returns a string that represents the current object.
+        /// </summary>
+        /// <returns>
+        /// A string that represents the current object.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        public override string ToString()
+        {
+            return string.Format("{0} at stop {1} limit {2}", base.ToString(), StopPrice.SmartRounding(), LimitPrice.SmartRounding());
+        }
+
+        /// <summary>
+        /// Creates a deep-copy clone of this order
+        /// </summary>
+        /// <returns>A copy of this order</returns>
+        public override Order Clone()
+        {
+            var order = new StopLimitOrder {StopPrice = StopPrice, LimitPrice = LimitPrice};
+            CopyTo(order);
+            return order;
+        }
+    }
+}

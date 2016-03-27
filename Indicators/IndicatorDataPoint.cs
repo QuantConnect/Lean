@@ -21,7 +21,7 @@ namespace QuantConnect.Indicators
     /// <summary>
     /// Represents a piece of data at a specific time
     /// </summary>
-    public class IndicatorDataPoint : BaseData, IEquatable<IndicatorDataPoint>
+    public class IndicatorDataPoint : BaseData, IEquatable<IndicatorDataPoint>, IComparable<IndicatorDataPoint>, IComparable
     {
         /// <summary>
         /// Initializes a new default instance of IndicatorDataPoint with a time of
@@ -50,7 +50,7 @@ namespace QuantConnect.Indicators
         /// <param name="symbol">The symbol associated with this data</param>
         /// <param name="time">The time this data was produced</param>
         /// <param name="value">The data</param>
-        public IndicatorDataPoint(string symbol, DateTime time, decimal value)
+        public IndicatorDataPoint(Symbol symbol, DateTime time, decimal value)
         {
             Symbol = symbol;
             Time = time;
@@ -71,6 +71,40 @@ namespace QuantConnect.Indicators
                 return false;
             }
             return other.Time == Time && other.Value == Value;
+        }
+
+        /// <summary>
+        /// Compares the current object with another object of the same type.
+        /// </summary>
+        /// <returns>
+        /// A value that indicates the relative order of the objects being compared. The return value has the following meanings: Value Meaning Less than zero This object is less than the <paramref name="other"/> parameter.Zero This object is equal to <paramref name="other"/>. Greater than zero This object is greater than <paramref name="other"/>. 
+        /// </returns>
+        /// <param name="other">An object to compare with this object.</param>
+        public int CompareTo(IndicatorDataPoint other)
+        {
+            if (ReferenceEquals(other, null))
+            {
+                // everything is greater than null via MSDN
+                return 1;
+            }
+            return Value.CompareTo(other.Value);
+        }
+
+        /// <summary>
+        /// Compares the current instance with another object of the same type and returns an integer that indicates whether the current instance precedes, follows, or occurs in the same position in the sort order as the other object.
+        /// </summary>
+        /// <returns>
+        /// A value that indicates the relative order of the objects being compared. The return value has these meanings: Value Meaning Less than zero This instance precedes <paramref name="obj"/> in the sort order. Zero This instance occurs in the same position in the sort order as <paramref name="obj"/>. Greater than zero This instance follows <paramref name="obj"/> in the sort order. 
+        /// </returns>
+        /// <param name="obj">An object to compare with this instance. </param><exception cref="T:System.ArgumentException"><paramref name="obj"/> is not the same type as this instance. </exception><filterpriority>2</filterpriority>
+        public int CompareTo(object obj)
+        {
+            var other = obj as IndicatorDataPoint;
+            if (other == null)
+            {
+                throw new ArgumentException("Object must be of type " + GetType().GetBetterTypeName());
+            }
+            return CompareTo(other);
         }
 
         /// <summary>
@@ -127,7 +161,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// This function is purposefully not implemented.
         /// </summary>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed)
+        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
             throw new NotImplementedException("IndicatorDataPoint does not support the Reader function. This function should never be called on this type.");
         }
@@ -135,7 +169,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// This function is purposefully not implemented.
         /// </summary>
-        public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
+        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             throw new NotImplementedException("IndicatorDataPoint does not support the GetSource function. This function should never be called on this type.");
         }

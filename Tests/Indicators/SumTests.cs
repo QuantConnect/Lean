@@ -14,9 +14,8 @@
 */
 
 using System;
-using QuantConnect.Indicators;
 using NUnit.Framework;
-
+using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Indicators {
 

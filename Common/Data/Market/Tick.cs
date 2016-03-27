@@ -13,13 +13,11 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using System;
 using System.Globalization;
+using System.IO;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.Market
 {
@@ -29,16 +27,13 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public class Tick : BaseData
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         /// <summary>
         /// Type of the Tick: Trade or Quote.
         /// </summary>
         public TickType TickType = TickType.Trade;
 
         /// <summary>
-        /// Quantity of the tick sale or quote offer.
+        /// Quantity exchanged in a trade.
         /// </summary>
         public int Quantity = 0;
 
@@ -80,18 +75,25 @@ namespace QuantConnect.Data.Market
             }
         }
 
-        // In Base Class: Last Trade Tick:
-        //public decimal Price = 0;
+        /// <summary>
+        /// Size of bid quote.
+        /// </summary>
+        public long BidSize = 0;
 
-        // In Base Class: Ticker String Symbol of the Asset
-        //public string Symbol = "";
+        /// <summary>
+        /// Size of ask quote.
+        /// </summary>
+        public long AskSize = 0;
 
-        // In Base Class: DateTime of this SnapShot
-        //public DateTime Time = new DateTime();
+        //In Base Class: Alias of Closing:
+        //public decimal Price;
 
-        /******************************************************** 
-        * CLASS CONSTRUCTORS
-        *********************************************************/
+        //Symbol of Asset.
+        //In Base Class: public Symbol Symbol;
+
+        //In Base Class: DateTime Of this TradeBar
+        //public DateTime Time;
+
         /// <summary>
         /// Initialize tick class with a default constructor.
         /// </summary>
@@ -100,28 +102,35 @@ namespace QuantConnect.Data.Market
             Value = 0;
             Time = new DateTime();
             DataType = MarketDataType.Tick;
-            Symbol = "";
+            Symbol = Symbol.Empty;
             TickType = TickType.Trade;
             Quantity = 0;
             Exchange = "";
             SaleCondition = "";
             Suspicious = false;
+            BidSize = 0;
+            AskSize = 0;
         }
 
         /// <summary>
-        /// Cloner constructor for fill formward engine implementation. Clone the original tick into this new tick:
+        /// Cloner constructor for fill forward engine implementation. Clone the original tick into this new tick:
         /// </summary>
         /// <param name="original">Original tick we're cloning</param>
         public Tick(Tick original) 
         {
             Symbol = original.Symbol;
             Time = new DateTime(original.Time.Ticks);
+            Value = original.Value;
             BidPrice = original.BidPrice;
             AskPrice = original.AskPrice;
             Exchange = original.Exchange;
             SaleCondition = original.SaleCondition;
             Quantity = original.Quantity;
             Suspicious = original.Suspicious;
+            DataType = MarketDataType.Tick;
+            TickType = original.TickType;
+            BidSize = original.BidSize;
+            AskSize = original.AskSize;
         }
 
         /// <summary>
@@ -132,12 +141,12 @@ namespace QuantConnect.Data.Market
         /// <param name="symbol">Underlying currency pair we're trading</param>
         /// <param name="bid">FX tick bid value</param>
         /// <param name="ask">FX tick ask value</param>
-        public Tick(DateTime time, string symbol, decimal bid, decimal ask)
+        public Tick(DateTime time, Symbol symbol, decimal bid, decimal ask)
         {
             DataType = MarketDataType.Tick;
             Time = time;
             Symbol = symbol;
-            Value = bid + (ask - bid) / 2;
+            Value = (bid + ask) / 2;
             TickType = TickType.Quote;
             BidPrice = bid;
             AskPrice = ask;
@@ -152,7 +161,7 @@ namespace QuantConnect.Data.Market
         /// <param name="bid">Bid value</param>
         /// <param name="ask">Ask value</param>
         /// <param name="last">Last trade price</param>
-        public Tick(DateTime time, string symbol, decimal last, decimal bid, decimal ask)
+        public Tick(DateTime time, Symbol symbol, decimal last, decimal bid, decimal ask)
         {
             DataType = MarketDataType.Tick;
             Time = time;
@@ -168,16 +177,36 @@ namespace QuantConnect.Data.Market
         /// </summary>
         /// <param name="symbol">Symbol for underlying asset</param>
         /// <param name="line">CSV line of data from FXCM</param>
-        public Tick(string symbol, string line)
+        public Tick(Symbol symbol, string line)
         {
             var csv = line.Split(',');
             DataType = MarketDataType.Tick;
             Symbol = symbol;
-            Time = DateTime.ParseExact(csv[0], "yyyyMMdd HH:mm:ss.ffff", CultureInfo.InvariantCulture);
-            Value = BidPrice + (AskPrice - BidPrice) / 2;
+            Time = DateTime.ParseExact(csv[0], DateFormat.Forex, CultureInfo.InvariantCulture);
+            Value = (BidPrice + AskPrice) / 2;
             TickType = TickType.Quote;
             BidPrice = Convert.ToDecimal(csv[1], CultureInfo.InvariantCulture);
             AskPrice = Convert.ToDecimal(csv[2], CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
+        /// Constructor for QuantConnect tick data
+        /// </summary>
+        /// <param name="symbol">Symbol for underlying asset</param>
+        /// <param name="line">CSV line of data from QC tick csv</param>
+        /// <param name="baseDate">The base date of the tick</param>
+        public Tick(Symbol symbol, string line, DateTime baseDate)
+        {
+            var csv = line.Split(',');
+            DataType = MarketDataType.Tick;
+            Symbol = symbol;
+            Time = baseDate.Date.AddMilliseconds(csv[0].ToInt32());
+            Value = csv[1].ToDecimal()/10000m;
+            TickType = TickType.Trade;
+            Quantity = csv[2].ToInt32();
+            Exchange = csv[3].Trim();
+            SaleCondition = csv[4];
+            Suspicious = csv[5].ToInt32() == 1;
         }
 
 
@@ -187,115 +216,143 @@ namespace QuantConnect.Data.Market
         /// <param name="line">CSV source line of the compressed source</param>
         /// <param name="date">Base date for the tick (ticks date is stored as int milliseconds since midnight)</param>
         /// <param name="config">Subscription configuration object</param>
-        /// <param name="datafeed">Datafeed for tick - live or backtesting.</param>
-        public Tick(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed)
+        public Tick(SubscriptionDataConfig config, string line, DateTime date)
         {
             try
             {
-                var csv = line.Split(',');
+                DataType = MarketDataType.Tick;
 
                 // Which security type is this data feed:
-                switch (config.Security)
-                { 
+                const decimal scaleFactor = 10000m;
+                switch (config.SecurityType)
+                {
                     case SecurityType.Equity:
+                    {
+                        var csv = line.ToCsv(6);
                         Symbol = config.Symbol;
-                        Time = date.Date.AddMilliseconds(Convert.ToInt64(csv[0]));
-                        Value = (csv[1].ToDecimal() / 10000m) * config.PriceScaleFactor;
-                        DataType = MarketDataType.Tick;
+                        Time = date.Date.AddMilliseconds(csv[0].ToInt64()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+                        Value = config.GetNormalizedPrice(csv[1].ToDecimal() / scaleFactor);
                         TickType = TickType.Trade;
-                        Quantity = Convert.ToInt32(csv[2]);
-                        if (csv.Length > 3)
+                        Quantity = csv[2].ToInt32();
+                        if (csv.Count > 3)
                         {
                             Exchange = csv[3];
                             SaleCondition = csv[4];
                             Suspicious = (csv[5] == "1");
                         }
                         break;
+                    }
 
                     case SecurityType.Forex:
+                    case SecurityType.Cfd:
+                    {
+                        var csv = line.ToCsv(3);
                         Symbol = config.Symbol;
                         TickType = TickType.Quote;
-                        Time = DateTime.ParseExact(csv[0], "yyyyMMdd HH:mm:ss.ffff", CultureInfo.InvariantCulture);
+                        Time = date.Date.AddMilliseconds(csv[0].ToInt64()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
                         BidPrice = csv[1].ToDecimal();
                         AskPrice = csv[2].ToDecimal();
-                        Value = BidPrice + (AskPrice - BidPrice) / 2;
+                        Value = (BidPrice + AskPrice) / 2;
                         break;
+                    }
+
+                    case SecurityType.Option:
+                    {
+                        var csv = line.ToCsv(7);
+                        TickType = config.TickType;
+                        Time = date.Date.AddMilliseconds(csv[0].ToInt64()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+                        Symbol = config.Symbol;
+
+                        if (TickType == TickType.Trade)
+                        {
+                            Value = config.GetNormalizedPrice(csv[1].ToDecimal()/scaleFactor);
+                            Quantity = csv[2].ToInt32();
+                            Exchange = csv[3];
+                            SaleCondition = csv[4];
+                            Suspicious = csv[5] == "1";
+                        }
+                        else
+                        {
+                            if (csv[1].Length != 0)
+                            {
+                                BidPrice = config.GetNormalizedPrice(csv[1].ToDecimal()/scaleFactor);
+                                BidSize = csv[2].ToInt32();
+                            }
+                            if (csv[3].Length != 0)
+                            {
+                                AskPrice = config.GetNormalizedPrice(csv[3].ToDecimal()/scaleFactor);
+                                AskSize = csv[4].ToInt32();
+                            }
+                            Exchange = csv[5];
+                            Suspicious = csv[6] == "1";
+
+                            if (BidPrice != 0)
+                            {
+                                if (AskPrice != 0)
+                                {
+                                    Value = (BidPrice + AskPrice)/2m;
+                                }
+                                else
+                                {
+                                    Value = BidPrice;
+                                }
+                            }
+                            else
+                            {
+                                Value = AskPrice;
+                            }
+                        }
+
+                        break;
+                    }
                 }
             }
             catch (Exception err)
             {
-                Log.Error("Error Generating Tick: " + err.Message);
+                Log.Error(err);
             }
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Tick implementation of reader method: read a line of data from the source and convert it to a tick object.
         /// </summary>
-        /// <param name="datafeed">Source of the datafeed</param>
         /// <param name="config">Subscription configuration object for algorithm</param>
         /// <param name="line">Line from the datafeed source</param>
         /// <param name="date">Date of this reader request</param>
+        /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>New Initialized tick</returns>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed)
+        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            var _tick = new Tick();
-
-            //Select the URL source of the data depending on where the system is trading.
-            switch (datafeed)
+            if (isLiveMode)
             {
-                //Local File System Storage and Backtesting QC Data Store Feed use same files:
-                case DataFeedEndpoint.FileSystem:
-                case DataFeedEndpoint.Backtesting:
-                    //Create a new instance of our tradebar:
-                    _tick = new Tick(config, line, date, datafeed);
-                    break;
-                case DataFeedEndpoint.LiveTrading:
-                    break;
+                // currently ticks don't come through the reader function
+                return new Tick();
             }
-
-            return _tick;
+            
+            return new Tick(config, line, date);
         }
-
 
         /// <summary>
         /// Get source for tick data feed - not used with QuantConnect data sources implementation.
         /// </summary>
         /// <param name="config">Configuration object</param>
         /// <param name="date">Date of this source request if source spread across multiple files</param>
-        /// <param name="datafeed">Source of the datafeed enum</param>
+        /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>String source location of the file to be opened with a stream</returns>
-        public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
+        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            var source = "";
-            var dataType = TickType.Trade;
-
-            switch (datafeed)
+            if (isLiveMode)
             {
-                //Backtesting S3 Endpoint:
-                case DataFeedEndpoint.Backtesting:
-                case DataFeedEndpoint.FileSystem:
-
-                    var dateFormat = "yyyyMMdd";
-                    if (config.Security == SecurityType.Forex)
-                    {
-                        dataType = TickType.Quote;
-                        dateFormat = "yyMMdd";
-                    }
-                    var symbol = String.IsNullOrEmpty(config.MappedSymbol) ? config.Symbol : config.MappedSymbol; 
-                    source = @"../../../Data/" + config.Security.ToString().ToLower();
-                    source += @"/" + config.Resolution.ToString().ToLower() + @"/" + symbol.ToLower() + @"/";
-                    source += date.ToString(dateFormat) + "_" + dataType.ToString().ToLower() + ".zip";
-                    break;
-
-                //Live Trading Endpoint: Fake, not actually used but need for consistency with backtesting system. Set to "" so will not use subscription reader.
-                case DataFeedEndpoint.LiveTrading:
-                    source = "";
-                    break;
+                // Currently ticks aren't sourced through GetSource in live mode
+                return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.LocalFile);
             }
-            return source;
+
+            var source = LeanData.GenerateZipFilePath(Globals.DataFolder, config.Symbol, date, config.Resolution, config.TickType);
+            if (config.SecurityType == SecurityType.Option)
+            {
+                source += "#" + LeanData.GenerateZipEntryName(config.Symbol, date, config.Resolution, config.TickType);
+            }
+            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
 
 
@@ -306,14 +363,27 @@ namespace QuantConnect.Data.Market
         /// <param name="bidPrice">Current bid price</param>
         /// <param name="askPrice">Current asking price</param>
         /// <param name="volume">Volume of this trade</param>
-        public override void Update(decimal lastTrade, decimal bidPrice, decimal askPrice, decimal volume)
+        /// <param name="bidSize">The size of the current bid, if available</param>
+        /// <param name="askSize">The size of the current ask, if available</param>
+        public override void Update(decimal lastTrade, decimal bidPrice, decimal askPrice, decimal volume, decimal bidSize, decimal askSize)
         {
             Value = lastTrade;
             BidPrice = bidPrice;
             AskPrice = askPrice;
+            BidSize = (long) bidSize;
+            AskSize = (long) askSize;
             Quantity = Convert.ToInt32(volume);
         }
 
+        /// <summary>
+        /// Check if tick contains valid data (either a trade, or a bid or ask)
+        /// </summary>
+        public bool IsValid()
+        {
+            return (TickType == TickType.Trade && LastPrice > 0.0m && Quantity > 0) ||
+                   (TickType == TickType.Quote && AskPrice > 0.0m && AskSize > 0) ||
+                   (TickType == TickType.Quote && BidPrice > 0.0m && BidSize > 0);
+        }
 
         /// <summary>
         /// Clone implementation for tick class:

@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Configuration;
@@ -26,71 +27,58 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
     /// <summary>
     /// Handles launching and killing the IB Controller script
     /// </summary>
+    /// <remarks>
+    /// Requires TWS or IB Gateway and IBController installed to run
+    /// </remarks>
     public static class InteractiveBrokersGatewayRunner
     {
         // process that's running the IB Controller script
         private static int ScriptProcessID;
-        private static string _account;
-
-        // pick controller based on configuraiton, TWS or just the gateway, TWS is nice for running on desktops, default to TWS for desktop users
-        private static readonly bool UseTWS = Config.GetBool("ib-use-tws");
-        private static readonly string Controller = UseTWS ? "IBControllerStart" : "IBControllerGatewayStart";
 
         /// <summary>
-        /// Gets whether or not the the IB Gateway or TWS is running
+        /// Starts the interactive brokers gateway using values from configuration
         /// </summary>
-        public static bool IsRunning
+        public static void StartFromConfiguration()
         {
-            get { return GetSpawnedProcesses(ScriptProcessID).Any(); }
-        }
-
-        /// <summary>
-        /// The account used to open this gateway
-        /// </summary>
-        public static string CurrentAccount
-        {
-            get { return _account; }
+            Start(Config.Get("ib-controller-dir"),
+                Config.Get("ib-tws-dir"),
+                Config.Get("ib-user-name"),
+                Config.Get("ib-password"),
+                Config.GetBool("ib-use-tws")
+                );
         }
 
         /// <summary>
         /// Starts the IB Gateway
         /// </summary>
-        /// <param name="account">The account tied to the gateway</param>
-        public static void Start(string account)
+        /// <param name="ibControllerDirectory">Directory to the IB controller installation</param>
+        /// <param name="twsDirectory"></param>
+        /// <param name="userID">The log in user id</param>
+        /// <param name="password">The log in password</param>
+        /// <param name="useTws">True to use Trader Work Station, false to just launch the API gateway</param>
+        public static void Start(string ibControllerDirectory, string twsDirectory, string userID, string password, bool useTws = false)
         {
-            _account = account;
+            var useTwsSwitch = useTws ? "-tws" : "";
+            var batchFilename = Path.Combine("InteractiveBrokers", "run-ib-controller.bat");
+            var bashFilename = Path.Combine("InteractiveBrokers", "run-ib-controller.sh");
 
             try
             {
-                Log.Trace("IBGatewayRunner.Start(): Launching IBController for account " + account + "...");
+                var file = OS.IsWindows ? batchFilename : bashFilename;
+                var arguments = string.Format("{0} {1} {2} {3} {4} {5}", file, ibControllerDirectory, twsDirectory, userID, password, useTwsSwitch);
 
-                ProcessStartInfo processStartInfo;
-                if (OS.IsWindows)
-                {
-                    processStartInfo = new ProcessStartInfo("cmd.exe", "/C " + string.Format("C:\\IBController\\{0}.bat", Controller));
-                }
-                else
-                {
-                    processStartInfo = new ProcessStartInfo("bash", string.Format("C:\\IBController\\{0}.sh", Controller));
-                }
+                Log.Trace("InteractiveBrokersGatewayRunner.Start(): Launching IBController for account " + userID + "...");
+
+                var processStartInfo = OS.IsWindows ? new ProcessStartInfo("cmd.exe", "/C " + arguments) : new ProcessStartInfo("bash", arguments);
 
                 processStartInfo.UseShellExecute = false;
-                processStartInfo.RedirectStandardOutput = true;
+                processStartInfo.RedirectStandardOutput = false;
                 var process = Process.Start(processStartInfo);
                 ScriptProcessID = process.Id;
-
-                if (UseTWS)
-                {
-                    // sleep an extra 10 seconds for TWS, it takes a little bit to come up all the way
-                    Thread.Sleep(10000);
-                }
-                // wait for 15 seconds so it can start
-                Thread.Sleep(15000);
-
             }
             catch (Exception err)
             {
-                Log.Error("IBGatewayRunner.Start(): " + err.Message);
+                Log.Error(err);
             }
         }
 
@@ -99,19 +87,28 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         public static void Stop()
         {
+            if (ScriptProcessID == 0)
+            {
+                return;
+            }
+
             try
             {
-                Log.Trace("IBGatewayRunner.Stop(): Stopping IBController...");
+                Log.Trace("InteractiveBrokersGatewayRunner.Stop(): Stopping IBController...");
 
-                foreach (var process in GetSpawnedProcesses(ScriptProcessID))
+                // we need to materialize this ienumerable since if we start killing some of them
+                // we may leave some daemon processes hanging
+                foreach (var process in GetSpawnedProcesses(ScriptProcessID).ToList())
                 {
                     // kill all spawned processes
                     process.Kill();
                 }
+
+                ScriptProcessID = 0;
             }
             catch (Exception err)
             {
-                Log.Error("IBGatewayRunner.Stop(): " + err.Message);
+                Log.Error(err);
             }
         }
 

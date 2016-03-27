@@ -14,16 +14,14 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using System;
-using System.Collections.Generic;
-using System.Threading;
+using System.Collections.Concurrent;
+using System.Linq;
 using QuantConnect.Interfaces;
-using QuantConnect.Packets;
+using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
+using QuantConnect.Packets;
+using QuantConnect.Scheduling;
 
 namespace QuantConnect.Lean.Engine.RealTime
 {
@@ -32,120 +30,45 @@ namespace QuantConnect.Lean.Engine.RealTime
     /// </summary>
     public class BacktestingRealTimeHandler : IRealTimeHandler
     {
-        /******************************************************** 
-        * PRIVATE VARIABLES
-        *********************************************************/
-        //Threading
-        private DateTime _time = new DateTime();
-        private bool _exitTriggered;
-        private bool _isActive = true;
-        private AlgorithmNodePacket _job;
-
-        //Events:
-        private List<RealTimeEvent> _events;
-
-        //Algorithm and Handlers:
         private IAlgorithm _algorithm;
-        private Dictionary<SecurityType, MarketToday> _today;
-
-        /******************************************************** 
-        * PUBLIC PROPERTIES
-        *********************************************************/
-        /// <summary>
-        /// Realtime Moment.
-        /// </summary>
-        public DateTime Time
-        {
-            get
-            {
-                return _time;
-            }
-        }
-
-        /// <summary>
-        /// Events array we scan to trigger realtime events.
-        /// </summary>
-        public List<RealTimeEvent> Events
-        {
-            get 
-            {
-                return _events;
-            }
-        }
+        private IResultHandler _resultHandler;
+        // initialize this immediately since the Initialzie method gets called after IAlgorithm.Initialize,
+        // so we want to be ready to accept events as soon as possible
+        private readonly ConcurrentDictionary<string, ScheduledEvent> _scheduledEvents = new ConcurrentDictionary<string, ScheduledEvent>();
 
         /// <summary>
         /// Flag indicating the hander thread is completely finished and ready to dispose.
         /// </summary>
         public bool IsActive
         {
-            get
-            {
-                return _isActive;
-            }
+            // this doesn't run as its own thread
+            get { return false; }
         }
 
         /// <summary>
-        /// Market hours for today for each security type in the algorithm
+        /// Intializes the real time handler for the specified algorithm and job
         /// </summary>
-        public Dictionary<SecurityType, MarketToday> MarketToday
-        {
-            get
-            {
-                throw new NotImplementedException("MarketToday is not currently needed in backtesting mode");
-                return _today;
-            }
-        }
-
-        /******************************************************** 
-        * PUBLIC CONSTRUCTOR
-        *********************************************************/
-        /// <summary>
-        /// Setup the algorithm data, cash, job start end date etc.
-        /// </summary>
-        public BacktestingRealTimeHandler(IAlgorithm algorithm, AlgorithmNodePacket job) 
+        public void Setup(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api) 
         {
             //Initialize:
             _algorithm = algorithm;
-            _events = new List<RealTimeEvent>();
-            _job = job;
-            _today = new Dictionary<SecurityType, MarketToday>();
-        }
+            _resultHandler =  resultHandler;
 
-        /******************************************************** 
-        * PUBLIC METHODS
-        *********************************************************/
-        /// <summary>
-        /// Setup the events for this date.
-        /// </summary>
-        /// <param name="date">Date for event</param>
-        public void SetupEvents(DateTime date)
-        {
-            //Clear any existing events:
-            ClearEvents();
+            // create events for algorithm's end of tradeable dates
+            Add(ScheduledEventFactory.EveryAlgorithmEndOfDay(_algorithm, _resultHandler, _algorithm.StartDate, _algorithm.EndDate, ScheduledEvent.AlgorithmEndOfDayDelta));
 
-            //Set up the events:
-            //1. Default End of Day Times:
-            foreach (var security in _algorithm.Securities.Values)
+            // set up the events for each security to fire every tradeable date before market close
+            foreach (var security in _algorithm.Securities.Values.Where(x => !x.SubscriptionDataConfig.IsInternalFeed))
             {
-                //Register Events:
-                Log.Debug("BacktestingRealTimeHandler.SetupEvents(): Adding End of Day: " + security.Exchange.MarketClose.Add(TimeSpan.FromMinutes(-10)));
+                Add(ScheduledEventFactory.EverySecurityEndOfDay(_algorithm, _resultHandler, security, algorithm.StartDate, _algorithm.EndDate, ScheduledEvent.SecurityEndOfDayDelta));
+            }
 
-                //1. Setup End of Day Events:
-                var closingToday = date.Date + security.Exchange.MarketClose.Add(TimeSpan.FromMinutes(-10));
-                var symbol = security.Symbol;
-                AddEvent(new RealTimeEvent( closingToday, () =>
-                {
-                    try
-                    {
-                        _algorithm.OnEndOfDay();
-                        _algorithm.OnEndOfDay(symbol);
-                    }
-                    catch (Exception err)
-                    {
-                        Engine.ResultHandler.RuntimeError("Runtime error in OnEndOfDay event: " + err.Message, err.StackTrace);
-                        Log.Error("BacktestingRealTimeHandler.SetupEvents(): EOD: " + err.Message);
-                    }
-                }));
+            foreach (var scheduledEvent in _scheduledEvents)
+            {
+                // zoom past old events
+                scheduledEvent.Value.SkipEventsUntil(algorithm.UtcTime);
+                // set logging accordingly
+                scheduledEvent.Value.IsLoggingEnabled = Log.DebuggingEnabled;
             }
         }
         
@@ -155,49 +78,35 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// </summary>
         public void Run()
         {
-            _isActive = false;
-        }
-
-
-        /// <summary>
-        /// Add a new event to our list of events to scan.
-        /// </summary>
-        /// <param name="newEvent">Event object to montitor daily.</param>
-        public void AddEvent(RealTimeEvent newEvent)
-        {
-            _events.Add(newEvent);
         }
 
         /// <summary>
-        /// Scan the event list with the current market time and see if we need to trigger the callback.
+        /// Adds the specified event to the schedule
         /// </summary>
-        public void ScanEvents()
+        /// <param name="scheduledEvent">The event to be scheduled, including the date/times the event fires and the callback</param>
+        public void Add(ScheduledEvent scheduledEvent)
         {
-            for (var i = 0; i < _events.Count; i++)
+            if (_algorithm != null)
             {
-                _events[i].Scan(_time);
+                scheduledEvent.SkipEventsUntil(_algorithm.UtcTime);
+            }
+
+            _scheduledEvents[scheduledEvent.Name] = scheduledEvent;
+            if (Log.DebuggingEnabled)
+            {
+                scheduledEvent.IsLoggingEnabled = true;
             }
         }
 
         /// <summary>
-        /// Clear any outstanding events.
+        /// Removes the specified event from the schedule
         /// </summary>
-        public void ClearEvents()
+        /// <param name="name">The name of the event to remove</param>
+        public void Remove(string name)
         {
-            _events.Clear();
+            ScheduledEvent scheduledEvent;
+            _scheduledEvents.TryRemove(name, out scheduledEvent);
         }
-
-        /// <summary>
-        /// Reset the events for a new day.
-        /// </summary>
-        public void ResetEvents()
-        {
-            for (var i = 0; i < _events.Count; i++)
-            {
-                _events[i].Reset();
-            }
-        }
-
 
         /// <summary>
         /// Set the time for the realtime event handler.
@@ -205,23 +114,11 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <param name="time">Current time.</param>
         public void SetTime(DateTime time)
         {
-            //Check for day reset:
-            if (_time.Date != time.Date)
+            // poke each event to see if it has fired, be sure to invoke these in time order
+            foreach (var scheduledEvent in _scheduledEvents)//.OrderBy(x => x.Value.NextEventUtcTime))
             {
-                // Backtest Mode Only: 
-                // > Scan & trigger any remaining events which haven't been triggered (e.g. daily bar data with "daily event" at 4pm):
-                ScanEvents();
-
-                //Reset all the daily events with today's date:
-                SetupEvents(time.Date);
+                scheduledEvent.Value.Scan(time);
             }
-
-            //Set the time:
-            _time = time;
-
-            // Backtest Mode Only: 
-            // > Scan the event every time we set the time. This allows "fast-forwarding" of the realtime events into sync with backtest.
-            ScanEvents();
         }
 
         /// <summary>
@@ -229,9 +126,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// </summary>
         public void Exit()
         {
-            _exitTriggered = true;
+            // this doesn't run as it's own thread, so nothing to exit
         }
-
-    } // End Result Handler Thread:
-
-} // End Namespace
+    }
+}

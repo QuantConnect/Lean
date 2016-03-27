@@ -14,6 +14,9 @@
 */
 
 using System;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using NUnit.Framework;
 using QuantConnect.Indicators;
 
@@ -83,6 +86,94 @@ namespace QuantConnect.Tests.Indicators
             // data based on time
             target.Update(data);
             Assert.AreEqual(value1, target.Current.Value);
+        }
+
+        [Test]
+        public void SortsTheSameAsDecimalDescending()
+        {
+            int count = 100;
+            var targets = Enumerable.Range(0, count).Select(x => new TestIndicator(x.ToString())).ToList();
+            for (int i = 0; i < targets.Count; i++)
+            {
+                targets[i].Update(DateTime.Today, i);
+            }
+
+            var expected = Enumerable.Range(0, count).Select(x => (decimal)x).OrderByDescending(x => x).ToList();
+            var actual = targets.OrderByDescending(x => x).ToList();
+            foreach (var pair in expected.Zip<decimal, TestIndicator, Tuple<decimal, TestIndicator>>(actual, Tuple.Create))
+            {
+                Assert.AreEqual(pair.Item1, pair.Item2.Current.Value);
+            }
+        }
+
+        [Test]
+        public void SortsTheSameAsDecimalAsecending()
+        {
+            int count = 100;
+            var targets = Enumerable.Range(0, count).Select(x => new TestIndicator(x.ToString())).ToList();
+            for (int i = 0; i < targets.Count; i++)
+            {
+                targets[i].Update(DateTime.Today, i);
+            }
+
+            var expected = Enumerable.Range(0, count).Select(x => (decimal)x).OrderBy(x => x).ToList();
+            var actual = targets.OrderBy(x => x).ToList();
+            foreach (var pair in expected.Zip<decimal, TestIndicator, Tuple<decimal, TestIndicator>>(actual, Tuple.Create))
+            {
+                Assert.AreEqual(pair.Item1, pair.Item2.Current.Value);
+            }
+        }
+
+        [Test]
+        public void ComparisonFunctions()
+        {   
+            TestComparisonOperators<int>();
+            TestComparisonOperators<long>();
+            TestComparisonOperators<float>();
+            TestComparisonOperators<double>();
+        }
+
+        private static void TestComparisonOperators<TValue>()
+        {
+            var indicator = new TestIndicator();
+            TestOperator(indicator, default(TValue), "GreaterThan", true, false);
+            TestOperator(indicator, default(TValue), "GreaterThan", false, false);
+            TestOperator(indicator, default(TValue), "GreaterThanOrEqual", true, true);
+            TestOperator(indicator, default(TValue), "GreaterThanOrEqual", false, true);
+            TestOperator(indicator, default(TValue), "LessThan", true, false);
+            TestOperator(indicator, default(TValue), "LessThan", false, false);
+            TestOperator(indicator, default(TValue), "LessThanOrEqual", true, true);
+            TestOperator(indicator, default(TValue), "LessThanOrEqual", false, true);
+            TestOperator(indicator, default(TValue), "Equality", true, true);
+            TestOperator(indicator, default(TValue), "Equality", false, true);
+            TestOperator(indicator, default(TValue), "Inequality", true, false);
+            TestOperator(indicator, default(TValue), "Inequality", false, false);
+        }
+
+        private static void TestOperator<TIndicator, TValue>(TIndicator indicator, TValue value, string opName, bool tvalueIsFirstParm, bool expected)
+        {
+            var method = GetOperatorMethodInfo<TValue>(opName, tvalueIsFirstParm ? 0 : 1);
+            var ctIndicator = Expression.Constant(indicator);
+            var ctValue = Expression.Constant(value);
+            var call = tvalueIsFirstParm ? Expression.Call(method, ctValue, ctIndicator) : Expression.Call(method, ctIndicator, ctValue);
+            var lamda = Expression.Lambda<Func<bool>>(call);
+            var func = lamda.Compile();
+            Assert.AreEqual(expected, func());
+        }
+
+        private static MethodInfo GetOperatorMethodInfo<T>(string @operator, int argIndex)
+        {
+            var methodName = "op_" + @operator;
+            var method =
+                typeof (IndicatorBase<IndicatorDataPoint>).GetMethods(BindingFlags.Static | BindingFlags.Public)
+                .SingleOrDefault(x => x.Name == methodName && x.GetParameters()[argIndex].ParameterType == typeof(T));
+
+            if (method == null)
+            {
+                Assert.Fail("Failed to find method for " + @operator + " of type " + typeof(T).Name + " at index: " + argIndex);
+            }
+
+            return method;
         }
 
         private class TestIndicator : Indicator

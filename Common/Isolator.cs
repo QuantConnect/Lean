@@ -13,9 +13,6 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,66 +20,58 @@ using QuantConnect.Logging;
 
 namespace QuantConnect 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Isolator class - create a new instance of the algorithm and ensure it doesn't 
     /// exceed memory or time execution limits.
     /// </summary>
     public class Isolator
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         /// <summary>
         /// Algo cancellation controls - cancel source.
         /// </summary>
-        public static CancellationTokenSource cancellation = new CancellationTokenSource();
+        public CancellationTokenSource CancellationTokenSource
+        {
+            get; private set;
+        }
 
         /// <summary>
         /// Algo cancellation controls - cancellation token for algorithm thread.
         /// </summary>
-        public static CancellationToken cancelToken = new CancellationToken();
+        public CancellationToken CancellationToken
+        {
+            get { return CancellationTokenSource.Token; }
+        }
 
-
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
         /// <summary>
         /// Check if this task isolator is cancelled, and exit the analysis
         /// </summary>
-        public static bool IsCancellationRequested
+        public bool IsCancellationRequested
         {
-            get 
-            {
-                return cancelToken.IsCancellationRequested;
-            }
+            get { return CancellationTokenSource.IsCancellationRequested; }
         }
 
-
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
-        /// Reset the cancellation token variables for a new task:
+        /// Initializes a new instance of the <see cref="Isolator"/> class
         /// </summary>
-        public static void ResetCancelToken() 
+        public Isolator()
         {
-            cancellation = new CancellationTokenSource();
-            cancelToken = cancellation.Token;
+            CancellationTokenSource = new CancellationTokenSource();
         }
-
 
         /// <summary>
         /// Execute a code block with a maximum limit on time and memory.
         /// </summary>
         /// <param name="timeSpan">Timeout in timespan</param>
+        /// <param name="withinCustomLimits">Function used to determine if the codeBlock is within custom limits, such as with algorithm manager
+        /// timing individual time loops, return a non-null and non-empty string with a message indicating the error/reason for stoppage</param>
         /// <param name="codeBlock">Action codeblock to execute</param>
         /// <param name="memoryCap">Maximum memory allocation, default 1024Mb</param>
         /// <returns>True if algorithm exited successfully, false if cancelled because it exceeded limits.</returns>
-        public static bool ExecuteWithTimeLimit(TimeSpan timeSpan, Action codeBlock, long memoryCap = 1024)
+        public bool ExecuteWithTimeLimit(TimeSpan timeSpan, Func<string> withinCustomLimits, Action codeBlock, long memoryCap = 1024)
         {
+            // default to always within custom limits
+            withinCustomLimits = withinCustomLimits ?? (() => null);
+
             var message = "";
             var end = DateTime.Now + timeSpan;
             var memoryLogger = DateTime.Now + TimeSpan.FromMinutes(1);
@@ -90,10 +79,8 @@ namespace QuantConnect
             //Convert to bytes
             memoryCap *= 1024 * 1024;
 
-            ResetCancelToken();
-
-            //Thread:
-            var task = Task.Factory.StartNew(codeBlock, cancelToken);
+            //Launch task
+            var task = Task.Factory.StartNew(codeBlock, CancellationTokenSource.Token);
 
             while (!task.IsCompleted && DateTime.Now < end)
             {
@@ -118,6 +105,15 @@ namespace QuantConnect
                     Log.Trace(DateTime.Now.ToString("u") + " Isolator.ExecuteWithTimeLimit(): Used: " + Math.Round(Convert.ToDouble(memoryUsed / (1024 * 1024))));
                     memoryLogger = DateTime.Now.AddMinutes(1);
                 }
+
+                // check to see if we're within other custom limits defined by the caller
+                var possibleMessage = withinCustomLimits();
+                if (!string.IsNullOrEmpty(possibleMessage))
+                {
+                    message = possibleMessage;
+                    break;
+                }
+
                 Thread.Sleep(100);
             }
 
@@ -129,11 +125,23 @@ namespace QuantConnect
 
             if (message != "")
             {
-                cancellation.Cancel();
+                CancellationTokenSource.Cancel();
                 Log.Error("Security.ExecuteWithTimeLimit(): " + message);
                 throw new Exception(message);
             }
             return task.IsCompleted;
+        }
+
+        /// <summary>
+        /// Execute a code block with a maximum limit on time and memory.
+        /// </summary>
+        /// <param name="timeSpan">Timeout in timespan</param>
+        /// <param name="codeBlock">Action codeblock to execute</param>
+        /// <param name="memoryCap">Maximum memory allocation, default 1024Mb</param>
+        /// <returns>True if algorithm exited successfully, false if cancelled because it exceeded limits.</returns>
+        public bool ExecuteWithTimeLimit(TimeSpan timeSpan, Action codeBlock, long memoryCap = 1024)
+        {
+            return ExecuteWithTimeLimit(timeSpan, null, codeBlock, memoryCap);
         }
     }
 }

@@ -16,6 +16,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace QuantConnect.Indicators
 {
@@ -29,8 +30,8 @@ namespace QuantConnect.Indicators
     {
         // the backing list object used to hold the data
         private readonly List<T> _list;
-        // lock used for modifying, also while getting enumerator to avoid mutation while enumerating
-        private readonly object _lock = new object();
+        // read-write lock used for controlling access to the underlying list data structure
+        private readonly ReaderWriterLockSlim _listLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
         // the most recently removed item from the window (fell off the back)
         private T _mostRecentlyRemoved;
         // the total number of samples taken by this indicator
@@ -56,7 +57,18 @@ namespace QuantConnect.Indicators
         /// </summary>
         public int Size
         {
-            get { return _list.Capacity; }
+            get
+            { 
+                try
+                {
+                    _listLock.EnterReadLock();
+                    return _list.Capacity;
+                }
+                finally
+                {
+                    _listLock.ExitReadLock();
+                }
+            }
         }
 
         /// <summary>
@@ -64,7 +76,18 @@ namespace QuantConnect.Indicators
         /// </summary>
         public int Count
         {
-            get { return _list.Count; }
+            get
+            { 
+                try
+                {
+                    _listLock.EnterReadLock();
+                    return _list.Count;
+                }
+                finally
+                {
+                    _listLock.ExitReadLock();
+                }
+            }
         }
 
         /// <summary>
@@ -72,7 +95,18 @@ namespace QuantConnect.Indicators
         /// </summary>
         public decimal Samples
         {
-            get { return _samples; }
+            get
+            { 
+                try
+                {
+                    _listLock.EnterReadLock();
+                    return _samples;
+                }
+                finally
+                {
+                    _listLock.ExitReadLock();
+                }
+            }
         }
 
         /// <summary>
@@ -84,11 +118,21 @@ namespace QuantConnect.Indicators
         {
             get
             {
-                if (!IsReady)
+                try
                 {
-                    throw new InvalidOperationException("No items have been removed yet!");
+                    _listLock.EnterReadLock();
+
+                    if (!IsReady)
+                    {
+                        throw new InvalidOperationException("No items have been removed yet!");
+                    }
+                    return _mostRecentlyRemoved;
                 }
-                return _mostRecentlyRemoved;
+                finally
+                {
+                    _listLock.ExitReadLock();
+                }
+
             }
         }
 
@@ -98,23 +142,41 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="i">the index, i</param>
         /// <returns>the ith most recent entry</returns>
-        public T this[int i]
+        public T this [int i]
         {
             get
             {
-                if (i >= Count)
+                try
                 {
-                    throw new ArgumentOutOfRangeException("i", i, string.Format("Must be between 0 and Count {0}", Count));
+                    _listLock.EnterReadLock();
+
+                    if (i >= Count)
+                    {
+                        throw new ArgumentOutOfRangeException("i", i, string.Format("Must be between 0 and Count {0}", Count));
+                    }
+                    return _list[(Count + _tail - i - 1) % Count];
                 }
-                return _list[(Count + _tail - i - 1) % Count];
+                finally
+                {
+                    _listLock.ExitReadLock();
+                }
             }
             set
             {
-                if (i >= Count)
+                try
                 {
-                    throw new ArgumentOutOfRangeException("i", i, string.Format("Must be between 0 and Count {0}", Count));
+                    _listLock.EnterWriteLock();
+
+                    if (i >= Count)
+                    {
+                        throw new ArgumentOutOfRangeException("i", i, string.Format("Must be between 0 and Count {0}", Count));
+                    }
+                    _list[(Count + _tail - i - 1) % Count] = value;
                 }
-                _list[(Count + _tail - i - 1) % Count] = value;
+                finally
+                {
+                    _listLock.ExitWriteLock();
+                }
             }
         }
 
@@ -124,7 +186,18 @@ namespace QuantConnect.Indicators
         /// </summary>
         public bool IsReady
         {
-            get { return Samples > Size; }
+            get
+            { 
+                try
+                {
+                    _listLock.EnterReadLock();
+                    return Samples > Size;
+                }
+                finally
+                {
+                    _listLock.ExitReadLock();
+                } 
+            }
         }
 
         /// <summary>
@@ -139,14 +212,21 @@ namespace QuantConnect.Indicators
             // we make a copy on purpose so the enumerator isn't tied 
             // to a mutable object, well it is still mutable but out of scope
             var temp = new List<T>(Count);
-            lock (_lock)
+            try
             {
+                _listLock.EnterReadLock();
+
                 for (int i = 0; i < Count; i++)
                 {
                     temp.Add(this[i]);
                 }
+                return temp.GetEnumerator();
             }
-            return temp.GetEnumerator();
+            finally
+            {
+                _listLock.ExitReadLock();
+            }
+
         }
 
         /// <summary>
@@ -167,8 +247,10 @@ namespace QuantConnect.Indicators
         /// <param name="item">The item to be added</param>
         public void Add(T item)
         {
-            lock (_lock)
+            try
             {
+                _listLock.EnterWriteLock();
+
                 _samples++;
                 if (Size == Count)
                 {
@@ -183,6 +265,10 @@ namespace QuantConnect.Indicators
                     _list.Add(item);
                 }
             }
+            finally
+            {
+                _listLock.ExitWriteLock();
+            }
         }
 
         /// <summary>
@@ -190,10 +276,17 @@ namespace QuantConnect.Indicators
         /// </summary>
         public void Reset()
         {
-            lock (_lock)
+            try
             {
+                _listLock.EnterWriteLock();
+
                 _samples = 0;
                 _list.Clear();
+                _tail = 0;
+            }
+            finally
+            {
+                _listLock.ExitWriteLock();
             }
         }
     }
