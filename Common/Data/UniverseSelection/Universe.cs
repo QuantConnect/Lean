@@ -18,6 +18,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 
@@ -154,6 +155,22 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="data">The symbols to remain in the universe</param>
         /// <returns>The data that passes the filter</returns>
         public abstract IEnumerable<Symbol> SelectSymbols(DateTime utcTime, BaseDataCollection data);
+
+        /// <summary>
+        /// Creates and configures a security for the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol of the security to be created</param>
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <param name="marketHoursDatabase">The market hours database</param>
+        /// <param name="symbolPropertiesDatabase">The symbol properties database</param>
+        /// <returns>The newly initialized security object</returns>
+        public virtual Security CreateSecurity(Symbol symbol, IAlgorithm algorithm, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase)
+        {
+            // by default invoke the create security method to handle security initialization
+            return SecurityManager.CreateSecurity(algorithm.Portfolio, algorithm.SubscriptionManager, marketHoursDatabase, symbolPropertiesDatabase,
+                SecurityInitializer, symbol, UniverseSettings.Resolution, UniverseSettings.FillForward, UniverseSettings.Leverage,
+                UniverseSettings.ExtendedMarketHours, false, false, false);
+        }
 
         /// <summary>
         /// Gets the subscriptions to be added for the specified security
