@@ -644,7 +644,7 @@ namespace QuantConnect.Algorithm
 
                 iterations++;
 
-            } while (orderQuantity > 0 && (marginRequired > marginRemaining || orderValue + orderFees > targetOrderValue));
+            } while (orderQuantity > 0 && (marginRequired > marginRemaining || orderValue > targetOrderValue));
 
             // add directionality back in
             return (direction == OrderDirection.Sell ? -1 : 1) * orderQuantity;
