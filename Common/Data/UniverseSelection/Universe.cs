@@ -156,6 +156,21 @@ namespace QuantConnect.Data.UniverseSelection
         public abstract IEnumerable<Symbol> SelectSymbols(DateTime utcTime, BaseDataCollection data);
 
         /// <summary>
+        /// Gets the subscriptions to be added for the specified security
+        /// </summary>
+        /// <remarks>
+        /// In most cases the default implementaon of returning the security's configuration is
+        /// sufficient. It's when we want multiple subscriptions (trade/quote data) that we'll need
+        /// to override this
+        /// </remarks>
+        /// <param name="security">The security to get subscriptions for</param>
+        /// <returns>All subscriptions required by this security</returns>
+        public virtual IEnumerable<SubscriptionDataConfig> GetSubscriptions(Security security)
+        {
+            return new[] {security.SubscriptionDataConfig};
+        }
+
+        /// <summary>
         /// Determines whether or not the specified
         /// </summary>
         /// <param name="security"></param>
