@@ -308,13 +308,15 @@ namespace QuantConnect.Lean.Engine
                 //Update the securities properties: first before calling user code to avoid issues with data
                 foreach (var kvp in timeSlice.SecuritiesUpdateData)
                 {
-                    kvp.Key.SetMarketPrice(kvp.Value);
+                    var security = kvp.Key;
+                    var updates = kvp.Value;
+                    foreach (var update in updates)
+                    {
+                        security.SetMarketPrice(update);
+                    }
 
                     // Send market price updates to the TradeBuilder
-                    if (kvp.Value != null)
-                    {
-                        algorithm.TradeBuilder.SetMarketPrice(kvp.Key.Symbol, kvp.Value.Price);
-                    }
+                    algorithm.TradeBuilder.SetMarketPrice(security.Symbol, security.Price);
                 }
 
                 // fire real time events after we've updated based on the new data
