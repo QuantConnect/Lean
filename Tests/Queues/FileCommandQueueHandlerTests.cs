@@ -34,10 +34,10 @@ namespace QuantConnect.Tests.Queues
         private const string MultiCommandFilePath = "commands.json";
 
         [Test]
-        public void ReadsSingleCommandFromFile()
+        public void ReadsSingleJsonCommandFromFile()
         {
             if (File.Exists(SingleCommandFilePath)) File.Delete(SingleCommandFilePath);
-            var queue = new FileCommandQueueHandler(SingleCommandFilePath);
+            var queue = new JsonCommandQueueHandler(SingleCommandFilePath);
             Assert.IsEmpty(queue.GetCommands());
             File.WriteAllText(SingleCommandFilePath, JsonConvert.SerializeObject(new LiquidateCommand(), new JsonSerializerSettings{TypeNameHandling = TypeNameHandling.All}));
             Assert.IsInstanceOf(typeof (LiquidateCommand), queue.GetCommands().Single());
@@ -47,7 +47,7 @@ namespace QuantConnect.Tests.Queues
         public void ReadsMultipleCommandsFromFile()
         {
             if (File.Exists(MultiCommandFilePath)) File.Delete(MultiCommandFilePath);
-            var queue = new FileCommandQueueHandler(MultiCommandFilePath);
+            var queue = new JsonCommandQueueHandler(MultiCommandFilePath);
             Assert.IsEmpty(queue.GetCommands());
             File.WriteAllText(MultiCommandFilePath, JsonConvert.SerializeObject(new List<ICommand>
             {

@@ -29,27 +29,38 @@ namespace QuantConnect.Queues
     /// Represents a command queue handler that sources it's commands from
     /// a file on the local disk
     /// </summary>
-    public class FileCommandQueueHandler : ICommandQueueHandler
+    public abstract class FileCommandQueueHandler : ICommandQueueHandler
     {
-        private readonly string _commandJsonFilePath;
-        private readonly Queue<ICommand> _commands = new Queue<ICommand>();
+        private readonly string _commandFilePath;
+        private readonly QueuedCommands _commands = new QueuedCommands();
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="FileCommandQueueHandler"/> class
-        /// using the 'command-json-file' configuration value for the command json file
+        /// 
         /// </summary>
-        public FileCommandQueueHandler()
-            : this(Config.Get("command-json-file", "command.json"))
+        protected QueuedCommands Commands
         {
+            get
+            {
+                return _commands;
+            }
         }
-
+        /// <summary>
+        /// Command File Path
+        /// </summary>
+        protected string CommandFilePath
+        {
+            get
+            {
+                return _commandFilePath;
+            }
+        }
         /// <summary>
         /// Initializes a new instance of the <see cref="FileCommandQueueHandler"/> class
         /// </summary>
-        /// <param name="commandJsonFilePath">The file path to the commands json file</param>
-        public FileCommandQueueHandler(string commandJsonFilePath)
+        /// <param name="commandFilePath">The file path to the commands  file</param>
+        public FileCommandQueueHandler(string commandFilePath)
         {
-            _commandJsonFilePath = commandJsonFilePath;
+            _commandFilePath = commandFilePath;
         }
 
         /// <summary>
@@ -57,8 +68,9 @@ namespace QuantConnect.Queues
         /// </summary>
         /// <param name="job">The job that defines what queue to bind to</param>
         /// <param name="algorithm">The algorithm instance</param>
-        public void Initialize(AlgorithmNodePacket job, IAlgorithm algorithm)
+        public virtual void Initialize(AlgorithmNodePacket job, IAlgorithm algorithm)
         {
+
         }
 
         /// <summary>
@@ -67,10 +79,13 @@ namespace QuantConnect.Queues
         /// <returns>The next command in the queue, if present, null if no commands present</returns>
         public IEnumerable<ICommand> GetCommands()
         {
-            if (File.Exists(_commandJsonFilePath))
+            if (File.Exists(_commandFilePath))
             {
-                // update the queue by reading the command file
-                ReadCommandFile();
+                // load commands from file
+                LoadCommands();
+
+                // remove the file when we're done reading it
+                File.Delete(_commandFilePath);
             }
 
             while (_commands.Count != 0)
@@ -80,25 +95,12 @@ namespace QuantConnect.Queues
         }
 
         /// <summary>
-        /// Reads the commnd file on disk and populates the queue with the commands
+        /// Populates the queue with the commands from file
         /// </summary>
-        private void ReadCommandFile()
+        private void LoadCommands()
         {
-            object deserialized;
-            try
-            {
-                if (!File.Exists(_commandJsonFilePath)) return;
-                var contents = File.ReadAllText(_commandJsonFilePath);
-                deserialized = JsonConvert.DeserializeObject(contents, new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All });
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
-                deserialized = null;
-            }
-
-            // remove the file when we're done reading it
-            File.Delete(_commandJsonFilePath);
+            // update the queue by reading the command file
+            object deserialized = ReadCommandFile();
 
             // try it as an enumerable
             var enumerable = deserialized as IEnumerable<ICommand>;
@@ -108,23 +110,31 @@ namespace QuantConnect.Queues
                 {
                     _commands.Enqueue(command);
                 }
-                return;
             }
-            
-            // try it as a single command
-            var item = deserialized as ICommand;
-            if (item != null)
+            else
             {
-                _commands.Enqueue(item);
+                // try it as a single command
+                var item = deserialized as ICommand;
+                if (item != null)
+                {
+                    _commands.Enqueue(item);
+                }
             }
+
         }
+
+        /// <summary>
+        /// Reads the command file on disk and and deserialize to object
+        /// </summary>
+        protected abstract object ReadCommandFile();
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         /// <filterpriority>2</filterpriority>
-        public void Dispose()
+        public virtual void Dispose()
         {
+
         }
     }
 }

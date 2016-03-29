@@ -15,6 +15,7 @@
 
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
+using System;
 
 namespace QuantConnect.Commands
 {

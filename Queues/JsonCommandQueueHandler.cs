@@ -29,9 +29,8 @@ namespace QuantConnect.Queues
     /// Represents a command queue handler that sources it's commands from
     /// a file on the local disk
     /// </summary>
-    public class JsonCommandQueueHandler : ICommandQueueHandler
+    public class JsonCommandQueueHandler : FileCommandQueueHandler
     {
-        private readonly string _commandJsonFilePath;
         private readonly Queue<ICommand> _commands = new Queue<ICommand>();
 
         /// <summary>
@@ -47,53 +46,29 @@ namespace QuantConnect.Queues
         /// Initializes a new instance of the <see cref="FileCommandQueueHandler"/> class
         /// </summary>
         /// <param name="commandJsonFilePath">The file path to the commands json file</param>
-        public JsonCommandQueueHandler(string commandJsonFilePath)
+        public JsonCommandQueueHandler(string commandJsonFilePath):
+            base(commandJsonFilePath)
         {
-            _commandJsonFilePath = commandJsonFilePath;
+
+            Commands.Enqueue(new CustomCommand());
+            Commands.Enqueue(new TotoCommand());
             File.WriteAllText(commandJsonFilePath, JsonConvert.SerializeObject(new List<ICommand>
             {
                 new CustomCommand(),
-                new NotifyCommand()
+                new TotoCommand()
             }, new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All }));
-        }
-
-        /// <summary>
-        /// Initializes this command queue for the specified job
-        /// </summary>
-        /// <param name="job">The job that defines what queue to bind to</param>
-        /// <param name="algorithm">The algorithm instance</param>
-        public void Initialize(AlgorithmNodePacket job, IAlgorithm algorithm)
-        {
-        }
-
-        /// <summary>
-        /// Gets the next command in the queue
-        /// </summary>
-        /// <returns>The next command in the queue, if present, null if no commands present</returns>
-        public IEnumerable<ICommand> GetCommands()
-        {
-            if (File.Exists(_commandJsonFilePath))
-            {
-                // update the queue by reading the command file
-                ReadCommandFile();
-            }
-
-            while (_commands.Count != 0)
-            {
-                yield return _commands.Dequeue();
-            }
         }
 
         /// <summary>
         /// Reads the commnd file on disk and populates the queue with the commands
         /// </summary>
-        private void ReadCommandFile()
+        protected override object ReadCommandFile()
         {
             object deserialized;
             try
             {
-                if (!File.Exists(_commandJsonFilePath)) return;
-                var contents = File.ReadAllText(_commandJsonFilePath);
+                if (!File.Exists(CommandFilePath)) return null;
+                var contents = File.ReadAllText(CommandFilePath);
                 deserialized = JsonConvert.DeserializeObject(contents, new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All });
             }
             catch (Exception err)
@@ -102,34 +77,7 @@ namespace QuantConnect.Queues
                 deserialized = null;
             }
 
-            // remove the file when we're done reading it
-            File.Delete(_commandJsonFilePath);
-
-            // try it as an enumerable
-            var enumerable = deserialized as IEnumerable<ICommand>;
-            if (enumerable != null)
-            {
-                foreach (var command in enumerable)
-                {
-                    _commands.Enqueue(command);
-                }
-                return;
-            }
-            
-            // try it as a single command
-            var item = deserialized as ICommand;
-            if (item != null)
-            {
-                _commands.Enqueue(item);
-            }
-        }
-
-        /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-        /// </summary>
-        /// <filterpriority>2</filterpriority>
-        public void Dispose()
-        {
+            return deserialized;
         }
     }
 }

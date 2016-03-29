@@ -9,12 +9,13 @@ using QuantConnect.Logging;
 
 namespace QuantConnect.Commands
 {
-    public sealed class CustomCommand : ICommand
+    public sealed class TotoCommand : ICommand
     {
         public CommandResultPacket Run(IAlgorithm algorithm)
         {
-            Log.Trace("Custom");
-            return new CommandResultPacket(this,true);
+            Log.Trace("Toto");
+            return new CommandResultPacket(this, true);
         }
+
     }
 }
