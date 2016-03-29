@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,15 +13,11 @@
  * limitations under the License.
 */
 
-using System;
+using QuantConnect.Commands;
+using QuantConnect.Interfaces;
+using QuantConnect.Packets;
 using System.Collections.Generic;
 using System.IO;
-using Newtonsoft.Json;
-using QuantConnect.Commands;
-using QuantConnect.Configuration;
-using QuantConnect.Interfaces;
-using QuantConnect.Logging;
-using QuantConnect.Packets;
 
 namespace QuantConnect.Queues
 {
@@ -35,17 +31,16 @@ namespace QuantConnect.Queues
         private readonly QueuedCommands _commands = new QueuedCommands();
 
         /// <summary>
-        /// 
+        /// Initializes a new instance of the <see cref="FileCommandQueueHandler"/> class
         /// </summary>
-        protected QueuedCommands Commands
+        /// <param name="commandFilePath">The file path to the commands file</param>
+        public FileCommandQueueHandler(string commandFilePath)
         {
-            get
-            {
-                return _commands;
-            }
+            _commandFilePath = commandFilePath;
         }
+
         /// <summary>
-        /// Command File Path
+        /// The file path to the commands file
         /// </summary>
         protected string CommandFilePath
         {
@@ -54,23 +49,24 @@ namespace QuantConnect.Queues
                 return _commandFilePath;
             }
         }
+
         /// <summary>
-        /// Initializes a new instance of the <see cref="FileCommandQueueHandler"/> class
+        /// The queue of commands
         /// </summary>
-        /// <param name="commandFilePath">The file path to the commands  file</param>
-        public FileCommandQueueHandler(string commandFilePath)
+        protected QueuedCommands Commands
         {
-            _commandFilePath = commandFilePath;
+            get
+            {
+                return _commands;
+            }
         }
 
         /// <summary>
-        /// Initializes this command queue for the specified job
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
-        /// <param name="job">The job that defines what queue to bind to</param>
-        /// <param name="algorithm">The algorithm instance</param>
-        public virtual void Initialize(AlgorithmNodePacket job, IAlgorithm algorithm)
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
         {
-
         }
 
         /// <summary>
@@ -95,7 +91,21 @@ namespace QuantConnect.Queues
         }
 
         /// <summary>
-        /// Populates the queue with the commands from file
+        /// Initializes this command queue for the specified job
+        /// </summary>
+        /// <param name="job">The job that defines what queue to bind to</param>
+        /// <param name="algorithm">The algorithm instance</param>
+        public void Initialize(AlgorithmNodePacket job, IAlgorithm algorithm)
+        {
+        }
+
+        /// <summary>
+        /// Reads the command file on disk and deserialize to object
+        /// </summary>
+        protected abstract object ReadCommandFile();
+
+        /// <summary>
+        /// Populates the queue with the deserialized commands from file
         /// </summary>
         private void LoadCommands()
         {
@@ -120,21 +130,6 @@ namespace QuantConnect.Queues
                     _commands.Enqueue(item);
                 }
             }
-
-        }
-
-        /// <summary>
-        /// Reads the command file on disk and and deserialize to object
-        /// </summary>
-        protected abstract object ReadCommandFile();
-
-        /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-        /// </summary>
-        /// <filterpriority>2</filterpriority>
-        public virtual void Dispose()
-        {
-
         }
     }
 }
