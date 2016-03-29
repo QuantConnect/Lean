@@ -490,7 +490,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             DateTime localEndTime,
             MapFileResolver mapFileResolver,
             IEnumerable<DateTime> tradeableDates,
-            bool applySubscripterFilterEnumerator = true)
+            bool applySubscriptionFilterEnumerator = true)
         {
             IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, mapFileResolver,
                 _factorFileProvider, tradeableDates, false);
@@ -503,7 +503,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // optionally apply exchange/user filters
-            if (applySubscripterFilterEnumerator)
+            if (applySubscriptionFilterEnumerator)
             {
                 enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(_resultHandler, enumerator, security, localEndTime);
             }
