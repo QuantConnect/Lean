@@ -222,16 +222,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>True if the subscription was successfully removed, false otherwise</returns>
         public bool RemoveSubscription(Symbol symbol)
         {
-            List<Subscription> sub;
-            if (!_subscriptions.TryRemove(symbol, out sub))
+            List<Subscription> subscriptions;
+            if (!_subscriptions.TryRemove(symbol, out subscriptions))
             {
                 Log.Error("FileSystemDataFeed.RemoveSubscription(): Unable to remove: " + symbol.ToString());
                 return false;
             }
 
+            foreach (var subscription in subscriptions)
+            {
+                subscription.Dispose();
+            }
+
             Log.Debug("FileSystemDataFeed.RemoveSubscription(): Removed " + symbol.ToString());
 
-            _changes += SecurityChanges.Removed(sub.Select(x => x.Security).ToArray());
+            _changes += SecurityChanges.Removed(subscriptions.Select(x => x.Security).ToArray());
 
             UpdateFillForwardResolution();
             return true;
@@ -428,7 +433,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     Log.Debug(string.Format("FileSystemDataFeed.GetEnumerator(): Finished subscription: {0} at {1} UTC", subscription.Security.Symbol.ID, _frontierUtc));
-                    subscription.Dispose();
                 }
             };
 
