@@ -48,7 +48,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private SecurityChanges _changes = SecurityChanges.None;
         private IMapFileProvider _mapFileProvider;
         private IFactorFileProvider _factorFileProvider;
-        private ConcurrentDictionary<Symbol, Subscription> _subscriptions;
+        private ConcurrentDictionary<Symbol, List<Subscription>> _subscriptions;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private UniverseSelection _universeSelection;
         private DateTime _frontierUtc;
@@ -58,7 +58,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public IEnumerable<Subscription> Subscriptions
         {
-            get { return _subscriptions.Select(x => x.Value); }
+            get { return _subscriptions.SelectMany(x => x.Value); }
         }
 
         /// <summary>
@@ -75,7 +75,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _resultHandler = resultHandler;
             _mapFileProvider = mapFileProvider;
             _factorFileProvider = factorFileProvider;
-            _subscriptions = new ConcurrentDictionary<Symbol, Subscription>();
+            _subscriptions = new ConcurrentDictionary<Symbol, List<Subscription>>();
             _universeSelection = new UniverseSelection(this, algorithm, job.Controls);
             _cancellationTokenSource = new CancellationTokenSource();
 
@@ -103,11 +103,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     case NotifyCollectionChangedAction.Remove:
                         foreach (var universe in args.OldItems.OfType<Universe>())
                         {
-                            Subscription subscription;
-                            if (_subscriptions.TryGetValue(universe.Configuration.Symbol, out subscription))
-                            {
-                                RemoveSubscription(subscription.Configuration.Symbol);
-                            }
+                            RemoveSubscription(universe.Configuration.Symbol);
                         }
                         break;
 
@@ -208,7 +204,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             Log.Debug("FileSystemDataFeed.AddSubscription(): Added " + security.Symbol.ID + " Start: " + utcStartTime + " End: " + utcEndTime);
 
-            _subscriptions.AddOrUpdate(subscription.Security.Symbol,  subscription);
+            _subscriptions.Add(subscription.Security.Symbol,  subscription);
 
             // prime the pump, run method checks current before move next calls
             //PrimeSubscriptionPump(subscription, true);
@@ -226,7 +222,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>True if the subscription was successfully removed, false otherwise</returns>
         public bool RemoveSubscription(Symbol symbol)
         {
-            Subscription sub;
+            List<Subscription> sub;
             if (!_subscriptions.TryRemove(symbol, out sub))
             {
                 Log.Error("FileSystemDataFeed.RemoveSubscription(): Unable to remove: " + symbol.ToString());
@@ -235,7 +231,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             Log.Debug("FileSystemDataFeed.RemoveSubscription(): Removed " + symbol.ToString());
 
-            _changes += SecurityChanges.Removed(sub.Security);
+            _changes += SecurityChanges.Removed(sub.Select(x => x.Security).ToArray());
 
             UpdateFillForwardResolution();
             return true;
@@ -377,7 +373,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // create the subscription
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, startTimeUtc, endTimeUtc);
             var subscription = new Subscription(universe, security, enumerator, timeZoneOffsetProvider, startTimeUtc, endTimeUtc, true);
-            _subscriptions.AddOrUpdate(subscription.Security.Symbol, subscription);
+
+            _subscriptions.Add(subscription.Security.Symbol, subscription);
 
             UpdateFillForwardResolution();
         }
@@ -398,8 +395,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private void UpdateFillForwardResolution()
         {
             _fillForwardResolution.Value = _subscriptions
-                .Where(x => !x.Value.Configuration.IsInternalFeed)
-                .Select(x => x.Value.Configuration.Resolution)
+                .SelectMany(x => x.Value)
+                .Where(x => !x.Configuration.IsInternalFeed)
+                .Select(x => x.Configuration.Resolution)
                 .Where(x => x != Resolution.Tick)
                 .DefaultIfEmpty(Resolution.Minute)
                 .Min().ToTimeSpan();
@@ -421,8 +419,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var syncer = new SubscriptionSynchronizer(_universeSelection);
             syncer.SubscriptionFinished += (sender, subscription) =>
             {
-                if (subscription.EndOfStream && _subscriptions.TryRemove(subscription.Security.Symbol, out subscription))
+                List<Subscription> subscriptions;
+                if (subscription.EndOfStream && _subscriptions.TryGetValue(subscription.Security.Symbol, out subscriptions))
                 {
+                    if (subscriptions.All(x => x.EndOfStream))
+                    {
+                        RemoveSubscription(subscription.Security.Symbol);
+                    }
+
                     Log.Debug(string.Format("FileSystemDataFeed.GetEnumerator(): Finished subscription: {0} at {1} UTC", subscription.Security.Symbol.ID, _frontierUtc));
                     subscription.Dispose();
                 }
