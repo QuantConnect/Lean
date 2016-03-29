@@ -132,8 +132,10 @@
     <Compile Include="Commands\AddSecurityCommand.cs" />
     <Compile Include="Commands\AlgorithmStatusCommand.cs" />
     <Compile Include="Commands\CancelOrderCommand.cs" />
+    <Compile Include="Commands\CustomCommand.cs" />
     <Compile Include="Commands\ICommand.cs" />
     <Compile Include="Commands\LiquidateCommand.cs" />
+    <Compile Include="Commands\NotifyCommand.cs" />
     <Compile Include="Commands\OrderCommand.cs" />
     <Compile Include="Commands\QuitCommand.cs" />
     <Compile Include="Commands\UpdateOrderCommand.cs" />
