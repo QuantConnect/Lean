@@ -22,7 +22,6 @@ using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Logging;
 
 namespace QuantConnect.Securities 
 {
@@ -312,6 +311,8 @@ namespace QuantConnect.Securities
             SubscriptionManager subscriptionManager,
             SecurityExchangeHours exchangeHours,
             DateTimeZone dataTimeZone,
+            SymbolProperties symbolProperties,
+            ISecurityInitializer securityInitializer,
             Symbol symbol,
             Resolution resolution,
             bool fillDataForward,
@@ -322,15 +323,6 @@ namespace QuantConnect.Securities
             bool addToSymbolCache = true)
         {
             var sid = symbol.ID;
-
-            //If it hasn't been set, use some defaults based on the security type
-            if (leverage <= 0)
-            {
-                if (sid.SecurityType == SecurityType.Equity) leverage = 2;
-                else if (sid.SecurityType == SecurityType.Forex) leverage = 50;
-                // default to 1 for everything else
-                else leverage = 1m;
-            }
 
             // add the symbol to our cache
             if (addToSymbolCache) SymbolCache.Set(symbol.Value, symbol);
@@ -343,32 +335,58 @@ namespace QuantConnect.Securities
             switch (config.SecurityType)
             {
                 case SecurityType.Equity:
-                    security = new Equity.Equity(exchangeHours, config, leverage);
+                    security = new Equity.Equity(exchangeHours, config);
                     break;
 
                 case SecurityType.Forex:
-                    // decompose the symbol into each currency pair
-                    string baseCurrency, quoteCurrency;
-                    Forex.Forex.DecomposeCurrencyPair(symbol.Value, out baseCurrency, out quoteCurrency);
+                    {
+                        // decompose the symbol into each currency pair
+                        string baseCurrency, quoteCurrency;
+                        Forex.Forex.DecomposeCurrencyPair(symbol.Value, out baseCurrency, out quoteCurrency);
 
-                    if (!securityPortfolioManager.CashBook.ContainsKey(baseCurrency))
-                    {
-                        // since we have none it's safe to say the conversion is zero
-                        securityPortfolioManager.CashBook.Add(baseCurrency, 0, 0);
+                        if (!securityPortfolioManager.CashBook.ContainsKey(baseCurrency))
+                        {
+                            // since we have none it's safe to say the conversion is zero
+                            securityPortfolioManager.CashBook.Add(baseCurrency, 0, 0);
+                        }
+                        if (!securityPortfolioManager.CashBook.ContainsKey(quoteCurrency))
+                        {
+                            // since we have none it's safe to say the conversion is zero
+                            securityPortfolioManager.CashBook.Add(quoteCurrency, 0, 0);
+                        }
+                        security = new Forex.Forex(exchangeHours, securityPortfolioManager.CashBook[quoteCurrency], config);
                     }
-                    if (!securityPortfolioManager.CashBook.ContainsKey(quoteCurrency))
+                    break;
+
+                case SecurityType.Cfd:
                     {
-                        // since we have none it's safe to say the conversion is zero
-                        securityPortfolioManager.CashBook.Add(quoteCurrency, 0, 0);
+                        var quoteCurrency = symbolProperties.QuoteCurrency;
+
+                        if (!securityPortfolioManager.CashBook.ContainsKey(quoteCurrency))
+                        {
+                            // since we have none it's safe to say the conversion is zero
+                            securityPortfolioManager.CashBook.Add(quoteCurrency, 0, 0);
+                        }
+                        security = new Cfd.Cfd(exchangeHours, securityPortfolioManager.CashBook[quoteCurrency], config, symbolProperties);
                     }
-                    security = new Forex.Forex(exchangeHours, securityPortfolioManager.CashBook[quoteCurrency], config, leverage);
                     break;
 
                 default:
                 case SecurityType.Base:
-                    security = new Security(exchangeHours, config, leverage);
+                    security = new Security(exchangeHours, config);
                     break;
             }
+
+            // invoke the security initializer
+            securityInitializer.Initialize(security);
+
+            // if leverage was specified then apply to security after the initializer has run, parameters of this
+            // method take precedence over the intializer
+            if (leverage > 0)
+            {
+                security.SetLeverage(leverage);
+            }
+
             return security;
         }
 
@@ -380,6 +398,8 @@ namespace QuantConnect.Securities
         public static Security CreateSecurity(SecurityPortfolioManager securityPortfolioManager,
             SubscriptionManager subscriptionManager,
             MarketHoursDatabase marketHoursDatabase,
+            SymbolPropertiesDatabase symbolPropertiesDatabase,
+            ISecurityInitializer securityInitializer,
             Symbol symbol,
             Resolution resolution,
             bool fillDataForward,
@@ -391,9 +411,13 @@ namespace QuantConnect.Securities
         {
             var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType);
             var exchangeHours = marketHoursDbEntry.ExchangeHours;
+
+            // only used in CFD security type, for now
+            var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType);
+
             var tradeBarType = typeof(TradeBar);
             var type = resolution == Resolution.Tick ? typeof(Tick) : tradeBarType;
-            return CreateSecurity(type, securityPortfolioManager, subscriptionManager, exchangeHours, marketHoursDbEntry.DataTimeZone, symbol, resolution,
+            return CreateSecurity(type, securityPortfolioManager, subscriptionManager, exchangeHours, marketHoursDbEntry.DataTimeZone, symbolProperties, securityInitializer, symbol, resolution,
                 fillDataForward, leverage, extendedMarketHours, isInternalFeed, isCustomData, addToSymbolCache);
         }
     }

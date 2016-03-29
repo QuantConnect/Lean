@@ -126,7 +126,7 @@ namespace QuantConnect.Tests.Brokerages.Tradier
         [Test, Ignore("This test exists to manually verify how rejected orders are handled when we don't receive an order ID back from Tradier.")]
         public void ShortZnga()
         {
-            PlaceOrderWaitForStatus(new MarketOrder(Symbols.ZNGA, -1, DateTime.Now, type: SecurityType.Equity), OrderStatus.Invalid, allowFailedSubmission: true);
+            PlaceOrderWaitForStatus(new MarketOrder(Symbols.ZNGA, -1, DateTime.Now), OrderStatus.Invalid, allowFailedSubmission: true);
 
             // wait for output to be generated
             Thread.Sleep(20*1000);

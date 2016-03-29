@@ -61,6 +61,7 @@ namespace QuantConnect.Algorithm
         private bool _sentNoDataError = false;
 
         private readonly MarketHoursDatabase _marketHoursDatabase;
+        private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase;
 
         // used for calling through to void OnData(Slice) if no override specified
         private bool _checkedForOnDataSlice;
@@ -69,18 +70,13 @@ namespace QuantConnect.Algorithm
         // set by SetBenchmark helper API functions
         private Symbol _benchmarkSymbol = QuantConnect.Symbol.Empty;
 
+        // flips to true when the user
+        private bool _userSetSecurityInitializer = false;
+
         // warmup resolution variables
         private TimeSpan? _warmupTimeSpan;
         private int? _warmupBarCount;
         private Dictionary<string, string> _parameters = new Dictionary<string, string>();
-        private Dictionary<SecurityType, string> _defaultMarkets = new Dictionary<SecurityType, string>
-        {
-            {SecurityType.Base, Market.USA},
-            {SecurityType.Equity, Market.USA},
-            {SecurityType.Option, Market.USA},
-            {SecurityType.Forex, Market.FXCM},
-            {SecurityType.Cfd, Market.FXCM}
-        };
 
         /// <summary>
         /// QCAlgorithm Base Class Constructor - Initialize the underlying QCAlgorithm components.
@@ -124,6 +120,9 @@ namespace QuantConnect.Algorithm
             // get exchange hours loaded from the market-hours-database.csv in /Data/market-hours
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
 
+            // get symbol properties loaded from the symbol-properties-database.csv in /Data/symbol-properties
+            _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
+
             // universe selection
             UniverseManager = new UniverseManager();
             Universe = new UniverseDefinitions(this);
@@ -136,7 +135,7 @@ namespace QuantConnect.Algorithm
             // initialize the trade builder
             TradeBuilder = new TradeBuilder(FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO);
 
-            AccountType = AccountType.Margin;
+            SecurityInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(AccountType.Margin));
         }
 
         /// <summary>
@@ -216,18 +215,18 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Gets the Trade Builder to generate trades from executions
+        /// Gets an instance that is to be used to initialize newly created securities.
         /// </summary>
-        public TradeBuilder TradeBuilder
+        public ISecurityInitializer SecurityInitializer
         {
-            get;
+            get; 
             private set;
         }
 
         /// <summary>
-        /// The account type determines which settlement model will be used (Cash or Margin).
+        /// Gets the Trade Builder to generate trades from executions
         /// </summary>
-        public AccountType AccountType
+        public TradeBuilder TradeBuilder
         {
             get;
             private set;
@@ -458,7 +457,7 @@ namespace QuantConnect.Algorithm
 
                         resolution = hasNonAddSecurityUniverses ? UniverseSettings.Resolution : Resolution.Daily;
                     }
-                    security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, _benchmarkSymbol, resolution, true, 1m, false, true, false);
+                    security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer, _benchmarkSymbol, resolution, true, 1m, false, true, false);
                     AddToUserDefinedUniverse(security);
                 }
 
@@ -498,12 +497,23 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Sets the default markets to be used by the algorithm
+        /// Sets the security initializer, used to initialize/configure securities after creation
         /// </summary>
-        /// <param name="defaultMarkets">A security typ to market string dictionary containing the default values</param>
-        public void SetDefaultMarkets(Dictionary<SecurityType, string> defaultMarkets)
+        /// <param name="securityInitializer">The security initializer</param>
+        public void SetSecurityInitializer(ISecurityInitializer securityInitializer)
         {
-            _defaultMarkets = new Dictionary<SecurityType, string>(defaultMarkets);
+            // this flag will prevent calls to SetBrokerageModel from overwriting this initializer
+            _userSetSecurityInitializer = true;
+            SecurityInitializer = securityInitializer;
+        }
+
+        /// <summary>
+        /// Sets the security initializer function, used to initialize/configure securities after creation
+        /// </summary>
+        /// <param name="securityInitializer">The security initializer function</param>
+        public void SetSecurityInitializer(Action<Security> securityInitializer)
+        {
+            SetSecurityInitializer(new FuncSecurityInitializer(securityInitializer));
         }
 
         /// <summary>
@@ -764,33 +774,7 @@ namespace QuantConnect.Algorithm
         /// <param name="accountType">The account type (Cash or Margin)</param>
         public void SetBrokerageModel(BrokerageName brokerage, AccountType accountType = AccountType.Margin)
         {
-            switch (brokerage)
-            {
-                case BrokerageName.Default:
-                    BrokerageModel = new DefaultBrokerageModel();
-                    break;
-
-                case BrokerageName.InteractiveBrokersBrokerage:
-                    BrokerageModel = new InteractiveBrokersBrokerageModel();
-                    break;
-
-                case BrokerageName.TradierBrokerage:
-                    BrokerageModel = new TradierBrokerageModel();
-                    break;
-
-                case BrokerageName.OandaBrokerage:
-                    BrokerageModel = new OandaBrokerageModel();
-                    break;
-
-                case BrokerageName.FxcmBrokerage:
-                    BrokerageModel = new FxcmBrokerageModel();
-                    break;
-
-                default:
-                    throw new ArgumentOutOfRangeException("brokerage", brokerage, null);
-            }
-
-            AccountType = accountType;
+            SetBrokerageModel(Brokerages.BrokerageModel.Create(brokerage, accountType));
         }
 
         /// <summary>
@@ -798,11 +782,14 @@ namespace QuantConnect.Algorithm
         /// This can be used to set a custom brokerage model.
         /// </summary>
         /// <param name="model">The brokerage model to use</param>
-        /// <param name="accountType">The account type (Cash or Margin)</param>
-        public void SetBrokerageModel(IBrokerageModel model, AccountType accountType = AccountType.Margin)
+        public void SetBrokerageModel(IBrokerageModel model)
         {
             BrokerageModel = model;
-            AccountType = accountType;
+            if (!_userSetSecurityInitializer)
+            {
+                // purposefully use the direct setter vs Set method so we don't flip the switch :/
+                SecurityInitializer = new BrokerageModelSecurityInitializer(model);
+            }
         }
 
         /// <summary>
@@ -1171,7 +1158,7 @@ namespace QuantConnect.Algorithm
             {
                 if (market == null)
                 {
-                    if (!_defaultMarkets.TryGetValue(securityType, out market))
+                    if (!BrokerageModel.DefaultMarkets.TryGetValue(securityType, out market))
                     {
                         throw new Exception("No default market set for security type: " + securityType);
                     }
@@ -1183,7 +1170,7 @@ namespace QuantConnect.Algorithm
                     symbolObject = QuantConnect.Symbol.Create(symbol, securityType, market);
                 }
 
-                var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase,
+                var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer,
                     symbolObject, resolution, fillDataForward, leverage, extendedMarketHours, false, false);
 
                 AddToUserDefinedUniverse(security);
@@ -1277,9 +1264,12 @@ namespace QuantConnect.Algorithm
             //Add this to the data-feed subscriptions
             var symbolObject = new Symbol(SecurityIdentifier.GenerateBase(symbol, Market.USA), symbol);
 
+            // only used in CFD security type, for now
+            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(Market.USA, symbol, SecurityType.Base);
+
             //Add this new generic data as a tradeable security: 
-            var security = SecurityManager.CreateSecurity(typeof (T), Portfolio, SubscriptionManager, marketHoursDbEntry.ExchangeHours, marketHoursDbEntry.DataTimeZone, symbolObject, resolution,
-                fillDataForward, leverage, true, false, true);
+            var security = SecurityManager.CreateSecurity(typeof(T), Portfolio, SubscriptionManager, marketHoursDbEntry.ExchangeHours, marketHoursDbEntry.DataTimeZone, 
+                symbolProperties, SecurityInitializer, symbolObject, resolution, fillDataForward, leverage, true, false, true);
 
             AddToUserDefinedUniverse(security);
         }

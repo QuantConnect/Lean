@@ -153,7 +153,7 @@ namespace QuantConnect.Brokerages.Oanda
                         }
                     }
 
-                    Thread.Sleep(1);
+                    Thread.Sleep(200);
                 }
             });
         }

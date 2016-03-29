@@ -44,6 +44,11 @@ namespace QuantConnect.Tests.Brokerages.Oanda
                 Symbol.Create("GBPUSD", SecurityType.Forex, Market.Oanda),
             });
 
+            brokerage.Subscribe(null, new List<Symbol>
+            {
+                Symbol.Create("XAUXAG", SecurityType.Cfd, Market.Oanda),
+            });
+
             Thread.Sleep(20000);
 
             foreach (var tick in brokerage.GetNextTicks())
@@ -56,6 +61,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
                 Symbol.Create("EURJPY", SecurityType.Forex, Market.Oanda),
                 Symbol.Create("AUDUSD", SecurityType.Forex, Market.Oanda),
                 Symbol.Create("GBPUSD", SecurityType.Forex, Market.Oanda),
+                Symbol.Create("XAUXAG", SecurityType.Cfd, Market.Oanda),
             });
 
             Thread.Sleep(20000);

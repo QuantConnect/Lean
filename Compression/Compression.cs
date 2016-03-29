@@ -212,6 +212,25 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Performs an in memory zip of the specified bytes
+        /// </summary>
+        /// <param name="bytes">The file contents in bytes to be zipped</param>
+        /// <param name="zipEntryName">The zip entry name</param>
+        /// <returns>The zipped file as a byte array</returns>
+        public static byte[] ZipBytes(byte[] bytes, string zipEntryName)
+        {
+            using (var memoryStream = new MemoryStream())
+            using (var stream = new ZipOutputStream(memoryStream))
+            {
+                var entry = new ZipEntry(zipEntryName);
+                stream.PutNextEntry(entry);
+                var buffer = new byte[16*1024];
+                StreamUtils.Copy(new MemoryStream(bytes), stream, buffer);
+                return memoryStream.GetBuffer();
+            }
+        }
+
+        /// <summary>
         /// Compress a given file and delete the original file. Automatically rename the file to name.zip.
         /// </summary>
         /// <param name="textPath">Path of the original file</param>
@@ -436,6 +455,9 @@ namespace QuantConnect
         /// closed rendering all key value pair Value properties unaccessible. Ideally this
         /// would be enumerated depth first.
         /// </summary>
+        /// <remarks>
+        /// This method has the potential for a memory leak if each kvp.Value enumerable is not disposed
+        /// </remarks>
         /// <param name="filename">The zip file to stream</param>
         /// <returns>The stream zip contents</returns>
         public static IEnumerable<KeyValuePair<string, IEnumerable<string>>> Unzip(string filename)
@@ -707,41 +729,5 @@ namespace QuantConnect
                 tarIn.Close();
             }
         }
-
-        /// <summary>
-        /// Creates the entry name for a QC zip data file
-        /// </summary>
-        public static string CreateZipEntryName(string symbol, SecurityType securityType, DateTime date, Resolution resolution, TickType dataType = TickType.Trade)
-        {
-            symbol = symbol.ToLower();
-
-            if (resolution == Resolution.Hour || resolution == Resolution.Daily)
-            {
-                return symbol + ".csv";
-            }
-
-            //All fx is quote data.
-            if (securityType == SecurityType.Forex) dataType = TickType.Quote;
-
-            return String.Format("{0}_{1}_{2}_{3}.csv", date.ToString(DateFormat.EightCharacter), symbol, resolution.ToString().ToLower(), dataType.ToString().ToLower());
-        }
-
-        /// <summary>
-        /// Creates the zip file name for a QC zip data file
-        /// </summary>
-        public static string CreateZipFileName(string symbol, SecurityType securityType, DateTime date, Resolution resolution)
-        {
-            if (resolution == Resolution.Hour || resolution == Resolution.Daily)
-            {
-                return symbol.ToLower() + ".zip";
-            }
-
-            var zipFileName = date.ToString(DateFormat.EightCharacter);
-            if (securityType == SecurityType.Forex)
-            {
-                return zipFileName + "_quote.zip";
-            }
-            return zipFileName + "_trade.zip";
-        }
-    } // End OS Class
-} // End QC Namespace
+    }
+}

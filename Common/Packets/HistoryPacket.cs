@@ -142,7 +142,7 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Initializes a new instance of the <see cref="HistoryResult"/> class
         /// </summary>
-        /// <param name="filepath">The relative file path where the file should be written</param>
+        /// <param name="filepath">The relative file path where the file should be written, rooted in /Data, so for example ./forex/fxcm/daily/eurusd.zip</param>
         /// <param name="file">The zipped csv file content in bytes</param>
         public FileHistoryResult(string filepath, byte[] file)
             : this()

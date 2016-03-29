@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Newtonsoft.Json;
 using NodaTime;
@@ -664,6 +665,22 @@ namespace QuantConnect
             {
                 return md5.ComputeHash(stream);
             }
+        }
+
+        /// <summary>
+        /// Convert a string into the same string with a URL! :)
+        /// </summary>
+        /// <param name="source">The source string to be converted</param>
+        /// <returns>The same source string but with anchor tags around substrings matching a link regex</returns>
+        public static string WithEmbeddedHtmlAnchors(this string source)
+        {
+            var regx = new Regex("http(s)?://([\\w+?\\.\\w+])+([a-zA-Z0-9\\~\\!\\@\\#\\$\\%\\^\\&amp;\\*\\(\\)_\\-\\=\\+\\\\\\/\\?\\.\\:\\;\\'\\,]*([a-zA-Z0-9\\?\\#\\=\\/]){1})?", RegexOptions.IgnoreCase);
+            var matches = regx.Matches(source);
+            foreach (Match match in matches)
+            {
+                source = source.Replace(match.Value, "<a href='" + match.Value + "' target='blank'>" + match.Value + "</a>");
+            }
+            return source;
         }
     }
 }

@@ -14,8 +14,10 @@
 */
 
 using System;
-using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.Slippage;
 
 namespace QuantConnect.Securities.Forex 
 {
@@ -32,7 +34,7 @@ namespace QuantConnect.Securities.Forex
         /// <param name="config">The subscription configuration for this security</param>
         /// <param name="leverage">The leverage used for this security</param>
         public Forex(Cash quoteCurrency, SubscriptionDataConfig config, decimal leverage)
-            : this(MarketHoursDatabase.FromDataFolder().GetExchangeHours(config), quoteCurrency, config, leverage)
+            : this(MarketHoursDatabase.FromDataFolder().GetExchangeHours(config), quoteCurrency, config)
         {
             // this constructor is provided for backward compatibility
 
@@ -45,19 +47,20 @@ namespace QuantConnect.Securities.Forex
         /// <param name="exchangeHours">Defines the hours this exchange is open</param>
         /// <param name="quoteCurrency">The cash object that represent the quote currency</param>
         /// <param name="config">The subscription configuration for this security</param>
-        /// <param name="leverage">The leverage used for this security</param>
-        public Forex(SecurityExchangeHours exchangeHours, Cash quoteCurrency, SubscriptionDataConfig config, decimal leverage)
-            : base(exchangeHours, config, leverage)
+        public Forex(SecurityExchangeHours exchangeHours, Cash quoteCurrency, SubscriptionDataConfig config)
+            : base(config,
+                new ForexExchange(exchangeHours),
+                new ForexCache(),
+                new ForexPortfolioModel(),
+                new ImmediateFillModel(),
+                new InteractiveBrokersFeeModel(),
+                new SpreadSlippageModel(),
+                new ImmediateSettlementModel(),
+                new ForexMarginModel(50m),
+                new ForexDataFilter()
+                )
         {
             QuoteCurrency = quoteCurrency;
-            //Holdings for new Vehicle:
-            Cache = new ForexCache();
-            Exchange = new ForexExchange(exchangeHours); 
-            DataFilter = new ForexDataFilter();
-            TransactionModel = new ForexTransactionModel();
-            PortfolioModel = new ForexPortfolioModel();
-            MarginModel = new ForexMarginModel(leverage);
-            SettlementModel = new ImmediateSettlementModel();
             Holdings = new ForexHolding(this);
 
             // decompose the symbol into each currency pair
@@ -105,31 +108,5 @@ namespace QuantConnect.Securities.Forex
             baseCurrency = currencyPair.Substring(0, 3);
             quoteCurrency = currencyPair.Substring(3);
         }
-
-        /// <summary>
-        /// Gets the listing of currently supported currency pairs.
-        /// </summary>
-        /// <remarks>
-        /// This listing should be in sync with the data available at: https://www.quantconnect.com/data/FOREX#2.1.1
-        /// </remarks>
-        public static readonly IReadOnlyList<string> CurrencyPairs = new []
-        {
-            "AUDJPY", "AUDUSD", "EURCHF", "EURGBP", "EURJPY", "EURUSD", "GBPAUD", "GBPJPY", "GBPUSD", "NZDUSD", "USDCAD", "USDCHF", "USDJPY"
-        };
-
-        /// <summary>
-        /// A mapping of currency codes to their display symbols
-        /// </summary>
-        public static readonly IReadOnlyDictionary<string, string> CurrencySymbols = new Dictionary<string, string>
-        {
-            {"USD", "$"},
-            {"GBP", "₤"},
-            {"JPY", "¥"},
-            {"EUR", "€"},
-            {"NZD", "$"},
-            {"AUD", "$"},
-            {"CAD", "$"},
-            {"CHF", "Fr"}
-        };
     }
 }

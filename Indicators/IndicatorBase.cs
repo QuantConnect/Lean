@@ -31,7 +31,7 @@ namespace QuantConnect.Indicators
     /// </summary>
     /// <typeparam name="T">The type of data input into this indicator</typeparam>
     [DebuggerDisplay("{ToDetailedString()}")]
-    public abstract class IndicatorBase<T> : IComparable<IndicatorBase<T>>, IComparable
+    public abstract partial class IndicatorBase<T> : IComparable<IndicatorBase<T>>, IComparable
         where T : BaseData
     {
         /// <summary>the most recent input that was given to this indicator</summary>
@@ -111,16 +111,6 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Returns the current value of this instance
-        /// </summary>
-        /// <param name="instance">The indicator instance</param>
-        /// <returns>The current value of the indicator</returns>
-        public static implicit operator decimal(IndicatorBase<T> instance)
-        {
-            return instance.Current;
-        }
-
-        /// <summary>
         /// Compares the current object with another object of the same type.
         /// </summary>
         /// <returns>
@@ -154,6 +144,30 @@ namespace QuantConnect.Indicators
             }
 
             return CompareTo(other);
+        }
+
+        /// <summary>
+        /// Determines whether the specified object is equal to the current object.
+        /// </summary>
+        /// <returns>
+        /// true if the specified object  is equal to the current object; otherwise, false.
+        /// </returns>
+        /// <param name="obj">The object to compare with the current object. </param>
+        public override bool Equals(object obj)
+        {
+            // this implementation acts as a liason to prevent inconsistency between the operators
+            // == and != against primitive types. the core impl for equals between two indicators
+            // is still reference equality, however, when comparing value types (floats/int, ect..)
+            // we'll use value type semantics on Current.Value
+            // because of this, we shouldn't need to override GetHashCode as well since we're still
+            // solely relying on reference semantics (think hashset/dictionary impls)
+
+            if (ReferenceEquals(obj, null)) return false;
+            if (obj.GetType().IsSubclassOf(typeof (IndicatorBase<>))) return ReferenceEquals(this, obj);
+
+            // the obj is not an indicator, so let's check for value types, try converting to decimal
+            var converted = Convert.ToDecimal(obj);
+            return Current.Value == converted;
         }
 
         /// <summary>

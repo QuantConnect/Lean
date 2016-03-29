@@ -57,6 +57,38 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Defines an average price that is equal to (O + H + L + C) / 4
+        /// </summary>
+        public static Func<BaseData, decimal> Average
+        {
+            get { return TradeBarPropertyOrValue(x => (x.Open + x.High + x.Low + x.Close) / 4m); }
+        }
+
+        /// <summary>
+        /// Defines an average price that is equal to (H + L) / 2
+        /// </summary>
+        public static Func<BaseData, decimal> Median
+        {
+            get { return TradeBarPropertyOrValue(x => (x.High + x.Low) / 2m); }
+        }
+
+        /// <summary>
+        /// Defines an average price that is equal to (H + L + C) / 3
+        /// </summary>
+        public static Func<BaseData, decimal> Typical
+        {
+            get { return TradeBarPropertyOrValue(x => (x.High + x.Low + x.Close) / 3m); }
+        }
+
+        /// <summary>
+        /// Defines an average price that is equal to (H + L + 2*C) / 4
+        /// </summary>
+        public static Func<BaseData, decimal> Weighted
+        {
+            get { return TradeBarPropertyOrValue(x => (x.High + x.Low + 2 * x.Close) / 4m); }
+        }
+
+        /// <summary>
         /// Defines an average price that is equal to (2*O + H + L + 3*C)/7
         /// </summary>
         public static Func<BaseData, decimal> SevenBar

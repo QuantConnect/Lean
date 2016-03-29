@@ -448,8 +448,8 @@ namespace QuantConnect.Brokerages.Oanda
                 default:
                     throw new NotSupportedException("The Oanda order type " + order.type + " is not supported.");
             }
-            qcOrder.SecurityType = _symbolMapper.GetBrokerageSecurityType(order.instrument);
-            qcOrder.Symbol = _symbolMapper.GetLeanSymbol(order.instrument, qcOrder.SecurityType, Market.Oanda);
+            var securityType = _symbolMapper.GetBrokerageSecurityType(order.instrument);
+            qcOrder.Symbol = _symbolMapper.GetLeanSymbol(order.instrument, securityType, Market.Oanda);
             qcOrder.Quantity = ConvertQuantity(order);
             qcOrder.Status = OrderStatus.None;
             qcOrder.BrokerId.Add(order.id.ToString());

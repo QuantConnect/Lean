@@ -95,7 +95,7 @@ namespace QuantConnect.Lean.Engine
                 Thread threadRealTime = null;
 
                 //-> Initialize messaging system
-                _systemHandlers.Notify.SetChannel(job.Channel);
+                _systemHandlers.Notify.SetAuthentication(job);
 
                 //-> Set the result handler type for this algorithm job, and launch the associated result thread.
                 _algorithmHandlers.Results.Initialize(job, _systemHandlers.Notify, _systemHandlers.Api, _algorithmHandlers.DataFeed, _algorithmHandlers.Setup, _algorithmHandlers.Transactions);
@@ -124,7 +124,7 @@ namespace QuantConnect.Lean.Engine
                         // send progress updates to the result handler only during initialization
                         if (!algorithm.GetLocked() || algorithm.IsWarmingUp)
                         {
-                            _algorithmHandlers.Results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.History, 
+                            _algorithmHandlers.Results.SendStatusUpdate(AlgorithmStatus.History, 
                                 string.Format("Processing history {0}%...", progress));
                         }
                     });
@@ -192,7 +192,7 @@ namespace QuantConnect.Lean.Engine
                     };
 
                     //Send status to user the algorithm is now executing.
-                    _algorithmHandlers.Results.SendStatusUpdate(job.AlgorithmId, AlgorithmStatus.Running);
+                    _algorithmHandlers.Results.SendStatusUpdate(AlgorithmStatus.Running);
 
                     //Launch the data, transaction and realtime handlers into dedicated threads
                     threadFeed = new Thread(_algorithmHandlers.DataFeed.Run) {Name = "DataFeed Thread"};
@@ -345,10 +345,12 @@ namespace QuantConnect.Lean.Engine
 
                 if (brokerage != null)
                 {
+                    Log.Trace("Engine.Run(): Disconnecting from brokerage...");
                     brokerage.Disconnect();
                 }
                 if (_algorithmHandlers.Setup != null)
                 {
+                    Log.Trace("Engine.Run(): Disposing of setup handler...");
                     _algorithmHandlers.Setup.Dispose();
                 }
                 Log.Trace("Engine.Main(): Analysis Completed and Results Posted.");

@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Interfaces;
@@ -23,6 +24,7 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Scheduling;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.RealTime
 {
@@ -139,39 +141,14 @@ namespace QuantConnect.Lean.Engine.RealTime
         {
             date = date.Date;
 
-            // group securities by security type to make calls to api one security type at a time
-            foreach (var securityTypeGrouping in _algorithm.Securities.GroupBy(x => x.Value.Type))
+            // update market hours for each security
+            foreach (var security in _algorithm.Securities.Values)
             {
-                var securityType = securityTypeGrouping.Key;
-                var marketToday = _api.MarketToday(date, securityType);
-
-                Log.Trace(string.Format("LiveTradingRealTimeHandler.SetupEvents(): Daily Market Hours Setup for Security Type: {0} Start: {1} Stop: {2}",
-                    securityType, marketToday.Open.Start, marketToday.Open.End
-                    ));
-
-                // foreach security in this security type grouping
-                foreach (var kvp in securityTypeGrouping)
-                {
-                    var symbol = kvp.Key;
-                    var security = kvp.Value;
-
-                    // if the market is not open today, set it as closed all day
-                    if (marketToday.Status != "open")
-                    {
-                        security.Exchange.SetMarketHours(TimeSpan.Zero, TimeSpan.Zero, date.DayOfWeek);
-                    }
-                    else
-                    {
-                        // set the market hours using data returned from the api
-                        var extendedMarketOpen = marketToday.PreMarket.Start.TimeOfDay;
-                        var marketOpen = marketToday.Open.Start.TimeOfDay;
-                        var marketClose = marketToday.Open.End.TimeOfDay;
-                        var extendedMarketClose = marketToday.PostMarket.End.TimeOfDay;
-                        security.Exchange.SetMarketHours(extendedMarketOpen, marketOpen, marketClose, extendedMarketClose, date.DayOfWeek);
-                        Log.Trace(string.Format("LiveTradingRealTimeHandler.SetupEvents({0}): Market hours set: Symbol: {1} Extended Start: {2} Start: {3} End: {4} Extended End: {5}",
-                                securityType, symbol, extendedMarketOpen, marketOpen, marketClose, extendedMarketClose));
-                    }
-                }
+                var marketHours = _api.MarketToday(date, security.Symbol);
+                security.Exchange.SetMarketHours(marketHours, date.DayOfWeek);
+                var localMarketHours = security.Exchange.Hours.MarketHours[date.DayOfWeek];
+                Log.Trace(string.Format("LiveTradingRealTimeHandler.SetupEvents({0}): Market hours set: Symbol: {1} {2}",
+                        security.Type, security.Symbol, localMarketHours));
             }
         }
 

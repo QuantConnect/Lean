@@ -27,6 +27,16 @@ namespace QuantConnect.Brokerages
     public class InteractiveBrokersBrokerageModel : DefaultBrokerageModel
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="InteractiveBrokersBrokerageModel"/> class
+        /// </summary>
+        /// <param name="accountType">The type of account to be modelled, defaults to 
+        /// <see cref="QuantConnect.AccountType.Margin"/></param>
+        public InteractiveBrokersBrokerageModel(AccountType accountType = AccountType.Margin)
+            : base(accountType)
+        {
+        }
+
+        /// <summary>
         /// Returns true if the brokerage could accept this order. This takes into account
         /// order type, security type, and order size limits.
         /// </summary>
@@ -75,7 +85,7 @@ namespace QuantConnect.Brokerages
 
             if (order.SecurityType == SecurityType.Forex && request.Quantity != null)
             {
-                return IsForexWithinOrderSizeLimits(order.Symbol, request.Quantity.Value, out message);
+                return IsForexWithinOrderSizeLimits(order.Symbol.Value, request.Quantity.Value, out message);
             }
 
             return true;

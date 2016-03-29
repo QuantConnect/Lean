@@ -23,15 +23,8 @@ namespace QuantConnect.Securities
     /// </summary>
     public class SecurityMarginModel : ISecurityMarginModel
     {
-        /// <summary>
-        /// The percentage of an order's absolute cost that must be held in free cash in order to place the order
-        /// </summary>
-        protected decimal InitialMarginRequirement;
-
-        /// <summary>
-        /// The percentage of the holding's absolute cost that must be held in free cash in order to avoid a margin call
-        /// </summary>
-        protected decimal MaintenanceMarginRequirement;
+        private decimal _initialMarginRequirement;
+        private decimal _maintenanceMarginRequirement;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecurityMarginModel"/>
@@ -52,8 +45,8 @@ namespace QuantConnect.Securities
                 throw new ArgumentException("Maintenance margin requirement must be between 0 and 1");
             }
 
-            InitialMarginRequirement = initialMarginRequirement;
-            MaintenanceMarginRequirement = maintenanceMarginRequirement;
+            _initialMarginRequirement = initialMarginRequirement;
+            _maintenanceMarginRequirement = maintenanceMarginRequirement;
         }
 
         /// <summary>
@@ -67,8 +60,8 @@ namespace QuantConnect.Securities
                 throw new ArgumentException("Leverage must be greater than or equal to 1.");
             }
 
-            InitialMarginRequirement = 1/leverage;
-            MaintenanceMarginRequirement = 1/leverage;
+            _initialMarginRequirement = 1/leverage;
+            _maintenanceMarginRequirement = 1/leverage;
         }
 
         /// <summary>
@@ -78,7 +71,7 @@ namespace QuantConnect.Securities
         /// <returns>The current leverage in the security</returns>
         public virtual decimal GetLeverage(Security security)
         {
-            return 1/MaintenanceMarginRequirement;
+            return 1/GetMaintenanceMarginRequirement(security);
         }
 
         /// <summary>
@@ -97,8 +90,8 @@ namespace QuantConnect.Securities
             }
 
             decimal margin = 1/leverage;
-            InitialMarginRequirement = margin;
-            MaintenanceMarginRequirement = margin;
+            _initialMarginRequirement = margin;
+            _maintenanceMarginRequirement = margin;
         }
 
         /// <summary>
@@ -111,10 +104,9 @@ namespace QuantConnect.Securities
         {
             //Get the order value from the non-abstract order classes (MarketOrder, LimitOrder, StopMarketOrder)
             //Market order is approximated from the current security price and set in the MarketOrder Method in QCAlgorithm.
-            var orderFees = security.TransactionModel.GetOrderFee(security, order);
-
-            var price = order.Status.IsFill() ? order.Price : security.Price;
-            return order.GetValue(price)*InitialMarginRequirement + orderFees;
+            var orderFees = security.FeeModel.GetOrderFee(security, order);
+            
+            return order.GetValue(security)*GetInitialMarginRequirement(security) + orderFees;
         }
 
         /// <summary>
@@ -124,7 +116,7 @@ namespace QuantConnect.Securities
         /// <returns>The maintenance margin required for the </returns>
         public virtual decimal GetMaintenanceMargin(Security security)
         {
-            return security.Holdings.AbsoluteHoldingsCost*MaintenanceMarginRequirement;
+            return security.Holdings.AbsoluteHoldingsCost*GetMaintenanceMarginRequirement(security);
         }
 
         /// <summary>
@@ -197,7 +189,7 @@ namespace QuantConnect.Securities
             decimal delta = totalMargin - netLiquidationValue;
             
             // compute the number of shares required for the order, rounding up
-            int quantity = (int) (Math.Round(delta/security.Price, MidpointRounding.AwayFromZero) / MaintenanceMarginRequirement);
+            int quantity = (int) (Math.Round(delta/security.Price, MidpointRounding.AwayFromZero) / GetMaintenanceMarginRequirement(security));
 
             // don't try and liquidate more share than we currently hold, minimum value of 1, maximum value for absolute quantity
             quantity = Math.Max(1, Math.Min((int)security.Holdings.AbsoluteQuantity, quantity));
@@ -208,6 +200,22 @@ namespace QuantConnect.Securities
             }
 
             return new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, quantity, 0, 0, security.LocalTime.ConvertToUtc(security.Exchange.TimeZone), "Margin Call");
+        }
+
+        /// <summary>
+        /// The percentage of an order's absolute cost that must be held in free cash in order to place the order
+        /// </summary>
+        protected virtual decimal GetInitialMarginRequirement(Security security)
+        {
+            return _initialMarginRequirement;
+        }
+
+        /// <summary>
+        /// The percentage of the holding's absolute cost that must be held in free cash in order to avoid a margin call
+        /// </summary>
+        protected virtual decimal GetMaintenanceMarginRequirement(Security security)
+        {
+            return _maintenanceMarginRequirement;
         }
     }
 }

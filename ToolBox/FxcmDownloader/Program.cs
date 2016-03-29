@@ -85,7 +85,7 @@ namespace QuantConnect.ToolBox.FxcmDownloader
                         var ticks = data.Cast<Tick>().ToList();
 
                         // Save the data (second resolution)
-                        var writer = new LeanDataWriter(securityType, resolution, symbol, dataDirectory, market);
+                        var writer = new LeanDataWriter(resolution, symbol, dataDirectory);
                         writer.Write(ticks);
 
                         // Save the data (other resolutions)
@@ -93,7 +93,7 @@ namespace QuantConnect.ToolBox.FxcmDownloader
                         {
                             var resData = FxcmDataDownloader.AggregateTicks(symbol, ticks, res.ToTimeSpan());
 
-                            writer = new LeanDataWriter(securityType, res, symbol, dataDirectory, market);
+                            writer = new LeanDataWriter(res, symbol, dataDirectory);
                             writer.Write(resData);
                         }
 
@@ -101,7 +101,7 @@ namespace QuantConnect.ToolBox.FxcmDownloader
                     else
                     {
                         // Save the data (single resolution)
-                        var writer = new LeanDataWriter(securityType, resolution, symbol, dataDirectory, market);
+                        var writer = new LeanDataWriter(resolution, symbol, dataDirectory);
                         writer.Write(data);
                     }
                 }

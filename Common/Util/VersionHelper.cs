@@ -23,6 +23,8 @@ namespace QuantConnect.Util
     /// </summary>
     public static class VersionHelper
     {
+        private static readonly bool IgnoreVersionChecks = Configuration.Config.GetBool("ignore-version-checks");
+
         /// <summary>
         /// Determines whether or not the specified version is older than this instance
         /// </summary>
@@ -44,12 +46,32 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Determines whether or not the specified version is equal to this instance
+        /// </summary>
+        /// <param name="version">The version to compare</param>
+        /// <returns>True if the specified version is equal, false otherwise</returns>
+        public static bool IsEqualVersion(string version)
+        {
+            return CompareVersions(version, Constants.Version) == 0;
+        }
+
+        /// <summary>
+        /// Determines whether or not the specified version is not equal to this instance
+        /// </summary>
+        /// <param name="version">The version to compare</param>
+        /// <returns>True if the specified version is not equal, false otherwise</returns>
+        public static bool IsNotEqualVersion(string version)
+        {
+            return !IsEqualVersion(version);
+        }
+
+        /// <summary>
         /// Compares two versions
         /// </summary>
         /// <returns>1 if the left version is after the right, 0 if they're the same, -1 if the left is before the right</returns>
         public static int CompareVersions(string left, string right)
         {
-            if (left == right) return 0;
+            if (IgnoreVersionChecks || left == right) return 0;
 
             // we actually need to parse the ints here, made up of 4 parts separated by '.'
             // sample: 123.45.67.90123

@@ -150,5 +150,15 @@ namespace QuantConnect.Orders
         /// </summary>
         BrokerageModelRefusedToUpdateOrder = -25,
 
+        /// <summary>
+        /// Need quote currency in cashbook to trade a CFD
+        /// </summary>
+        CfdQuoteCurrencyRequired = -26,
+
+        /// <summary>
+        /// Need conversion rate to account currency
+        /// </summary>
+        CfdConversionRateZero = -27,
+
     }
 }

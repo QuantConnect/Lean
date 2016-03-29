@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.AlgorithmFactory;
+using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
@@ -127,9 +128,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 if (baseJob.Type == PacketType.BacktestNode)
                 {
                     var backtestJob = baseJob as BacktestNodePacket;
-
-                    //Set our default markets
-                    algorithm.SetDefaultMarkets(BacktestingBrokerageFactory.DefaultMarketMap.ToDictionary());
+                    
                     algorithm.SetMaximumOrders(int.MaxValue);
                     // set our parameters
                     algorithm.SetParameters(baseJob.Parameters);
@@ -168,8 +167,6 @@ namespace QuantConnect.Lean.Engine.Setup
                 initializeComplete = true;
             }
 
-            // set the transaction and settlement models based on the brokerage properties
-            algorithm.UpdateModels(algorithm.BrokerageModel);
             algorithm.Transactions.SetOrderProcessor(transactionHandler);
             algorithm.PostInitialize();
 

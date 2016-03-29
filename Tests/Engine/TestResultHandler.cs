@@ -193,7 +193,7 @@ namespace QuantConnect.Tests.Engine
         {
         }
 
-        public void SendStatusUpdate(string algorithmId, AlgorithmStatus status, string message = "")
+        public void SendStatusUpdate(AlgorithmStatus status, string message = "")
         {
         }
 

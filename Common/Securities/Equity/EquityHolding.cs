@@ -13,8 +13,6 @@
  * limitations under the License.
 */
 
-using QuantConnect.Securities.Interfaces;
-
 namespace QuantConnect.Securities.Equity
 {
     /// <summary>
@@ -27,9 +25,7 @@ namespace QuantConnect.Securities.Equity
         /// Constructor for equities holdings.
         /// </summary>
         /// <param name="security">The security being held</param>
-        /// <param name="transactionModel">The transaction model used for the security</param>
-        /// <param name="marginModel">The margin model used for the security</param>
-        public EquityHolding(Security security, ISecurityTransactionModel transactionModel, ISecurityMarginModel marginModel)
+        public EquityHolding(Security security)
             : base(security)
         {
         }

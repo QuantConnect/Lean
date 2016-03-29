@@ -17,10 +17,12 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
-using QuantConnect.Securities.Forex;
-using QuantConnect.Securities.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages
 {
@@ -30,6 +32,45 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class DefaultBrokerageModel : IBrokerageModel
     {
+        /// <summary>
+        /// The default markets for the backtesting brokerage
+        /// </summary>
+        public static readonly IReadOnlyDictionary<SecurityType, string> DefaultMarketMap = new Dictionary<SecurityType, string>
+        {
+            {SecurityType.Base, Market.USA},
+            {SecurityType.Equity, Market.USA},
+            {SecurityType.Option, Market.USA},
+            {SecurityType.Forex, Market.FXCM},
+            {SecurityType.Cfd, Market.FXCM}
+        }.ToReadOnlyDictionary();
+
+        /// <summary>
+        /// Gets or sets the account type used by this model
+        /// </summary>
+        public virtual AccountType AccountType
+        {
+            get; 
+            private set;
+        }
+
+        /// <summary>
+        /// Gets a map of the default markets to be used for each security type
+        /// </summary>
+        public virtual IReadOnlyDictionary<SecurityType, string> DefaultMarkets
+        {
+            get { return DefaultMarketMap; }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DefaultBrokerageModel"/> class
+        /// </summary>
+        /// <param name="accountType">The type of account to be modelled, defaults to 
+        /// <see cref="QuantConnect.AccountType.Margin"/></param>
+        public DefaultBrokerageModel(AccountType accountType = AccountType.Margin)
+        {
+            AccountType = accountType;
+        }
+
         /// <summary>
         /// Returns true if the brokerage could accept this order. This takes into account
         /// order type, security type, and order size limits.
@@ -97,28 +138,87 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Gets a new transaction model the represents this brokerage's fee structure and fill behavior
+        /// Gets the brokerage's leverage for the specified security
         /// </summary>
-        /// <param name="security">The security to get a transaction model for</param>
-        /// <returns>The transaction model for this brokerage</returns>
-        public virtual ISecurityTransactionModel GetTransactionModel(Security security)
+        /// <param name="security">The security's whose leverage we seek</param>
+        /// <returns>The leverage for the specified security</returns>
+        public decimal GetLeverage(Security security)
         {
             switch (security.Type)
             {
-                case SecurityType.Forex: 
-                    return new ForexTransactionModel();
-                
-                case SecurityType.Equity: 
-                    return new EquityTransactionModel();
+                case SecurityType.Equity:
+                    return 2m;
+
+                case SecurityType.Forex:
+                case SecurityType.Cfd:
+                    return 50m;
 
                 case SecurityType.Base:
-                case SecurityType.Option:
                 case SecurityType.Commodity:
+                case SecurityType.Option:
                 case SecurityType.Future:
-                    return new SecurityTransactionModel();
-
                 default:
-                    throw new ArgumentOutOfRangeException("securityType", security.Type, null);
+                    return 1m;
+            }
+        }
+
+        /// <summary>
+        /// Gets a new fill model that represents this brokerage's fill behavior
+        /// </summary>
+        /// <param name="security">The security to get fill model for</param>
+        /// <returns>The new fill model for this brokerage</returns>
+        public virtual IFillModel GetFillModel(Security security)
+        {
+            return new ImmediateFillModel();
+        }
+
+        /// <summary>
+        /// Gets a new fee model that represents this brokerage's fee structure
+        /// </summary>
+        /// <param name="security">The security to get a fee model for</param>
+        /// <returns>The new fee model for this brokerage</returns>
+        public virtual IFeeModel GetFeeModel(Security security)
+        {
+            switch (security.Type)
+            {
+                case SecurityType.Base:
+                    return new ConstantFeeModel(0m);
+
+                case SecurityType.Forex:
+                case SecurityType.Equity:
+                    return new InteractiveBrokersFeeModel();
+
+                case SecurityType.Commodity:
+                case SecurityType.Option:
+                case SecurityType.Future:
+                case SecurityType.Cfd:
+                default:
+                    return new ConstantFeeModel(0m);
+            }
+        }
+
+        /// <summary>
+        /// Gets a new slippage model that represents this brokerage's fill slippage behavior
+        /// </summary>
+        /// <param name="security">The security to get a slippage model for</param>
+        /// <returns>The new slippage model for this brokerage</returns>
+        public virtual ISlippageModel GetSlippageModel(Security security)
+        {
+            switch (security.Type)
+            {
+                case SecurityType.Base:
+                case SecurityType.Equity:
+                    return new ConstantSlippageModel(0);
+
+                case SecurityType.Forex:
+                case SecurityType.Cfd:
+                    return new SpreadSlippageModel();
+
+                case SecurityType.Commodity:
+                case SecurityType.Option:
+                case SecurityType.Future:
+                default:
+                    return new ConstantSlippageModel(0);
             }
         }
 

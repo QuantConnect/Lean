@@ -23,6 +23,24 @@ namespace QuantConnect.Tests.Indicators
     public class StandardDeviationTests
     {
         [Test]
+        public void ComparesAgainstExternalData()
+        {
+            var std = new StandardDeviation("STD", 10);
+
+            RunTestIndicator(std);
+        }
+
+        [Test]
+        public void ComparesAgainstExternalDataAfterReset()
+        {
+            var std = new StandardDeviation("STD", 10);
+
+            RunTestIndicator(std);
+            std.Reset();
+            RunTestIndicator(std);
+        }
+
+        [Test]
         public void ComputesCorrectly()
         {
             // Indicator output was compared against the following function in Julia
@@ -34,7 +52,7 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(0m, std.Current.Value);
 
             std.Update(reference.AddDays(2), -1m);
-            Assert.AreEqual(1m, std.Current.Value);
+            Assert.AreEqual(0m, std.Current.Value);
 
             std.Update(reference.AddDays(3), 1m);
             Assert.AreEqual(0.942809041582063m, std.Current.Value);
@@ -57,6 +75,11 @@ namespace QuantConnect.Tests.Indicators
 
             std.Reset();
             TestHelper.AssertIndicatorIsInDefaultState(std);
+        }
+
+        private static void RunTestIndicator(StandardDeviation std)
+        {
+            TestHelper.TestIndicator(std, "spy_var.txt", "Var", (ind, expected) => Assert.AreEqual(Math.Sqrt(expected), (double)std.Current.Value, 1e-6));
         }
     }
 }

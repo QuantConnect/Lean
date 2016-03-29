@@ -33,12 +33,12 @@ namespace QuantConnect.Tests.Brokerages
 
         public override Order CreateShortOrder(int quantity)
         {
-            return new StopLimitOrder(Symbol, -Math.Abs(quantity), _lowLimit, _highLimit, DateTime.Now, type: SecurityType);
+            return new StopLimitOrder(Symbol, -Math.Abs(quantity), _lowLimit, _highLimit, DateTime.Now);
         }
 
         public override Order CreateLongOrder(int quantity)
         {
-            return new StopLimitOrder(Symbol, Math.Abs(quantity), _highLimit, _lowLimit, DateTime.Now, type: SecurityType);
+            return new StopLimitOrder(Symbol, Math.Abs(quantity), _highLimit, _lowLimit, DateTime.Now);
         }
 
         public override bool ModifyOrderToFill(IBrokerage brokerage, Order order, decimal lastMarketPrice)
