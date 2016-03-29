@@ -1,1 +1,0 @@
-{"$type":"System.Collections.Generic.List`1[[QuantConnect.Commands.ICommand, QuantConnect.Common]], mscorlib","$values":[{"$type":"QuantConnect.Commands.CustomCommand, QuantConnect.Common"},{"$type":"QuantConnect.Commands.TotoCommand, QuantConnect.Common"}]}

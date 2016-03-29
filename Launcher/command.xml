@@ -1,9 +1,0 @@
-<?xml version="1.0"?>
-<QueuedCommands>
-  <ICommand AssemblyQualifiedName="QuantConnect.Commands.TotoCommand, QuantConnect.Common, Version=2.2.0.2, Culture=neutral, PublicKeyToken=null">
-    <TotoCommand xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-  </ICommand>
-  <ICommand AssemblyQualifiedName="QuantConnect.Commands.CustomCommand, QuantConnect.Common, Version=2.2.0.2, Culture=neutral, PublicKeyToken=null">
-    <CustomCommand xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-  </ICommand>
-</QueuedCommands>
