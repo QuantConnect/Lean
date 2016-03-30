@@ -70,7 +70,7 @@ namespace QuantConnect.Tests.Queues
             Assert.IsEmpty(queue.GetCommands());
             CommandQueue commands = new CommandQueue();
             commands.Enqueue(new LiquidateCommand());
-            commands.Enqueue(new SpecialCommand());
+            commands.Enqueue(new AlgorithmStatusCommand());
 
             using (FileStream stream = new FileStream(MultiCommandXmlFilePath, FileMode.OpenOrCreate))
             {
@@ -80,7 +80,7 @@ namespace QuantConnect.Tests.Queues
 
             var list = queue.GetCommands().ToList();
             Assert.IsInstanceOf(typeof(LiquidateCommand), list[0]);
-            Assert.IsInstanceOf(typeof(SpecialCommand), list[1]);
+            Assert.IsInstanceOf(typeof(AlgorithmStatusCommand), list[1]);
             Assert.IsEmpty(queue.GetCommands());
         }
 
