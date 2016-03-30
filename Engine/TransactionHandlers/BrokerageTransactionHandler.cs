@@ -25,8 +25,6 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Cfd;
-using QuantConnect.Securities.Forex;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.TransactionHandlers
@@ -186,6 +184,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 // add it to the orders collection for recall later
                 var order = Order.CreateOrder(request);
+
+                // ensure the order is tagged with a currency
+                var security = _algorithm.Securities[order.Symbol];
+                order.PriceCurrency = security.SymbolProperties.QuoteCurrency;
+
                 order.Status = OrderStatus.Invalid;
                 order.Tag = "Algorithm warming up.";
                 ticket.SetOrder(order);
@@ -596,6 +599,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             OrderTicket ticket;
             var order = Order.CreateOrder(request);
 
+            // ensure the order is tagged with a currency
+            var security = _algorithm.Securities[order.Symbol];
+            order.PriceCurrency = security.SymbolProperties.QuoteCurrency;
+
             if (!_orders.TryAdd(order.Id, order))
             {
                 Log.Error("BrokerageTransactionHandler.HandleSubmitOrderRequest(): Unable to add new order, order not processed.");
@@ -627,7 +634,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             if (!sufficientCapitalForOrder)
             {
                 order.Status = OrderStatus.Invalid;
-                var security = _algorithm.Securities[order.Symbol];
                 var response = OrderResponse.Error(request, OrderResponseErrorCode.InsufficientBuyingPower, string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id, order.GetValue(security).SmartRounding()));
                 _algorithm.Error(response.ErrorMessage);
                 HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m, "Insufficient buying power to complete order"));
@@ -636,7 +642,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             // verify that our current brokerage can actually take the order
             BrokerageMessageEvent message;
-            if (!_algorithm.LiveMode && !_algorithm.BrokerageModel.CanSubmitOrder(_algorithm.Securities[order.Symbol], order, out message))
+            if (!_algorithm.LiveMode && !_algorithm.BrokerageModel.CanSubmitOrder(security, order, out message))
             {
                 // if we couldn't actually process the order, mark it as invalid and bail
                 order.Status = OrderStatus.Invalid;
@@ -820,11 +826,22 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 Log.Debug("BrokerageTransactionHandler.HandleOrderEvent(): " + fill);
                 Interlocked.Exchange(ref _lastFillTimeTicks, DateTime.Now.Ticks);
+
+                // check if the fill currency and the order currency match the symbol currency
+                var security = _algorithm.Securities[fill.Symbol];
+                if (fill.FillPriceCurrency != security.SymbolProperties.QuoteCurrency)
+                {
+                    Log.Error(string.Format("Currency mismatch: Fill currency: {0}, Symbol currency: {1}", fill.FillPriceCurrency, security.SymbolProperties.QuoteCurrency));
+                }
+                if (order.PriceCurrency != security.SymbolProperties.QuoteCurrency)
+                {
+                    Log.Error(string.Format("Currency mismatch: Order currency: {0}, Symbol currency: {1}", order.PriceCurrency, security.SymbolProperties.QuoteCurrency));
+                }
+
                 try
                 {
                     _algorithm.Portfolio.ProcessFill(fill);
 
-                    var security = _algorithm.Securities[fill.Symbol];
                     var conversionRate = security.QuoteCurrency.ConversionRate;
 
                     _algorithm.TradeBuilder.ProcessFill(fill, conversionRate);

@@ -635,6 +635,7 @@
     <Content Include="RegressionAlgorithm.py" />
     <Content Include="UserDefinedUniverseAlgorithm.py" />
     <Content Include="WarmupAlgorithm.py" />
+    <Content Include="WarmupHistoryAlgorithm.py" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

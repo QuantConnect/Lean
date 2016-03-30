@@ -117,7 +117,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             };
         }
 
-        private Subscription CreateSubscription(Universe universe, IResultHandler resultHandler, Security security, DateTime startTimeUtc, DateTime endTimeUtc, IReadOnlyRef<TimeSpan> fillForwardResolution)
+        private Subscription CreateSubscription(Universe universe, Security security, DateTime startTimeUtc, DateTime endTimeUtc)
         {
             var config = security.SubscriptionDataConfig;
             var localStartTime = startTimeUtc.ConvertFromUtc(security.Exchange.TimeZone);
@@ -137,17 +137,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (config.SecurityType == SecurityType.Equity) mapFileResolver = _mapFileProvider.Get(config.Market);
 
             // ReSharper disable once PossibleMultipleEnumeration
-            IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, resultHandler, mapFileResolver, _factorFileProvider, tradeableDates, false);
-
-            // optionally apply fill forward logic, but never for tick data
-            if (config.FillDataForward && config.Resolution != Resolution.Tick)
-            {
-                enumerator = new FillForwardEnumerator(enumerator, security.Exchange, fillForwardResolution,
-                    security.IsExtendedMarketHours, localEndTime, config.Resolution.ToTimeSpan());
-            }
-
-            // finally apply exchange/user filters
-            enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(resultHandler, enumerator, security, localEndTime);
+            var enumerator = CreateSubscriptionEnumerator(security, config, localStartTime, localEndTime, mapFileResolver, tradeableDates);
 
             var enqueueable = new EnqueueableEnumerator<BaseData>(true);
 
@@ -208,7 +198,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="utcEndTime">The end time of the subscription</param>
         public bool AddSubscription(Universe universe, Security security, DateTime utcStartTime, DateTime utcEndTime)
         {
-            var subscription = CreateSubscription(universe, _resultHandler, security, utcStartTime, utcEndTime, _fillForwardResolution);
+            var subscription = CreateSubscription(universe, security, utcStartTime, utcEndTime);
             if (subscription == null)
             {
                 // subscription will be null when there's no tradeable dates for the security between the requested times, so
@@ -374,7 +364,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             else
             {
                 // normal reader for all others
-                enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, MapFileResolver.Empty, _factorFileProvider, tradeableDates, false);
+                enumerator = CreateSubscriptionEnumerator(security, config, localStartTime, localEndTime, MapFileResolver.Empty, tradeableDates, false);
 
                 // route these custom subscriptions through the exchange for buffering
                 var enqueueable = new EnqueueableEnumerator<BaseData>(true);
@@ -491,6 +481,34 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return GetEnumerator();
         }
 
+        /// <summary>
+        /// Creates an enumerator for the specified security/configuration
+        /// </summary>
+        private IEnumerator<BaseData> CreateSubscriptionEnumerator(Security security,
+            SubscriptionDataConfig config,
+            DateTime localStartTime,
+            DateTime localEndTime,
+            MapFileResolver mapFileResolver,
+            IEnumerable<DateTime> tradeableDates,
+            bool applySubscripterFilterEnumerator = true)
+        {
+            IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, mapFileResolver,
+                _factorFileProvider, tradeableDates, false);
+
+            // optionally apply fill forward logic, but never for tick data
+            if (config.FillDataForward && config.Resolution != Resolution.Tick)
+            {
+                enumerator = new FillForwardEnumerator(enumerator, security.Exchange, _fillForwardResolution,
+                    security.IsExtendedMarketHours, localEndTime, config.Resolution.ToTimeSpan());
+            }
+
+            // optionally apply exchange/user filters
+            if (applySubscripterFilterEnumerator)
+            {
+                enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(_resultHandler, enumerator, security, localEndTime);
+            }
+            return enumerator;
+        }
 
         private int GetLowerThreshold(Resolution resolution)
         {
