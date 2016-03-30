@@ -136,7 +136,7 @@
     <Compile Include="Commands\ICommand.cs" />
     <Compile Include="Commands\LiquidateCommand.cs" />
     <Compile Include="Commands\OrderCommand.cs" />
-    <Compile Include="Commands\QueuedCommands.cs" />
+    <Compile Include="Commands\CommandQueue.cs" />
     <Compile Include="Commands\QuitCommand.cs" />
     <Compile Include="Commands\UpdateOrderCommand.cs" />
     <Compile Include="Constants.cs" />

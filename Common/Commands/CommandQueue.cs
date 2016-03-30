@@ -7,10 +7,10 @@ using System.Xml.Serialization;
 namespace QuantConnect.Commands
 {
     /// <summary>
-    /// Represent a queue of ICommand that can also be serialized or deserialized to xml
+    /// Represents a queue of ICommand that can also be serialized or deserialized to xml
     /// http://www.codeproject.com/Articles/738100/XmlSerializer-Serializing-list-of-interfaces
     /// </summary>
-    public class QueuedCommands : Queue<ICommand>, IXmlSerializable
+    public class CommandQueue : Queue<ICommand>, IXmlSerializable
     {
         /// <summary>
         /// Returns the XML schema

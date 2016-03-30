@@ -28,7 +28,7 @@ namespace QuantConnect.Queues
     public abstract class FileCommandQueueHandler : ICommandQueueHandler
     {
         private readonly string _commandFilePath;
-        private readonly QueuedCommands _commands = new QueuedCommands();
+        private readonly CommandQueue _commands = new CommandQueue();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FileCommandQueueHandler"/> class
@@ -47,17 +47,6 @@ namespace QuantConnect.Queues
             get
             {
                 return _commandFilePath;
-            }
-        }
-
-        /// <summary>
-        /// The queue of commands
-        /// </summary>
-        protected QueuedCommands Commands
-        {
-            get
-            {
-                return _commands;
             }
         }
 
@@ -102,7 +91,7 @@ namespace QuantConnect.Queues
         /// <summary>
         /// Reads the command file on disk and deserialize to object
         /// </summary>
-        protected abstract object ReadCommandFile();
+        protected abstract IEnumerable<ICommand> ReadCommandFile();
 
         /// <summary>
         /// Populates the queue with the deserialized commands from file
@@ -110,24 +99,13 @@ namespace QuantConnect.Queues
         private void LoadCommands()
         {
             // update the queue by reading the command file
-            object deserialized = ReadCommandFile();
+            IEnumerable<ICommand> deserialized = ReadCommandFile();
 
-            // try it as an enumerable
-            var enumerable = deserialized as IEnumerable<ICommand>;
-            if (enumerable != null)
+            if (deserialized != null)
             {
-                foreach (var command in enumerable)
+                foreach (var command in deserialized)
                 {
                     _commands.Enqueue(command);
-                }
-            }
-            else
-            {
-                // try it as a single command
-                var item = deserialized as ICommand;
-                if (item != null)
-                {
-                    _commands.Enqueue(item);
                 }
             }
         }

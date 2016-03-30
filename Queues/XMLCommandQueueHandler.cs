@@ -17,6 +17,7 @@ using QuantConnect.Commands;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Xml.Serialization;
 
@@ -28,7 +29,7 @@ namespace QuantConnect.Queues
     /// </summary>
     public class XmlCommandQueueHandler : FileCommandQueueHandler
     {
-        private readonly XmlSerializer serializer = new XmlSerializer(typeof(QueuedCommands));
+        private readonly XmlSerializer _serializer = new XmlSerializer(typeof(CommandQueue));
 
         /// <summary>
         /// Initializes a new instance of the <see cref="XmlCommandQueueHandler"/> class
@@ -52,21 +53,21 @@ namespace QuantConnect.Queues
         /// Reads the xml command file on disk and deserialize to object
         /// </summary>
         /// <returns>deserialized object</returns>
-        protected override object ReadCommandFile()
+        protected override IEnumerable<ICommand> ReadCommandFile()
         {
-            object deserialized;
-
             try
             {
                 using (FileStream stream = new FileStream(CommandFilePath, FileMode.Open))
-                    deserialized = serializer.Deserialize(stream);
+                {
+                    var deserialized = _serializer.Deserialize(stream);
+                    return deserialized as IEnumerable<ICommand> ?? new List<ICommand> { deserialized as ICommand };
+                }
             }
             catch (Exception err)
             {
                 Log.Error(err);
-                deserialized = null;
+                return null;
             }
-            return deserialized;
         }
     }
 }

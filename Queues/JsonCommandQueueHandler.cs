@@ -50,22 +50,22 @@ namespace QuantConnect.Queues
         /// <summary>
         /// Reads the json command file on disk and deserialize to object
         /// </summary>
-        protected override object ReadCommandFile()
+        protected override IEnumerable<ICommand> ReadCommandFile()
         {
-            object deserialized;
             try
             {
                 if (!File.Exists(CommandFilePath)) return null;
                 var contents = File.ReadAllText(CommandFilePath);
-                deserialized = JsonConvert.DeserializeObject(contents, new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All });
+                var deserialized = JsonConvert.DeserializeObject(contents,
+                    new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All });
+
+                return deserialized as IEnumerable<ICommand> ?? new List<ICommand> { deserialized as ICommand };
             }
             catch (Exception err)
             {
                 Log.Error(err);
-                deserialized = null;
+                return null;
             }
-
-            return deserialized;
         }
     }
 }
