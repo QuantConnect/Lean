@@ -104,6 +104,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="AddRemoveSecurityRegressionAlgorithm.py" />
+    <Content Include="CustomChartingAlgorithm.py" />
     <Content Include="DividendAlgorithm.py" />
     <Content Include="MACDTrendAlgorithm.py" />
     <Content Include="QuandlImporterAlgorithm.py" />
