@@ -923,6 +923,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 ClientId = _clientID,
                 OrderId = ibOrderID,
+                Account = _account,
                 Action = ConvertOrderDirection(order.Direction),
                 TotalQuantity = Math.Abs(order.Quantity),
                 OrderType = ConvertOrderType(order.Type),
