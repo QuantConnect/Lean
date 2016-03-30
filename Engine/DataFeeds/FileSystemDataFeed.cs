@@ -123,7 +123,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var localStartTime = startTimeUtc.ConvertFromUtc(security.Exchange.TimeZone);
             var localEndTime = endTimeUtc.ConvertFromUtc(security.Exchange.TimeZone);
 
-            var tradeableDates = Time.EachTradeableDay(security, localStartTime, localEndTime);
+            var tradeableDates = Time.EachTradeableDayInTimeZone(security.Exchange.Hours, localStartTime, localEndTime, config.DataTimeZone, config.ExtendedMarketHours);
 
             // ReSharper disable once PossibleMultipleEnumeration
             if (!tradeableDates.Any())
@@ -325,7 +325,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // define our data enumerator
             IEnumerator<BaseData> enumerator;
 
-            var tradeableDates = Time.EachTradeableDay(security, localStartTime, localEndTime);
+            var tradeableDates = Time.EachTradeableDayInTimeZone(security.Exchange.Hours, localStartTime, localEndTime, config.DataTimeZone, config.ExtendedMarketHours);
 
             var userDefined = universe as UserDefinedUniverse;
             if (userDefined != null)
@@ -349,10 +349,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var enqueueable = new EnqueueableEnumerator<BaseData>(true);
 
                 // load coarse data day by day
-                var coarse = from date in Time.EachTradeableDay(security, _algorithm.StartDate, _algorithm.EndDate)
-                             let dateInDataTimeZone = date.ConvertTo(config.ExchangeTimeZone, config.DataTimeZone).Date
-                             let source = cf.GetSource(config, dateInDataTimeZone, false)
-                             let factory = SubscriptionFactory.ForSource(source, config, dateInDataTimeZone, false)
+                var coarse = from date in Time.EachTradeableDayInTimeZone(security.Exchange.Hours, _algorithm.StartDate, _algorithm.EndDate, config.DataTimeZone, config.ExtendedMarketHours)
+                             let source = cf.GetSource(config, date, false)
+                             let factory = SubscriptionFactory.ForSource(source, config, date, false)
                              let coarseFundamentalForDate = factory.Read(source)
                              select new BaseDataCollection(date.AddDays(1), config.Symbol, coarseFundamentalForDate);
 
