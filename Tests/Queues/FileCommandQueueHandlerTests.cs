@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Xml.Serialization;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Commands;
@@ -30,26 +31,27 @@ namespace QuantConnect.Tests.Queues
     [TestFixture]
     public class FileCommandQueueHandlerTests
     {
-        private const string SingleCommandFilePath = "command.json";
-        private const string MultiCommandFilePath = "commands.json";
+        private const string SingleCommandJsonFilePath = "command.json";
+        private const string MultiCommandJsonFilePath = "commands.json";
+        private const string MultiCommandXmlFilePath = "commands.xml";
 
         [Test]
         public void ReadsSingleJsonCommandFromFile()
         {
-            if (File.Exists(SingleCommandFilePath)) File.Delete(SingleCommandFilePath);
-            var queue = new JsonCommandQueueHandler(SingleCommandFilePath);
+            if (File.Exists(SingleCommandJsonFilePath)) File.Delete(SingleCommandJsonFilePath);
+            var queue = new JsonCommandQueueHandler(SingleCommandJsonFilePath);
             Assert.IsEmpty(queue.GetCommands());
-            File.WriteAllText(SingleCommandFilePath, JsonConvert.SerializeObject(new LiquidateCommand(), new JsonSerializerSettings{TypeNameHandling = TypeNameHandling.All}));
+            File.WriteAllText(SingleCommandJsonFilePath, JsonConvert.SerializeObject(new LiquidateCommand(), new JsonSerializerSettings{TypeNameHandling = TypeNameHandling.All}));
             Assert.IsInstanceOf(typeof (LiquidateCommand), queue.GetCommands().Single());
         }
 
         [Test]
-        public void ReadsMultipleCommandsFromFile()
+        public void ReadsMultipleCommandsFromJsonFile()
         {
-            if (File.Exists(MultiCommandFilePath)) File.Delete(MultiCommandFilePath);
-            var queue = new JsonCommandQueueHandler(MultiCommandFilePath);
+            if (File.Exists(MultiCommandJsonFilePath)) File.Delete(MultiCommandJsonFilePath);
+            var queue = new JsonCommandQueueHandler(MultiCommandJsonFilePath);
             Assert.IsEmpty(queue.GetCommands());
-            File.WriteAllText(MultiCommandFilePath, JsonConvert.SerializeObject(new List<ICommand>
+            File.WriteAllText(MultiCommandJsonFilePath, JsonConvert.SerializeObject(new List<ICommand>
             {
                 new LiquidateCommand(),
                 new SpecialCommand()
@@ -57,6 +59,28 @@ namespace QuantConnect.Tests.Queues
             var list = queue.GetCommands().ToList();
             Assert.IsInstanceOf(typeof (LiquidateCommand), list[0]);
             Assert.IsInstanceOf(typeof (SpecialCommand), list[1]);
+            Assert.IsEmpty(queue.GetCommands());
+        }
+
+        [Test]
+        public void ReadsMultipleCommandsFromXmlFile()
+        {
+            if (File.Exists(MultiCommandXmlFilePath)) File.Delete(MultiCommandXmlFilePath);
+            var queue = new XmlCommandQueueHandler(MultiCommandXmlFilePath);
+            Assert.IsEmpty(queue.GetCommands());
+            CommandQueue commands = new CommandQueue();
+            commands.Enqueue(new LiquidateCommand());
+            commands.Enqueue(new SpecialCommand());
+
+            using (FileStream stream = new FileStream(MultiCommandXmlFilePath, FileMode.OpenOrCreate))
+            {
+                XmlSerializer serializer = new XmlSerializer(typeof (CommandQueue));
+                serializer.Serialize(stream, commands);
+            }
+
+            var list = queue.GetCommands().ToList();
+            Assert.IsInstanceOf(typeof(LiquidateCommand), list[0]);
+            Assert.IsInstanceOf(typeof(SpecialCommand), list[1]);
             Assert.IsEmpty(queue.GetCommands());
         }
 

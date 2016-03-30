@@ -27,7 +27,7 @@ namespace QuantConnect.Commands
         /// <param name="reader">the xml reader</param>
         public void ReadXml(XmlReader reader)
         {
-            reader.ReadStartElement("QueuedCommands");
+            reader.ReadStartElement("CommandQueue");
             while (reader.IsStartElement("ICommand"))
             {
                 Type type = Type.GetType(reader.GetAttribute("AssemblyQualifiedName"));

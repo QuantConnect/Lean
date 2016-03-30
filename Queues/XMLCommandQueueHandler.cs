@@ -60,7 +60,7 @@ namespace QuantConnect.Queues
                 using (FileStream stream = new FileStream(CommandFilePath, FileMode.Open))
                 {
                     var deserialized = _serializer.Deserialize(stream);
-                    return deserialized as IEnumerable<ICommand> ?? new List<ICommand> { deserialized as ICommand };
+                    return deserialized as IEnumerable<ICommand>;
                 }
             }
             catch (Exception err)
