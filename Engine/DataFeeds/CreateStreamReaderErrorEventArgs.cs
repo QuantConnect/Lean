@@ -19,7 +19,7 @@ using QuantConnect.Data;
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// Event arguments for the <see cref="BaseDataSubscriptionFactory.CreateStreamReader"/> event
+    /// Event arguments for the <see cref="TextSubscriptionFactory.CreateStreamReader"/> event
     /// </summary>
     public sealed class CreateStreamReaderErrorEventArgs : EventArgs
     {

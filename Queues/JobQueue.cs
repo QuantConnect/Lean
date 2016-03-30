@@ -37,7 +37,7 @@ namespace QuantConnect.Queues
         private static readonly int UserId = Config.GetInt("job-user-id", int.MaxValue);
         private static readonly int ProjectId = Config.GetInt("job-project-id", int.MaxValue);
         private static readonly string AlgorithmTypeName = Config.Get("algorithm-type-name");
-        private static readonly Language Language = (Language)Enum.Parse(typeof(Language), Config.Get("algorithm-language"));
+        private readonly Language Language = (Language)Enum.Parse(typeof(Language), Config.Get("algorithm-language"));
 
         /// <summary>
         /// Physical location of Algorithm DLL.
@@ -87,7 +87,7 @@ namespace QuantConnect.Queues
                     Channel = Channel,
                     UserId = UserId,
                     ProjectId = ProjectId,
-                    Version = Constants.Version,
+                    Version = Globals.Version,
                     DeployId = AlgorithmTypeName,
                     RamAllocation = int.MaxValue,
                     Parameters = parameters,
@@ -116,7 +116,7 @@ namespace QuantConnect.Queues
                 Channel = Channel,
                 UserId = UserId,
                 ProjectId = ProjectId,
-                Version = Constants.Version,
+                Version = Globals.Version,
                 BacktestId = AlgorithmTypeName,
                 RamAllocation = int.MaxValue,
                 Language = Language,

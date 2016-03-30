@@ -105,8 +105,9 @@ namespace QuantConnect.Securities
             //Get the order value from the non-abstract order classes (MarketOrder, LimitOrder, StopMarketOrder)
             //Market order is approximated from the current security price and set in the MarketOrder Method in QCAlgorithm.
             var orderFees = security.FeeModel.GetOrderFee(security, order);
-            
-            return order.GetValue(security)*GetInitialMarginRequirement(security) + orderFees;
+
+            var orderValue = order.GetValue(security) * GetInitialMarginRequirement(security);
+            return orderValue + Math.Sign(orderValue) * orderFees;
         }
 
         /// <summary>
@@ -143,8 +144,14 @@ namespace QuantConnect.Securities
                 {
                     case OrderDirection.Buy:
                         return portfolio.MarginRemaining;
+
                     case OrderDirection.Sell:
-                        return security.MarginModel.GetMaintenanceMargin(security)*2 + portfolio.MarginRemaining;
+                        return 
+                            // portion of margin to close the existing position
+                            GetMaintenanceMargin(security) +
+                            // portion of margin to open the new position
+                            security.Holdings.AbsoluteHoldingsValue * GetInitialMarginRequirement(security) +
+                            portfolio.MarginRemaining;
                 }
             }
             else if (holdings.IsShort)
@@ -152,7 +159,13 @@ namespace QuantConnect.Securities
                 switch (direction)
                 {
                     case OrderDirection.Buy:
-                        return security.MarginModel.GetMaintenanceMargin(security)*2 + portfolio.MarginRemaining;
+                        return
+                            // portion of margin to close the existing position
+                            GetMaintenanceMargin(security) +
+                            // portion of margin to open the new position
+                            security.Holdings.AbsoluteHoldingsValue * GetInitialMarginRequirement(security) +
+                            portfolio.MarginRemaining;
+
                     case OrderDirection.Sell:
                         return portfolio.MarginRemaining;
                 }
@@ -185,11 +198,18 @@ namespace QuantConnect.Securities
                 return null;
             }
 
-            // compute the value we need to liquidate in order to get within margin requirements
-            decimal delta = totalMargin - netLiquidationValue;
-            
+            if (security.QuoteCurrency.ConversionRate == 0m)
+            {
+                // check for div 0 - there's no conv rate, so we can't place an order
+                return null;
+            }
+
+            // compute the amount of quote currency we need to liquidate in order to get within margin requirements
+            var deltaInQuoteCurrency = (totalMargin - netLiquidationValue)/security.QuoteCurrency.ConversionRate;
+
             // compute the number of shares required for the order, rounding up
-            int quantity = (int) (Math.Round(delta/security.Price, MidpointRounding.AwayFromZero) / GetMaintenanceMarginRequirement(security));
+            var unitPriceInQuoteCurrency = security.Price * security.SymbolProperties.ContractMultiplier;
+            int quantity = (int) (Math.Round(deltaInQuoteCurrency/unitPriceInQuoteCurrency, MidpointRounding.AwayFromZero)/GetMaintenanceMarginRequirement(security));
 
             // don't try and liquidate more share than we currently hold, minimum value of 1, maximum value for absolute quantity
             quantity = Math.Max(1, Math.Min((int)security.Holdings.AbsoluteQuantity, quantity));

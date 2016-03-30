@@ -17,8 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Cfd;
-using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Orders
 {
@@ -46,11 +44,16 @@ namespace QuantConnect.Orders
         /// Symbol of the Asset
         /// </summary>
         public Symbol Symbol { get; internal set; }
-        
+
         /// <summary>
         /// Price of the Order.
         /// </summary>
         public decimal Price { get; internal set; }
+
+        /// <summary>
+        /// Currency for the order price
+        /// </summary>
+        public string PriceCurrency { get; internal set; }
 
         /// <summary>
         /// Time the order was created.
@@ -130,6 +133,7 @@ namespace QuantConnect.Orders
         {
             Time = new DateTime();
             Price = 0;
+            PriceCurrency = string.Empty;
             Quantity = 0;
             Symbol = Symbol.Empty;
             Status = OrderStatus.None;
@@ -151,6 +155,7 @@ namespace QuantConnect.Orders
         {
             Time = time;
             Price = 0;
+            PriceCurrency = string.Empty;
             Quantity = quantity;
             Symbol = symbol;
             Status = OrderStatus.None;
@@ -170,23 +175,13 @@ namespace QuantConnect.Orders
         public decimal GetValue(Security security)
         {
             var value = GetValueImpl(security);
-            switch (security.Type)
-            {
-                // this is here until QuoteCurrency is on the base Security
-                case SecurityType.Forex:
-                    var forex = (Forex) security;
-                    value = value*forex.QuoteCurrency.ConversionRate;
-                    break;
-                case SecurityType.Cfd:
-                    var cfd = (Cfd) security;
-                    value = value*cfd.ContractMultiplier*cfd.QuoteCurrency.ConversionRate;
-                    break;
-            }
-            return value;
+            return value*security.QuoteCurrency.ConversionRate*security.SymbolProperties.ContractMultiplier;
         }
 
         /// <summary>
-        /// Gets the order value in units of the security's quote currency
+        /// Gets the order value in units of the security's quote currency for a single unit.
+        /// A single unit here is a single share of stock, or a single barrel of oil, or the
+        /// cost of a single share in an option contract.
         /// </summary>
         /// <param name="security">The security matching this order's symbol</param>
         protected abstract decimal GetValueImpl(Security security);
@@ -241,6 +236,7 @@ namespace QuantConnect.Orders
             order.ContingentId = ContingentId;
             order.Duration = Duration;
             order.Price = Price;
+            order.PriceCurrency = PriceCurrency;
             order.Quantity = Quantity;
             order.Status = Status;
             order.Symbol = Symbol;

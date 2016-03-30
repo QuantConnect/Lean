@@ -172,5 +172,31 @@ namespace QuantConnect.Data.Market
         {
             throw new NotSupportedException("RenkoBar does not support the GetSource function. This function should never be called on this type.");
         }
+
+        /// <summary>
+        /// Return a new instance clone of this object, used in fill forward
+        /// </summary>
+        /// <remarks>
+        /// This base implementation uses reflection to copy all public fields and properties
+        /// </remarks>
+        /// <returns>A clone of the current object</returns>
+        public override BaseData Clone()
+        {
+            return new RenkoBar
+            {
+                BrickSize = BrickSize,
+                Open = Open,
+                Volume = Volume,
+                Close = Close,
+                EndTime = EndTime,
+                High = High,
+                IsClosed = IsClosed,
+                Low = Low,
+                Time = Time,
+                Value = Value,
+                Symbol = Symbol,
+                DataType = DataType
+            };
+        }
     }
 }

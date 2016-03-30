@@ -178,27 +178,27 @@ namespace QuantConnect.Securities
                 if (symbol.Value == normal || symbol.Value == invert)
                 {
                     _invertRealTimePrice = symbol.Value == invert;
+                    var securityType = symbol.ID.SecurityType;
+                    var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol.Value, securityType, Symbol);
+                    Cash quoteCash;
+                    if (!cashBook.TryGetValue(symbolProperties.QuoteCurrency, out quoteCash))
+                    {
+                        throw new Exception("Unable to resolve quote cash: " + symbolProperties.QuoteCurrency + ". This is required to add conversion feed: " + symbol.ToString());
+                    }
                     var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType);
                     var exchangeHours = marketHoursDbEntry.ExchangeHours;
                     // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
                     var config = subscriptions.Add(objectType, symbol, minimumResolution, marketHoursDbEntry.DataTimeZone, exchangeHours.TimeZone, false, true, false, true);
                     SecuritySymbol = config.Symbol;
 
-                    var securityType = symbol.ID.SecurityType;
                     Security security;
                     if (securityType == SecurityType.Cfd)
                     {
-                        var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol.Value, securityType);
-                        Cash quoteCash;
-                        if (!cashBook.TryGetValue(symbolProperties.QuoteCurrency, out quoteCash))
-                        {
-                            throw new Exception("Unable to resolve quote cash: " + symbolProperties.QuoteCurrency + ". This is required to add conversion feed: " + symbol.ToString());
-                        }
                         security = new Cfd.Cfd(exchangeHours, quoteCash, config, symbolProperties);
                     }
                     else
                     {
-                        security = new Forex.Forex(exchangeHours, this, config);
+                        security = new Forex.Forex(exchangeHours, this, config, symbolProperties);
                     }
                     securities.Add(config.Symbol, security);
                     Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding " + symbol.Value + " for cash " + Symbol + " currency feed");
@@ -219,7 +219,13 @@ namespace QuantConnect.Securities
             // round the conversion rate for output
             decimal rate = ConversionRate;
             rate = rate < 1000 ? rate.RoundToSignificantDigits(5) : Math.Round(rate, 2);
-            return string.Format("{0}: {1,10} @ ${2,10} = {3}", Symbol, Amount.ToString("0.00"), rate.ToString("0.00####"), ValueInAccountCurrency.ToString("C"));
+            return string.Format("{0}: {1,15} @ ${2,10} = {3}{4}", 
+                Symbol, 
+                Amount.ToString("0.00"), 
+                rate.ToString("0.00####"), 
+                Currencies.CurrencySymbols[Symbol], 
+                Math.Round(ValueInAccountCurrency, 2)
+                );
         }
     }
 }

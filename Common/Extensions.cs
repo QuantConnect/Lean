@@ -120,6 +120,28 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Adds the specified element to the collection with the specified key. If an entry does not exist for th
+        /// specified key then one will be created.
+        /// </summary>
+        /// <typeparam name="TKey">The key type</typeparam>
+        /// <typeparam name="TElement">The collection element type</typeparam>
+        /// <typeparam name="TCollection">The collection type</typeparam>
+        /// <param name="dictionary">The source dictionary to be added to</param>
+        /// <param name="key">The key</param>
+        /// <param name="element">The element to be added</param>
+        public static void Add<TKey, TElement, TCollection>(this IDictionary<TKey, TCollection> dictionary, TKey key, TElement element)
+            where TCollection : ICollection<TElement>, new()
+        {
+            TCollection list;
+            if (!dictionary.TryGetValue(key, out list))
+            {
+                list = new TCollection();
+                dictionary.Add(key, list);
+            }
+            list.Add(element);
+        }
+
+        /// <summary>
         /// Extension method to round a double value to a fixed number of significant figures instead of a fixed decimal places.
         /// </summary>
         /// <param name="d">Double we're rounding</param>
@@ -681,6 +703,16 @@ namespace QuantConnect
                 source = source.Replace(match.Value, "<a href='" + match.Value + "' target='blank'>" + match.Value + "</a>");
             }
             return source;
+        }
+
+        /// <summary>
+        /// Converts the specified <paramref name="enum"/> value to its corresponding lower-case string representation
+        /// </summary>
+        /// <param name="enum">The enumeration value</param>
+        /// <returns>A lower-case string representation of the specified enumeration value</returns>
+        public static string ToLower(this Enum @enum)
+        {
+            return @enum.ToString().ToLower();
         }
     }
 }

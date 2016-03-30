@@ -36,45 +36,20 @@ namespace QuantConnect.Securities.Cfd
         /// <param name="symbolProperties">The symbol properties for this security</param>
         public Cfd(SecurityExchangeHours exchangeHours, Cash quoteCurrency, SubscriptionDataConfig config, SymbolProperties symbolProperties)
             : base(config,
+                quoteCurrency,
+                symbolProperties,
                 new CfdExchange(exchangeHours),
                 new CfdCache(),
-                new CfdPortfolioModel(),
+                new SecurityPortfolioModel(),
                 new ImmediateFillModel(),
                 new ConstantFeeModel(0),
                 new SpreadSlippageModel(),
                 new ImmediateSettlementModel(),
-                new CfdMarginModel(50m),
+                new SecurityMarginModel(50m),
                 new CfdDataFilter()
                 )
         {
-            QuoteCurrency = quoteCurrency;
             Holdings = new CfdHolding(this);
-            SymbolProperties = symbolProperties;
-
-            if (symbolProperties == null)
-                throw new ArgumentException("CFD requires a valid SymbolProperties argument");
-
-            if (symbolProperties.QuoteCurrency != quoteCurrency.Symbol)
-                throw new ArgumentException("CFD SymbolProperties.QuoteCurrency and QuoteCurrency.Symbol do not match.");
-        }
-
-        /// <summary>
-        /// Gets the Cash object used for converting the quote currency to the account currency
-        /// </summary>
-        public Cash QuoteCurrency { get; private set; }
-
-        /// <summary>
-        /// Gets the symbol properties for this security
-        /// </summary>
-        /// <remarks>Could possibly be moved to the base Security class</remarks>
-        public SymbolProperties SymbolProperties { get; private set; }
-
-        /// <summary>
-        /// Gets the quote currency for this CFD security
-        /// </summary>
-        public string QuoteCurrencySymbol
-        {
-            get { return SymbolProperties.QuoteCurrency; }
         }
 
         /// <summary>

@@ -60,7 +60,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var changes = SecurityChanges.None;
             nextFrontier = DateTime.MaxValue;
             var earlyBirdTicks = nextFrontier.Ticks;
-            var data = new List<KeyValuePair<Security, List<BaseData>>>();
+            var data = new List<DataFeedPacket>();
 
             SecurityChanges newChanges;
             do
@@ -84,8 +84,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
                     }
 
-                    var cache = new KeyValuePair<Security, List<BaseData>>(subscription.Security, new List<BaseData>());
-                    data.Add(cache);
+                    var packet = new DataFeedPacket(subscription.Security);
+                    data.Add(packet);
 
                     var configuration = subscription.Configuration;
                     var offsetProvider = subscription.OffsetProvider;
@@ -96,7 +96,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // so we don't interfere with the enumerator's internal logic
                         var clone = subscription.Current.Clone(subscription.Current.IsFillForward);
                         clone.Time = clone.Time.ExchangeRoundDown(configuration.Increment, subscription.Security.Exchange.Hours, configuration.ExtendedMarketHours);
-                        cache.Value.Add(clone);
+                        packet.Add(clone);
                         if (!subscription.MoveNext())
                         {
                             OnSubscriptionFinished(subscription);
@@ -105,11 +105,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     // we have new universe data to select based on
-                    if (subscription.IsUniverseSelectionSubscription && cache.Value.Count > 0)
+                    if (subscription.IsUniverseSelectionSubscription && packet.Count > 0)
                     {
                         // assume that if the first item is a base data collection then the enumerator handled the aggregation,
                         // otherwise, load all the the data into a new collection instance
-                        var collection = cache.Value[0] as BaseDataCollection ?? new BaseDataCollection(frontier, subscription.Configuration.Symbol, cache.Value);
+                        var collection = packet.Data[0] as BaseDataCollection ?? new BaseDataCollection(frontier, subscription.Configuration.Symbol, packet.Data);
                         newChanges += _universeSelection.ApplyUniverseSelection(subscription.Universe, frontier, collection);
                     }
 

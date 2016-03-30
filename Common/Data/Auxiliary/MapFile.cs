@@ -113,7 +113,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <returns>The file path to the requested map file</returns>
         public static string GetMapFilePath(string permtick, string market)
         {
-            return Path.Combine(Constants.DataFolder, "equity", market, "map_files", permtick.ToLower() + ".csv");
+            return Path.Combine(Globals.DataFolder, "equity", market, "map_files", permtick.ToLower() + ".csv");
         }
 
         #region Implementation of IEnumerable

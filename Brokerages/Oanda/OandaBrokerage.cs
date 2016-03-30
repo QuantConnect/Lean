@@ -349,6 +349,7 @@ namespace QuantConnect.Brokerages.Oanda
 
             // send Submitted order event
             const int orderFee = 0;
+            order.PriceCurrency = _securityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
             OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee) { Status = OrderStatus.Submitted });
 
             if (order.Type == OrderType.Market)

@@ -53,6 +53,14 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
+        /// Gets a clone of the data being currently consolidated
+        /// </summary>
+        public BaseData WorkingData
+        {
+            get { return Second.WorkingData; }
+        }
+
+        /// <summary>
         /// Gets the type consumed by this consolidator
         /// </summary>
         public Type InputType
@@ -75,6 +83,15 @@ namespace QuantConnect.Data.Consolidators
         public void Update(BaseData data)
         {
             First.Update(data);
+        }
+
+        /// <summary>
+        /// Scans this consolidator to see if it should emit a bar due to time passing
+        /// </summary>
+        /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
+        public void Scan(DateTime currentLocalTime)
+        {
+            First.Scan(currentLocalTime);
         }
 
         /// <summary>

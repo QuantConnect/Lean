@@ -34,6 +34,40 @@ namespace QuantConnect.Tests.Common
         };
 
         [Test]
+        public void OptionSymbolAliasMatchesOSI()
+        {
+            const string expected = @"MSFT  060318C00047500";
+            var symbol = Symbol.CreateOption("MSFT", Market.USA, OptionStyle.American, OptionRight.Call, 47.50m, new DateTime(2006, 03, 18));
+            Assert.AreEqual(expected, symbol.Value);
+        }
+
+        [Test]
+        public void OptionSymbolAliasAddsPaddingSpaceForSixOrMoreCharacterSymbols()
+        {
+            const string expected = @"ABCDEF 060318C00047500";
+            var symbol = Symbol.CreateOption("ABCDEF", Market.USA, OptionStyle.American, OptionRight.Call, 47.50m, new DateTime(2006, 03, 18));
+            Assert.AreEqual(expected, symbol.Value);
+        }
+
+        [Test]
+        public void SymbolCreateWithOptionSecurityTypeCreatesCanonicalOptionSymbol()
+        {
+            var symbol = Symbol.Create("SPY", SecurityType.Option, Market.USA);
+            var sid = symbol.ID;
+            Assert.AreEqual(SecurityIdentifier.DefaultDate, sid.Date);
+            Assert.AreEqual(0m, sid.StrikePrice);
+            Assert.AreEqual(default(OptionRight), sid.OptionRight);
+            Assert.AreEqual(default(OptionStyle), sid.OptionStyle);
+        }
+
+        [Test]
+        public void CanonicalOptionSymbolAliasHasQuestionMark()
+        {
+            var symbol = Symbol.Create("SPY", SecurityType.Option, Market.USA);
+            Assert.AreEqual("?SPY", symbol.Value);
+        }
+
+        [Test]
         public void UsesSidForDictionaryKey()
         {
             var sid = SecurityIdentifier.GenerateEquity("SPY", Market.USA);
@@ -55,6 +89,7 @@ namespace QuantConnect.Tests.Common
             var actual = JsonConvert.DeserializeObject<Symbol>(json, Settings);
             Assert.AreEqual(expected, actual);
         }
+
         [Test]
         public void SurvivesRoundtripSerializationWithTypeNameHandling()
         {

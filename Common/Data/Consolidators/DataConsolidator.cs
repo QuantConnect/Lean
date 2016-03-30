@@ -41,6 +41,12 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
+        /// Scans this consolidator to see if it should emit a bar due to time passing
+        /// </summary>
+        /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
+        public abstract void Scan(DateTime currentLocalTime);
+
+        /// <summary>
         /// Event handler that fires when a new piece of data is produced
         /// </summary>
         public event DataConsolidatedHandler DataConsolidated;
@@ -52,6 +58,14 @@ namespace QuantConnect.Data.Consolidators
         public BaseData Consolidated
         {
             get; private set;
+        }
+
+        /// <summary>
+        /// Gets a clone of the data being currently consolidated
+        /// </summary>
+        public abstract BaseData WorkingData
+        {
+            get;
         }
 
         /// <summary>

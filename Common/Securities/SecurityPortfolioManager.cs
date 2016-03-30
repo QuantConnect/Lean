@@ -632,6 +632,14 @@ namespace QuantConnect.Securities
 
             // build a 'next' value to update the market prices in light of the split factor
             var next = security.GetLastData();
+            if (next == null)
+            {
+                // sometimes we can get splits before we receive data which
+                // will cause this to return null, in this case we can't possibly
+                // have any holdings or price to set since we haven't received
+                // data yet, so just do nothing
+                return;
+            }
             next.Value *= split.SplitFactor;
 
             // make sure to modify open/high/low as well for tradebar data types

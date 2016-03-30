@@ -26,7 +26,17 @@ namespace QuantConnect.Tests.Indicators
         {
             var cmo = new ChandeMomentumOscillator("CMO", 5);
 
-            TestHelper.TestIndicator(cmo, "spy_cmo.txt", "CMO_5", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-3));
+            TestIndicator(cmo);
+        }
+
+        [Test]
+        public void ComparesAgainstExternalDataAfterReset()
+        {
+            var cmo = new ChandeMomentumOscillator("CMO", 5);
+
+            TestIndicator(cmo);
+            cmo.Reset();
+            TestIndicator(cmo);
         }
 
         [Test]
@@ -35,6 +45,11 @@ namespace QuantConnect.Tests.Indicators
             var cmo = new ChandeMomentumOscillator("CMO", 5);
 
             TestHelper.TestIndicatorReset(cmo, "spy_cmo.txt");
+        }
+
+        private static void TestIndicator(ChandeMomentumOscillator cmo)
+        {
+            TestHelper.TestIndicator(cmo, "spy_cmo.txt", "CMO_5", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-3));
         }
     }
 }

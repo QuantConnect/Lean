@@ -443,6 +443,25 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(reference.AddDays(2), consolidated.Time);
         }
 
+        [Test]
+        public void FiresEventAfterTimePassesViaScan()
+        {
+            TradeBar consolidated = null;
+            var period = TimeSpan.FromDays(1);
+            var consolidator = new TradeBarConsolidator(period);
+            consolidator.DataConsolidated += (sender, bar) =>
+            {
+                consolidated = bar;
+            };
+
+            var reference = new DateTime(2015, 04, 13);
+            consolidator.Update(new TradeBar { Time = reference.AddSeconds(45), Period = period });
+            Assert.IsNull(consolidated);
+
+            consolidator.Scan(reference + period);
+            Assert.IsNotNull(consolidated);
+        }
+
         private readonly TimeSpan marketStop = new DateTime(2000, 1, 1, 12 + 4, 0, 0).TimeOfDay;
         private readonly TimeSpan marketStart = new DateTime(2000, 1, 1, 9, 30, 0).TimeOfDay;
         private IEnumerable<TradeBar> StreamTradeBars(DateTime start, DateTime end, TimeSpan resolution, bool skipAferMarketHours = true)

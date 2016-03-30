@@ -81,6 +81,14 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
+        /// Gets a clone of the data being currently consolidated
+        /// </summary>
+        public override BaseData WorkingData
+        {
+            get { return _currentBar == null ? null : _currentBar.Clone(); }
+        }
+
+        /// <summary>
         /// Gets <see cref="RenkoBar"/> which is the type emitted in the <see cref="IDataConsolidator.DataConsolidated"/> event.
         /// </summary>
         public override Type OutputType
@@ -123,6 +131,14 @@ namespace QuantConnect.Data.Consolidators
                 }
                 _currentBar = new RenkoBar(data.Symbol, data.Time, _barSize, open, volume);
             }
+        }
+
+        /// <summary>
+        /// Scans this consolidator to see if it should emit a bar due to time passing
+        /// </summary>
+        /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
+        public override void Scan(DateTime currentLocalTime)
+        {
         }
 
         /// <summary>

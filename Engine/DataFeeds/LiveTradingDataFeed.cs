@@ -114,10 +114,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Task.Run(() => _customExchange.Start(_cancellationTokenSource.Token));
 
             // this value will be modified via calls to AddSubscription/RemoveSubscription
-            var ffres = Time.OneSecond;
+            var ffres = Time.OneMinute;
             _fillForwardResolution = Ref.Create(() => ffres, v => ffres = v);
-
-            ffres = ResolveFillForwardResolution(algorithm);
 
             // wire ourselves up to receive notifications when universes are added/removed
             var start = _timeProvider.GetUtcNow();
@@ -129,6 +127,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         foreach (var universe in args.NewItems.OfType<Universe>())
                         {
                             _subscriptions[universe.Configuration.Symbol] = CreateUniverseSubscription(universe, start, Time.EndOfTime);
+                            UpdateFillForwardResolution();
                         }
                         break;
 
@@ -138,7 +137,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             Subscription subscription;
                             if (_subscriptions.TryGetValue(universe.Configuration.Symbol, out subscription))
                             {
-                                RemoveSubscription(subscription);
+                                RemoveSubscription(subscription.Configuration.Symbol);
                             }
                         }
                         break;
@@ -184,8 +183,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // as notifications, used in universe selection
             _changes += SecurityChanges.Added(security);
 
-            // update our fill forward resolution setting
-            _fillForwardResolution.Value = ResolveFillForwardResolution(_algorithm);
+            UpdateFillForwardResolution();
 
             return true;
         }
@@ -193,10 +191,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Removes the subscription from the data feed, if it exists
         /// </summary>
-        /// <param name="subscription">The subscription to be removed</param>
+        /// <param name="symbol">The symbol of the subscription to be removed</param>
         /// <returns>True if the subscription was successfully removed, false otherwise</returns>
-        public bool RemoveSubscription(Subscription subscription)
+        public bool RemoveSubscription(Symbol symbol)
         {
+            // remove the subscription from our collection
+            Subscription subscription;
+            if (!_subscriptions.TryRemove(symbol, out subscription))
+            {
+                return false;
+            }
+
             var security = subscription.Security;
 
             // remove the subscriptions
@@ -211,25 +216,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _exchange.RemoveDataHandler(security.Symbol);
             }
 
-            // remove the subscription from our collection
-            Subscription sub;
-            if (_subscriptions.TryRemove(subscription.Security.Symbol, out sub))
-            {
-                sub.Dispose();
-            }
-            else
-            {
-                return false;
-            }
+            subscription.Dispose();
 
             Log.Trace("LiveTradingDataFeed.RemoveSubscription(): Removed " + security.Symbol.ToString());
 
             // keep track of security changes, we emit these to the algorithm
             // as notications, used in universe selection
             _changes += SecurityChanges.Removed(security);
-
-            // update our fill forward resolution setting
-            _fillForwardResolution.Value = ResolveFillForwardResolution(_algorithm);
+            
+            UpdateFillForwardResolution();
 
             return true;
         }
@@ -254,24 +249,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _frontierUtc = _timeProvider.GetUtcNow();
                     _frontierTimeProvider.SetCurrentTime(_frontierUtc);
 
-                    var data = new List<KeyValuePair<Security, List<BaseData>>>();
+                    var data = new List<DataFeedPacket>();
                     foreach (var kvp in _subscriptions)
                     {
                         var subscription = kvp.Value;
 
-                        var cache = new KeyValuePair<Security, List<BaseData>>(subscription.Security, new List<BaseData>());
+                        var packet = new DataFeedPacket(subscription.Security);
 
                         // dequeue data that is time stamped at or before this frontier
                         while (subscription.MoveNext() && subscription.Current != null)
                         {
-                            cache.Value.Add(subscription.Current);
+                            packet.Add(subscription.Current);
                         }
 
                         // if we have data, add it to be added to the bridge
-                        if (cache.Value.Count > 0) data.Add(cache);
+                        if (packet.Count > 0) data.Add(packet);
 
                         // we have new universe data to select based on
-                        if (subscription.IsUniverseSelectionSubscription && cache.Value.Count > 0)
+                        if (subscription.IsUniverseSelectionSubscription && packet.Count > 0)
                         {
                             var universe = subscription.Universe;
 
@@ -283,7 +278,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                             // assume that if the first item is a base data collection then the enumerator handled the aggregation,
                             // otherwise, load all the the data into a new collection instance
-                            var collection = cache.Value[0] as BaseDataCollection ?? new BaseDataCollection(_frontierUtc, subscription.Configuration.Symbol, cache.Value);
+                            var collection = packet.Data[0] as BaseDataCollection ?? new BaseDataCollection(_frontierUtc, subscription.Configuration.Symbol, packet.Data);
 
                             _changes += _universeSelection.ApplyUniverseSelection(universe, _frontierUtc, collection);
                         }
@@ -330,7 +325,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     try
                     {
-                        RemoveSubscription(kvp.Value);
+                        RemoveSubscription(kvp.Value.Configuration.Symbol);
                     }
                     catch (Exception err)
                     {
@@ -400,8 +395,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         var sourceProvider = (BaseData)Activator.CreateInstance(config.Type);
                         var dateInDataTimeZone = DateTime.UtcNow.ConvertFromUtc(config.DataTimeZone).Date;
-                        var factory = new BaseDataSubscriptionFactory(config, dateInDataTimeZone, true);
                         var source = sourceProvider.GetSource(config, dateInDataTimeZone, true);
+                        var factory = SubscriptionFactory.ForSource(source, config, dateInDataTimeZone, false);
                         var factoryReadEnumerator = factory.Read(source).GetEnumerator();
                         var maximumDataAge = TimeSpan.FromTicks(Math.Max(config.Increment.Ticks, TimeSpan.FromSeconds(5).Ticks));
                         var fastForward = new FastForwardEnumerator(factoryReadEnumerator, _timeProvider, security.Exchange.TimeZone, maximumDataAge);
@@ -485,7 +480,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var exchangeHours = marketHoursDatabase.GetExchangeHours(config);
 
             // create a canonical security object
-            var security = new Security(exchangeHours, config);
+            var security = new Security(exchangeHours, config, _algorithm.Portfolio.CashBook[CashBook.AccountCurrency], SymbolProperties.GetDefault(CashBook.AccountCurrency));
             var tzOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, startTimeUtc, endTimeUtc);
 
             IEnumerator<BaseData> enumerator;
@@ -529,8 +524,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     var sourceProvider = (BaseData)Activator.CreateInstance(config.Type);
                     var dateInDataTimeZone = DateTime.UtcNow.ConvertFromUtc(config.DataTimeZone).Date;
-                    var factory = new BaseDataSubscriptionFactory(config, dateInDataTimeZone, true);
                     var source = sourceProvider.GetSource(config, dateInDataTimeZone, true);
+                    var factory = SubscriptionFactory.ForSource(source, config, dateInDataTimeZone, false);
                     var factorEnumerator = factory.Read(source).GetEnumerator();
                     var fastForward = new FastForwardEnumerator(factorEnumerator, _timeProvider, security.Exchange.TimeZone, config.Increment);
                     var frontierAware = new FrontierAwareEnumerator(fastForward, _frontierTimeProvider, tzOffsetProvider);
@@ -572,14 +567,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Log.Trace("LiveTradingDataFeed.GetNextTicksEnumerator(): Exiting enumerator thread...");
         }
 
-        private static TimeSpan ResolveFillForwardResolution(IAlgorithm algorithm)
+        /// <summary>
+        /// Updates the fill forward resolution by checking all existing subscriptions and
+        /// selecting the smallest resoluton not equal to tick
+        /// </summary>
+        private void UpdateFillForwardResolution()
         {
-            return algorithm.SubscriptionManager.Subscriptions
-                .Where(x => !x.IsInternalFeed)
-                .Select(x => x.Resolution)
-                .Union(algorithm.UniverseManager.Select(x => x.Value.UniverseSettings.Resolution))
+            _fillForwardResolution.Value = _subscriptions
+                .Select(x => x.Value.Configuration.Resolution)
                 .Where(x => x != Resolution.Tick)
-                .DefaultIfEmpty(Resolution.Second)
+                .DefaultIfEmpty(Resolution.Minute)
                 .Min().ToTimeSpan();
         }
 
