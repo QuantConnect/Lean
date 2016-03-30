@@ -115,6 +115,7 @@
     <Content Include="DropboxUniverseSelectionAlgorithm.py" />
     <Content Include="CoarseFundamentalTop5Algorithm.py" />
     <Content Include="ScheduledEventsAlgorithm.py" />
+    <Content Include="TickDataFilteringAlgorithm.py" />
     <Content Include="UniverseSelectionDefinitionsAlgorithm.py" />
     <Content Include="UniverseSelectionRegressionAlgorithm.py" />
     <Content Include="UpdateOrderRegressionAlgorithm.py" />
