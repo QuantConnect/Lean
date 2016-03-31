@@ -206,7 +206,7 @@ namespace QuantConnect.Brokerages.Backtesting
                 var stillNeedsScan = false;
 
                 // process each pending order to produce fills/fire events
-                foreach (var kvp in _pending)
+                foreach (var kvp in _pending.OrderBy(x => x.Key))
                 {
                     var order = kvp.Value;
 
