@@ -509,7 +509,7 @@ namespace QuantConnect.Securities
                 Exchange.SetLocalDateTimeFrontier(args.Time);
             };
         }
-
+        
         /// <summary>
         /// Update any security properties based on the lastest market data and time
         /// </summary>
