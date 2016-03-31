@@ -519,7 +519,7 @@ namespace QuantConnect.Securities
             //Add new point to cache:
             if (data == null) return;
             Cache.AddData(data);
-            Holdings.UpdateMarketPrice(data.Value);
+            Holdings.UpdateMarketPrice(Price);
             VolatilityModel.Update(this, data);
         }
 
