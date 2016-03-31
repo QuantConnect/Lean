@@ -31,6 +31,7 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -130,9 +131,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // get the map file resolver for this market
             var mapFileResolver = MapFileResolver.Empty;
             if (config.SecurityType == SecurityType.Equity) mapFileResolver = _mapFileProvider.Get(config.Market);
-
+            
             // ReSharper disable once PossibleMultipleEnumeration
-            var enumerator = CreateSubscriptionEnumerator(security, config, localStartTime, localEndTime, mapFileResolver, tradeableDates);
+            var enumerator = CreateSubscriptionEnumerator(security, config, localStartTime, localEndTime, mapFileResolver, tradeableDates, true, false);
 
             var enqueueable = new EnqueueableEnumerator<BaseData>(true);
 
@@ -351,24 +352,40 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 var cf = new CoarseFundamental();
 
-                var enqueueable = new EnqueueableEnumerator<BaseData>(true);
-
                 // load coarse data day by day
-                var coarse = from date in Time.EachTradeableDayInTimeZone(security.Exchange.Hours, _algorithm.StartDate, _algorithm.EndDate, config.DataTimeZone, config.ExtendedMarketHours)
+                enumerator = (from date in Time.EachTradeableDayInTimeZone(security.Exchange.Hours, _algorithm.StartDate, _algorithm.EndDate, config.DataTimeZone, config.ExtendedMarketHours)
                              let source = cf.GetSource(config, date, false)
                              let factory = SubscriptionFactory.ForSource(source, config, date, false)
                              let coarseFundamentalForDate = factory.Read(source)
-                             select new BaseDataCollection(date.AddDays(1), config.Symbol, coarseFundamentalForDate);
-
+                             select new BaseDataCollection(date.AddDays(1), config.Symbol, coarseFundamentalForDate)
+                             ).GetEnumerator();
                 
-                ScheduleEnumerator(coarse.GetEnumerator(), enqueueable, 5, 100000, 2);
+                var enqueueable = new EnqueueableEnumerator<BaseData>(true);
+                ScheduleEnumerator(enumerator, enqueueable, 5, 100000, 2);
+
+                enumerator = enqueueable;
+            }
+            else if (config.SecurityType == SecurityType.Option && security is Option)
+            {
+                var configs = universe.GetSubscriptions(security);
+                var enumerators = configs.Select(c =>
+                    CreateSubscriptionEnumerator(security, c, localStartTime, localEndTime, _mapFileProvider.Get(c.Market), tradeableDates, false, true)
+                    ).ToList();
+
+                var sync = new SynchronizingEnumerator(enumerators);
+                enumerator = new OptionChainUniverseDataCollectionAggregatorEnumerator(sync, config.Symbol);
+
+                var enqueueable = new EnqueueableEnumerator<BaseData>(true);
+
+                // add this enumerator to our exchange
+                ScheduleEnumerator(enumerator, enqueueable, GetLowerThreshold(config.Resolution), GetUpperThreshold(config.Resolution));
 
                 enumerator = enqueueable;
             }
             else
             {
                 // normal reader for all others
-                enumerator = CreateSubscriptionEnumerator(security, config, localStartTime, localEndTime, MapFileResolver.Empty, tradeableDates);
+                enumerator = CreateSubscriptionEnumerator(security, config, localStartTime, localEndTime, MapFileResolver.Empty, tradeableDates, true, false);
 
                 // route these custom subscriptions through the exchange for buffering
                 var enqueueable = new EnqueueableEnumerator<BaseData>(true);
@@ -501,10 +518,31 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             DateTime localStartTime,
             DateTime localEndTime,
             MapFileResolver mapFileResolver,
-            IEnumerable<DateTime> tradeableDates)
+            IEnumerable<DateTime> tradeableDates,
+            bool useSubscriptionDataReader,
+            bool aggregate)
         {
-            IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, mapFileResolver,
-                _factorFileProvider, tradeableDates, false);
+            IEnumerator<BaseData> enumerator;
+            if (useSubscriptionDataReader)
+            {
+                enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, mapFileResolver,
+                    _factorFileProvider, tradeableDates, false);
+            }
+            else
+            {
+                var sourceFactory = (BaseData)Activator.CreateInstance(config.Type);
+                enumerator = (from date in tradeableDates
+                              let source = sourceFactory.GetSource(config, date, false)
+                              let factory = SubscriptionFactory.ForSource(source, config, date, false)
+                              let entriesForDate = factory.Read(source)
+                              from entry in entriesForDate
+                              select entry).GetEnumerator();
+            }
+
+            if (aggregate)
+            {
+                enumerator = new BaseDataCollectionAggregatorEnumerator(enumerator, config.Symbol);
+            }
 
             // optionally apply fill forward logic, but never for tick data
             if (config.FillDataForward && config.Resolution != Resolution.Tick)
