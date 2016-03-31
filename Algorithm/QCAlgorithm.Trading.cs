@@ -15,9 +15,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Cfd;
 using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Algorithm
@@ -421,7 +421,7 @@ namespace QuantConnect.Algorithm
             var orderIdList = new List<int>();
             symbolToLiquidate = symbolToLiquidate ?? QuantConnect.Symbol.Empty;
 
-            foreach (var symbol in Securities.Keys)
+            foreach (var symbol in Securities.Keys.OrderBy(x => x.Value))
             {
                 // symbol not matching, do nothing
                 if (symbol != symbolToLiquidate && symbolToLiquidate != QuantConnect.Symbol.Empty) 
