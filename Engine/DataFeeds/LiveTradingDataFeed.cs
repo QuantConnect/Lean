@@ -574,6 +574,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private void UpdateFillForwardResolution()
         {
             _fillForwardResolution.Value = _subscriptions
+                .Where(x => !x.Value.Configuration.IsInternalFeed)
                 .Select(x => x.Value.Configuration.Resolution)
                 .Where(x => x != Resolution.Tick)
                 .DefaultIfEmpty(Resolution.Minute)
