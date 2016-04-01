@@ -92,20 +92,16 @@ namespace QuantConnect.Securities
             _lastData = data;
             _dataByType[data.GetType()] = data;
 
-            // set our current price
-            Price = data.Value;
-
             var tick = data as Tick;
             if (tick != null)
             {
-                if (tick.LastPrice != 0) Price = tick.LastPrice;
+                if (tick.Value != 0) Price = tick.Value;
 
                 if (tick.BidPrice != 0) BidPrice = tick.BidPrice;
                 if (tick.BidSize != 0) BidSize = tick.BidSize;
 
                 if (tick.AskPrice != 0) AskPrice = tick.AskPrice;
                 if (tick.AskSize != 0) AskSize = tick.AskSize;
-                return;
             }
             var bar = data as IBar;
             if (bar != null)
@@ -136,6 +132,10 @@ namespace QuantConnect.Securities
                     if (quoteBar.LastBidSize != 0) BidSize = quoteBar.LastBidSize;
                     if (quoteBar.LastAskSize != 0) AskSize = quoteBar.LastAskSize;
                 }
+            }
+            else
+            {
+                Price = data.Price;
             }
         }
 
