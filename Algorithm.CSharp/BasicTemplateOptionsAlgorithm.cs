@@ -18,6 +18,7 @@ using System;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -63,6 +64,7 @@ namespace QuantConnect.Algorithm.CSharp
                     var contract = (
                         from optionContract in chain.OrderByDescending(x => x.Strike)
                         where optionContract.Right == OptionRight.Call
+                        where optionContract.Expiry == Time.Date
                         where optionContract.Strike < chain.Underlying.Price
                         select optionContract
                         ).Skip(2).FirstOrDefault();
@@ -75,6 +77,16 @@ namespace QuantConnect.Algorithm.CSharp
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Order fill event handler. On an order fill update the resulting information is passed to this method.
+        /// </summary>
+        /// <param name="orderEvent">Order event details containing details of the evemts</param>
+        /// <remarks>This method can be called asynchronously and so should only be used by seasoned C# experts. Ensure you use proper locks on thread-unsafe objects</remarks>
+        public override void OnOrderEvent(OrderEvent orderEvent)
+        {
+            Log(orderEvent.ToString());
         }
     }
 }

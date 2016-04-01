@@ -53,6 +53,29 @@ namespace QuantConnect.Tests
                 {"Total Fees", "$3.09"}
             };
 
+            var basicTemplateOptionsStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "2"},
+                {"Average Win", "18.70%"},
+                {"Average Loss", "0%"},
+                {"Compounding Annual Return", "79228162514264337593543950335%"},
+                {"Drawdown", "40.500%"},
+                {"Expectancy", "0"},
+                {"Net Profit", "18.700%"},
+                {"Sharpe Ratio", "0"},
+                {"Loss Rate", "0%"},
+                {"Win Rate", "100%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "0"},
+                {"Beta", "0"},
+                {"Annual Standard Deviation", "0"},
+                {"Annual Variance", "0"},
+                {"Information Ratio", "0"},
+                {"Tracking Error", "0"},
+                {"Treynor Ratio", "0"},
+                {"Total Fees", "$0.00"},
+            };
+
             var limitFillRegressionStatistics = new Dictionary<string, string>
             {
                 {"Total Trades", "34"},
@@ -265,6 +288,7 @@ namespace QuantConnect.Tests
                 // CSharp
                 new AlgorithmStatisticsTestParameters("AddRemoveSecurityRegressionAlgorithm", addRemoveSecurityRegressionStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("BasicTemplateOptionsAlgorithm", basicTemplateOptionsStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("CustomDataRegressionAlgorithm", customDataRegressionStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("DropboxBaseDataUniverseSelectionAlgorithm", dropboxBaseDataUniverseSelectionStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("DropboxUniverseSelectionAlgorithm", dropboxUniverseSelectionStatistics, Language.CSharp),
