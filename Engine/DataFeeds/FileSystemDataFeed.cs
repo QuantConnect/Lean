@@ -364,7 +364,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             else
             {
                 // normal reader for all others
-                enumerator = CreateSubscriptionEnumerator(security, config, localStartTime, localEndTime, MapFileResolver.Empty, tradeableDates, false);
+                enumerator = CreateSubscriptionEnumerator(security, config, localStartTime, localEndTime, MapFileResolver.Empty, tradeableDates);
 
                 // route these custom subscriptions through the exchange for buffering
                 var enqueueable = new EnqueueableEnumerator<BaseData>(true);
@@ -497,8 +497,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             DateTime localStartTime,
             DateTime localEndTime,
             MapFileResolver mapFileResolver,
-            IEnumerable<DateTime> tradeableDates,
-            bool applySubscriptionFilterEnumerator = true)
+            IEnumerable<DateTime> tradeableDates)
         {
             IEnumerator<BaseData> enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, mapFileResolver,
                 _factorFileProvider, tradeableDates, false);
@@ -511,7 +510,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // optionally apply exchange/user filters
-            if (applySubscriptionFilterEnumerator)
+            if (config.IsFilteredSubscription)
             {
                 enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(_resultHandler, enumerator, security, localEndTime);
             }

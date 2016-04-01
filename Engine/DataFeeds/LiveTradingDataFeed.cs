@@ -440,16 +440,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 if (config.FillDataForward)
                 {
-                    // TODO : Properly resolve fill forward resolution like in FileSystemDataFeed (make considerations for universe-only)
                     enumerator = new LiveFillForwardEnumerator(_frontierTimeProvider, enumerator, security.Exchange, _fillForwardResolution, config.ExtendedMarketHours, localEndTime, config.Increment);
                 }
 
                 // define market hours and user filters to incoming data
-                enumerator = new SubscriptionFilterEnumerator(enumerator, security, localEndTime);
+                if (config.IsFilteredSubscription)
+                {
+                    enumerator = new SubscriptionFilterEnumerator(enumerator, security, localEndTime);
+                }
 
-                // finally, make our subscriptions aware of the frontier of the data feed, this will help
+                // finally, make our subscriptions aware of the frontier of the data feed, prevents future data from spewing into the feed
                 enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, timeZoneOffsetProvider);
-
 
                 subscription = new Subscription(universe, security, enumerator, timeZoneOffsetProvider, utcStartTime, utcEndTime, false);
             }

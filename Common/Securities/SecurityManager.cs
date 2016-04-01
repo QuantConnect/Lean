@@ -320,7 +320,8 @@ namespace QuantConnect.Securities
             bool extendedMarketHours,
             bool isInternalFeed,
             bool isCustomData,
-            bool addToSymbolCache = true)
+            bool addToSymbolCache = true,
+            bool isFilteredSubscription = true)
         {
             var sid = symbol.ID;
 
@@ -329,7 +330,7 @@ namespace QuantConnect.Securities
 
             //Add the symbol to Data Manager -- generate unified data streams for algorithm events
             var config = subscriptionManager.Add(factoryType, symbol, resolution, dataTimeZone, exchangeHours.TimeZone, isCustomData, fillDataForward,
-                extendedMarketHours, isInternalFeed);
+                extendedMarketHours, isInternalFeed, isFilteredSubscription);
 
             Security security;
             switch (config.SecurityType)
