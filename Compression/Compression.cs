@@ -443,7 +443,8 @@ namespace QuantConnect
                         var entry = zip.FirstOrDefault(x => zipEntryName == null || string.Compare(x.FileName, zipEntryName, StringComparison.OrdinalIgnoreCase) == 0);
                         if (entry == null)
                         {
-                            throw new ArgumentException("Unable to locate zip entry with name: " + zipEntryName);
+                            Log.Error("Compression.Unzip(): Unable to locate zip entry with name: " + zipEntryName);
+                            return null;
                         }
 
                         reader = new StreamReader(entry.OpenReader());
