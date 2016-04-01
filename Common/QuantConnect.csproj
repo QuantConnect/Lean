@@ -270,6 +270,7 @@
     <Compile Include="Securities\CompositeSecurityInitializer.cs" />
     <Compile Include="Securities\ConstantFeeTransactionModel.cs" />
     <Compile Include="Securities\DelayedSettlementModel.cs" />
+    <Compile Include="Securities\FuncSecurityDerivativeFilter.cs" />
     <Compile Include="Securities\FuncSecurityInitializer.cs" />
     <Compile Include="Securities\IDerivativeSecurityFilter.cs" />
     <Compile Include="Securities\IndicatorVolatilityModel.cs" />
