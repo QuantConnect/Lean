@@ -89,6 +89,7 @@
     <Compile Include="LogEntry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Log.cs" />
+    <Compile Include="RegressionFileLogHandler.cs" />
     <Compile Include="WhoCalledMe.cs" />
   </ItemGroup>
   <ItemGroup>
