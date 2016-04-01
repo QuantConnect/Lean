@@ -457,7 +457,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual decimal BidPrice
         {
-            get { return Cache.BidPrice; }
+            get { return Cache.BidPrice == 0 ? Price : Cache.BidPrice; }
         }
 
         /// <summary>
@@ -473,7 +473,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual decimal AskPrice
         {
-            get { return Cache.AskPrice; }
+            get { return Cache.AskPrice == 0 ? Price : Cache.AskPrice; }
         }
 
         /// <summary>
