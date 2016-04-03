@@ -875,6 +875,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 // mark sells as negative quantities
                 var fillQuantity = order.Direction == OrderDirection.Buy ? filledThisTime : -filledThisTime;
+                order.PriceCurrency = _securityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
                 var orderEvent = new OrderEvent(order, DateTime.UtcNow, orderFee, "Interactive Brokers Fill Event")
                 {
                     Status = status,
@@ -922,6 +923,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 ClientId = _clientID,
                 OrderId = ibOrderID,
+                Account = _account,
                 Action = ConvertOrderDirection(order.Direction),
                 TotalQuantity = Math.Abs(order.Quantity),
                 OrderType = ConvertOrderType(order.Type),

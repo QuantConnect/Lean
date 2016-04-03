@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
@@ -57,17 +58,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="universe">The universe the subscription is to be added to</param>
         /// <param name="security">The security to add a subscription for</param>
+        /// <param name="config">The subscription config to be added</param>
         /// <param name="utcStartTime">The start time of the subscription</param>
         /// <param name="utcEndTime">The end time of the subscription</param>
         /// <returns>True if the subscription was created and added successfully, false otherwise</returns>
-        bool AddSubscription(Universe universe, Security security, DateTime utcStartTime, DateTime utcEndTime);
+        bool AddSubscription(Universe universe, Security security, SubscriptionDataConfig config, DateTime utcStartTime, DateTime utcEndTime);
 
         /// <summary>
         /// Removes the subscription from the data feed, if it exists
         /// </summary>
-        /// <param name="subscription">The subscription to be removed</param>
+        /// <param name="symbol">The symbol of the subscription to be removed</param>
         /// <returns>True if the subscription was successfully removed, false otherwise</returns>
-        bool RemoveSubscription(Subscription subscription);
+        bool RemoveSubscription(Symbol symbol);
 
         /// <summary>
         /// Primary entry point.

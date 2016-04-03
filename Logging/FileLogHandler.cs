@@ -93,6 +93,17 @@ namespace QuantConnect.Logging
         }
 
         /// <summary>
+        /// Creates the message to be logged
+        /// </summary>
+        /// <param name="text">The text to be logged</param>
+        /// <param name="level">The logging leel</param>
+        /// <returns></returns>
+        protected virtual string CreateMessage(string text, string level)
+        {
+            return string.Format("{0} {1}:: {2}", DateTime.UtcNow.ToString("o"), level, text);
+        }
+
+        /// <summary>
         /// Writes the message to the writer
         /// </summary>
         private void WriteMessage(string text, string level)
@@ -100,7 +111,7 @@ namespace QuantConnect.Logging
             lock (_lock)
             {
                 if (_disposed) return;
-                _writer.Value.WriteLine("{0} {1}:: {2}", DateTime.UtcNow.ToString("o"), level, text);
+                _writer.Value.WriteLine(CreateMessage(text, level));
                 _writer.Value.Flush();
             }
         }

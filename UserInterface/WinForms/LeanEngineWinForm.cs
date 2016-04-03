@@ -71,11 +71,16 @@ namespace QuantConnect.Views.WinForms
             InitializeComponent();
 
             //Create Form:
-            Text = @"QuantConnect Lean Algorithmic Trading Engine: v" + Constants.Version;
-            
+            Text = "QuantConnect Lean Algorithmic Trading Engine: v" + Globals.Version;
+            Size = new Size(1024,768);
+            MinimumSize = new Size(1024, 768);
+            CenterToScreen();
+            WindowState = FormWindowState.Maximized;
+            Icon = new Icon("../../../lean.ico");
+
             //Setup Console Log Area:
             TextBoxLog.Parent = LogGroupBox;
-
+            
             Log.LogHandler = new RichTextBoxLogHandler(TextBoxLog);
             TextBoxLog.KeyUp += ConsoleOnKeyUp;
 
@@ -83,7 +88,7 @@ namespace QuantConnect.Views.WinForms
 
             //Form Events:
             Closed += ExitApplication;
-            
+
             //Trigger a timer event.
             _timer = new Timer { Interval = 1000 };
             _timer.Tick += TickerTick;
@@ -142,7 +147,7 @@ namespace QuantConnect.Views.WinForms
         ///     Launch the Desktop Interface
         /// </summary>
         /// <remarks>
-        ///     This is a preliminary implementation of a UX for the Lean Engine. It is not considered complete or
+        ///     This is a preliminary implementation of a UX for the Lean Engine. It is not considered complete or 
         ///     production ready but is committed so the open source community can begin experimenting with custom UIs!
         /// </remarks>
         public static void Main()
@@ -191,7 +196,7 @@ namespace QuantConnect.Views.WinForms
         }
 
         #region FormElementDeclarations
-        
+
         //Timer;
         private readonly Timer _timer;
 

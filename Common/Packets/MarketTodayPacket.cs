@@ -40,19 +40,19 @@ namespace QuantConnect.Packets
         /// Premarket hours for today
         /// </summary>
         [JsonProperty(PropertyName = "premarket")]
-        public MarketHours PreMarket = new MarketHours(DateTime.Now, 4, 9.5);
+        public MarketHours PreMarket;
 
         /// <summary>
         /// Normal trading market hours for today
         /// </summary>
         [JsonProperty(PropertyName = "open")]
-        public MarketHours Open = new MarketHours(DateTime.Now, 9.5, 16);
+        public MarketHours Open;
 
         /// <summary>
         /// Post market hours for today
         /// </summary>
         [JsonProperty(PropertyName = "postmarket")]
-        public MarketHours PostMarket = new MarketHours(DateTime.Now, 16, 20);
+        public MarketHours PostMarket;
 
         /// <summary>
         /// Default constructor (required for JSON serialization)

@@ -137,6 +137,53 @@ namespace QuantConnect.Tests.Common.Util
             CollectionAssert.AreEqual(expected, actual);
         }
 
+        [Test]
+        public void DictionaryAddsItemToExistsList()
+        {
+            const int key = 0;
+            var list = new List<int> {1, 2};
+            var dictionary = new Dictionary<int, List<int>> {{key, list}};
+            Extensions.Add(dictionary, key, 3);
+            Assert.AreEqual(3, list.Count);
+            Assert.AreEqual(3, list[2]);
+        }
+
+        [Test]
+        public void DictionaryAddCreatesNewList()
+        {
+            const int key = 0;
+            var dictionary = new Dictionary<int, List<int>>();
+            Extensions.Add(dictionary, key, 1);
+            Assert.IsTrue(dictionary.ContainsKey(key));
+            var list = dictionary[key];
+            Assert.AreEqual(1, list.Count);
+            Assert.AreEqual(1, list[0]);
+        }
+
+        [Test]
+        public void SafeDecimalCasts()
+        {
+            var input = 2d;
+            var output = input.SafeDecimalCast();
+            Assert.AreEqual(2m, output);
+        }
+
+        [Test]
+        public void SafeDecimalCastRespectsUpperBound()
+        {
+            var input = (double) decimal.MaxValue;
+            var output = input.SafeDecimalCast();
+            Assert.AreEqual(decimal.MaxValue, output);
+        }
+
+        [Test]
+        public void SafeDecimalCastRespectsLowerBound()
+        {
+            var input = (double) decimal.MinValue;
+            var output = input.SafeDecimalCast();
+            Assert.AreEqual(decimal.MinValue, output);
+        }
+
         private class Super<T>
         {
         }

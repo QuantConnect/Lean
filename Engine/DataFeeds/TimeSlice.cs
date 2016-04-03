@@ -42,7 +42,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Gets the data in the time slice
         /// </summary>
-        public List<KeyValuePair<Security, List<BaseData>>> Data { get; private set; }
+        public List<DataFeedPacket> Data { get; private set; }
 
         /// <summary>
         /// Gets the <see cref="Slice"/> that will be used as input for the algorithm
@@ -57,7 +57,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Gets the data used to update securities
         /// </summary>
-        public List<KeyValuePair<Security, BaseData>> SecuritiesUpdateData { get; private set; }
+        public List<KeyValuePair<Security, List<BaseData>>> SecuritiesUpdateData { get; private set; }
 
         /// <summary>
         /// Gets the data used to update the consolidators
@@ -67,7 +67,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Gets all the custom data in this <see cref="TimeSlice"/>
         /// </summary>
-        public List<KeyValuePair<Security, List<BaseData>>> CustomData { get; private set; }
+        public List<KeyValuePair<Security, IEnumerable<BaseData>>> CustomData { get; private set; }
 
         /// <summary>
         /// Gets the changes to the data subscriptions as a result of universe selection
@@ -77,7 +77,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes a new <see cref="TimeSlice"/> containing the specified data
         /// </summary>
-        public TimeSlice(DateTime time, int dataPointCount, Slice slice, List<KeyValuePair<Security, List<BaseData>>> data, List<KeyValuePair<Cash, BaseData>> cashBookUpdateData, List<KeyValuePair<Security, BaseData>> securitiesUpdateData, List<KeyValuePair<SubscriptionDataConfig, List<BaseData>>> consolidatorUpdateData, List<KeyValuePair<Security, List<BaseData>>> customData, SecurityChanges securityChanges)
+        public TimeSlice(DateTime time,
+            int dataPointCount,
+            Slice slice,
+            List<DataFeedPacket> data,
+            List<KeyValuePair<Cash, BaseData>> cashBookUpdateData,
+            List<KeyValuePair<Security, List<BaseData>>> securitiesUpdateData,
+            List<KeyValuePair<SubscriptionDataConfig, List<BaseData>>> consolidatorUpdateData,
+            List<KeyValuePair<Security, IEnumerable<BaseData>>> customData,
+            SecurityChanges securityChanges)
         {
             Time = time;
             Data = data;
@@ -99,11 +107,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="data">The data in this <see cref="TimeSlice"/></param>
         /// <param name="changes">The new changes that are seen in this time slice as a result of universe selection</param>
         /// <returns>A new <see cref="TimeSlice"/> containing the specified data</returns>
-        public static TimeSlice Create(DateTime utcDateTime, DateTimeZone algorithmTimeZone, CashBook cashBook, List<KeyValuePair<Security, List<BaseData>>> data, SecurityChanges changes)
+        public static TimeSlice Create(DateTime utcDateTime, DateTimeZone algorithmTimeZone, CashBook cashBook, List<DataFeedPacket> data, SecurityChanges changes)
         {
             int count = 0;
-            var security = new List<KeyValuePair<Security, BaseData>>();
-            var custom = new List<KeyValuePair<Security, List<BaseData>>>();
+            var security = new List<KeyValuePair<Security, List<BaseData>>>();
+            var custom = new List<KeyValuePair<Security, IEnumerable<BaseData>>>();
             var consolidator = new List<KeyValuePair<SubscriptionDataConfig, List<BaseData>>>();
             var allDataForAlgorithm = new List<BaseData>(data.Count);
             var cash = new List<KeyValuePair<Cash, BaseData>>(cashBook.Count);
@@ -127,10 +135,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var delistings = new Delistings(algorithmTime);
             var symbolChanges = new SymbolChangedEvents(algorithmTime);
 
-            foreach (var kvp in data)
+            foreach (var packet in data)
             {
-                var list = kvp.Value;
-                var symbol = kvp.Key.Symbol;
+                var list = packet.Data;
+                var symbol = packet.Security.Symbol;
+
+                if (list.Count == 0) continue;
                 
                 // keep count of all data points
                 if (list.Count == 1 && list[0] is BaseDataCollection)
@@ -142,48 +152,34 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     count += list.Count;
                 }
 
-                BaseData update = null;
+                var securityUpdate = new List<BaseData>(list.Count);
                 var consolidatorUpdate = new List<BaseData>(list.Count);
                 for (int i = 0; i < list.Count; i++)
                 {
                     var baseData = list[i];
-                    if (!kvp.Key.SubscriptionDataConfig.IsInternalFeed)
+                    if (!packet.Security.SubscriptionDataConfig.IsInternalFeed)
                     {
                         // this is all the data that goes into the algorithm
                         allDataForAlgorithm.Add(baseData);
-                        if (kvp.Key.SubscriptionDataConfig.IsCustomData)
+                        if (packet.Security.SubscriptionDataConfig.IsCustomData)
                         {
                             // this is all the custom data
-                            custom.Add(kvp);
+                            custom.Add(new KeyValuePair<Security, IEnumerable<BaseData>>(packet.Security, list));
                         }
                     }
                     // don't add internal feed data to ticks/bars objects
                     if (baseData.DataType != MarketDataType.Auxiliary)
                     {
-                        if (!kvp.Key.SubscriptionDataConfig.IsInternalFeed)
+                        if (!packet.Security.SubscriptionDataConfig.IsInternalFeed)
                         {
-                            // populate ticks and tradebars dictionaries with no aux data
-                            if (baseData.DataType == MarketDataType.Tick)
-                            {
-                                List<Tick> ticksList;
-                                if (!ticks.TryGetValue(symbol, out ticksList))
-                                {
-                                    ticksList = new List<Tick> {(Tick) baseData};
-                                    ticks[symbol] = ticksList;
-                                }
-                                ticksList.Add((Tick) baseData);
-                            }
-                            else if (baseData.DataType == MarketDataType.TradeBar)
-                            {
-                                tradeBars[symbol] = (TradeBar) baseData;
-                            }
+                            PopulateDataDictionaries(baseData, ticks, tradeBars);
 
                             // this is data used to update consolidators
                             consolidatorUpdate.Add(baseData);
                         }
 
                         // this is the data used set market prices
-                        update = baseData;
+                        securityUpdate.Add(baseData);
                     }
                     // include checks for various aux types so we don't have to construct the dictionaries in Slice
                     else if ((delisting = baseData as Delisting) != null)
@@ -201,32 +197,64 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     else if ((symbolChange = baseData as SymbolChangedEvent) != null)
                     {
                         // symbol changes is keyed by the requested symbol
-                        symbolChanges[kvp.Key.SubscriptionDataConfig.Symbol] = symbolChange;
+                        symbolChanges[packet.Security.SubscriptionDataConfig.Symbol] = symbolChange;
                     }
                 }
 
-                // check for 'cash securities' if we found valid update data for this symbol
-                // and we need this data to update cash conversion rates, long term we should
-                // have Cash hold onto it's security, then he can update himself, or rather, just
-                // patch through calls to conversion rate to compue it on the fly using Security.Price
-                if (update != null && cashSecurities.Contains(kvp.Key.Symbol))
+                if (securityUpdate.Count > 0)
                 {
-                    foreach (var cashKvp in cashBook)
+                    // check for 'cash securities' if we found valid update data for this symbol
+                    // and we need this data to update cash conversion rates, long term we should
+                    // have Cash hold onto it's security, then he can update himself, or rather, just
+                    // patch through calls to conversion rate to compue it on the fly using Security.Price
+                    if (cashSecurities.Contains(packet.Security.Symbol))
                     {
-                        if (cashKvp.Value.SecuritySymbol == kvp.Key.Symbol)
+                        foreach (var cashKvp in cashBook)
                         {
-                            cash.Add(new KeyValuePair<Cash, BaseData>(cashKvp.Value, update));
+                            if (cashKvp.Value.SecuritySymbol == packet.Security.Symbol)
+                            {
+                                cash.Add(new KeyValuePair<Cash, BaseData>(cashKvp.Value, securityUpdate[securityUpdate.Count - 1]));
+                            }
                         }
                     }
-                }
 
-                security.Add(new KeyValuePair<Security, BaseData>(kvp.Key, update));
-                consolidator.Add(new KeyValuePair<SubscriptionDataConfig, List<BaseData>>(kvp.Key.SubscriptionDataConfig, consolidatorUpdate));
+                    security.Add(new KeyValuePair<Security, List<BaseData>>(packet.Security, securityUpdate));
+                }
+                if (consolidatorUpdate.Count > 0)
+                {
+                    consolidator.Add(new KeyValuePair<SubscriptionDataConfig, List<BaseData>>(packet.Security.SubscriptionDataConfig, consolidatorUpdate));
+                }
             }
 
             var slice = new Slice(algorithmTime, allDataForAlgorithm, tradeBars, ticks, splits, dividends, delistings, symbolChanges, allDataForAlgorithm.Count > 0);
 
             return new TimeSlice(utcDateTime, count, slice, data, cash, security, consolidator, custom, changes);
+        }
+
+        /// <summary>
+        /// Adds the specified <see cref="BaseData"/> instance to the appropriate <see cref="DataDictionary{T}"/>
+        /// </summary>
+        private static void PopulateDataDictionaries(BaseData baseData, Ticks ticks, TradeBars tradeBars)
+        {
+            var symbol = baseData.Symbol;
+
+            // populate data dictionaries
+            switch (baseData.DataType)
+            {
+                case MarketDataType.Tick:
+                    List<Tick> ticksList;
+                    if (!ticks.TryGetValue(symbol, out ticksList))
+                    {
+                        ticksList = new List<Tick> {(Tick) baseData};
+                        ticks[symbol] = ticksList;
+                    }
+                    ticksList.Add((Tick) baseData);
+                    break;
+
+                case MarketDataType.TradeBar:
+                    tradeBars[symbol] = (TradeBar) baseData;
+                    break;
+            }
         }
     }
 }

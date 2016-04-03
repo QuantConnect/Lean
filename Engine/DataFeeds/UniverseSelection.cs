@@ -61,7 +61,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var settings = universe.UniverseSettings;
 
             // perform initial filtering and limit the result
-            var selectSymbolsResult = universe.SelectSymbols(dateTimeUtc, universeData.Data);
+            var selectSymbolsResult = universe.PerformSelection(dateTimeUtc, universeData);
 
             // check for no changes first
             if (ReferenceEquals(selectSymbolsResult, Universe.Unchanged))
@@ -78,42 +78,34 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var additions = new List<Security>();
             var removals = new List<Security>();
 
-            // determine which data subscriptions need to be removed for this market
-            foreach (var subscription in _dataFeed.Subscriptions)
+            // determine which data subscriptions need to be removed from this universe
+            foreach (var member in universe.Members.Values)
             {
-                // universes can only remove members of their own
-                if (!universe.ContainsMember(subscription.Security)) continue;
-
-                // never remove universe selection subscriptions
-                if (subscription.IsUniverseSelectionSubscription) continue;
-
-                var config = subscription.Configuration;
-
-                // never remove internal feeds
-                if (config.IsInternalFeed) continue;
+                var config = member.SubscriptionDataConfig;
 
                 // if we've selected this subscription again, keep it
                 if (selections.Contains(config.Symbol)) continue;
 
                 // don't remove if the universe wants to keep him in
-                if (!universe.CanRemoveMember(dateTimeUtc, subscription.Security)) continue;
+                if (!universe.CanRemoveMember(dateTimeUtc, member)) continue;
 
-                // let the algorithm know this security has been removed from the universe
-                removals.Add(subscription.Security);
+                // remove the member - this marks this member as not being
+                // selected by the universe, but it may remain in the universe
+                // until open orders are closed and the security is liquidated
+                removals.Add(member);
 
                 // but don't physically remove it from the algorithm if we hold stock or have open orders against it
                 var openOrders = _algorithm.Transactions.GetOrders(x => x.Status.IsOpen() && x.Symbol == config.Symbol);
-                if (!subscription.Security.HoldStock && !openOrders.Any())
+                if (!member.HoldStock && !openOrders.Any())
                 {
+                    // safe to remove the member from the universe
+                    universe.RemoveMember(dateTimeUtc, member);
+
                     // we need to mark this security as untradeable while it has no data subscription
                     // it is expected that this function is called while in sync with the algo thread,
                     // so we can make direct edits to the security here
-                    subscription.Security.Cache.Reset();
-
-                    if (_dataFeed.RemoveSubscription(subscription))
-                    {
-                        universe.RemoveMember(dateTimeUtc, subscription.Security);
-                    }
+                    member.Cache.Reset();
+                    _dataFeed.RemoveSubscription(member.Symbol);
                 }
             }
 
@@ -123,34 +115,35 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // we already have a subscription for this symbol so don't re-add it
                 if (existingSubscriptions.Contains(symbol)) continue;
 
-                // ask the limiter if we can add another subscription at that resolution
-                string reason;
-                if (!_limiter.CanAddSubscription(settings.Resolution, out reason))
-                {
-                    _algorithm.Error(reason);
-                    Log.Trace("UniverseSelection.ApplyUniverseSelection(): Skipping adding subscriptions: " + reason);
-                    break;
-                }
-                
                 // create the new security, the algorithm thread will add this at the appropriate time
                 Security security;
                 if (!_algorithm.Securities.TryGetValue(symbol, out security))
                 {
-                    security = SecurityManager.CreateSecurity(_algorithm.Portfolio, _algorithm.SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, _algorithm.SecurityInitializer,
-                        symbol,
-                        settings.Resolution,
-                        settings.FillForward,
-                        settings.Leverage,
-                        settings.ExtendedMarketHours,
-                        false,
-                        false,
-                        false);
+                    security = universe.CreateSecurity(symbol, _algorithm, _marketHoursDatabase, _symbolPropertiesDatabase);
                 }
 
                 additions.Add(security);
 
-                // add the new subscriptions to the data feed
-                if (_dataFeed.AddSubscription(universe, security, dateTimeUtc, _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone)))
+                var addedSubscription = false;
+                foreach (var config in universe.GetSubscriptions(security))
+                {
+                    // ask the limiter if we can add another subscription at that resolution
+                    string reason;
+                    if (!_limiter.CanAddSubscription(config.Resolution, out reason))
+                    {
+                        _algorithm.Error(reason);
+                        Log.Trace("UniverseSelection.ApplyUniverseSelection(): Skipping adding subscription: " + config.Symbol.ToString() + ": " + reason);
+                        continue;
+                    }
+
+                    // add the new subscriptions to the data feed
+                    if (_dataFeed.AddSubscription(universe, security, config, dateTimeUtc, _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone)))
+                    {
+                        addedSubscription = true;
+                    }
+                }
+
+                if (addedSubscription)
                 {
                     universe.AddMember(dateTimeUtc, security);
                 }
@@ -162,7 +155,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var addedSecurities = _algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(_algorithm.Securities, _algorithm.SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, _algorithm.BrokerageModel.DefaultMarkets);
                 foreach (var security in addedSecurities)
                 {
-                    _dataFeed.AddSubscription(universe, security, dateTimeUtc, _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone));
+                    // assume currency feeds are always one subscription per, these are typically quote subscriptions
+                    _dataFeed.AddSubscription(universe, security, security.SubscriptionDataConfig, dateTimeUtc, _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone));
                 }
             }
 

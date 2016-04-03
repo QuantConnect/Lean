@@ -241,6 +241,7 @@ namespace QuantConnect.Tests.Common.Securities
         private static Security CreateSecurity(DateTime newLocalTime)
         {
             var security = new Security(CreateUsEquitySecurityExchangeHours(), CreateTradeBarConfig(), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            TimeKeeper.SetUtcDateTime(newLocalTime.ConvertToUtc(security.Exchange.TimeZone));
             security.Exchange.SetLocalDateTimeFrontier(newLocalTime);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, newLocalTime, 100m));

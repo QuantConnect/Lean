@@ -147,15 +147,15 @@ namespace QuantConnect.Statistics
             return new Dictionary<string, string> 
             { 
                 { "Total Trades", totalTransactions.ToString(CultureInfo.InvariantCulture) },
-                { "Average Win", Math.Round(totalPerformance.PortfolioStatistics.AverageWinRate * 100, 2) + "%"  },
-                { "Average Loss", Math.Round(totalPerformance.PortfolioStatistics.AverageLossRate * 100, 2) + "%" },
-                { "Compounding Annual Return", Math.Round(totalPerformance.PortfolioStatistics.CompoundingAnnualReturn * 100, 3) + "%" },
-                { "Drawdown", (Math.Round(totalPerformance.PortfolioStatistics.Drawdown * 100, 3)) + "%" },
+                { "Average Win", Math.Round(totalPerformance.PortfolioStatistics.AverageWinRate.SafeMultiply100(), 2) + "%"  },
+                { "Average Loss", Math.Round(totalPerformance.PortfolioStatistics.AverageLossRate.SafeMultiply100(), 2) + "%" },
+                { "Compounding Annual Return", Math.Round(totalPerformance.PortfolioStatistics.CompoundingAnnualReturn.SafeMultiply100(), 3) + "%" },
+                { "Drawdown", (Math.Round(totalPerformance.PortfolioStatistics.Drawdown.SafeMultiply100(), 3)) + "%" },
                 { "Expectancy", Math.Round(totalPerformance.PortfolioStatistics.Expectancy, 3).ToString(CultureInfo.InvariantCulture) },
-                { "Net Profit", Math.Round(totalPerformance.PortfolioStatistics.TotalNetProfit * 100, 3) + "%"},
+                { "Net Profit", Math.Round(totalPerformance.PortfolioStatistics.TotalNetProfit.SafeMultiply100(), 3) + "%"},
                 { "Sharpe Ratio", Math.Round((double)totalPerformance.PortfolioStatistics.SharpeRatio, 3).ToString(CultureInfo.InvariantCulture) },
-                { "Loss Rate", Math.Round(totalPerformance.PortfolioStatistics.LossRate * 100) + "%" },
-                { "Win Rate", Math.Round(totalPerformance.PortfolioStatistics.WinRate * 100) + "%" }, 
+                { "Loss Rate", Math.Round(totalPerformance.PortfolioStatistics.LossRate.SafeMultiply100()) + "%" },
+                { "Win Rate", Math.Round(totalPerformance.PortfolioStatistics.WinRate.SafeMultiply100()) + "%" }, 
                 { "Profit-Loss Ratio", Math.Round(totalPerformance.PortfolioStatistics.ProfitLossRatio, 2).ToString(CultureInfo.InvariantCulture) },
                 { "Alpha", Math.Round((double)totalPerformance.PortfolioStatistics.Alpha, 3).ToString(CultureInfo.InvariantCulture) },
                 { "Beta", Math.Round((double)totalPerformance.PortfolioStatistics.Beta, 3).ToString(CultureInfo.InvariantCulture) },
@@ -166,6 +166,13 @@ namespace QuantConnect.Statistics
                 { "Treynor Ratio", Math.Round((double)totalPerformance.PortfolioStatistics.TreynorRatio, 3).ToString(CultureInfo.InvariantCulture) },
                 { "Total Fees", "$" + totalFees.ToString("0.00") }
             };
+        }
+
+        private static decimal SafeMultiply100(this decimal value)
+        {
+            const decimal max = decimal.MaxValue/100m;
+            if (value >= max) return decimal.MaxValue;
+            return value*100m;
         }
 
         /// <summary>

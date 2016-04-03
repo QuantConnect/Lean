@@ -51,7 +51,7 @@ namespace QuantConnect.Tests.Common.Util
         [Test, TestCaseSource("GetLeanDataTestParameters")]
         public void GenerateZipFilePath(LeanDataTestParameters parameters)
         {
-            var path = LeanData.GenerateZipFilePath(Constants.DataFolder, parameters.Symbol, parameters.Date, parameters.Resolution, parameters.TickType);
+            var path = LeanData.GenerateZipFilePath(Globals.DataFolder, parameters.Symbol, parameters.Date, parameters.Resolution, parameters.TickType);
             Assert.AreEqual(parameters.ExpectedZipFilePath, path);
         }
 
@@ -110,9 +110,27 @@ namespace QuantConnect.Tests.Common.Util
         {
             var source = parameters.Data.GetSource(parameters.Config, parameters.Data.Time.Date, false);
             var normalizedSourcePath = new FileInfo(source.Source).FullName;
-            var zipFilePath = LeanData.GenerateZipFilePath(Constants.DataFolder, parameters.Data.Symbol, parameters.Data.Time.Date, parameters.Resolution, parameters.TickType);
+            var zipFilePath = LeanData.GenerateZipFilePath(Globals.DataFolder, parameters.Data.Symbol, parameters.Data.Time.Date, parameters.Resolution, parameters.TickType);
             var normalizeZipFilePath = new FileInfo(zipFilePath).FullName;
+            var indexOfHash = normalizedSourcePath.LastIndexOf("#", StringComparison.Ordinal);
+            if (indexOfHash > 0)
+            {
+                normalizedSourcePath = normalizedSourcePath.Substring(0, indexOfHash);
+            }
             Assert.AreEqual(normalizeZipFilePath, normalizedSourcePath);
+        }
+
+        [Test, TestCaseSource("GetLeanDataTestParameters")]
+        public void GetSource(LeanDataTestParameters parameters)
+        {
+            var factory = (BaseData)Activator.CreateInstance(parameters.BaseDataType);
+            var source = factory.GetSource(parameters.Config, parameters.Date, false);
+            var expected = parameters.ExpectedZipFilePath;
+            if (parameters.SecurityType == SecurityType.Option)
+            {
+                expected += "#" + parameters.ExpectedZipEntryName;
+            }
+            Assert.AreEqual(expected, source.Source);
         }
 
         private static void AssertBarsAreEqual(IBar expected, IBar actual)
@@ -144,16 +162,16 @@ namespace QuantConnect.Tests.Common.Util
                 new LeanDataTestParameters(Symbols.SPY, date, Resolution.Daily, TickType.Trade, "spy.zip", "spy.csv", "equity/usa/daily"),
 
                 // equity option trades
-                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Tick, TickType.Trade, "20160217_trade_american.zip", "20160217_spy_tick_trade_american.csv", "option/usa/tick/spy"),
-                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Tick, TickType.Quote, "20160217_quote_american.zip", "20160217_spy_tick_quote_american.csv", "option/usa/tick/spy"),
-                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Second, TickType.Trade, "20160217_trade_american.zip", "20160217_spy_second_trade_american.csv", "option/usa/second/spy"),
-                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Second, TickType.Quote, "20160217_quote_american.zip", "20160217_spy_second_quote_american.csv", "option/usa/second/spy"),
-                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Minute, TickType.Trade, "20160217_trade_american.zip", "20160217_spy_minute_trade_american.csv", "option/usa/minute/spy"),
-                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Minute, TickType.Quote, "20160217_quote_american.zip", "20160217_spy_minute_quote_american.csv", "option/usa/minute/spy"),
-                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Hour, TickType.Trade, "spy_trade_american.zip", "spy_trade_american.csv", "option/usa/hour"),
-                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Hour, TickType.Quote, "spy_quote_american.zip", "spy_quote_american.csv", "option/usa/hour"),
-                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Daily, TickType.Trade, "spy_trade_american.zip", "spy_trade_american.csv", "option/usa/daily"),
-                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Daily, TickType.Quote, "spy_quote_american.zip", "spy_quote_american.csv", "option/usa/daily"),
+                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Tick, TickType.Trade, "20160217_trade_american.zip", "20160217_spy_tick_trade_american_put_1920000_20160219.csv", "option/usa/tick/spy"),
+                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Tick, TickType.Quote, "20160217_quote_american.zip", "20160217_spy_tick_quote_american_put_1920000_20160219.csv", "option/usa/tick/spy"),
+                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Second, TickType.Trade, "20160217_trade_american.zip", "20160217_spy_second_trade_american_put_1920000_20160219.csv", "option/usa/second/spy"),
+                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Second, TickType.Quote, "20160217_quote_american.zip", "20160217_spy_second_quote_american_put_1920000_20160219.csv", "option/usa/second/spy"),
+                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Minute, TickType.Trade, "20160217_trade_american.zip", "20160217_spy_minute_trade_american_put_1920000_20160219.csv", "option/usa/minute/spy"),
+                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Minute, TickType.Quote, "20160217_quote_american.zip", "20160217_spy_minute_quote_american_put_1920000_20160219.csv", "option/usa/minute/spy"),
+                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Hour, TickType.Trade, "spy_trade_american.zip", "spy_trade_american_put_1920000_20160219.csv", "option/usa/hour"),
+                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Hour, TickType.Quote, "spy_quote_american.zip", "spy_quote_american_put_1920000_20160219.csv", "option/usa/hour"),
+                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Daily, TickType.Trade, "spy_trade_american.zip", "spy_trade_american_put_1920000_20160219.csv", "option/usa/daily"),
+                new LeanDataTestParameters(Symbols.SPY_P_192_Feb19_2016, date, Resolution.Daily, TickType.Quote, "spy_quote_american.zip", "spy_quote_american_put_1920000_20160219.csv", "option/usa/daily"),
 
                 // forex
                 new LeanDataTestParameters(Symbols.EURUSD, date, Resolution.Tick, TickType.Quote, "20160217_quote.zip", "20160217_eurusd_tick_quote.csv", "forex/fxcm/tick/eurusd"),
@@ -228,6 +246,8 @@ namespace QuantConnect.Tests.Common.Util
             public readonly DateTime Date;
             public readonly Resolution Resolution;
             public readonly TickType TickType;
+            public readonly Type BaseDataType;
+            public readonly SubscriptionDataConfig Config;
             public readonly string ExpectedZipFileName;
             public readonly string ExpectedZipEntryName;
             public readonly string ExpectedRelativeZipFilePath;
@@ -243,9 +263,16 @@ namespace QuantConnect.Tests.Common.Util
                 ExpectedZipFileName = expectedZipFileName;
                 ExpectedZipEntryName = expectedZipEntryName;
                 ExpectedRelativeZipFilePath = Path.Combine(expectedRelativeZipFileDirectory, expectedZipFileName).Replace("/", Path.DirectorySeparatorChar.ToString());
-                ExpectedZipFilePath = Path.Combine(Constants.DataFolder, ExpectedRelativeZipFilePath);
+                ExpectedZipFilePath = Path.Combine(Globals.DataFolder, ExpectedRelativeZipFilePath);
 
                 Name = SecurityType + "_" + resolution;
+
+                BaseDataType = resolution == Resolution.Tick ? typeof(Tick) : typeof(TradeBar);
+                if (symbol.ID.SecurityType == SecurityType.Option && resolution != Resolution.Tick)
+                {
+                    BaseDataType = typeof(QuoteBar);
+                }
+                Config = new SubscriptionDataConfig(BaseDataType, symbol, resolution, TimeZones.NewYork, TimeZones.NewYork, true, false, false, false, tickType);
             }
         }
 

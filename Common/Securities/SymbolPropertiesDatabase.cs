@@ -44,7 +44,7 @@ namespace QuantConnect.Securities
         /// <param name="securityType">The security type of the symbol</param>
         /// <param name="defaultQuoteCurrency">Specifies the quote currency to be used when returning a default instance of an entry is not found in the database</param>
         /// <returns>The symbol properties matching the specified market/symbol/security-type or null if not found</returns>
-        public SymbolProperties GetSymbolProperties(string market, string symbol, SecurityType securityType, string defaultQuoteCurrency = CashBook.AccountCurrency)
+        public SymbolProperties GetSymbolProperties(string market, string symbol, SecurityType securityType, string defaultQuoteCurrency)
         {
             SymbolProperties symbolProperties;
             var key = new SecurityDatabaseKey(market, symbol, securityType);
@@ -73,7 +73,7 @@ namespace QuantConnect.Securities
             {
                 if (_dataFolderSymbolPropertiesDatabase == null)
                 {
-                    var directory = Path.Combine(Constants.DataFolder, "symbol-properties");
+                    var directory = Path.Combine(Globals.DataFolder, "symbol-properties");
                     _dataFolderSymbolPropertiesDatabase = FromCsvFile(Path.Combine(directory, "symbol-properties-database.csv"));
                 }
             }
@@ -122,7 +122,7 @@ namespace QuantConnect.Securities
 
             key = new SecurityDatabaseKey(
                 market: csv[0], 
-                symbol: string.IsNullOrEmpty(csv[1]) ? null : csv[1], 
+                symbol: csv[1], 
                 securityType: (SecurityType)Enum.Parse(typeof(SecurityType), csv[2], true));
 
             return new SymbolProperties(

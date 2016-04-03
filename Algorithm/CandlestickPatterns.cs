@@ -504,5 +504,520 @@ namespace QuantConnect.Algorithm
             _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
             return pattern;
         }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.HikkakeModified"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public HikkakeModified HikkakeModified(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "HIKKAKEMODIFIED", resolution);
+            var pattern = new HikkakeModified(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.HomingPigeon"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public HomingPigeon HomingPigeon(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "HOMINGPIGEON", resolution);
+            var pattern = new HomingPigeon(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.IdenticalThreeCrows"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public IdenticalThreeCrows IdenticalThreeCrows(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "IDENTICALTHREECROWS", resolution);
+            var pattern = new IdenticalThreeCrows(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.InNeck"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public InNeck InNeck(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "INNECK", resolution);
+            var pattern = new InNeck(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.InvertedHammer"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public InvertedHammer InvertedHammer(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "INVERTEDHAMMER", resolution);
+            var pattern = new InvertedHammer(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.Kicking"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public Kicking Kicking(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "KICKING", resolution);
+            var pattern = new Kicking(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.KickingByLength"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public KickingByLength KickingByLength(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "KICKINGBYLENGTH", resolution);
+            var pattern = new KickingByLength(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.LadderBottom"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public LadderBottom LadderBottom(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "LADDERBOTTOM", resolution);
+            var pattern = new LadderBottom(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.LongLeggedDoji"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public LongLeggedDoji LongLeggedDoji(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "LONGLEGGEDDOJI", resolution);
+            var pattern = new LongLeggedDoji(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.LongLineCandle"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public LongLineCandle LongLineCandle(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "LONGLINECANDLE", resolution);
+            var pattern = new LongLineCandle(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.Marubozu"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public Marubozu Marubozu(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "MARUBOZU", resolution);
+            var pattern = new Marubozu(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.MatchingLow"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public MatchingLow MatchingLow(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "MATCHINGLOW", resolution);
+            var pattern = new MatchingLow(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.MatHold"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="penetration">Percentage of penetration of a candle within another candle</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public MatHold MatHold(Symbol symbol, decimal penetration = 0.5m, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "MATHOLD", resolution);
+            var pattern = new MatHold(name, penetration);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.MorningDojiStar"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="penetration">Percentage of penetration of a candle within another candle</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public MorningDojiStar MorningDojiStar(Symbol symbol, decimal penetration = 0.3m, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "MORNINGDOJISTAR", resolution);
+            var pattern = new MorningDojiStar(name, penetration);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.MorningStar"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="penetration">Percentage of penetration of a candle within another candle</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public MorningStar MorningStar(Symbol symbol, decimal penetration = 0.3m, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "MORNINGSTAR", resolution);
+            var pattern = new MorningStar(name, penetration);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.OnNeck"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public OnNeck OnNeck(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "ONNECK", resolution);
+            var pattern = new OnNeck(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.Piercing"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public Piercing Piercing(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "PIERCING", resolution);
+            var pattern = new Piercing(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.RickshawMan"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public RickshawMan RickshawMan(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "RICKSHAWMAN", resolution);
+            var pattern = new RickshawMan(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.RiseFallThreeMethods"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public RiseFallThreeMethods RiseFallThreeMethods(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "RISEFALLTHREEMETHODS", resolution);
+            var pattern = new RiseFallThreeMethods(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.SeparatingLines"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public SeparatingLines SeparatingLines(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "SEPARATINGLINES", resolution);
+            var pattern = new SeparatingLines(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.ShootingStar"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public ShootingStar ShootingStar(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "SHOOTINGSTAR", resolution);
+            var pattern = new ShootingStar(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.ShortLineCandle"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public ShortLineCandle ShortLineCandle(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "SHORTLINECANDLE", resolution);
+            var pattern = new ShortLineCandle(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.SpinningTop"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public SpinningTop SpinningTop(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "SPINNINGTOP", resolution);
+            var pattern = new SpinningTop(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.StalledPattern"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public StalledPattern StalledPattern(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "STALLEDPATTERN", resolution);
+            var pattern = new StalledPattern(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.StickSandwich"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public StickSandwich StickSandwich(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "STICKSANDWICH", resolution);
+            var pattern = new StickSandwich(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.Takuri"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public Takuri Takuri(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "TAKURI", resolution);
+            var pattern = new Takuri(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.TasukiGap"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public TasukiGap TasukiGap(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "TASUKIGAP", resolution);
+            var pattern = new TasukiGap(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.Thrusting"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public Thrusting Thrusting(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "THRUSTING", resolution);
+            var pattern = new Thrusting(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.Tristar"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public Tristar Tristar(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "TRISTAR", resolution);
+            var pattern = new Tristar(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.UniqueThreeRiver"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public UniqueThreeRiver UniqueThreeRiver(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "UNIQUETHREERIVER", resolution);
+            var pattern = new UniqueThreeRiver(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.UpsideGapTwoCrows"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public UpsideGapTwoCrows UpsideGapTwoCrows(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "UPSIDEGAPTWOCROWS", resolution);
+            var pattern = new UpsideGapTwoCrows(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Indicators.CandlestickPatterns.UpDownGapThreeMethods"/> pattern indicator.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose pattern we seek</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The pattern indicator for the requested symbol.</returns>
+        public UpDownGapThreeMethods UpDownGapThreeMethods(Symbol symbol, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = _algorithm.CreateIndicatorName(symbol, "UPDOWNGAPTHREEMETHODS", resolution);
+            var pattern = new UpDownGapThreeMethods(name);
+            _algorithm.RegisterIndicator(symbol, pattern, resolution, selector);
+            return pattern;
+        }
     }
 }

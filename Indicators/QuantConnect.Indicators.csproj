@@ -46,10 +46,42 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AbsolutePriceOscillator.cs" />
     <Compile Include="AccumulationDistribution.cs" />
     <Compile Include="AccumulationDistributionOscillator.cs" />
     <Compile Include="AverageDirectionalIndex.cs" />
+    <Compile Include="AverageDirectionalMovementIndexRating.cs" />
     <Compile Include="BalanceOfPower.cs" />
+    <Compile Include="CandlestickPatterns\UpDownGapThreeMethods.cs" />
+    <Compile Include="CandlestickPatterns\UpsideGapTwoCrows.cs" />
+    <Compile Include="CandlestickPatterns\UniqueThreeRiver.cs" />
+    <Compile Include="CandlestickPatterns\Tristar.cs" />
+    <Compile Include="CandlestickPatterns\Thrusting.cs" />
+    <Compile Include="CandlestickPatterns\TasukiGap.cs" />
+    <Compile Include="CandlestickPatterns\Takuri.cs" />
+    <Compile Include="CandlestickPatterns\StickSandwich.cs" />
+    <Compile Include="CandlestickPatterns\StalledPattern.cs" />
+    <Compile Include="CandlestickPatterns\SpinningTop.cs" />
+    <Compile Include="CandlestickPatterns\ShortLineCandle.cs" />
+    <Compile Include="CandlestickPatterns\ShootingStar.cs" />
+    <Compile Include="CandlestickPatterns\SeparatingLines.cs" />
+    <Compile Include="CandlestickPatterns\RiseFallThreeMethods.cs" />
+    <Compile Include="CandlestickPatterns\RickshawMan.cs" />
+    <Compile Include="CandlestickPatterns\Piercing.cs" />
+    <Compile Include="CandlestickPatterns\OnNeck.cs" />
+    <Compile Include="CandlestickPatterns\MorningStar.cs" />
+    <Compile Include="CandlestickPatterns\MorningDojiStar.cs" />
+    <Compile Include="CandlestickPatterns\MatHold.cs" />
+    <Compile Include="CandlestickPatterns\MatchingLow.cs" />
+    <Compile Include="CandlestickPatterns\Marubozu.cs" />
+    <Compile Include="CandlestickPatterns\LongLineCandle.cs" />
+    <Compile Include="CandlestickPatterns\LongLeggedDoji.cs" />
+    <Compile Include="CandlestickPatterns\LadderBottom.cs" />
+    <Compile Include="CandlestickPatterns\KickingByLength.cs" />
+    <Compile Include="CandlestickPatterns\Kicking.cs" />
+    <Compile Include="CandlestickPatterns\InvertedHammer.cs" />
+    <Compile Include="CandlestickPatterns\InNeck.cs" />
+    <Compile Include="CandlestickPatterns\HomingPigeon.cs" />
     <Compile Include="CandlestickPatterns\HighWaveCandle.cs" />
     <Compile Include="CandlestickPatterns\HaramiCross.cs" />
     <Compile Include="CandlestickPatterns\Harami.cs" />
@@ -69,6 +101,7 @@
     <Compile Include="CandlestickPatterns\CandleEnums.cs" />
     <Compile Include="CandlestickPatterns\CandleSettings.cs" />
     <Compile Include="CandlestickPatterns\CandlestickPattern.cs" />
+    <Compile Include="CandlestickPatterns\HikkakeModified.cs" />
     <Compile Include="CandlestickPatterns\ThreeBlackCrows.cs" />
     <Compile Include="CandlestickPatterns\GapSideBySideWhite.cs" />
     <Compile Include="CandlestickPatterns\ThreeInside.cs" />
@@ -79,6 +112,7 @@
     <Compile Include="CandlestickPatterns\ThreeOutside.cs" />
     <Compile Include="CandlestickPatterns\Counterattack.cs" />
     <Compile Include="CandlestickPatterns\ThreeStarsInSouth.cs" />
+    <Compile Include="CandlestickPatterns\IdenticalThreeCrows.cs" />
     <Compile Include="CandlestickPatterns\ThreeWhiteSoldiers.cs" />
     <Compile Include="CandlestickPatterns\Doji.cs" />
     <Compile Include="CandlestickPatterns\TwoCrows.cs" />
@@ -89,9 +123,12 @@
     <Compile Include="IchimokuKinkoHyo.cs" />
     <Compile Include="IndicatorResult.cs" />
     <Compile Include="IndicatorStatus.cs" />
+    <Compile Include="KaufmanAdaptiveMovingAverage.cs" />
     <Compile Include="KeltnerChannels.cs" />
     <Compile Include="LeastSquaresMovingAverage.cs" />
     <Compile Include="LogReturn.cs" />
+    <Compile Include="MidPrice.cs" />
+    <Compile Include="MidPoint.cs" />
     <Compile Include="Momersion.cs" />
     <Compile Include="NormalizedAverageTrueRange.cs" />
     <Compile Include="OnBalanceVolume.cs" />
@@ -100,11 +137,14 @@
     </Compile>
     <Compile Include="LinearWeightedMovingAverage.cs" />
     <Compile Include="ParabolicStopAndReverse.cs" />
+    <Compile Include="PercentagePriceOscillator.cs" />
     <Compile Include="T3MovingAverage.cs" />
     <Compile Include="RateOfChangeRatio.cs" />
+    <Compile Include="Trix.cs" />
     <Compile Include="TrueRange.cs" />
     <Compile Include="TripleExponentialMovingAverage.cs" />
     <Compile Include="TriangularMovingAverage.cs" />
+    <Compile Include="UltimateOscillator.cs" />
     <Compile Include="Variance.cs" />
     <Compile Include="WilliamsPercentR.cs" />
     <Compile Include="AroonOscillator.cs" />

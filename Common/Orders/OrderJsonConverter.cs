@@ -75,6 +75,18 @@ namespace QuantConnect.Orders
         {
             var jObject = JObject.Load(reader);
 
+            var order = CreateOrderFromJObject(jObject);
+
+            return order;
+        }
+
+        /// <summary>
+        /// Create an order from a simple JObject
+        /// </summary>
+        /// <param name="jObject"></param>
+        /// <returns>Order Object</returns>
+        public static Order CreateOrderFromJObject(JObject jObject)
+        {
             // create order instance based on order type field
             var orderType = (OrderType) jObject["Type"].Value<int>();
             var order = CreateOrder(orderType, jObject);
@@ -87,9 +99,12 @@ namespace QuantConnect.Orders
             order.Tag = jObject["Tag"].Value<string>();
             order.Quantity = jObject["Quantity"].Value<int>();
             order.Price = jObject["Price"].Value<decimal>();
-            var securityType = (SecurityType)jObject["SecurityType"].Value<int>();
+            var securityType = (SecurityType) jObject["SecurityType"].Value<int>();
             order.BrokerId = jObject["BrokerId"].Select(x => x.Value<string>()).ToList();
             order.ContingentId = jObject["ContingentId"].Value<int>();
+
+            var market = Market.USA;
+            if (securityType == SecurityType.Forex) market = Market.FXCM;
 
             if (jObject.SelectTokens("Symbol.ID").Any())
             {
@@ -97,20 +112,20 @@ namespace QuantConnect.Orders
                 var ticker = jObject.SelectTokens("Symbol.Value").Single().Value<string>();
                 order.Symbol = new Symbol(sid, ticker);
             }
-            else
+            else if (jObject.SelectTokens("Symbol.Value").Any())
             {
                 // provide for backwards compatibility
                 var ticker = jObject.SelectTokens("Symbol.Value").Single().Value<string>();
-
-                var market = Market.USA;
-                if (securityType == SecurityType.Forex) market = Market.FXCM;
-
                 order.Symbol = Symbol.Create(ticker, securityType, market);
             }
-
+            else
+            {
+                var tickerstring = jObject["Symbol"].Value<string>();
+                order.Symbol = Symbol.Create(tickerstring, securityType, market);
+            }
             return order;
         }
-
+        
         /// <summary>
         /// Creates an order of the correct type
         /// </summary>

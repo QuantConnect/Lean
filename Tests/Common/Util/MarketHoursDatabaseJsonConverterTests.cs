@@ -60,10 +60,10 @@ namespace QuantConnect.Tests.Common.Util
         [Test, Ignore("This is provided to make it easier to convert your own market-hours-database.csv to the new format")]
         public void ConvertMarketHoursDatabaseCsvToJson()
         {
-            var directory = Path.Combine(Constants.DataFolder, "market-hours");
+            var directory = Path.Combine(Globals.DataFolder, "market-hours");
             var input = Path.Combine(directory, "market-hours-database.csv");
             var output = Path.Combine(directory, Path.GetFileNameWithoutExtension(input) + ".json");
-            var allHolidays = Directory.EnumerateFiles(Path.Combine(Constants.DataFolder, "market-hours"), "holidays-*.csv").Select(x =>
+            var allHolidays = Directory.EnumerateFiles(Path.Combine(Globals.DataFolder, "market-hours"), "holidays-*.csv").Select(x =>
             {
                 var dates = new HashSet<DateTime>();
                 var market = Path.GetFileNameWithoutExtension(x).Replace("holidays-", string.Empty);

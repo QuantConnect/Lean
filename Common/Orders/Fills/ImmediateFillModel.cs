@@ -94,7 +94,7 @@ namespace QuantConnect.Orders.Fills
             //Get the range of prices in the last bar:
             decimal minimumPrice;
             decimal maximumPrice;
-            DataMinMaxPrices(asset, out minimumPrice, out maximumPrice);
+            DataMinMaxPrices(asset, out minimumPrice, out maximumPrice, order.Direction);
 
             //Calculate the model slippage: e.g. 0.01c
             var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
@@ -160,7 +160,7 @@ namespace QuantConnect.Orders.Fills
             //Get the range of prices in the last bar:
             decimal minimumPrice;
             decimal maximumPrice;
-            DataMinMaxPrices(asset, out minimumPrice, out maximumPrice);
+            DataMinMaxPrices(asset, out minimumPrice, out maximumPrice, order.Direction);
 
             //Check if the Stop Order was filled: opposite to a limit order
             switch (order.Direction)
@@ -228,7 +228,7 @@ namespace QuantConnect.Orders.Fills
             //Get the range of prices in the last bar:
             decimal minimumPrice;
             decimal maximumPrice;
-            DataMinMaxPrices(asset, out minimumPrice, out maximumPrice);
+            DataMinMaxPrices(asset, out minimumPrice, out maximumPrice, order.Direction);
 
             //-> Valid Live/Model Order: 
             switch (order.Direction)
@@ -381,21 +381,57 @@ namespace QuantConnect.Orders.Fills
         /// <param name="asset">Security asset we're checking</param>
         /// <param name="minimumPrice">Minimum price in the last data bar</param>
         /// <param name="maximumPrice">Minimum price in the last data bar</param>
-        public virtual void DataMinMaxPrices(Security asset, out decimal minimumPrice, out decimal maximumPrice)
+        /// <param name="direction">The order direction, decides whether to pick bid or ask</param>
+        public virtual void DataMinMaxPrices(Security asset, out decimal minimumPrice, out decimal maximumPrice, OrderDirection direction)
         {
-            var marketData = asset.GetLastData();
+            var tick = asset.Cache.GetData<Tick>();
+            if (tick != null)
+            {
+                var price = tick.Value;
+                if (direction == OrderDirection.Sell && tick.BidPrice != 0)
+                {
+                    price = tick.BidPrice;
+                }
+                else if (direction == OrderDirection.Buy && tick.AskPrice != 0)
+                {
+                    price = tick.AskPrice;
+                }
+                minimumPrice = maximumPrice = price;
+                return;
+            }
 
-            var tradeBar = marketData as TradeBar;
+            var quoteBar = asset.Cache.GetData<QuoteBar>();
+            if (quoteBar != null)
+            {
+                var bar = direction == OrderDirection.Sell ? quoteBar.Ask : quoteBar.Bid;
+                minimumPrice = quoteBar.Low;
+                maximumPrice = quoteBar.High;
+                if (bar != null)
+                {
+                    if (bar.High != 0) maximumPrice = bar.High;
+                    if (bar.Low != 0) minimumPrice = bar.Low;
+                }
+                return;
+            }
+
+            var tradeBar = asset.Cache.GetData<TradeBar>();
             if (tradeBar != null)
             {
                 minimumPrice = tradeBar.Low;
                 maximumPrice = tradeBar.High;
+                return;
             }
-            else
+
+            var lastData = asset.GetLastData();
+            var lastBar = lastData as IBar;
+            if (lastBar != null)
             {
-                minimumPrice = marketData.Value;
-                maximumPrice = marketData.Value;
+                minimumPrice = lastBar.Low;
+                maximumPrice = lastBar.High;
+                return;
             }
+
+            minimumPrice = maximumPrice = asset.Price;
         }
 
         /// <summary>

@@ -186,6 +186,7 @@
     <Compile Include="DataFeeds\ITimeProvider.cs" />
     <Compile Include="DataFeeds\ManualTimeProvider.cs" />
     <Compile Include="DataFeeds\RealTimeProvider.cs" />
+    <Compile Include="DataFeeds\DataFeedPacket.cs" />
     <Compile Include="DataFeeds\TextSubscriptionFactory.cs" />
     <Compile Include="DataFeeds\CreateStreamReaderErrorEventArgs.cs" />
     <Compile Include="DataFeeds\BaseDataExchange.cs" />
@@ -205,6 +206,7 @@
     <Compile Include="DataFeeds\Transport\RemoteFileSubscriptionStreamReader.cs" />
     <Compile Include="DataFeeds\Transport\RestSubscriptionStreamReader.cs" />
     <Compile Include="DataFeeds\UniverseSelection.cs" />
+    <Compile Include="DataFeeds\ZipEntryNameSubscriptionFactory.cs" />
     <Compile Include="DefaultBrokerageMessageHandler.cs" />
     <Compile Include="HistoricalData\SubscriptionDataReaderHistoryProvider.cs" />
     <Compile Include="LeanEngineAlgorithmHandlers.cs" />

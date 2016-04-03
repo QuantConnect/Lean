@@ -30,8 +30,21 @@ namespace QuantConnect.Tests.Indicators
 
             TestHelper.TestIndicator(adx, "spy_with_adx.txt", "ADX 14",
                 (ind, expected) => Assert.AreEqual(expected, (double)((AverageDirectionalIndex)ind).Current.Value, epsilon)
-
             );
+        }
+
+        [Test]
+        public void ComparesAgainstExternalDataAfterReset()
+        {
+            var adx = new AverageDirectionalIndex("adx", 14);
+
+            const double epsilon = 1;
+
+            TestHelper.TestIndicator(adx, "spy_with_adx.txt", "ADX 14",
+                (ind, expected) => Assert.AreEqual(expected, (double)((AverageDirectionalIndex)ind).Current.Value, epsilon));
+            adx.Reset();
+            TestHelper.TestIndicator(adx, "spy_with_adx.txt", "ADX 14",
+                (ind, expected) => Assert.AreEqual(expected, (double)((AverageDirectionalIndex)ind).Current.Value, epsilon));
         }
 
         [Test]

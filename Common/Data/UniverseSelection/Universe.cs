@@ -18,7 +18,9 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -31,6 +33,8 @@ namespace QuantConnect.Data.UniverseSelection
         /// Gets a value indicating that no change to the universe should be made
         /// </summary>
         public static readonly UnchangedUniverse Unchanged = UnchangedUniverse.Instance;
+
+        private HashSet<Symbol> _previousSelections; 
 
         private readonly ConcurrentDictionary<Symbol, Member> _securities;
 
@@ -90,6 +94,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="securityInitializer">Initializes securities when they're added to the universe</param>
         protected Universe(SubscriptionDataConfig config, ISecurityInitializer securityInitializer = null)
         {
+            _previousSelections = new HashSet<Symbol>();
             _securities = new ConcurrentDictionary<Symbol, Member>();
 
             Configuration = config;
@@ -125,7 +130,62 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="utcTime">The current utc time</param>
         /// <param name="data">The symbols to remain in the universe</param>
         /// <returns>The data that passes the filter</returns>
-        public abstract IEnumerable<Symbol> SelectSymbols(DateTime utcTime, IEnumerable<BaseData> data);
+        public IEnumerable<Symbol> PerformSelection(DateTime utcTime, BaseDataCollection data)
+        {
+            var result = SelectSymbols(utcTime, data);
+            if (ReferenceEquals(result, Unchanged))
+            {
+                return Unchanged;
+            }
+
+            var selections = result.ToHashSet();
+            var hasDiffs = _previousSelections.Except(selections).Union(selections.Except(_previousSelections)).Any();
+            _previousSelections = selections;
+            if (!hasDiffs)
+            {
+                return Unchanged;
+            }
+            return selections;
+        }
+
+        /// <summary>
+        /// Performs universe selection using the data specified
+        /// </summary>
+        /// <param name="utcTime">The current utc time</param>
+        /// <param name="data">The symbols to remain in the universe</param>
+        /// <returns>The data that passes the filter</returns>
+        public abstract IEnumerable<Symbol> SelectSymbols(DateTime utcTime, BaseDataCollection data);
+
+        /// <summary>
+        /// Creates and configures a security for the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol of the security to be created</param>
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <param name="marketHoursDatabase">The market hours database</param>
+        /// <param name="symbolPropertiesDatabase">The symbol properties database</param>
+        /// <returns>The newly initialized security object</returns>
+        public virtual Security CreateSecurity(Symbol symbol, IAlgorithm algorithm, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase)
+        {
+            // by default invoke the create security method to handle security initialization
+            return SecurityManager.CreateSecurity(algorithm.Portfolio, algorithm.SubscriptionManager, marketHoursDatabase, symbolPropertiesDatabase,
+                SecurityInitializer, symbol, UniverseSettings.Resolution, UniverseSettings.FillForward, UniverseSettings.Leverage,
+                UniverseSettings.ExtendedMarketHours, false, false, false);
+        }
+
+        /// <summary>
+        /// Gets the subscriptions to be added for the specified security
+        /// </summary>
+        /// <remarks>
+        /// In most cases the default implementaon of returning the security's configuration is
+        /// sufficient. It's when we want multiple subscriptions (trade/quote data) that we'll need
+        /// to override this
+        /// </remarks>
+        /// <param name="security">The security to get subscriptions for</param>
+        /// <returns>All subscriptions required by this security</returns>
+        public virtual IEnumerable<SubscriptionDataConfig> GetSubscriptions(Security security)
+        {
+            return new[] {security.SubscriptionDataConfig};
+        }
 
         /// <summary>
         /// Determines whether or not the specified
