@@ -137,7 +137,7 @@ namespace QuantConnect.Views.WinForms
             _timer.Start();
 
             //Complete load
-            FormToolStripStatusLabel.Text = @"LEAN Desktop v" + Constants.Version + @" Load Complete.";
+            FormToolStripStatusLabel.Text = @"LEAN Desktop v" + Globals.Version + @" Load Complete.";
 
             //Load the Lean Engine
             Engine = LaunchLean();
