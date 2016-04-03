@@ -42,7 +42,7 @@ namespace QuantConnect.Lean.Launcher
 #if DEBUG
             mode = "DEBUG";
 #endif
-            if (Config.Get("environment") == "desktop")
+            if (Config.Get("environment") == "backtesting-desktop")
             {
                 Application.EnableVisualStyles();
                 Thread thread = new Thread(RunLeanEngineWinForm);
