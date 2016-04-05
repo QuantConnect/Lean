@@ -184,6 +184,7 @@
     <Compile Include="Data\UniverseSelection\SecurityChanges.cs" />
     <Compile Include="Data\UniverseSelection\UniverseSettings.cs" />
     <Compile Include="Field.cs" />
+    <Compile Include="Indicators\IndicatorDataPoint.cs" />
     <Compile Include="Interfaces\IAlgorithm.cs" />
     <Compile Include="Interfaces\IApi.cs" />
     <Compile Include="Interfaces\IBrokerage.cs" />

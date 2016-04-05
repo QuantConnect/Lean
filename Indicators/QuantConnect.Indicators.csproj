@@ -158,7 +158,6 @@
     <Compile Include="Identity.cs" />
     <Compile Include="Indicator.cs" />
     <Compile Include="IndicatorBase.cs" />
-    <Compile Include="IndicatorDataPoint.cs" />
     <Compile Include="IndicatorExtensions.cs" />
     <Compile Include="IReadOnlyWindow.cs" />
     <Compile Include="MeanAbsoluteDeviation.cs" />
