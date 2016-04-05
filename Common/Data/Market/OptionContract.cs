@@ -17,6 +17,8 @@ using System;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Data.Market
 {
@@ -25,6 +27,8 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public class OptionContract
     {
+        private Lazy<OptionPriceModelResult> _optionPriceModelResult = new Lazy<OptionPriceModelResult>(() => new OptionPriceModelResult(0m, new FirstOrderGreeks())); 
+
         /// <summary>
         /// Gets the option contract's symbol
         /// </summary>
@@ -66,11 +70,19 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Gets or sets the greeks for this contract
+        /// Gets the theoretical price of this option contract as computed by the <see cref="IOptionPriceModel"/>
+        /// </summary>
+        public decimal TheoreticalPrice
+        {
+            get { return _optionPriceModelResult.Value.TheoreticalPrice; }
+        }
+
+        /// <summary>
+        /// Gets the greeks for this contract
         /// </summary>
         public FirstOrderGreeks Greeks
         {
-            get; set;
+            get { return _optionPriceModelResult.Value.Greeks; }
         }
 
         /// <summary>
@@ -146,9 +158,15 @@ namespace QuantConnect.Data.Market
         {
             Symbol = symbol;
             UnderlyingSymbol = underlyingSymbol;
+        }
 
-            // empty default instance - models can populate this later in the pipelines
-            Greeks = new FirstOrderGreeks();
+        /// <summary>
+        /// Sets the option price model evaluator function to be used for this contract
+        /// </summary>
+        /// <param name="optionPriceModelEvaluator">Function delegate used to evaluate the option price model</param>
+        internal void SetOptionPriceModel(Func<OptionPriceModelResult> optionPriceModelEvaluator)
+        {
+            _optionPriceModelResult = new Lazy<OptionPriceModelResult>(optionPriceModelEvaluator);
         }
 
         /// <summary>

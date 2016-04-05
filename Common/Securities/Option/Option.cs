@@ -15,6 +15,7 @@
 
 using System;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
@@ -60,7 +61,16 @@ namespace QuantConnect.Securities.Option
                 new OptionDataFilter()
                 )
         {
+            PriceModel = new CurrentPriceOptionPriceModel();
             ContractFilter = new StrikeExpiryOptionFilter(-5, 5, TimeSpan.Zero, TimeSpan.FromDays(35));
+        }
+
+        /// <summary>
+        /// Gets or sets the price model for this option security
+        /// </summary>
+        public IOptionPriceModel PriceModel
+        {
+            get; set;
         }
 
         /// <summary>

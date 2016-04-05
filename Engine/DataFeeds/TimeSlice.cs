@@ -21,6 +21,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -128,6 +129,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Delisting delisting;
             SymbolChangedEvent symbolChange;
 
+            // we need to be able to reference the slice being created in order to define the
+            // evaluation of option price models, so we define a 'future' that can be referenced
+            // in the option price model evaluation delegates for each contract
+            Slice slice = null;
+            var sliceFuture = new Lazy<Slice>(() => slice);
+
             var algorithmTime = utcDateTime.ConvertFromUtc(algorithmTimeZone);
             var tradeBars = new TradeBars(algorithmTime);
             var quoteBars = new QuoteBars(algorithmTime);
@@ -189,7 +196,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 {
                                     optionChains[baseData.Symbol] = (OptionChain) baseData;
                                 }
-                                else if (!HandleOptionData(algorithmTime, baseData, optionChains, packet.Security))
+                                else if (!HandleOptionData(algorithmTime, baseData, optionChains, packet.Security, sliceFuture))
                                 {
                                     continue;
                                 }
@@ -247,7 +254,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
-            var slice = new Slice(algorithmTime, allDataForAlgorithm, tradeBars, quoteBars, ticks, optionChains, splits, dividends, delistings, symbolChanges, allDataForAlgorithm.Count > 0);
+            slice = new Slice(algorithmTime, allDataForAlgorithm, tradeBars, quoteBars, ticks, optionChains, splits, dividends, delistings, symbolChanges, allDataForAlgorithm.Count > 0);
 
             return new TimeSlice(utcDateTime, count, slice, data, cash, security, consolidator, custom, changes);
         }
@@ -280,7 +287,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
         }
 
-        private static bool HandleOptionData(DateTime algorithmTime, BaseData baseData, OptionChains optionChains, Security security)
+        private static bool HandleOptionData(DateTime algorithmTime, BaseData baseData, OptionChains optionChains, Security security, Lazy<Slice> sliceFuture)
         {
             var symbol = baseData.Symbol;
             
@@ -310,14 +317,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (!chain.Contracts.TryGetValue(baseData.Symbol, out contract))
             {
                 var underlyingSymbol = Symbol.Create(baseData.Symbol.ID.Symbol, SecurityType.Equity, baseData.Symbol.ID.Market);
-                contract = new OptionContract(baseData.Symbol, underlyingSymbol) { Time = baseData.EndTime };
+                contract = new OptionContract(baseData.Symbol, underlyingSymbol)
+                {
+                    Time = baseData.EndTime,
+                    LastPrice = security.Close,
+                    BidPrice = security.BidPrice,
+                    BidSize = security.BidSize,
+                    AskPrice = security.AskPrice,
+                    AskSize = security.AskSize,
+                    UnderlyingLastPrice = chain.Underlying != null ? chain.Underlying.Price : 0m
+                };
                 chain.Contracts[baseData.Symbol] = contract;
-                contract.LastPrice = security.Close;
-                contract.BidPrice = security.BidPrice;
-                contract.BidSize = security.BidSize;
-                contract.AskPrice = security.AskPrice;
-                contract.AskSize = security.AskSize;
-                contract.UnderlyingLastPrice = chain.Underlying != null ? chain.Underlying.Price : 0m;
+                var option = security as Option;
+                if (option != null)
+                {
+                    contract.SetOptionPriceModel(() => option.PriceModel.Evaluate(option, sliceFuture.Value, contract));
+                }
             }
 
             // populate ticks and tradebars dictionaries with no aux data
