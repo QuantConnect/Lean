@@ -280,11 +280,14 @@
     <Compile Include="Securities\LocalMarketHours.cs" />
     <Compile Include="Securities\MarketHoursSegment.cs" />
     <Compile Include="Securities\MarketHoursState.cs" />
+    <Compile Include="Securities\Option\CurrentPriceOptionPriceModel.cs" />
+    <Compile Include="Securities\Option\IOptionPriceModel.cs" />
     <Compile Include="Securities\Option\Option.cs" />
     <Compile Include="Securities\Option\OptionCache.cs" />
     <Compile Include="Securities\Option\OptionDataFilter.cs" />
     <Compile Include="Securities\Option\OptionExchange.cs" />
     <Compile Include="Securities\Option\OptionHolding.cs" />
+    <Compile Include="Securities\Option\OptionPriceModelResult.cs" />
     <Compile Include="Securities\PatternDayTradingMarginModel.cs" />
     <Compile Include="Securities\RelativeStandardDeviationVolatilityModel.cs" />
     <Compile Include="Securities\SecurityDatabaseKey.cs" />
