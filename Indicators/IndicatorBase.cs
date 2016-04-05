@@ -24,7 +24,7 @@ namespace QuantConnect.Indicators
     /// </summary>
     /// <typeparam name="T">The type of data input into this indicator</typeparam>
     [DebuggerDisplay("{ToDetailedString()}")]
-    public abstract partial class IndicatorBase<T> : IComparable<IndicatorBase<T>>, IComparable
+    public abstract partial class IndicatorBase<T> : IIndicator<T>
         where T : BaseData
     {
         /// <summary>the most recent input that was given to this indicator</summary>
@@ -114,7 +114,7 @@ namespace QuantConnect.Indicators
         /// A value that indicates the relative order of the objects being compared. The return value has the following meanings: Value Meaning Less than zero This object is less than the <paramref name="other"/> parameter.Zero This object is equal to <paramref name="other"/>. Greater than zero This object is greater than <paramref name="other"/>. 
         /// </returns>
         /// <param name="other">An object to compare with this object.</param>
-        public int CompareTo(IndicatorBase<T> other)
+        public int CompareTo(IIndicator<T> other)
         {
             if (ReferenceEquals(other, null))
             {

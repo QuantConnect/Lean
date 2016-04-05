@@ -121,6 +121,7 @@
     <Compile Include="DoubleExponentialMovingAverage.cs" />
     <Compile Include="HeikinAshi.cs" />
     <Compile Include="IchimokuKinkoHyo.cs" />
+    <Compile Include="IIndicator.cs" />
     <Compile Include="IndicatorResult.cs" />
     <Compile Include="IndicatorStatus.cs" />
     <Compile Include="KaufmanAdaptiveMovingAverage.cs" />
