@@ -9,7 +9,7 @@
     "environment": "backtesting",
 
     // algorithm class selector
-    "algorithm-type-name": "BasicTemplateAlgorithm",
+    "algorithm-type-name": "BitcoinRsiAlgorithm",
 
     // Algorithm language selector - options CSharp, FSharp, VisualBasic, Python, Java
     "algorithm-language": "CSharp",
@@ -41,7 +41,7 @@
     // will remain open all hours and all days.
     // Any other string beside "true" will make lean operate
     // only during regular market hours.
-    "force-exchange-always-open": "false",
+    "force-exchange-always-open": "true",
 
     // interactive brokers configuration
     "ib-account": "DUxxxx",
@@ -80,6 +80,12 @@
         "ema-slow": 20
     },
 
+    "bitfinex-wallet": "trading",
+    "bitfinex-api-secret": "",
+    "bitfinex-api-key": "",
+    "bitfinex-wss":  "wss://api2.bitfinex.com:3000/ws",
+    "bitfinex-scale-factor":  "100",
+
     "environments": {
 
         // defines the 'backtesting' environment
@@ -114,6 +120,28 @@
             "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
             "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
             "data-queue-handler": "QuantConnect.Lean.Engine.DataFeeds.Queues.LiveDataQueue",
+            "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+            "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"
+        },
+	
+      "live-bitfinex-websockets": {
+            "live-mode": "true",
+            "live-mode-brokerage": "BitfinexBrokerage",
+            "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+            "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+            "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+            "data-queue-handler": "QuantConnect.Brokerages.Bitfinex.BitfinexWebsocketsBrokerage",
+            "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+            "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler"
+        },
+
+        "live-bitfinex-paper": {
+            "live-mode": "true",
+            "live-mode-brokerage": "BitfinexWebsocketsPaperBrokerage",
+            "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+            "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+            "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+            "data-queue-handler": "QuantConnect.Brokerages.Bitfinex.BitfinexWebsocketsPaperBrokerage",
             "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
             "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"
         },

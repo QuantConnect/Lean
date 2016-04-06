@@ -45,6 +45,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Krs.Ats.IBNet.9.66.0.31\lib\net20\Krs.Ats.IBNet.dll</HintPath>
     </Reference>
+    <Reference Include="Moq, Version=4.2.1510.2205, Culture=neutral, PublicKeyToken=69f491c39445e920, processorArchitecture=MSIL">
+      <HintPath>..\packages\Moq.4.2.1510.2205\lib\net40\Moq.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -69,6 +73,18 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="TradingApi.Bitfinex, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Brokerages\Bitfinex\TradingApi.Bitfinex.dll</HintPath>
+    </Reference>
+    <Reference Include="TradingApi.ModelObjects, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Brokerages\Bitfinex\TradingApi.ModelObjects.dll</HintPath>
+    </Reference>
+    <Reference Include="websocket-sharp, Version=1.0.2.36589, Culture=neutral, PublicKeyToken=5660b08a1845a91e, processorArchitecture=MSIL">
+      <HintPath>..\packages\WebSocketSharp.1.0.3-rc9\lib\websocket-sharp.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
@@ -77,6 +93,11 @@
     <Compile Include="AlgorithmRunner.cs" />
     <Compile Include="Algorithm\AlgorithmSetHoldingsTests.cs" />
     <Compile Include="Algorithm\AlgorithmTradingTests.cs" />
+    <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageMockTests.cs" />
+    <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageUtilTests.cs" />
+    <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageTests.cs" />
+    <Compile Include="Brokerages\Bitfinex\BitfinexTestsHelpers.cs" />
+    <Compile Include="Brokerages\Bitfinex\BitfinexWebsocketsBrokerageTests.cs" />
     <Compile Include="Brokerages\BrokerageTests.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmBrokerageDataQueueHandlerTests.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmBrokerageTests.cs" />
@@ -109,6 +130,7 @@
     <Compile Include="Common\Data\SubscriptionDataSourceTests.cs" />
     <Compile Include="Common\Data\TickQuoteBarConsolidatorTests.cs" />
     <Compile Include="Common\MarketTests.cs" />
+    <Compile Include="Common\Orders\Fees\BitfinexFeeModelTests.cs" />
     <Compile Include="Common\Orders\Fills\PartialMarketFillModelTests.cs" />
     <Compile Include="Common\Orders\OrderJsonConverterTests.cs" />
     <Compile Include="Common\Orders\OrderTests.cs" />
@@ -216,6 +238,7 @@
     <Compile Include="Indicators\StochasticTests.cs" />
     <Compile Include="Queues\FileCommandQueueHandlerTests.cs" />
     <Compile Include="RegressionTests.cs" />
+    <Compile Include="Securities\BitfinexSecurityMarginModelTests.cs" />
     <Compile Include="Symbols.cs" />
     <Compile Include="TestExtensions.cs" />
     <Compile Include="Indicators\LinearWeightedMovingAverageTests.cs" />

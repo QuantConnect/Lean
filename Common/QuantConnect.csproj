@@ -121,6 +121,7 @@
     <Compile Include="Benchmarks\IBenchmark.cs" />
     <Compile Include="Benchmarks\SecurityBenchmark.cs" />
     <Compile Include="Brokerages\BrokerageName.cs" />
+    <Compile Include="Brokerages\BitfinexBrokerageModel.cs" />
     <Compile Include="Brokerages\DefaultBrokerageModel.cs" />
     <Compile Include="Brokerages\FxcmBrokerageModel.cs" />
     <Compile Include="Brokerages\OandaTransactionModel.cs" />
@@ -200,6 +201,7 @@
     <Compile Include="Notifications\Notification.cs" />
     <Compile Include="Notifications\NotificationManager.cs" />
     <Compile Include="Orders\CancelOrderRequest.cs" />
+    <Compile Include="Orders\Fees\BitfinexFeeModel.cs" />
     <Compile Include="Orders\Fees\ConstantFeeModel.cs" />
     <Compile Include="Orders\Fees\InteractiveBrokersFeeModel.cs" />
     <Compile Include="Orders\Fees\FxcmFeeModel.cs" />
@@ -218,6 +220,7 @@
     <Compile Include="Orders\OrderExtensions.cs" />
     <Compile Include="Orders\OrderTicket.cs" />
     <Compile Include="Orders\Slippage\ConstantSlippageModel.cs" />
+    <Compile Include="Orders\Slippage\BitfinexSlippageModel.cs" />
     <Compile Include="Orders\Slippage\SpreadSlippageModel.cs" />
     <Compile Include="Orders\Slippage\ISlippageModel.cs" />
     <Compile Include="Orders\StopLimitOrder.cs" />
@@ -256,6 +259,7 @@
     <Compile Include="Securities\Cfd\CfdHolding.cs" />
     <Compile Include="Securities\ConstantFeeTransactionModel.cs" />
     <Compile Include="Securities\DelayedSettlementModel.cs" />
+    <Compile Include="Securities\Forex\BitfinexTransactionModel.cs" />
     <Compile Include="Securities\FuncSecurityInitializer.cs" />
     <Compile Include="Securities\ISecurityInitializer.cs" />
     <Compile Include="Securities\ISettlementModel.cs" />
@@ -272,6 +276,7 @@
     <Compile Include="Securities\IOrderProvider.cs" />
     <Compile Include="Securities\ISecurityPortfolioModel.cs" />
     <Compile Include="Securities\MarginCallModel.cs" />
+    <Compile Include="Securities\BitfinexSecurityMarginModel.cs" />
     <Compile Include="Securities\SecurityPortfolioModel.cs" />
     <Compile Include="Securities\SecurityMarginModel.cs" />
     <Compile Include="Securities\ImmediateSettlementModel.cs" />
