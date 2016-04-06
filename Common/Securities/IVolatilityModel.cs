@@ -32,7 +32,7 @@ namespace QuantConnect.Securities
         /// the specified security instance
         /// </summary>
         /// <param name="security">The security to calculate volatility for</param>
-        /// <param name="data"></param>
+        /// <param name="data">The new data used to update the model</param>
         void Update(Security security, BaseData data);
     }
 
