@@ -15,7 +15,6 @@
 
 using System;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
@@ -261,6 +260,15 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the volatility model used for this security
+        /// </summary>
+        public IVolatilityModel VolatilityModel
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Customizable data filter to filter outlier ticks before they are passed into user event handlers. 
         /// By default all ticks are passed into the user algorithms.
         /// </summary>
@@ -287,6 +295,7 @@ namespace QuantConnect.Securities
                 new InteractiveBrokersFeeModel(),
                 new SpreadSlippageModel(),
                 new ImmediateSettlementModel(),
+                Securities.VolatilityModel.Null, 
                 new SecurityMarginModel(1m),
                 new SecurityDataFilter())
         {
@@ -305,6 +314,7 @@ namespace QuantConnect.Securities
             IFeeModel feeModel,
             ISlippageModel slippageModel,
             ISettlementModel settlementModel,
+            IVolatilityModel volatilityModel,
             ISecurityMarginModel marginModel,
             ISecurityDataFilter dataFilter
             )
@@ -332,6 +342,7 @@ namespace QuantConnect.Securities
             FeeModel = feeModel;
             SlippageModel = slippageModel;
             SettlementModel = settlementModel;
+            VolatilityModel = volatilityModel;
             Holdings = new SecurityHolding(this);
         }
 
@@ -500,6 +511,7 @@ namespace QuantConnect.Securities
             if (data == null) return;
             Cache.AddData(data);
             Holdings.UpdateMarketPrice(data.Value);
+            VolatilityModel.Update(this, data);
         }
 
         /// <summary>
