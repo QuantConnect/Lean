@@ -187,6 +187,8 @@
     <Compile Include="Indicators\IIndicator.cs" />
     <Compile Include="Indicators\IndicatorDataPoint.cs" />
     <Compile Include="Indicators\IndicatorUpdatedHandler.cs" />
+    <Compile Include="Indicators\IReadOnlyWindow.cs" />
+    <Compile Include="Indicators\RollingWindow.cs" />
     <Compile Include="Interfaces\IAlgorithm.cs" />
     <Compile Include="Interfaces\IApi.cs" />
     <Compile Include="Interfaces\IBrokerage.cs" />

@@ -159,7 +159,6 @@
     <Compile Include="Indicator.cs" />
     <Compile Include="IndicatorBase.cs" />
     <Compile Include="IndicatorExtensions.cs" />
-    <Compile Include="IReadOnlyWindow.cs" />
     <Compile Include="MeanAbsoluteDeviation.cs" />
     <Compile Include="Minimum.cs" />
     <Compile Include="Momentum.cs" />
@@ -173,7 +172,6 @@
     <Compile Include="RelativeStrengthIndex.cs" />
     <Compile Include="Stochastics.cs" />
     <Compile Include="Sum.cs" />
-    <Compile Include="RollingWindow.cs" />
     <Compile Include="SimpleMovingAverage.cs" />
     <Compile Include="MovingAverageTypeExtensions.cs" />
     <Compile Include="Maximum.cs" />
