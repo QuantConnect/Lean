@@ -339,6 +339,12 @@ namespace QuantConnect.Algorithm
 
             //Set a temporary price for validating order for market orders:
             var security = Securities[request.Symbol];
+
+            if (!security.IsTradable)
+            {
+                return OrderResponse.Error(request, OrderResponseErrorCode.NonTradableSecurity, "The security with symbol '" + request.Symbol.ToString() + "' is marked as non-tradable.");
+            }
+
             var price = security.Price;
 
             //Check the exchange is open before sending a market on close orders
