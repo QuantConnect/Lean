@@ -104,6 +104,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="AddRemoveSecurityRegressionAlgorithm.py" />
+    <Content Include="DataConsolidationAlgorithm.py" />
     <Content Include="HistoryAndWarmupRegressionAlgorithm.py" />
     <Content Include="CustomChartingAlgorithm.py" />
     <Content Include="DelistingEventsAlgorithm.py" />
