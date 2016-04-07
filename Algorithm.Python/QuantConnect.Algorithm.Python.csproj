@@ -106,6 +106,7 @@
     <Content Include="AddRemoveSecurityRegressionAlgorithm.py" />
     <Content Include="HistoryAndWarmupRegressionAlgorithm.py" />
     <Content Include="CustomChartingAlgorithm.py" />
+    <Content Include="DelistingEventsAlgorithm.py" />
     <Content Include="DividendAlgorithm.py" />
     <Content Include="MACDTrendAlgorithm.py" />
     <Content Include="QuandlImporterAlgorithm.py" />
