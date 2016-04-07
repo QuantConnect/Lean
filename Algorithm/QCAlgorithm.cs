@@ -24,6 +24,7 @@ using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
 using QuantConnect.Notifications;
 using QuantConnect.Orders;
@@ -478,6 +479,34 @@ namespace QuantConnect.Algorithm
 
                 // just return the current price
                 Benchmark = new SecurityBenchmark(security);
+            }
+
+            // add option underlying securities if not present
+            foreach (var option in Securities.Select(x => x.Value).OfType<Option>())
+            {
+                var sid = option.Symbol.ID;
+                var underlying = QuantConnect.Symbol.Create(sid.Symbol, SecurityType.Equity, sid.Market);
+                Security equity;
+                if (!Securities.TryGetValue(underlying, out equity))
+                {
+                    // if it wasn't manually added, add a daily subscription for volatility calculations
+                    equity = AddEquity(underlying.Value, Resolution.Daily, underlying.ID.Market, false);
+                }
+
+                // check for the null volatility model and update it
+                if (equity.VolatilityModel == VolatilityModel.Null)
+                {
+                    const int period = 50;
+                    // define indicator for daily close to prevent multiple consolidators per indicator
+                    var dailyClose = Identity(equity.Symbol, Resolution.Daily);
+                    var meanName = CreateIndicatorName(equity.Symbol, "SMA" + period, Resolution.Daily);
+                    var stdName = CreateIndicatorName(equity.Symbol, "STD" + period, Resolution.Daily);
+                    var mean = new SimpleMovingAverage(meanName, period).Of(dailyClose);
+                    var std = new StandardDeviation(stdName, period).Of(dailyClose);
+                    // the model wants a % volatility
+                    var volatility = std.Over(mean);
+                    equity.VolatilityModel = new IndicatorVolatilityModel<IndicatorDataPoint>(volatility);
+                }
             }
         }
 
