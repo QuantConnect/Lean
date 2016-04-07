@@ -174,6 +174,27 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
+        public void OverHandlesDivideByZero()
+        {
+            var left = new Identity("left");
+            var right = new Identity("right");
+            var composite = left.Over(right);
+            var updatedEventFired = false;
+            composite.Updated += delegate { updatedEventFired = true; };
+
+            left.Update(DateTime.Today, 1m);
+            Assert.IsFalse(updatedEventFired);
+            right.Update(DateTime.Today, 0m);
+            Assert.IsFalse(updatedEventFired);
+
+            // submitting another update to right won't cause an update without corresponding update to left
+            right.Update(DateTime.Today, 1m);
+            Assert.IsFalse(updatedEventFired);
+            left.Update(DateTime.Today, 1m);
+            Assert.IsTrue(updatedEventFired);
+        }
+
+        [Test]
         public void TimesMultipliesLeftAndRightAfterBothUpdated()
         {
             var left = new Identity("left");
