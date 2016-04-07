@@ -161,9 +161,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // return None if there's no changes, otherwise return what we've modified
-            return additions.Count + removals.Count != 0
+            var securityChanges = additions.Count + removals.Count != 0
                 ? new SecurityChanges(additions, removals)
                 : SecurityChanges.None;
+
+            if (securityChanges != SecurityChanges.None)
+            {
+                Log.Debug("UniverseSelection.ApplyUniverseSelection(): " + dateTimeUtc + ": " + securityChanges);
+            }
+
+            return securityChanges;
         }
     }
 }
