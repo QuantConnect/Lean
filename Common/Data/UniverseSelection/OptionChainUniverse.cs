@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 using QuantConnect.Util;
@@ -124,6 +125,23 @@ namespace QuantConnect.Data.UniverseSelection
                 objectType: GetDataType(config.Resolution, x),
                 isFilteredSubscription: true
                 ));
+        }
+
+        /// <summary>
+        /// Creates and configures a security for the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol of the security to be created</param>
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <param name="marketHoursDatabase">The market hours database</param>
+        /// <param name="symbolPropertiesDatabase">The symbol properties database</param>
+        /// <returns>The newly initialized security object</returns>
+        public override Security CreateSecurity(Symbol symbol, IAlgorithm algorithm, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase)
+        {
+            // set the underlying security and pricing model from the canonical security
+            var option = (Option)base.CreateSecurity(symbol, algorithm, marketHoursDatabase, symbolPropertiesDatabase);
+            option.Underlying = _option.Underlying;
+            option.PriceModel = _option.PriceModel;
+            return option;
         }
 
         /// <summary>

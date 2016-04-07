@@ -66,6 +66,14 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
+        /// Gets or sets the underlying security object.
+        /// </summary>
+        public Security Underlying
+        {
+            get; set;
+        }
+
+        /// <summary>
         /// Gets or sets the price model for this option security
         /// </summary>
         public IOptionPriceModel PriceModel

@@ -493,6 +493,9 @@ namespace QuantConnect.Algorithm
                     equity = AddEquity(underlying.Value, Resolution.Daily, underlying.ID.Market, false);
                 }
 
+                // set the underlying property on the option chain
+                option.Underlying = equity;
+
                 // check for the null volatility model and update it
                 if (equity.VolatilityModel == VolatilityModel.Null)
                 {
