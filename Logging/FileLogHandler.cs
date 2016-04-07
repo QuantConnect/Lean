@@ -28,14 +28,17 @@ namespace QuantConnect.Logging
         // we need to control synchronization to our stream writer since it's not inherently thread-safe
         private readonly object _lock = new object();
         private readonly Lazy<TextWriter> _writer;
+        private readonly bool _useTimestampPrefix;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FileLogHandler"/> class to write messages to the specified file path.
         /// The file will be opened using <see cref="FileMode.Append"/>
         /// </summary>
         /// <param name="filepath">The file path use to save the log messages</param>
-        public FileLogHandler(string filepath)
+        /// <param name="useTimestampPrefix">True to prefix each line in the log which the UTC timestamp, false otherwise</param>
+        public FileLogHandler(string filepath, bool useTimestampPrefix = true)
         {
+            _useTimestampPrefix = useTimestampPrefix;
             _writer = new Lazy<TextWriter>(
                 () => new StreamWriter(File.Open(filepath, FileMode.Append, FileAccess.Write, FileShare.Read))
                 );
@@ -100,7 +103,11 @@ namespace QuantConnect.Logging
         /// <returns></returns>
         protected virtual string CreateMessage(string text, string level)
         {
-            return string.Format("{0} {1}:: {2}", DateTime.UtcNow.ToString("o"), level, text);
+            if (_useTimestampPrefix)
+            {
+                return string.Format("{0} {1}:: {2}", DateTime.UtcNow.ToString("o"), level, text);
+            }
+            return string.Format("{0}:: {1}", level, text);
         }
 
         /// <summary>

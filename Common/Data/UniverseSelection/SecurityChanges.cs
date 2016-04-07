@@ -38,7 +38,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         public IReadOnlyList<Security> AddedSecurities
         {
-            get { return _addedSecurities.ToList(); }
+            get { return _addedSecurities.OrderBy(x => x.Symbol.Value).ToList(); }
         }
 
         /// <summary>
@@ -48,7 +48,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         public IReadOnlyList<Security> RemovedSecurities
         {
-            get { return _removedSecurities.ToList(); }
+            get { return _removedSecurities.OrderBy(x => x.Symbol.Value).ToList(); }
         }
 
         /// <summary>

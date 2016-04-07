@@ -135,6 +135,11 @@ namespace QuantConnect.Data
         public readonly HashSet<IDataConsolidator> Consolidators;
 
         /// <summary>
+        /// Gets whether or not this subscription should have filters applied to it (market hours/user filters from security)
+        /// </summary>
+        public readonly bool IsFilteredSubscription;
+
+        /// <summary>
         /// Constructor for Data Subscriptions
         /// </summary>
         /// <param name="objectType">Type of the data objects.</param>
@@ -149,6 +154,7 @@ namespace QuantConnect.Data
         /// setting this flag to true will prevent the data from being sent into the algorithm's OnData methods</param>
         /// <param name="isCustom">True if this is user supplied custom data, false for normal QC data</param>
         /// <param name="tickType">Specifies if trade or quote data is subscribed</param>
+        /// <param name="isFilteredSubscription">True if this subscription should have filters applied to it (market hours/user filters from security), false otherwise</param>
         public SubscriptionDataConfig(Type objectType,
             Symbol symbol,
             Resolution resolution,
@@ -158,7 +164,8 @@ namespace QuantConnect.Data
             bool extendedHours,
             bool isInternalFeed,
             bool isCustom = false,
-            TickType? tickType = null)
+            TickType? tickType = null,
+            bool isFilteredSubscription = true)
         {
             Type = objectType;
             SecurityType = symbol.ID.SecurityType;
@@ -173,6 +180,7 @@ namespace QuantConnect.Data
             Market = symbol.ID.Market;
             DataTimeZone = dataTimeZone;
             ExchangeTimeZone = exchangeTimeZone;
+            IsFilteredSubscription = isFilteredSubscription;
             Consolidators = new HashSet<IDataConsolidator>();
 
             if (!tickType.HasValue)
@@ -228,6 +236,7 @@ namespace QuantConnect.Data
         /// setting this flag to true will prevent the data from being sent into the algorithm's OnData methods</param>
         /// <param name="isCustom">True if this is user supplied custom data, false for normal QC data</param>
         /// <param name="tickType">Specifies if trade or quote data is subscribed</param>
+        /// <param name="isFilteredSubscription">True if this subscription should have filters applied to it (market hours/user filters from security), false otherwise</param>
         public SubscriptionDataConfig(SubscriptionDataConfig config,
             Type objectType = null,
             Symbol symbol = null,
@@ -238,7 +247,8 @@ namespace QuantConnect.Data
             bool? extendedHours = null,
             bool? isInternalFeed = null,
             bool? isCustom = null,
-            TickType? tickType = null)
+            TickType? tickType = null,
+            bool? isFilteredSubscription = null)
             : this(
             objectType ?? config.Type,
             symbol ?? config.Symbol,
@@ -249,7 +259,8 @@ namespace QuantConnect.Data
             extendedHours ?? config.ExtendedMarketHours,
             isInternalFeed ?? config.IsInternalFeed,
             isCustom ?? config.IsCustomData,
-            tickType ?? config.TickType
+            tickType ?? config.TickType,
+            isFilteredSubscription ?? config.IsFilteredSubscription
             )
         {
         }

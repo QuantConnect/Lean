@@ -49,7 +49,7 @@ namespace QuantConnect.Tests
                 Config.Set("algorithm-language", language.ToString());
                 Config.Set("algorithm-location", "QuantConnect.Algorithm." + language + ".dll");
 
-                var logHandlers = new ILogHandler[] {new ConsoleLogHandler(), new RegressionLogHandler()};
+                var logHandlers = new ILogHandler[] {new ConsoleLogHandler(), new FileLogHandler("regression.log", false)};
                 using (Log.LogHandler = new CompositeLogHandler(logHandlers))
                 using (var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance))
                 using (var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(Composer.Instance))
@@ -81,23 +81,6 @@ namespace QuantConnect.Tests
             {
                 Assert.AreEqual(true, statistics.ContainsKey(stat.Key), "Missing key: " + stat.Key);
                 Assert.AreEqual(stat.Value, statistics[stat.Key], "Failed on " + stat.Key);
-            }
-        }
-
-        /// <summary>
-        /// Provides a special version of the <see cref="FileLogHandler"/> that doesn't time stamp
-        /// every line. This makes finding differences between runs much simpler.
-        /// </summary>
-        class RegressionLogHandler : FileLogHandler
-        {
-            public RegressionLogHandler()
-                : base("regression.log")
-            {
-            }
-
-            protected override string CreateMessage(string text, string level)
-            {
-                return string.Format("{0}:: {1}", level, text);
             }
         }
     }
