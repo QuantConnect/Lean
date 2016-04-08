@@ -133,7 +133,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 var cached = this.CachedOrderIDs.Where(c => c.Value.BrokerId.Contains(msg.TRD_ORD_ID.ToString())).FirstOrDefault();
                 if (cached.Value != null)
                 {
-                    if (msg.TRD_ORD_ID == cached.Value.BrokerId.Select(b => int.Parse(b)).Max(b => b))
+                    if (msg.TRD_ORD_ID == cached.Value.BrokerId.Select(b => int.Parse(b)).Max())
                     {
                         return OrderStatus.Filled;
                     }
