@@ -57,6 +57,11 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 return new Dictionary<string, string>
                 {
+                    {"apiSecret" ,Config.Get("bitfinex-api-secret")},
+                    {"apiKey" ,Config.Get("bitfinex-api-key")},
+                    {"wallet" ,Config.Get("bitfinex-wallet")},
+                    {"url" , Config.Get("bitfinex-wss", "wss://api2.bitfinex.com:3000/ws")},
+                    {"scaleFactor", Config.Get("bitfinex-scale-factor", "1")}
                 };
             }
         }
@@ -78,28 +83,27 @@ namespace QuantConnect.Brokerages.Bitfinex
         public override Interfaces.IBrokerage CreateBrokerage(Packets.LiveNodePacket job, Interfaces.IAlgorithm algorithm)
         {
 
-            string apiSecret = Config.Get("bitfinex-api-secret");
-            string apiKey = Config.Get("bitfinex-api-key");
-            string wallet = Config.Get("bitfinex-wallet");
             //it's desirable to throw an exception here when failing parse
-            decimal scaleFactor = decimal.Parse(Config.Get("bitfinex-scale-factor", "1"));
+            decimal scaleFactor = decimal.Parse(job.BrokerageData["scaleFactor"]);
 
-            if (string.IsNullOrEmpty(apiSecret))
+            if (scaleFactor == 0m)
+                throw new Exception("Invalid bitfinex-scale-factor in config.json");
+
+            if (string.IsNullOrEmpty(job.BrokerageData["apiSecret"]))
                 throw new Exception("Missing bitfinex-api-secret in config.json");
 
-            if (string.IsNullOrEmpty(apiKey))
+            if (string.IsNullOrEmpty(job.BrokerageData["apiKey"]))
                 throw new Exception("Missing bitfinex-api-key in config.json");
 
-            if (string.IsNullOrEmpty(wallet))
+            if (string.IsNullOrEmpty(job.BrokerageData["wallet"]))
                 throw new Exception("Missing bitfinex-wallet in config.json");
 
-            string url = Config.Get("bitfinex-wss", "wss://api2.bitfinex.com:3000/ws");
-
-            var restClient = new BitfinexApi(apiSecret, apiKey);
+            var restClient = new BitfinexApi(job.BrokerageData["apiSecret"], job.BrokerageData["apiKey"]);
 
             var webSocketClient = new WebSocketWrapper();
 
-            var brokerage = new BitfinexWebsocketsBrokerage(url, webSocketClient, apiKey, apiSecret, wallet, restClient, scaleFactor, algorithm.Portfolio);
+            var brokerage = new BitfinexWebsocketsBrokerage(job.BrokerageData["url"], webSocketClient, job.BrokerageData["apiKey"], job.BrokerageData["apiSecret"], 
+                job.BrokerageData["wallet"], restClient, scaleFactor, algorithm.Portfolio);
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
 
             return brokerage;
