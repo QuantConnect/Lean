@@ -383,9 +383,9 @@ namespace QuantConnect.Brokerages.Bitfinex
 
             var list = this.GetOpenBitfinexOrders().Select(o => (Order)o).ToList();
 
-            foreach (var item in list)
+            foreach (Order item in list)
             {
-                if (item.Status != OrderStatus.Canceled && item.Status != OrderStatus.Filled && item.Status != OrderStatus.Invalid)
+                if (item.Status.IsOpen())
                 {
                     var cached = this.CachedOrderIDs.Where(c => c.Value.BrokerId.Contains(item.BrokerId.First()));
                     if (cached.Count() > 0 && cached.First().Value != null)
