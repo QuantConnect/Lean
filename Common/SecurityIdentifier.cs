@@ -38,6 +38,7 @@ namespace QuantConnect
         #region Empty, DefaultDate Fields
 
         private static readonly string MapFileProviderTypeName = Config.Get("map-file-provider", "LocalDiskMapFileProvider");
+        private static readonly char[] InvalidCharacters = {'|', ' '};
 
         /// <summary>
         /// Gets an instance of <see cref="SecurityIdentifier"/> that is empty, that is, one with no symbol specified
@@ -48,6 +49,11 @@ namespace QuantConnect
         /// Gets the date to be used when it does not apply.
         /// </summary>
         public static readonly DateTime DefaultDate = DateTime.FromOADate(0);
+
+        /// <summary>
+        /// Gets the set of invalids symbol characters
+        /// </summary>
+        public static readonly IReadOnlyCollection<char> InvalidSymbolCharacters = (IReadOnlyCollection<char>)new HashSet<char>(InvalidCharacters);
 
         #endregion
 
@@ -221,6 +227,10 @@ namespace QuantConnect
             if (symbol == null)
             {
                 throw new ArgumentNullException("symbol", "SecurityIdentifier requires a non-null string 'symbol'");
+            }
+            if (symbol.IndexOfAny(InvalidCharacters) != -1)
+            {
+                throw new ArgumentException("symbol must not contain the characters '|' or ' '.", "symbol");
             }
             _symbol = symbol;
             _properties = properties;

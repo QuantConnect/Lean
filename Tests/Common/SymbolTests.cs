@@ -246,7 +246,7 @@ namespace QuantConnect.Tests.Common
         {
 #pragma warning disable 0618 // This test requires implicit operators
             // this doesn't exist in the symbol cache
-            var eurusd = new Symbol(SecurityIdentifier.GenerateForex("NOT A SECURITY", Market.FXCM), "EURUSD");
+            var eurusd = new Symbol(SecurityIdentifier.GenerateForex("NOT-A-SECURITY", Market.FXCM), "EURUSD");
             string stringEurusd = eurusd;
             Assert.AreEqual(eurusd.ID.ToString(), stringEurusd);
 

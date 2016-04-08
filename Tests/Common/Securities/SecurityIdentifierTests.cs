@@ -119,7 +119,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void ReturnsCorrectMarketWhenNotFound()
         {
-            var sid = new SecurityIdentifier("some symbol", 0357960000000009901);
+            var sid = new SecurityIdentifier("some-symbol", 0357960000000009901);
             Assert.AreEqual("99", sid.Market);
         }
 
@@ -234,6 +234,13 @@ namespace QuantConnect.Tests.Common.Securities
             const string symbol = "~!@#$%^&*()_+¼»`ÆÜCⁿª▓G";
             var sid = new SecurityIdentifier(symbol, 0);
             Assert.AreEqual(sid.Symbol, symbol);
+        }
+
+        [Theory, TestCase("|"), TestCase(" ")]
+        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "must not contain the characters")]
+        public void ThrowsOnInvalidSymbolCharacters(string input)
+        {
+            new SecurityIdentifier(input, 0);
         }
 
         class Container
