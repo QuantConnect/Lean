@@ -141,6 +141,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
                     RemainingAmount = "1",
                     ExecutedAmount = "0",
                     IsLive = true,
+                    Type = "market",
                     IsCancelled = false
                 }
             };

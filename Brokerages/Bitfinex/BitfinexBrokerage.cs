@@ -86,6 +86,13 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// Security Provider
         /// </summary>
         protected ISecurityProvider SecurityProvider;
+
+        const string _exchangeMarket  = "exchange market";
+        const string _exchangeLimit = "exchange limit";
+        const string _exchangeStop = "exchange stop"  ;     
+        const string _market = "market";
+        const string _limit = "limit";
+        const string _stop = "stop";
         #endregion
 
         /// <summary>
@@ -173,16 +180,33 @@ namespace QuantConnect.Brokerages.Bitfinex
                 }
                 else
                 {
-                    CachedOrderIDs.TryAdd(order.Id, new BitfinexOrder
+                    Order caching = null;
+                    if (order.Type == OrderType.Market)
                     {
-                        Id = order.Id,
-                        BrokerId = new List<string> { response.OrderId.ToString() },
-                        Price = order.Price / ScaleFactor,
-                        Quantity = totalQuantity * (int)ScaleFactor,
-                        Status = OrderStatus.Submitted,
-                        Symbol = order.Symbol,
-                        Time = order.Time,
-                    });
+                        caching = new MarketOrder();
+                    }
+                    else if (order.Type == OrderType.Limit)
+                    {
+                        caching = new LimitOrder();
+                    }
+                    else if (order.Type == OrderType.StopMarket)
+                    {
+                        caching = new StopMarketOrder();
+                    }
+                    else
+                    {
+                        throw new Exception("BitfinexBrokerage.PlaceOrder(): Unsupported order type was encountered: " + order.Type.ToString());
+                    }
+
+                    caching.Id = order.Id;
+                    caching.BrokerId = new List<string> { response.OrderId.ToString() };
+                    caching.Price = order.Price / ScaleFactor;
+                    caching.Quantity = totalQuantity * (int)ScaleFactor;
+                    caching.Status = OrderStatus.Submitted;
+                    caching.Symbol = order.Symbol;
+                    caching.Time = order.Time;
+
+                    CachedOrderIDs.TryAdd(order.Id, order);
                 }
                 if (crossOrder != null && crossOrder.Status != OrderStatus.Submitted)
                 {
@@ -297,9 +321,9 @@ namespace QuantConnect.Brokerages.Bitfinex
             }
         }
 
-        private List<BitfinexOrder> GetOpenBitfinexOrders()
+        private List<Order> GetOpenBitfinexOrders()
         {
-            var list = new List<BitfinexOrder>();
+            var list = new List<Order>();
 
             try
             {
@@ -308,18 +332,38 @@ namespace QuantConnect.Brokerages.Bitfinex
                 {
                     foreach (var item in response)
                     {
-                        list.Add(new BitfinexOrder
+                        Order order = null;
+                        if (item.Type == _exchangeMarket || item.Type == _market)
                         {
-                            Quantity = Convert.ToInt32(decimal.Parse(item.OriginalAmount) * ScaleFactor),
-                            BrokerId = new List<string> { item.Id.ToString() },
-                            Symbol = Symbol,
-                            Time = Time.UnixTimeStampToDateTime(double.Parse(item.Timestamp)),
-                            Price = decimal.Parse(item.Price) / ScaleFactor,
-                            Status = MapOrderStatus(item),
-                            OriginalAmount = decimal.Parse(item.OriginalAmount) * ScaleFactor,
-                            RemainingAmount = decimal.Parse(item.RemainingAmount) * ScaleFactor,
-                            ExecutedAmount = decimal.Parse(item.ExecutedAmount) * ScaleFactor
-                        });
+                            order = new MarketOrder();
+                        }
+                        else if (item.Type == _exchangeLimit || item.Type == _limit)
+                        {
+                            order = new LimitOrder
+                            {
+                                LimitPrice = decimal.Parse(item.Price) / ScaleFactor
+                            };
+                        }
+                        else if (item.Type == _exchangeStop || item.Type == _stop)
+                        {
+                            order = new StopMarketOrder
+                            {
+                                StopPrice = decimal.Parse(item.Price) / ScaleFactor
+                            };
+                        }
+                        else
+                        {
+                            Log.Error("BitfinexBrokerage.GetOpenBitfinexOrders(): Unsupported order type returned from brokerage" + item.Type);
+                            continue;
+                        }
+
+                        order.Quantity = Convert.ToInt32(decimal.Parse(item.OriginalAmount) * ScaleFactor);
+                        order.BrokerId = new List<string> { item.Id.ToString() };
+                        order.Symbol = Symbol;
+                        order.Time = Time.UnixTimeStampToDateTime(double.Parse(item.Timestamp));
+                        order.Price = decimal.Parse(item.Price) / ScaleFactor;
+                        order.Status = MapOrderStatus(item);
+                        list.Add(order);
                     }
                 }
             }

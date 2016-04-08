@@ -74,7 +74,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
         {
             string brokerId = "2";
             string json = "[0,\"tu\", [\"abc123\",\"1\",\"BTCUSD\",\"1453989092 \",\"" + brokerId + "\",\"3\",\"4\",\"<ORD_TYPE>\",\"5\",\"6\",\"USD\"]]";
-            unit.CachedOrderIDs.TryAdd(1, new BitfinexOrder { BrokerId = new List<string> { brokerId } });
+            unit.CachedOrderIDs.TryAdd(1, new Orders.MarketOrder { BrokerId = new List<string> { brokerId } });
             ManualResetEvent raised = new ManualResetEvent(false);
 
             unit.OrderStatusChanged += (s, e) =>
@@ -97,7 +97,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
         {
             string brokerId = "2";
             string json = "[0,\"tu\", [\"abc123\",\"1\",\"BTCUSD\",\"1453989092 \",\"" + brokerId + "\",\"3\",\"4\",\"<ORD_TYPE>\",\"5\",\"0.000006\",\"USD\"]]";
-            unit.CachedOrderIDs.TryAdd(1, new BitfinexOrder { BrokerId = new List<string> { brokerId } });
+            unit.CachedOrderIDs.TryAdd(1, new Orders.MarketOrder { BrokerId = new List<string> { brokerId } });
             ManualResetEvent raised = new ManualResetEvent(false);
 
             unit.OrderStatusChanged += (s, e) =>
@@ -119,7 +119,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
         {
             string brokerId = "2";
             string json = "[0,\"tu\", [\"abc123\",\"1\",\"BTCUSD\",\"1453989092 \",\"" + brokerId + "\",\"3\",\"-0.000004\",\"<ORD_TYPE>\",\"5\",\"6\",\"USD\"]]";
-            unit.CachedOrderIDs.TryAdd(1, new BitfinexOrder { BrokerId = new List<string> { brokerId } });
+            unit.CachedOrderIDs.TryAdd(1, new Orders.LimitOrder { BrokerId = new List<string> { brokerId } });
             ManualResetEvent raised = new ManualResetEvent(false);
 
             unit.OrderStatusChanged += (s, e) =>
@@ -141,7 +141,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
         {
             string brokerId = "2";
             string json = "[0,\"te\", [\"abc123\",\"1\",\"BTCUSD\",\"1453989092 \",\"" + brokerId + "\",\"2\",\"4\",\"<ORD_TYPE>\",\"5\",\"0\",\"\"]]";
-            unit.CachedOrderIDs.TryAdd(1, new BitfinexOrder { BrokerId = new List<string> { brokerId } });
+            unit.CachedOrderIDs.TryAdd(1, new Orders.MarketOrder { BrokerId = new List<string> { brokerId } });
             ManualResetEvent raised = new ManualResetEvent(false);
 
             unit.OrderStatusChanged += (s, e) =>

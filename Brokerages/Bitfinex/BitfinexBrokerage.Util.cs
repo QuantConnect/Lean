@@ -46,14 +46,14 @@ namespace QuantConnect.Brokerages.Bitfinex
         //todo: trailing stop support
         private static List<OrderTypeMap> _orderTypeMap = new List<OrderTypeMap>
         {
-            { new OrderTypeMap { BitfinexOrderType = "exchange market", Wallet = WalletType.exchange.ToString(), OrderType = OrderType.Market } },
-            { new OrderTypeMap { BitfinexOrderType = "exchange limit", Wallet = WalletType.exchange.ToString(), OrderType = OrderType.Limit } },
-            { new OrderTypeMap { BitfinexOrderType = "exchange stop", Wallet = WalletType.exchange.ToString(), OrderType = OrderType.StopMarket } },
+            { new OrderTypeMap { BitfinexOrderType = _exchangeMarket, Wallet = WalletType.exchange.ToString(), OrderType = OrderType.Market } },
+            { new OrderTypeMap { BitfinexOrderType = _exchangeLimit, Wallet = WalletType.exchange.ToString(), OrderType = OrderType.Limit } },
+            { new OrderTypeMap { BitfinexOrderType = _exchangeStop, Wallet = WalletType.exchange.ToString(), OrderType = OrderType.StopMarket } },
             //{ new OrderTypeMap { BitfinexOrderType = "exchange trailing stop", Wallet = WalletType.exchange.ToString(), OrderType = OrderType.StopLimit } },
 
-            { new OrderTypeMap { BitfinexOrderType = "market", Wallet = WalletType.trading.ToString(), OrderType = OrderType.Market } },
-            { new OrderTypeMap { BitfinexOrderType = "limit", Wallet = WalletType.trading.ToString(), OrderType = OrderType.Limit } },
-            { new OrderTypeMap { BitfinexOrderType = "stop", Wallet = WalletType.trading.ToString(), OrderType = OrderType.StopMarket } },
+            { new OrderTypeMap { BitfinexOrderType = _market, Wallet = WalletType.trading.ToString(), OrderType = OrderType.Market } },
+            { new OrderTypeMap { BitfinexOrderType = _limit, Wallet = WalletType.trading.ToString(), OrderType = OrderType.Limit } },
+            { new OrderTypeMap { BitfinexOrderType = _stop, Wallet = WalletType.trading.ToString(), OrderType = OrderType.StopMarket } },
             //{ new OrderTypeMap { BitfinexOrderType = "trailing stop", Wallet = WalletType.trading.ToString(), OrderType = OrderType.StopLimit } },
         };
         #endregion
