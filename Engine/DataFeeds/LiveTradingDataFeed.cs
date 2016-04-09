@@ -452,7 +452,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // finally, make our subscriptions aware of the frontier of the data feed, prevents future data from spewing into the feed
                 enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, timeZoneOffsetProvider);
 
-                subscription = new Subscription(universe, security, enumerator, timeZoneOffsetProvider, utcStartTime, utcEndTime, false);
+                subscription = new Subscription(universe, security, config, enumerator, timeZoneOffsetProvider, utcStartTime, utcEndTime, false);
             }
             catch (Exception err)
             {
@@ -540,7 +540,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // create the subscription
-            var subscription = new Subscription(universe, security, enumerator, tzOffsetProvider, startTimeUtc, endTimeUtc, true);
+            var subscription = new Subscription(universe, security, config, enumerator, tzOffsetProvider, startTimeUtc, endTimeUtc, true);
 
             return subscription;
         }

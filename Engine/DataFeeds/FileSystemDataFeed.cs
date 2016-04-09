@@ -139,7 +139,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             ScheduleEnumerator(enumerator, enqueueable, GetLowerThreshold(config.Resolution), GetUpperThreshold(config.Resolution));
 
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, startTimeUtc, endTimeUtc);
-            var subscription = new Subscription(universe, security, enqueueable, timeZoneOffsetProvider, startTimeUtc, endTimeUtc, false);
+            var subscription = new Subscription(universe, security, config, enqueueable, timeZoneOffsetProvider, startTimeUtc, endTimeUtc, false);
             return subscription;
         }
 
@@ -372,7 +372,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // create the subscription
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, startTimeUtc, endTimeUtc);
-            var subscription = new Subscription(universe, security, enumerator, timeZoneOffsetProvider, startTimeUtc, endTimeUtc, true);
+            var subscription = new Subscription(universe, security, config, enumerator, timeZoneOffsetProvider, startTimeUtc, endTimeUtc, true);
 
             _subscriptions.Add(subscription.Security.Symbol, subscription);
 
