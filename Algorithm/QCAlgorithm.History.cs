@@ -188,12 +188,12 @@ namespace QuantConnect.Algorithm
             var requests = symbols.Select(x =>
             {
                 var security = Securities[x];
-                // don't make requests for symbols of the wrong type
-                if (!typeof(T).IsAssignableFrom(security.SubscriptionDataConfig.Type)) return null;
+                var config = GetMatchingSubscription(security, typeof(T));
+                if (config == null) return null;
 
                 Resolution? res = resolution ?? security.Resolution;
                 var start = GetStartTimeAlgoTz(x, periods, resolution).ConvertToUtc(TimeZone);
-                return CreateHistoryRequest(security, start, UtcTime.RoundDown(res.Value.ToTimeSpan()), resolution);
+                return CreateHistoryRequest(security, config, start, UtcTime.RoundDown(res.Value.ToTimeSpan()), resolution);
             });
 
             return History(requests.Where(x => x != null)).Get<T>().Memoize();
@@ -214,9 +214,10 @@ namespace QuantConnect.Algorithm
             var requests = symbols.Select(x =>
             {
                 var security = Securities[x];
-                // don't make requests for symbols of the wrong type
-                if (!typeof (T).IsAssignableFrom(security.SubscriptionDataConfig.Type)) return null;
-                return CreateHistoryRequest(security, start, end, resolution);
+                var config = GetMatchingSubscription(security, typeof(T));
+                if (config == null) return null;
+
+                return CreateHistoryRequest(security, config, start, end, resolution);
             });
 
             return History(requests.Where(x => x != null)).Get<T>().Memoize();
@@ -266,10 +267,11 @@ namespace QuantConnect.Algorithm
             if (resolution == Resolution.Tick) throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
             var security = Securities[symbol];
             // verify the types match
-            var actualType = security.SubscriptionDataConfig.Type;
             var requestedType = typeof(T);
-            if (!requestedType.IsAssignableFrom(actualType))
+            var config = GetMatchingSubscription(security, requestedType);
+            if (config == null)
             {
+                var actualType = security.Subscriptions.Select(x => x.Type.Name).DefaultIfEmpty("[None]").FirstOrDefault();
                 throw new ArgumentException("The specified security is not of the requested type. Symbol: " + symbol.ToString() + " Requested Type: " + requestedType.Name + " Actual Type: " + actualType);
             }
 
@@ -289,16 +291,16 @@ namespace QuantConnect.Algorithm
             where T : BaseData
         {
             var security = Securities[symbol];
-
             // verify the types match
-            var actualType = security.SubscriptionDataConfig.Type;
             var requestedType = typeof(T);
-            if (!requestedType.IsAssignableFrom(actualType))
+            var config = GetMatchingSubscription(security, requestedType);
+            if (config == null)
             {
+                var actualType = security.Subscriptions.Select(x => x.Type.Name).DefaultIfEmpty("[None]").FirstOrDefault();
                 throw new ArgumentException("The specified security is not of the requested type. Symbol: " + symbol.ToString() + " Requested Type: " + requestedType.Name + " Actual Type: " + actualType);
             }
 
-            var request = CreateHistoryRequest(security, start, end, resolution);
+            var request = CreateHistoryRequest(security, config, start, end, resolution);
             return History(request).Get<T>(symbol).Memoize();
         }
 
@@ -438,7 +440,8 @@ namespace QuantConnect.Algorithm
             return symbols.Select(x =>
             {
                 var security = Securities[x];
-                var request = CreateHistoryRequest(security, startAlgoTz, endAlgoTz, resolution);
+                var config = GetMatchingSubscription(security, typeof (BaseData));
+                var request = CreateHistoryRequest(security, config, startAlgoTz, endAlgoTz, resolution);
 
                 // apply overrides
                 Resolution? res = resolution ?? security.Resolution;
@@ -458,20 +461,29 @@ namespace QuantConnect.Algorithm
                 var security = Securities[x];
                 Resolution? res = resolution ?? security.Resolution;
                 var start = GetStartTimeAlgoTz(x, periods, res);
-                return CreateHistoryRequest(security, start, Time.RoundDown(res.Value.ToTimeSpan()), resolution);
+                var config = GetMatchingSubscription(security, typeof(BaseData));
+                return CreateHistoryRequest(security, config, start, Time.RoundDown(res.Value.ToTimeSpan()), resolution);
             });
         }
 
-        private HistoryRequest CreateHistoryRequest(Security security, DateTime startAlgoTz, DateTime endAlgoTz, Resolution? resolution)
+        private HistoryRequest CreateHistoryRequest(Security security, SubscriptionDataConfig subscription, DateTime startAlgoTz, DateTime endAlgoTz, Resolution? resolution)
         {
             resolution = resolution ?? security.Resolution;
-            var request = new HistoryRequest(security, startAlgoTz.ConvertToUtc(TimeZone), endAlgoTz.ConvertToUtc(TimeZone))
+            var request = new HistoryRequest(subscription, security.Exchange.Hours, startAlgoTz.ConvertToUtc(TimeZone), endAlgoTz.ConvertToUtc(TimeZone))
             {
-                DataType = security.SubscriptionDataConfig.IsCustomData ? security.SubscriptionDataConfig.Type : resolution == Resolution.Tick ? typeof(Tick) : typeof(TradeBar),
+                DataType = subscription.IsCustomData ? subscription.Type : resolution == Resolution.Tick ? typeof(Tick) : typeof(TradeBar),
                 Resolution = resolution.Value,
-                FillForwardResolution = security.IsFillDataForward ? resolution : null
+                FillForwardResolution = subscription.FillDataForward ? resolution : null
             };
             return request;
+        }
+
+        private static SubscriptionDataConfig GetMatchingSubscription(Security security, Type type)
+        {
+            // find a subscription matchin the requested type with a higher resolution than requested
+            return (from sub in security.Subscriptions.OrderByDescending(s => s.Resolution)
+                    where type.IsAssignableFrom(sub.Type)
+                    select sub).FirstOrDefault();
         }
     }
 }

@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
@@ -37,7 +38,16 @@ namespace QuantConnect.Securities
     {
         private readonly Symbol _symbol;
         private LocalTimeKeeper _localTimeKeeper;
-        private readonly List<SubscriptionDataConfig> _subscriptions;
+        // using concurrent bag to avoid list enumeration threading issues
+        private readonly ConcurrentBag<SubscriptionDataConfig> _subscriptions;
+
+        /// <summary>
+        /// Gets all the subscriptions for this security
+        /// </summary>
+        public IEnumerable<SubscriptionDataConfig> Subscriptions
+        {
+            get { return _subscriptions; }
+        }
 
         /// <summary>
         /// <see cref="Symbol"/> for the asset.
@@ -335,7 +345,7 @@ namespace QuantConnect.Securities
             }
 
             _symbol = config.Symbol;
-            _subscriptions = new List<SubscriptionDataConfig> {config};
+            _subscriptions = new ConcurrentBag<SubscriptionDataConfig> {config};
             QuoteCurrency = quoteCurrency;
             SymbolProperties = symbolProperties;
             IsTradable = !config.IsInternalFeed;
@@ -534,7 +544,10 @@ namespace QuantConnect.Securities
         /// </summary>
         public void SetDataNormalizationMode(DataNormalizationMode mode)
         {
-            _subscriptions.ForEach(x => x.DataNormalizationMode = mode);
+            foreach (var subscription in _subscriptions)
+            {
+                subscription.DataNormalizationMode = mode;
+            }
         }
 
         /// <summary>
