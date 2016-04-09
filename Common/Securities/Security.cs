@@ -14,6 +14,8 @@
 */
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
@@ -33,18 +35,16 @@ namespace QuantConnect.Securities
     /// </remarks>
     public class Security 
     {
+        private readonly Symbol _symbol;
         private LocalTimeKeeper _localTimeKeeper;
-        private readonly SubscriptionDataConfig _config;
+        private readonly List<SubscriptionDataConfig> _subscriptions;
 
         /// <summary>
         /// <see cref="Symbol"/> for the asset.
         /// </summary>
-        public Symbol Symbol 
+        public Symbol Symbol
         {
-            get 
-            {
-                return _config.Symbol;
-            }
+            get { return _symbol; }
         }
 
         /// <summary>
@@ -71,10 +71,7 @@ namespace QuantConnect.Securities
         /// </remarks>
         public SecurityType Type 
         {
-            get 
-            {
-                return _config.SecurityType;
-            }
+            get { return _symbol.ID.SecurityType; }
         }
 
         /// <summary>
@@ -83,10 +80,7 @@ namespace QuantConnect.Securities
         /// <remarks>Tick, second or minute resolution for QuantConnect assets.</remarks>
         public Resolution Resolution 
         {
-            get 
-            {
-                return _config.Resolution;
-            }
+            get { return _subscriptions.Select(x => x.Resolution).DefaultIfEmpty(Resolution.Daily).Min(); }
         }
 
         /// <summary>
@@ -94,10 +88,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public bool IsFillDataForward 
         {
-            get 
-            {
-                return _config.FillDataForward;
-            }
+            get { return _subscriptions.Any(x => x.FillDataForward); }
         }
 
         /// <summary>
@@ -105,10 +96,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public bool IsExtendedMarketHours
         {
-            get 
-            {
-                return _config.ExtendedMarketHours;
-            }
+            get { return _subscriptions.Any(x => x.ExtendedMarketHours); }
         }
 
         /// <summary>
@@ -116,7 +104,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public SubscriptionDataConfig SubscriptionDataConfig
         {
-            get { return _config; }
+            get { return _subscriptions.FirstOrDefault(); }
         }
 
         /// <summary>
@@ -338,7 +326,8 @@ namespace QuantConnect.Securities
                 throw new ArgumentException("symbolProperties.QuoteCurrency must match the quoteCurrency.Symbol");
             }
 
-            _config = config;
+            _symbol = config.Symbol;
+            _subscriptions = new List<SubscriptionDataConfig> {config};
             QuoteCurrency = quoteCurrency;
             SymbolProperties = symbolProperties;
             IsTradable = !config.IsInternalFeed;
@@ -537,7 +526,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public void SetDataNormalizationMode(DataNormalizationMode mode)
         {
-            _config.DataNormalizationMode = mode;
+            _subscriptions.ForEach(x => x.DataNormalizationMode = mode);
         }
 
         /// <summary>
