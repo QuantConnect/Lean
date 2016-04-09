@@ -108,7 +108,7 @@ namespace QuantConnect.Data.UniverseSelection
             // canonical also needs underlying price data
             if (security.Symbol == _option.Symbol)
             {
-                var underlying = Symbol.Create(config.Symbol.ID.Symbol, SecurityType.Equity, config.Market);
+                var underlying = new Symbol(_option.Symbol.ID.Underlying, _option.Symbol.Value);
                 var resolution = config.Resolution == Resolution.Tick ? Resolution.Second : config.Resolution;
                 return new[]
                 {

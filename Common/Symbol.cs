@@ -62,7 +62,8 @@ namespace QuantConnect
                     break;
                 case SecurityType.Option:
                     alias = alias ?? "?" + ticker.ToUpper();
-                    sid = SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, ticker, market, 0, default(OptionRight), default(OptionStyle));
+                    var underlying = SecurityIdentifier.GenerateEquity(ticker, market);
+                    sid = SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, underlying, market, 0, default(OptionRight), default(OptionStyle));
                     break;
                 case SecurityType.Commodity:
                 case SecurityType.Future:
@@ -87,7 +88,8 @@ namespace QuantConnect
         /// <returns>A new Symbol object for the specified option contract</returns>
         public static Symbol CreateOption(string underlying, string market, OptionStyle style, OptionRight right, decimal strike, DateTime expiry, string alias = null)
         {
-            var sid = SecurityIdentifier.GenerateOption(expiry, underlying, market, strike, right, style);
+            var underlyingSid = SecurityIdentifier.GenerateEquity(underlying, market);
+            var sid = SecurityIdentifier.GenerateOption(expiry, underlyingSid, market, strike, right, style);
             var sym = sid.Symbol;
             if (sym.Length > 5) sym += " ";
             // format spec: http://www.optionsclearing.com/components/docs/initiatives/symbology/symbology_initiative_v1_8.pdf

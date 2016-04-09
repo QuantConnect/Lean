@@ -23,14 +23,14 @@ namespace QuantConnect.Tests.Common.Securities
     [TestFixture]
     public class SecurityIdentifierTests
     {
-        private SecurityIdentifier SPY
+        private static SecurityIdentifier SPY
         {
             get { return SecurityIdentifier.GenerateEquity(new DateTime(1998, 01, 02), "SPY", Market.USA); }
         }
 
 
         // this is really not european style, but I'd prefer to test a value of 1 vs a value of 0
-        private readonly SecurityIdentifier SPY_Put_19550 = SecurityIdentifier.GenerateOption(new DateTime(2015, 09, 18), "SPY", Market.USA, 195.50m, OptionRight.Put, OptionStyle.European);
+        private readonly SecurityIdentifier SPY_Put_19550 = SecurityIdentifier.GenerateOption(new DateTime(2015, 09, 18), SPY, Market.USA, 195.50m, OptionRight.Put, OptionStyle.European);
 
         [Test]
         public void GenerateEquityProperlyResolvesFirstDate()
@@ -61,6 +61,8 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(Market.USA, spyPut.Market); // market
             Assert.AreEqual(SecurityType.Option, spyPut.SecurityType); // security type
             Assert.AreEqual("SPY", spyPut.Symbol); // SPY in base36
+            Assert.IsTrue(spyPut.HasUnderlying);
+            Assert.AreEqual(SPY, spyPut.Underlying);
 
             Console.WriteLine(SPY_Put_19550);
         }
@@ -108,6 +110,26 @@ namespace QuantConnect.Tests.Common.Securities
             Console.WriteLine(value);
             var sid2 = SecurityIdentifier.Parse(value);
             Assert.AreEqual(SPY_Put_19550, sid2);
+        }
+
+        [Test]
+        public void ToStringPipeDelimitsUnderlying()
+        {
+            var actual = SPY_Put_19550.ToString();
+            var parts = actual.Split('|');
+            var option = SecurityIdentifier.Parse(parts[0]);
+            // verify various values
+            Assert.AreEqual(OptionRight.Put, option.OptionRight); // put
+            Assert.AreEqual(new DateTime(2015, 09, 18), option.Date); // oa date 2015.09.18
+            Assert.AreEqual(OptionStyle.European, option.OptionStyle); // option style
+            Assert.AreEqual(195.5m, option.StrikePrice); // strike/scale
+            Assert.AreEqual(Market.USA, option.Market); // market
+            Assert.AreEqual(SecurityType.Option, option.SecurityType); // security type
+            Assert.AreEqual("SPY", option.Symbol); // SPY in base36
+            Assert.IsFalse(option.HasUnderlying);
+            Assert.Throws<InvalidOperationException>(() => { var x = option.Underlying; });
+            var equity = SecurityIdentifier.Parse(parts[1]);
+            Assert.AreEqual(SPY, equity);
         }
 
         [Test]
