@@ -399,15 +399,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private ISubscriptionFactory CreateSubscriptionFactory(SubscriptionDataSource source)
         {
-            return SubscriptionFactory.ForSource(source, _config, _tradeableDates.Current, _isLiveMode);
+            var factory = SubscriptionFactory.ForSource(source, _config, _tradeableDates.Current, _isLiveMode);
+            AttachEventHandlers(factory, source);
+            return factory;
         }
 
-        private ISubscriptionFactory HandleCsvFileFormat(SubscriptionDataSource source)
+        private void AttachEventHandlers(ISubscriptionFactory factory, SubscriptionDataSource source)
         {
-            // convert the date to the data time zone 
-            var dateInDataTimeZone = _tradeableDates.Current.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date;
-            var factory = SubscriptionFactory.ForSource(source, _config, dateInDataTimeZone, _isLiveMode);
-
             // handle missing files
             factory.InvalidSource += (sender, args) =>
             {
@@ -451,7 +449,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _resultHandler.RuntimeError(string.Format("Error invoking {0} data reader. Line: {1} Error: {2}", _config.Symbol, args.Line, args.Exception.Message), args.Exception.StackTrace);
                 };
             }
-            return factory;
         }
 
         /// <summary>
