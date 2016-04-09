@@ -21,6 +21,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm
 {
@@ -126,7 +127,7 @@ namespace QuantConnect.Algorithm
         /// <returns>An enumerable of slice containing data over the most recent span for all configured securities</returns>
         public IEnumerable<Slice> History(TimeSpan span, Resolution? resolution = null)
         {
-            return History(Securities.Keys, Time - span, Time, resolution);
+            return History(Securities.Keys, Time - span, Time, resolution).Memoize();
         }
 
         /// <summary>
@@ -139,7 +140,7 @@ namespace QuantConnect.Algorithm
         /// <returns>An enumerable of slice containing data over the most recent span for all configured securities</returns>
         public IEnumerable<Slice> History(int periods, Resolution? resolution = null)
         {
-            return History(Securities.Keys, periods, resolution);
+            return History(Securities.Keys, periods, resolution).Memoize();
         }
 
         /// <summary>
@@ -153,7 +154,7 @@ namespace QuantConnect.Algorithm
         public IEnumerable<DataDictionary<T>> History<T>(TimeSpan span, Resolution? resolution = null)
             where T : BaseData
         {
-            return History<T>(Securities.Keys, span, resolution);
+            return History<T>(Securities.Keys, span, resolution).Memoize();
         }
 
         /// <summary>
@@ -168,7 +169,7 @@ namespace QuantConnect.Algorithm
         public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, TimeSpan span, Resolution? resolution = null)
             where T : BaseData
         {
-            return History<T>(symbols, Time - span, Time, resolution);
+            return History<T>(symbols, Time - span, Time, resolution).Memoize();
         }
 
         /// <summary>
@@ -195,7 +196,7 @@ namespace QuantConnect.Algorithm
                 return CreateHistoryRequest(security, start, UtcTime.RoundDown(res.Value.ToTimeSpan()), resolution);
             });
 
-            return History(requests.Where(x => x != null)).Get<T>();
+            return History(requests.Where(x => x != null)).Get<T>().Memoize();
         }
 
         /// <summary>
@@ -218,7 +219,7 @@ namespace QuantConnect.Algorithm
                 return CreateHistoryRequest(security, start, end, resolution);
             });
 
-            return History(requests.Where(x => x != null)).Get<T>();
+            return History(requests.Where(x => x != null)).Get<T>().Memoize();
         }
 
         /// <summary>
@@ -232,7 +233,7 @@ namespace QuantConnect.Algorithm
         public IEnumerable<T> History<T>(Symbol symbol, TimeSpan span, Resolution? resolution = null)
             where T : BaseData
         {
-            return History<T>(symbol, Time - span, Time, resolution);
+            return History<T>(symbol, Time - span, Time, resolution).Memoize();
         }
 
         /// <summary>
@@ -247,7 +248,7 @@ namespace QuantConnect.Algorithm
         {
             var security = Securities[symbol];
             var start = GetStartTimeAlgoTz(symbol, periods, resolution);
-            return History(new[] {symbol}, start, Time.RoundDown((resolution ?? security.Resolution).ToTimeSpan()), resolution).Get(symbol);
+            return History(new[] {symbol}, start, Time.RoundDown((resolution ?? security.Resolution).ToTimeSpan()), resolution).Get(symbol).Memoize();
         }
 
         /// <summary>
@@ -273,7 +274,7 @@ namespace QuantConnect.Algorithm
             }
 
             var start = GetStartTimeAlgoTz(symbol, periods, resolution);
-            return History<T>(symbol, start, Time.RoundDown((resolution ?? security.Resolution).ToTimeSpan()), resolution);
+            return History<T>(symbol, start, Time.RoundDown((resolution ?? security.Resolution).ToTimeSpan()), resolution).Memoize();
         }
 
         /// <summary>
@@ -298,7 +299,7 @@ namespace QuantConnect.Algorithm
             }
 
             var request = CreateHistoryRequest(security, start, end, resolution);
-            return History(request).Get<T>(symbol);
+            return History(request).Get<T>(symbol).Memoize();
         }
 
         /// <summary>
@@ -310,7 +311,7 @@ namespace QuantConnect.Algorithm
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         public IEnumerable<TradeBar> History(Symbol symbol, TimeSpan span, Resolution? resolution = null)
         {
-            return History(new[] {symbol}, span, resolution).Get(symbol);
+            return History(new[] {symbol}, span, resolution).Get(symbol).Memoize();
         }
 
         /// <summary>
@@ -323,7 +324,7 @@ namespace QuantConnect.Algorithm
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         public IEnumerable<TradeBar> History(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null)
         {
-            return History(new[] {symbol}, start, end, resolution).Get(symbol);
+            return History(new[] {symbol}, start, end, resolution).Get(symbol).Memoize();
         }
 
         /// <summary>
@@ -337,7 +338,7 @@ namespace QuantConnect.Algorithm
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, TimeSpan span, Resolution? resolution = null)
         {
-            return History(symbols, Time - span, Time, resolution);
+            return History(symbols, Time - span, Time, resolution).Memoize();
         }
 
         /// <summary>
@@ -352,7 +353,7 @@ namespace QuantConnect.Algorithm
         public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null)
         {
             if (resolution == Resolution.Tick) throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
-            return History(CreateBarCountHistoryRequests(symbols, periods, resolution));
+            return History(CreateBarCountHistoryRequests(symbols, periods, resolution)).Memoize();
         }
 
         /// <summary>
@@ -367,7 +368,7 @@ namespace QuantConnect.Algorithm
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null, bool? fillForward = null, bool? extendedMarket = null)
         {
-            return History(CreateDateRangeHistoryRequests(symbols, start, end, resolution, fillForward, extendedMarket));
+            return History(CreateDateRangeHistoryRequests(symbols, start, end, resolution, fillForward, extendedMarket)).Memoize();
         }
 
         /// <summary>
@@ -390,7 +391,7 @@ namespace QuantConnect.Algorithm
         /// <returns>An enumerable of slice satisfying the specified history request</returns>
         public IEnumerable<Slice> History(HistoryRequest request)
         {
-            return History(new[] {request});
+            return History(new[] {request}).Memoize();
         }
 
         /// <summary>
@@ -400,7 +401,7 @@ namespace QuantConnect.Algorithm
         /// <returns>An enumerable of slice satisfying the specified history request</returns>
         public IEnumerable<Slice> History(IEnumerable<HistoryRequest> requests)
         {
-            return History(requests, TimeZone);
+            return History(requests, TimeZone).Memoize();
         }
 
         private IEnumerable<Slice> History(IEnumerable<HistoryRequest> requests, DateTimeZone timeZone)
