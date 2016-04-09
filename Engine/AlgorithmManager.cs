@@ -33,6 +33,7 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine
 {
@@ -677,7 +678,7 @@ namespace QuantConnect.Lean.Engine
                 foreach (var request in historyRequests)
                 {
                     Security security;
-                    if (algorithm.Securities.TryGetValue(request.Symbol, out security) && security.SubscriptionDataConfig.IsInternalFeed)
+                    if (algorithm.Securities.TryGetValue(request.Symbol, out security) && security.IsInternalFeed())
                     {
                         if (request.Resolution < minResolution)
                         {
