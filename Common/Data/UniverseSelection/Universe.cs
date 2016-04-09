@@ -184,7 +184,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>All subscriptions required by this security</returns>
         public virtual IEnumerable<SubscriptionDataConfig> GetSubscriptions(Security security)
         {
-            return new[] {security.SubscriptionDataConfig};
+            return security.Subscriptions;
         }
 
         /// <summary>
