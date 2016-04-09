@@ -135,6 +135,7 @@
     <Compile Include="Common\Securities\SecurityPortfolioModelTests.cs" />
     <Compile Include="Common\Securities\SecurityTests.cs" />
     <Compile Include="Common\Securities\SecurityTransactionModelTests.cs" />
+    <Compile Include="Common\Securities\SubscriptionDataConfigTests.cs" />
     <Compile Include="Common\Securities\UniverseManagerTests.cs" />
     <Compile Include="Common\SeriesTests.cs" />
     <Compile Include="Common\SymbolCacheTests.cs" />
