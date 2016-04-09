@@ -100,7 +100,7 @@ namespace QuantConnect.Messaging
                             Log.Trace("STATISTICS:: " + pair.Key + " " + pair.Value);
                             //Console.WriteLine("\t\t\t\t{{\"{0}\",\"{1}\"}},", pair.Key, pair.Value);
                         }
-                        //Console.WriteLine("\t\t\t});");
+                        //Console.WriteLine("\t\t\t};");
 
                         //foreach (var pair in statisticsResults.RollingPerformances)
                         //{
