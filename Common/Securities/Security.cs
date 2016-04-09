@@ -100,6 +100,14 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the data normalization mode used for this security
+        /// </summary>
+        public DataNormalizationMode DataNormalizationMode
+        {
+            get { return _subscriptions.Select(x => x.DataNormalizationMode).DefaultIfEmpty(DataNormalizationMode.Adjusted).FirstOrDefault(); }
+        }
+
+        /// <summary>
         /// Gets the subscription configuration for this security
         /// </summary>
         public SubscriptionDataConfig SubscriptionDataConfig
