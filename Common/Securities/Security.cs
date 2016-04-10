@@ -120,6 +120,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the subscription configuration for this security
         /// </summary>
+        [Obsolete("This property returns only the first subscription. Use the 'Subscriptions' property for all of this security's subscriptions.")]
         public SubscriptionDataConfig SubscriptionDataConfig
         {
             get { return _subscriptions.FirstOrDefault(); }
