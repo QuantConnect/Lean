@@ -52,22 +52,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Gets the data used to update the cash book
         /// </summary>
-        public List<KeyValuePair<Cash, BaseData>> CashBookUpdateData { get; private set; }
+        public List<UpdateData<Cash>> CashBookUpdateData { get; private set; }
 
         /// <summary>
         /// Gets the data used to update securities
         /// </summary>
-        public List<KeyValuePair<Security, List<BaseData>>> SecuritiesUpdateData { get; private set; }
+        public List<UpdateData<Security>> SecuritiesUpdateData { get; private set; }
 
         /// <summary>
         /// Gets the data used to update the consolidators
         /// </summary>
-        public List<KeyValuePair<SubscriptionDataConfig, List<BaseData>>> ConsolidatorUpdateData { get; private set; }
+        public List<UpdateData<SubscriptionDataConfig>> ConsolidatorUpdateData { get; private set; }
 
         /// <summary>
         /// Gets all the custom data in this <see cref="TimeSlice"/>
         /// </summary>
-        public List<KeyValuePair<Security, IEnumerable<BaseData>>> CustomData { get; private set; }
+        public List<UpdateData<Security>> CustomData { get; private set; }
 
         /// <summary>
         /// Gets the changes to the data subscriptions as a result of universe selection
@@ -81,10 +81,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             int dataPointCount,
             Slice slice,
             List<DataFeedPacket> data,
-            List<KeyValuePair<Cash, BaseData>> cashBookUpdateData,
-            List<KeyValuePair<Security, List<BaseData>>> securitiesUpdateData,
-            List<KeyValuePair<SubscriptionDataConfig, List<BaseData>>> consolidatorUpdateData,
-            List<KeyValuePair<Security, IEnumerable<BaseData>>> customData,
+            List<UpdateData<Cash>> cashBookUpdateData,
+            List<UpdateData<Security>> securitiesUpdateData,
+            List<UpdateData<SubscriptionDataConfig>> consolidatorUpdateData,
+            List<UpdateData<Security>> customData,
             SecurityChanges securityChanges)
         {
             Time = time;
@@ -110,11 +110,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public static TimeSlice Create(DateTime utcDateTime, DateTimeZone algorithmTimeZone, CashBook cashBook, List<DataFeedPacket> data, SecurityChanges changes)
         {
             int count = 0;
-            var security = new List<KeyValuePair<Security, List<BaseData>>>();
-            var custom = new List<KeyValuePair<Security, IEnumerable<BaseData>>>();
-            var consolidator = new List<KeyValuePair<SubscriptionDataConfig, List<BaseData>>>();
+            var security = new List<UpdateData<Security>>();
+            var custom = new List<UpdateData<Security>>();
+            var consolidator = new List<UpdateData<SubscriptionDataConfig>>();
             var allDataForAlgorithm = new List<BaseData>(data.Count);
-            var cash = new List<KeyValuePair<Cash, BaseData>>(cashBook.Count);
+            var cash = new List<UpdateData<Cash>>(cashBook.Count);
 
             var cashSecurities = new HashSet<Symbol>();
             foreach (var cashItem in cashBook.Values)
@@ -157,20 +157,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 for (int i = 0; i < list.Count; i++)
                 {
                     var baseData = list[i];
-                    if (!packet.Security.SubscriptionDataConfig.IsInternalFeed)
+                    if (!packet.Configuration.IsInternalFeed)
                     {
                         // this is all the data that goes into the algorithm
                         allDataForAlgorithm.Add(baseData);
-                        if (packet.Security.SubscriptionDataConfig.IsCustomData)
+                        if (packet.Configuration.IsCustomData)
                         {
                             // this is all the custom data
-                            custom.Add(new KeyValuePair<Security, IEnumerable<BaseData>>(packet.Security, list));
+                            custom.Add(new UpdateData<Security>(packet.Security, packet.Configuration.Type, list));
                         }
                     }
                     // don't add internal feed data to ticks/bars objects
                     if (baseData.DataType != MarketDataType.Auxiliary)
                     {
-                        if (!packet.Security.SubscriptionDataConfig.IsInternalFeed)
+                        if (!packet.Configuration.IsInternalFeed)
                         {
                             PopulateDataDictionaries(baseData, ticks, tradeBars);
 
@@ -197,7 +197,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     else if ((symbolChange = baseData as SymbolChangedEvent) != null)
                     {
                         // symbol changes is keyed by the requested symbol
-                        symbolChanges[packet.Security.SubscriptionDataConfig.Symbol] = symbolChange;
+                        symbolChanges[packet.Configuration.Symbol] = symbolChange;
                     }
                 }
 
@@ -213,16 +213,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         {
                             if (cashKvp.Value.SecuritySymbol == packet.Security.Symbol)
                             {
-                                cash.Add(new KeyValuePair<Cash, BaseData>(cashKvp.Value, securityUpdate[securityUpdate.Count - 1]));
+                                var cashUpdates = new List<BaseData> {securityUpdate[securityUpdate.Count - 1]};
+                                cash.Add(new UpdateData<Cash>(cashKvp.Value, packet.Configuration.Type, cashUpdates));
                             }
                         }
                     }
 
-                    security.Add(new KeyValuePair<Security, List<BaseData>>(packet.Security, securityUpdate));
+                    security.Add(new UpdateData<Security>(packet.Security, packet.Configuration.Type, securityUpdate));
                 }
                 if (consolidatorUpdate.Count > 0)
                 {
-                    consolidator.Add(new KeyValuePair<SubscriptionDataConfig, List<BaseData>>(packet.Security.SubscriptionDataConfig, consolidatorUpdate));
+                    consolidator.Add(new UpdateData<SubscriptionDataConfig>(packet.Configuration, packet.Configuration.Type, consolidatorUpdate));
                 }
             }
 
