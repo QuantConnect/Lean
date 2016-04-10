@@ -166,7 +166,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 {
                     if (subscription.EndOfStream) continue;
 
-                    var packet = new DataFeedPacket(subscription.Security);
+                    var packet = new DataFeedPacket(subscription.Security, subscription.Configuration);
 
                     var offsetProvider = subscription.OffsetProvider;
                     var currentOffsetTicks = offsetProvider.GetOffsetTicks(frontier);

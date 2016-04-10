@@ -251,7 +251,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var data = new List<DataFeedPacket>();
                     foreach (var subscription in Subscriptions)
                     {
-                        var packet = new DataFeedPacket(subscription.Security);
+                        var packet = new DataFeedPacket(subscription.Security, subscription.Configuration);
 
                         // dequeue data that is time stamped at or before this frontier
                         while (subscription.MoveNext() && subscription.Current != null)
