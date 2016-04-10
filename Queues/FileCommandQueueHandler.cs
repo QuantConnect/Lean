@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,15 +13,11 @@
  * limitations under the License.
 */
 
-using System;
+using QuantConnect.Commands;
+using QuantConnect.Interfaces;
+using QuantConnect.Packets;
 using System.Collections.Generic;
 using System.IO;
-using Newtonsoft.Json;
-using QuantConnect.Commands;
-using QuantConnect.Configuration;
-using QuantConnect.Interfaces;
-using QuantConnect.Logging;
-using QuantConnect.Packets;
 
 namespace QuantConnect.Queues
 {
@@ -29,27 +25,58 @@ namespace QuantConnect.Queues
     /// Represents a command queue handler that sources it's commands from
     /// a file on the local disk
     /// </summary>
-    public class FileCommandQueueHandler : ICommandQueueHandler
+    public abstract class FileCommandQueueHandler : ICommandQueueHandler
     {
-        private readonly string _commandJsonFilePath;
-        private readonly Queue<ICommand> _commands = new Queue<ICommand>();
+        private readonly string _commandFilePath;
+        private readonly CommandQueue _commands = new CommandQueue();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FileCommandQueueHandler"/> class
-        /// using the 'command-json-file' configuration value for the command json file
         /// </summary>
-        public FileCommandQueueHandler()
-            : this(Config.Get("command-json-file", "command.json"))
+        /// <param name="commandFilePath">The file path to the commands file</param>
+        public FileCommandQueueHandler(string commandFilePath)
+        {
+            _commandFilePath = commandFilePath;
+        }
+
+        /// <summary>
+        /// The file path to the commands file
+        /// </summary>
+        protected string CommandFilePath
+        {
+            get
+            {
+                return _commandFilePath;
+            }
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="FileCommandQueueHandler"/> class
+        /// Gets the next command in the queue
         /// </summary>
-        /// <param name="commandJsonFilePath">The file path to the commands json file</param>
-        public FileCommandQueueHandler(string commandJsonFilePath)
+        /// <returns>The next command in the queue, if present, null if no commands present</returns>
+        public IEnumerable<ICommand> GetCommands()
         {
-            _commandJsonFilePath = commandJsonFilePath;
+            if (File.Exists(_commandFilePath))
+            {
+                // load commands from file
+                LoadCommands();
+
+                // remove the file when we're done reading it
+                File.Delete(_commandFilePath);
+            }
+
+            while (_commands.Count != 0)
+            {
+                yield return _commands.Dequeue();
+            }
         }
 
         /// <summary>
@@ -62,69 +89,25 @@ namespace QuantConnect.Queues
         }
 
         /// <summary>
-        /// Gets the next command in the queue
+        /// Reads the command file on disk and deserialize to object
         /// </summary>
-        /// <returns>The next command in the queue, if present, null if no commands present</returns>
-        public IEnumerable<ICommand> GetCommands()
-        {
-            if (File.Exists(_commandJsonFilePath))
-            {
-                // update the queue by reading the command file
-                ReadCommandFile();
-            }
-
-            while (_commands.Count != 0)
-            {
-                yield return _commands.Dequeue();
-            }
-        }
+        protected abstract IEnumerable<ICommand> ReadCommandFile();
 
         /// <summary>
-        /// Reads the commnd file on disk and populates the queue with the commands
+        /// Populates the queue with the deserialized commands from file
         /// </summary>
-        private void ReadCommandFile()
+        private void LoadCommands()
         {
-            object deserialized;
-            try
-            {
-                if (!File.Exists(_commandJsonFilePath)) return;
-                var contents = File.ReadAllText(_commandJsonFilePath);
-                deserialized = JsonConvert.DeserializeObject(contents, new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All });
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
-                deserialized = null;
-            }
+            // update the queue by reading the command file
+            IEnumerable<ICommand> deserialized = ReadCommandFile();
 
-            // remove the file when we're done reading it
-            File.Delete(_commandJsonFilePath);
-
-            // try it as an enumerable
-            var enumerable = deserialized as IEnumerable<ICommand>;
-            if (enumerable != null)
+            if (deserialized != null)
             {
-                foreach (var command in enumerable)
+                foreach (var command in deserialized)
                 {
                     _commands.Enqueue(command);
                 }
-                return;
             }
-            
-            // try it as a single command
-            var item = deserialized as ICommand;
-            if (item != null)
-            {
-                _commands.Enqueue(item);
-            }
-        }
-
-        /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-        /// </summary>
-        /// <filterpriority>2</filterpriority>
-        public void Dispose()
-        {
         }
     }
 }

@@ -49,6 +49,8 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="EmptyCommandQueueHandler.cs" />
+    <Compile Include="JsonCommandQueueHandler.cs" />
+    <Compile Include="XmlCommandQueueHandler.cs" />
     <Compile Include="FileCommandQueueHandler.cs" />
     <Compile Include="JobQueue.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

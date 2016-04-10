@@ -31,9 +31,10 @@
     "api-handler": "QuantConnect.Api.Api",
     "command-queue-handler": "QuantConnect.Queues.EmptyCommandQueueHandler",
     // this command queue will check a file to read json serialized commands (use TypeNameHandling.All)
-    //"command-queue-handler": "QuantConnect.Queues.FileCommandQueueHandler",
+    //"command-queue-handler": "QuantConnect.Queues.JsonCommandQueueHandler","QuantConnect.Queues.XmlCommandQueueHandler"
     // used by the FileComandQueueHandler, serialize a ICommand and it will be run against algorithm
     "command-json-file": "command.json",
+	"command-xml-file": "command.xml",
     "map-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskMapFileProvider",
     "factor-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskFactorFileProvider",
 
