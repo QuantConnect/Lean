@@ -73,7 +73,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var selections = selectSymbolsResult.ToHashSet();
 
             // create a hash set of our existing subscriptions by sid
-            var existingSubscriptions = _dataFeed.Subscriptions.ToHashSet(x => x.Security.Symbol);
+            var existingSubscriptions = _dataFeed.Subscriptions.Where(x => !x.EndOfStream).ToHashSet(x => x.Security.Symbol);
 
             var additions = new List<Security>();
             var removals = new List<Security>();
