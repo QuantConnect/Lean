@@ -187,6 +187,7 @@
     <Compile Include="DataFeeds\ManualTimeProvider.cs" />
     <Compile Include="DataFeeds\RealTimeProvider.cs" />
     <Compile Include="DataFeeds\DataFeedPacket.cs" />
+    <Compile Include="DataFeeds\SubscriptionCollection.cs" />
     <Compile Include="DataFeeds\TextSubscriptionFactory.cs" />
     <Compile Include="DataFeeds\CreateStreamReaderErrorEventArgs.cs" />
     <Compile Include="DataFeeds\BaseDataExchange.cs" />
