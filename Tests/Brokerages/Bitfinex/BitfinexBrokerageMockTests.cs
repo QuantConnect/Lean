@@ -48,7 +48,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
                 Assert.AreEqual(0, e.OrderFee);
                 Assert.AreEqual(Orders.OrderStatus.Submitted, e.Status);
                 raised.Set();
-            };            
+            };
             bool actual = unit.PlaceOrder(new Orders.MarketOrder(symbol, 100, DateTime.UtcNow));
 
             Assert.IsTrue(actual);
@@ -73,7 +73,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
                 raised.Set();
             };
             var actual = unit.PlaceOrder(new Orders.MarketOrder(symbol, 100, DateTime.UtcNow));
-            
+
             Assert.IsFalse(actual);
             Assert.IsTrue(raised.WaitOne(1000));
         }
@@ -81,18 +81,54 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
         [Test()]
         public void UpdateOrderTest()
         {
-            var response = new BitfinexCancelReplaceOrderResponse { OrderId = 1 };
-            mock.Setup(m => m.CancelReplaceOrder(It.IsAny<BitfinexCancelReplacePost>())).Returns(response);
-            bool actual = unit.UpdateOrder(new Orders.MarketOrder { BrokerId = new List<string> { "1", "2", "3" } });
-            Assert.IsTrue(actual);
+            int brokerId = 123;
+            var response = new BitfinexOrderStatusResponse
+            {
+                Id = brokerId,
+                Symbol = "BTCUSD"
+            };
+            mock.Setup(m => m.CancelOrder(brokerId)).Returns(response);
 
-            response.OrderId = 0;
-            mock.Setup(m => m.CancelReplaceOrder(It.IsAny<BitfinexCancelReplacePost>())).Returns(response);
+            var placed = new BitfinexNewOrderResponse
+            {
+                OrderId = 1,
+                Symbol = "BTCUSD"
+            };
+            mock.Setup(m => m.SendOrder(It.IsAny<BitfinexNewOrderPost>())).Returns(placed);
+
+            bool isCancel = true;
+            ManualResetEvent cancel = new ManualResetEvent(false);
+            ManualResetEvent open = new ManualResetEvent(false);
+
+            unit.OrderStatusChanged += (s, e) =>
+            {
+                if (isCancel)
+                {
+                    Assert.AreEqual(0, e.OrderFee);
+                    Assert.AreEqual(Orders.OrderStatus.Canceled, e.Status);
+                    isCancel = false;
+                    cancel.Set();
+                    return;
+                }
+                Assert.AreEqual("BTCUSD", e.Symbol.Value);
+                Assert.AreEqual(0, e.OrderFee);
+                Assert.AreEqual(Orders.OrderStatus.Submitted, e.Status);
+                open.Set();
+            };
+
+            bool actual = unit.UpdateOrder(new Orders.MarketOrder { BrokerId = new List<string> { brokerId.ToString() }, Symbol = symbol });
+            Assert.IsTrue(actual);
+            Assert.IsTrue(cancel.WaitOne(1000));
+            Assert.IsTrue(open.WaitOne(1000));
+
+            //cancel fails
+            response.Id = 0;
             actual = unit.UpdateOrder(new Orders.MarketOrder { BrokerId = new List<string> { "1", "2", "3" } });
             Assert.IsFalse(actual);
 
-            response = new BitfinexCancelReplaceOrderResponse { OrderId = 2 };
-            mock.Setup(m => m.CancelReplaceOrder(It.IsAny<BitfinexCancelReplacePost>())).Callback(() => { response.OrderId -= 1; }).Returns(response);
+            //update fails
+            response.Id = 2;
+            placed.OrderId = 0;
             actual = unit.UpdateOrder(new Orders.MarketOrder { BrokerId = new List<string> { "1", "2", "3" } });
             Assert.IsFalse(actual);
 
@@ -116,7 +152,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
                 Assert.AreEqual(Orders.OrderStatus.Canceled, e.Status);
                 raised.Set();
             };
-                        
+
             bool actual = unit.CancelOrder(new Orders.MarketOrder(symbol, 100, DateTime.UtcNow) { BrokerId = new List<string> { brokerId.ToString() } });
 
             Assert.IsTrue(actual);
@@ -283,7 +319,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
 
             Assert.IsTrue(actual);
 
-            Assert.IsTrue(raised.WaitOne(1000));       
+            Assert.IsTrue(raised.WaitOne(1000));
         }
 
         [Test()]

@@ -235,35 +235,17 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <returns></returns>
         public override bool UpdateOrder(Orders.Order order)
         {
-
-            bool hasFaulted = false;
+            bool cancelled;
             foreach (string id in order.BrokerId)
             {
-                var post = new BitfinexCancelReplacePost
+                cancelled = this.CancelOrder(order);
+                if (!cancelled)
                 {
-                    Amount = (order.Quantity / ScaleFactor).ToString(),
-                    CancelOrderId = int.Parse(id),
-                    Symbol = order.Symbol.Value,
-                    Price = order.Price <= 0 ? order.Id.ToString() : (order.Price * ScaleFactor).ToString(),
-                    Type = MapOrderType(order.Type),
-                    Exchange = _exchange,
-                    Side = order.Quantity > 0 ? buy : sell
-                };
-                var response = _restClient.CancelReplaceOrder(post);
-                if (response.OrderId == 0)
-                {
-                    hasFaulted = true;
-                    break;
+                    return false;
                 }
-            }
 
-            if (hasFaulted)
-            {
-                return false;
             }
-
-            UpdateCachedOpenOrder(order.Id, order);
-            return true;
+            return this.PlaceOrder(order);
         }
 
         /// <summary>
