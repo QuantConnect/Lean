@@ -206,7 +206,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                     caching.Symbol = order.Symbol;
                     caching.Time = order.Time;
 
-                    CachedOrderIDs.TryAdd(order.Id, order);
+                    CachedOrderIDs.TryAdd(order.Id, caching);
                 }
                 if (crossOrder != null && crossOrder.Status != OrderStatus.Submitted)
                 {
