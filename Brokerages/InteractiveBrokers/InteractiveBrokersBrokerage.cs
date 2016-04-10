@@ -1048,6 +1048,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 contract.Currency = ibSymbol.Substring(3);
             }
 
+            if (symbol.ID.SecurityType == SecurityType.Option)
+            {
+                contract.Expiry = symbol.ID.Date.ToString(DateFormat.EightCharacter);
+                contract.Right = symbol.ID.OptionRight == OptionRight.Call ? IB.RightType.Call : IB.RightType.Put;
+                contract.Strike = Convert.ToDouble(symbol.ID.StrikePrice);
+                contract.Symbol = symbol.ID.Symbol;
+            }
+
             // some contracts require this, such as MSFT
             contract.PrimaryExchange = GetPrimaryExchange(contract);
 
@@ -1252,7 +1260,17 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var ibSymbol = securityType == SecurityType.Forex ? contract.Symbol + contract.Currency : contract.Symbol;
             var market = securityType == SecurityType.Forex ? Market.FXCM : Market.USA;
 
-            return _symbolMapper.GetLeanSymbol(ibSymbol, securityType, market);
+            switch (securityType)
+            {
+                case SecurityType.Option:
+                    return _symbolMapper.GetLeanSymbol(ibSymbol, securityType, market,
+                        DateTime.ParseExact(contract.Expiry, "yyyyMMdd", CultureInfo.InvariantCulture),
+                        Convert.ToDecimal(contract.Strike),
+                        contract.Right == IB.RightType.Call ? OptionRight.Call : OptionRight.Put,
+                        OptionStyle.American); // Note: Find a way to pull this (Example SPX is Euro style, while SPY is American)               
+                default:
+                    return _symbolMapper.GetLeanSymbol(ibSymbol, securityType, market);
+            }
         }
 
         private decimal RoundPrice(decimal input, decimal minTick)

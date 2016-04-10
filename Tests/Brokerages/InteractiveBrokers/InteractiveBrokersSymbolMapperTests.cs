@@ -36,6 +36,16 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             Assert.AreEqual("AAPL", symbol.Value);
             Assert.AreEqual(SecurityType.Equity, symbol.ID.SecurityType);
             Assert.AreEqual(Market.USA, symbol.ID.Market);
+
+            symbol = mapper.GetLeanSymbol("AAPL", SecurityType.Option, Market.USA,new DateTime(2016,05,20),108,OptionRight.Put, OptionStyle.American);
+            Assert.AreEqual("AAPL  160520P00108000", symbol.Value);
+            Assert.AreEqual("AAPL", symbol.ID.Symbol);  // IB Relies on this for ConvertOrder
+            Assert.AreEqual(SecurityType.Option, symbol.ID.SecurityType);
+            Assert.AreEqual(Market.USA, symbol.ID.Market);
+            Assert.AreEqual(OptionRight.Put,symbol.ID.OptionRight);
+            Assert.AreEqual(OptionStyle.American,symbol.ID.OptionStyle);
+            Assert.AreEqual(108,symbol.ID.StrikePrice);
+            Assert.AreEqual(new DateTime(2016, 05, 20),symbol.ID.Date);
         }
 
         [Test]
@@ -50,6 +60,12 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             symbol = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
             brokerageSymbol = mapper.GetBrokerageSymbol(symbol);
             Assert.AreEqual("AAPL", brokerageSymbol);
+
+            symbol = Symbol.CreateOption("AAPL",Market.USA,OptionStyle.American, OptionRight.Put, 108, new DateTime(2016, 05, 20));
+            brokerageSymbol = mapper.GetBrokerageSymbol(symbol);
+            Assert.AreEqual("AAPL  160520P00108000", brokerageSymbol);
+            Assert.AreEqual("AAPL", symbol.ID.Symbol);  // IB Relies on this for ConvertOrder
+
         }
 
         [Test]
