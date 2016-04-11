@@ -45,7 +45,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private ParallelRunnerController _controller;
         private IResultHandler _resultHandler;
         private Ref<TimeSpan> _fillForwardResolution;
-        private SecurityChanges _changes = SecurityChanges.None;
         private IMapFileProvider _mapFileProvider;
         private IFactorFileProvider _factorFileProvider;
         private ConcurrentDictionary<Symbol, List<Subscription>> _subscriptions;
@@ -209,8 +208,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // prime the pump, run method checks current before move next calls
             //PrimeSubscriptionPump(subscription, true);
 
-            _changes += SecurityChanges.Added(security);
-
             UpdateFillForwardResolution();
 
             return true;
@@ -235,8 +232,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             Log.Debug("FileSystemDataFeed.RemoveSubscription(): Removed " + symbol.ToString());
-
-            _changes += SecurityChanges.Removed(subscriptions.Select(x => x.Security).ToArray());
 
             UpdateFillForwardResolution();
             return true;
