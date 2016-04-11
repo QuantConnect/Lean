@@ -134,7 +134,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     case NotifyCollectionChangedAction.Remove:
                         foreach (var universe in args.OldItems.OfType<Universe>())
                         {
-                            RemoveSubscription(universe.Configuration.Symbol);
+                            RemoveSubscription(universe.Configuration);
                         }
                         break;
 
@@ -188,19 +188,26 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Removes the subscription from the data feed, if it exists
         /// </summary>
-        /// <param name="symbol">The symbol of the subscription to be removed</param>
+        /// <param name="configuration">The configuration of the subscription to remove</param>
         /// <returns>True if the subscription was successfully removed, false otherwise</returns>
-        public bool RemoveSubscription(Symbol symbol)
+        public bool RemoveSubscription(SubscriptionDataConfig configuration)
         {
             // remove the subscription from our collection
             List<Subscription> subscriptions;
-            if (!_subscriptions.TryRemove(symbol, out subscriptions))
+            if (!_subscriptions.TryGetValue(configuration.Symbol, out subscriptions))
             {
                 return false;
             }
 
+            var newSubscriptionsList = new List<Subscription>();
             foreach (var subscription in subscriptions)
             {
+                if (!subscription.Configuration.Equals(configuration))
+                {
+                    newSubscriptionsList.Add(subscription);
+                    continue;
+                }
+
                 var security = subscription.Security;
 
                 // remove the subscriptions
@@ -222,7 +229,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _changes += SecurityChanges.Removed(security);
             }
 
-            Log.Trace("LiveTradingDataFeed.RemoveSubscription(): Removed " + symbol.ToString());
+            // update our subscriptions dictionary
+            if (newSubscriptionsList.Count == 0)
+            {
+                _subscriptions.TryRemove(configuration.Symbol, out subscriptions);
+            }
+            else
+            {
+                _subscriptions[configuration.Symbol] = newSubscriptionsList;
+            }
+
+            Log.Trace("LiveTradingDataFeed.RemoveSubscription(): Removed " + configuration.ToString());
             UpdateFillForwardResolution();
 
             return true;
@@ -320,14 +337,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // remove each subscription from our collection
                 foreach (var subscription in Subscriptions)
                 {
-                    var symbol = subscription.Configuration.Symbol;
                     try
                     {
-                        RemoveSubscription(symbol);
+                        RemoveSubscription(subscription.Configuration);
                     }
                     catch (Exception err)
                     {
-                        Log.Error(err, "Error removing: " + symbol.ToString());
+                        Log.Error(err, "Error removing: " + subscription.Configuration);
                     }
                 }
             }

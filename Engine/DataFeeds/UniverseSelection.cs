@@ -103,7 +103,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // it is expected that this function is called while in sync with the algo thread,
                     // so we can make direct edits to the security here
                     member.Cache.Reset();
-                    _dataFeed.RemoveSubscription(member.Symbol);
+                    foreach (var configuration in universe.GetSubscriptions(member))
+                    {
+                        _dataFeed.RemoveSubscription(configuration);
+                    }
                 }
             }
 

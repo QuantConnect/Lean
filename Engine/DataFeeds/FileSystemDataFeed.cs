@@ -102,7 +102,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     case NotifyCollectionChangedAction.Remove:
                         foreach (var universe in args.OldItems.OfType<Universe>())
                         {
-                            RemoveSubscription(universe.Configuration.Symbol);
+                            RemoveSubscription(universe.Configuration);
                         }
                         break;
 
@@ -212,26 +212,46 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             return true;
         }
+
         /// <summary>
         /// Removes the subscription from the data feed, if it exists
         /// </summary>
-        /// <param name="symbol">The symbol of the subscription to be removed</param>
+        /// <param name="configuration">The configuration of the subscription to remove</param>
         /// <returns>True if the subscription was successfully removed, false otherwise</returns>
-        public bool RemoveSubscription(Symbol symbol)
+        public bool RemoveSubscription(SubscriptionDataConfig configuration)
         {
             List<Subscription> subscriptions;
-            if (!_subscriptions.TryRemove(symbol, out subscriptions))
+            if (!_subscriptions.TryGetValue(configuration.Symbol, out subscriptions))
             {
-                Log.Error("FileSystemDataFeed.RemoveSubscription(): Unable to remove: " + symbol.ToString());
+                Log.Error("FileSystemDataFeed.RemoveSubscription(): Unable to remove: " + configuration.ToString());
                 return false;
             }
 
+            // copy the list so we're not mutating it while it's potentially being enumerated
+            var newSubscriptionsList = new List<Subscription>();
             foreach (var subscription in subscriptions)
             {
-                subscription.Dispose();
+                if (subscription.Configuration.Equals(configuration))
+                {
+                    subscription.Dispose();
+                    Log.Debug("FileSystemDataFeed.RemoveSubscription(): Removed " + configuration.ToString());
+                }
+                else
+                {
+                    newSubscriptionsList.Add(subscription);
+                }
             }
 
-            Log.Debug("FileSystemDataFeed.RemoveSubscription(): Removed " + symbol.ToString());
+            // update our subscriptions dictionary
+            if (newSubscriptionsList.Count == 0)
+            {
+                _subscriptions.TryRemove(configuration.Symbol, out subscriptions);
+            }
+            else
+            {
+                _subscriptions[configuration.Symbol] = newSubscriptionsList;
+            }
+
 
             UpdateFillForwardResolution();
             return true;
@@ -424,7 +444,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     if (subscriptions.All(x => x.EndOfStream))
                     {
-                        RemoveSubscription(subscription.Security.Symbol);
+                        RemoveSubscription(subscription.Configuration);
                     }
 
                     Log.Debug(string.Format("FileSystemDataFeed.GetEnumerator(): Finished subscription: {0} at {1} UTC", subscription.Security.Symbol.ID, _frontierUtc));

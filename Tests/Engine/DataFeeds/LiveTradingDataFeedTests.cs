@@ -181,7 +181,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             FuncDataQueueHandler dataQueueHandler;
             var feed = RunDataFeed(algorithm, out dataQueueHandler);
 
-            feed.RemoveSubscription(Symbols.SPY);
+            feed.RemoveSubscription(feed.Subscriptions.Single(sub => sub.Configuration.Symbol == Symbols.SPY).Configuration);
 
             Assert.AreEqual(1, dataQueueHandler.Subscriptions.Count);
             Assert.IsFalse(dataQueueHandler.Subscriptions.Contains(Symbols.SPY));

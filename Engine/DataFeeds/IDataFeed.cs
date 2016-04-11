@@ -67,9 +67,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Removes the subscription from the data feed, if it exists
         /// </summary>
-        /// <param name="symbol">The symbol of the subscription to be removed</param>
+        /// <param name="configuration">The configuration of the subscription to remove</param>
         /// <returns>True if the subscription was successfully removed, false otherwise</returns>
-        bool RemoveSubscription(Symbol symbol);
+        bool RemoveSubscription(SubscriptionDataConfig configuration);
 
         /// <summary>
         /// Primary entry point.
