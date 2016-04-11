@@ -43,7 +43,7 @@ namespace QuantConnect.Messaging
         /// </summary>
         public void Initialize()
         {
-            throw new NotImplementedException();
+            //NOP
         }
 
         /// <summary>
@@ -76,39 +76,39 @@ namespace QuantConnect.Messaging
         /// <param name="packet"></param>
         public void Send(Packet packet)
         {
+            //Packets we handled in the UX.
             switch (packet.Type)
             {
                 case PacketType.Debug:
                     var debug = (DebugPacket)packet;
-                    DebugEvent(debug);
+                    OnDebugEvent(debug);
                     break;
 
                 case PacketType.Log:
                     var log = (LogPacket)packet;
-                    LogEvent(log);
+                    OnLogEvent(log);
                     break;
 
                 case PacketType.RuntimeError:
                     var runtime = (RuntimeErrorPacket)packet;
-                    RuntimeErrorEvent(runtime);
+                    OnRuntimeErrorEvent(runtime);
                     break;
 
                 case PacketType.HandledError:
                     var handled = (HandledErrorPacket)packet;
-                    HandledErrorEvent(handled);
+                    OnHandledErrorEvent(handled);
                     break;
 
                 case PacketType.BacktestResult:
                     var result = (BacktestResultPacket)packet;
-                    BacktestResultEvent(result);
+                    OnBacktestResultEvent(result);
                     break;
             }
-            
+
             if (StreamingApi.IsEnabled)
             {
                 StreamingApi.Transmit(_job.UserId, _job.Channel, packet);
             }
-
         }
 
         /// <summary>
@@ -118,14 +118,67 @@ namespace QuantConnect.Messaging
         public void SendNotification(Notification notification)
         {
             var type = notification.GetType();
-            if (type == typeof(NotificationEmail)
-             || type == typeof(NotificationWeb)
-             || type == typeof(NotificationSms))
+            if (type == typeof (NotificationEmail) || type == typeof (NotificationWeb) || type == typeof (NotificationSms))
             {
                 Log.Error("Messaging.SendNotification(): Send not implemented for notification of type: " + type.Name);
                 return;
             }
             notification.Send();
+        }
+
+        /// <summary>
+        /// Raise a debug event safely
+        /// </summary>
+        protected virtual void OnDebugEvent(DebugPacket packet)
+        {
+            if (DebugEvent != null)
+            {
+                DebugEvent(packet);
+            }
+        }
+
+        /// <summary>
+        /// Raise a log event safely
+        /// </summary>
+        protected virtual void OnLogEvent(LogPacket packet)
+        {
+            if (LogEvent != null)
+            {
+                LogEvent(packet);
+            }
+        }
+
+        /// <summary>
+        /// Raise a handled error event safely
+        /// </summary>
+        protected virtual void OnHandledErrorEvent(HandledErrorPacket packet)
+        {
+            if (HandledErrorEvent != null)
+            {
+                HandledErrorEvent(packet);
+            }
+        }
+
+        /// <summary>
+        /// Raise runtime error safely
+        /// </summary>
+        protected virtual void OnRuntimeErrorEvent(RuntimeErrorPacket packet)
+        {
+            if (RuntimeErrorEvent != null)
+            {
+                RuntimeErrorEvent(packet);
+            }
+        }
+
+        /// <summary>
+        /// Raise a backtest result event safely.
+        /// </summary>
+        protected virtual void OnBacktestResultEvent(BacktestResultPacket packet)
+        {
+            if (BacktestResultEvent != null)
+            {
+                BacktestResultEvent(packet);
+            }
         }
     }
 }

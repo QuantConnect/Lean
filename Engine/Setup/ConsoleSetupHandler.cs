@@ -145,8 +145,8 @@ namespace QuantConnect.Lean.Engine.Setup
                     backtestJob.PeriodFinish = algorithm.EndDate;
                     backtestJob.BacktestId = "LOCALHOST";
                     backtestJob.Type = PacketType.BacktestNode;
-                    backtestJob.UserId = !string.IsNullOrWhiteSpace(Config.Get("qc-user-id"))  ? Convert.ToInt32(Config.Get("qc-user-id")) : 1001;
-                    backtestJob.Channel = Config.Get("api-access-token");
+                    backtestJob.UserId = baseJob.UserId;
+                    backtestJob.Channel = baseJob.Channel;
        
                     //Backtest Specific Parameters:
                     StartingDate = backtestJob.PeriodStart;

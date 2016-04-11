@@ -30,32 +30,20 @@ namespace QuantConnect.Lean.Launcher
     {
         private const string _collapseMessage = "Unhandled exception breaking past controls and causing collapse of algorithm node. This is likely a memory leak of an external dependency or the underlying OS terminating the LEAN engine.";
 
-        static void RunLeanEngineWinForm()
-        {
-            Application.Run(new Views.WinForms.LeanEngineWinForm());
-        }
-
         static void Main(string[] args)
         {
             //Initialize:
-            string mode = "RELEASE";
-#if DEBUG
+            var mode = "RELEASE";
+            var environment = Config.Get("environment");
+            #if DEBUG
             mode = "DEBUG";
-#endif
-            if (Config.Get("environment") == "backtesting-desktop")
-            {
-                Application.EnableVisualStyles();
-                Thread thread = new Thread(RunLeanEngineWinForm);
-                thread.SetApartmentState(ApartmentState.STA);
-                thread.Start();
-                thread.Join(); 
-            }
-            else
-            {
-                Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
+            #endif
+            
+            Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
 
-                var liveMode = Config.GetBool("live-mode");
-                Log.DebuggingEnabled = Config.GetBool("debug-mode");
+            var liveMode = Config.GetBool("live-mode");
+            Log.DebuggingEnabled = Config.GetBool("debug-mode");
+
             //Name thread for the profiler:
             Thread.CurrentThread.Name = "Algorithm Analysis Thread";
             Log.Trace("Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v" + Globals.Version + " Mode: " + mode);
@@ -85,7 +73,7 @@ namespace QuantConnect.Lean.Launcher
             {
                 throw new Exception("Engine.Main(): Job was null.");
             }
-
+            
             LeanEngineAlgorithmHandlers leanEngineAlgorithmHandlers;
             try
             {
@@ -95,6 +83,14 @@ namespace QuantConnect.Lean.Launcher
             {
                 Log.Error("Engine.Main(): Failed to load library: " + compositionException);
                 throw;
+            }
+
+            if (environment == "backtesting-desktop")
+            {
+                Application.EnableVisualStyles();
+                var thread = new Thread(() => LaunchUX(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, job));
+                thread.SetApartmentState(ApartmentState.STA);
+                thread.Start();
             }
 
             // log the job endpoints
@@ -138,8 +134,25 @@ namespace QuantConnect.Lean.Launcher
                 leanEngineAlgorithmHandlers.Dispose();
                 Log.LogHandler.Dispose();
             }
-            }
+        }
 
+        /// <summary>
+        /// Form launcher method for thread.
+        /// </summary>
+        static void LaunchUX(LeanEngineSystemHandlers system, LeanEngineAlgorithmHandlers algorithm, AlgorithmNodePacket job)
+        {
+            var form = new Views.WinForms.LeanWinForm(system, algorithm, job);
+
+            // Pipe console log through to the UX
+            Log.LogHandler = new CompositeLogHandler(new ILogHandler[] { new ConsoleLogHandler(), 
+                new FunctionalLogHandler(
+                    x => system.Notify.Send(new DebugPacket(job.ProjectId, job.AlgorithmId, job.CompileId, x)),
+                    x => system.Notify.Send(new DebugPacket(job.ProjectId, job.AlgorithmId, job.CompileId, x)),
+                    x => system.Notify.Send(new HandledErrorPacket(job.AlgorithmId, x)))
+                });
+
+            //Launch the UX
+            Application.Run(form);
         }
     }
 }
