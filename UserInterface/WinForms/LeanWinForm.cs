@@ -18,7 +18,13 @@ namespace QuantConnect.Views.WinForms
         private EventMessagingHandler _messaging;
         private LeanEngineSystemHandlers _systemHandlers;
         private LeanEngineAlgorithmHandlers _algorithmHandlers;
-
+        
+        /// <summary>
+        /// Create the UX.
+        /// </summary>
+        /// <param name="systemHandlers"></param>
+        /// <param name="algorithmHandlers"></param>
+        /// <param name="job"></param>
         public LeanWinForm(LeanEngineSystemHandlers systemHandlers, LeanEngineAlgorithmHandlers algorithmHandlers, AlgorithmNodePacket job)
         {
             InitializeComponent();
@@ -36,6 +42,7 @@ namespace QuantConnect.Views.WinForms
 
             //Create the browser control
             _browser = new GeckoWebBrowser { Dock = DockStyle.Fill, Name = "browser" };
+            _browser.DOMContentLoaded += BrowserOnDomContentLoaded;
             splitPanel.Panel1.Controls.Add(_browser);
 
             var url = string.Format("https://beta.quantconnect.com/terminal/embedded?user={0}&token={1}&bid={2}&pid={3}&version={4}",
@@ -49,7 +56,15 @@ namespace QuantConnect.Views.WinForms
             _messaging.HandledErrorEvent += MessagingOnHandledErrorEvent;
             _messaging.BacktestResultEvent += MessagingOnBacktestResultEvent;
         }
-        
+
+        /// <summary>
+        /// Browser content has completely loaded.
+        /// </summary>
+        private void BrowserOnDomContentLoaded(object sender, DomEventArgs domEventArgs)
+        {
+            _messaging.OnConsumerReadyEvent();
+        }
+
         /// <summary>
         /// Onload Form Initialization
         /// </summary>
@@ -74,7 +89,7 @@ namespace QuantConnect.Views.WinForms
         /// <param name="e"></param>
         private void TextBoxLog_KeyUp(object sender, KeyEventArgs e)
         {
-            //Environment.Exit(0);
+
         }
 
         /// <summary>
@@ -87,8 +102,7 @@ namespace QuantConnect.Views.WinForms
             {
                 foreach (var pair in packet.Results.Statistics)
                 {
-                    Log.Trace("STATISTICS:: " + pair.Key + " " + pair.Value);
-                    LogTextBox.AppendText("STATISTICS:: " + pair.Key + " " + pair.Value, Color.CornflowerBlue);
+                    LogTextBox.AppendText("STATISTICS:: " + pair.Key + " " + pair.Value, Color.Blue);
                 }
             }
         }

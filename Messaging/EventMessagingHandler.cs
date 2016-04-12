@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Notifications;
@@ -27,6 +28,8 @@ namespace QuantConnect.Messaging
     public class EventMessagingHandler : IMessagingHandler
     {
         private AlgorithmNodePacket _job;
+        private volatile bool _loaded;
+        private Queue<Packet> _queue; 
 
         /// <summary>
         /// Gets or sets whether this messaging handler has any current subscribers.
@@ -43,7 +46,14 @@ namespace QuantConnect.Messaging
         /// </summary>
         public void Initialize()
         {
-            //NOP
+            _queue = new Queue<Packet>();
+
+            ConsumerReadyEvent += () => { _loaded = true; };
+        }
+
+        public void LoadingComplete()
+        {
+            _loaded = true;
         }
 
         /// <summary>
@@ -70,11 +80,50 @@ namespace QuantConnect.Messaging
         public delegate void BacktestResultEventRaised(BacktestResultPacket packet);
         public event BacktestResultEventRaised BacktestResultEvent;
 
+        public delegate void ConsumerReadyEventRaised();
+        public event ConsumerReadyEventRaised ConsumerReadyEvent;
+
         /// <summary>
         /// Send any message with a base type of Packet.
         /// </summary>
-        /// <param name="packet"></param>
         public void Send(Packet packet)
+        {
+            //Until we're loaded queue it up
+            if (!_loaded)
+            {
+                _queue.Enqueue(packet);
+                return;
+            }
+
+            //Catch up if this is the first time
+            while (_queue.Count > 0)
+            {
+                ProcessPacket(_queue.Dequeue());
+            }
+
+            //Finally process this new packet
+            ProcessPacket(packet);
+        }
+        
+        /// <summary>
+        /// Send any notification with a base type of Notification.
+        /// </summary>
+        /// <param name="notification">The notification to be sent.</param>
+        public void SendNotification(Notification notification)
+        {
+            var type = notification.GetType();
+            if (type == typeof (NotificationEmail) || type == typeof (NotificationWeb) || type == typeof (NotificationSms))
+            {
+                Log.Error("Messaging.SendNotification(): Send not implemented for notification of type: " + type.Name);
+                return;
+            }
+            notification.Send();
+        }
+
+        /// <summary>
+        /// Packet processing implementation
+        /// </summary>
+        private void ProcessPacket(Packet packet)
         {
             //Packets we handled in the UX.
             switch (packet.Type)
@@ -112,21 +161,6 @@ namespace QuantConnect.Messaging
         }
 
         /// <summary>
-        /// Send any notification with a base type of Notification.
-        /// </summary>
-        /// <param name="notification">The notification to be sent.</param>
-        public void SendNotification(Notification notification)
-        {
-            var type = notification.GetType();
-            if (type == typeof (NotificationEmail) || type == typeof (NotificationWeb) || type == typeof (NotificationSms))
-            {
-                Log.Error("Messaging.SendNotification(): Send not implemented for notification of type: " + type.Name);
-                return;
-            }
-            notification.Send();
-        }
-
-        /// <summary>
         /// Raise a debug event safely
         /// </summary>
         protected virtual void OnDebugEvent(DebugPacket packet)
@@ -134,6 +168,17 @@ namespace QuantConnect.Messaging
             if (DebugEvent != null)
             {
                 DebugEvent(packet);
+            }
+        }
+
+        /// <summary>
+        /// Handler for consumer ready code.
+        /// </summary>
+        public virtual void OnConsumerReadyEvent()
+        {
+            if (ConsumerReadyEvent != null)
+            {
+                ConsumerReadyEvent();
             }
         }
 

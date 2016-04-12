@@ -55,7 +55,7 @@
   "ib-controller-dir": "C:\\IBController",
 
   //job configuration
-  "job-user-id": "",
+  "job-user-id": "677",
 
   // tradier configuration
   "tradier-account-id": "",
@@ -157,7 +157,7 @@
     "backtesting-desktop": {
       "live-mode": false,
       "send-via-api": true,
-      "api-access-token": "",
+      "api-access-token": "2575bcef180c1e10faf8633cd533db2e",
       
       "setup-handler": "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.BacktestingResultHandler",

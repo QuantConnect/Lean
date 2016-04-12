@@ -143,7 +143,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     //Construct the backtest job packet:
                     backtestJob.PeriodStart = algorithm.StartDate;
                     backtestJob.PeriodFinish = algorithm.EndDate;
-                    backtestJob.BacktestId = "LOCALHOST";
+                    backtestJob.BacktestId = algorithm.GetType().Name;
                     backtestJob.Type = PacketType.BacktestNode;
                     backtestJob.UserId = baseJob.UserId;
                     backtestJob.Channel = baseJob.Channel;
