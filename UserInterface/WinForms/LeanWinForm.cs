@@ -45,7 +45,7 @@ namespace QuantConnect.Views.WinForms
             _browser.DOMContentLoaded += BrowserOnDomContentLoaded;
             splitPanel.Panel1.Controls.Add(_browser);
 
-            var url = string.Format("https://beta.quantconnect.com/terminal/embedded?user={0}&token={1}&bid={2}&pid={3}&version={4}",
+            var url = string.Format("https://www.quantconnect.com/terminal/embedded?user={0}&token={1}&bid={2}&pid={3}&version={4}",
                         job.UserId, job.Channel, job.AlgorithmId, job.ProjectId, Globals.Version);
             _browser.Navigate(url);
 
