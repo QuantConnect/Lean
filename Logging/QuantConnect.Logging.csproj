@@ -82,7 +82,6 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="CompositeLogHandler.cs" />
-    <Compile Include="RichTextBoxLogHandler.cs" />
     <Compile Include="FunctionalLogHandler.cs" />
     <Compile Include="ConsoleLogHandler.cs" />
     <Compile Include="FileLogHandler.cs" />
