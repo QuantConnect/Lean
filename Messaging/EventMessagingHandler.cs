@@ -165,9 +165,11 @@ namespace QuantConnect.Messaging
         /// </summary>
         protected virtual void OnDebugEvent(DebugPacket packet)
         {
-            if (DebugEvent != null)
+            var handler = DebugEvent;
+
+            if (handler != null)
             {
-                DebugEvent(packet);
+                handler(packet);
             }
         }
 
@@ -176,9 +178,10 @@ namespace QuantConnect.Messaging
         /// </summary>
         public virtual void OnConsumerReadyEvent()
         {
-            if (ConsumerReadyEvent != null)
+            var handler = ConsumerReadyEvent;
+            if (handler != null)
             {
-                ConsumerReadyEvent();
+                handler();
             }
         }
 
@@ -187,9 +190,10 @@ namespace QuantConnect.Messaging
         /// </summary>
         protected virtual void OnLogEvent(LogPacket packet)
         {
-            if (LogEvent != null)
+            var handler = LogEvent;
+            if (handler != null)
             {
-                LogEvent(packet);
+                handler(packet);
             }
         }
 
@@ -198,9 +202,10 @@ namespace QuantConnect.Messaging
         /// </summary>
         protected virtual void OnHandledErrorEvent(HandledErrorPacket packet)
         {
-            if (HandledErrorEvent != null)
+            var handler = HandledErrorEvent;
+            if (handler != null)
             {
-                HandledErrorEvent(packet);
+                handler(packet);
             }
         }
 
@@ -209,9 +214,10 @@ namespace QuantConnect.Messaging
         /// </summary>
         protected virtual void OnRuntimeErrorEvent(RuntimeErrorPacket packet)
         {
-            if (RuntimeErrorEvent != null)
+            var handler = RuntimeErrorEvent;
+            if (handler != null)
             {
-                RuntimeErrorEvent(packet);
+                handler(packet);
             }
         }
 
@@ -220,9 +226,10 @@ namespace QuantConnect.Messaging
         /// </summary>
         protected virtual void OnBacktestResultEvent(BacktestResultPacket packet)
         {
-            if (BacktestResultEvent != null)
+            var handler = BacktestResultEvent;
+            if (handler != null)
             {
-                BacktestResultEvent(packet);
+                handler(packet);
             }
         }
     }
