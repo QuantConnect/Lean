@@ -56,7 +56,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             Task.Run(() => exchange.Start());
 
-            Thread.Sleep(10);
+            Thread.Sleep(50);
 
             Assert.IsTrue(firedHandler);
             Assert.IsFalse(firedWrongHandler);

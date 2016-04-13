@@ -186,7 +186,7 @@ namespace QuantConnect.Data
             if (!tickType.HasValue)
             {
                 TickType = TickType.Trade;
-                if (SecurityType == SecurityType.Forex || SecurityType == SecurityType.Cfd)
+                if (SecurityType == SecurityType.Forex || SecurityType == SecurityType.Cfd || SecurityType == SecurityType.Option)
                 {
                     TickType = TickType.Quote;
                 }

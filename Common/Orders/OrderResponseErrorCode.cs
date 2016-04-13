@@ -159,5 +159,10 @@ namespace QuantConnect.Orders
         /// Need conversion rate to account currency
         /// </summary>
         ConversionRateZero = -27,
+
+        /// <summary>
+        /// The order's symbol references a non-tradable security
+        /// </summary>
+        NonTradableSecurity = -28
     }
 }

@@ -417,8 +417,11 @@ namespace QuantConnect.Securities
             if (symbol.ID.SecurityType == SecurityType.Forex) defaultQuoteCurrency = symbol.Value.Substring(3);
             var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType, defaultQuoteCurrency);
 
-            var tradeBarType = typeof(TradeBar);
-            var type = resolution == Resolution.Tick ? typeof(Tick) : tradeBarType;
+            var type = resolution == Resolution.Tick ? typeof(Tick) : typeof(TradeBar);
+            if (symbol.ID.SecurityType == SecurityType.Option && resolution != Resolution.Tick)
+            {
+                type = typeof(QuoteBar);
+            }
             return CreateSecurity(type, securityPortfolioManager, subscriptionManager, exchangeHours, marketHoursDbEntry.DataTimeZone, symbolProperties, securityInitializer, symbol, resolution,
                 fillDataForward, leverage, extendedMarketHours, isInternalFeed, isCustomData, addToSymbolCache);
         }

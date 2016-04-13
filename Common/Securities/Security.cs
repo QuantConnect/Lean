@@ -131,6 +131,14 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets or sets whether or not this security should be considered tradable
+        /// </summary>
+        public bool IsTradable
+        {
+            get; set;
+        }
+
+        /// <summary>
         /// Data cache for the security to store previous price information.
         /// </summary>
         /// <seealso cref="EquityCache"/>
@@ -333,6 +341,7 @@ namespace QuantConnect.Securities
             _config = config;
             QuoteCurrency = quoteCurrency;
             SymbolProperties = symbolProperties;
+            IsTradable = !config.IsInternalFeed;
             Cache = cache;
             Exchange = exchange;
             DataFilter = dataFilter;
@@ -448,7 +457,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual decimal BidPrice
         {
-            get { return Cache.BidPrice; }
+            get { return Cache.BidPrice == 0 ? Price : Cache.BidPrice; }
         }
 
         /// <summary>
@@ -464,7 +473,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual decimal AskPrice
         {
-            get { return Cache.AskPrice; }
+            get { return Cache.AskPrice == 0 ? Price : Cache.AskPrice; }
         }
 
         /// <summary>
@@ -510,7 +519,7 @@ namespace QuantConnect.Securities
             //Add new point to cache:
             if (data == null) return;
             Cache.AddData(data);
-            Holdings.UpdateMarketPrice(data.Value);
+            Holdings.UpdateMarketPrice(Price);
             VolatilityModel.Update(this, data);
         }
 

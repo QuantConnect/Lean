@@ -86,11 +86,9 @@ namespace QuantConnect.Lean.Engine.RealTime
 
             return new ScheduledEvent(CreateEventName("Algorithm", "EndOfDay"), times, (name, triggerTime) =>
             {
-                Log.Debug(string.Format("ScheduledEvent.{0}: Firing at {1}", name, triggerTime));
                 try
                 {
                     algorithm.OnEndOfDay();
-                    Log.Debug(string.Format("ScheduledEvent.{0}: Fired On End of Day Event() for Day({1})", name, triggerTime.ToShortDateString()));
                 }
                 catch (Exception err)
                 {

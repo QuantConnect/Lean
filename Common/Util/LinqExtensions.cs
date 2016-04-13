@@ -261,7 +261,7 @@ namespace QuantConnect.Util
         /// <param name="enumerable">The source enumerable</param>
         /// <param name="selector">The property selector</param>
         /// <returns>A filtered enumerable distinct on the selected property</returns>
-        public static IEnumerable<T> DistincyBy<T, TPropery>(this IEnumerable<T> enumerable, Func<T, TPropery> selector)
+        public static IEnumerable<T> DistinctBy<T, TPropery>(this IEnumerable<T> enumerable, Func<T, TPropery> selector)
         {
             var hash = new HashSet<TPropery>();
             return enumerable.Where(x => hash.Add(selector(x)));

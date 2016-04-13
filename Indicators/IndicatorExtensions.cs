@@ -175,7 +175,7 @@ namespace QuantConnect.Indicators
         /// <returns>The ratio of the left to the right indicator</returns>
         public static CompositeIndicator<IndicatorDataPoint> Over(this IndicatorBase<IndicatorDataPoint> left, IndicatorBase<IndicatorDataPoint> right)
         {
-            return new CompositeIndicator<IndicatorDataPoint>(left, right, (l, r) => l / r);
+            return new CompositeIndicator<IndicatorDataPoint>(left, right, (l, r) => r == 0m ? new IndicatorResult(0m, IndicatorStatus.MathError) : new IndicatorResult(l / r));
         }
 
         /// <summary>
@@ -190,7 +190,7 @@ namespace QuantConnect.Indicators
         /// <returns>The ratio of the left to the right indicator</returns>
         public static CompositeIndicator<IndicatorDataPoint> Over(this IndicatorBase<IndicatorDataPoint> left, IndicatorBase<IndicatorDataPoint> right, string name)
         {
-            return new CompositeIndicator<IndicatorDataPoint>(name, left, right, (l, r) => l / r);
+            return new CompositeIndicator<IndicatorDataPoint>(name, left, right, (l, r) => r == 0m ? new IndicatorResult(0m, IndicatorStatus.MathError) : new IndicatorResult(l / r));
         }
 
         /// <summary>

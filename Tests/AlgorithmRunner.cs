@@ -30,6 +30,12 @@ namespace QuantConnect.Tests
     /// </summary>
     public static class AlgorithmRunner
     {
+        static AlgorithmRunner()
+        {
+            // delete the regression.log file, since we turned debug output on it can grow pretty quickly
+            try { System.IO.File.Delete("regression.log"); } catch { /*NOP*/ }
+        }
+
         public static void RunLocalBacktest(string algorithm, Dictionary<string, string> expectedStatistics, Language language)
         {
             var statistics = new Dictionary<string, string>();
@@ -49,11 +55,15 @@ namespace QuantConnect.Tests
                 Config.Set("algorithm-language", language.ToString());
                 Config.Set("algorithm-location", "QuantConnect.Algorithm." + language + ".dll");
 
+                var debugEnabled = Log.DebuggingEnabled;
+
                 var logHandlers = new ILogHandler[] {new ConsoleLogHandler(), new FileLogHandler("regression.log", false)};
                 using (Log.LogHandler = new CompositeLogHandler(logHandlers))
                 using (var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance))
                 using (var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(Composer.Instance))
                 {
+                    Log.DebuggingEnabled = true;
+
                     Log.LogHandler.Trace("");
                     Log.LogHandler.Trace("{0}: Running " + algorithm + "...", DateTime.UtcNow);
                     Log.LogHandler.Trace("");
@@ -70,6 +80,8 @@ namespace QuantConnect.Tests
 
                     var backtestingResultHandler = (BacktestingResultHandler)algorithmHandlers.Results;
                     statistics = backtestingResultHandler.FinalStatistics;
+                    
+                    Log.DebuggingEnabled = debugEnabled;
                 }
             }
             catch (Exception ex)

@@ -188,13 +188,13 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
-        /// Determines whether or not the specified
+        /// Determines whether or not the specified symbol is currently a member of this universe
         /// </summary>
-        /// <param name="security"></param>
-        /// <returns></returns>
-        internal bool ContainsMember(Security security)
+        /// <param name="symbol">The symbol whose membership is to be checked</param>
+        /// <returns>True if the specified symbol is part of this universe, false otherwise</returns>
+        public bool ContainsMember(Symbol symbol)
         {
-            return _securities.ContainsKey(security.Symbol);
+            return _securities.ContainsKey(symbol);
         }
 
         /// <summary>

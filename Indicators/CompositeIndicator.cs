@@ -38,10 +38,10 @@ namespace QuantConnect.Indicators
         /// A simple example would be to compute the difference between the two indicators (such as with MACD)
         /// (left, right) => left - right
         /// </remarks>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
-        public delegate decimal IndicatorComposer(IndicatorBase<T> left, IndicatorBase<T> right);
+        /// <param name="left">The left indicator</param>
+        /// <param name="right">The right indicator</param>
+        /// <returns>And indicator result representing the composition of the two indicators</returns>
+        public delegate IndicatorResult IndicatorComposer(IndicatorBase<T> left, IndicatorBase<T> right);
 
         /// <summary>function used to compose the individual indicators</summary>
         private readonly IndicatorComposer _composer;
@@ -108,12 +108,27 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
+        /// and returns an instance of the <see cref="IndicatorResult"/> class
         /// </summary>
+        /// <param name="input">The input given to the indicator</param>
+        /// <returns>An IndicatorResult object including the status of the indicator</returns>
+        protected override IndicatorResult ValidateAndComputeNextValue(T input)
+        {
+            return _composer.Invoke(Left, Right);
+        }
+
+        /// <summary>
+        /// Computes the next value of this indicator from the given state
+        /// </summary>
+        /// <remarks>
+        /// Since this class overrides <see cref="ValidateAndComputeNextValue"/>, this method is a no-op
+        /// </remarks>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(T input)
         {
-            return _composer.Invoke(Left, Right);
+            // this should never actually be invoked
+            return _composer.Invoke(Left, Right).Value;
         }
 
         /// <summary>

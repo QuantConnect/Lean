@@ -104,8 +104,12 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="AddRemoveSecurityRegressionAlgorithm.py" />
+    <Content Include="DataConsolidationAlgorithm.py" />
+    <Content Include="HistoryAndWarmupRegressionAlgorithm.py" />
     <Content Include="CustomChartingAlgorithm.py" />
+    <Content Include="DelistingEventsAlgorithm.py" />
     <Content Include="DividendAlgorithm.py" />
+    <Content Include="ETFGlobalRotationAlgorithm.py" />
     <Content Include="MACDTrendAlgorithm.py" />
     <Content Include="QuandlImporterAlgorithm.py" />
     <Content Include="OrderTicketDemoAlgorithm.py" />
