@@ -93,6 +93,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="universe">Specified for universe subscriptions</param>
         /// <param name="security">The security this subscription is for</param>
+        /// <param name="configuration">The subscription configuration that was used to generate the enumerator</param>
         /// <param name="enumerator">The subscription's data source</param>
         /// <param name="timeZoneOffsetProvider">The offset provider used to convert data local times to utc</param>
         /// <param name="utcStartTime">The start time of the subscription</param>
@@ -102,6 +103,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// normal data subscription, i.e, SPY</param>
         public Subscription(Universe universe,
             Security security,
+            SubscriptionDataConfig configuration,
             IEnumerator<BaseData> enumerator,
             TimeZoneOffsetProvider timeZoneOffsetProvider,
             DateTime utcStartTime,
@@ -112,7 +114,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Security = security;
             _enumerator = enumerator;
             IsUniverseSelectionSubscription = isUniverseSelectionSubscription;
-            Configuration = security.SubscriptionDataConfig;
+            Configuration = configuration;
             OffsetProvider = timeZoneOffsetProvider;
 
             UtcStartTime = utcStartTime;

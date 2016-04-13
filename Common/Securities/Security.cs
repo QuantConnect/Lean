@@ -14,6 +14,9 @@
 */
 
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
@@ -33,18 +36,25 @@ namespace QuantConnect.Securities
     /// </remarks>
     public class Security 
     {
+        private readonly Symbol _symbol;
         private LocalTimeKeeper _localTimeKeeper;
-        private readonly SubscriptionDataConfig _config;
+        // using concurrent bag to avoid list enumeration threading issues
+        private readonly ConcurrentBag<SubscriptionDataConfig> _subscriptions;
+
+        /// <summary>
+        /// Gets all the subscriptions for this security
+        /// </summary>
+        public IEnumerable<SubscriptionDataConfig> Subscriptions
+        {
+            get { return _subscriptions; }
+        }
 
         /// <summary>
         /// <see cref="Symbol"/> for the asset.
         /// </summary>
-        public Symbol Symbol 
+        public Symbol Symbol
         {
-            get 
-            {
-                return _config.Symbol;
-            }
+            get { return _symbol; }
         }
 
         /// <summary>
@@ -71,10 +81,7 @@ namespace QuantConnect.Securities
         /// </remarks>
         public SecurityType Type 
         {
-            get 
-            {
-                return _config.SecurityType;
-            }
+            get { return _symbol.ID.SecurityType; }
         }
 
         /// <summary>
@@ -83,10 +90,7 @@ namespace QuantConnect.Securities
         /// <remarks>Tick, second or minute resolution for QuantConnect assets.</remarks>
         public Resolution Resolution 
         {
-            get 
-            {
-                return _config.Resolution;
-            }
+            get { return _subscriptions.Select(x => x.Resolution).DefaultIfEmpty(Resolution.Daily).Min(); }
         }
 
         /// <summary>
@@ -94,10 +98,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public bool IsFillDataForward 
         {
-            get 
-            {
-                return _config.FillDataForward;
-            }
+            get { return _subscriptions.Any(x => x.FillDataForward); }
         }
 
         /// <summary>
@@ -105,18 +106,24 @@ namespace QuantConnect.Securities
         /// </summary>
         public bool IsExtendedMarketHours
         {
-            get 
-            {
-                return _config.ExtendedMarketHours;
-            }
+            get { return _subscriptions.Any(x => x.ExtendedMarketHours); }
+        }
+
+        /// <summary>
+        /// Gets the data normalization mode used for this security
+        /// </summary>
+        public DataNormalizationMode DataNormalizationMode
+        {
+            get { return _subscriptions.Select(x => x.DataNormalizationMode).DefaultIfEmpty(DataNormalizationMode.Adjusted).FirstOrDefault(); }
         }
 
         /// <summary>
         /// Gets the subscription configuration for this security
         /// </summary>
+        [Obsolete("This property returns only the first subscription. Use the 'Subscriptions' property for all of this security's subscriptions.")]
         public SubscriptionDataConfig SubscriptionDataConfig
         {
-            get { return _config; }
+            get { return _subscriptions.FirstOrDefault(); }
         }
 
         /// <summary>
@@ -338,7 +345,8 @@ namespace QuantConnect.Securities
                 throw new ArgumentException("symbolProperties.QuoteCurrency must match the quoteCurrency.Symbol");
             }
 
-            _config = config;
+            _symbol = config.Symbol;
+            _subscriptions = new ConcurrentBag<SubscriptionDataConfig> {config};
             QuoteCurrency = quoteCurrency;
             SymbolProperties = symbolProperties;
             IsTradable = !config.IsInternalFeed;
@@ -537,7 +545,10 @@ namespace QuantConnect.Securities
         /// </summary>
         public void SetDataNormalizationMode(DataNormalizationMode mode)
         {
-            _config.DataNormalizationMode = mode;
+            foreach (var subscription in _subscriptions)
+            {
+                subscription.DataNormalizationMode = mode;
+            }
         }
 
         /// <summary>

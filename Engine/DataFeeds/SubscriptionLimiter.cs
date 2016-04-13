@@ -61,7 +61,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     let security = subscription.Security
                     where security.Resolution == resolution
                     // don't count feeds we auto add
-                    where !security.SubscriptionDataConfig.IsInternalFeed
+                    where !subscription.Configuration.IsInternalFeed
                     select security.Resolution).Count();
         }
 

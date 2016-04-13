@@ -77,7 +77,7 @@ namespace QuantConnect.Securities
             {
                 // each day we need to recompute the strike size
                 symbols = symbols.ToList();
-                var uniqueStrikes = symbols.DistincyBy(x => x.ID.StrikePrice).OrderBy(x => x.ID.StrikePrice).ToList();
+                var uniqueStrikes = symbols.DistinctBy(x => x.ID.StrikePrice).OrderBy(x => x.ID.StrikePrice).ToList();
                 _strikeSize = uniqueStrikes.Zip(uniqueStrikes.Skip(1), (l, r) => r.ID.StrikePrice - l.ID.StrikePrice).DefaultIfEmpty(5m).Min();
                 _strikeSizeResolveDate = underlying.Time.Date;
             }

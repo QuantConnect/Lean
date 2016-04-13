@@ -593,7 +593,7 @@ namespace QuantConnect.Securities
             var security = Securities[dividend.Symbol];
 
             // only apply dividends when we're in raw mode or split adjusted mode
-            var mode = security.SubscriptionDataConfig.DataNormalizationMode;
+            var mode = security.DataNormalizationMode;
             if (mode == DataNormalizationMode.Raw || mode == DataNormalizationMode.SplitAdjusted)
             {
                 // longs get benefits, shorts get clubbed on dividends
@@ -613,7 +613,7 @@ namespace QuantConnect.Securities
             var security = Securities[split.Symbol];
 
             // only apply splits in raw data mode, 
-            var mode = security.SubscriptionDataConfig.DataNormalizationMode;
+            var mode = security.DataNormalizationMode;
             if (mode != DataNormalizationMode.Raw)
             {
                 return;
