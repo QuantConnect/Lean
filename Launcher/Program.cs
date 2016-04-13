@@ -34,16 +34,15 @@ namespace QuantConnect.Lean.Launcher
         {
             //Initialize:
             var mode = "RELEASE";
-            var environment = Config.Get("environment");
             #if DEBUG
-            mode = "DEBUG";
+                mode = "DEBUG";
             #endif
-            
-            Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
 
+            var environment = Config.Get("environment");
             var liveMode = Config.GetBool("live-mode");
             Log.DebuggingEnabled = Config.GetBool("debug-mode");
-
+            Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
+   
             //Name thread for the profiler:
             Thread.CurrentThread.Name = "Algorithm Analysis Thread";
             Log.Trace("Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v" + Globals.Version + " Mode: " + mode);
@@ -141,17 +140,8 @@ namespace QuantConnect.Lean.Launcher
         /// </summary>
         static void LaunchUX(LeanEngineSystemHandlers system, LeanEngineAlgorithmHandlers algorithm, AlgorithmNodePacket job)
         {
-            var form = new Views.WinForms.LeanWinForm(system, algorithm, job);
-
-            // Pipe console log through to the UX
-            Log.LogHandler = new CompositeLogHandler(new ILogHandler[] { new ConsoleLogHandler(), 
-                new FunctionalLogHandler(
-                    x => system.Notify.Send(new DebugPacket(job.ProjectId, job.AlgorithmId, job.CompileId, x)),
-                    x => system.Notify.Send(new DebugPacket(job.ProjectId, job.AlgorithmId, job.CompileId, x)),
-                    x => system.Notify.Send(new HandledErrorPacket(job.AlgorithmId, x)))
-                });
-
             //Launch the UX
+            var form = new Views.WinForms.LeanWinForm(system, algorithm, job);
             Application.Run(form);
         }
     }

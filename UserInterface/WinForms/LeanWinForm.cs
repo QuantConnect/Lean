@@ -2,6 +2,9 @@
 using System.Drawing;
 using System.Windows.Forms;
 using Gecko;
+using Gecko.JQuery;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Logging;
@@ -16,6 +19,7 @@ namespace QuantConnect.Views.WinForms
         private AlgorithmNodePacket _job;
         private GeckoWebBrowser _browser;
         private EventMessagingHandler _messaging;
+        private QueueLogHandler _logging;
         private LeanEngineSystemHandlers _systemHandlers;
         private LeanEngineAlgorithmHandlers _algorithmHandlers;
         
@@ -45,8 +49,7 @@ namespace QuantConnect.Views.WinForms
             _browser.DOMContentLoaded += BrowserOnDomContentLoaded;
             splitPanel.Panel1.Controls.Add(_browser);
 
-            var url = string.Format("https://www.quantconnect.com/terminal/embedded?user={0}&token={1}&bid={2}&pid={3}&version={4}",
-                        job.UserId, job.Channel, job.AlgorithmId, job.ProjectId, Globals.Version);
+            var url = GetURL(job, false, false);
             _browser.Navigate(url);
 
             //Setup Event Handlers:
@@ -55,7 +58,29 @@ namespace QuantConnect.Views.WinForms
             _messaging.RuntimeErrorEvent += MessagingOnRuntimeErrorEvent;
             _messaging.HandledErrorEvent += MessagingOnHandledErrorEvent;
             _messaging.BacktestResultEvent += MessagingOnBacktestResultEvent;
+
+            _logging = Log.LogHandler as QueueLogHandler;
         }
+
+        /// <summary>
+        /// Get the URL for the embedded charting
+        /// </summary>
+        /// <param name="job">Job packet for the URL</param>
+        /// <param name="liveMode">Is this a live mode chart?</param>
+        /// <param name="holdReady">Hold the ready signal to inject data</param>
+        private string GetURL(AlgorithmNodePacket job, bool liveMode = false, bool holdReady = false)
+        {
+            var url = "";
+            var hold = holdReady == false ? "0" : "1";
+            var embedPage = liveMode ? "embeddedLive" : "embedded";
+
+            url = string.Format(
+                "https://www.quantconnect.com/terminal/{0}?user={1}&token={2}&pid={3}&version={4}&holdReady={5}&bid={6}",
+                embedPage, job.UserId, job.Channel, job.ProjectId, Globals.Version, hold, job.AlgorithmId);
+
+            return url;
+        }
+        
 
         /// <summary>
         /// Browser content has completely loaded.
@@ -80,18 +105,29 @@ namespace QuantConnect.Views.WinForms
         {
             StatisticsToolStripStatusLabel.Text = string.Concat("Performance: CPU: ", OS.CpuUsage.NextValue().ToString("0.0"), "%",
                                                                 " Ram: ", OS.TotalPhysicalMemoryUsed, " Mb");
+
+            if (_logging != null)
+            {
+                LogEntry log;
+                while (_logging.Logs.TryDequeue(out log))
+                {
+                    switch (log.MessageType)
+                    {
+                        case LogType.Debug:
+                            LogTextBox.AppendText(log.ToString(), Color.Black);
+                            break;
+                        default:
+                        case LogType.Trace:
+                            LogTextBox.AppendText(log.ToString(), Color.Black);
+                            break;
+                        case LogType.Error:
+                            LogTextBox.AppendText(log.ToString(), Color.DarkRed);
+                            break;
+                    }
+                }
+            }
         }
-
-        /// <summary>
-        /// Trigger Exit at the end of the backtest
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void TextBoxLog_KeyUp(object sender, KeyEventArgs e)
-        {
-
-        }
-
+         
         /// <summary>
         /// Backtest result packet
         /// </summary>
@@ -100,9 +136,37 @@ namespace QuantConnect.Views.WinForms
         {
             if (packet.Progress == 1)
             {
+                //Remove previous event handler:
+                var url = GetURL(_job, false, true);
+                _browser.Navigate(url);
+
+                _browser.DOMContentLoaded += (sender, args) =>
+                {
+                    var executor = new JQueryExecutor(_browser.Window);
+
+                    var jObj = new JObject();
+                    var dateFormat = "yyyy-MM-dd HH:mm:ss";
+                    dynamic final = jObj;
+                    final.dtPeriodStart = packet.PeriodStart.ToString(dateFormat);
+                    final.dtPeriodFinished = packet.PeriodFinish.AddDays(1).ToString(dateFormat);
+
+                    dynamic resultData = new JObject();
+                    resultData.version = "3";
+                    resultData.results = JObject.FromObject(packet.Results);
+                    resultData.statistics = JObject.FromObject(packet.Results.Statistics);
+                    resultData.iTradeableDates = 1;
+                    resultData.ranking = null;
+                    final.oResultData = resultData;
+                    
+                    //Set packet 
+                    var json = JsonConvert.SerializeObject(final);
+                    executor.ExecuteJQuery("window.jnBacktest = JSON.parse('" + json + "');");
+                    executor.ExecuteJQuery("$.holdReady(false)");
+                };
+
                 foreach (var pair in packet.Results.Statistics)
                 {
-                    LogTextBox.AppendText("STATISTICS:: " + pair.Key + " " + pair.Value, Color.Blue);
+                    _logging.Trace("STATISTICS:: " + pair.Key + " " + pair.Value);
                 }
             }
         }
@@ -113,7 +177,8 @@ namespace QuantConnect.Views.WinForms
         private void MessagingOnHandledErrorEvent(HandledErrorPacket packet)
         {
             var hstack = (!string.IsNullOrEmpty(packet.StackTrace) ? (Environment.NewLine + " " + packet.StackTrace) : string.Empty);
-            LogTextBox.AppendText(packet.Message + hstack, Color.DarkRed);
+            _logging.Error(packet.Message + hstack);
+            //LogTextBox.AppendText(, Color.DarkRed);
         }
 
         /// <summary>
@@ -122,7 +187,8 @@ namespace QuantConnect.Views.WinForms
         private void MessagingOnRuntimeErrorEvent(RuntimeErrorPacket packet)
         {
             var rstack = (!string.IsNullOrEmpty(packet.StackTrace) ? (Environment.NewLine + " " + packet.StackTrace) : string.Empty);
-            LogTextBox.AppendText(packet.Message + rstack, Color.DarkRed);
+            _logging.Error(packet.Message + rstack);
+            //LogTextBox.AppendText(packet.Message + rstack, Color.DarkRed);
         }
 
         /// <summary>
@@ -130,7 +196,8 @@ namespace QuantConnect.Views.WinForms
         /// </summary>
         private void MessagingOnLogEvent(LogPacket packet)
         {
-            LogTextBox.AppendText(packet.Message, Color.Black);
+            _logging.Trace(packet.Message);
+            //LogTextBox.AppendText(packet.Message, Color.Black);
         }
 
         /// <summary>
@@ -139,7 +206,8 @@ namespace QuantConnect.Views.WinForms
         /// <param name="packet"></param>
         private void MessagingOnDebugEvent(DebugPacket packet)
         {
-            LogTextBox.AppendText(packet.Message, Color.Black);
+            _logging.Trace(packet.Message);
+            //LogTextBox.AppendText(packet.Message, Color.Black);
         }
 
         /// <summary>

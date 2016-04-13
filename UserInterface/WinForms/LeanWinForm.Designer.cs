@@ -37,8 +37,9 @@
             this.FormToolStripProgressBar = new System.Windows.Forms.ToolStripProgressBar();
             this.splitPanel = new System.Windows.Forms.SplitContainer();
             this.groupLog = new System.Windows.Forms.GroupBox();
-            this.timer = new System.Windows.Forms.Timer(this.components);
             this.LogTextBox = new System.Windows.Forms.RichTextBox();
+            this.timer = new System.Windows.Forms.Timer(this.components);
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitPanel)).BeginInit();
             this.splitPanel.Panel2.SuspendLayout();
@@ -111,12 +112,6 @@
             this.groupLog.TabStop = false;
             this.groupLog.Text = "Log";
             // 
-            // timer
-            // 
-            this.timer.Enabled = true;
-            this.timer.Interval = 250;
-            this.timer.Tick += new System.EventHandler(this.timer_Tick);
-            // 
             // LogTextBox
             // 
             this.LogTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -126,6 +121,12 @@
             this.LogTextBox.Size = new System.Drawing.Size(1433, 133);
             this.LogTextBox.TabIndex = 0;
             this.LogTextBox.Text = "";
+            // 
+            // timer
+            // 
+            this.timer.Enabled = true;
+            this.timer.Interval = 250;
+            this.timer.Tick += new System.EventHandler(this.timer_Tick);
             // 
             // LeanWinForm
             // 
@@ -163,5 +164,6 @@
         private System.Windows.Forms.ToolStripProgressBar FormToolStripProgressBar;
         private System.Windows.Forms.Timer timer;
         private System.Windows.Forms.RichTextBox LogTextBox;
+        private System.Windows.Forms.Timer timer1;
     }
 }

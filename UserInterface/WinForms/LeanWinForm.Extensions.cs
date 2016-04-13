@@ -29,16 +29,12 @@ namespace QuantConnect.Views.WinForms
     {
         public static void AppendText(this RichTextBox box, string text, Color color)
         {
-            box.SafeInvoke(b =>
-            {
-                box.SelectionStart = box.TextLength;
-                b.SelectionLength = 0;
-                box.SelectionColor = color;
-                box.AppendText(text + Environment.NewLine);
-                box.SelectionColor = box.ForeColor;
-                box.ScrollToCaret();
-                return 0;
-            });
+            box.SelectionStart = box.TextLength;
+            box.SelectionLength = 0;
+            box.SelectionColor = color;
+            box.AppendText(text + Environment.NewLine);
+            box.SelectionColor = box.ForeColor;
+            box.ScrollToCaret();
         }
 
         /// <summary>
