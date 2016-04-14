@@ -40,7 +40,7 @@ namespace QuantConnect.Securities.Equity
         /// <summary>
         /// Construct the Equity Object
         /// </summary>
-        public Equity(Symbol symbol, SecurityExchangeHours exchangeHours, Cash quoteCurrency, SymbolProperties symbolProperties, bool isTradable = true)
+        public Equity(Symbol symbol, SecurityExchangeHours exchangeHours, Cash quoteCurrency, SymbolProperties symbolProperties)
             : base(symbol,
                 quoteCurrency,
                 symbolProperties,
@@ -53,8 +53,7 @@ namespace QuantConnect.Securities.Equity
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
                 new SecurityMarginModel(2m),
-                new EquityDataFilter(),
-                isTradable
+                new EquityDataFilter()
                 )
         {
             Holdings = new EquityHolding(this);

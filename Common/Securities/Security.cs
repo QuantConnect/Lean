@@ -310,7 +310,7 @@ namespace QuantConnect.Securities
                 new InteractiveBrokersFeeModel(),
                 new SpreadSlippageModel(),
                 new ImmediateSettlementModel(),
-                Securities.VolatilityModel.Null, 
+                Securities.VolatilityModel.Null,
                 new SecurityMarginModel(1m),
                 new SecurityDataFilter())
         {
@@ -319,7 +319,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Construct a new security vehicle based on the user options.
         /// </summary>
-        public Security(Symbol symbol, SecurityExchangeHours exchangeHours, Cash quoteCurrency, SymbolProperties symbolProperties, bool isTradable = true)
+        public Security(Symbol symbol, SecurityExchangeHours exchangeHours, Cash quoteCurrency, SymbolProperties symbolProperties)
             : this(symbol,
                 quoteCurrency,
                 symbolProperties,
@@ -332,8 +332,8 @@ namespace QuantConnect.Securities
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
                 new SecurityMarginModel(1m),
-                new SecurityDataFilter(),
-                isTradable)
+                new SecurityDataFilter()
+                )
         {
         }
 
@@ -352,8 +352,7 @@ namespace QuantConnect.Securities
             ISettlementModel settlementModel,
             IVolatilityModel volatilityModel,
             ISecurityMarginModel marginModel,
-            ISecurityDataFilter dataFilter,
-            bool isTradable
+            ISecurityDataFilter dataFilter
             )
         {
 
@@ -371,7 +370,7 @@ namespace QuantConnect.Securities
             SubscriptionsBag = new ConcurrentBag<SubscriptionDataConfig>();
             QuoteCurrency = quoteCurrency;
             SymbolProperties = symbolProperties;
-            IsTradable = isTradable;
+            IsTradable = true;
             Cache = cache;
             Exchange = exchange;
             DataFilter = dataFilter;
@@ -415,8 +414,7 @@ namespace QuantConnect.Securities
                 settlementModel,
                 volatilityModel,
                 marginModel,
-                dataFilter,
-                !config.IsInternalFeed
+                dataFilter
                 )
         {
             SubscriptionsBag.Add(config);
@@ -620,6 +618,17 @@ namespace QuantConnect.Securities
         public override string ToString()
         {
             return Symbol.ToString();
+        }
+
+        /// <summary>
+        /// Adds the specified data subscription to this security.
+        /// </summary>
+        /// <param name="subscription">The subscription configuration to add. The Symbol and ExchangeTimeZone properties must match the existing Security object</param>
+        internal void AddData(SubscriptionDataConfig subscription)
+        {
+            if (subscription.Symbol != _symbol) throw new ArgumentException("Symbols must match.", "subscription.Symbol");
+            if (!subscription.ExchangeTimeZone.Equals(Exchange.TimeZone)) throw new ArgumentException("ExchangeTimeZones must match.", "subscription.ExchangeTimeZone");
+            SubscriptionsBag.Add(subscription);
         }
     }
 }

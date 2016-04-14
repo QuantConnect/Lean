@@ -356,29 +356,38 @@ namespace QuantConnect.Securities
                     securityPortfolioManager.CashBook.Add(quoteCurrency, 0, 0);
                 }
             }
-
+            
             var quoteCash = securityPortfolioManager.CashBook[symbolProperties.QuoteCurrency];
 
             Security security;
             switch (config.SecurityType)
             {
                 case SecurityType.Equity:
-                    security = new Equity.Equity(exchangeHours, config, quoteCash, symbolProperties);
+                    security = new Equity.Equity(symbol, exchangeHours, quoteCash, symbolProperties);
                     break;
 
                 case SecurityType.Forex:
-                    security = new Forex.Forex(exchangeHours, securityPortfolioManager.CashBook[quoteCurrency], config, symbolProperties);
+                    security = new Forex.Forex(symbol, exchangeHours, quoteCash, symbolProperties);
                     break;
 
                 case SecurityType.Cfd:
-                    security = new Cfd.Cfd(exchangeHours, quoteCash, config, symbolProperties);
+                    security = new Cfd.Cfd(symbol, exchangeHours, quoteCash, symbolProperties);
                     break;
 
                 default:
                 case SecurityType.Base:
-                    security = new Security(exchangeHours, config, quoteCash, symbolProperties);
+                    security = new Security(symbol, exchangeHours, quoteCash, symbolProperties);
                     break;
             }
+
+            // if we're just creating this security and it only has an internal
+            // feed, mark it as non-tradable since the user didn't request this data
+            if (!config.IsInternalFeed)
+            {
+                security.IsTradable = true;
+            }
+
+            security.AddData(config);
 
             // invoke the security initializer
             securityInitializer.Initialize(security);
