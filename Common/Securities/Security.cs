@@ -39,14 +39,14 @@ namespace QuantConnect.Securities
         private readonly Symbol _symbol;
         private LocalTimeKeeper _localTimeKeeper;
         // using concurrent bag to avoid list enumeration threading issues
-        private readonly ConcurrentBag<SubscriptionDataConfig> _subscriptions;
+        protected readonly ConcurrentBag<SubscriptionDataConfig> SubscriptionsBag;
 
         /// <summary>
         /// Gets all the subscriptions for this security
         /// </summary>
         public IEnumerable<SubscriptionDataConfig> Subscriptions
         {
-            get { return _subscriptions; }
+            get { return SubscriptionsBag; }
         }
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace QuantConnect.Securities
         /// <remarks>Tick, second or minute resolution for QuantConnect assets.</remarks>
         public Resolution Resolution 
         {
-            get { return _subscriptions.Select(x => x.Resolution).DefaultIfEmpty(Resolution.Daily).Min(); }
+            get { return SubscriptionsBag.Select(x => x.Resolution).DefaultIfEmpty(Resolution.Daily).Min(); }
         }
 
         /// <summary>
@@ -98,7 +98,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public bool IsFillDataForward 
         {
-            get { return _subscriptions.Any(x => x.FillDataForward); }
+            get { return SubscriptionsBag.Any(x => x.FillDataForward); }
         }
 
         /// <summary>
@@ -106,7 +106,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public bool IsExtendedMarketHours
         {
-            get { return _subscriptions.Any(x => x.ExtendedMarketHours); }
+            get { return SubscriptionsBag.Any(x => x.ExtendedMarketHours); }
         }
 
         /// <summary>
@@ -114,7 +114,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public DataNormalizationMode DataNormalizationMode
         {
-            get { return _subscriptions.Select(x => x.DataNormalizationMode).DefaultIfEmpty(DataNormalizationMode.Adjusted).FirstOrDefault(); }
+            get { return SubscriptionsBag.Select(x => x.DataNormalizationMode).DefaultIfEmpty(DataNormalizationMode.Adjusted).FirstOrDefault(); }
         }
 
         /// <summary>
@@ -123,7 +123,7 @@ namespace QuantConnect.Securities
         [Obsolete("This property returns only the first subscription. Use the 'Subscriptions' property for all of this security's subscriptions.")]
         public SubscriptionDataConfig SubscriptionDataConfig
         {
-            get { return _subscriptions.FirstOrDefault(); }
+            get { return SubscriptionsBag.FirstOrDefault(); }
         }
 
         /// <summary>
@@ -319,6 +319,55 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Construct a new security vehicle based on the user options.
         /// </summary>
+        protected Security(Symbol symbol,
+            Cash quoteCurrency,
+            SymbolProperties symbolProperties,
+            SecurityExchange exchange,
+            SecurityCache cache,
+            ISecurityPortfolioModel portfolioModel,
+            IFillModel fillModel,
+            IFeeModel feeModel,
+            ISlippageModel slippageModel,
+            ISettlementModel settlementModel,
+            IVolatilityModel volatilityModel,
+            ISecurityMarginModel marginModel,
+            ISecurityDataFilter dataFilter,
+            bool isTradable
+            )
+        {
+
+            if (symbolProperties == null)
+            {
+                throw new ArgumentNullException("symbolProperties", "Security requires a valid SymbolProperties instance.");
+            }
+
+            if (symbolProperties.QuoteCurrency != quoteCurrency.Symbol)
+            {
+                throw new ArgumentException("symbolProperties.QuoteCurrency must match the quoteCurrency.Symbol");
+            }
+
+            _symbol = symbol;
+            SubscriptionsBag = new ConcurrentBag<SubscriptionDataConfig>();
+            QuoteCurrency = quoteCurrency;
+            SymbolProperties = symbolProperties;
+            IsTradable = isTradable;
+            Cache = cache;
+            Exchange = exchange;
+            DataFilter = dataFilter;
+            PortfolioModel = portfolioModel;
+            MarginModel = marginModel;
+            FillModel = fillModel;
+            FeeModel = feeModel;
+            SlippageModel = slippageModel;
+            SettlementModel = settlementModel;
+            VolatilityModel = volatilityModel;
+            Holdings = new SecurityHolding(this);
+        }
+
+
+        /// <summary>
+        /// Temporary convenience constructor
+        /// </summary>
         protected Security(SubscriptionDataConfig config,
             Cash quoteCurrency,
             SymbolProperties symbolProperties,
@@ -333,34 +382,23 @@ namespace QuantConnect.Securities
             ISecurityMarginModel marginModel,
             ISecurityDataFilter dataFilter
             )
+            : this(config.Symbol,
+                quoteCurrency,
+                symbolProperties,
+                exchange,
+                cache,
+                portfolioModel,
+                fillModel,
+                feeModel,
+                slippageModel,
+                settlementModel,
+                volatilityModel,
+                marginModel,
+                dataFilter,
+                !config.IsInternalFeed
+                )
         {
-
-            if (symbolProperties == null)
-            {
-                throw new ArgumentNullException("symbolProperties", "Security requires a valid SymbolProperties instance.");
-            }
-
-            if (symbolProperties.QuoteCurrency != quoteCurrency.Symbol)
-            {
-                throw new ArgumentException("symbolProperties.QuoteCurrency must match the quoteCurrency.Symbol");
-            }
-
-            _symbol = config.Symbol;
-            _subscriptions = new ConcurrentBag<SubscriptionDataConfig> {config};
-            QuoteCurrency = quoteCurrency;
-            SymbolProperties = symbolProperties;
-            IsTradable = !config.IsInternalFeed;
-            Cache = cache;
-            Exchange = exchange;
-            DataFilter = dataFilter;
-            PortfolioModel = portfolioModel;
-            MarginModel = marginModel;
-            FillModel = fillModel;
-            FeeModel = feeModel;
-            SlippageModel = slippageModel;
-            SettlementModel = settlementModel;
-            VolatilityModel = volatilityModel;
-            Holdings = new SecurityHolding(this);
+            SubscriptionsBag.Add(config);
         }
 
         /// <summary>
@@ -545,7 +583,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public void SetDataNormalizationMode(DataNormalizationMode mode)
         {
-            foreach (var subscription in _subscriptions)
+            foreach (var subscription in SubscriptionsBag)
             {
                 subscription.DataNormalizationMode = mode;
             }
