@@ -319,6 +319,27 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Construct a new security vehicle based on the user options.
         /// </summary>
+        public Security(Symbol symbol, SecurityExchangeHours exchangeHours, Cash quoteCurrency, SymbolProperties symbolProperties, bool isTradable = true)
+            : this(symbol,
+                quoteCurrency,
+                symbolProperties,
+                new SecurityExchange(exchangeHours),
+                new SecurityCache(),
+                new SecurityPortfolioModel(),
+                new ImmediateFillModel(),
+                new InteractiveBrokersFeeModel(),
+                new SpreadSlippageModel(),
+                new ImmediateSettlementModel(),
+                Securities.VolatilityModel.Null,
+                new SecurityMarginModel(1m),
+                new SecurityDataFilter(),
+                isTradable)
+        {
+        }
+
+        /// <summary>
+        /// Construct a new security vehicle based on the user options.
+        /// </summary>
         protected Security(Symbol symbol,
             Cash quoteCurrency,
             SymbolProperties symbolProperties,

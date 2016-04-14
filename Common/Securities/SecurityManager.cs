@@ -332,49 +332,51 @@ namespace QuantConnect.Securities
             var config = subscriptionManager.Add(factoryType, symbol, resolution, dataTimeZone, exchangeHours.TimeZone, isCustomData, fillDataForward,
                 extendedMarketHours, isInternalFeed, isFilteredSubscription);
 
+            // verify the cash book is in a ready state
+            var quoteCurrency = symbolProperties.QuoteCurrency;
+            if (!securityPortfolioManager.CashBook.ContainsKey(quoteCurrency))
+            {
+                // since we have none it's safe to say the conversion is zero
+                securityPortfolioManager.CashBook.Add(quoteCurrency, 0, 0);
+            }
+            if (sid.SecurityType == SecurityType.Forex)
+            {
+                // decompose the symbol into each currency pair
+                string baseCurrency;
+                Forex.Forex.DecomposeCurrencyPair(symbol.Value, out baseCurrency, out quoteCurrency);
+
+                if (!securityPortfolioManager.CashBook.ContainsKey(baseCurrency))
+                {
+                    // since we have none it's safe to say the conversion is zero
+                    securityPortfolioManager.CashBook.Add(baseCurrency, 0, 0);
+                }
+                if (!securityPortfolioManager.CashBook.ContainsKey(quoteCurrency))
+                {
+                    // since we have none it's safe to say the conversion is zero
+                    securityPortfolioManager.CashBook.Add(quoteCurrency, 0, 0);
+                }
+            }
+
+            var quoteCash = securityPortfolioManager.CashBook[symbolProperties.QuoteCurrency];
+
             Security security;
             switch (config.SecurityType)
             {
                 case SecurityType.Equity:
-                    security = new Equity.Equity(exchangeHours, config, securityPortfolioManager.CashBook[CashBook.AccountCurrency], symbolProperties);
+                    security = new Equity.Equity(exchangeHours, config, quoteCash, symbolProperties);
                     break;
 
                 case SecurityType.Forex:
-                    {
-                        // decompose the symbol into each currency pair
-                        string baseCurrency, quoteCurrency;
-                        Forex.Forex.DecomposeCurrencyPair(symbol.Value, out baseCurrency, out quoteCurrency);
-
-                        if (!securityPortfolioManager.CashBook.ContainsKey(baseCurrency))
-                        {
-                            // since we have none it's safe to say the conversion is zero
-                            securityPortfolioManager.CashBook.Add(baseCurrency, 0, 0);
-                        }
-                        if (!securityPortfolioManager.CashBook.ContainsKey(quoteCurrency))
-                        {
-                            // since we have none it's safe to say the conversion is zero
-                            securityPortfolioManager.CashBook.Add(quoteCurrency, 0, 0);
-                        }
-                        security = new Forex.Forex(exchangeHours, securityPortfolioManager.CashBook[quoteCurrency], config, symbolProperties);
-                    }
+                    security = new Forex.Forex(exchangeHours, securityPortfolioManager.CashBook[quoteCurrency], config, symbolProperties);
                     break;
 
                 case SecurityType.Cfd:
-                    {
-                        var quoteCurrency = symbolProperties.QuoteCurrency;
-
-                        if (!securityPortfolioManager.CashBook.ContainsKey(quoteCurrency))
-                        {
-                            // since we have none it's safe to say the conversion is zero
-                            securityPortfolioManager.CashBook.Add(quoteCurrency, 0, 0);
-                        }
-                        security = new Cfd.Cfd(exchangeHours, securityPortfolioManager.CashBook[quoteCurrency], config, symbolProperties);
-                    }
+                    security = new Cfd.Cfd(exchangeHours, quoteCash, config, symbolProperties);
                     break;
 
                 default:
                 case SecurityType.Base:
-                    security = new Security(exchangeHours, config, securityPortfolioManager.CashBook[CashBook.AccountCurrency], symbolProperties);
+                    security = new Security(exchangeHours, config, quoteCash, symbolProperties);
                     break;
             }
 
