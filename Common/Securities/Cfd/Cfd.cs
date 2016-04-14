@@ -54,6 +54,34 @@ namespace QuantConnect.Securities.Cfd
         }
 
         /// <summary>
+        /// Constructor for the CFD security
+        /// </summary>
+        /// <param name="symbol">The security's symbol</param>
+        /// <param name="exchangeHours">Defines the hours this exchange is open</param>
+        /// <param name="quoteCurrency">The cash object that represent the quote currency</param>
+        /// <param name="symbolProperties">The symbol properties for this security</param>
+        /// <param name="isTradable">True to indicate this security can be traded</param>
+        public Cfd(Symbol symbol, SecurityExchangeHours exchangeHours, Cash quoteCurrency, SymbolProperties symbolProperties, bool isTradable = true)
+            : base(symbol,
+                quoteCurrency,
+                symbolProperties,
+                new CfdExchange(exchangeHours),
+                new CfdCache(),
+                new SecurityPortfolioModel(),
+                new ImmediateFillModel(),
+                new ConstantFeeModel(0),
+                new SpreadSlippageModel(),
+                new ImmediateSettlementModel(),
+                Securities.VolatilityModel.Null,
+                new SecurityMarginModel(50m),
+                new CfdDataFilter(),
+                isTradable
+                )
+        {
+            Holdings = new CfdHolding(this);
+        }
+
+        /// <summary>
         /// Gets the contract multiplier for this CFD security
         /// </summary>
         /// <remarks>

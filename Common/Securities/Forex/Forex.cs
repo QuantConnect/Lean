@@ -59,6 +59,39 @@ namespace QuantConnect.Securities.Forex
         }
 
         /// <summary>
+        /// Constructor for the forex security
+        /// </summary>
+        /// <param name="symbol">The security's symbol</param>
+        /// <param name="exchangeHours">Defines the hours this exchange is open</param>
+        /// <param name="quoteCurrency">The cash object that represent the quote currency</param>
+        /// <param name="symbolProperties">The symbol properties for this security</param>
+        /// <param name="isTradable">True to indicate this security can be traded</param>
+        public Forex(Symbol symbol, SecurityExchangeHours exchangeHours, Cash quoteCurrency, SymbolProperties symbolProperties, bool isTradable)
+            : base(symbol,
+                quoteCurrency,
+                symbolProperties,
+                new ForexExchange(exchangeHours),
+                new ForexCache(),
+                new SecurityPortfolioModel(),
+                new ImmediateFillModel(),
+                new InteractiveBrokersFeeModel(),
+                new SpreadSlippageModel(),
+                new ImmediateSettlementModel(),
+                Securities.VolatilityModel.Null,
+                new SecurityMarginModel(50m),
+                new ForexDataFilter(),
+                isTradable
+                )
+        {
+            Holdings = new ForexHolding(this);
+
+            // decompose the symbol into each currency pair
+            string baseCurrencySymbol, quoteCurrencySymbol;
+            DecomposeCurrencyPair(symbol.Value, out baseCurrencySymbol, out quoteCurrencySymbol);
+            BaseCurrencySymbol = baseCurrencySymbol;
+        }
+
+        /// <summary>
         /// Gets the currency acquired by going long this currency pair
         /// </summary>
         /// <remarks>
