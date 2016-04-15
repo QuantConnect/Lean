@@ -5,7 +5,7 @@ install:
   - nuget install NUnit.Runners -Version 2.6.4 -OutputDirectory testrunner
 script:
   - sudo apt-get install libmono-windowsbase4.0-cil
-  - xbuild /p:Configuration=Release /p:VbcToolExe=vbnc.exe QuantConnect.Lean.sln
-  - mono ./testrunner/NUnit.Runners.2.6.4/tools/nunit-console.exe ./Tests/bin/Release/QuantConnect.Tests.dll --exclude:TravisExclude
+  - xbuild /p:Configuration=TravisCI /p:VbcToolExe=vbnc.exe QuantConnect.Lean.sln
+  - mono ./testrunner/NUnit.Runners.2.6.4/tools/nunit-console.exe ./Tests/bin/TravisCI/QuantConnect.Tests.dll --exclude:TravisExclude
 after_success:
   - coveralls

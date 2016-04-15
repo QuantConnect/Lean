@@ -6,7 +6,7 @@
     // two predefined environments, 'backtesting' and 'live', feel free
     // to add more!
 
-    "environment": "backtesting",
+    "environment": "backtesting-desktop",
 
     // algorithm class selector
     "algorithm-type-name": "BasicTemplateAlgorithm",
@@ -55,7 +55,7 @@
     "ib-controller-dir": "C:\\IBController",
 
     //job configuration
-    "job-user-id": "0",
+    "job-user-id": "677",
 
     // tradier configuration
     "tradier-account-id": "",
@@ -147,7 +147,7 @@
         "backtesting-desktop": {
             "live-mode": false,
             "send-via-api": true,
-            "api-access-token": "",
+            "api-access-token": "65cd4b170cd38855e4b327924e18adb6",
       
             "setup-handler": "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler",
             "result-handler": "QuantConnect.Lean.Engine.Results.BacktestingResultHandler",
