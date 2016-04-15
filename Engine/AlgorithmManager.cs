@@ -308,13 +308,15 @@ namespace QuantConnect.Lean.Engine
                 //Update the securities properties: first before calling user code to avoid issues with data
                 foreach (var kvp in timeSlice.SecuritiesUpdateData)
                 {
-                    kvp.Key.SetMarketPrice(kvp.Value);
+                    var security = kvp.Key;
+                    var updates = kvp.Value;
+                    foreach (var update in updates)
+                    {
+                        security.SetMarketPrice(update);
+                    }
 
                     // Send market price updates to the TradeBuilder
-                    if (kvp.Value != null)
-                    {
-                        algorithm.TradeBuilder.SetMarketPrice(kvp.Key.Symbol, kvp.Value.Price);
-                    }
+                    algorithm.TradeBuilder.SetMarketPrice(security.Symbol, security.Price);
                 }
 
                 // fire real time events after we've updated based on the new data
@@ -428,7 +430,7 @@ namespace QuantConnect.Lean.Engine
                 // apply dividends
                 foreach (var dividend in timeSlice.Slice.Dividends.Values)
                 {
-                    Log.Trace("AlgorithmManager.Run(): Applying Dividend for " + dividend.Symbol.ToString(), true);
+                    Log.Trace("AlgorithmManager.Run(): {0}: Applying Dividend for {1}", algorithm.Time, dividend.Symbol.ToString());
                     algorithm.Portfolio.ApplyDividend(dividend);
                 }
 
@@ -437,7 +439,7 @@ namespace QuantConnect.Lean.Engine
                 {
                     try
                     {
-                        Log.Trace("AlgorithmManager.Run(): Applying Split for " + split.Symbol.ToString(), true);
+                        Log.Trace("AlgorithmManager.Run(): {0}: Applying Split for {1}", algorithm.Time, split.Symbol.ToString());
                         algorithm.Portfolio.ApplySplit(split);
                         // apply the split to open orders as well in raw mode, all other modes are split adjusted
                         if (_liveMode || algorithm.Securities[split.Symbol].SubscriptionDataConfig.DataNormalizationMode == DataNormalizationMode.Raw)

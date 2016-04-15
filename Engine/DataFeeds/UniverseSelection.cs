@@ -115,34 +115,35 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // we already have a subscription for this symbol so don't re-add it
                 if (existingSubscriptions.Contains(symbol)) continue;
 
-                // ask the limiter if we can add another subscription at that resolution
-                string reason;
-                if (!_limiter.CanAddSubscription(settings.Resolution, out reason))
-                {
-                    _algorithm.Error(reason);
-                    Log.Trace("UniverseSelection.ApplyUniverseSelection(): Skipping adding subscriptions: " + reason);
-                    break;
-                }
-                
                 // create the new security, the algorithm thread will add this at the appropriate time
                 Security security;
                 if (!_algorithm.Securities.TryGetValue(symbol, out security))
                 {
-                    security = SecurityManager.CreateSecurity(_algorithm.Portfolio, _algorithm.SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, universe.SecurityInitializer,
-                        symbol,
-                        settings.Resolution,
-                        settings.FillForward,
-                        settings.Leverage,
-                        settings.ExtendedMarketHours,
-                        false,
-                        false,
-                        false);
+                    security = universe.CreateSecurity(symbol, _algorithm, _marketHoursDatabase, _symbolPropertiesDatabase);
                 }
 
                 additions.Add(security);
 
-                // add the new subscriptions to the data feed
-                if (_dataFeed.AddSubscription(universe, security, dateTimeUtc, _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone)))
+                var addedSubscription = false;
+                foreach (var config in universe.GetSubscriptions(security))
+                {
+                    // ask the limiter if we can add another subscription at that resolution
+                    string reason;
+                    if (!_limiter.CanAddSubscription(config.Resolution, out reason))
+                    {
+                        _algorithm.Error(reason);
+                        Log.Trace("UniverseSelection.ApplyUniverseSelection(): Skipping adding subscription: " + config.Symbol.ToString() + ": " + reason);
+                        continue;
+                    }
+
+                    // add the new subscriptions to the data feed
+                    if (_dataFeed.AddSubscription(universe, security, config, dateTimeUtc, _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone)))
+                    {
+                        addedSubscription = true;
+                    }
+                }
+
+                if (addedSubscription)
                 {
                     universe.AddMember(dateTimeUtc, security);
                 }
@@ -154,14 +155,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var addedSecurities = _algorithm.Portfolio.CashBook.EnsureCurrencyDataFeeds(_algorithm.Securities, _algorithm.SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, _algorithm.BrokerageModel.DefaultMarkets);
                 foreach (var security in addedSecurities)
                 {
-                    _dataFeed.AddSubscription(universe, security, dateTimeUtc, _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone));
+                    // assume currency feeds are always one subscription per, these are typically quote subscriptions
+                    _dataFeed.AddSubscription(universe, security, security.SubscriptionDataConfig, dateTimeUtc, _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone));
                 }
             }
 
             // return None if there's no changes, otherwise return what we've modified
-            return additions.Count + removals.Count != 0
+            var securityChanges = additions.Count + removals.Count != 0
                 ? new SecurityChanges(additions, removals)
                 : SecurityChanges.None;
+
+            if (securityChanges != SecurityChanges.None)
+            {
+                Log.Debug("UniverseSelection.ApplyUniverseSelection(): " + dateTimeUtc + ": " + securityChanges);
+            }
+
+            return securityChanges;
         }
     }
 }

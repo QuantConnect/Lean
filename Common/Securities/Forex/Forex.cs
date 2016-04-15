@@ -45,6 +45,7 @@ namespace QuantConnect.Securities.Forex
                 new InteractiveBrokersFeeModel(),
                 new SpreadSlippageModel(),
                 new ImmediateSettlementModel(),
+                Securities.VolatilityModel.Null,
                 new SecurityMarginModel(50m),
                 new ForexDataFilter()
                 )

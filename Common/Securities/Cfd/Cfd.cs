@@ -45,6 +45,7 @@ namespace QuantConnect.Securities.Cfd
                 new ConstantFeeModel(0),
                 new SpreadSlippageModel(),
                 new ImmediateSettlementModel(),
+                Securities.VolatilityModel.Null,
                 new SecurityMarginModel(50m),
                 new CfdDataFilter()
                 )

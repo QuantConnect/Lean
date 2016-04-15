@@ -120,6 +120,28 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Adds the specified element to the collection with the specified key. If an entry does not exist for th
+        /// specified key then one will be created.
+        /// </summary>
+        /// <typeparam name="TKey">The key type</typeparam>
+        /// <typeparam name="TElement">The collection element type</typeparam>
+        /// <typeparam name="TCollection">The collection type</typeparam>
+        /// <param name="dictionary">The source dictionary to be added to</param>
+        /// <param name="key">The key</param>
+        /// <param name="element">The element to be added</param>
+        public static void Add<TKey, TElement, TCollection>(this IDictionary<TKey, TCollection> dictionary, TKey key, TElement element)
+            where TCollection : ICollection<TElement>, new()
+        {
+            TCollection list;
+            if (!dictionary.TryGetValue(key, out list))
+            {
+                list = new TCollection();
+                dictionary.Add(key, list);
+            }
+            list.Add(element);
+        }
+
+        /// <summary>
         /// Extension method to round a double value to a fixed number of significant figures instead of a fixed decimal places.
         /// </summary>
         /// <param name="d">Double we're rounding</param>
@@ -162,6 +184,19 @@ namespace QuantConnect
             // this is good for forex and other small numbers
             var d = (double)input;
             return (decimal)d.RoundToSignificantDigits(7);
+        }
+
+        /// <summary>
+        /// Casts the specified input value to a decimal while acknowledging the overflow conditions
+        /// </summary>
+        /// <param name="input">The value to be cast</param>
+        /// <returns>The input value as a decimal, if the value is too large or to small to be represented
+        /// as a decimal, then the closest decimal value will be returned</returns>
+        public static decimal SafeDecimalCast(this double input)
+        {
+            if (input <= (double) decimal.MinValue) return decimal.MinValue;
+            if (input >= (double) decimal.MaxValue) return decimal.MaxValue;
+            return (decimal) input;
         }
 
         private static decimal Normalize(decimal input)

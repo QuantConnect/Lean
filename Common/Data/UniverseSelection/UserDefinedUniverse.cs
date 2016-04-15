@@ -197,7 +197,7 @@ namespace QuantConnect.Data.UniverseSelection
                     yield return dateTime;
                     first = false;
                 }
-                if (exchangeHours.IsOpen(dateTime, dateTime + Interval, Configuration.ExtendedMarketHours))
+                else if (exchangeHours.IsOpen(dateTime, dateTime + Interval, Configuration.ExtendedMarketHours))
                 {
                     yield return dateTime;
                 }

@@ -18,6 +18,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 
@@ -156,13 +157,44 @@ namespace QuantConnect.Data.UniverseSelection
         public abstract IEnumerable<Symbol> SelectSymbols(DateTime utcTime, BaseDataCollection data);
 
         /// <summary>
-        /// Determines whether or not the specified
+        /// Creates and configures a security for the specified symbol
         /// </summary>
-        /// <param name="security"></param>
-        /// <returns></returns>
-        internal bool ContainsMember(Security security)
+        /// <param name="symbol">The symbol of the security to be created</param>
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <param name="marketHoursDatabase">The market hours database</param>
+        /// <param name="symbolPropertiesDatabase">The symbol properties database</param>
+        /// <returns>The newly initialized security object</returns>
+        public virtual Security CreateSecurity(Symbol symbol, IAlgorithm algorithm, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase)
         {
-            return _securities.ContainsKey(security.Symbol);
+            // by default invoke the create security method to handle security initialization
+            return SecurityManager.CreateSecurity(algorithm.Portfolio, algorithm.SubscriptionManager, marketHoursDatabase, symbolPropertiesDatabase,
+                SecurityInitializer, symbol, UniverseSettings.Resolution, UniverseSettings.FillForward, UniverseSettings.Leverage,
+                UniverseSettings.ExtendedMarketHours, false, false, symbol.ID.SecurityType == SecurityType.Option);
+        }
+
+        /// <summary>
+        /// Gets the subscriptions to be added for the specified security
+        /// </summary>
+        /// <remarks>
+        /// In most cases the default implementaon of returning the security's configuration is
+        /// sufficient. It's when we want multiple subscriptions (trade/quote data) that we'll need
+        /// to override this
+        /// </remarks>
+        /// <param name="security">The security to get subscriptions for</param>
+        /// <returns>All subscriptions required by this security</returns>
+        public virtual IEnumerable<SubscriptionDataConfig> GetSubscriptions(Security security)
+        {
+            return new[] {security.SubscriptionDataConfig};
+        }
+
+        /// <summary>
+        /// Determines whether or not the specified symbol is currently a member of this universe
+        /// </summary>
+        /// <param name="symbol">The symbol whose membership is to be checked</param>
+        /// <returns>True if the specified symbol is part of this universe, false otherwise</returns>
+        public bool ContainsMember(Symbol symbol)
+        {
+            return _securities.ContainsKey(symbol);
         }
 
         /// <summary>

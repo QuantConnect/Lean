@@ -48,6 +48,17 @@ namespace QuantConnect.Indicators
             Value = value;
             Status = status;
         }
-    }
 
+        /// <summary>
+        /// Converts the specified decimal value into a successful indicator result
+        /// </summary>
+        /// <remarks>
+        /// This method is provided for backwards compatibility
+        /// </remarks>
+        /// <param name="value">The decimal value to be converted into an <see cref="IndicatorResult"/></param>
+        public static implicit operator IndicatorResult(decimal value)
+        {
+            return new IndicatorResult(value);
+        }
+    }
 }

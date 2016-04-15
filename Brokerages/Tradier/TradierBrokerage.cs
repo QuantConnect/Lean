@@ -1234,6 +1234,7 @@ namespace QuantConnect.Brokerages.Tradier
             {
                 // send the submitted event
                 const int orderFee = 0;
+                order.QCOrder.PriceCurrency = "USD";
                 OnOrderEvent(new OrderEvent(order.QCOrder, DateTime.UtcNow, orderFee) { Status = OrderStatus.Submitted });
 
                 // mark this in our open orders before we submit so it's gauranteed to be there when we poll for updates
@@ -1465,6 +1466,7 @@ namespace QuantConnect.Brokerages.Tradier
              || ConvertStatus(updatedOrder.Status) != ConvertStatus(cachedOrder.Order.Status))
             {
                 var qcOrder = _orderProvider.GetOrderByBrokerageId(updatedOrder.Id);
+                qcOrder.PriceCurrency = "USD";
                 const int orderFee = 0;
                 var fill = new OrderEvent(qcOrder, DateTime.UtcNow, orderFee, "Tradier Fill Event")
                 {

@@ -18,8 +18,8 @@ namespace QuantConnect.Algorithm.Examples
         public override void Initialize()
         {
             SetCash(25000);
-            SetStartDate(2014, 6, 1);
-            SetEndDate(2014, 7, 1);
+            SetStartDate(2013, 10, 07);
+            SetEndDate(2013, 10, 11);
             AddSecurity(SecurityType.Equity, "SPY", Resolution.Tick);
 
             //Add our custom data filter.

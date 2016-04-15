@@ -104,6 +104,12 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="AddRemoveSecurityRegressionAlgorithm.py" />
+    <Content Include="DataConsolidationAlgorithm.py" />
+    <Content Include="HistoryAndWarmupRegressionAlgorithm.py" />
+    <Content Include="CustomChartingAlgorithm.py" />
+    <Content Include="DelistingEventsAlgorithm.py" />
+    <Content Include="DividendAlgorithm.py" />
+    <Content Include="ETFGlobalRotationAlgorithm.py" />
     <Content Include="MACDTrendAlgorithm.py" />
     <Content Include="QuandlImporterAlgorithm.py" />
     <Content Include="OrderTicketDemoAlgorithm.py" />
@@ -114,6 +120,7 @@
     <Content Include="DropboxUniverseSelectionAlgorithm.py" />
     <Content Include="CoarseFundamentalTop5Algorithm.py" />
     <Content Include="ScheduledEventsAlgorithm.py" />
+    <Content Include="TickDataFilteringAlgorithm.py" />
     <Content Include="UniverseSelectionDefinitionsAlgorithm.py" />
     <Content Include="UniverseSelectionRegressionAlgorithm.py" />
     <Content Include="UpdateOrderRegressionAlgorithm.py" />
@@ -634,6 +641,7 @@
     <Content Include="RegressionAlgorithm.py" />
     <Content Include="UserDefinedUniverseAlgorithm.py" />
     <Content Include="WarmupAlgorithm.py" />
+    <Content Include="WarmupHistoryAlgorithm.py" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

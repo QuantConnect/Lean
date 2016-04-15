@@ -312,11 +312,16 @@ namespace QuantConnect.Lean.Engine.Results
                     }
                     Log.Debug("LiveTradingResultHandler.Update(): End build run time stats");
 
+                    //Some users have $0 in their brokerage account / starting cash of $0. Prevent divide by zero errors
+                    var netReturn = _setupHandler.StartingPortfolioValue > 0 ?
+                                    (_algorithm.Portfolio.TotalPortfolioValue - _setupHandler.StartingPortfolioValue) / _setupHandler.StartingPortfolioValue
+                                    : 0;
+
                     //Add other fixed parameters.
                     runtimeStatistics.Add("Unrealized:", "$" + _algorithm.Portfolio.TotalUnrealizedProfit.ToString("N2"));
                     runtimeStatistics.Add("Fees:", "-$" + _algorithm.Portfolio.TotalFees.ToString("N2"));
                     runtimeStatistics.Add("Net Profit:", "$" + _algorithm.Portfolio.TotalProfit.ToString("N2"));
-                    runtimeStatistics.Add("Return:", ((_algorithm.Portfolio.TotalPortfolioValue - _setupHandler.StartingPortfolioValue) / _setupHandler.StartingPortfolioValue).ToString("P"));
+                    runtimeStatistics.Add("Return:", netReturn.ToString("P"));
                     runtimeStatistics.Add("Equity:", "$" + _algorithm.Portfolio.TotalPortfolioValue.ToString("N2"));
                     runtimeStatistics.Add("Holdings:", "$" + _algorithm.Portfolio.TotalHoldingsValue.ToString("N2"));
                     runtimeStatistics.Add("Volume:", "$" + _algorithm.Portfolio.TotalSaleVolume.ToString("N2"));
@@ -382,7 +387,7 @@ namespace QuantConnect.Lean.Engine.Results
                                 _algorithm.Portfolio.TotalProfit,
                                 _algorithm.Portfolio.TotalHoldingsValue, 
                                 _algorithm.Portfolio.TotalPortfolioValue,
-                                ((_algorithm.Portfolio.TotalPortfolioValue - _setupHandler.StartingPortfolioValue) / _setupHandler.StartingPortfolioValue),
+                                netReturn,
                                 _algorithm.Portfolio.TotalSaleVolume, 
                                 _lastOrderId, 0);
                         }

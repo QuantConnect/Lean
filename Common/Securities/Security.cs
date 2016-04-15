@@ -15,7 +15,6 @@
 
 using System;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
@@ -129,6 +128,14 @@ namespace QuantConnect.Securities
             {
                 return GetLastData() != null; 
             }
+        }
+
+        /// <summary>
+        /// Gets or sets whether or not this security should be considered tradable
+        /// </summary>
+        public bool IsTradable
+        {
+            get; set;
         }
 
         /// <summary>
@@ -261,6 +268,15 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the volatility model used for this security
+        /// </summary>
+        public IVolatilityModel VolatilityModel
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Customizable data filter to filter outlier ticks before they are passed into user event handlers. 
         /// By default all ticks are passed into the user algorithms.
         /// </summary>
@@ -287,6 +303,7 @@ namespace QuantConnect.Securities
                 new InteractiveBrokersFeeModel(),
                 new SpreadSlippageModel(),
                 new ImmediateSettlementModel(),
+                Securities.VolatilityModel.Null, 
                 new SecurityMarginModel(1m),
                 new SecurityDataFilter())
         {
@@ -305,6 +322,7 @@ namespace QuantConnect.Securities
             IFeeModel feeModel,
             ISlippageModel slippageModel,
             ISettlementModel settlementModel,
+            IVolatilityModel volatilityModel,
             ISecurityMarginModel marginModel,
             ISecurityDataFilter dataFilter
             )
@@ -323,6 +341,7 @@ namespace QuantConnect.Securities
             _config = config;
             QuoteCurrency = quoteCurrency;
             SymbolProperties = symbolProperties;
+            IsTradable = !config.IsInternalFeed;
             Cache = cache;
             Exchange = exchange;
             DataFilter = dataFilter;
@@ -332,6 +351,7 @@ namespace QuantConnect.Securities
             FeeModel = feeModel;
             SlippageModel = slippageModel;
             SettlementModel = settlementModel;
+            VolatilityModel = volatilityModel;
             Holdings = new SecurityHolding(this);
         }
 
@@ -378,16 +398,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual decimal Price 
         {
-            get 
-            {
-                //Get the current security value from the cache
-                var data = GetLastData();
-                if (data != null) 
-                {
-                    return data.Value;
-                }
-                return 0;
-            }
+            get { return Cache.Price; }
         }
 
         /// <summary>
@@ -404,35 +415,17 @@ namespace QuantConnect.Securities
         /// <summary>
         /// If this uses tradebar data, return the most recent high.
         /// </summary>
-        public virtual decimal High {
-            get 
-            { 
-                var data = GetLastData();
-
-                var bar = data as TradeBar;
-                if (bar != null) 
-                {
-                    return bar.High;
-                }
-                return data.Value;
-            }
+        public virtual decimal High
+        {
+            get { return Cache.High == 0 ? Price : Cache.High; }
         }
 
         /// <summary>
         /// If this uses tradebar data, return the most recent low.
         /// </summary>
-        public virtual decimal Low {
-            get 
-            {
-                var data = GetLastData();
-
-                var bar = data as TradeBar;
-                if (bar != null)
-                {
-                    return bar.Low;
-                }
-                return data.Value;
-            }
+        public virtual decimal Low
+        {
+            get { return Cache.Low == 0 ? Price : Cache.Low; }
         }
 
         /// <summary>
@@ -440,28 +433,15 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual decimal Close 
         {
-            get 
-            {
-                var data = GetLastData();
-                if (data == null) return 0;
-                return data.Value;
-            }
+            get { return Cache.Close == 0 ? Price : Cache.Close; }
         }
 
         /// <summary>
         /// If this uses tradebar data, return the most recent open.
         /// </summary>
-        public virtual decimal Open {
-            get {
-                var data = GetLastData();
-
-                var bar = data as TradeBar;
-                if (bar != null)
-                {
-                    return bar.Open;
-                }
-                return data.Value;
-            }
+        public virtual decimal Open
+        {
+            get { return Cache.Open == 0 ? Price: Cache.Open; }
         }
 
         /// <summary>
@@ -469,17 +449,39 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual long Volume
         {
-            get
-            {
-                var data = GetLastData();
+            get { return Cache.Volume; }
+        }
 
-                var bar = data as TradeBar;
-                if (bar != null)
-                {
-                    return bar.Volume;
-                }
-                return 0;
-            }
+        /// <summary>
+        /// Gets the most recent bid price if available
+        /// </summary>
+        public virtual decimal BidPrice
+        {
+            get { return Cache.BidPrice == 0 ? Price : Cache.BidPrice; }
+        }
+
+        /// <summary>
+        /// Gets the most recent bid size if available
+        /// </summary>
+        public virtual long BidSize
+        {
+            get { return Cache.BidSize; }
+        }
+
+        /// <summary>
+        /// Gets the most recent ask price if available
+        /// </summary>
+        public virtual decimal AskPrice
+        {
+            get { return Cache.AskPrice == 0 ? Price : Cache.AskPrice; }
+        }
+
+        /// <summary>
+        /// Gets the most recent ask size if available
+        /// </summary>
+        public virtual long AskSize
+        {
+            get { return Cache.AskSize; }
         }
 
         /// <summary>
@@ -517,7 +519,8 @@ namespace QuantConnect.Securities
             //Add new point to cache:
             if (data == null) return;
             Cache.AddData(data);
-            Holdings.UpdateMarketPrice(data.Value);
+            Holdings.UpdateMarketPrice(Price);
+            VolatilityModel.Update(this, data);
         }
 
         /// <summary>

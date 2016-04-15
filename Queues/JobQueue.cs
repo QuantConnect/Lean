@@ -31,6 +31,7 @@ namespace QuantConnect.Queues
     public class JobQueue : IJobQueueHandler
     {
         // The type name of the QuantConnect.Brokerages.Paper.PaperBrokerage
+        private static readonly TextWriter Console = System.Console.Out;
         private const string PaperBrokerageTypeName = "PaperBrokerage";
         private bool _liveMode = Config.GetBool("live-mode");
         private static readonly string Channel = Config.Get("job-channel");
@@ -133,8 +134,8 @@ namespace QuantConnect.Queues
         public void AcknowledgeJob(AlgorithmNodePacket job)
         {
             // Make the console window pause so we can read log output before exiting and killing the application completely
-            Log.Trace("Engine.Main(): Analysis Complete. Press any key to continue.");
-            Console.Read();
+            Console.WriteLine("Engine.Main(): Analysis Complete. Press any key to continue.");
+            System.Console.Read();
         }
     }
 

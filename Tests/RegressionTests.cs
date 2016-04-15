@@ -173,11 +173,11 @@ namespace QuantConnect.Tests
                 {"Total Trades", "5"},
                 {"Average Win", "0.49%"},
                 {"Average Loss", "0%"},
-                {"Compounding Annual Return", "307.953%"},
+                {"Compounding Annual Return", "307.853%"},
                 {"Drawdown", "1.400%"},
                 {"Expectancy", "0"},
                 {"Net Profit", "1.814%"},
-                {"Sharpe Ratio", "6.475"},
+                {"Sharpe Ratio", "6.474"},
                 {"Loss Rate", "0%"},
                 {"Win Rate", "100%"},
                 {"Profit-Loss Ratio", "0"},
@@ -185,33 +185,33 @@ namespace QuantConnect.Tests
                 {"Beta", "0.018"},
                 {"Annual Standard Deviation", "0.141"},
                 {"Annual Variance", "0.02"},
-                {"Information Ratio", "1.649"},
+                {"Information Ratio", "1.648"},
                 {"Tracking Error", "0.236"},
-                {"Treynor Ratio", "50.468"},
-                {"Total Fees", "$25.21"}
+                {"Treynor Ratio", "50.372"},
+                {"Total Fees", "$25.20"}
             };
 
             var dropboxBaseDataUniverseSelectionStatistics = new Dictionary<string, string>
             {
                 {"Total Trades", "67"},
-                {"Average Win", "1.07%"},
+                {"Average Win", "1.13%"},
                 {"Average Loss", "-0.69%"},
-                {"Compounding Annual Return", "17.697%"},
+                {"Compounding Annual Return", "17.718%"},
                 {"Drawdown", "5.100%"},
-                {"Expectancy", "0.776"},
-                {"Net Profit", "17.697%"},
-                {"Sharpe Ratio", "1.379"},
-                {"Loss Rate", "30%"},
-                {"Win Rate", "70%"},
-                {"Profit-Loss Ratio", "1.55"},
+                {"Expectancy", "0.813"},
+                {"Net Profit", "17.718%"},
+                {"Sharpe Ratio", "1.38"},
+                {"Loss Rate", "31%"},
+                {"Win Rate", "69%"},
+                {"Profit-Loss Ratio", "1.64"},
                 {"Alpha", "0.151"},
                 {"Beta", "-0.073"},
                 {"Annual Standard Deviation", "0.099"},
                 {"Annual Variance", "0.01"},
-                {"Information Ratio", "-0.507"},
+                {"Information Ratio", "-0.506"},
                 {"Tracking Error", "0.146"},
-                {"Treynor Ratio", "-1.871"},
-                {"Total Fees", "$300.29"}
+                {"Treynor Ratio", "-1.873"},
+                {"Total Fees", "$300.15"}
             };
 
             var dropboxUniverseSelectionStatistics = new Dictionary<string, string>
@@ -219,11 +219,11 @@ namespace QuantConnect.Tests
                 {"Total Trades", "49"},
                 {"Average Win", "1.58%"},
                 {"Average Loss", "-1.03%"},
-                {"Compounding Annual Return", "21.280%"},
+                {"Compounding Annual Return", "21.281%"},
                 {"Drawdown", "8.200%"},
                 {"Expectancy", "0.646"},
-                {"Net Profit", "21.280%"},
-                {"Sharpe Ratio", "1.363"},
+                {"Net Profit", "21.281%"},
+                {"Sharpe Ratio", "1.362"},
                 {"Loss Rate", "35%"},
                 {"Win Rate", "65%"},
                 {"Profit-Loss Ratio", "1.52"},
@@ -231,10 +231,10 @@ namespace QuantConnect.Tests
                 {"Beta", "-0.071"},
                 {"Annual Standard Deviation", "0.12"},
                 {"Annual Variance", "0.014"},
-                {"Information Ratio", "-0.297"},
+                {"Information Ratio", "-0.296"},
                 {"Tracking Error", "0.161"},
                 {"Treynor Ratio", "-2.319"},
-                {"Total Fees", "$233.07"}
+                {"Total Fees", "$232.92"}
             };
 
             var parameterizedStatistics = new Dictionary<string, string>
