@@ -61,6 +61,14 @@ namespace QuantConnect.Indicators
             return second;
         }
 
+        public static TSecond SMA<T, TSecond>(this TSecond second, IndicatorBase<T> first, int period, bool waitForFirstToReady = true)
+            where T :BaseData
+            where TSecond : IndicatorBase<IndicatorDataPoint>
+        {
+            SimpleMovingAverage _smaADX = new SimpleMovingAverage("SMA of " + first.Name, period).Of(first);
+            return second;
+        }
+
         /// <summary>
         /// Creates a new CompositeIndicator such that the result will be the sum of the left and the constant
         /// </summary>
