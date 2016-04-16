@@ -61,12 +61,12 @@ namespace QuantConnect.Indicators
             return second;
         }
 
-        public static TSecond SMA<T, TSecond>(this TSecond second, IndicatorBase<T> first, int period, bool waitForFirstToReady = true)
+        public static SimpleMovingAverage SMA<T, TSecond>(this IndicatorBase<T> left, int period, bool waitForFirstToReady = true)
             where T :BaseData
             where TSecond : IndicatorBase<IndicatorDataPoint>
         {
-            SimpleMovingAverage _smaADX = new SimpleMovingAverage("SMA of " + first.Name, period).Of(first);
-            return second;
+            SimpleMovingAverage _smaADX = new SimpleMovingAverage("SMA of " + left.Name, period).Of(left);
+            return _smaADX;
         }
 
         /// <summary>
