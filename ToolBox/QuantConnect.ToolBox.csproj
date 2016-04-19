@@ -35,18 +35,6 @@
   <PropertyGroup>
     <StartupObject>QuantConnect.ToolBox.CryptoiqDownloader.Program</StartupObject>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'TravisCI|AnyCPU'">
-    <OutputPath>bin\TravisCI\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>5</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <Prefer32Bit>true</Prefer32Bit>
-  </PropertyGroup>
   <ItemGroup>
     <Reference Include="IKVM.AWT.WinForms">
       <HintPath>..\packages\IKVM-WithExes.7.3.4830.1\tools\IKVM.AWT.WinForms.dll</HintPath>
