@@ -6,7 +6,7 @@
   // two predefined environments, 'backtesting' and 'live', feel free
   // to add more!
 
-  "environment": "backtesting-desktop",
+  "environment": "backtesting",
 
   // algorithm class selector
   "algorithm-type-name": "BasicTemplateAlgorithm",
