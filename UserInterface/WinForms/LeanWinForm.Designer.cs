@@ -39,7 +39,6 @@
             this.groupLog = new System.Windows.Forms.GroupBox();
             this.LogTextBox = new System.Windows.Forms.RichTextBox();
             this.timer = new System.Windows.Forms.Timer(this.components);
-            this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitPanel)).BeginInit();
             this.splitPanel.Panel2.SuspendLayout();
@@ -164,6 +163,5 @@
         private System.Windows.Forms.ToolStripProgressBar FormToolStripProgressBar;
         private System.Windows.Forms.Timer timer;
         private System.Windows.Forms.RichTextBox LogTextBox;
-        private System.Windows.Forms.Timer timer1;
     }
 }

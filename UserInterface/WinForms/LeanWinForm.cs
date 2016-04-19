@@ -4,7 +4,6 @@ using System.Windows.Forms;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine;
 using QuantConnect.Logging;
 using QuantConnect.Messaging;
 using QuantConnect.Packets;
@@ -15,17 +14,17 @@ namespace QuantConnect.Views.WinForms
 {
     public partial class LeanWinForm : Form
     {
-        private Engine _engine;
-        private AlgorithmNodePacket _job;
+        private readonly WebBrowser _monoBrowser;
+        private readonly AlgorithmNodePacket _job;
+        private readonly QueueLogHandler _logging;
+        private readonly EventMessagingHandler _messaging;
         //private GeckoWebBrowser _geckoBrowser;
-        private WebBrowser _monoBrowser;
-        private EventMessagingHandler _messaging;
-        private QueueLogHandler _logging;
-        
+
         /// <summary>
         /// Create the UX.
         /// </summary>
-        /// <param name="job"></param>
+        /// <param name="notificationHandler">Messaging system</param>
+        /// <param name="job">Job to use for URL generation</param>
         public LeanWinForm(IMessagingHandler notificationHandler, AlgorithmNodePacket job)
         {
             InitializeComponent();
@@ -38,7 +37,7 @@ namespace QuantConnect.Views.WinForms
             //Save off the messaging event handler we need:
             _job = job;
             _messaging = (EventMessagingHandler)notificationHandler;
-            var url = GetURL(job, false, false);
+            var url = GetUrl(job);
 
             //GECKO WEB BROWSER: Create the browser control
             // https://www.nuget.org/packages/GeckoFX/
@@ -72,7 +71,7 @@ namespace QuantConnect.Views.WinForms
         /// <param name="job">Job packet for the URL</param>
         /// <param name="liveMode">Is this a live mode chart?</param>
         /// <param name="holdReady">Hold the ready signal to inject data</param>
-        private string GetURL(AlgorithmNodePacket job, bool liveMode = false, bool holdReady = false)
+        private static string GetUrl(AlgorithmNodePacket job, bool liveMode = false, bool holdReady = false)
         {
             var url = "";
             var hold = holdReady == false ? "0" : "1";
@@ -120,24 +119,23 @@ namespace QuantConnect.Views.WinForms
             StatisticsToolStripStatusLabel.Text = string.Concat("Performance: CPU: ", OS.CpuUsage.NextValue().ToString("0.0"), "%",
                                                                 " Ram: ", OS.TotalPhysicalMemoryUsed, " Mb");
 
-            if (_logging != null)
+            if (_logging == null) return;
+
+            LogEntry log;
+            while (_logging.Logs.TryDequeue(out log))
             {
-                LogEntry log;
-                while (_logging.Logs.TryDequeue(out log))
+                switch (log.MessageType)
                 {
-                    switch (log.MessageType)
-                    {
-                        case LogType.Debug:
-                            LogTextBox.AppendText(log.ToString(), Color.Black);
-                            break;
-                        default:
-                        case LogType.Trace:
-                            LogTextBox.AppendText(log.ToString(), Color.Black);
-                            break;
-                        case LogType.Error:
-                            LogTextBox.AppendText(log.ToString(), Color.DarkRed);
-                            break;
-                    }
+                    case LogType.Debug:
+                        LogTextBox.AppendText(log.ToString(), Color.Black);
+                        break;
+                    default:
+                    case LogType.Trace:
+                        LogTextBox.AppendText(log.ToString(), Color.Black);
+                        break;
+                    case LogType.Error:
+                        LogTextBox.AppendText(log.ToString(), Color.DarkRed);
+                        break;
                 }
             }
         }
@@ -148,47 +146,47 @@ namespace QuantConnect.Views.WinForms
         /// <param name="packet"></param>
         private void MessagingOnBacktestResultEvent(BacktestResultPacket packet)
         {
-            if (packet.Progress == 1)
+            if (packet.Progress != 1) return;
+
+            //Remove previous event handler:
+            var url = GetUrl(_job, false, true);
+
+            //Generate JSON:
+            var jObj = new JObject();
+            var dateFormat = "yyyy-MM-dd HH:mm:ss";
+            dynamic final = jObj;
+            final.dtPeriodStart = packet.PeriodStart.ToString(dateFormat);
+            final.dtPeriodFinished = packet.PeriodFinish.AddDays(1).ToString(dateFormat);
+            dynamic resultData = new JObject();
+            resultData.version = "3";
+            resultData.results = JObject.FromObject(packet.Results);
+            resultData.statistics = JObject.FromObject(packet.Results.Statistics);
+            resultData.iTradeableDates = 1;
+            resultData.ranking = null;
+            final.oResultData = resultData;
+            var json = JsonConvert.SerializeObject(final);
+
+            //GECKO RESULT SET:
+            //_geckoBrowser.DOMContentLoaded += (sender, args) =>
+            //{
+            //    var executor = new JQueryExecutor(_geckoBrowser.Window);
+            //    executor.ExecuteJQuery("window.jnBacktest = JSON.parse('" + json + "');");
+            //    executor.ExecuteJQuery("$.holdReady(false)");
+            //};
+            //_geckoBrowser.Navigate(url);
+
+            //MONO WEB BROWSER RESULT SET:
+            _monoBrowser.DocumentCompleted += (sender, args) =>
             {
-                //Remove previous event handler:
-                var url = GetURL(_job, false, true);
+                if (_monoBrowser.Document == null) return;
+                _monoBrowser.Document.InvokeScript("eval", new object[] { "window.jnBacktest = JSON.parse('" + json + "');" });
+                _monoBrowser.Document.InvokeScript("eval", new object[] { "$.holdReady(false)" });
+            };
+            _monoBrowser.Navigate(url);
 
-                //Generate JSON:
-                var jObj = new JObject();
-                var dateFormat = "yyyy-MM-dd HH:mm:ss";
-                dynamic final = jObj;
-                final.dtPeriodStart = packet.PeriodStart.ToString(dateFormat);
-                final.dtPeriodFinished = packet.PeriodFinish.AddDays(1).ToString(dateFormat);
-                dynamic resultData = new JObject();
-                resultData.version = "3";
-                resultData.results = JObject.FromObject(packet.Results);
-                resultData.statistics = JObject.FromObject(packet.Results.Statistics);
-                resultData.iTradeableDates = 1;
-                resultData.ranking = null;
-                final.oResultData = resultData;
-                var json = JsonConvert.SerializeObject(final);
-
-                //GECKO RESULT SET:
-                //_geckoBrowser.DOMContentLoaded += (sender, args) =>
-                //{
-                //    var executor = new JQueryExecutor(_geckoBrowser.Window);
-                //    executor.ExecuteJQuery("window.jnBacktest = JSON.parse('" + json + "');");
-                //    executor.ExecuteJQuery("$.holdReady(false)");
-                //};
-                //_geckoBrowser.Navigate(url);
-
-                //MONO WEB BROWSER RESULT SET:
-                _monoBrowser.DocumentCompleted += (sender, args) =>
-                {
-                    _monoBrowser.Document.InvokeScript("eval", new object[] { "window.jnBacktest = JSON.parse('" + json + "');" });
-                    _monoBrowser.Document.InvokeScript("eval", new object[] { "$.holdReady(false)" });
-                };
-                _monoBrowser.Navigate(url);
-
-                foreach (var pair in packet.Results.Statistics)
-                {
-                    _logging.Trace("STATISTICS:: " + pair.Key + " " + pair.Value);
-                }
+            foreach (var pair in packet.Results.Statistics)
+            {
+                _logging.Trace("STATISTICS:: " + pair.Key + " " + pair.Value);
             }
         }
 
