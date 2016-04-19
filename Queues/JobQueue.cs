@@ -34,9 +34,9 @@ namespace QuantConnect.Queues
         private static readonly TextWriter Console = System.Console.Out;
         private const string PaperBrokerageTypeName = "PaperBrokerage";
         private bool _liveMode = Config.GetBool("live-mode");
-        private static readonly string Channel = Config.Get("job-channel");
-        private static readonly int UserId = Config.GetInt("job-user-id", int.MaxValue);
-        private static readonly int ProjectId = Config.GetInt("job-project-id", int.MaxValue);
+        private static readonly string AccessToken = Config.Get("api-access-token");
+        private static readonly int UserId = Config.GetInt("job-user-id", 0);
+        private static readonly int ProjectId = Config.GetInt("job-project-id", 0);
         private static readonly string AlgorithmTypeName = Config.Get("algorithm-type-name");
         private readonly Language Language = (Language)Enum.Parse(typeof(Language), Config.Get("algorithm-language"));
 
@@ -85,7 +85,7 @@ namespace QuantConnect.Queues
                     Type = PacketType.LiveNode,
                     Algorithm = File.ReadAllBytes(AlgorithmLocation),
                     Brokerage = Config.Get("live-mode-brokerage", PaperBrokerageTypeName),
-                    Channel = Channel,
+                    Channel = AccessToken,
                     UserId = UserId,
                     ProjectId = ProjectId,
                     Version = Globals.Version,
@@ -114,7 +114,7 @@ namespace QuantConnect.Queues
             {
                 Type = PacketType.BacktestNode,
                 Algorithm = File.ReadAllBytes(AlgorithmLocation),
-                Channel = Channel,
+                Channel = AccessToken,
                 UserId = UserId,
                 ProjectId = ProjectId,
                 Version = Globals.Version,

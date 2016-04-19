@@ -6,7 +6,7 @@
     // two predefined environments, 'backtesting' and 'live', feel free
     // to add more!
 
-    "environment": "backtesting",
+    "environment": "backtesting-desktop",
 
     // algorithm class selector
     "algorithm-type-name": "BasicTemplateAlgorithm",
@@ -54,8 +54,10 @@
     "ib-tws-dir": "C:\\Jts",
     "ib-controller-dir": "C:\\IBController",
 
+    //job configuration
+    "job-user-id": "677",
+
     // tradier configuration
-    "qc-user-id": "",
     "tradier-account-id": "",
     "tradier-access-token": "",
     "tradier-refresh-token": "",
@@ -88,16 +90,6 @@
 
             "setup-handler": "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler",
             "result-handler": "QuantConnect.Lean.Engine.Results.BacktestingResultHandler",
-            "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed",
-            "real-time-handler": "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler",
-            "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"
-        },
-
-        "desktop": {
-            "live-mode": false,
-
-            "setup-handler": "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler",
-            "result-handler": "QuantConnect.Lean.Engine.Results.DesktopResultHandler",
             "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed",
             "real-time-handler": "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler",
             "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"
@@ -146,9 +138,24 @@
             "data-queue-handler": "InteractiveBrokersBrokerage",
             "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
             "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
-            "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",            
+            "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
             "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
             "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler"
-        }
+        },
+
+        // defines the 'backtesting-desktop' environment
+        "backtesting-desktop": {
+            "live-mode": false,
+            "send-via-api": true,
+            "api-access-token": "65cd4b170cd38855e4b327924e18adb6",
+      
+            "setup-handler": "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler",
+            "result-handler": "QuantConnect.Lean.Engine.Results.BacktestingResultHandler",
+            "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed",
+            "real-time-handler": "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler",
+            "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler",
+            "messaging-handler": "QuantConnect.Messaging.EventMessagingHandler",
+            "log-handler": "QuantConnect.Logging.QueueLogHandler"
+       }
     }
 }

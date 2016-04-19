@@ -36,6 +36,16 @@
   <PropertyGroup>
     <StartupObject />
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'TravisCI|AnyCPU'">
+    <OutputPath>bin\TravisCI\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>5</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="IKVM.OpenJDK.Beans, Version=7.2.4630.5, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

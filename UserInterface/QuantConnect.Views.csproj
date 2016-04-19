@@ -5,13 +5,15 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{C68BEEED-B0C0-4002-94D4-1E871133D02A}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>QuantConnect.Views</RootNamespace>
     <AssemblyName>QuantConnect.Views</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <LangVersion>5</LangVersion>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -21,6 +23,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -30,10 +33,58 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
+  <PropertyGroup> 
+    <StartupObject>
+    </StartupObject>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>5</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>5</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'TravisCI|AnyCPU'">
+    <OutputPath>bin\TravisCI\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>5</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'TravisCI|x64'">
+    <OutputPath>bin\x64\TravisCI\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>5</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -45,14 +96,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="WinForms\LeanEngineWinForm.Events.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="WinForms\LeanEngineWinForm.cs">
-      <SubType>Form</SubType>
+    <Compile Include="Browser.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="WinForms\LeanEngineWinForm.Extensions.cs" />
+    <Compile Include="WinForms\LeanWinForm.Extensions.cs" />
+    <Compile Include="WinForms\LeanWinForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="WinForms\LeanWinForm.Designer.cs">
+      <DependentUpon>LeanWinForm.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm.CSharp\QuantConnect.Algorithm.CSharp.csproj">
@@ -102,7 +159,46 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Icons\application-exit-16.png" />
+    <Content Include="Icons\applications-utilities-128.png" />
+    <Content Include="Icons\dialog-cancel-32.png" />
+    <Content Include="Icons\dialog-close-32.png" />
+    <Content Include="Icons\dialog-ok-apply-32.png" />
+    <Content Include="Icons\document-new-16.png" />
+    <Content Include="Icons\document-open-16.png" />
+    <Content Include="Icons\document-open-32.png" />
+    <Content Include="Icons\document-open-folder-32.png" />
+    <Content Include="Icons\documentation-16.png" />
+    <Content Include="Icons\download.png" />
+    <Content Include="Icons\folder-open-16.ico" />
+    <Content Include="Icons\folder-open-16.png" />
+    <Content Include="Icons\help-about-16.png" />
+    <Content Include="Icons\icon_128x128.png" />
+    <Content Include="Icons\kformula-16.ico" />
+    <Content Include="Icons\kformula-16.png" />
+    <Content Include="Icons\kformula-32.png" />
+    <Content Include="Icons\lean.ico" />
+    <Content Include="Icons\office-chart-area-16.png" />
+    <Content Include="Icons\preferences-other.png" />
+    <Content Include="Icons\server-database.png" />
+    <Content Include="Icons\window-cascade.png" />
+    <Content Include="Icons\window-new-16.png" />
+    <Content Include="Icons\window-tile-horizontal.png" />
+    <Content Include="Icons\window-tile-vertical.png" />
+    <EmbeddedResource Include="WinForms\LeanWinForm.resx">
+      <DependentUpon>LeanWinForm.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
