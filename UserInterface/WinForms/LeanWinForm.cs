@@ -62,6 +62,16 @@ namespace QuantConnect.Views.WinForms
             _messaging.BacktestResultEvent += MessagingOnBacktestResultEvent;
 
             _logging = Log.LogHandler as QueueLogHandler;
+
+            //Show warnings if the API token and UID aren't set.
+            if (_job.UserId == 0)
+            {
+                MessageBox.Show("Your user id is not set. Please check your config.json file 'job-user-id' property.", "LEAN Algorithmic Trading", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            if (_job.Channel == "")
+            {
+                MessageBox.Show("Your API token is not set. Please check your config.json file 'api-access-token' property.", "LEAN Algorithmic Trading", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
 
