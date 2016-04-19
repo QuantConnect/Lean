@@ -107,21 +107,21 @@ namespace QuantConnect.Brokerages.Bitfinex
                 Log.Error(ex, string.Format("Parsing wss message failed. Data: {0}", e.Data));
             }
         }
-        
+
         private void PopulateTicker(string response)
         {
             var data = JsonConvert.DeserializeObject<string[]>(response, settings);
             var msg = new TickerMessage(data);
             lock (Ticks)
             {
-                Ticks.Add(new Tick
+               Ticks.Add(new Tick
                 {
                     AskPrice = msg.ASK / ScaleFactor,
                     BidPrice = msg.BID / ScaleFactor,
                     AskSize = (long)Math.Round(msg.ASK_SIZE * ScaleFactor, 0),
                     BidSize = (long)Math.Round(msg.BID_SIZE * ScaleFactor, 0),
                     Time = DateTime.UtcNow,
-                    Value = msg.LAST_PRICE / ScaleFactor,
+                    Value = (msg.ASK - ((msg.ASK - msg.BID) / 2m)) / ScaleFactor,
                     TickType = TickType.Quote,
                     Symbol = Symbol,
                     DataType = MarketDataType.Tick,

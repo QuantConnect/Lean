@@ -167,31 +167,31 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
 
             unit.OnMessage(unit, GetArgs(json));
 
-            json = "[\"0\",\"0.01\",\"0.01\",\"0.01\",\"0.01\",\"0.01\",\"0.01\",\"1\",\"0.01\",\"0.01\",\"0.01\"]";
+            json = "[\"0\",\"1.00\",\"0.01\",\"2.00\",\"0.01\",\"0.01\",\"0.01\",\"1\",\"0.01\",\"0.01\",\"0.01\"]";
 
             unit.OnMessage(unit, GetArgs(json));
 
             var actual = unit.GetNextTicks().First();
             Assert.AreEqual("BTCUSD", actual.Symbol.Value);
-            Assert.AreEqual(0.01m, actual.Price);
+            Assert.AreEqual(0.015m, actual.Price);
 
             //should not serialize into exponent
-            json = "[\"0\",\"0.01\",\"0.01\",\"0.01\",\"0.01\",\"0.01\",\"0.0000001\",\"1\",\"0.01\",\"0.01\",\"0.01\"]";
+            json = "[\"0\",\"200.00\",\"0.01\",\"400.00\",\"0.01\",\"0.01\",\"0.0000001\",\"1\",\"0.01\",\"0.01\",\"0.01\"]";
 
             unit.OnMessage(unit, GetArgs(json));
 
             actual = unit.GetNextTicks().First();
             Assert.AreEqual("BTCUSD", actual.Symbol.Value);
-            Assert.AreEqual(0.01m, actual.Price);
+            Assert.AreEqual(3m, actual.Price);
 
             //should not fail due to parse error on superfluous field
-            json = "[\"0\",\"0.01\",\"0.01\",\"0.01\",\"0.01\",\"0.01\",\"abc\",\"1\",\"0.01\",\"0.01\",\"0.01\"]";
+            json = "[\"0\",\"70.00\",\"0.01\",\"71.00\",\"0.01\",\"0.01\",\"abc\",\"1\",\"0.01\",\"0.01\",\"0.01\"]";
 
             unit.OnMessage(unit, GetArgs(json));
 
             actual = unit.GetNextTicks().First();
             Assert.AreEqual("BTCUSD", actual.Symbol.Value);
-            Assert.AreEqual(0.01m, actual.Price);
+            Assert.AreEqual(0.705m, actual.Price);
 
         }
 
@@ -209,7 +209,7 @@ namespace QuantConnect.Brokerages.Bitfinex.Tests
 
             var actual = unit.GetNextTicks().First();
             Assert.AreEqual("BTCUSD", actual.Symbol.Value);
-            Assert.AreEqual(4.3272m, actual.Price);
+            Assert.AreEqual(4.32625m, actual.Price);
         }
 
 
