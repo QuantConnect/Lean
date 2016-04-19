@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using Gecko;
-using Gecko.JQuery;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Interfaces;
@@ -10,6 +8,8 @@ using QuantConnect.Lean.Engine;
 using QuantConnect.Logging;
 using QuantConnect.Messaging;
 using QuantConnect.Packets;
+//using Gecko;
+//using Gecko.JQuery;
 
 namespace QuantConnect.Views.WinForms
 {
@@ -17,19 +17,16 @@ namespace QuantConnect.Views.WinForms
     {
         private Engine _engine;
         private AlgorithmNodePacket _job;
-        private GeckoWebBrowser _browser;
+        //private GeckoWebBrowser _geckoBrowser;
+        private WebBrowser _monoBrowser;
         private EventMessagingHandler _messaging;
         private QueueLogHandler _logging;
-        private LeanEngineSystemHandlers _systemHandlers;
-        private LeanEngineAlgorithmHandlers _algorithmHandlers;
         
         /// <summary>
         /// Create the UX.
         /// </summary>
-        /// <param name="systemHandlers"></param>
-        /// <param name="algorithmHandlers"></param>
         /// <param name="job"></param>
-        public LeanWinForm(LeanEngineSystemHandlers systemHandlers, LeanEngineAlgorithmHandlers algorithmHandlers, AlgorithmNodePacket job)
+        public LeanWinForm(IMessagingHandler notificationHandler, AlgorithmNodePacket job)
         {
             InitializeComponent();
 
@@ -40,17 +37,23 @@ namespace QuantConnect.Views.WinForms
 
             //Save off the messaging event handler we need:
             _job = job;
-            _systemHandlers = systemHandlers;
-            _algorithmHandlers = algorithmHandlers;
-            _messaging = (EventMessagingHandler)systemHandlers.Notify;
-
-            //Create the browser control
-            _browser = new GeckoWebBrowser { Dock = DockStyle.Fill, Name = "browser" };
-            _browser.DOMContentLoaded += BrowserOnDomContentLoaded;
-            splitPanel.Panel1.Controls.Add(_browser);
-
+            _messaging = (EventMessagingHandler)notificationHandler;
             var url = GetURL(job, false, false);
-            _browser.Navigate(url);
+
+            //GECKO WEB BROWSER: Create the browser control
+            // https://www.nuget.org/packages/GeckoFX/
+            // -> If you don't have IE.
+            //_geckoBrowser = new GeckoWebBrowser { Dock = DockStyle.Fill, Name = "browser" };
+            //_geckoBrowser.DOMContentLoaded += BrowserOnDomContentLoaded;
+            //_geckoBrowser.Navigate(url);
+            //splitPanel.Panel1.Controls.Add(_geckoBrowser);
+
+            // MONO WEB BROWSER: Create the browser control
+            // Default shipped with VS and Mono. Works OK in Windows, and compiles in linux.
+            _monoBrowser = new WebBrowser() {Dock = DockStyle.Fill, Name = "Browser"};
+            _monoBrowser.DocumentCompleted += MonoBrowserOnDocumentCompleted;
+            _monoBrowser.Navigate(url);
+            splitPanel.Panel1.Controls.Add(_monoBrowser);
 
             //Setup Event Handlers:
             _messaging.DebugEvent += MessagingOnDebugEvent;
@@ -61,6 +64,7 @@ namespace QuantConnect.Views.WinForms
 
             _logging = Log.LogHandler as QueueLogHandler;
         }
+
 
         /// <summary>
         /// Get the URL for the embedded charting
@@ -80,22 +84,32 @@ namespace QuantConnect.Views.WinForms
 
             return url;
         }
-        
 
         /// <summary>
-        /// Browser content has completely loaded.
+        /// MONO BROWSER: Browser content has completely loaded.
         /// </summary>
-        private void BrowserOnDomContentLoaded(object sender, DomEventArgs domEventArgs)
+        private void MonoBrowserOnDocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs webBrowserDocumentCompletedEventArgs)
         {
             _messaging.OnConsumerReadyEvent();
         }
+
+        /// <summary>
+        /// GECKO BROWSER: Browser content has completely loaded.
+        /// </summary>
+        //private void BrowserOnDomContentLoaded(object sender, DomEventArgs domEventArgs)
+        //{
+        //    _messaging.OnConsumerReadyEvent();
+        //}
 
         /// <summary>
         /// Onload Form Initialization
         /// </summary>
         private void LeanWinForm_Load(object sender, EventArgs e)
         {
-
+            if (OS.IsWindows && !WBEmulator.IsBrowserEmulationSet())
+            {
+                WBEmulator.SetBrowserEmulationVersion();
+            }
         }
 
         /// <summary>
@@ -138,31 +152,38 @@ namespace QuantConnect.Views.WinForms
             {
                 //Remove previous event handler:
                 var url = GetURL(_job, false, true);
-                _browser.Navigate(url);
 
-                _browser.DOMContentLoaded += (sender, args) =>
+                //Generate JSON:
+                var jObj = new JObject();
+                var dateFormat = "yyyy-MM-dd HH:mm:ss";
+                dynamic final = jObj;
+                final.dtPeriodStart = packet.PeriodStart.ToString(dateFormat);
+                final.dtPeriodFinished = packet.PeriodFinish.AddDays(1).ToString(dateFormat);
+                dynamic resultData = new JObject();
+                resultData.version = "3";
+                resultData.results = JObject.FromObject(packet.Results);
+                resultData.statistics = JObject.FromObject(packet.Results.Statistics);
+                resultData.iTradeableDates = 1;
+                resultData.ranking = null;
+                final.oResultData = resultData;
+                var json = JsonConvert.SerializeObject(final);
+
+                //GECKO RESULT SET:
+                //_geckoBrowser.DOMContentLoaded += (sender, args) =>
+                //{
+                //    var executor = new JQueryExecutor(_geckoBrowser.Window);
+                //    executor.ExecuteJQuery("window.jnBacktest = JSON.parse('" + json + "');");
+                //    executor.ExecuteJQuery("$.holdReady(false)");
+                //};
+                //_geckoBrowser.Navigate(url);
+
+                //MONO WEB BROWSER RESULT SET:
+                _monoBrowser.DocumentCompleted += (sender, args) =>
                 {
-                    var executor = new JQueryExecutor(_browser.Window);
-
-                    var jObj = new JObject();
-                    var dateFormat = "yyyy-MM-dd HH:mm:ss";
-                    dynamic final = jObj;
-                    final.dtPeriodStart = packet.PeriodStart.ToString(dateFormat);
-                    final.dtPeriodFinished = packet.PeriodFinish.AddDays(1).ToString(dateFormat);
-
-                    dynamic resultData = new JObject();
-                    resultData.version = "3";
-                    resultData.results = JObject.FromObject(packet.Results);
-                    resultData.statistics = JObject.FromObject(packet.Results.Statistics);
-                    resultData.iTradeableDates = 1;
-                    resultData.ranking = null;
-                    final.oResultData = resultData;
-                    
-                    //Set packet 
-                    var json = JsonConvert.SerializeObject(final);
-                    executor.ExecuteJQuery("window.jnBacktest = JSON.parse('" + json + "');");
-                    executor.ExecuteJQuery("$.holdReady(false)");
+                    _monoBrowser.Document.InvokeScript("eval", new object[] { "window.jnBacktest = JSON.parse('" + json + "');" });
+                    _monoBrowser.Document.InvokeScript("eval", new object[] { "$.holdReady(false)" });
                 };
+                _monoBrowser.Navigate(url);
 
                 foreach (var pair in packet.Results.Statistics)
                 {
@@ -178,7 +199,6 @@ namespace QuantConnect.Views.WinForms
         {
             var hstack = (!string.IsNullOrEmpty(packet.StackTrace) ? (Environment.NewLine + " " + packet.StackTrace) : string.Empty);
             _logging.Error(packet.Message + hstack);
-            //LogTextBox.AppendText(, Color.DarkRed);
         }
 
         /// <summary>
@@ -188,7 +208,6 @@ namespace QuantConnect.Views.WinForms
         {
             var rstack = (!string.IsNullOrEmpty(packet.StackTrace) ? (Environment.NewLine + " " + packet.StackTrace) : string.Empty);
             _logging.Error(packet.Message + rstack);
-            //LogTextBox.AppendText(packet.Message + rstack, Color.DarkRed);
         }
 
         /// <summary>
@@ -197,7 +216,6 @@ namespace QuantConnect.Views.WinForms
         private void MessagingOnLogEvent(LogPacket packet)
         {
             _logging.Trace(packet.Message);
-            //LogTextBox.AppendText(packet.Message, Color.Black);
         }
 
         /// <summary>
@@ -207,7 +225,6 @@ namespace QuantConnect.Views.WinForms
         private void MessagingOnDebugEvent(DebugPacket packet)
         {
             _logging.Trace(packet.Message);
-            //LogTextBox.AppendText(packet.Message, Color.Black);
         }
 
         /// <summary>

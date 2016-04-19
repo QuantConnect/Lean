@@ -19,6 +19,7 @@ using System.ComponentModel.Composition;
 using System.Threading;
 using System.Windows.Forms;
 using QuantConnect.Configuration;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
@@ -87,7 +88,8 @@ namespace QuantConnect.Lean.Launcher
             if (environment == "backtesting-desktop")
             {
                 Application.EnableVisualStyles();
-                var thread = new Thread(() => LaunchUX(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, job));
+                var messagingHandler = leanEngineSystemHandlers.Notify;
+                var thread = new Thread(() => LaunchUX(messagingHandler, job));
                 thread.SetApartmentState(ApartmentState.STA);
                 thread.Start();
             }
@@ -138,10 +140,11 @@ namespace QuantConnect.Lean.Launcher
         /// <summary>
         /// Form launcher method for thread.
         /// </summary>
-        static void LaunchUX(LeanEngineSystemHandlers system, LeanEngineAlgorithmHandlers algorithm, AlgorithmNodePacket job)
+        static void LaunchUX(IMessagingHandler messaging, AlgorithmNodePacket job)
         {
             //Launch the UX
-            var form = new Views.WinForms.LeanWinForm(system, algorithm, job);
+            //var form = Composer.Instance.GetExportedValueByTypeName<Form>("desktop-ux-classname");
+            var form = new Views.WinForms.LeanWinForm(messaging, job);
             Application.Run(form);
         }
     }
