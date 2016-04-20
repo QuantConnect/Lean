@@ -77,6 +77,12 @@
   "fxcm-password": "",
   "fxcm-account-id": "",
 
+  // iqfeed configuration
+  "iqfeed-username": "",
+  "iqfeed-password": "",
+  "iqfeed-productName": "",
+  "iqfeed-version": "1.0",
+
   // parameters to set in the algorithm (the below are just samples)
   "parameters": {
     "ema-fast": 10,
