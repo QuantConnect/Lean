@@ -81,12 +81,14 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="CompositeLogHandler.cs" />
+    <Compile Include="QueueLogHandler.cs" />
     <Compile Include="FunctionalLogHandler.cs" />
     <Compile Include="ConsoleLogHandler.cs" />
     <Compile Include="FileLogHandler.cs" />
     <Compile Include="ILogHandler.cs" />
     <Compile Include="ILogHandlerExtensions.cs" />
     <Compile Include="LogEntry.cs" />
+    <Compile Include="LogType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="RegressionFileLogHandler.cs" />
