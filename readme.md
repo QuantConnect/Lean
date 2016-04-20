@@ -76,21 +76,22 @@ Setup Mono GPG signing key ([instructions here](http://www.mono-project.com/docs
 
 Install dependencies, MonoDevelop, Git and NuGet:
 ```
-sudo apt-get install mono-complete mono-vbnc fsharp monodevelop monodevelop-nunit  git nuget 
+sudo apt-get install mono-complete mono-vbnc fsharp monodevelop monodevelop-nunit  git nuget ca-certificates-mono
+mozroots --import --sync
 ```
 Clone the repo:
 ```
-git clone git@github.com:QuantConnect/Lean.git
+git clone https://github.com/QuantConnect/Lean.git
 cd Lean
 ```
 Like OSX, Linux does not fully support Visual Basic. You will need to remove this project from the solution for them to build properly. Alternatively modify the target framework:
 ```
-sed -i 's/4.5/4.0' Algorithm.VisualBasic/QuantConnect.Algorithm.VisualBasic.vbproj
+sed -i 's/4.5/4.0/' Algorithm.VisualBasic/QuantConnect.Algorithm.VisualBasic.vbproj
 ```
 Restore NuGet packages then compile:
 ```
 nuget restore QuantConnect.Lean.sln
-mdtool build
+xbuild build
 ```
 Run the compiled `exe` file. For the time being you need to run the `exe` in the same path as your current working directory:
 ```

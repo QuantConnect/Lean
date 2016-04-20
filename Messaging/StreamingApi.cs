@@ -50,6 +50,16 @@ namespace QuantConnect.Messaging
                     {
                         Log.Trace("StreamingApi.Transmit(): Packet too long: " + packet.GetType());
                     }
+                    if (userId == 0)
+                    {
+                        Log.Error("StreamingApi.Transmit(): UserId is not set. Check your config.json file 'job-user-id' property.");
+                        return;
+                    }
+                    if (apiToken == "")
+                    {
+                        Log.Error("StreamingApi.Transmit(): API Access token not set. Check your config.json file 'api-access-token' property.");
+                        return;
+                    }
 
                     var response = client.UploadValues("http://streaming.quantconnect.com", new NameValueCollection
                     {
