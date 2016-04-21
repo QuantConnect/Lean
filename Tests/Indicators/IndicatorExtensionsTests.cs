@@ -16,6 +16,7 @@
 using System;
 using NUnit.Framework;
 using QuantConnect.Indicators;
+using System.Linq;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -55,6 +56,28 @@ namespace QuantConnect.Tests.Indicators
             // now getting the delayed data
             first.Update(data4);
             Assert.AreEqual(2.5m, second.Current.Value);
+        }
+
+        [Test]
+        public void PipesDataFirstWeightedBySecond()
+        {
+            const int period = 4;
+            var value = new Identity("Value");
+            var weight = new Identity("Weight");
+     
+            var third = value.WeightedBy(weight, period);
+
+            var data = Enumerable.Range(1, 10).ToList();
+            var window = Enumerable.Reverse(data).Take(period);
+            var current = window.Sum(x => 2 * x * x) / (decimal)window.Sum(x => x);
+
+            foreach (var item in data)
+            {
+                value.Update(new IndicatorDataPoint(DateTime.UtcNow, Convert.ToDecimal(2 * item)));
+                weight.Update(new IndicatorDataPoint(DateTime.UtcNow, Convert.ToDecimal(item)));
+            }
+
+            Assert.AreEqual(current, third.Current.Value);
         }
 
         [Test]

@@ -16,6 +16,8 @@
 using System;
 using System.Globalization;
 using QuantConnect.Data;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Indicators
 {
@@ -59,6 +61,44 @@ namespace QuantConnect.Indicators
             };
 
             return second;
+        }
+
+        /// <summary>
+        /// Creates a new CompositeIndicator such that the result will be average of a first indicator weighted by a second one
+        /// </summary>
+        /// <param name="value">Indicator that will be averaged</param>
+        /// <param name="weight">Indicator that provides the average weights</param>
+        /// <param name="period">Average period</param>
+        /// <returns>Indicator that results of the average of first by weights given by second</returns>
+        public static CompositeIndicator<IndicatorDataPoint> WeightedBy<T, TWeight>(this IndicatorBase<T> value, TWeight weight, int period)
+            where T : BaseData
+            where TWeight : IndicatorBase<IndicatorDataPoint>
+        {
+            var x = new WindowIdentity(period);
+            var y = new WindowIdentity(period);
+            var numerator = new Sum("Sum_xy", period);
+            var denominator = new Sum("Sum_y", period);
+
+            value.Updated += (sender, consolidated) =>
+            {
+                x.Update(consolidated);
+                if (x.Samples == y.Samples)
+                {
+                    numerator.Update(consolidated.Time, consolidated.Value * y.Current.Value);
+                }  
+            };
+
+            weight.Updated += (sender, consolidated) =>
+            {
+                y.Update(consolidated);
+                if (x.Samples == y.Samples)
+                {
+                    numerator.Update(consolidated.Time, consolidated.Value * x.Current.Value);
+                }
+                denominator.Update(consolidated);
+            };
+            
+            return numerator.Over(denominator);
         }
 
         /// <summary>
