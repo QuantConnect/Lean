@@ -60,5 +60,30 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             return Symbol.Create(brokerageSymbol, securityType, market);
         }
+
+        /// <summary>
+        /// Converts an InteractiveBrokers symbol to a Lean symbol instance
+        /// </summary>
+        /// <param name="brokerageSymbol">The InteractiveBrokers symbol</param>
+        /// <param name="securityType">The security type</param>
+        /// <param name="market">The market</param>
+        /// <param name="expiry">Expiration date for the option</param>
+        /// <param name="strike">Strike price</param>
+        /// <param name="optionRight">Put or Call</param>
+        /// <param name="optionStyle">Style (American or Euro)</param>
+        /// <param name="alias">An alias to be used for the symbol cache. Required when 
+        /// adding the same security from different markets</param>    
+        /// <returns>A new Lean Symbol instance</returns>
+        public Symbol GetLeanSymbol(string brokerageSymbol, SecurityType securityType, string market,
+            DateTime expiry, decimal strike, OptionRight optionRight, OptionStyle optionStyle, string alias = null)
+        {
+            if (string.IsNullOrWhiteSpace(brokerageSymbol))
+                throw new ArgumentException("Invalid symbol: " + brokerageSymbol);
+
+            if (securityType != SecurityType.Option)
+                throw new ArgumentException("Invalid security type (expected SecurityType.Option): " + securityType);
+
+            return Symbol.CreateOption(brokerageSymbol, market, optionStyle, optionRight, strike, expiry, alias);
+        }
     }
 }

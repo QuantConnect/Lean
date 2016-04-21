@@ -1260,7 +1260,17 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var ibSymbol = securityType == SecurityType.Forex ? contract.Symbol + contract.Currency : contract.Symbol;
             var market = securityType == SecurityType.Forex ? Market.FXCM : Market.USA;
 
-            return _symbolMapper.GetLeanSymbol(ibSymbol, securityType, market);
+            switch (securityType)
+            {
+                case SecurityType.Option:
+                    return _symbolMapper.GetLeanSymbol(ibSymbol, securityType, market,
+                        DateTime.ParseExact(contract.Expiry, "yyyyMMdd", CultureInfo.InvariantCulture),
+                        Convert.ToDecimal(contract.Strike),
+                        contract.Right == IB.RightType.Call ? OptionRight.Call : OptionRight.Put,
+                        OptionStyle.American); // Note: Find a way to pull this (Example SPX is Euro style, while SPY is American)               
+                default:
+                    return _symbolMapper.GetLeanSymbol(ibSymbol, securityType, market);
+            }
         }
 
         private decimal RoundPrice(decimal input, decimal minTick)
