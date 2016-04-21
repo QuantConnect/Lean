@@ -996,6 +996,23 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates an VolumeWeightedAveragePrice (VWAP) indicator for the symbol. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose VWAP we want</param>
+        /// <param name="period">The period of the VWAP</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The VolumeWeightedAveragePrice for the given parameters</returns>
+        public VolumeWeightedAveragePriceIndicator VWAP(Symbol symbol, int period, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "VWAP" + period, resolution);
+            var vwap = new VolumeWeightedAveragePriceIndicator(name, period);
+            RegisterIndicator(symbol, vwap, resolution, selector);
+            return vwap;
+        }
+
+        /// <summary>
         /// Creates and registers a new consolidator to receive automatic updates at the specified resolution as well as configures
         /// the indicator to receive updates from the consolidator.
         /// </summary>
