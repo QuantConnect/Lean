@@ -139,6 +139,7 @@
     <Compile Include="LinearWeightedMovingAverage.cs" />
     <Compile Include="ParabolicStopAndReverse.cs" />
     <Compile Include="PercentagePriceOscillator.cs" />
+    <Compile Include="WindowIdentity.cs" />
     <Compile Include="T3MovingAverage.cs" />
     <Compile Include="RateOfChangeRatio.cs" />
     <Compile Include="Trix.cs" />

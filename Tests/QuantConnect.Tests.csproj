@@ -204,6 +204,7 @@
     <Compile Include="Indicators\ParabolicStopAndReverseTests.cs" />
     <Compile Include="Indicators\PercentagePriceOscillatorTests.cs" />
     <Compile Include="Indicators\FisherTransformTests.cs" />
+    <Compile Include="Indicators\WindowIdentityTests.cs" />
     <Compile Include="Indicators\T3MovingAverageTests.cs" />
     <Compile Include="Indicators\RateOfChangeRatioTests.cs" />
     <Compile Include="Indicators\TrixTests.cs" />
