@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 var lastPriceTime = sd.Close.Current.Time;
                 // only make decisions when we have data on our requested resolution
-                if (lastPriceTime.RoundDown(sd.Security.SubscriptionDataConfig.Increment) == lastPriceTime)
+                if (lastPriceTime.RoundDown(sd.Security.Resolution.ToTimeSpan()) == lastPriceTime)
                 {
                     sd.Update();
                 }

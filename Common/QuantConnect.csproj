@@ -138,6 +138,12 @@
     <Compile Include="Commands\OrderCommand.cs" />
     <Compile Include="Commands\QuitCommand.cs" />
     <Compile Include="Commands\UpdateOrderCommand.cs" />
+    <Compile Include="Data\Market\FirstOrderGreeks.cs" />
+    <Compile Include="Data\Market\OptionChain.cs" />
+    <Compile Include="Data\Market\OptionChains.cs" />
+    <Compile Include="Data\Market\OptionContract.cs" />
+    <Compile Include="Data\Market\OptionContracts.cs" />
+    <Compile Include="Data\Market\QuoteBars.cs" />
     <Compile Include="Globals.cs" />
     <Compile Include="Currencies.cs" />
     <Compile Include="Data\Auxiliary\FactorFile.cs" />
@@ -178,6 +184,8 @@
     <Compile Include="Data\SubscriptionDataSource.cs" />
     <Compile Include="Data\UniverseSelection\CoarseFundamental.cs" />
     <Compile Include="Data\UniverseSelection\BaseDataCollection.cs" />
+    <Compile Include="Data\UniverseSelection\OptionChainUniverse.cs" />
+    <Compile Include="Data\UniverseSelection\OptionChainUniverseDataCollection.cs" />
     <Compile Include="Data\UniverseSelection\UserDefinedUniverse.cs" />
     <Compile Include="Data\UniverseSelection\FuncUniverse.cs" />
     <Compile Include="Data\UniverseSelection\Universe.cs" />
@@ -262,7 +270,9 @@
     <Compile Include="Securities\CompositeSecurityInitializer.cs" />
     <Compile Include="Securities\ConstantFeeTransactionModel.cs" />
     <Compile Include="Securities\DelayedSettlementModel.cs" />
+    <Compile Include="Securities\FuncSecurityDerivativeFilter.cs" />
     <Compile Include="Securities\FuncSecurityInitializer.cs" />
+    <Compile Include="Securities\IDerivativeSecurityFilter.cs" />
     <Compile Include="Securities\IndicatorVolatilityModel.cs" />
     <Compile Include="Securities\ISecurityInitializer.cs" />
     <Compile Include="Securities\ISettlementModel.cs" />
@@ -270,6 +280,14 @@
     <Compile Include="Securities\LocalMarketHours.cs" />
     <Compile Include="Securities\MarketHoursSegment.cs" />
     <Compile Include="Securities\MarketHoursState.cs" />
+    <Compile Include="Securities\Option\CurrentPriceOptionPriceModel.cs" />
+    <Compile Include="Securities\Option\IOptionPriceModel.cs" />
+    <Compile Include="Securities\Option\Option.cs" />
+    <Compile Include="Securities\Option\OptionCache.cs" />
+    <Compile Include="Securities\Option\OptionDataFilter.cs" />
+    <Compile Include="Securities\Option\OptionExchange.cs" />
+    <Compile Include="Securities\Option\OptionHolding.cs" />
+    <Compile Include="Securities\Option\OptionPriceModelResult.cs" />
     <Compile Include="Securities\PatternDayTradingMarginModel.cs" />
     <Compile Include="Securities\RelativeStandardDeviationVolatilityModel.cs" />
     <Compile Include="Securities\SecurityDatabaseKey.cs" />
@@ -284,6 +302,7 @@
     <Compile Include="Securities\SecurityPortfolioModel.cs" />
     <Compile Include="Securities\SecurityMarginModel.cs" />
     <Compile Include="Securities\ImmediateSettlementModel.cs" />
+    <Compile Include="Securities\StrikeExpiryOptionFilter.cs" />
     <Compile Include="Securities\SymbolProperties.cs" />
     <Compile Include="Securities\SymbolPropertiesDatabase.cs" />
     <Compile Include="Securities\UniverseManager.cs" />
@@ -383,6 +402,7 @@
     <Compile Include="Util\ParallelRunner.cs" />
     <Compile Include="Util\ParallelRunnerWorker.cs" />
     <Compile Include="Util\ColorJsonConverter.cs" />
+    <Compile Include="Util\SecurityExtensions.cs" />
     <Compile Include="Util\SecurityIdentifierJsonConverter.cs" />
     <Compile Include="Util\TypeChangeJsonConverter.cs" />
     <Compile Include="Util\LinqExtensions.cs" />

@@ -22,6 +22,7 @@ using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
+using QuantConnect.Securities.Option;
 using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages
@@ -230,9 +231,18 @@ namespace QuantConnect.Brokerages
         /// <returns>The settlement model for this brokerage</returns>
         public virtual ISettlementModel GetSettlementModel(Security security, AccountType accountType)
         {
-            if (security.Type == SecurityType.Equity && accountType == AccountType.Cash)
-                return new DelayedSettlementModel(Equity.DefaultSettlementDays, Equity.DefaultSettlementTime);
-            
+            if (accountType == AccountType.Cash)
+            {
+                switch (security.Type)
+                {
+                    case SecurityType.Equity:
+                        return new DelayedSettlementModel(Equity.DefaultSettlementDays, Equity.DefaultSettlementTime);
+
+                    case SecurityType.Option:
+                        return new DelayedSettlementModel(Option.DefaultSettlementDays, Option.DefaultSettlementTime);
+                }
+            }
+
             return new ImmediateSettlementModel();
         }
 

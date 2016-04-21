@@ -68,6 +68,7 @@
 [Rr]eleases/
 x64/
 x86/
+.vs/
 build/
 bld/
 [Bb]in/

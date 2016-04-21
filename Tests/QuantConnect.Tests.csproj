@@ -135,6 +135,8 @@
     <Compile Include="Common\Securities\SecurityPortfolioModelTests.cs" />
     <Compile Include="Common\Securities\SecurityTests.cs" />
     <Compile Include="Common\Securities\SecurityTransactionModelTests.cs" />
+    <Compile Include="Common\Securities\SubscriptionDataConfigTests.cs" />
+    <Compile Include="Common\Securities\StrikeExpiryOptionFilterTests.cs" />
     <Compile Include="Common\Securities\UniverseManagerTests.cs" />
     <Compile Include="Common\SeriesTests.cs" />
     <Compile Include="Common\SymbolCacheTests.cs" />
@@ -166,7 +168,9 @@
     <Compile Include="Engine\DataFeeds\Enumerators\FastForwardEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\FrontierAwareEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\LiveFillForwardEnumeratorTests.cs" />
+    <Compile Include="Engine\DataFeeds\Enumerators\OptionChainUniverseDataCollectionAggregatorEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\RateLimitEnumeratorTests.cs" />
+    <Compile Include="Engine\DataFeeds\Enumerators\SynchronizingEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\TradeBarBuilderEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\FillForwardEnumeratorTest.cs" />
     <Compile Include="Engine\DataFeeds\RemoteFileBaseData.cs" />
@@ -203,6 +207,7 @@
     <Compile Include="Indicators\OnBalanceVolumeTest.cs" />
     <Compile Include="Indicators\ParabolicStopAndReverseTests.cs" />
     <Compile Include="Indicators\PercentagePriceOscillatorTests.cs" />
+    <Compile Include="Indicators\FisherTransformTests.cs" />
     <Compile Include="Indicators\T3MovingAverageTests.cs" />
     <Compile Include="Indicators\RateOfChangeRatioTests.cs" />
     <Compile Include="Indicators\TrixTests.cs" />
@@ -476,6 +481,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_with_don50.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_with_fisher.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_with_indicators.txt">

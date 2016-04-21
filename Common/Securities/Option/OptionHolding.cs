@@ -11,28 +11,23 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
 */
 
-using System.Drawing;
-using System.Windows.Forms;
-
-namespace QuantConnect.Views.WinForms
+namespace QuantConnect.Securities.Option
 {
     /// <summary>
-    /// Public extensions methods for the forms.
-    /// Credit: http://stackoverflow.com/questions/1926264/color-different-parts-of-a-richtextbox-string/1926822#1926822
+    /// Option holdings implementation of the base securities class
     /// </summary>
-    public static class RichTextBoxExtensions
+    /// <seealso cref="SecurityHolding"/>
+    public class OptionHolding : SecurityHolding
     {
-        public static void AppendText(this RichTextBox box, string text, Color color)
+        /// <summary>
+        /// Option Holding Class constructor
+        /// </summary>
+        /// <param name="security">The option security being held</param>
+        public OptionHolding(Security security)
+            : base(security)
         {
-            box.SelectionStart = box.TextLength;
-            box.SelectionLength = 0;
-
-            box.SelectionColor = color;
-            box.AppendText(text);
-            box.SelectionColor = box.ForeColor;
         }
     }
 }

@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -34,7 +35,7 @@ namespace QuantConnect.Tests.Common.Securities
             var config = CreateTradeBarConfig();
             var security = new Security(exchangeHours, config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
 
-            Assert.AreEqual(config, security.SubscriptionDataConfig);
+            Assert.AreEqual(config, security.Subscriptions.Single());
             Assert.AreEqual(config.Symbol, security.Symbol);
             Assert.AreEqual(config.SecurityType, security.Type);
             Assert.AreEqual(config.Resolution, security.Resolution);

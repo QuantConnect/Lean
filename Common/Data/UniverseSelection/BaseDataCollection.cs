@@ -25,10 +25,21 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class BaseDataCollection : BaseData
     {
+        private DateTime _endTime;
+
         /// <summary>
         /// Gets the data list
         /// </summary>
-        public readonly List<BaseData> Data = new List<BaseData>();
+        public List<BaseData> Data { get; set; }
+
+        /// <summary>
+        /// Gets or sets the end time of this data
+        /// </summary>
+        public override DateTime EndTime
+        {
+            get { return _endTime; }
+            set { _endTime = value; }
+        }
 
         /// <summary>
         /// Initializes a new default instance of the <see cref="BaseDataCollection"/> c;ass
@@ -45,10 +56,23 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="symbol">A common identifier for all data in this packet</param>
         /// <param name="data">The data to add to this collection</param>
         public BaseDataCollection(DateTime time, Symbol symbol, IEnumerable<BaseData> data = null)
+            : this(time, time, symbol, data)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BaseDataCollection"/> class
+        /// </summary>
+        /// <param name="time">The start time of this data</param>
+        /// <param name="endTime">The end time of this data</param>
+        /// <param name="symbol">A common identifier for all data in this packet</param>
+        /// <param name="data">The data to add to this collection</param>
+        public BaseDataCollection(DateTime time, DateTime endTime, Symbol symbol, IEnumerable<BaseData> data = null)
         {
             Symbol = symbol;
             Time = time;
-            if (data != null) Data = data.ToList();
+            _endTime = endTime;
+            Data = data != null ? data.ToList() : new List<BaseData>();
         }
 
         /// <summary>
@@ -60,7 +84,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>A clone of the current object</returns>
         public override BaseData Clone()
         {
-            return new BaseDataCollection(Time, Symbol, Data);
+            return new BaseDataCollection(Time, EndTime, Symbol, Data);
         }
     }
 }

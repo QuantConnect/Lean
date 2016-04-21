@@ -38,7 +38,7 @@ namespace QuantConnect.Tests.Common.Util
             var enumerable = Enumerable.Range(0, 10).Select(x => i++);
             var memoized = new MemoizingEnumerable<int>(enumerable);
             // enumerating memoized twice shouldn't matter
-            CollectionAssert.AreEqual(memoized, memoized);
+            CollectionAssert.AreEqual(memoized.ToList(), memoized.ToList());
         }
     }
 }

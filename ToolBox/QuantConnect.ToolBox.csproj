@@ -160,6 +160,16 @@
     <Compile Include="GoogleDownloader\GoogleDataDownloader.cs" />
     <Compile Include="GoogleDownloader\Program.cs" />
     <Compile Include="IDataProcessor.cs" />
+    <Compile Include="IQFeed\IQFeedDataQueueHandler.cs" />
+    <Compile Include="IQFeed\IQ\DataStructures.cs" />
+    <Compile Include="IQFeed\IQ\IQAdminSocketClient.cs" />
+    <Compile Include="IQFeed\IQ\IQConnect.cs" />
+    <Compile Include="IQFeed\IQ\IQCredentials.cs" />
+    <Compile Include="IQFeed\IQ\IQLevel1Client.cs" />
+    <Compile Include="IQFeed\IQ\IQLookupHistorySymbolClient.cs" />
+    <Compile Include="IQFeed\IQ\IQLookupTableClient.cs" />
+    <Compile Include="IQFeed\IQ\IQSocket.cs" />
+    <Compile Include="IQFeed\IQ\SocketClient.cs" />
     <Compile Include="IStreamParser.cs" />
     <Compile Include="IStreamProvider.cs" />
     <Compile Include="LeanDataPathComponents.cs" />

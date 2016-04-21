@@ -11,40 +11,30 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
 */
 
 using System;
-using System.Windows.Forms;
 
-namespace QuantConnect.Views.WinForms
+namespace QuantConnect.Data.Market
 {
     /// <summary>
-    /// Primary Form for use with LEAN:
+    /// Collection of <see cref="OptionChain"/> keyed by canonical option symbol
     /// </summary>
-    public partial class LeanEngineWinForm : Form
+    public class OptionChains : DataDictionary<OptionChain>
     {
         /// <summary>
-        /// Trigger a terminate message to the Lean Engine.
+        /// Creates a new instance of the <see cref="OptionChains"/> dictionary
         /// </summary>
-        private void OnClosed(object sender, EventArgs eventArgs)
+        public OptionChains()
         {
-            _engine.SystemHandlers.Dispose();
-            _engine.AlgorithmHandlers.Dispose();
-            Environment.Exit(0);
         }
 
         /// <summary>
-        /// Binding to the Console Key Press. In the console there's virtually nothing for user input other than the end of the backtest.
+        /// Creates a new instance of the <see cref="OptionChains"/> dictionary
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="keyEventArgs"></param>
-        private void ConsoleOnKeyUp(object sender, KeyEventArgs keyEventArgs)
+        public OptionChains(DateTime time)
+            : base(time)
         {
-            if (!_resultsHandler.IsActive)
-            {
-                Environment.Exit(0);
-            }
         }
     }
 }
