@@ -70,6 +70,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 // make sure we never emit past data
                 if (_current != null && _current.EndTime > _enumerator.Current.EndTime)
                 {
+                    Logging.Log.Trace("FastForwardEnumerator.MoveNext(): Continuing because  of current end time");
                     continue;
                 }
 
