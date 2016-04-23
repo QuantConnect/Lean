@@ -72,8 +72,8 @@ namespace QuantConnect.Indicators
             where T : BaseData
             where TSecond : IndicatorBase<IndicatorDataPoint>
         {
-            SimpleMovingAverage _smaADX = new SimpleMovingAverage("SMA of " + left.Name, period).Of(left, waitForFirstToReady);
-            return _smaADX;
+            SimpleMovingAverage smaADX = new SimpleMovingAverage("SMA of " + left.Name, period).Of(left, waitForFirstToReady);
+            return smaADX;
         }
 
         /// <summary>
