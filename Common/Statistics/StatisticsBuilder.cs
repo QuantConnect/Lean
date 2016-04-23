@@ -254,20 +254,21 @@ namespace QuantConnect.Statistics
         /// <returns>The list of benchmark differences</returns>
         private static List<double> CreateBenchmarkDifferences(SortedDictionary<DateTime, decimal> benchmark, SortedDictionary<DateTime, decimal> equity)
         {
-            // to find the delta in benchmark for first day, we need to know the price at the opening
-            // moment of the day, but since we cannot find this, we cannot find the first benchmark's delta,
-            // so we pad it with Zero. If running a short backtest this will skew results, longer backtests
-            // will not be affected much
-            var listBenchmark = new List<double> { 0 };
+            // to find the delta in benchmark for first day, we need to know the price at
+            // the opening moment of the day, but since we cannot find this, we cannot find
+            // the first benchmark's delta, so we start looking for data in a inexistent day. 
+            // If running a short backtest this will skew results, longer backtests will not be affected much
+            var dtPrevious = new DateTime();
+
+            var listBenchmark = new List<double>();
 
             var minDate = equity.Keys.FirstOrDefault().AddDays(-1);
             var maxDate = equity.Keys.LastOrDefault();
 
             // Get benchmark performance array for same period:
-            var dtPrevious = new DateTime();
             benchmark.Keys.ToList().ForEach(dt =>
             {
-                if (dt >= minDate && dt < maxDate)
+                if (dt >= minDate && dt <= maxDate)
                 {
                     decimal previous;
                     if (benchmark.TryGetValue(dtPrevious, out previous) && previous != 0)
