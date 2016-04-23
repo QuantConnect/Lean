@@ -61,11 +61,18 @@ namespace QuantConnect.Indicators
             return second;
         }
 
+        /// <summary>
+        /// Configures the second indicator to receive automatic updates from the first by attaching an event handler
+        /// to first.DataConsolidated
+        /// </summary>
+        /// <param name="left">The indicator used to create a SimpleMovingAverage</param>
+        /// <param name="waitForFirstToReady">True to only send updates to the second if first.IsReady returns true, false to alway send updates to second</param>
+        /// <returns>The reference to the SimpleMovingAverage indicator to allow for method chaining</returns>
         public static SimpleMovingAverage SMA<T, TSecond>(this IndicatorBase<T> left, int period, bool waitForFirstToReady = true)
-            where T :BaseData
+            where T : BaseData
             where TSecond : IndicatorBase<IndicatorDataPoint>
         {
-            SimpleMovingAverage _smaADX = new SimpleMovingAverage("SMA of " + left.Name, period).Of(left);
+            SimpleMovingAverage _smaADX = new SimpleMovingAverage("SMA of " + left.Name, period).Of(left, waitForFirstToReady);
             return _smaADX;
         }
 
