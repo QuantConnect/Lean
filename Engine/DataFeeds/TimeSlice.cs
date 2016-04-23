@@ -245,7 +245,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     List<Tick> ticksList;
                     if (!ticks.TryGetValue(symbol, out ticksList))
                     {
-                        ticksList = new List<Tick> {(Tick) baseData};
+                        ticksList = new List<Tick>();
                         ticks[symbol] = ticksList;
                     }
                     ticksList.Add((Tick) baseData);
