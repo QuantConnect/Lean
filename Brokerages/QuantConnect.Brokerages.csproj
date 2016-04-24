@@ -174,9 +174,10 @@
     <Compile Include="Backtesting\BacktestingBrokerage.cs" />
     <Compile Include="Backtesting\BacktestingBrokerageFactory.cs" />
     <Compile Include="Bitfinex\BaseMessage.cs" />
-    <Compile Include="Bitfinex\BitfinexBrokerage.Messaging.cs" />
     <Compile Include="Bitfinex\BitfinexBrokerage.cs" />
+    <Compile Include="Bitfinex\BitfinexBrokerage.Messaging.cs" />
     <Compile Include="Bitfinex\BitfinexBrokerage.Util.cs" />
+    <Compile Include="Bitfinex\BitfinexFill.cs" />
     <Compile Include="Bitfinex\BitfinexWebsocketsPaperBrokerageFactory.cs" />
     <Compile Include="Bitfinex\BitfinexBrokerageFactory.cs" />
     <Compile Include="Bitfinex\BitfinexWebsocketsBrokerage.cs" />

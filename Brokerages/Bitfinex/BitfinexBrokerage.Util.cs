@@ -122,33 +122,6 @@ namespace QuantConnect.Brokerages.Bitfinex
         }
 
         /// <summary>
-        /// Map exchange order status
-        /// </summary>
-        /// <param name="msg"></param>
-        /// <returns></returns>
-        public OrderStatus MapOrderStatus(TradeMessage msg)
-        {
-            if (Math.Abs(msg.FEE) != 0)
-            {
-                var cached = this.CachedOrderIDs.Where(c => c.Value.BrokerId.Contains(msg.TRD_ORD_ID.ToString())).FirstOrDefault();
-                if (cached.Value != null)
-                {
-                    if (msg.TRD_ORD_ID == cached.Value.BrokerId.Select(b => int.Parse(b)).Max())
-                    {
-                        return OrderStatus.Filled;
-                    }
-                    else
-                    {
-                        return OrderStatus.PartiallyFilled;
-                    }
-                }
-                return OrderStatus.Filled;
-            }
-
-            return OrderStatus.PartiallyFilled;
-        }
-
-        /// <summary>
         /// Creates authentication hash
         /// </summary>
         /// <param name="payload"></param>

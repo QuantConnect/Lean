@@ -93,6 +93,8 @@ namespace QuantConnect.Brokerages.Bitfinex
         const string _market = "market";
         const string _limit = "limit";
         const string _stop = "stop";
+
+        public ConcurrentDictionary<int, BitfinexFill> FillSplit { get; set; }
         #endregion
 
         /// <summary>
@@ -107,6 +109,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             _restClient = restClient;
             ScaleFactor = scaleFactor;
             SecurityProvider = securityProvider;
+            FillSplit = new ConcurrentDictionary<int, BitfinexFill>();
         }
 
         /// <summary>

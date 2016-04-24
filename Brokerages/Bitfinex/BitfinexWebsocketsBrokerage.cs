@@ -17,6 +17,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
 using System;
 using System.Collections.Concurrent;
@@ -158,6 +159,18 @@ namespace QuantConnect.Brokerages.Bitfinex
         public void Dispose()
         {
             this.Disconnect();
+        }
+
+        /// <summary>
+        /// Add bitfinex order and prepare for fill message
+        /// </summary>
+        /// <param name="order"></param>
+        /// <returns></returns>
+        public override bool PlaceOrder(Order order)
+        {
+            var result = base.PlaceOrder(order);
+            this.FillSplit.TryAdd(order.Id, new BitfinexFill(order, ScaleFactor));
+            return result;
         }
 
         /// <summary>
