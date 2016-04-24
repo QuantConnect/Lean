@@ -81,11 +81,10 @@ namespace QuantConnect.Tests.Indicators
         public void MultiChain()
         {
             var identity = new Identity("identity");
-            var sma = new SimpleMovingAverage(2);
             var delay = new Delay(2);
 
             // create the SMA of the delay of the identity
-            sma.Of(delay.Of(identity));
+            var sma = delay.Of(identity).SMA(2);
 
             identity.Update(DateTime.UtcNow, 1m);
             Assert.IsTrue(identity.IsReady);
