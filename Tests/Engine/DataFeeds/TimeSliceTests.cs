@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -58,7 +57,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             IEnumerable<TimeSlice> timeSlices = rawTicks.Select(t => TimeSlice.Create(
                 t.Time,
-                DateTimeZone.Utc,
+                TimeZones.Utc,
                 new CashBook(),
                 new List<DataFeedPacket> {new DataFeedPacket(security, new List<BaseData>() {t})},
                 new SecurityChanges(Enumerable.Empty<Security>(), Enumerable.Empty<Security>())));
