@@ -101,14 +101,13 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void MultiChain()
+        public void MultiChainSMA()
         {
             var identity = new Identity("identity");
-            var sma = new SimpleMovingAverage(2);
             var delay = new Delay(2);
 
             // create the SMA of the delay of the identity
-            sma.Of(delay.Of(identity));
+            var sma = delay.Of(identity).SMA(2);
 
             identity.Update(DateTime.UtcNow, 1m);
             Assert.IsTrue(identity.IsReady);
@@ -131,6 +130,97 @@ namespace QuantConnect.Tests.Indicators
             Assert.IsTrue(sma.IsReady);
 
             Assert.AreEqual(1.5m, sma);
+        }
+
+        [Test]
+        public void MultiChainEMA()
+        {
+            var identity = new Identity("identity");
+            var delay = new Delay(2);
+
+            // create the EMA of chained methods
+            var ema = delay.Of(identity).EMA(2, 1);
+            
+            // Assert.IsTrue(ema. == 1);
+            identity.Update(DateTime.UtcNow, 1m);
+            Assert.IsTrue(identity.IsReady);
+            Assert.IsFalse(delay.IsReady);
+            Assert.IsFalse(ema.IsReady);
+
+            identity.Update(DateTime.UtcNow, 2m);
+            Assert.IsTrue(identity.IsReady);
+            Assert.IsFalse(delay.IsReady);
+            Assert.IsFalse(ema.IsReady);
+
+            identity.Update(DateTime.UtcNow, 3m);
+            Assert.IsTrue(identity.IsReady);
+            Assert.IsTrue(delay.IsReady);
+            Assert.IsFalse(ema.IsReady);
+
+            identity.Update(DateTime.UtcNow, 4m);
+            Assert.IsTrue(identity.IsReady);
+            Assert.IsTrue(delay.IsReady);
+            Assert.IsTrue(ema.IsReady);
+        }
+
+        [Test]
+        public void MultiChainMAX()
+        {
+            var identity = new Identity("identity");
+            var delay = new Delay(2);
+
+            // create the MAX of the delay of the identity
+            var max = delay.Of(identity).MAX(2);
+
+            identity.Update(DateTime.UtcNow, 1m);
+            Assert.IsTrue(identity.IsReady);
+            Assert.IsFalse(delay.IsReady);
+            Assert.IsFalse(max.IsReady);
+
+            identity.Update(DateTime.UtcNow, 2m);
+            Assert.IsTrue(identity.IsReady);
+            Assert.IsFalse(delay.IsReady);
+            Assert.IsFalse(max.IsReady);
+
+            identity.Update(DateTime.UtcNow, 3m);
+            Assert.IsTrue(identity.IsReady);
+            Assert.IsTrue(delay.IsReady);
+            Assert.IsFalse(max.IsReady);
+
+            identity.Update(DateTime.UtcNow, 4m);
+            Assert.IsTrue(identity.IsReady);
+            Assert.IsTrue(delay.IsReady);
+            Assert.IsTrue(max.IsReady);
+        }
+
+        [Test]
+        public void MultiChainMIN()
+        {
+            var identity = new Identity("identity");
+            var delay = new Delay(2);
+
+            // create the MIN of the delay of the identity
+            var min = delay.Of(identity).MIN(2);
+
+            identity.Update(DateTime.UtcNow, 1m);
+            Assert.IsTrue(identity.IsReady);
+            Assert.IsFalse(delay.IsReady);
+            Assert.IsFalse(min.IsReady);
+
+            identity.Update(DateTime.UtcNow, 2m);
+            Assert.IsTrue(identity.IsReady);
+            Assert.IsFalse(delay.IsReady);
+            Assert.IsFalse(min.IsReady);
+
+            identity.Update(DateTime.UtcNow, 3m);
+            Assert.IsTrue(identity.IsReady);
+            Assert.IsTrue(delay.IsReady);
+            Assert.IsFalse(min.IsReady);
+
+            identity.Update(DateTime.UtcNow, 4m);
+            Assert.IsTrue(identity.IsReady);
+            Assert.IsTrue(delay.IsReady);
+            Assert.IsTrue(min.IsReady);
         }
 
         [Test]
