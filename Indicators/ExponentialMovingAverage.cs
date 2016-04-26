@@ -15,6 +15,7 @@
 
 namespace QuantConnect.Indicators
 {
+
     /// <summary>
     ///     Represents the traditional exponential moving average indicator (EMA)
     /// </summary>
@@ -23,8 +24,7 @@ namespace QuantConnect.Indicators
         private readonly decimal _k;
         private readonly int _period;
 
-        /// <summary>
-        ///     Initializes a new instance of the ExponentialMovingAverage class with the specified name and period
+        /// <summary>Initializes a new instance of the ExponentialMovingAverage class with the specified name and period
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of the EMA</param>
@@ -32,11 +32,10 @@ namespace QuantConnect.Indicators
             : base(name)
         {
             _period = period;
-            _k = 2 / ((decimal)period + 1);
+            _k = ExponentialMovingAverage.SmoothingFactorDefault(period);
         }
 
-        /// <summary>
-        ///     Initializes a new instance of the ExponentialMovingAverage class with the specified name and period
+        /// <summary>Initializes a new instance of the ExponentialMovingAverage class with the specified name and period
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of the EMA</param>
@@ -57,14 +56,22 @@ namespace QuantConnect.Indicators
         {
         }
 
-        /// <summary>
-        ///     Initializes a new instance of the ExponentialMovingAverage class with the default name and period
+        /// <summary>Initializes a new instance of the ExponentialMovingAverage class with the default name and period
         /// </summary>
         /// <param name="period">The period of the EMA</param>
         /// <param name="smoothingFactor">The percentage of data from the previous value to be carried into the next value</param>
         public ExponentialMovingAverage(int period, decimal smoothingFactor)
             : this("EMA" + period, period, smoothingFactor)
         {
+        }
+
+        /// <summary>Calculates the default smoothing factor for an ExponentialMovingAverage indicator
+        /// </summary>
+        /// <param name="period">The period of the EMA</param>
+        /// <returns>The default smoothing factor</returns>
+        public static decimal SmoothingFactorDefault(int period)
+        {
+            return 2.0m / ((decimal) period + 1.0m);
         }
 
         /// <summary>
