@@ -71,8 +71,8 @@
   "oanda-account-id": "",
 
   // fxcm configuration
-  "fxcm-server": "",
-  "fxcm-terminal": "",
+  "fxcm-server": "http://www.fxcorporate.com/Hosts.jsp", 
+  "fxcm-terminal": "Demo", //Real or Demo
   "fxcm-user-name": "",
   "fxcm-password": "",
   "fxcm-account-id": "",
@@ -143,6 +143,20 @@
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "InteractiveBrokersBrokerage",
       "data-queue-handler": "InteractiveBrokersBrokerage",
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler"
+    },
+
+    // defines the 'live-fxcm' environment
+    "live-fxcm": {
+      "live-mode": true,
+
+      // real brokerage implementations require the BrokerageTransactionHandler
+      "live-mode-brokerage": "FxcmBrokerage",
+      "data-queue-handler": "FxcmBrokerage",
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
