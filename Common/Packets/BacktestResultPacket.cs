@@ -225,7 +225,7 @@ namespace QuantConnect.Packets
         /// <summary>
         /// The runtime / dynamic statistics generated while a backtest is running.
         /// </summary>
-        public IDictionary<string, string> RuntimeStatistics = new Dictionary<string, string>(); 
+        public IDictionary<string, string> RuntimeStatistics = new Dictionary<string, string>();
 
         /// <summary>
         /// Rolling window detailed statistics.
@@ -233,22 +233,29 @@ namespace QuantConnect.Packets
         public Dictionary<string, AlgorithmPerformance> RollingWindow = new Dictionary<string, AlgorithmPerformance>();
 
         /// <summary>
+        /// Rolling window detailed statistics.
+        /// </summary>
+        public AlgorithmPerformance TotalPerformance = null;
+
+        /// <summary>
         /// Default Constructor
         /// </summary>
-        public BacktestResult() {
-            
+        public BacktestResult()
+        {
+
         }
 
         /// <summary>
         /// Constructor for the result class using dictionary objects.
         /// </summary>
-        public BacktestResult(IDictionary<string, Chart> charts, IDictionary<int, Order> orders, IDictionary<DateTime, decimal> profitLoss, IDictionary<string, string> statistics, Dictionary<string, AlgorithmPerformance> rollingWindow)
+        public BacktestResult(IDictionary<string, Chart> charts, IDictionary<int, Order> orders, IDictionary<DateTime, decimal> profitLoss, IDictionary<string, string> statistics, Dictionary<string, AlgorithmPerformance> rollingWindow, AlgorithmPerformance totalPerformance = null)
         {
             Charts = charts;
             Orders = orders;
             ProfitLoss = profitLoss;
             Statistics = statistics;
             RollingWindow = rollingWindow;
+            TotalPerformance = totalPerformance;
         }
     }
 
