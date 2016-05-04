@@ -190,8 +190,7 @@ namespace QuantConnect.Brokerages.Fxcm
             Instant instant = Instant.FromSecondsSinceUnixEpoch(javaDate.getTime() / 1000);
 
             // Convert to configured TZ then to a .Net DateTime
-            var dt = instant.InZone(configTimeZone).ToDateTimeUnspecified();
-            return dt;
+            return instant.InZone(configTimeZone).ToDateTimeUnspecified();
         }
 
 
