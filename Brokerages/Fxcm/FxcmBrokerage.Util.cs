@@ -177,6 +177,7 @@ namespace QuantConnect.Brokerages.Fxcm
         private static DateTime FromJavaDate(java.util.Date javaDate)
         {
             var cal = java.util.Calendar.getInstance();
+            cal.setTimeZone(java.util.TimeZone.getTimeZone("EST"));  // FXCM Needs to be EST always
             cal.setTime(javaDate);
 
             // note that the Month component of java.util.Date  
