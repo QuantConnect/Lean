@@ -30,7 +30,7 @@ namespace QuantConnect.Brokerages.Fxcm
     /// </summary>
     public partial class FxcmBrokerage
     {
-        private static DateTimeZone configTimeZone = null;
+        private static DateTimeZone _configTimeZone = null;
 
         /// <summary>
         /// Converts an FXCM order to a QuantConnect order.
@@ -180,17 +180,17 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <returns></returns>
         private static DateTime FromJavaDate(java.util.Date javaDate)
         {
-            if (configTimeZone == null)
+            if (_configTimeZone == null)
             {
                 // Read time zone from market-hours-config
-                configTimeZone = MarketHoursDatabase.FromDataFolder().GetDataTimeZone("fxcm", "*", SecurityType.Forex);
+                _configTimeZone = MarketHoursDatabase.FromDataFolder().GetDataTimeZone("fxcm", "*", SecurityType.Forex);
             }
 
             // Convert javaDate to UTC Instant (Epoch)
-            Instant instant = Instant.FromSecondsSinceUnixEpoch(javaDate.getTime() / 1000);
+            var instant = Instant.FromSecondsSinceUnixEpoch(javaDate.getTime() / 1000);
 
             // Convert to configured TZ then to a .Net DateTime
-            return instant.InZone(configTimeZone).ToDateTimeUnspecified();
+            return instant.InZone(_configTimeZone).ToDateTimeUnspecified();
         }
 
 
