@@ -149,7 +149,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // schedule the work on the controller
             var firstLoop = true;
             FuncParallelRunnerWorkItem workItem = null;
-            workItem = new FuncParallelRunnerWorkItem(() => enqueueable.Count < lowerThreshold, () =>
+            workItem = new FuncParallelRunnerWorkItem(() => true, () =>
             {
                 var count = 0;
                 while (enumerator.MoveNext())
