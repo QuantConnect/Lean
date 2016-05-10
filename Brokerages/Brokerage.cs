@@ -174,5 +174,13 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <returns>The current cash balance for each currency available for trading</returns>
         public abstract List<Cash> GetCashBalance();
+
+        /// <summary>
+        /// Specifies whether the brokerage will instantly update account balances
+        /// </summary>
+        public virtual bool AccountInstantlyUpdated
+        {
+            get { return false; }
+        }
     }
 }

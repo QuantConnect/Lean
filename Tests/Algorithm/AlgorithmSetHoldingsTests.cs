@@ -135,7 +135,7 @@ namespace QuantConnect.Tests.Algorithm
             MarketOrder order;
             decimal orderFee;
             OrderEvent fill;
-            int orderQuantity;
+            decimal orderQuantity;
             decimal freeMargin;
             decimal requiredMargin;
             if (initialPosition != Position.Zero)

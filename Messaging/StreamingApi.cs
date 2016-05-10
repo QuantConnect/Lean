@@ -20,6 +20,7 @@ using Newtonsoft.Json;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using RestSharp;
 
 namespace QuantConnect.Messaging
 {
@@ -33,6 +34,9 @@ namespace QuantConnect.Messaging
         /// </summary>
         public static readonly bool IsEnabled = Config.GetBool("send-via-api");
 
+        // Client for sending asynchronous requests.
+        private static readonly RestClient Client = new RestClient("http://streaming.quantconnect.com");
+
         /// <summary>
         /// Send a message to the QuantConnect Chart Streaming API.
         /// </summary>
@@ -43,38 +47,35 @@ namespace QuantConnect.Messaging
         {
             try
             {
-                using (var client = new WebClient())
+                var tx = JsonConvert.SerializeObject(packet);
+                if (tx.Length > 10000)
                 {
-                    var tx = JsonConvert.SerializeObject(packet);
-                    if (tx.Length > 10000)
-                    {
-                        Log.Trace("StreamingApi.Transmit(): Packet too long: " + packet.GetType());
-                    }
-                    if (userId == 0)
-                    {
-                        Log.Error("StreamingApi.Transmit(): UserId is not set. Check your config.json file 'job-user-id' property.");
-                        return;
-                    }
-                    if (apiToken == "")
-                    {
-                        Log.Error("StreamingApi.Transmit(): API Access token not set. Check your config.json file 'api-access-token' property.");
-                        return;
-                    }
+                    Log.Trace("StreamingApi.Transmit(): Packet too long: " + packet.GetType());
+                    return;
+                }
+                if (userId == 0)
+                {
+                    Log.Error("StreamingApi.Transmit(): UserId is not set. Check your config.json file 'job-user-id' property.");
+                    return;
+                }
+                if (apiToken == "")
+                {
+                    Log.Error("StreamingApi.Transmit(): API Access token not set. Check your config.json file 'api-access-token' property.");
+                    return;
+                }
 
-                    var response = client.UploadValues("http://streaming.quantconnect.com", new NameValueCollection
-                    {
-                        {"uid", userId.ToString()},
-                        {"token", apiToken},
-                        {"tx", tx}
-                    });
-
-                    //Deserialize the response from the streaming API and throw in error case.
-                    var result = JsonConvert.DeserializeObject<Response>(System.Text.Encoding.UTF8.GetString(response));
+                var request = new RestRequest();
+                request.AddParameter("uid", userId);
+                request.AddParameter("token", apiToken);
+                request.AddParameter("tx", tx);
+                Client.ExecuteAsyncPost(request, (response, handle) =>
+                {
+                    var result = JsonConvert.DeserializeObject<Response>(response.Content);
                     if (result.Type == "error")
                     {
-                        throw new Exception(result.Message);
+                        Log.Error(new Exception(result.Message), "PacketType: " + packet.Type);
                     }
-                }
+                }, "POST");
             }
             catch (Exception err)
             {

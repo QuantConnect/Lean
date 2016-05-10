@@ -38,6 +38,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private IBrokerage _brokerage;
         private bool _syncedLiveBrokerageCashToday;
 
+        // this bool is used to check if the warning message for the rounding of order quantity has been displayed for the first time
+        private bool _firstRoundOffMessage = false;
+
         // this value is used for determining how confident we are in our cash balance update
         private long _lastFillTimeTicks;
         private long _lastSyncTimeTicks;
@@ -603,6 +606,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             var security = _algorithm.Securities[order.Symbol];
             order.PriceCurrency = security.SymbolProperties.QuoteCurrency;
 
+            // rounds off the order towards 0 to the nearest multiple of lot size
+            order.Quantity = RoundOffOrder(order, security);
+
             if (!_orders.TryAdd(order.Id, order))
             {
                 Log.Error("BrokerageTransactionHandler.HandleSubmitOrderRequest(): Unable to add new order, order not processed.");
@@ -697,6 +703,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 return OrderResponse.InvalidStatus(request, order);
             }
+
+            // rounds off the order towards 0 to the nearest multiple of lot size
+            var security = _algorithm.Securities[order.Symbol];
+            order.Quantity = RoundOffOrder(order, security);
 
             // verify that our current brokerage can actually update the order
             BrokerageMessageEvent message;
@@ -898,9 +908,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 Log.Trace(string.Format("BrokerageTransactionHandler.HandleAccountChanged(): {0} Cash Delta: {1}", account.CurrencySymbol, delta));
             }
 
-            // we don't actually want to do this, this data can be delayed
-            // override the current cash value to we're always gauranted to be in sync with the brokerage's push updates
-            //_algorithm.Portfolio.CashBook[account.CurrencySymbol].Quantity = account.CashBalance;
+            // maybe we don't actually want to do this, this data can be delayed. Must be explicitly supported by brokerage
+            if (_brokerage.AccountInstantlyUpdated)
+            {
+                // override the current cash value so we're always guaranteed to be in sync with the brokerage's push updates
+                _algorithm.Portfolio.CashBook[account.CurrencySymbol].SetAmount(account.CashBalance);
+            }
         }
 
         /// <summary>
@@ -917,6 +930,33 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private DateTime LastSyncDate
         {
             get { return new DateTime(Interlocked.Read(ref _lastSyncTimeTicks)).Date; }
+        }
+
+        /// <summary>
+        /// Rounds off the order towards 0 to the nearest multiple of Lot Size
+        /// </summary>
+        public int RoundOffOrder(Order order, Security security)
+        {
+            var orderLotMod = order.Quantity%Convert.ToInt32(security.SymbolProperties.LotSize);
+
+            if (orderLotMod != 0)
+            {
+                order.Quantity = order.Quantity - orderLotMod;
+
+                if (!_firstRoundOffMessage)
+                {
+                    _algorithm.Error(
+                        string.Format(
+                            "Warning: Due to brokerage limitations, orders will be rounded to the nearest lot size of {0}",
+                            Convert.ToInt32(security.SymbolProperties.LotSize)));
+                    _firstRoundOffMessage = true;
+                }
+                return order.Quantity;
+            }
+            else
+            {
+                return order.Quantity;
+            }
         }
     }
 }

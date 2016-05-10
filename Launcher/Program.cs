@@ -85,7 +85,7 @@ namespace QuantConnect.Lean.Launcher
                 throw;
             }
 
-            if (environment == "backtesting-desktop")
+            if (environment.EndsWith("-desktop"))
             {
                 Application.EnableVisualStyles();
                 var messagingHandler = leanEngineSystemHandlers.Notify;

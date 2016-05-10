@@ -293,6 +293,20 @@ namespace QuantConnect.Lean.Engine
 
                                 statisticsResults = StatisticsBuilder.Generate(trades, profitLoss, equity, performance, benchmark,
                                     _algorithmHandlers.Setup.StartingPortfolioValue, algorithm.Portfolio.TotalFees, totalTransactions);
+
+                                //Some users have $0 in their brokerage account / starting cash of $0. Prevent divide by zero errors
+                                var netReturn = _algorithmHandlers.Setup.StartingPortfolioValue > 0 ?
+                                                (algorithm.Portfolio.TotalPortfolioValue - _algorithmHandlers.Setup.StartingPortfolioValue) / _algorithmHandlers.Setup.StartingPortfolioValue
+                                                : 0;
+
+                                //Add other fixed parameters.
+                                banner.Add("Unrealized:", "$" + algorithm.Portfolio.TotalUnrealizedProfit.ToString("N2"));
+                                banner.Add("Fees:", "-$" + algorithm.Portfolio.TotalFees.ToString("N2"));
+                                banner.Add("Net Profit:", "$" + algorithm.Portfolio.TotalProfit.ToString("N2"));
+                                banner.Add("Return:", netReturn.ToString("P"));
+                                banner.Add("Equity:", "$" + algorithm.Portfolio.TotalPortfolioValue.ToString("N2"));
+                                banner.Add("Holdings:", "$" + algorithm.Portfolio.TotalHoldingsValue.ToString("N2"));
+                                banner.Add("Volume:", "$" + algorithm.Portfolio.TotalSaleVolume.ToString("N2"));
                             }
                         }
                         catch (Exception err)

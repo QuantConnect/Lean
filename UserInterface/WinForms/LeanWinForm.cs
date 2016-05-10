@@ -18,6 +18,7 @@ namespace QuantConnect.Views.WinForms
         private readonly AlgorithmNodePacket _job;
         private readonly QueueLogHandler _logging;
         private readonly EventMessagingHandler _messaging;
+        private readonly bool _liveMode = false;
         //private GeckoWebBrowser _geckoBrowser;
 
         /// <summary>
@@ -36,8 +37,9 @@ namespace QuantConnect.Views.WinForms
 
             //Save off the messaging event handler we need:
             _job = job;
+            _liveMode = job is LiveNodePacket;
             _messaging = (EventMessagingHandler)notificationHandler;
-            var url = GetUrl(job);
+            var url = GetUrl(job, _liveMode);
 
             //GECKO WEB BROWSER: Create the browser control
             // https://www.nuget.org/packages/GeckoFX/
@@ -159,7 +161,7 @@ namespace QuantConnect.Views.WinForms
             if (packet.Progress != 1) return;
 
             //Remove previous event handler:
-            var url = GetUrl(_job, false, true);
+            var url = GetUrl(_job, _liveMode, true);
 
             //Generate JSON:
             var jObj = new JObject();

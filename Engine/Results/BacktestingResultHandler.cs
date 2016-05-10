@@ -338,7 +338,7 @@ namespace QuantConnect.Lean.Engine.Results
                 if (progress > 0.999m) progress = 0.999m;
 
                 //1. Cloud Upload -> Upload the whole packet to S3  Immediately:
-                var completeResult = new BacktestResult(Charts, _transactionHandler.Orders, Algorithm.Transactions.TransactionRecord, new Dictionary<string, string>(), new Dictionary<string, AlgorithmPerformance>());
+                var completeResult = new BacktestResult(Charts, _transactionHandler.Orders, Algorithm.Transactions.TransactionRecord, new Dictionary<string, string>(), runtimeStatistics, new Dictionary<string, AlgorithmPerformance>());
                 var complete = new BacktestResultPacket(_job, completeResult, progress);
 
                 if (DateTime.Now > _nextS3Update)
@@ -460,10 +460,8 @@ namespace QuantConnect.Lean.Engine.Results
 
                 //Create a result packet to send to the browser.
                 var result = new BacktestResultPacket((BacktestNodePacket) job,
-                    new BacktestResult(charts, orders, profitLoss, statisticsResults.Summary, statisticsResults.RollingPerformances, statisticsResults.TotalPerformance)
-                    {
-                        RuntimeStatistics = _runtimeStatistics
-                    }, 1m)
+                    new BacktestResult(charts, orders, profitLoss, statisticsResults.Summary, banner, statisticsResults.RollingPerformances, statisticsResults.TotalPerformance)
+                    , 1m)
                 {
                     ProcessingTime = (DateTime.Now - _startTime).TotalSeconds,
                     DateFinished = DateTime.Now,

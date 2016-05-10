@@ -288,7 +288,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             var allowedDollarLoss = MaximumPorfolioRiskPercentPerPosition * Portfolio.TotalPortfolioValue;
 
-            var shares = (int) (allowedDollarLoss/expectedCaptureRange);
+            var shares = allowedDollarLoss/expectedCaptureRange;
 
             // determine a position size based on an acceptable loss in proporton to our total portfolio value
             //var shares = (int) (MaximumLeverage*MaximumPorfolioRiskPercentPerPosition*Portfolio.TotalPortfolioValue/(0.4m*ATR14));

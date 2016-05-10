@@ -45,7 +45,7 @@ namespace QuantConnect.Orders
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
         /// <param name="time">Time the order was placed</param>
         /// <param name="tag">User defined data tag for this order</param>
-        public MarketOrder(Symbol symbol, int quantity, DateTime time, string tag = "")
+        public MarketOrder(Symbol symbol, decimal quantity, DateTime time, string tag = "")
             : base(symbol, quantity, time, tag)
         {
         }

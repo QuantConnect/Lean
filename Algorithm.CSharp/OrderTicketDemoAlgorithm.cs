@@ -346,7 +346,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 // open a new position or triple our existing position
                 var qty = Portfolio[Symbol].Quantity;
-                qty = qty == 0 ? 100 : 2*qty;
+                qty = qty == 0m ? 100m : 2m*qty;
 
                 var newTicket = MarketOnCloseOrder(Symbol, qty);
                 _openMarketOnCloseOrders.Add(newTicket);
@@ -362,7 +362,7 @@ namespace QuantConnect.Algorithm.CSharp
                     return;
                 }
 
-                var quantity = ticket.Quantity + 1;
+                var quantity = ticket.Quantity + 1m;
                 Log("Updating quantity  - New Quantity: " + quantity);
 
                 // we can update the quantity and tag
@@ -408,7 +408,7 @@ namespace QuantConnect.Algorithm.CSharp
                     return;
                 }
                 
-                var quantity = ticket.Quantity + 1;
+                var quantity = ticket.Quantity + 1m;
                 Log("Updating quantity  - New Quantity: " + quantity);
 
                 // we can update the quantity and tag

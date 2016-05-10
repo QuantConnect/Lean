@@ -63,7 +63,7 @@ namespace QuantConnect.Brokerages
                 case SecurityType.Commodity:
                     return true;
                 case SecurityType.Forex:
-                    return IsForexWithinOrderSizeLimits(order.Symbol.Value, order.Quantity, out message);
+                    return IsForexWithinOrderSizeLimits(order.Symbol.Value, (int)Math.Floor(order.Quantity), out message);
                 case SecurityType.Future:
                     return true;
                 default:
@@ -85,7 +85,7 @@ namespace QuantConnect.Brokerages
 
             if (order.SecurityType == SecurityType.Forex && request.Quantity != null)
             {
-                return IsForexWithinOrderSizeLimits(order.Symbol.Value, request.Quantity.Value, out message);
+                return IsForexWithinOrderSizeLimits(order.Symbol.Value, (int)Math.Floor(request.Quantity.Value), out message);
             }
 
             return true;

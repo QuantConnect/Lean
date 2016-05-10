@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
@@ -24,7 +23,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
@@ -126,7 +124,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     case NotifyCollectionChangedAction.Add:
                         foreach (var universe in args.NewItems.OfType<Universe>())
                         {
-                            _subscriptions.TryAdd(CreateUniverseSubscription(universe, start, Time.EndOfTime));
+                            if (!_subscriptions.Contains(universe.Configuration))
+                            {
+                                _subscriptions.TryAdd(CreateUniverseSubscription(universe, start, Time.EndOfTime));
+                            }
+
+                            // Not sure if this is needed but left here because of this:
+                            // https://github.com/QuantConnect/Lean/commit/029d70bde6ca83a1eb0c667bb5cc4444bea05678
                             UpdateFillForwardResolution();
                         }
                         break;
@@ -391,17 +395,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         var sourceProvider = (BaseData)Activator.CreateInstance(config.Type);
                         var dateInDataTimeZone = DateTime.UtcNow.ConvertFromUtc(config.DataTimeZone).Date;
                         var source = sourceProvider.GetSource(config, dateInDataTimeZone, true);
-                        var factory = SubscriptionFactory.ForSource(source, config, dateInDataTimeZone, false);
+                        var factory = SubscriptionDataSourceReader.ForSource(source, config, dateInDataTimeZone, false);
                         var factoryReadEnumerator = factory.Read(source).GetEnumerator();
                         var maximumDataAge = TimeSpan.FromTicks(Math.Max(config.Increment.Ticks, TimeSpan.FromSeconds(5).Ticks));
-                        var fastForward = new FastForwardEnumerator(factoryReadEnumerator, _timeProvider, security.Exchange.TimeZone, maximumDataAge);
-                        return new FrontierAwareEnumerator(fastForward, _timeProvider, timeZoneOffsetProvider);
+                        return new FastForwardEnumerator(factoryReadEnumerator, _timeProvider, security.Exchange.TimeZone, maximumDataAge);
                     });
 
                     // rate limit the refreshing of the stack to the requested interval
                     var minimumTimeBetweenCalls = Math.Min(config.Increment.Ticks, TimeSpan.FromMinutes(30).Ticks);
                     var rateLimit = new RateLimitEnumerator(refresher, _timeProvider, TimeSpan.FromTicks(minimumTimeBetweenCalls));
-                    _customExchange.AddEnumerator(config.Symbol, rateLimit);
+                    var frontierAware = new FrontierAwareEnumerator(rateLimit, _timeProvider, timeZoneOffsetProvider);
+                    _customExchange.AddEnumerator(config.Symbol, frontierAware);
 
                     var enqueable = new EnqueueableEnumerator<BaseData>();
                     _customExchange.SetDataHandler(config.Symbol, data =>
@@ -526,7 +530,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var sourceProvider = (BaseData)Activator.CreateInstance(config.Type);
                     var dateInDataTimeZone = DateTime.UtcNow.ConvertFromUtc(config.DataTimeZone).Date;
                     var source = sourceProvider.GetSource(config, dateInDataTimeZone, true);
-                    var factory = SubscriptionFactory.ForSource(source, config, dateInDataTimeZone, false);
+                    var factory = SubscriptionDataSourceReader.ForSource(source, config, dateInDataTimeZone, false);
                     var factorEnumerator = factory.Read(source).GetEnumerator();
                     var fastForward = new FastForwardEnumerator(factorEnumerator, _timeProvider, security.Exchange.TimeZone, config.Increment);
                     var frontierAware = new FrontierAwareEnumerator(fastForward, _frontierTimeProvider, tzOffsetProvider);

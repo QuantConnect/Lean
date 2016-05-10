@@ -19,7 +19,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Gets the new quantity of the order, null to not change the quantity
         /// </summary>
-        public int? Quantity { get; private set; }
+        public decimal? Quantity { get; private set; }
 
         /// <summary>
         /// Gets the new limit price of the order, null to not change the limit price

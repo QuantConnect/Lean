@@ -75,7 +75,7 @@ namespace QuantConnect.Algorithm.CSharp
             public readonly Symbol Symbol;
             public readonly Security Security;
 
-            public int Quantity
+            public decimal Quantity
             {
                 get { return Security.Holdings.Quantity; }
             }
