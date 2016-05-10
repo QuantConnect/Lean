@@ -76,8 +76,9 @@ Setup Mono GPG signing key ([instructions here](http://www.mono-project.com/docs
 
 Install dependencies, MonoDevelop, Git and NuGet:
 ```
-sudo apt-get install mono-complete mono-vbnc fsharp monodevelop monodevelop-nunit  git nuget ca-certificates-mono
+sudo apt-get install mono-complete mono-vbnc fsharp monodevelop monodevelop-nunit  git ca-certificates-mono
 mozroots --import --sync
+apt-get upgrade mono-complete
 ```
 Clone the repo:
 ```
@@ -90,9 +91,13 @@ sed -i 's/4.5/4.0/' Algorithm.VisualBasic/QuantConnect.Algorithm.VisualBasic.vbp
 ```
 Restore NuGet packages then compile:
 ```
-nuget restore QuantConnect.Lean.sln
-xbuild build
+wget https://nuget.org/nuget.exe
+mono nuget.exe restore QuantConnect.Lean.sln
+xbuild
 ```
+If you get: "Error initializing task Fsc: Not registered task Fsc." -> apt-get upgrade mono-complete
+If you get: "XX not found" -> Make sure Nuget ran successfully, and re-run if neccessary.
+
 Run the compiled `exe` file. For the time being you need to run the `exe` in the same path as your current working directory:
 ```
 cd Lean/Launcher/bin/Debug
