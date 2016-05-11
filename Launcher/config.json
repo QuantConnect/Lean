@@ -9,7 +9,7 @@
   "environment": "backtesting",
 
   // algorithm class selector
-  "algorithm-type-name": "BasicTemplateAlgorithm",
+  "algorithm-type-name": "BasicTemplateOptionsAlgorithm",
 
   // Algorithm language selector - options CSharp, FSharp, VisualBasic, Python, Java
   "algorithm-language": "CSharp",

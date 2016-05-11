@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
 using NodaTime;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Securities;
@@ -371,6 +370,18 @@ namespace QuantConnect.Data
         public static bool operator !=(SubscriptionDataConfig left, SubscriptionDataConfig right)
         {
             return !Equals(left, right);
+        }
+
+        /// <summary>
+        /// Returns a string that represents the current object.
+        /// </summary>
+        /// <returns>
+        /// A string that represents the current object.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        public override string ToString()
+        {
+            return Symbol.ToString() + "," + MappedSymbol + "," + Resolution;
         }
     }
 }
