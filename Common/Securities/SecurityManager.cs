@@ -337,7 +337,7 @@ namespace QuantConnect.Securities
                 // since we have none it's safe to say the conversion is zero
                 securityPortfolioManager.CashBook.Add(quoteCurrency, 0, 0);
             }
-            if (sid.SecurityType == SecurityType.Forex)
+            if (symbol.ID.SecurityType == SecurityType.Forex)
             {
                 // decompose the symbol into each currency pair
                 string baseCurrency;
