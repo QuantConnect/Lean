@@ -73,7 +73,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var selections = selectSymbolsResult.ToHashSet();
 
             // create a hash set of our existing subscriptions by sid
-            var existingSubscriptions = _dataFeed.Subscriptions.ToHashSet(x => x.Security.Symbol);
+            var existingSubscriptions = _dataFeed.Subscriptions.Where(x => !x.EndOfStream).ToHashSet(x => x.Security.Symbol);
 
             var additions = new List<Security>();
             var removals = new List<Security>();
@@ -81,10 +81,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // determine which data subscriptions need to be removed from this universe
             foreach (var member in universe.Members.Values)
             {
-                var config = member.SubscriptionDataConfig;
-
                 // if we've selected this subscription again, keep it
-                if (selections.Contains(config.Symbol)) continue;
+                if (selections.Contains(member.Symbol)) continue;
 
                 // don't remove if the universe wants to keep him in
                 if (!universe.CanRemoveMember(dateTimeUtc, member)) continue;
@@ -95,7 +93,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 removals.Add(member);
 
                 // but don't physically remove it from the algorithm if we hold stock or have open orders against it
-                var openOrders = _algorithm.Transactions.GetOrders(x => x.Status.IsOpen() && x.Symbol == config.Symbol);
+                var openOrders = _algorithm.Transactions.GetOrders(x => x.Status.IsOpen() && x.Symbol == member.Symbol);
                 if (!member.HoldStock && !openOrders.Any())
                 {
                     // safe to remove the member from the universe
@@ -105,7 +103,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // it is expected that this function is called while in sync with the algo thread,
                     // so we can make direct edits to the security here
                     member.Cache.Reset();
-                    _dataFeed.RemoveSubscription(member.Symbol);
+                    foreach (var configuration in universe.GetSubscriptions(member))
+                    {
+                        _dataFeed.RemoveSubscription(configuration);
+                    }
+
+                    // remove symbol mappings for symbols removed from universes
+                    SymbolCache.TryRemove(member.Symbol);
                 }
             }
 
@@ -156,7 +160,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 foreach (var security in addedSecurities)
                 {
                     // assume currency feeds are always one subscription per, these are typically quote subscriptions
-                    _dataFeed.AddSubscription(universe, security, security.SubscriptionDataConfig, dateTimeUtc, _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone));
+                    _dataFeed.AddSubscription(universe, security, security.Subscriptions.First(), dateTimeUtc, _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone));
                 }
             }
 

@@ -36,6 +36,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
+        /// The subscription configuration that produced this data
+        /// </summary>
+        public SubscriptionDataConfig Configuration
+        {
+            get; private set;
+        }
+
+        /// <summary>
         /// Gets the number of data points held within this packet
         /// </summary>
         public int Count
@@ -55,9 +63,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Initializes a new instance of the <see cref="DataFeedPacket"/> class
         /// </summary>
         /// <param name="security">The security whose data is held in this packet</param>
-        public DataFeedPacket(Security security)
+        /// <param name="configuration">The subscription configuration that produced this data</param>
+        public DataFeedPacket(Security security, SubscriptionDataConfig configuration)
         {
             Security = security;
+            Configuration = configuration;
             _data = new List<BaseData>();
         }
 
@@ -65,11 +75,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Initializes a new instance of the <see cref="DataFeedPacket"/> class
         /// </summary>
         /// <param name="security">The security whose data is held in this packet</param>
+        /// <param name="configuration">The subscription configuration that produced this data</param>
         /// <param name="data">The data to add to this packet. The list reference is reused
         /// internally and NOT copied.</param>
-        public DataFeedPacket(Security security, List<BaseData> data)
+        public DataFeedPacket(Security security, SubscriptionDataConfig configuration, List<BaseData> data)
         {
             Security = security;
+            Configuration = configuration;
             _data = data;
         }
 

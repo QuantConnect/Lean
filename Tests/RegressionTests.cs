@@ -53,6 +53,29 @@ namespace QuantConnect.Tests
                 {"Total Fees", "$3.09"}
             };
 
+            var basicTemplateOptionsStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "2"},
+                {"Average Win", "18.70%"},
+                {"Average Loss", "0%"},
+                {"Compounding Annual Return", "79228162514264337593543950335%"},
+                {"Drawdown", "40.500%"},
+                {"Expectancy", "0"},
+                {"Net Profit", "18.700%"},
+                {"Sharpe Ratio", "0"},
+                {"Loss Rate", "0%"},
+                {"Win Rate", "100%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "0"},
+                {"Beta", "0"},
+                {"Annual Standard Deviation", "0"},
+                {"Annual Variance", "0"},
+                {"Information Ratio", "0"},
+                {"Tracking Error", "0"},
+                {"Treynor Ratio", "0"},
+                {"Total Fees", "$0.00"},
+            };
+
             var limitFillRegressionStatistics = new Dictionary<string, string>
             {
                 {"Total Trades", "34"},
@@ -260,11 +283,35 @@ namespace QuantConnect.Tests
                 {"Total Fees", "$3.09"},
             };
 
+            var historyAlgorithmStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "1"},
+                {"Average Win", "0%"},
+                {"Average Loss", "0%"},
+                {"Compounding Annual Return", "372.677%"},
+                {"Drawdown", "1.100%"},
+                {"Expectancy", "0"},
+                {"Net Profit", "0%"},
+                {"Sharpe Ratio", "4.521"},
+                {"Loss Rate", "0%"},
+                {"Win Rate", "0%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "0.774"},
+                {"Beta", "0.182"},
+                {"Annual Standard Deviation", "0.193"},
+                {"Annual Variance", "0.037"},
+                {"Information Ratio", "1.319"},
+                {"Tracking Error", "0.247"},
+                {"Treynor Ratio", "4.798"},
+                {"Total Fees", "$3.09"},
+            };
+
             return new List<AlgorithmStatisticsTestParameters>
             {
                 // CSharp
                 new AlgorithmStatisticsTestParameters("AddRemoveSecurityRegressionAlgorithm", addRemoveSecurityRegressionStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("BasicTemplateOptionsAlgorithm", basicTemplateOptionsStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("CustomDataRegressionAlgorithm", customDataRegressionStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("DropboxBaseDataUniverseSelectionAlgorithm", dropboxBaseDataUniverseSelectionStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("DropboxUniverseSelectionAlgorithm", dropboxUniverseSelectionStatistics, Language.CSharp),
@@ -273,6 +320,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("RegressionAlgorithm", regressionStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("UniverseSelectionRegressionAlgorithm", universeSelectionRegressionStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("UpdateOrderRegressionAlgorithm", updateOrderRegressionStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("HistoryAlgorithm", historyAlgorithmStatistics, Language.CSharp),
 
                 // FSharp
                 new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.FSharp),

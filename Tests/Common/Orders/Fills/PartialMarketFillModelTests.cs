@@ -166,7 +166,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
                 // make sure some time has passed
                 var lastOrderEvent = ticket.OrderEvents.LastOrDefault();
-                var increment = TimeSpan.FromTicks(Math.Max(asset.SubscriptionDataConfig.Increment.Ticks, 1));
+                var increment = TimeSpan.FromTicks(Math.Max(asset.Resolution.ToTimeSpan().Ticks, 1));
                 if (lastOrderEvent != null && currentUtcTime - lastOrderEvent.UtcTime < increment)
                 {
                     // wait a minute between fills

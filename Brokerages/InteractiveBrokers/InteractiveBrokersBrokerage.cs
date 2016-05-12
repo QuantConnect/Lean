@@ -1048,6 +1048,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 contract.Currency = ibSymbol.Substring(3);
             }
 
+            if (symbol.ID.SecurityType == SecurityType.Option)
+            {
+                contract.Expiry = symbol.ID.Date.ToString(DateFormat.EightCharacter);
+                contract.Right = symbol.ID.OptionRight == OptionRight.Call ? IB.RightType.Call : IB.RightType.Put;
+                contract.Strike = Convert.ToDouble(symbol.ID.StrikePrice);
+                contract.Symbol = symbol.ID.Symbol;
+            }
+
             // some contracts require this, such as MSFT
             contract.PrimaryExchange = GetPrimaryExchange(contract);
 

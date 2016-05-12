@@ -146,7 +146,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             });
 
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, start, end);
-            return new Subscription(null, security, reader, timeZoneOffsetProvider, start, end, false);
+            return new Subscription(null, security, config, reader, timeZoneOffsetProvider, start, end, false);
         }
 
         /// <summary>
@@ -166,7 +166,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 {
                     if (subscription.EndOfStream) continue;
 
-                    var packet = new DataFeedPacket(subscription.Security);
+                    var packet = new DataFeedPacket(subscription.Security, subscription.Configuration);
 
                     var offsetProvider = subscription.OffsetProvider;
                     var currentOffsetTicks = offsetProvider.GetOffsetTicks(frontier);

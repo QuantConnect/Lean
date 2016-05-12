@@ -135,17 +135,6 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="HistoryRequest"/> class using all values from the security
-        /// </summary>
-        /// <param name="security">The security used to initialize this request</param>
-        /// <param name="startTimeUtc">The start time for this request,</param>
-        /// <param name="endTimeUtc">The start time for this request</param>
-        public HistoryRequest(Security security, DateTime startTimeUtc, DateTime endTimeUtc)
-            : this(security.SubscriptionDataConfig, security.Exchange.Hours, startTimeUtc, endTimeUtc)
-        {
-        }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="HistoryRequest"/> class from the specified config and exchange hours
         /// </summary>
         /// <param name="config">The subscription data config used to initalize this request</param>

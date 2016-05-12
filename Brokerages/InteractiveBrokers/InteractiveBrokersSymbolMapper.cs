@@ -32,7 +32,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             if (symbol == null || symbol == Symbol.Empty || string.IsNullOrWhiteSpace(symbol.Value))
                 throw new ArgumentException("Invalid symbol: " + (symbol == null ? "null" : symbol.ToString()));
 
-            if (symbol.ID.SecurityType != SecurityType.Forex && symbol.ID.SecurityType != SecurityType.Equity)
+            if (symbol.ID.SecurityType != SecurityType.Forex &&
+                symbol.ID.SecurityType != SecurityType.Equity &&
+                symbol.ID.SecurityType != SecurityType.Option)
                 throw new ArgumentException("Invalid security type: " + symbol.ID.SecurityType);
 
             if (symbol.ID.SecurityType == SecurityType.Forex && symbol.Value.Length != 6)

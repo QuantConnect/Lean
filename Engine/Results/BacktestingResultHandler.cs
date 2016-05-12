@@ -21,6 +21,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.Setup;
@@ -516,11 +517,14 @@ namespace QuantConnect.Lean.Engine.Results
             }
             SecurityType(types);
 
-            // we need to forward Console.Write messages to the algorithm's Debug function
-            var debug = new FuncTextWriter(algorithm.Debug);
-            var error = new FuncTextWriter(algorithm.Error);
-            Console.SetOut(debug);
-            Console.SetError(error);
+            if (Config.GetBool("forward-console-messages", true))
+            {
+                // we need to forward Console.Write messages to the algorithm's Debug function
+                var debug = new FuncTextWriter(algorithm.Debug);
+                var error = new FuncTextWriter(algorithm.Error);
+                Console.SetOut(debug);
+                Console.SetError(error);
+            }
         }
 
         /// <summary>

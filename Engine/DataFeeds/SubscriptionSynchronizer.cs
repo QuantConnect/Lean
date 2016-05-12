@@ -84,7 +84,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
                     }
 
-                    var packet = new DataFeedPacket(subscription.Security);
+                    var packet = new DataFeedPacket(subscription.Security, subscription.Configuration);
                     data.Add(packet);
 
                     var configuration = subscription.Configuration;

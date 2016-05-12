@@ -25,6 +25,7 @@ using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.RealTime
 {
@@ -83,7 +84,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             Add(ScheduledEventFactory.EveryAlgorithmEndOfDay(_algorithm, _resultHandler, todayInAlgorithmTimeZone, Time.EndOfTime, ScheduledEvent.AlgorithmEndOfDayDelta, DateTime.UtcNow));
 
             // add end of trading day events for each security
-            foreach (var security in _algorithm.Securities.Values.Where(x => !x.SubscriptionDataConfig.IsInternalFeed))
+            foreach (var security in _algorithm.Securities.Values.Where(x => x.IsInternalFeed()))
             {
                 // assumes security.Exchange has been updated with today's hours via RefreshMarketHoursToday
                 Add(ScheduledEventFactory.EverySecurityEndOfDay(_algorithm, _resultHandler, security, todayInAlgorithmTimeZone, Time.EndOfTime, ScheduledEvent.SecurityEndOfDayDelta, DateTime.UtcNow));

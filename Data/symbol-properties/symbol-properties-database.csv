@@ -1,4 +1,4 @@
-﻿market,symbol,type,description,quote_currency,contract_multiplier,pip_size
+market,symbol,type,description,quote_currency,contract_multiplier,pip_size
 
 #
 # Use # signs for comments
@@ -79,3 +79,5 @@ oanda,XAUXAG,cfd,Gold/Silver,XAG,1,0.01
 oanda,XCUUSD,cfd,Copper,USD,1,0.0001
 oanda,XPDUSD,cfd,Palladium,USD,1,0.01
 oanda,XPTUSD,cfd,Platinum,USD,1,0.01
+
+usa,[*],option,,USD,100,0.01

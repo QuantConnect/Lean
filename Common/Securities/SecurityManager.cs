@@ -323,8 +323,6 @@ namespace QuantConnect.Securities
             bool addToSymbolCache = true,
             bool isFilteredSubscription = true)
         {
-            var sid = symbol.ID;
-
             // add the symbol to our cache
             if (addToSymbolCache) SymbolCache.Set(symbol.Value, symbol);
 
@@ -332,51 +330,66 @@ namespace QuantConnect.Securities
             var config = subscriptionManager.Add(factoryType, symbol, resolution, dataTimeZone, exchangeHours.TimeZone, isCustomData, fillDataForward,
                 extendedMarketHours, isInternalFeed, isFilteredSubscription);
 
+            // verify the cash book is in a ready state
+            var quoteCurrency = symbolProperties.QuoteCurrency;
+            if (!securityPortfolioManager.CashBook.ContainsKey(quoteCurrency))
+            {
+                // since we have none it's safe to say the conversion is zero
+                securityPortfolioManager.CashBook.Add(quoteCurrency, 0, 0);
+            }
+            if (symbol.ID.SecurityType == SecurityType.Forex)
+            {
+                // decompose the symbol into each currency pair
+                string baseCurrency;
+                Forex.Forex.DecomposeCurrencyPair(symbol.Value, out baseCurrency, out quoteCurrency);
+
+                if (!securityPortfolioManager.CashBook.ContainsKey(baseCurrency))
+                {
+                    // since we have none it's safe to say the conversion is zero
+                    securityPortfolioManager.CashBook.Add(baseCurrency, 0, 0);
+                }
+                if (!securityPortfolioManager.CashBook.ContainsKey(quoteCurrency))
+                {
+                    // since we have none it's safe to say the conversion is zero
+                    securityPortfolioManager.CashBook.Add(quoteCurrency, 0, 0);
+                }
+            }
+            
+            var quoteCash = securityPortfolioManager.CashBook[symbolProperties.QuoteCurrency];
+
             Security security;
             switch (config.SecurityType)
             {
                 case SecurityType.Equity:
-                    security = new Equity.Equity(exchangeHours, config, securityPortfolioManager.CashBook[CashBook.AccountCurrency], symbolProperties);
+                    security = new Equity.Equity(symbol, exchangeHours, quoteCash, symbolProperties);
+                    break;
+
+                case SecurityType.Option:
+                    security = new Option.Option(exchangeHours, config, securityPortfolioManager.CashBook[CashBook.AccountCurrency], symbolProperties);
                     break;
 
                 case SecurityType.Forex:
-                    {
-                        // decompose the symbol into each currency pair
-                        string baseCurrency, quoteCurrency;
-                        Forex.Forex.DecomposeCurrencyPair(symbol.Value, out baseCurrency, out quoteCurrency);
-
-                        if (!securityPortfolioManager.CashBook.ContainsKey(baseCurrency))
-                        {
-                            // since we have none it's safe to say the conversion is zero
-                            securityPortfolioManager.CashBook.Add(baseCurrency, 0, 0);
-                        }
-                        if (!securityPortfolioManager.CashBook.ContainsKey(quoteCurrency))
-                        {
-                            // since we have none it's safe to say the conversion is zero
-                            securityPortfolioManager.CashBook.Add(quoteCurrency, 0, 0);
-                        }
-                        security = new Forex.Forex(exchangeHours, securityPortfolioManager.CashBook[quoteCurrency], config, symbolProperties);
-                    }
+                    security = new Forex.Forex(symbol, exchangeHours, quoteCash, symbolProperties);
                     break;
 
                 case SecurityType.Cfd:
-                    {
-                        var quoteCurrency = symbolProperties.QuoteCurrency;
-
-                        if (!securityPortfolioManager.CashBook.ContainsKey(quoteCurrency))
-                        {
-                            // since we have none it's safe to say the conversion is zero
-                            securityPortfolioManager.CashBook.Add(quoteCurrency, 0, 0);
-                        }
-                        security = new Cfd.Cfd(exchangeHours, securityPortfolioManager.CashBook[quoteCurrency], config, symbolProperties);
-                    }
+                    security = new Cfd.Cfd(symbol, exchangeHours, quoteCash, symbolProperties);
                     break;
 
                 default:
                 case SecurityType.Base:
-                    security = new Security(exchangeHours, config, securityPortfolioManager.CashBook[CashBook.AccountCurrency], symbolProperties);
+                    security = new Security(symbol, exchangeHours, quoteCash, symbolProperties);
                     break;
             }
+
+            // if we're just creating this security and it only has an internal
+            // feed, mark it as non-tradable since the user didn't request this data
+            if (!config.IsInternalFeed)
+            {
+                security.IsTradable = true;
+            }
+
+            security.AddData(config);
 
             // invoke the security initializer
             securityInitializer.Initialize(security);
