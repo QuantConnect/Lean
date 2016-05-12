@@ -59,7 +59,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 t.Time,
                 TimeZones.Utc,
                 new CashBook(),
-                new List<DataFeedPacket> {new DataFeedPacket(security, new List<BaseData>() {t})},
+                new List<DataFeedPacket> {new DataFeedPacket(security, subscriptionDataConfig, new List<BaseData>() {t})},
                 new SecurityChanges(Enumerable.Empty<Security>(), Enumerable.Empty<Security>())));
 
             Tick[] timeSliceTicks = timeSlices.SelectMany(ts => ts.Slice.Ticks.Values.SelectMany(x => x)).ToArray();
