@@ -100,7 +100,8 @@ namespace QuantConnect.Data.Custom
                     data.SetProperty(property, 0m);
                     _propertyNames.Add(property);
                 }
-                return data;
+                // Returns null at this point where we are only reading the properties names
+                return null;
             }
 
             data.Time = DateTime.ParseExact(csv[0], "yyyy-MM-dd", CultureInfo.InvariantCulture);

@@ -159,7 +159,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (baseDataCollectionCount == 0)
                     {
                         continue;
-                    }
+                }
                     count += baseDataCollectionCount;
                 }
                 else

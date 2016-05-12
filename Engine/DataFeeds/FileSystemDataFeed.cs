@@ -130,7 +130,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // get the map file resolver for this market
             var mapFileResolver = MapFileResolver.Empty;
             if (config.SecurityType == SecurityType.Equity) mapFileResolver = _mapFileProvider.Get(config.Market);
-            
+
             // ReSharper disable once PossibleMultipleEnumeration
             var enumerator = CreateSubscriptionEnumerator(security, config, localStartTime, localEndTime, mapFileResolver, tradeableDates, true, false);
 
@@ -206,7 +206,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             if (_subscriptions.TryAdd(subscription))
             {
-                UpdateFillForwardResolution();
+            UpdateFillForwardResolution();
             }
 
             return true;
@@ -226,9 +226,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
-            subscription.Dispose();
+                subscription.Dispose();
             Log.Debug("FileSystemDataFeed.RemoveSubscription(): Removed " + configuration.ToString());
-            
+
             UpdateFillForwardResolution();
 
             return true;
@@ -367,7 +367,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 enumerator = new OptionChainUniverseDataCollectionAggregatorEnumerator(sync, config.Symbol);
 
                 var enqueueable = new EnqueueableEnumerator<BaseData>(true);
-
+                
                 // add this enumerator to our exchange
                 ScheduleEnumerator(enumerator, enqueueable, GetLowerThreshold(config.Resolution), GetUpperThreshold(config.Resolution));
 
@@ -436,7 +436,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             syncer.SubscriptionFinished += (sender, subscription) =>
             {
                 RemoveSubscription(subscription.Configuration);
-                Log.Debug(string.Format("FileSystemDataFeed.GetEnumerator(): Finished subscription: {0} at {1} UTC", subscription.Security.Symbol.ID, _frontierUtc));
+                    Log.Debug(string.Format("FileSystemDataFeed.GetEnumerator(): Finished subscription: {0} at {1} UTC", subscription.Security.Symbol.ID, _frontierUtc));
             };
 
             while (!_cancellationTokenSource.IsCancellationRequested)
@@ -506,9 +506,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             IEnumerator<BaseData> enumerator;
             if (useSubscriptionDataReader)
-            {
+        {
                 enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, mapFileResolver,
-                    _factorFileProvider, tradeableDates, false);
+                _factorFileProvider, tradeableDates, false);
             }
             else
             {

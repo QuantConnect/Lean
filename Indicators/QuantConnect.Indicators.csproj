@@ -119,6 +119,7 @@
     <Compile Include="ChandeMomentumOscillator.cs" />
     <Compile Include="DonchianChannel.cs" />
     <Compile Include="DoubleExponentialMovingAverage.cs" />
+    <Compile Include="VolumeWeightedAveragePriceIndicator.cs" />
     <Compile Include="FisherTransform.cs" />
     <Compile Include="HeikinAshi.cs" />
     <Compile Include="IchimokuKinkoHyo.cs" />
@@ -139,6 +140,7 @@
     <Compile Include="LinearWeightedMovingAverage.cs" />
     <Compile Include="ParabolicStopAndReverse.cs" />
     <Compile Include="PercentagePriceOscillator.cs" />
+    <Compile Include="WindowIdentity.cs" />
     <Compile Include="T3MovingAverage.cs" />
     <Compile Include="RateOfChangeRatio.cs" />
     <Compile Include="Trix.cs" />

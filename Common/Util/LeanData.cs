@@ -419,6 +419,16 @@ namespace QuantConnect.Util
         /// </summary>
         private static string ToCsv(params object[] args)
         {
+            // use culture neutral formatting for decimals
+            for (var i = 0; i < args.Length; i++)
+            {
+                var value = args[i];
+                if (value is decimal)
+                {
+                    args[i] = ((decimal) value).ToString(CultureInfo.InvariantCulture);
+                }
+            }
+
             return string.Join(",", args);
         }
 

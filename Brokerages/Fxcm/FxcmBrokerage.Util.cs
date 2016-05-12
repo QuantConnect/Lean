@@ -19,7 +19,9 @@ using com.fxcm.fix;
 using com.fxcm.fix.posttrade;
 using com.fxcm.fix.trade;
 using com.sun.rowset;
+using NodaTime;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Brokerages.Fxcm
 {
@@ -28,6 +30,8 @@ namespace QuantConnect.Brokerages.Fxcm
     /// </summary>
     public partial class FxcmBrokerage
     {
+        private static DateTimeZone _configTimeZone = null;
+
         /// <summary>
         /// Converts an FXCM order to a QuantConnect order.
         /// </summary>
@@ -176,18 +180,17 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <returns></returns>
         private static DateTime FromJavaDate(java.util.Date javaDate)
         {
-            var cal = java.util.Calendar.getInstance();
-            cal.setTime(javaDate);
+            if (_configTimeZone == null)
+            {
+                // Read time zone from market-hours-config
+                _configTimeZone = MarketHoursDatabase.FromDataFolder().GetDataTimeZone("fxcm", "*", SecurityType.Forex);
+            }
 
-            // note that the Month component of java.util.Date  
-            // from 0-11 (i.e. Jan == 0)
-            return new DateTime(cal.get(java.util.Calendar.YEAR),
-                                cal.get(java.util.Calendar.MONTH) + 1,
-                                cal.get(java.util.Calendar.DAY_OF_MONTH),
-                                cal.get(java.util.Calendar.HOUR_OF_DAY),
-                                cal.get(java.util.Calendar.MINUTE),
-                                cal.get(java.util.Calendar.SECOND),
-                                cal.get(java.util.Calendar.MILLISECOND));
+            // Convert javaDate to UTC Instant (Epoch)
+            var instant = Instant.FromSecondsSinceUnixEpoch(javaDate.getTime() / 1000);
+
+            // Convert to configured TZ then to a .Net DateTime
+            return instant.InZone(_configTimeZone).ToDateTimeUnspecified();
         }
 
 
