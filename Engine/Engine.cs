@@ -245,11 +245,15 @@ namespace QuantConnect.Lean.Engine
                         // Algorithm runtime error:
                         if (algorithm.RunTimeError != null)
                         {
-                            throw algorithm.RunTimeError;
+                            throw new Exception("Algorithm.RunTimeError", algorithm.RunTimeError); //Keep original exception as inner exception to preserve stack trace
                         }
                     }
                     catch (Exception err)
                     {
+                        while (err != null && err.InnerException != null)
+                        {
+                            err = err.InnerException; //Find inner most exception as this will be most useful to algorithm designer
+                        }
                         //Error running the user algorithm: purge datafeed, send error messages, set algorithm status to failed.
                         Log.Error(err, "Breaking out of parent try catch:");
                         if (_algorithmHandlers.DataFeed != null) _algorithmHandlers.DataFeed.Exit();
