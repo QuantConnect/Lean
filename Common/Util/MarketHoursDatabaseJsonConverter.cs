@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NodaTime;
@@ -174,7 +173,7 @@ namespace QuantConnect.Util
                 SetSegmentsForDay(hours, DayOfWeek.Thursday, out Thursday);
                 SetSegmentsForDay(hours, DayOfWeek.Friday, out Friday);
                 SetSegmentsForDay(hours, DayOfWeek.Saturday, out Saturday);
-                Holidays = hours.Holidays.Select(x => x.ToString("M/d/yyyy")).ToList();
+                Holidays = hours.Holidays.Select(x => x.ToString("M/d/yyyy", CultureInfo.InvariantCulture)).ToList();
             }
 
             /// <summary>
@@ -193,7 +192,7 @@ namespace QuantConnect.Util
                     { DayOfWeek.Friday, new LocalMarketHours(DayOfWeek.Friday, Friday) },
                     { DayOfWeek.Saturday, new LocalMarketHours(DayOfWeek.Saturday, Saturday) }
                 };
-                var holidayDates = Holidays.Select(x => DateTime.ParseExact(x, "M/d/yyyy", null)).ToHashSet();
+                var holidayDates = Holidays.Select(x => DateTime.ParseExact(x, "M/d/yyyy", CultureInfo.InvariantCulture)).ToHashSet();
                 var exchangeHours = new SecurityExchangeHours(DateTimeZoneProviders.Tzdb[ExchangeTimeZone], holidayDates, hours);
                 return new MarketHoursDatabase.Entry(DateTimeZoneProviders.Tzdb[DataTimeZone], exchangeHours);
             }
