@@ -825,17 +825,18 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             if (fill.Status == OrderStatus.Filled || fill.Status == OrderStatus.PartiallyFilled)
             {
                 Interlocked.Exchange(ref _lastFillTimeTicks, DateTime.Now.Ticks);
-
+                
                 // check if the fill currency and the order currency match the symbol currency
                 var security = _algorithm.Securities[fill.Symbol];
-                if (fill.FillPriceCurrency != security.SymbolProperties.QuoteCurrency)
-                {
-                    Log.Error(string.Format("Currency mismatch: Fill currency: {0}, Symbol currency: {1}", fill.FillPriceCurrency, security.SymbolProperties.QuoteCurrency));
-                }
-                if (order.PriceCurrency != security.SymbolProperties.QuoteCurrency)
-                {
-                    Log.Error(string.Format("Currency mismatch: Order currency: {0}, Symbol currency: {1}", order.PriceCurrency, security.SymbolProperties.QuoteCurrency));
-                }
+                // Bug in FXCM API flipping the currencies -- disabling for now. 5/17/16 RFB
+                //if (fill.FillPriceCurrency != security.SymbolProperties.QuoteCurrency)
+                //{
+                //    Log.Error(string.Format("Currency mismatch: Fill currency: {0}, Symbol currency: {1}", fill.FillPriceCurrency, security.SymbolProperties.QuoteCurrency));
+                //}
+                //if (order.PriceCurrency != security.SymbolProperties.QuoteCurrency)
+                //{
+                //    Log.Error(string.Format("Currency mismatch: Order currency: {0}, Symbol currency: {1}", order.PriceCurrency, security.SymbolProperties.QuoteCurrency));
+                //}
 
                 try
                 {
