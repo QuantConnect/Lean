@@ -388,8 +388,12 @@ namespace QuantConnect.Brokerages.Fxcm
                         _isOrderSubmitRejected = true;
                     }
 
-                    _mapRequestsToAutoResetEvents[_currentRequest].Set();
-                    _mapRequestsToAutoResetEvents.Remove(_currentRequest);
+                    AutoResetEvent autoResetEvent = null;
+                    if (_mapRequestsToAutoResetEvents.TryGetValue(_currentRequest, out autoResetEvent))
+                    {
+                        autoResetEvent.Set();
+                        _mapRequestsToAutoResetEvents.Remove(_currentRequest);
+                    }
                 }
             }
         }
@@ -428,9 +432,10 @@ namespace QuantConnect.Brokerages.Fxcm
 
             if (message.getRequestID() == _currentRequest)
             {
-                if (message.isLastRptRequested())
+                AutoResetEvent autoResetEvent = null;
+                if (message.isLastRptRequested() && _mapRequestsToAutoResetEvents.TryGetValue(_currentRequest, out autoResetEvent))
                 {
-                    _mapRequestsToAutoResetEvents[_currentRequest].Set();
+                    autoResetEvent.Set();
                     _mapRequestsToAutoResetEvents.Remove(_currentRequest);
                 }
             }
