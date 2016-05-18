@@ -117,22 +117,15 @@ namespace QuantConnect.Util
         {
             try
             {
-                int count = 0;
                 foreach (var workItem in _holdQueue.GetConsumingEnumerable(token))
                 {
                     if (workItem.IsReady)
                     {
                         _processQueue.Add(workItem, token);
-                        count = 0;
                     }
                     else
                     {
                         _holdQueue.Add(workItem, token);
-                        if (count++ > _holdQueue.Count)
-                        {
-                            count = 0;
-                            Thread.Sleep(1);
-                        }
                     }
                 }
             }
