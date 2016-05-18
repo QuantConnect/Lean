@@ -16,6 +16,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -24,6 +25,7 @@ using QuantConnect.Data.Auxiliary;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Packets;
+using Equity = QuantConnect.Algorithm.CSharp.Benchmarks.Symbols.Equity;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -72,41 +74,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         public class BenchmarkTest : QCAlgorithm
         {
-            private readonly string[] _tickers =
-            {
-                // 400 symbols
-
-                //"spy", "aapl", "fb", "vxx", "vrx", "nflx", "uvxy", "qqq", "iwm", "baba", "gild", "xiv", "xom", "cvx", "msft", "ge", "slb", "jpm", "xle",
-                //"dis", "amzn", "twtr", "pfe", "c", "bac", "abbv", "jnj", "hal", "xlv", "intc", "wfc", "v", "yhoo", "cop", "myl", "agn", "wmt", "kmi",
-                //"mrk", "tsla", "gdx", "lly", "fcx", "cat", "celg", "qcom", "mcd", "cmcsa", "xop", "cvs", "amgn", "dow", "aal", "apc", "sune", "mu", "vlo",
-                //"sbux", "wmb", "pg", "eog", "dvn", "bmy", "apa", "unh", "eem", "ibm", "nke", "t", "hd", "unp", "dal", "endp", "csco", "oxy", "mro", "mdt",
-                //"txn", "wll", "orcl", "googl", "ual", "wynn", "ms", "hznp", "biib", "vz", "gm", "nbl", "twx", "swks", "jd", "hca", "avgo", "yum", "ko",
-                //"goog", "gs", "pep", "aig", "emc", "bidu", "clr", "pypl", "lvs", "swn", "axp", "atvi", "rrc", "wba", "mpc", "nxpi", "ete", "nov", "foxa",
-                //"sndk", "dia", "utx", "dd", "wdc", "aa", "m", "fxi", "rig", "ma", "dust", "tgt", "aet", "ebay", "luv", "efa", "brk.b", "ba", "met", "lyb",
-                //"svxy", "uwti", "hon", "hpq", "oas", "abt", "mo", "esrx", "teva", "stx", "ibb", "f", "cbs", "tlt", "pm", "esv", "ne", "psx", "schw", "mon",
-                //"hes", "gpro", "tvix", "mnk", "nvda", "nfx", "uso", "nugt", "ewz", "low", "ua", "tna", "xly", "mmm", "pxd", "viab", "mdlz", "nem", "usb",
-                //"mur", "etn", "feye", "pten", "oih", "ups", "chk", "dhr", "rai", "tqqq", "ccl", "brcm", "dg", "jblu", "crm", "adbe", "cog", "pbr", "hp",
-                //"bhi", "bk", "tjx", "de", "cof", "incy", "dhi", "abc", "xli", "zts", "bp", "iyr", "pnc", "cnx", "xlf", "lrcx", "gg", "rds.a", "wfm", "tso",
-                //"antm", "kss", "ea", "pru", "rad", "wft", "xbi", "thc", "vwo", "ctsh", "abx", "vmw", "csx", "acn", "emr", "se", "mjn", "skx", "ace", "p",
-                //"cmi", "cl", "cah", "exc", "duk", "amat", "aem", "fti", "stt", "ilmn", "hog", "kr", "expe", "vrtx", "ivv", "cam", "gps", "mck", "adsk",
-                //"cmcsk", "htz", "mgm", "dltr", "sti", "cyh", "mos", "cnq", "glw", "key", "kors", "siri", "epd", "su", "dfs", "tmo", "tap", "hst", "nbr",
-                //"eqt", "xlu", "bsx", "cost", "ctrp", "hfc", "vnq", "trv", "pot", "cern", "lltc", "do", "adi", "bax", "amt", "uri", "uco", "eca", "mas",
-                //"all", "pcar", "vips", "atw", "spxu", "lnkd", "x", "tsm", "so", "bbt", "syf", "vfc", "cxo", "ir", "pwr", "gld", "lng", "etp", "jnpr", "mat",
-                //"klac", "xlk", "trip", "aep", "vtr", "rost", "rdc", "cf", "fas", "hcn", "ar", "sm", "wpx", "d", "hot", "prgo", "alxn", "cnc", "vale", "jcp",
-                //"gdxj", "oke", "adm", "joy", "tsn", "mar", "khc", "nsc", "cma", "coh", "gmcr", "fl", "fitb", "bhp", "jwn", "dnr", "pbf", "xlnx", "phm", "hig",
-                //"ppg", "mbly", "itub", "fdx", "ip", "el", "len", "afl", "hlt", "xrx", "nee", "rcl", "nrg", "wtw", "qep", "jah", "sqqq", "rio", "cfg", "pah",
-                //"xlb", "rspp", "fox", "lbtyk", "fast", "xlp", "tza", "kmb", "hcp", "jci", "lmt", "spg", "hbi", "bby", "bmrn", "ben", "gis", "pcg", "wy", "rtn",
-                //"disca", "ivz", "slw", "tck", "bwa", "nue", "adp", "cci", "lnc", "fold"
-
-                // 2 symbols
-
-                //"aapl", "spy"
-
-                // 1 symbol
-
-                //"ibm",
-            };
-
             public override void Initialize()
             {
                 SetStartDate(1998, 1, 1);
@@ -116,8 +83,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 // no benchmark
                 SetBenchmark(time => 0m);
 
-                // Use all symbols above
-                //foreach (var ticker in _tickers)
+                // Use 400 symbols
+                //foreach (var ticker in Equity.All.Take(400))
                 //{
                 //    AddEquity(ticker, Resolution.Minute);
                 //}
