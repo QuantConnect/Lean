@@ -258,12 +258,12 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <returns>The open orders returned from FXCM</returns>
         public override List<Order> GetOpenOrders()
         {
-            Log.Trace("FxcmBrokerage.GetOpenOrders()");
-
-            return _openOrders.Values.ToList()
+            Log.Trace(string.Format("FxcmBrokerage.GetOpenOrders(): Located {0} orders", _openOrders.Count));
+            var orders = _openOrders.Values.ToList()
                 .Where(x => OrderIsOpen(x.getFXCMOrdStatus().getCode()))
                 .Select(ConvertOrder)
                 .ToList();
+            return orders;
         }
 
         /// <summary>

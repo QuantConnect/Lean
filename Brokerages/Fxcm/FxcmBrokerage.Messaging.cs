@@ -98,7 +98,7 @@ namespace QuantConnect.Brokerages.Fxcm
             AutoResetEvent autoResetEvent;
             lock (_locker)
             {
-                _currentRequest = _gateway.requestOpenOrders(Convert.ToInt64(_accountId));
+                _currentRequest = _gateway.requestOpenOrders(_accountId);
                 autoResetEvent = new AutoResetEvent(false);
                 _mapRequestsToAutoResetEvents[_currentRequest] = autoResetEvent;
             }
@@ -111,7 +111,7 @@ namespace QuantConnect.Brokerages.Fxcm
             AutoResetEvent autoResetEvent;
             lock (_locker)
             {
-                _currentRequest = _gateway.requestOpenPositions(Convert.ToInt64(_accountId));
+                _currentRequest = _gateway.requestOpenPositions(_accountId);
                 autoResetEvent = new AutoResetEvent(false);
                 _mapRequestsToAutoResetEvents[_currentRequest] = autoResetEvent;
             }
