@@ -49,9 +49,10 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        ///     Initializes a new instance of the LinearWeightedMovingAverage class with the default name and period
+        /// Initializes a new instance of the average class
         /// </summary>
-        /// <param name="period">The period of the LWMA</param>
+        /// <param name="name">The window period (must be even). Example value: 16</param>
+        /// <param name="n"></param>
         public FractalAdaptiveMovingAverage(string name, int n)
             : this("FRAMA" + n, n, 198)
         {
