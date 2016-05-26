@@ -35,7 +35,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Initializes a new instance of the average class
         /// </summary>
-        /// <param name="name"></param>
+        /// <param name="name">The name of the indicator instance</param>
         /// <param name="n">The window period (must be even). Example value: 16</param>
         /// <param name="longPeriod">The average period. Example value: 198</param>
         public FractalAdaptiveMovingAverage(string name, int n, int longPeriod)
@@ -54,8 +54,8 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Initializes a new instance of the average class
         /// </summary>
-        /// <param name="name">The window period (must be even). Example value: 16</param>
-        /// <param name="n"></param>
+        /// <param name="name">The name of the indicator instance</param>
+        /// <param name="n">The window period (must be even). Example value: 16</param>
         public FractalAdaptiveMovingAverage(int n)
             : this("FRAMA" + n, n, 198)
         {
@@ -63,11 +63,10 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Calculates the average value based on the input
+        /// Computes the average value
         /// </summary>
-        /// <param name="window"></param>
-        /// <param name="input"></param>
-        /// <returns></returns>
+        /// <param name="input">The data for the calculation</param>
+        /// <returns>The average value</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
             var price = (double)(input.High + input.Low) / 2;
