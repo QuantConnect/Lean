@@ -51,7 +51,7 @@ git clone git@github.com:QuantConnect/Lean.git
 cd Lean
 ```
 
-Open the project in Xamarin Studio, then in the menu bar, click `Project > Update NuGet Packages`.
+Open the project in Xamarin Studio, then in the menu bar, click `Project > Update NuGet Packages`. You should also run `nuget install MathNet.Filtering -pre` to install the MathNet library. 
 
 In OS X `mdtool` is not added to the PATH environment. Either set up the PATH manually or reference the binary directly.
 
