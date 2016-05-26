@@ -16,6 +16,7 @@
 using System;
 using NUnit.Framework;
 using QuantConnect.Indicators;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -25,15 +26,14 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void ComputesCorrectly()
         {
-            FractalAdaptiveMovingAverage frama = new FractalAdaptiveMovingAverage("", 6, 198);
+            FractalAdaptiveMovingAverage frama = new FractalAdaptiveMovingAverage("", 6, 100);
 
             decimal[] values = { 441m, 442m, 446m, 438m, 400m, 442m, 448m, 437m, 435m, 431m, 450m, 451m };
-            decimal[] expected = { 441m, 442m, 446m, 438m, 400m, 442m, 444.16m, 441.87m, 439.09m, 435.39m, 436.09m, 436.63m, 438m  };
+            decimal[] expected = { 441m, 442m, 446m, 438m, 400m, 442m, 444.51m, 441.67m, 438.58m, 434.69m, 435.84m, 436.73m, 438m };
             for (int i = 0; i < values.Length; i++)
             {
-                frama.Update(new IndicatorDataPoint(DateTime.UtcNow.AddSeconds(i), values[i]));
-               
-                Assert.AreEqual(expected[i], Math.Round(frama.Current.Value,2));
+                frama.Update(new TradeBar { High = values[i], Low = values[i] });
+                Assert.AreEqual(expected[i], Math.Round(frama.Current.Value, 2));
             }
 
         }
@@ -46,7 +46,7 @@ namespace QuantConnect.Tests.Indicators
 
             foreach (var data in TestHelper.GetDataStream(7))
             {
-                frama.Update(data);
+                frama.Update(new TradeBar { High = data, Low = data });
             }
             Assert.IsTrue(frama.IsReady);
             Assert.AreNotEqual(0m, frama.Current.Value);
@@ -55,6 +55,24 @@ namespace QuantConnect.Tests.Indicators
             frama.Reset();
 
             TestHelper.AssertIndicatorIsInDefaultState(frama);
+        }
+
+        [Test]
+        public void ComparesAgainstExternalData()
+        {
+            var indicator = new FractalAdaptiveMovingAverage("", 16, 198);
+            RunTestIndicator(indicator);
+        }
+
+        private static void RunTestIndicator(TradeBarIndicator indicator)
+        {
+            TestHelper.TestIndicator(indicator, "frama.txt", "Filt", (actual, expected) => {AssertResult(expected, actual.Current.Value);});
+        }
+
+        private static void AssertResult(double expected, decimal actual)
+        {
+            System.Diagnostics.Debug.WriteLine(expected + "," + actual + "," + Math.Abs((decimal)expected - actual));
+            Assert.IsTrue(Math.Abs((decimal)expected - actual) < 0.006m);
         }
 
     }

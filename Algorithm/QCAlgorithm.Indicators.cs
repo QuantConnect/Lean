@@ -1022,11 +1022,11 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>The FRAMA for the given parameters</returns>
-        public FractalAdaptiveMovingAverage FRAMA(Symbol symbol, int period, int longPeriod = 198, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
+        public FractalAdaptiveMovingAverage FRAMA(Symbol symbol, int period, int longPeriod = 198, Resolution? resolution = null)
         {
             var name = CreateIndicatorName(symbol, "FRAMA" + period, resolution);
             var frama = new FractalAdaptiveMovingAverage(name, period, longPeriod);
-            RegisterIndicator(symbol, frama, resolution, selector);
+            RegisterIndicator(symbol, frama, resolution);
             return frama;
         }
 

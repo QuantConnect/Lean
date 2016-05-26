@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using QuantConnect.Data.Market;
 using System;
 using System.Linq;
 
@@ -22,13 +23,14 @@ namespace QuantConnect.Indicators
     /// <summary>
     /// The Fractal Adaptive Moving Average (FRAMA) by John Ehlers
     /// </summary>
-    public class FractalAdaptiveMovingAverage : WindowIndicator<IndicatorDataPoint>
+    public class FractalAdaptiveMovingAverage : TradeBarIndicator
     {
 
         double _filt;
         int _n = 16;
         double _w = -4.6;
-        RollingWindow<double> _series;
+        RollingWindow<double> _high;
+        RollingWindow<double> _low;
 
         /// <summary>
         /// Initializes a new instance of the average class
@@ -37,7 +39,7 @@ namespace QuantConnect.Indicators
         /// <param name="n">The window period (must be even). Example value: 16</param>
         /// <param name="longPeriod">The average period. Example value: 198</param>
         public FractalAdaptiveMovingAverage(string name, int n, int longPeriod)
-            : base(name, n)
+            : base(name)
         {
             if (n % 2 > 0)
             {
@@ -45,7 +47,8 @@ namespace QuantConnect.Indicators
             }
             _n = n;
             _w = CalculateW(longPeriod);
-            _series = new RollingWindow<double>(n);
+            _high = new RollingWindow<double>(n);
+            _low = new RollingWindow<double>(n);
         }
 
         /// <summary>
@@ -53,7 +56,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="name">The window period (must be even). Example value: 16</param>
         /// <param name="n"></param>
-        public FractalAdaptiveMovingAverage(string name, int n)
+        public FractalAdaptiveMovingAverage(int n)
             : this("FRAMA" + n, n, 198)
         {
 
@@ -65,15 +68,16 @@ namespace QuantConnect.Indicators
         /// <param name="window"></param>
         /// <param name="input"></param>
         /// <returns></returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
+        protected override decimal ComputeNextValue(TradeBar input)
         {
-            _series.Add((double)input.Price);
+            var price = (double)(input.High + input.Low) / 2;
+            _high.Add((double)input.High);
+            _low.Add((double)input.Low);
 
             // our first data point just return identity
-            if (!_series.IsReady)
+            if (!_high.IsReady)
             {
-                _filt = (double)input.Price;
-                return input;
+                _filt = price;
             }
             double n1;
             double n2;
@@ -82,18 +86,19 @@ namespace QuantConnect.Indicators
             double ll;
             double dimen = 0;
             double alpha;
-            double price = (double)input.Price;
 
+            n3 = (_high.Max() - _low.Min()) / _n;
 
-            n3 = (_series.Max() - _series.Min()) / _n;
-
-            hh = _series.Take(_n / 2).Max();
-            ll = _series.Take(_n / 2).Min();
+            hh = _high.Take(_n / 2).Max();
+            ll = _low.Take(_n / 2).Min();
 
             n1 = (hh - ll) / (_n / 2);
 
-            hh = _series.Skip(_n / 2).Take(_n / 2).Max();
-            ll = _series.Skip(_n / 2).Take(_n / 2).Min();
+            if (_high.IsReady)
+            {
+                hh = _high.Skip(_n / 2).Take(_n / 2).Max();
+                ll = _low.Skip(_n / 2).Take(_n / 2).Min();
+            }
 
             n2 = (hh - ll) / (_n / 2);
 
@@ -123,7 +128,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override bool IsReady
         {
-            get { return _series.IsReady; }
+            get { return _high.IsReady; }
         }
 
         /// <summary>
@@ -132,7 +137,8 @@ namespace QuantConnect.Indicators
         public override void Reset()
         {
             _filt = 0;
-            _series.Reset();
+            _high.Reset();
+			_low.Reset();
             _n = 16;
             _w = -4.6;
             base.Reset();
