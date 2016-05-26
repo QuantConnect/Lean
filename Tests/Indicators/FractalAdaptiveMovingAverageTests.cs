@@ -71,7 +71,6 @@ namespace QuantConnect.Tests.Indicators
 
         private static void AssertResult(double expected, decimal actual)
         {
-            System.Diagnostics.Debug.WriteLine(expected + "," + actual + "," + Math.Abs((decimal)expected - actual));
             Assert.IsTrue(Math.Abs((decimal)expected - actual) < 0.006m);
         }
 
