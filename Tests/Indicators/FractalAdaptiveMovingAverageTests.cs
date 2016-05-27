@@ -23,20 +23,6 @@ namespace QuantConnect.Tests.Indicators
     [TestFixture]
     public class FractalAdaptiveMovingAverageTests
     {
-        [Test]
-        public void ComputesCorrectly()
-        {
-            FractalAdaptiveMovingAverage frama = new FractalAdaptiveMovingAverage("", 6, 100);
-
-            decimal[] values = { 441m, 442m, 446m, 438m, 400m, 442m, 448m, 437m, 435m, 431m, 450m, 451m };
-            decimal[] expected = { 441m, 442m, 446m, 438m, 400m, 442m, 444.51m, 441.67m, 438.58m, 434.69m, 435.84m, 436.73m, 438m };
-            for (int i = 0; i < values.Length; i++)
-            {
-                frama.Update(new TradeBar { High = values[i], Low = values[i] });
-                Assert.AreEqual(expected[i], Math.Round(frama.Current.Value, 2));
-            }
-
-        }
 
         [Test]
         public void ResetsProperly()
