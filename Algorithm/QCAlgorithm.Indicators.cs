@@ -1013,6 +1013,24 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates an FractalAdaptiveMovingAverage (FRAMA) indicator for the symbol. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose FRAMA we want</param>
+        /// <param name="period">The period of the FRAMA</param>
+        /// <param name="longPeriod">The long period of the FRAMA</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The FRAMA for the given parameters</returns>
+        public FractalAdaptiveMovingAverage FRAMA(Symbol symbol, int period, int longPeriod = 198, Resolution? resolution = null)
+        {
+            var name = CreateIndicatorName(symbol, "FRAMA" + period, resolution);
+            var frama = new FractalAdaptiveMovingAverage(name, period, longPeriod);
+            RegisterIndicator(symbol, frama, resolution);
+            return frama;
+        }
+
+        /// <summary>
         /// Creates and registers a new consolidator to receive automatic updates at the specified resolution as well as configures
         /// the indicator to receive updates from the consolidator.
         /// </summary>
