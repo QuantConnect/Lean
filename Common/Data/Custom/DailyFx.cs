@@ -198,12 +198,12 @@ namespace QuantConnect.Data.Custom
                 start += "0101";
                 end += "03312359"; 
             }
-            else if (date.Month < 6)
+            else if (date.Month < 7)
             {
                 start += "0401";
                 end += "06302359";
             }
-            else if (date.Month < 9)
+            else if (date.Month < 10)
             {
                 start += "0701";
                 end += "09302359";
