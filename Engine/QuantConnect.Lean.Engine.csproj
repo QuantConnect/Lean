@@ -173,6 +173,7 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="AlgorithmManager.cs" />
+    <Compile Include="DataFeeds\DataFeeds.cs" />
     <Compile Include="DataFeeds\Enumerators\BaseDataCollectionAggregatorEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\EnqueueableEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\FastForwardEnumerator.cs" />
@@ -186,6 +187,7 @@
     <Compile Include="DataFeeds\Enumerators\SynchronizingEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\TradeBarBuilderEnumerator.cs" />
     <Compile Include="DataFeeds\ITimeProvider.cs" />
+    <Compile Include="DataFeeds\JsonSubscriptionFactory.cs" />
     <Compile Include="DataFeeds\ManualTimeProvider.cs" />
     <Compile Include="DataFeeds\RealTimeProvider.cs" />
     <Compile Include="DataFeeds\DataFeedPacket.cs" />
