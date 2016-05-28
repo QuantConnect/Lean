@@ -34,10 +34,6 @@ namespace QuantConnect.Data.Custom
     /// </remarks>
     public class DailyFx : BaseData
     {
-        //Private factory variables.
-        private Dictionary<string, DailyFx> _cache;
-        private static readonly DateTimeZone EasternTimeZone = DateTimeZoneProviders.Tzdb["America/New_York"];
-
         /// <summary>
         /// Title of the event.
         /// </summary>
@@ -119,7 +115,7 @@ namespace QuantConnect.Data.Custom
         /// </summary>
         public DailyFx()
         {
-            _cache = new Dictionary<string, DailyFx>();
+
         }
 
         /// <summary>
@@ -136,7 +132,7 @@ namespace QuantConnect.Data.Custom
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             // Live mode just always get today's results, backtesting get all the results for the quarter.
-            var url = "https://content.dailyfx.com/getData?contenttype=calendarEvent&description=true";
+            var url = "https://content.dailyfx.com/getData?contenttype=calendarEvent&description=true&format=json_pretty";
 
             // If we're backtesting append the quarters.
             if (!isLiveMode)
@@ -217,7 +213,7 @@ namespace QuantConnect.Data.Custom
                 start += "1001";
                 end += "12312359";
             }
-            return "&startdate=20160526&format=json_pretty&enddate=201605262359"; // string.Format("&startdate={0}&enddate={1}", start, end);
+            return string.Format("&startdate={0}&enddate={1}", start, end);
         }
 
         /// <summary>
