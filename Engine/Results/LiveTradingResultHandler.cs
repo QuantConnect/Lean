@@ -295,8 +295,8 @@ namespace QuantConnect.Lean.Engine.Results
                     var upTime = DateTime.UtcNow - _launchTimeUtc;
                     serverStatistics["Up Time"] = string.Format("{0}d {1:hh\\:mm\\:ss}", upTime.Days, upTime);
 
-                    // only send holdings updates when we have changes in orders, except for first time, then we want to send all
-                    foreach (var asset in _algorithm.Securities.Values.Where(x => x.IsInternalFeed()).OrderBy(x => x.Symbol.Value))
+                    // Only send holdings updates when we have changes in orders, except for first time, then we want to send all
+                    foreach (var asset in _algorithm.Securities.Values.Where(x => !x.IsInternalFeed()).OrderBy(x => x.Symbol.Value))
                     {
                         holdings.Add(asset.Symbol.Value, new Holding(asset));
                     }
