@@ -1368,6 +1368,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Client.RequestMarketData(id, contract, null, false, false);
 
                 _subscribedSymbols[symbol] = id;
+                _subscribedTickets[id] = symbol;
             }
         }
 
@@ -1500,6 +1501,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     _lastBidSizes[symbol] = tick.Quantity;
 
                     tick.Value = tick.BidPrice;
+                    tick.BidSize = tick.Quantity;
                     break;
 
                 case IB.TickType.AskSize:
@@ -1510,6 +1512,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     _lastAskSizes[symbol] = tick.Quantity;
 
                     tick.Value = tick.AskPrice;
+                    tick.AskSize = tick.Quantity;
                     break;
                 
                 
