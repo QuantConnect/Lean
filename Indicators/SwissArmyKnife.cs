@@ -123,7 +123,7 @@ namespace QuantConnect.Indicators
 
             if (_tool == SwissArmyKnifeTool.EMA)
             {
-                alpha = (Math.Cos(Math.PI / (int)_period) + Math.Sin(Math.PI / (int)_period) - 1) / Math.Cos(Math.PI / (int)_period);
+                alpha = (Math.Cos(2 * Math.PI / (int)_period) + Math.Sin(2 * Math.PI / (int)_period) - 1) / Math.Cos(2 * Math.PI / (int)_period);
                 b0 = alpha;
                 a1 = 1 - alpha;
             }
