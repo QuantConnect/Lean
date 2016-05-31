@@ -24,15 +24,8 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Custom
 {
     /// <summary>
-    /// Collection to return items from
-    /// </summary>
-    public class DailyFxCollection : BaseDataCollection
-    {
-        
-    }
-
-    /// <summary>
     /// Helper data type for FXCM's public macro economic sentiment API.
+    /// Data source used to create: https://www.dailyfx.com/calendar
     /// </summary>
     /// <remarks>
     /// Data sourced by Thomson Reuters
