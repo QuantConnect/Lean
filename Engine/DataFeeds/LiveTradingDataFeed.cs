@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
@@ -24,7 +23,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
@@ -126,7 +124,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     case NotifyCollectionChangedAction.Add:
                         foreach (var universe in args.NewItems.OfType<Universe>())
                         {
-                            _subscriptions.TryAdd(CreateUniverseSubscription(universe, start, Time.EndOfTime));
+                            if (!_subscriptions.Contains(universe.Configuration))
+                            {
+                                _subscriptions.TryAdd(CreateUniverseSubscription(universe, start, Time.EndOfTime));
+                            }
+
+                            // Not sure if this is needed but left here because of this:
+                            // https://github.com/QuantConnect/Lean/commit/029d70bde6ca83a1eb0c667bb5cc4444bea05678
                             UpdateFillForwardResolution();
                         }
                         break;
