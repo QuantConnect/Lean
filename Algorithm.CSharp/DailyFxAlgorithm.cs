@@ -32,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             SetStartDate(2016, 05, 26);  //Set Start Date
-            SetEndDate(2016, 05, 28);    //Set End Date
+            SetEndDate(2016, 05, 27);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
             AddData<DailyFx>("DFX", Resolution.Second, DateTimeZone.Utc);
         }

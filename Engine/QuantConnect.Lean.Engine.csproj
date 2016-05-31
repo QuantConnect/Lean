@@ -186,7 +186,7 @@
     <Compile Include="DataFeeds\Enumerators\SynchronizingEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\TradeBarBuilderEnumerator.cs" />
     <Compile Include="DataFeeds\ITimeProvider.cs" />
-    <Compile Include="DataFeeds\JsonSubscriptionFactory.cs" />
+    <Compile Include="DataFeeds\CollectionSubscriptionFactory.cs" />
     <Compile Include="DataFeeds\ManualTimeProvider.cs" />
     <Compile Include="DataFeeds\RealTimeProvider.cs" />
     <Compile Include="DataFeeds\DataFeedPacket.cs" />

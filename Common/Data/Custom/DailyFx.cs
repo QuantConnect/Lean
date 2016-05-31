@@ -18,11 +18,19 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
-using NodaTime;
-using NodaTime.TimeZones;
+using Newtonsoft.Json.Linq;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Data.Custom
 {
+    /// <summary>
+    /// Collection to return items from
+    /// </summary>
+    public class DailyFxCollection : BaseDataCollection
+    {
+        
+    }
+
     /// <summary>
     /// Helper data type for FXCM's public macro economic sentiment API.
     /// </summary>
@@ -34,6 +42,8 @@ namespace QuantConnect.Data.Custom
     /// </remarks>
     public class DailyFx : BaseData
     {
+        JsonSerializerSettings _jsonSerializerSettings;
+
         /// <summary>
         /// Title of the event.
         /// </summary>
@@ -115,7 +125,12 @@ namespace QuantConnect.Data.Custom
         /// </summary>
         public DailyFx()
         {
-
+            _jsonSerializerSettings = new JsonSerializerSettings()
+            {
+                DateFormatHandling = DateFormatHandling.IsoDateFormat,
+                DateParseHandling = DateParseHandling.DateTimeOffset,
+                DateTimeZoneHandling = DateTimeZoneHandling.RoundtripKind
+            };
         }
 
         /// <summary>
@@ -140,44 +155,47 @@ namespace QuantConnect.Data.Custom
                 url += GetQuarter(date);
             }
             
-            return new SubscriptionDataSourceCollection(url, SubscriptionTransportMedium.Rest, FileFormat.Json);
+            return new SubscriptionDataSource(url, SubscriptionTransportMedium.Rest, FileFormat.Collection);
         }
 
         /// <summary>
         /// Create a new Daily FX Object
         /// </summary>
         /// <param name="config">Subscription data config which created this factory</param>
-        /// <param name="line">Line from a <seealso cref="SubscriptionDataSourceCollection"/> result</param>
+        /// <param name="content">Line from a <seealso cref="SubscriptionDataSource"/> result</param>
         /// <param name="date">Date of the request</param>
         /// <param name="isLiveMode">Live mode</param>
         /// <returns></returns>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+        public override BaseData Reader(SubscriptionDataConfig config, string content, DateTime date, bool isLiveMode)
         {
-            //Parse the line into a DailyFx entry.
-            var dailyfx = JsonConvert.DeserializeObject<DailyFx>(line);
-            
-            //Fix the date-time for the event:
-            var utcDateTime = dailyfx.DisplayDate.Date.AddHours(dailyfx.DisplayTime.TimeOfDay.TotalHours);
+            var dailyfxList = JsonConvert.DeserializeObject<List<DailyFx>>(content, _jsonSerializerSettings);
 
-            // Custom data format without settings in market hours are assumed UTC.
-            dailyfx.Time = utcDateTime;
-
-            //Assign a value? to this event: 
-            dailyfx.Value = 0;
-            try
+            foreach (var dailyfx in dailyfxList)
             {
-                if (!string.IsNullOrEmpty(Actual))
+                // Custom data format without settings in market hours are assumed UTC.
+                dailyfx.Time = dailyfx.DisplayDate.Date.AddHours(dailyfx.DisplayTime.TimeOfDay.TotalHours);
+
+                // Assign a value to this event: 
+                // Fairly meaningless between unrelated events, but meaningful with the same event over time.
+                dailyfx.Value = 0;
+                try
                 {
-                    dailyfx.Value = Convert.ToDecimal(RemoveSpecialCharacters(Actual));
+                    if (!string.IsNullOrEmpty(Actual))
+                    {
+                        dailyfx.Value = Convert.ToDecimal(RemoveSpecialCharacters(Actual));
+                    }
+                }
+                catch
+                {
                 }
             }
-            catch 
-            { }
 
-            return dailyfx;
+            return new BaseDataCollection(date, config.Symbol, dailyfxList);
         }
 
-
+        /// <summary>
+        /// Actual values from the API have lots of units, strip these to generate a "value" for the basedata.
+        /// </summary>
         private static string RemoveSpecialCharacters(string str)
         {
             return Regex.Replace(str, "[^a-zA-Z0-9_.]+", "", RegexOptions.Compiled);
@@ -311,6 +329,9 @@ namespace QuantConnect.Data.Custom
             throw new NotImplementedException("DailyFx Enum Converter is ReadOnly");
         }
 
+        /// <summary>
+        /// Indicate if we can convert this object.
+        /// </summary>
         public override bool CanConvert(Type objectType)
         {
             return objectType == typeof(string);

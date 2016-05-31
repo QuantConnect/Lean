@@ -14,20 +14,18 @@
 */
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds.Transport;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// JSON Subscription Factory breaks a JSON object into pieces for the BaseData objects to consume.
+    /// Collection Subscription Factory takes a BaseDataCollection from BaseData factories
+    /// and yields it one point at a time to the algorithm
     /// </summary>
-    public class JsonSubscriptionFactory : ISubscriptionFactory
+    public class CollectionSubscriptionFactory : ISubscriptionFactory
     {
         
         private readonly DateTime _date;
@@ -36,12 +34,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly SubscriptionDataConfig _config;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="JsonSubscriptionFactory"/> class
+        /// Initializes a new instance of the <see cref="CollectionSubscriptionFactory"/> class
         /// </summary>
         /// <param name="config">The subscription's configuration</param>
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
-        public JsonSubscriptionFactory(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public CollectionSubscriptionFactory(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             _date = date;
             _config = config;
@@ -57,7 +55,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         /// <summary>
         /// Event fired when an exception is thrown during a call to 
-        /// <see cref="BaseData.Reader(QuantConnect.Data.SubscriptionDataConfig,string,System.DateTime,bool)"/>
+        /// <see cref="BaseData.Reader(SubscriptionDataConfig, string, DateTime, bool)"/>
         /// </summary>
         public event EventHandler<ReaderErrorEventArgs> ReaderError;
 
@@ -68,39 +66,49 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>An <see cref="IEnumerable{BaseData}"/> that contains the data in the source</returns>
         public IEnumerable<BaseData> Read(SubscriptionDataSource source)
         {
-            // Only handle REST JSON calls for now.
-            if (source.TransportMedium != SubscriptionTransportMedium.Rest)
+            IStreamReader reader = null;
+            var instances = new BaseDataCollection();
+            try
             {
-                throw new NotImplementedException("Reading JSON from " + source.TransportMedium + " is not implemented.");
-            }   
-
-            // Convert to a collection string reader.
-            var collection = source as SubscriptionDataSourceCollection;
-            if (collection == null)
-            {
-                OnInvalidSource(source, new Exception("Json file format must be used with SubscriptionDataSourceCollection source."));
-            }
-
-            using (var reader = new RestSubscriptionStreamReader(source.Source))
-            {
-                var json = reader.ReadLine();
-                foreach (var entry in collection.Explode(json, _config, _date, _isLiveMode))
+                switch (source.TransportMedium)
                 {
-                    BaseData instance = null;
-                    try
-                    {
-                        instance = _factory.Reader(_config, entry, _date, _isLiveMode);
-                    }
-                    catch (Exception err)
-                    {
-                        OnReaderError(entry, err);
-                    }
+                    default:
+                    case SubscriptionTransportMedium.Rest:
+                        reader = new RestSubscriptionStreamReader(source.Source);
+                        break;
+                    case SubscriptionTransportMedium.LocalFile:
+                        reader = new LocalFileSubscriptionStreamReader(source.Source);
+                        break;
+                    case SubscriptionTransportMedium.RemoteFile:
+                        reader = new RemoteFileSubscriptionStreamReader(source.Source, Globals.Cache);
+                        break;
+                }
 
-                    if (instance != null)
+                var raw = "";
+                try
+                {
+                    raw = reader.ReadLine();
+                    var result = _factory.Reader(_config, raw, _date, _isLiveMode);
+                    instances = result as BaseDataCollection;
+                    if (instances == null)
                     {
-                        yield return instance;
+                        OnInvalidSource(source, new Exception("Reader must generate a BaseDataCollection with the FileFormat.Collection"));
                     }
                 }
+                catch (Exception err)
+                {
+                    OnReaderError(raw, err);
+                }
+
+                foreach (var instance in instances.Data)
+                {
+                    yield return instance;
+                }
+            }
+            finally
+            {
+                if (reader != null)
+                    reader.Dispose();
             }
         }
 
