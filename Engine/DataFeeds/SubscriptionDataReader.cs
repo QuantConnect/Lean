@@ -266,9 +266,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // prevent emitting past data, this can happen when switching symbols on daily data
                     if (_previous != null && _config.Resolution != Resolution.Tick)
                     {
-                        if (_config.Resolution == Resolution.Tick || _config.IsCustomData)
+                        if (_config.IsCustomData)
                         {
-                            // allow duplicate times for tick data
+                            // Skip the point if time went backwards for custom data?
+                            // TODO: Should this be the case for all datapoints?
                             if (instance.EndTime < _previous.EndTime) continue;
                         }
                         else
