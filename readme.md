@@ -43,12 +43,15 @@ Install [Mono for Mac](http://www.mono-project.com/docs/getting-started/install/
 
 Install [MonoDevelop](http://www.monodevelop.com/download/) or [Xamarin Studio](http://xamarin.com/studio) for your IDE. If you use MonoDevelop also install its [FSharp Plugin](http://addins.monodevelop.com/Project/Index/48).
 
-OSX does not fully support Visual Basic or F#. You will need to remove these projects from the solution for them to build properly. Alternatively for Visual Basic modify the target framework as shown [here](https://groups.google.com/forum/#!topic/lean-engine/uR94evlM01g).
-
 Clone the repo:
 ```
 git clone git@github.com:QuantConnect/Lean.git
 cd Lean
+```
+
+OSX does not fully support Visual Basic or F#. You will need to remove these projects from the solution for them to build properly. Alternatively for Visual Basic modify the target framework as shown [here](https://groups.google.com/forum/#!topic/lean-engine/uR94evlM01g). Alternatively modify the target framework:
+```
+sed -i -e 's/4.5/4.0/' Algorithm.VisualBasic/QuantConnect.Algorithm.VisualBasic.vbproj
 ```
 
 Open the project in Xamarin Studio, then in the menu bar, click `Project > Update NuGet Packages`. You should also run `nuget install MathNet.Filtering -pre` to install the MathNet library. 
@@ -68,7 +71,7 @@ If you are running MonoDevelop:
 Run the compiled `exe` file. For the time being you need to run the `exe` in the same path as your current working directory:
 ```
 cd Lean/Launcher/bin/Debug
-mono ./QuantConnect.Launcher.Lean.exe
+mono ./QuantConnect.Lean.Launcher.exe
 ```
 ### Linux (Debian, Ubuntu)
 
