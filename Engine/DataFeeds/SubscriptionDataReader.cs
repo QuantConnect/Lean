@@ -398,17 +398,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             while (true);
         }
 
-        private ISubscriptionFactory CreateSubscriptionFactory(SubscriptionDataSource source)
+        private ISubscriptionDataSourceReader CreateSubscriptionFactory(SubscriptionDataSource source)
         {
-            var factory = SubscriptionFactory.ForSource(source, _config, _tradeableDates.Current, _isLiveMode);
+            var factory = SubscriptionDataSourceReader.ForSource(source, _config, _tradeableDates.Current, _isLiveMode);
             AttachEventHandlers(factory, source);
             return factory;
         }
 
-        private void AttachEventHandlers(ISubscriptionFactory factory, SubscriptionDataSource source)
+        private void AttachEventHandlers(ISubscriptionDataSourceReader dataSourceReader, SubscriptionDataSource source)
         {
             // handle missing files
-            factory.InvalidSource += (sender, args) =>
+            dataSourceReader.InvalidSource += (sender, args) =>
             {
                 switch (args.Source.TransportMedium)
                 {
@@ -431,10 +431,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             };
 
-            if (factory is TextSubscriptionFactory)
+            if (dataSourceReader is TextSubscriptionDataSourceReader)
             {
                 // handle empty files/instantiation errors
-                var textSubscriptionFactory = (TextSubscriptionFactory)factory;
+                var textSubscriptionFactory = (TextSubscriptionDataSourceReader)dataSourceReader;
                 textSubscriptionFactory.CreateStreamReaderError += (sender, args) =>
                 {
                     Log.Error(string.Format("Failed to get StreamReader for data source({0}), symbol({1}). Skipping date({2}). Reader is null.", args.Source.Source, _mappedSymbol, args.Date.ToShortDateString()));

@@ -24,7 +24,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// Represents a type responsible for accepting an input <see cref="SubscriptionDataSource"/>
     /// and returning an enumerable of the source's <see cref="BaseData"/>
     /// </summary>
-    public interface ISubscriptionFactory
+    public interface ISubscriptionDataSourceReader
     {
         /// <summary>
         /// Event fired when the specified source is considered invalid, this may
@@ -41,30 +41,30 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     }
 
     /// <summary>
-    /// Provides a factory method for creating <see cref="ISubscriptionFactory"/> instances
+    /// Provides a factory method for creating <see cref="ISubscriptionDataSourceReader"/> instances
     /// </summary>
-    public static class SubscriptionFactory
+    public static class SubscriptionDataSourceReader
     {
         /// <summary>
-        /// Createsa new <see cref="ISubscriptionFactory"/> capable of handling the specified <paramref name="source"/>
+        /// Creates a new <see cref="ISubscriptionDataSourceReader"/> capable of handling the specified <paramref name="source"/>
         /// </summary>
         /// <param name="source">The subscription data source to create a factory for</param>
         /// <param name="config">The configuration of the subscription</param>
         /// <param name="date">The date to be processed</param>
         /// <param name="isLiveMode">True for live mode, false otherwise</param>
-        /// <returns>A new <see cref="ISubscriptionFactory"/> that can read the specified <paramref name="source"/></returns>
-        public static ISubscriptionFactory ForSource(SubscriptionDataSource source, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        /// <returns>A new <see cref="ISubscriptionDataSourceReader"/> that can read the specified <paramref name="source"/></returns>
+        public static ISubscriptionDataSourceReader ForSource(SubscriptionDataSource source, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             switch (source.Format)
             {
                 case FileFormat.Csv:
-                    return new TextSubscriptionFactory(config, date, isLiveMode);
+                    return new TextSubscriptionDataSourceReader(config, date, isLiveMode);
 
                 case FileFormat.Collection:
-                    return new CollectionSubscriptionFactory(config, date, isLiveMode);
+                    return new CollectionSubscriptionDataSourceReader(config, date, isLiveMode);
 
                 case FileFormat.ZipEntryName:
-                    return new ZipEntryNameSubscriptionFactory(config, date, isLiveMode);
+                    return new ZipEntryNameSubscriptionDataSourceReader(config, date, isLiveMode);
 
                 default:
                     throw new NotImplementedException("SubscriptionFactory.ForSource(" + source + ") has not been implemented yet.");
