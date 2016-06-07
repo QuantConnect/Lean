@@ -60,6 +60,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 case FileFormat.Csv:
                     return new TextSubscriptionFactory(config, date, isLiveMode);
 
+                case FileFormat.Collection:
+                    return new CollectionSubscriptionFactory(config, date, isLiveMode);
+
                 case FileFormat.ZipEntryName:
                     return new ZipEntryNameSubscriptionFactory(config, date, isLiveMode);
 
@@ -68,4 +71,5 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
         }
     }
+
 }

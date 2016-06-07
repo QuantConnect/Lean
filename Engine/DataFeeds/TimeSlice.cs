@@ -16,6 +16,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Microsoft.Scripting.Utils;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -159,7 +161,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (baseDataCollectionCount == 0)
                     {
                         continue;
-                }
+                    }
                     count += baseDataCollectionCount;
                 }
                 else
@@ -178,8 +180,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         allDataForAlgorithm.Add(baseData);
                         if (packet.Configuration.IsCustomData)
                         {
-                            // this is all the custom data
-                            custom.Add(new UpdateData<Security>(packet.Security, packet.Configuration.Type, list));
+                            // This is all the custom data
+                            // Add the list to the custom data when its unique.
+                            var exists = custom.Any(x => x.DataType == packet.Configuration.Type);
+                            if (!exists)
+                            {
+                                custom.Add(new UpdateData<Security>(packet.Security, packet.Configuration.Type, list));
+                            }
                         }
                     }
                     // don't add internal feed data to ticks/bars objects
