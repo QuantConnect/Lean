@@ -26,7 +26,7 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void ResetsProperly()
         {
-            var sak = new SwissArmyKnife(4, 4, 0.1, SwissArmyKnifeTool.EMA);
+            var sak = new SwissArmyKnife(4, 0.1, SwissArmyKnifeTool.BandPass);
 
             foreach (var data in TestHelper.GetDataStream(5))
             {
@@ -42,9 +42,22 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void ComparesAgainstExternalData()
+        public void ComparesBandPassAgainstExternalData()
         {
-            //todo: external data tests
+            var indicator = new SwissArmyKnife("", 20, 0.1, SwissArmyKnifeTool.BandPass);
+            RunTestIndicator(indicator, "BP");
         }
+
+        private static void RunTestIndicator(IndicatorBase<IndicatorDataPoint> indicator, string field)
+        {
+            TestHelper.TestIndicator(indicator, "spy_swiss.txt", field, (actual, expected) => { AssertResult(expected, actual.Current.Value); });
+        }
+
+        private static void AssertResult(double expected, decimal actual)
+        {
+            System.Diagnostics.Debug.WriteLine(expected + "," + actual + "," + Math.Abs((decimal)expected - actual));
+            Assert.IsTrue(Math.Abs((decimal)expected - actual) < 0.05m);
+        }
+
     }
 }
