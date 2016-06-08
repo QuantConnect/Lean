@@ -1036,16 +1036,15 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol to use for calculations</param>
         /// <param name="period">The period of the calculation</param>
-        /// <param name="n">The window of the calculation</param>
         /// <param name="delta">The delta scale of the BandStop or BandPass</param>
         /// <param name="tool">The tool os the Swiss Army Knife</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">elects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>The calculation using the given tool</returns>
-        public SwissArmyKnife SWISS(Symbol symbol, int period, int n, double delta, SwissArmyKnifeTool tool, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
+        public SwissArmyKnife SWISS(Symbol symbol, int period, double delta, SwissArmyKnifeTool tool, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
         {
             string name = CreateIndicatorName(symbol, "SWISS" + period, resolution);
-            var swiss = new SwissArmyKnife(name, period, n, delta, tool);
+            var swiss = new SwissArmyKnife(name, period, delta, tool);
             RegisterIndicator(symbol, swiss, resolution, selector);
             return swiss;
         }

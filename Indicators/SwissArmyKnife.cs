@@ -119,7 +119,7 @@ namespace QuantConnect.Indicators
             if (_tool == SwissArmyKnifeTool.HighPass)
             {
                 alpha = (Math.Cos(2 * Math.PI / _period) + Math.Sin(2 * Math.PI / _period) - 1) / Math.Cos(2 * Math.PI / _period);
-                _c0 = 1 + alpha / 2;
+                _c0 = (1 + alpha) / 2;
                 _b1 = -1;
                 _a1 = 1 - alpha;
             }
@@ -128,7 +128,7 @@ namespace QuantConnect.Indicators
             {
                 beta = 2.415 * (1 - Math.Cos(2 * Math.PI / _period));
                 alpha = -beta + Math.Sqrt(Math.Pow(beta, 2) + 2d * beta);
-                _c0 = (1 + alpha / 2) * (1 + alpha / 2);
+                _c0 = (1 + alpha) * (1 + alpha) / 4;
                 _b1 = -2;
                 _b2 = 1;
                 _a1 = 2d * (1 - alpha);
@@ -174,8 +174,7 @@ namespace QuantConnect.Indicators
                 _price.Add(_price[0]);           
             }
 
-            double signal = Math.Round(_a0 * _c0 * (_b0 * _price[0] + _b1 * _price[1] + _b2 * _price[2]) + _a0 * (_a1 * _filt[0] + _a2 * _filt[1]), 2);
-            //double emd = 0.5 * (1 - alpha) * (_price[0] - _price[2]) + beta * (1 + alpha) * _filt[0] - alpha * _filt[1];
+            double signal = _a0 * _c0 * (_b0 * _price[0] + _b1 * _price[1] + _b2 * _price[2]) + _a0 * (_a1 * _filt[0] + _a2 * _filt[1]);
 
             _filt.Add(signal);
 

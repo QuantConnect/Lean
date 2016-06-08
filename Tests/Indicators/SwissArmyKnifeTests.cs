@@ -45,18 +45,46 @@ namespace QuantConnect.Tests.Indicators
         public void ComparesBandPassAgainstExternalData()
         {
             var indicator = new SwissArmyKnife("", 20, 0.1, SwissArmyKnifeTool.BandPass);
-            RunTestIndicator(indicator, "BP");
+            RunTestIndicator(indicator, "BP", 0.043m);
         }
 
-        private static void RunTestIndicator(IndicatorBase<IndicatorDataPoint> indicator, string field)
+        [Test]
+        public void Compares2PHPAgainstExternalData()
         {
-            TestHelper.TestIndicator(indicator, "spy_swiss.txt", field, (actual, expected) => { AssertResult(expected, actual.Current.Value); });
+            var indicator = new SwissArmyKnife("", 20, 0.1, SwissArmyKnifeTool.TwoPoleHighPass);
+            RunTestIndicator(indicator, "2PHP", 0.01m);
         }
 
-        private static void AssertResult(double expected, decimal actual)
+        [Test]
+        public void ComparesHPAgainstExternalData()
+        {
+            var indicator = new SwissArmyKnife("", 20, 0.1, SwissArmyKnifeTool.HighPass);
+            RunTestIndicator(indicator, "HP", 0.01m);
+        }
+
+        [Test]
+        public void ComparesButterAgainstExternalData()
+        {
+            var indicator = new SwissArmyKnife("", 20, 0.1, SwissArmyKnifeTool.Butter);
+            RunTestIndicator(indicator, "Butter", 0.01m);
+        }
+
+        [Test]
+        public void ComparesGaussAgainstExternalData()
+        {
+            var indicator = new SwissArmyKnife("", 20, 0.1, SwissArmyKnifeTool.Gauss);
+            RunTestIndicator(indicator, "Gauss", 0.01m);
+        }
+
+        private static void RunTestIndicator(IndicatorBase<IndicatorDataPoint> indicator, string field, decimal variance)
+        {
+            TestHelper.TestIndicator(indicator, "spy_swiss.txt", field, (actual, expected) => { AssertResult(expected, actual.Current.Value, variance); });
+        }
+
+        private static void AssertResult(double expected, decimal actual, decimal variance)
         {
             System.Diagnostics.Debug.WriteLine(expected + "," + actual + "," + Math.Abs((decimal)expected - actual));
-            Assert.IsTrue(Math.Abs((decimal)expected - actual) < 0.05m);
+            Assert.IsTrue(Math.Abs((decimal)expected - actual) < variance);
         }
 
     }
