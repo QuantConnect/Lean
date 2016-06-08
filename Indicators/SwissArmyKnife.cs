@@ -174,13 +174,6 @@ namespace QuantConnect.Indicators
                 _price.Add(_price[0]);           
             }
 
-
-            if (IsReady)
-            {
-                System.Diagnostics.Debugger.Break();
-            }
-
-
             double signal = Math.Round(_a0 * _c0 * (_b0 * _price[0] + _b1 * _price[1] + _b2 * _price[2]) + _a0 * (_a1 * _filt[0] + _a2 * _filt[1]), 2);
             //double emd = 0.5 * (1 - alpha) * (_price[0] - _price[2]) + beta * (1 + alpha) * _filt[0] - alpha * _filt[1];
 
