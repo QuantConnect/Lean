@@ -179,7 +179,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 try
                 {
-                    var mapFile = mapFileResolver.ResolveMapFile(config.Symbol.Value, config.Symbol.ID.Date);
+                    var mapFile = mapFileResolver.ResolveMapFile(config.Symbol.Value, DateTime.Today);
 
                     // only take the resolved map file if it has data, otherwise we'll use the empty one we defined above
                     if (mapFile.Any()) _mapFile = mapFile;
