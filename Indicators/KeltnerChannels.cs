@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
@@ -133,7 +132,7 @@ namespace QuantConnect.Indicators
 
             var typicalPrice = (input.High + input.Low + input.Close)/3m;
             MiddleBand.Update(input.Time, typicalPrice);
-            Console.WriteLine(input.Time.ToString("yyyymmdd") + "\t" + typicalPrice.SmartRounding() + "\t" + MiddleBand.Current.Value.SmartRounding());
+
             // poke the upper/lower bands, they actually don't use the input, they compute
             // based on the ATR and the middle band
             LowerBand.Update(input);
