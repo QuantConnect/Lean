@@ -151,14 +151,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Adds a new subscription to provide data for the specified security.
         /// </summary>
-        /// <param name="universe">The universe the subscription is to be added to</param>
-        /// <param name="security">The security to add a subscription for</param>
-        /// <param name="config">The subscription config to be added</param>
-        /// <param name="utcStartTime">The start time of the subscription</param>
-        /// <param name="utcEndTime">The end time of the subscription</param>
+        /// <param name="request"></param>
         /// <returns>True if the subscription was created and added successfully, false otherwise</returns>
-        public bool AddSubscription(Universe universe, Security security, SubscriptionDataConfig config, DateTime utcStartTime, DateTime utcEndTime)
+        public bool AddSubscription(SubscriptionRequest request)
         {
+            var universe = request.Universe;
+            var security = request.Security;
+            var utcStartTime = request.StartTimeUtc;
+            var utcEndTime = request.EndTimeUtc;
+            var config = request.Configuration;
+
             // create and add the subscription to our collection
             var subscription = CreateSubscription(universe, security, config, utcStartTime, utcEndTime);
             

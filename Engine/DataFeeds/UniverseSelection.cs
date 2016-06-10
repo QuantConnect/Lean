@@ -128,9 +128,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 additions.Add(security);
 
                 var addedSubscription = false;
-                foreach (var subscription in universe.GetSubscriptionRequests(security, dateTimeUtc, algorithmEndDateUtc))
+                foreach (var subscriptionRequest in universe.GetSubscriptionRequests(security, dateTimeUtc, algorithmEndDateUtc))
                 {
-                    var config = subscription.Configuration;
+                    var config = subscriptionRequest.Configuration;
 
                     // ask the limiter if we can add another subscription at that resolution
                     string reason;
@@ -143,13 +143,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         continue;
                     }
 
-                    if (subscription.IsUniverseSubscription)
+                    if (subscriptionRequest.IsUniverseSubscription)
                     {
                         throw new NotImplementedException("Chained universes are not implemented yet");
                     }
-                    
+
                     // add the new subscriptions to the data feed
-                    if (_dataFeed.AddSubscription(universe, security, config, dateTimeUtc, algorithmEndDateUtc))
+                    if (_dataFeed.AddSubscription(subscriptionRequest))
                     {
                         addedSubscription = true;
                     }
@@ -168,7 +168,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 foreach (var security in addedSecurities)
                 {
                     // assume currency feeds are always one subscription per, these are typically quote subscriptions
-                    _dataFeed.AddSubscription(universe, security, security.Subscriptions.First(), dateTimeUtc, algorithmEndDateUtc);
+                    _dataFeed.AddSubscription(new SubscriptionRequest(false, universe, security, security.Subscriptions.First(), dateTimeUtc, algorithmEndDateUtc));
                 }
             }
 
