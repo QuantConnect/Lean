@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -128,28 +129,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 additions.Add(security);
 
                 var addedSubscription = false;
-                foreach (var subscriptionRequest in universe.GetSubscriptionRequests(security, dateTimeUtc, algorithmEndDateUtc))
+                foreach (var request in universe.GetSubscriptionRequests(security, dateTimeUtc, algorithmEndDateUtc))
                 {
-                    var config = subscriptionRequest.Configuration;
-
                     // ask the limiter if we can add another subscription at that resolution
                     string reason;
-                    if (!_limiter.CanAddSubscription(config.Resolution, out reason))
+                    if (!_limiter.CanAddSubscription(request.Configuration.Resolution, out reason))
                     {
                         // should we be counting universe subscriptions against user subscriptions limits?
 
                         _algorithm.Error(reason);
-                        Log.Trace("UniverseSelection.ApplyUniverseSelection(): Skipping adding subscription: " + config.Symbol.ToString() + ": " + reason);
+                        Log.Trace("UniverseSelection.ApplyUniverseSelection(): Skipping adding subscription: " + request.Configuration.Symbol.ToString() + ": " + reason);
                         continue;
                     }
 
-                    if (subscriptionRequest.IsUniverseSubscription)
-                    {
-                        throw new NotImplementedException("Chained universes are not implemented yet");
-                    }
-
                     // add the new subscriptions to the data feed
-                    if (_dataFeed.AddSubscription(subscriptionRequest))
+                    if (_dataFeed.AddSubscription(request))
                     {
                         addedSubscription = true;
                     }
