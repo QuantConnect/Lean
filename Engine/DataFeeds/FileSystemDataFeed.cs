@@ -358,7 +358,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             else if (config.SecurityType == SecurityType.Option && security is Option)
             {
-                var configs = universe.GetSubscriptions(security);
+                var subscriptions = universe.GetSubscriptionRequests(security, startTimeUtc, endTimeUtc).ToList();
+                if (subscriptions.Any(sub => sub.IsUniverseSubscription))
+                {
+                    throw new NotImplementedException("Chained options universes not implemented.");
+                }
+
+                var configs = universe.GetSubscriptionRequests(security, startTimeUtc, endTimeUtc).Select(sub => sub.Configuration);
                 var enumerators = configs.Select(c =>
                     CreateSubscriptionEnumerator(security, c, localStartTime, localEndTime, _mapFileProvider.Get(c.Market), tradeableDates, false, true)
                     ).ToList();
