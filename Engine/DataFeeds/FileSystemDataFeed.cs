@@ -191,13 +191,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>True if the subscription was created and added successfully, false otherwise</returns>
         public bool AddSubscription(SubscriptionRequest request)
         {
-            var universe = request.Universe;
-            var security = request.Security;
-            var utcStartTime = request.StartTimeUtc;
-            var utcEndTime = request.EndTimeUtc;
-            var config = request.Configuration;
-
-            var subscription = CreateSubscription(universe, security, config, utcStartTime, utcEndTime);
+            var subscription = CreateSubscription(request.Universe, request.Security, request.Configuration, request.StartTimeUtc, request.EndTimeUtc);
             if (subscription == null)
             {
                 // subscription will be null when there's no tradeable dates for the security between the requested times, so
@@ -205,7 +199,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
-            Log.Debug("FileSystemDataFeed.AddSubscription(): Added " + security.Symbol.ID + " Start: " + utcStartTime + " End: " + utcEndTime);
+            Log.Debug("FileSystemDataFeed.AddSubscription(): Added " + request.Security.Symbol.ID + " Start: " + request.StartTimeUtc + " End: " + request.EndTimeUtc);
 
             if (_subscriptions.TryAdd(subscription))
             {

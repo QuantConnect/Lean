@@ -155,23 +155,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>True if the subscription was created and added successfully, false otherwise</returns>
         public bool AddSubscription(SubscriptionRequest request)
         {
-            var universe = request.Universe;
-            var security = request.Security;
-            var utcStartTime = request.StartTimeUtc;
-            var utcEndTime = request.EndTimeUtc;
-            var config = request.Configuration;
-
             // create and add the subscription to our collection
-            var subscription = CreateSubscription(universe, security, config, utcStartTime, utcEndTime);
+            var subscription = CreateSubscription(request.Universe, request.Security, request.Configuration, request.StartTimeUtc, request.EndTimeUtc);
             
             // for some reason we couldn't create the subscription
             if (subscription == null)
             {
-                Log.Trace("Unable to add subscription for: " + security.Symbol.ToString());
+                Log.Trace("Unable to add subscription for: " + request.Security.Symbol.ToString());
                 return false;
             }
 
-            Log.Trace("LiveTradingDataFeed.AddSubscription(): Added " + security.Symbol.ToString());
+            Log.Trace("LiveTradingDataFeed.AddSubscription(): Added " + request.Security.Symbol.ToString());
 
             _subscriptions.TryAdd(subscription);
 
@@ -179,12 +173,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // unless it is custom data, custom data is retrieved using the same as backtest
             if (!subscription.Configuration.IsCustomData)
             {
-                _dataQueueHandler.Subscribe(_job, new[] {security.Symbol});
+                _dataQueueHandler.Subscribe(_job, new[] {request.Security.Symbol});
             }
 
             // keep track of security changes, we emit these to the algorithm
             // as notifications, used in universe selection
-            _changes += SecurityChanges.Added(security);
+            _changes += SecurityChanges.Added(request.Security);
 
             UpdateFillForwardResolution();
 
