@@ -166,6 +166,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     count += list.Count;
                 }
 
+                if (!packet.Configuration.IsInternalFeed && packet.Configuration.IsCustomData)
+                {
+                    // This is all the custom data
+                    custom.Add(new UpdateData<Security>(packet.Security, packet.Configuration.Type, list));
+                }
+
                 var securityUpdate = new List<BaseData>(list.Count);
                 var consolidatorUpdate = new List<BaseData>(list.Count);
                 for (int i = 0; i < list.Count; i++)
@@ -175,11 +181,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         // this is all the data that goes into the algorithm
                         allDataForAlgorithm.Add(baseData);
-                        if (packet.Configuration.IsCustomData)
-                        {
-                            // This is all the custom data
-                            custom.Add(new UpdateData<Security>(packet.Security, packet.Configuration.Type, list));
-                        }
                     }
                     // don't add internal feed data to ticks/bars objects
                     if (baseData.DataType != MarketDataType.Auxiliary)

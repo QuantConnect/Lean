@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
+using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -80,7 +81,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [Test]
-        public void HandlesMultipleCustomDataOfSameType()
+        public void HandlesMultipleCustomDataOfSameTypeWithDifferentSymbols()
         {
             var symbol1 = Symbol.Create("SCF/CBOE_VX1_EW", SecurityType.Base, Market.USA);
             var symbol2 = Symbol.Create("SCF/CBOE_VX2_EW", SecurityType.Base, Market.USA);
@@ -121,6 +122,46 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(symbol2, data2.Symbol);
             Assert.AreEqual(15, data1.Value);
             Assert.AreEqual(20, data2.Value);
+        }
+
+        [Test]
+        public void HandlesMultipleCustomDataOfSameTypeSameSymbol()
+        {
+            var symbol = Symbol.Create("DFX", SecurityType.Base, Market.USA);
+
+            var subscriptionDataConfig = new SubscriptionDataConfig(
+                typeof(DailyFx), symbol, Resolution.Daily, TimeZones.Utc, TimeZones.Utc, true, true, false, isCustom: true);
+
+            var security = new Security(
+                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                subscriptionDataConfig,
+                new Cash(CashBook.AccountCurrency, 0, 1m),
+                SymbolProperties.GetDefault(CashBook.AccountCurrency));
+
+            var refTime = DateTime.UtcNow;
+
+            var timeSlice = TimeSlice.Create(refTime, TimeZones.Utc, new CashBook(),
+                new List<DataFeedPacket>
+                {
+                    new DataFeedPacket(security, subscriptionDataConfig, new List<BaseData>
+                    {
+                        new DailyFx { Symbol = symbol, Time = refTime, Title = "Item 1" },
+                        new DailyFx { Symbol = symbol, Time = refTime, Title = "Item 2" },
+                    }),
+                },
+                new SecurityChanges(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()));
+
+            Assert.AreEqual(1, timeSlice.CustomData.Count);
+
+            var data1 = timeSlice.CustomData[0].Data[0];
+            var data2 = timeSlice.CustomData[0].Data[1];
+
+            Assert.IsInstanceOf(typeof(DailyFx), data1);
+            Assert.IsInstanceOf(typeof(DailyFx), data2);
+            Assert.AreEqual(symbol, data1.Symbol);
+            Assert.AreEqual(symbol, data2.Symbol);
+            Assert.AreEqual("Item 1", ((DailyFx)data1).Title);
+            Assert.AreEqual("Item 2", ((DailyFx)data2).Title);
         }
 
     }
