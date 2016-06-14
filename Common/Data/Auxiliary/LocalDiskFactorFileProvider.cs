@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using System.Collections.Concurrent;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
@@ -71,7 +72,7 @@ namespace QuantConnect.Data.Auxiliary
                 return GetFactorFile(symbol, symbol.Value, market);
             }
 
-            var mapFile = mapFileResolver.ResolveMapFile(symbol.Value, symbol.ID.Date);
+            var mapFile = mapFileResolver.ResolveMapFile(symbol.ID.Symbol, symbol.ID.Date);
             if (mapFile.IsNullOrEmpty())
             {
                 return GetFactorFile(symbol, symbol.Value, market);
