@@ -33,7 +33,6 @@ using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
-using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -841,6 +840,17 @@ namespace QuantConnect.Lean.Engine.Results
 
                         var highResolutionCharts = new Dictionary<string, Chart>(live.Results.Charts);
 
+                        // 10 minute resolution data, save today
+                        var tenminuteSampler = new SeriesSampler(TimeSpan.FromMinutes(10));
+                        var tenminuteCharts = tenminuteSampler.SampleCharts(live.Results.Charts, start, stop);
+
+                        live.Results.Charts = tenminuteCharts;
+                        data_keys.Add(new
+                        {
+                            Key = CreateKey("10minute"),
+                            Serialized = JsonConvert.SerializeObject(live.Results)
+                        });
+
                         // minute resoluton data, save today
                         var minuteSampler = new SeriesSampler(TimeSpan.FromMinutes(1));
                         var minuteCharts = minuteSampler.SampleCharts(live.Results.Charts, start, stop);
@@ -850,17 +860,6 @@ namespace QuantConnect.Lean.Engine.Results
                         data_keys.Add(new
                         {
                             Key = CreateKey("minute"),
-                            Serialized = JsonConvert.SerializeObject(live.Results)
-                        });
-
-                        // 10 minute resolution data, save today
-                        var tenminuteSampler = new SeriesSampler(TimeSpan.FromMinutes(10));
-                        var tenminuteCharts = tenminuteSampler.SampleCharts(live.Results.Charts, start, stop);
-
-                        live.Results.Charts = tenminuteCharts;
-                        data_keys.Add(new
-                        {
-                            Key = CreateKey("10minute"),
                             Serialized = JsonConvert.SerializeObject(live.Results)
                         });
 
@@ -1023,15 +1022,6 @@ namespace QuantConnect.Lean.Engine.Results
                             if (last != null)
                             {
                                 last.Value = price;
-                                security.SetRealTimePrice(last);
-
-                                // Update CashBook for Forex securities
-                                Cash cash;
-                                var forex = security as Forex;
-                                if (forex != null && _algorithm.Portfolio.CashBook.TryGetValue(forex.BaseCurrencySymbol, out cash))
-                                {
-                                    cash.Update(last);
-                                }
                             }
                             else
                             {
