@@ -576,7 +576,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Update any security properties based on the lastest market data and time
+        /// Update any security properties based on the latest market data and time
         /// </summary>
         /// <param name="data">New data packet from LEAN</param>
         public void SetMarketPrice(BaseData data)
@@ -589,7 +589,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Update any security properties based on the lastest realtime data and time
+        /// Update any security properties based on the latest realtime data and time
         /// </summary>
         /// <param name="data">New data packet from LEAN</param>
         public void SetRealTimePrice(BaseData data)
