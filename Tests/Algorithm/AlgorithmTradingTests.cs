@@ -18,6 +18,7 @@ using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
+using QuantConnect.Brokerages;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -935,7 +936,59 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(-3000, actual);
         }
 
+        /*************************************************************************/
+        //  Rounding the order quantity to the nearest multiple of lot size test
+        /*************************************************************************/
 
+        [Test]
+        public void SetHoldings_Long_RoundOff()
+        {
+            var algo = new QCAlgorithm();
+            algo.AddSecurity(SecurityType.Forex, "EURUSD");
+            algo.SetCash(100000);
+            algo.SetBrokerageModel(BrokerageName.FxcmBrokerage);
+            algo.Securities[Symbols.EURUSD].TransactionModel = new ConstantFeeTransactionModel(0);
+            Security eurusd = algo.Securities[Symbols.EURUSD];
+            // Set Price to $26
+            Update(eurusd, 26);
+            // So 100000/26 = 3846, After Rounding off becomes 3000
+            var actual = algo.CalculateOrderQuantity("EURUSD", 1m);
+            Assert.AreEqual(3000m, actual);
+
+        }
+
+        [Test]
+        public void SetHoldings_Short_RoundOff()
+        {
+            var algo = new QCAlgorithm();
+            algo.AddSecurity(SecurityType.Forex, "EURUSD");
+            algo.SetCash(100000);
+            algo.SetBrokerageModel(BrokerageName.FxcmBrokerage);
+            algo.Securities[Symbols.EURUSD].TransactionModel = new ConstantFeeTransactionModel(0);
+            Security eurusd = algo.Securities[Symbols.EURUSD];
+            // Set Price to $26
+            Update(eurusd, 26);
+            // So -100000/26 = -3846, After Rounding off becomes -3000
+            var actual = algo.CalculateOrderQuantity("EURUSD", -1m);
+            Assert.AreEqual(-3000m, actual);
+        }
+
+        [Test]
+        public void SetHoldings_Long_ToZero_RoundOff()
+        {
+            var algo = new QCAlgorithm();
+            algo.AddSecurity(SecurityType.Forex, "EURUSD");
+            algo.SetCash(10000);
+            algo.SetBrokerageModel(BrokerageName.FxcmBrokerage);
+            algo.Securities[Symbols.EURUSD].TransactionModel = new ConstantFeeTransactionModel(0);
+            Security eurusd = algo.Securities[Symbols.EURUSD];
+            // Set Price to $25
+            Update(eurusd, 25);
+            // So 10000/25 = 400, After Rounding off becomes 0
+            var actual = algo.CalculateOrderQuantity("EURUSD", 1m);
+            Assert.AreEqual(0m, actual);
+        }
+        
         //[Test]
         //public void SetHoldings_LongToLonger_PriceRise()
         //{
