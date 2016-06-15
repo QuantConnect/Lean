@@ -94,8 +94,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
             if (underlyingCurrent != null && underlyingCurrent.EndTime <= localFrontier)
             {
-                // only emit if new data available
-                if (_lastEmittedValue != null && _lastEmittedValue.EndTime == underlyingCurrent.EndTime)
+                // only emit if new data available (skip custom data if same time/value)
+                if (_lastEmittedValue != null && 
+                    _lastEmittedValue.DataType == MarketDataType.Base && 
+                    _lastEmittedValue.EndTime == underlyingCurrent.EndTime &&
+                    _lastEmittedValue.Value == underlyingCurrent.Value)
                 {
                     _current = null;
                 }
