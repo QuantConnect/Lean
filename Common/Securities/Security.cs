@@ -574,18 +574,30 @@ namespace QuantConnect.Securities
                 Exchange.SetLocalDateTimeFrontier(args.Time);
             };
         }
-        
+
         /// <summary>
         /// Update any security properties based on the lastest market data and time
         /// </summary>
         /// <param name="data">New data packet from LEAN</param>
-        public void SetMarketPrice(BaseData data) 
+        public void SetMarketPrice(BaseData data)
         {
             //Add new point to cache:
             if (data == null) return;
             Cache.AddData(data);
             Holdings.UpdateMarketPrice(Price);
             VolatilityModel.Update(this, data);
+        }
+
+        /// <summary>
+        /// Update any security properties based on the lastest realtime data and time
+        /// </summary>
+        /// <param name="data">New data packet from LEAN</param>
+        public void SetRealTimePrice(BaseData data)
+        {
+            //Add new point to cache:
+            if (data == null) return;
+            Cache.AddData(data);
+            Holdings.UpdateMarketPrice(Price);
         }
 
         /// <summary>

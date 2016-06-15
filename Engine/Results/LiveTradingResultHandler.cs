@@ -33,6 +33,7 @@ using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
+using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -1022,6 +1023,15 @@ namespace QuantConnect.Lean.Engine.Results
                             if (last != null)
                             {
                                 last.Value = price;
+                                security.SetRealTimePrice(last);
+
+                                // Update CashBook for Forex securities
+                                Cash cash;
+                                var forex = security as Forex;
+                                if (forex != null && _algorithm.Portfolio.CashBook.TryGetValue(forex.BaseCurrencySymbol, out cash))
+                                {
+                                    cash.Update(last);
+                                }
                             }
                             else
                             {
