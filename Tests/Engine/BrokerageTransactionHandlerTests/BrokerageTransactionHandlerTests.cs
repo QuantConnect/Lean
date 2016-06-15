@@ -14,27 +14,13 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Backtesting;
-using QuantConnect.Data.Market;
-using QuantConnect.Lean.Engine;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
-using QuantConnect.Packets;
-using QuantConnect.Securities;
-using QuantConnect.Tests.Engine.DataFeeds;
 
 
 namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
