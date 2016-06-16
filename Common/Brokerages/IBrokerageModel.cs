@@ -120,6 +120,11 @@ namespace QuantConnect.Brokerages
         /// <param name="accountType">The account type</param>
         /// <returns>The settlement model for this brokerage</returns>
         ISettlementModel GetSettlementModel(Security security, AccountType accountType);
+
+        /// <summary>
+        /// Allows the brokerage to push cashbook updates. This is disabled by default.
+        /// </summary>
+        bool AllowAccountUpdates { get; }
     }
 
     /// <summary>

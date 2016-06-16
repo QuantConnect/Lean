@@ -246,5 +246,13 @@ namespace QuantConnect.Brokerages
             return new ImmediateSettlementModel();
         }
 
+        /// <summary>
+        /// Allows the brokerage to push cashbook updates. This is disabled by default.
+        /// </summary>
+        public virtual bool AllowAccountUpdates
+        {
+            get { return false; }
+        }
+
     }
 }
