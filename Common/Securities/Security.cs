@@ -574,12 +574,12 @@ namespace QuantConnect.Securities
                 Exchange.SetLocalDateTimeFrontier(args.Time);
             };
         }
-
+        
         /// <summary>
         /// Update any security properties based on the latest market data and time
         /// </summary>
         /// <param name="data">New data packet from LEAN</param>
-        public void SetMarketPrice(BaseData data)
+        public void SetMarketPrice(BaseData data) 
         {
             //Add new point to cache:
             if (data == null) return;
@@ -599,7 +599,7 @@ namespace QuantConnect.Securities
             Cache.AddData(data);
             Holdings.UpdateMarketPrice(Price);
         }
-
+ 
         /// <summary>
         /// Set the leverage parameter for this security
         /// </summary>

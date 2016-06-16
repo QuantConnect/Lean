@@ -57,14 +57,24 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// The lot size (lot size of the order) for the security
+        /// </summary>
+        public decimal LotSize
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
         /// Creates an instance of the <see cref="SymbolProperties"/> class
         /// </summary>
-        public SymbolProperties(string description, string quoteCurrency, decimal contractMultiplier, decimal pipSize)
+        public SymbolProperties(string description, string quoteCurrency, decimal contractMultiplier, decimal pipSize, decimal lotSize)
         {
             Description = description;
             QuoteCurrency = quoteCurrency;
             ContractMultiplier = contractMultiplier;
             PipSize = pipSize;
+            LotSize = lotSize;
         }
 
         /// <summary>
@@ -74,7 +84,7 @@ namespace QuantConnect.Securities
         /// <returns>A default instance of the<see cref="SymbolProperties"/> class</returns>
         public static SymbolProperties GetDefault(string quoteCurrency)
         {
-            return new SymbolProperties("", quoteCurrency.ToUpper(), 1, 0.01m);
+            return new SymbolProperties("", quoteCurrency.ToUpper(), 1, 0.01m, 1);
         }
     }
 }

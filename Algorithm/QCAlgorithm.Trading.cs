@@ -653,6 +653,12 @@ namespace QuantConnect.Algorithm
 
             } while (orderQuantity > 0 && (marginRequired > marginRemaining || orderValue + orderFees > targetOrderValue));
 
+            //Rounding off Order Quantity to the nearest multiple of Lot Size
+            if (orderQuantity % Convert.ToInt32(security.SymbolProperties.LotSize) != 0)
+            {
+                orderQuantity = orderQuantity - (orderQuantity % Convert.ToInt32(security.SymbolProperties.LotSize));
+            }
+
             // add directionality back in
             return (direction == OrderDirection.Sell ? -1 : 1) * orderQuantity;
         }
