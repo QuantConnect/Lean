@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
@@ -541,29 +540,37 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             return enumerator;
         }
 
-        private int GetLowerThreshold(Resolution resolution)
+        private static int GetLowerThreshold(Resolution resolution)
         {
             switch (resolution)
             {
-                case Resolution.Tick: return 500;
-                case Resolution.Second: return 250;
-                case Resolution.Minute: return 100;
-                case Resolution.Hour: return 18;
-                case Resolution.Daily: return 5;
+                case Resolution.Tick:
+                    return 500;
+
+                case Resolution.Second:
+                case Resolution.Minute:
+                case Resolution.Hour:
+                case Resolution.Daily:
+                    return 250;
+
                 default:
                     throw new ArgumentOutOfRangeException("resolution", resolution, null);
             }
         }
 
-        private int GetUpperThreshold(Resolution resolution)
+        private static int GetUpperThreshold(Resolution resolution)
         {
             switch (resolution)
             {
-                case Resolution.Tick: return 10000;
-                case Resolution.Second: return 5000;
-                case Resolution.Minute: return 1200;
-                case Resolution.Hour: return 100;
-                case Resolution.Daily: return 50;
+                case Resolution.Tick:
+                    return 10000;
+
+                case Resolution.Second:
+                case Resolution.Minute:
+                case Resolution.Hour:
+                case Resolution.Daily:
+                    return 5000;
+
                 default:
                     throw new ArgumentOutOfRangeException("resolution", resolution, null);
             }
