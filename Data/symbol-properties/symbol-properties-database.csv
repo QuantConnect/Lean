@@ -4,29 +4,29 @@ market,symbol,type,description,quote_currency,contract_multiplier,pip_size,lot_s
 # Use # signs for comments
 #
 
-fxcm,AU200AUD,cfd,S&P/ASX index of Australian listed shares,USD,0.1,1,1000
-fxcm,DE10YBEUR,cfd,Euro-Bund,EUR,10,0.01,1000
-fxcm,XCUUSD,cfd,Copper,USD,100,0.001,1000
-fxcm,ES35EUR,cfd,IBEX 35 index of Spanish listed shares,EUR,0.1,1,1000
-fxcm,EU50EUR,cfd,Euro Stoxx 50 index of European listed shares,EUR,0.1,1,1000
-fxcm,FR40EUR,cfd,CAC 40 index of French listed shares,EUR,0.1,1,1000
-fxcm,DE30EUR,cfd,DAX index of German listed shares,EUR,0.1,1,1000
-fxcm,HK33HKD,cfd,Hang Seng index of Hong Kong listed shares,HKD,1,1,1000
-fxcm,IT40EUR,cfd,FTSE MIB index of Italian listed shares,EUR,0.1,1,1000
-fxcm,JP225JPY,cfd,Nikkei 225 index of Japanese listed shares,JPY,1,1,1000
-fxcm,NAS100USD,cfd,TECH 100 index of US listed shares,USD,0.1,1,1000
-fxcm,NATGASUSD,cfd,Natural Gas (Henry Hub),USD,100,0.001,1000
-fxcm,SPX500USD,cfd,S&P 500 index of US listed shares,USD,1,0.1,1000
-fxcm,CH20CHF,cfd,Swiss Market Index of Swiss listed shares,CHF,0.1,1,1000
-fxcm,UK100GBP,cfd,FTSE 100 index of UK listed shares,GBP,0.1,1,1000
-fxcm,BCOUSD,cfd,Crude Oil (Brent),USD,10,0.01,1000
-fxcm,US30USD,cfd,Index of top 30 shares on Wall Street,USD,0.1,1,1000
-fxcm,DXYUSD,cfd,Dow Jones FXCM Dollar Index Basket,USD,1,1,1000
-fxcm,WTICOUSD,cfd,Crude Oil (WTI),USD,10,0.01,1000
-fxcm,XAGUSD,cfd,Silver,USD,1,0.01,1000
-fxcm,XAUUSD,cfd,Gold,USD,1,0.01,1000
-fxcm,XPDUSD,cfd,Palladium,USD,1,0.1,1000
-fxcm,XPTUSD,cfd,Platinum,USD,1,0.1,1000
+fxcm,AU200AUD,cfd,S&P/ASX index of Australian listed shares,USD,0.1,1,1
+fxcm,DE10YBEUR,cfd,Euro-Bund,EUR,10,0.01,1
+fxcm,XCUUSD,cfd,Copper,USD,100,0.001,1
+fxcm,ES35EUR,cfd,IBEX 35 index of Spanish listed shares,EUR,0.1,1,1
+fxcm,EU50EUR,cfd,Euro Stoxx 50 index of European listed shares,EUR,0.1,1,1
+fxcm,FR40EUR,cfd,CAC 40 index of French listed shares,EUR,0.1,1,1
+fxcm,DE30EUR,cfd,DAX index of German listed shares,EUR,0.1,1,1
+fxcm,HK33HKD,cfd,Hang Seng index of Hong Kong listed shares,HKD,1,1,1
+fxcm,IT40EUR,cfd,FTSE MIB index of Italian listed shares,EUR,0.1,1,1
+fxcm,JP225JPY,cfd,Nikkei 225 index of Japanese listed shares,JPY,1,1,10
+fxcm,NAS100USD,cfd,TECH 100 index of US listed shares,USD,0.1,1,1
+fxcm,NATGASUSD,cfd,Natural Gas (Henry Hub),USD,100,0.001,1
+fxcm,SPX500USD,cfd,S&P 500 index of US listed shares,USD,1,0.1,1
+fxcm,CH20CHF,cfd,Swiss Market Index of Swiss listed shares,CHF,0.1,1,1
+fxcm,UK100GBP,cfd,FTSE 100 index of UK listed shares,GBP,0.1,1,1
+fxcm,BCOUSD,cfd,Crude Oil (Brent),USD,10,0.01,1
+fxcm,US30USD,cfd,Index of top 30 shares on Wall Street,USD,0.1,1,1
+fxcm,DXYUSD,cfd,Dow Jones FXCM Dollar Index Basket,USD,1,1,1
+fxcm,WTICOUSD,cfd,Crude Oil (WTI),USD,10,0.01,1
+fxcm,XAGUSD,cfd,Silver,USD,1,0.01,50
+fxcm,XAUUSD,cfd,Gold,USD,1,0.01,1
+fxcm,XPDUSD,cfd,Palladium,USD,1,0.1,1
+fxcm,XPTUSD,cfd,Platinum,USD,1,0.1,1
 
 oanda,AU200AUD,cfd,Australia 200,AUD,1,1,1
 oanda,BCOUSD,cfd,Brent Crude Oil,USD,1,0.01,1

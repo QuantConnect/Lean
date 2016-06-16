@@ -600,7 +600,6 @@ namespace QuantConnect.Securities
             Holdings.UpdateMarketPrice(Price);
         }
  
-
         /// <summary>
         /// Set the leverage parameter for this security
         /// </summary>
