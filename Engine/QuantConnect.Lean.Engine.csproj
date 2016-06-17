@@ -178,6 +178,7 @@
     <Compile Include="DataFeeds\Enumerators\Factories\BaseDataCollectionSubscripionEnumeratorFactory.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\BaseDataSubscriptionEnumeratorFactory.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\OptionChainUniverseSubscriptionEnumeratorFactory.cs" />
+    <Compile Include="DataFeeds\Enumerators\Factories\PostCreateConfigureSubscriptionEnumeratorFactory.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\SubscriptionDataReaderSubscriptionEnumeratorFactory.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\UserDefinedUniverseSubcriptionEnumeratorFactory.cs" />
     <Compile Include="DataFeeds\Enumerators\FastForwardEnumerator.cs" />
