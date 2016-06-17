@@ -29,6 +29,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     /// </summary>
     public class BaseDataCollectionSubscripionEnumeratorFactory : ISubscriptionEnumeratorFactory
     {
+        private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BaseDataCollectionSubscripionEnumeratorFactory"/> class.
+        /// </summary>
+        /// <param name="tradableDaysProvider">Function used to provide the tradable dates to be enumerator.
+        /// Specify null to default to <see cref="SubscriptionRequest.TradableDays"/></param>
+        public BaseDataCollectionSubscripionEnumeratorFactory(Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null)
+        {
+            _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
+        }
+
         /// <summary>
         /// Creates an enumerator to read the specified request
         /// </summary>
@@ -37,10 +49,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request)
         {
             var configuration = request.Configuration;
+            var tradableDays = _tradableDaysProvider(request);
             var sourceFactory = (BaseData) Activator.CreateInstance(request.Configuration.Type);
 
             return (
-                from date in request.TradableDays
+                from date in tradableDays
                 let source = sourceFactory.GetSource(configuration, date, false)
                 let factory = SubscriptionDataSourceReader.ForSource(source, configuration, date, false)
                 let coarseFundamentalForDate = factory.Read(source)
