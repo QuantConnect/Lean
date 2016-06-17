@@ -26,6 +26,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
@@ -328,8 +329,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (userDefined != null)
             {
                 // spoof a tick on the requested interval to trigger the universe selection function
-                enumerator = userDefined.GetTriggerTimes(request.StartTimeUtc, request.EndTimeUtc, MarketHoursDatabase.FromDataFolder())
-                    .Select(x => new Tick { Time = x, Symbol = config.Symbol }).GetEnumerator();
+                var enumeratorFactory = new UserDefinedUniverseSubcriptionEnumeratorFactory(userDefined, MarketHoursDatabase.FromDataFolder());
+                enumerator = enumeratorFactory.CreateEnumerator(request);
 
                 // route these custom subscriptions through the exchange for buffering
                 var enqueueable = new EnqueueableEnumerator<BaseData>(true);

@@ -28,6 +28,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
@@ -486,8 +487,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating user defined universe: " + config.Symbol.ToString());
 
                 // spoof a tick on the requested interval to trigger the universe selection function
-                enumerator = userDefined.GetTriggerTimes(request.StartTimeUtc, request.EndTimeUtc, MarketHoursDatabase.FromDataFolder())
-                    .Select(dt => new Tick { Time = dt }).GetEnumerator();
+                var enumeratorFactory = new UserDefinedUniverseSubcriptionEnumeratorFactory(userDefined, MarketHoursDatabase.FromDataFolder());
+                enumerator = enumeratorFactory.CreateEnumerator(request);
 
                 enumerator = new FrontierAwareEnumerator(enumerator, _timeProvider, tzOffsetProvider);
 
