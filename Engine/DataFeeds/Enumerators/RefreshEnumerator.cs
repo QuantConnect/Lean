@@ -49,10 +49,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. </exception><filterpriority>2</filterpriority>
         public bool MoveNext()
         {
-            if (_enumerator == null)
-            {
-                _enumerator = _enumeratorFactory.Invoke();
-            }
+            _enumerator = _enumeratorFactory.Invoke();
 
             var moveNext = _enumerator.MoveNext();
             if (moveNext)
