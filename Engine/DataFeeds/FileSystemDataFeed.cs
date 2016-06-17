@@ -506,13 +506,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             else
             {
-                var sourceFactory = (BaseData)Activator.CreateInstance(request.Configuration.Type);
-                enumerator = (from date in tradeableDates
-                              let source = sourceFactory.GetSource(request.Configuration, date, false)
-                              let factory = SubscriptionDataSourceReader.ForSource(source, request.Configuration, date, false)
-                              let entriesForDate = factory.Read(source)
-                              from entry in entriesForDate
-                              select entry).GetEnumerator();
+                var enumeratorFactory = new BaseDataCollectionSubscripionEnumeratorFactory();
+                enumerator = enumeratorFactory.CreateEnumerator(request);
             }
 
             return ConfigureEnumerator(request, aggregate, enumerator);
