@@ -131,7 +131,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var localStartTime = request.StartTimeUtc.ConvertFromUtc(request.Security.Exchange.TimeZone);
             var localEndTime = request.EndTimeUtc.ConvertFromUtc(request.Security.Exchange.TimeZone);
 
-            var tradeableDates = Time.EachTradeableDayInTimeZone(request.Security.Exchange.Hours, localStartTime, localEndTime, request.Configuration.DataTimeZone, request.Configuration.ExtendedMarketHours);
+            var tradeableDates = request.TradableDays;
 
             // ReSharper disable once PossibleMultipleEnumeration
             if (!tradeableDates.Any())
@@ -323,7 +323,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // define our data enumerator
             IEnumerator<BaseData> enumerator;
 
-            var tradeableDates = Time.EachTradeableDayInTimeZone(request.Security.Exchange.Hours, localStartTime, localEndTime, config.DataTimeZone, config.ExtendedMarketHours);
+            var tradeableDates = request.TradableDays;
 
             var userDefined = request.Universe as UserDefinedUniverse;
             if (userDefined != null)
