@@ -109,5 +109,26 @@ namespace QuantConnect.Data.UniverseSelection
             _localStartTime = new Lazy<DateTime>(() => StartTimeUtc.ConvertFromUtc(Configuration.ExchangeTimeZone));
             _localEndTime = new Lazy<DateTime>(() => EndTimeUtc.ConvertFromUtc(Configuration.ExchangeTimeZone));
         }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SubscriptionRequest"/> class
+        /// </summary>
+        public SubscriptionRequest(SubscriptionRequest template,
+            bool? isUniverseSubscription = null,
+            Universe universe = null,
+            Security security = null,
+            SubscriptionDataConfig configuration = null,
+            DateTime? startTimeUtc = null,
+            DateTime? endTimeUtc = null
+            )
+            : this(isUniverseSubscription ?? template.IsUniverseSubscription,
+                  universe ?? template.Universe,
+                  security ?? template.Security,
+                  configuration ?? template.Configuration,
+                  startTimeUtc ?? template.StartTimeUtc,
+                  endTimeUtc ?? template.EndTimeUtc
+                  )
+        {
+        }
     }
 }
