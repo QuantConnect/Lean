@@ -360,8 +360,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 var configs = request.Universe.GetSubscriptionRequests(request.Security, request.StartTimeUtc, request.EndTimeUtc).Select(sub => sub.Configuration);
                 var enumerators = configs.Select(c =>
-                    CreateSubscriptionEnumerator(request.Security, c, localStartTime, localEndTime, _mapFileProvider.Get(c.Market), tradeableDates, false, true)
-                    ).ToList();
+                {
+                    var sourceFactory = (BaseData) Activator.CreateInstance(c.Type);
+                    var e = (
+                        from date in tradeableDates
+                        let source = sourceFactory.GetSource(c, date, false)
+                        let factory = SubscriptionDataSourceReader.ForSource(source, c, date, false)
+                        let entriesForDate = factory.Read(source)
+                        from entry in entriesForDate
+                        select entry
+                        ).GetEnumerator();
+
+                    return ConfigureEnumerator(request.Security, c, localEndTime, true, e);
+                }).ToList();
 
                 var sync = new SynchronizingEnumerator(enumerators);
                 enumerator = new OptionChainUniverseDataCollectionAggregatorEnumerator(sync, config.Symbol);
