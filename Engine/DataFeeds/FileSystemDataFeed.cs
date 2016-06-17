@@ -22,7 +22,6 @@ using System.Linq;
 using System.Threading;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
-using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
@@ -128,13 +127,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private Subscription CreateSubscription(SubscriptionRequest request)
         {
-            var localStartTime = request.StartTimeUtc.ConvertFromUtc(request.Security.Exchange.TimeZone);
-            var localEndTime = request.EndTimeUtc.ConvertFromUtc(request.Security.Exchange.TimeZone);
-
-            var tradeableDates = request.TradableDays;
-
             // ReSharper disable once PossibleMultipleEnumeration
-            if (!tradeableDates.Any())
+            if (!request.TradableDays.Any())
             {
                 _algorithm.Error(string.Format("No data loaded for {0} because there were no tradeable dates for this security.", request.Security.Symbol));
                 return null;
@@ -145,8 +139,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (request.Configuration.SecurityType == SecurityType.Equity) mapFileResolver = _mapFileProvider.Get(request.Configuration.Market);
 
             // ReSharper disable once PossibleMultipleEnumeration
-            var enumeratorFactory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(_resultHandler, mapFileResolver, _factorFileProvider, false,
-                true, r => tradeableDates);
+            var enumeratorFactory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(_resultHandler, mapFileResolver, _factorFileProvider, false, true);
             var enumerator = enumeratorFactory.CreateEnumerator(request);
             enumerator = ConfigureEnumerator(request, false, enumerator);
 
@@ -319,14 +312,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // grab the relevant exchange hours
             var config = request.Universe.Configuration;
-
-            var localStartTime = request.StartTimeUtc.ConvertFromUtc(request.Security.Exchange.TimeZone);
-            var localEndTime = request.EndTimeUtc.ConvertFromUtc(request.Security.Exchange.TimeZone);
-
+            
             // define our data enumerator
             IEnumerator<BaseData> enumerator;
-
-            var tradeableDates = request.TradableDays;
 
             var userDefined = request.Universe as UserDefinedUniverse;
             if (userDefined != null)
@@ -355,12 +343,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             else if (config.SecurityType == SecurityType.Option && request.Security is Option)
             {
-                var subscriptions = request.Universe.GetSubscriptionRequests(request.Security, request.StartTimeUtc, request.EndTimeUtc).ToList();
-                if (subscriptions.Any(sub => sub.IsUniverseSubscription))
-                {
-                    throw new NotImplementedException("Chained options universes not implemented.");
-                }
-
                 var enumeratorFactory = new BaseDataSubscriptionEnumeratorFactory();
                 var configs = request.Universe.GetSubscriptionRequests(request.Security, request.StartTimeUtc, request.EndTimeUtc).Select(sub => sub.Configuration);
                 var enumerators = configs.Select(c => new SubscriptionRequest(request, configuration: c))
@@ -380,8 +362,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             else
             {
                 // normal reader for all others
-                var enumeratorFactory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(_resultHandler, MapFileResolver.Empty, _factorFileProvider,
-                    false, true, r => tradeableDates);
+                var enumeratorFactory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(_resultHandler, MapFileResolver.Empty, _factorFileProvider, false, true);
 
                 enumerator = enumeratorFactory.CreateEnumerator(request);
                 enumerator = ConfigureEnumerator(request, false, enumerator);
