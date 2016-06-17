@@ -145,7 +145,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (request.Configuration.SecurityType == SecurityType.Equity) mapFileResolver = _mapFileProvider.Get(request.Configuration.Market);
 
             // ReSharper disable once PossibleMultipleEnumeration
-            var enumerator = CreateSubscriptionEnumerator(request.Security, request.Configuration, localStartTime, localEndTime, mapFileResolver, tradeableDates, true, false);
+            var enumerator = CreateSubscriptionEnumerator(request, mapFileResolver, tradeableDates, true, false);
 
             var enqueueable = new EnqueueableEnumerator<BaseData>(true);
 
@@ -361,7 +361,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var enumeratorFactory = new BaseDataSubscriptionEnumeratorFactory();
                 var configs = request.Universe.GetSubscriptionRequests(request.Security, request.StartTimeUtc, request.EndTimeUtc).Select(sub => sub.Configuration);
                 var enumerators = configs.Select(c => new SubscriptionRequest(request, configuration: c))
-                    .Select(sr => ConfigureEnumerator(request.Security, sr.Configuration, localEndTime, true, enumeratorFactory.CreateEnumerator(sr))
+                    .Select(sr => ConfigureEnumerator(request, true, enumeratorFactory.CreateEnumerator(sr))
                     ).ToList();
 
                 var sync = new SynchronizingEnumerator(enumerators);
@@ -377,7 +377,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             else
             {
                 // normal reader for all others
-                enumerator = CreateSubscriptionEnumerator(request.Security, config, localStartTime, localEndTime, MapFileResolver.Empty, tradeableDates, true, false);
+                enumerator = CreateSubscriptionEnumerator(request, MapFileResolver.Empty, tradeableDates, true, false);
 
                 // route these custom subscriptions through the exchange for buffering
                 var enqueueable = new EnqueueableEnumerator<BaseData>(true);
@@ -492,10 +492,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Creates an enumerator for the specified security/configuration
         /// </summary>
-        private IEnumerator<BaseData> CreateSubscriptionEnumerator(Security security,
-            SubscriptionDataConfig config,
-            DateTime localStartTime,
-            DateTime localEndTime,
+        private IEnumerator<BaseData> CreateSubscriptionEnumerator(SubscriptionRequest request,
             MapFileResolver mapFileResolver,
             IEnumerable<DateTime> tradeableDates,
             bool useSubscriptionDataReader,
@@ -504,44 +501,44 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IEnumerator<BaseData> enumerator;
             if (useSubscriptionDataReader)
             {
-                enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, mapFileResolver,
+                enumerator = new SubscriptionDataReader(request.Configuration, request.StartTimeLocal, request.EndTimeLocal, _resultHandler, mapFileResolver,
                 _factorFileProvider, tradeableDates, false);
             }
             else
             {
-                var sourceFactory = (BaseData)Activator.CreateInstance(config.Type);
+                var sourceFactory = (BaseData)Activator.CreateInstance(request.Configuration.Type);
                 enumerator = (from date in tradeableDates
-                              let source = sourceFactory.GetSource(config, date, false)
-                              let factory = SubscriptionDataSourceReader.ForSource(source, config, date, false)
+                              let source = sourceFactory.GetSource(request.Configuration, date, false)
+                              let factory = SubscriptionDataSourceReader.ForSource(source, request.Configuration, date, false)
                               let entriesForDate = factory.Read(source)
                               from entry in entriesForDate
                               select entry).GetEnumerator();
             }
 
-            return ConfigureEnumerator(security, config, localEndTime, aggregate, enumerator);
+            return ConfigureEnumerator(request, aggregate, enumerator);
         }
 
         /// <summary>
         /// Configures the enumerator with aggregation/fill-forward/filtering behaviors
         /// </summary>
-        private IEnumerator<BaseData> ConfigureEnumerator(Security security, SubscriptionDataConfig config, DateTime localEndTime, bool aggregate, IEnumerator<BaseData> enumerator)
+        private IEnumerator<BaseData> ConfigureEnumerator(SubscriptionRequest request, bool aggregate, IEnumerator<BaseData> enumerator)
         {
             if (aggregate)
             {
-                enumerator = new BaseDataCollectionAggregatorEnumerator(enumerator, config.Symbol);
+                enumerator = new BaseDataCollectionAggregatorEnumerator(enumerator, request.Configuration.Symbol);
             }
 
             // optionally apply fill forward logic, but never for tick data
-            if (config.FillDataForward && config.Resolution != Resolution.Tick)
+            if (request.Configuration.FillDataForward && request.Configuration.Resolution != Resolution.Tick)
             {
-                enumerator = new FillForwardEnumerator(enumerator, security.Exchange, _fillForwardResolution,
-                    security.IsExtendedMarketHours, localEndTime, config.Resolution.ToTimeSpan());
+                enumerator = new FillForwardEnumerator(enumerator, request.Security.Exchange, _fillForwardResolution,
+                    request.Security.IsExtendedMarketHours, request.EndTimeLocal, request.Configuration.Resolution.ToTimeSpan());
             }
 
             // optionally apply exchange/user filters
-            if (config.IsFilteredSubscription)
+            if (request.Configuration.IsFilteredSubscription)
             {
-                enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(_resultHandler, enumerator, security, localEndTime);
+                enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(_resultHandler, enumerator, request.Security, request.EndTimeLocal);
             }
             return enumerator;
         }
