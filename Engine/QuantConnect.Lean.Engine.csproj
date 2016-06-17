@@ -175,6 +175,7 @@
     <Compile Include="AlgorithmManager.cs" />
     <Compile Include="DataFeeds\Enumerators\BaseDataCollectionAggregatorEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\EnqueueableEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\Factories\BaseDataCollectionSubscripionEnumeratorFactory.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\UserDefinedUniverseSubcriptionEnumeratorFactory.cs" />
     <Compile Include="DataFeeds\Enumerators\FastForwardEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\FillForwardEnumerator.cs" />
