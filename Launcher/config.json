@@ -54,10 +54,6 @@
   "ib-tws-dir": "C:\\Jts",
   "ib-controller-dir": "C:\\IBController",
 
-  //job configuration - required for local charting
-  // To get your QC user id type "uid" into the backtesting terminal.
-  "job-user-id": "0",
-
   // tradier configuration
   "tradier-account-id": "",
   "tradier-access-token": "",
@@ -71,7 +67,7 @@
   "oanda-account-id": "",
 
   // fxcm configuration
-  "fxcm-server": "http://www.fxcorporate.com/Hosts.jsp", 
+  "fxcm-server": "http://www.fxcorporate.com/Hosts.jsp",
   "fxcm-terminal": "Demo", //Real or Demo
   "fxcm-user-name": "",
   "fxcm-password": "",
@@ -171,6 +167,7 @@
 
       //Required for local charting.
       // To get your api access token go to quantconnect.com/account
+      "job-user-id": "0",
       "api-access-token": "",
 
       "setup-handler": "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler",
@@ -178,6 +175,29 @@
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed",
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler",
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler",
+      "messaging-handler": "QuantConnect.Messaging.EventMessagingHandler",
+      "log-handler": "QuantConnect.Logging.QueueLogHandler"
+    },
+
+    // defines the 'backtesting-desktop' environment
+    "live-desktop": {
+      "live-mode": true,
+      "send-via-api": true,
+
+      //Required for local charting.
+      // To get your api access token go to quantconnect.com/account
+      "job-user-id": "0",
+      "api-access-token": "",
+
+      // Set your own brokerage and data queue handlers here.
+      // Live desktop charting isn't as cool as on quantconnect.com but its pretty neat!
+      "live-mode-brokerage": "FxcmBrokerage",
+      "data-queue-handler": "FxcmBrokerage",
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
       "messaging-handler": "QuantConnect.Messaging.EventMessagingHandler",
       "log-handler": "QuantConnect.Logging.QueueLogHandler"
     }

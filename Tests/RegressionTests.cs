@@ -306,6 +306,29 @@ namespace QuantConnect.Tests
                 {"Total Fees", "$3.09"},
             };
 
+            var coarseFundamentalTop5AlgorithmStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "8"},
+                {"Average Win", "1.39%"},
+                {"Average Loss", "-0.66%"},
+                {"Compounding Annual Return", "-0.622%"},
+                {"Drawdown", "2.600%"},
+                {"Expectancy", "-0.229"},
+                {"Net Profit", "-0.622%"},
+                {"Sharpe Ratio", "-0.228"},
+                {"Loss Rate", "75%"},
+                {"Win Rate", "25%"},
+                {"Profit-Loss Ratio", "2.09"},
+                {"Alpha", "-0.009"},
+                {"Beta", "0.04"},
+                {"Annual Standard Deviation", "0.021"},
+                {"Annual Variance", "0"},
+                {"Information Ratio", "-0.966"},
+                {"Tracking Error", "0.1"},
+                {"Treynor Ratio", "-0.121"},
+                {"Total Fees", "$8.64"},
+            };
+
             return new List<AlgorithmStatisticsTestParameters>
             {
                 // CSharp
@@ -321,12 +344,13 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("UniverseSelectionRegressionAlgorithm", universeSelectionRegressionStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("UpdateOrderRegressionAlgorithm", updateOrderRegressionStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("HistoryAlgorithm", historyAlgorithmStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("CoarseFundamentalTop5Algorithm", coarseFundamentalTop5AlgorithmStatistics, Language.CSharp),
 
                 // FSharp
-                new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.FSharp),
+                // new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.FSharp),
 
                 // VisualBasic
-                new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.VisualBasic),
+                // new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.VisualBasic),
             }.Select(x => new TestCaseData(x).SetName(x.Language + "/" + x.Algorithm)).ToArray();
         }
 

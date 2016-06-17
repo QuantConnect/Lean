@@ -24,11 +24,11 @@ using QuantConnect.Util;
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// Provides an implementations of <see cref="ISubscriptionFactory"/> that uses the 
+    /// Provides an implementations of <see cref="ISubscriptionDataSourceReader"/> that uses the 
     /// <see cref="BaseData.Reader(QuantConnect.Data.SubscriptionDataConfig,string,System.DateTime,bool)"/>
     /// method to read lines of text from a <see cref="SubscriptionDataSource"/>
     /// </summary>
-    public class TextSubscriptionFactory : ISubscriptionFactory
+    public class TextSubscriptionDataSourceReader : ISubscriptionDataSourceReader
     {
         private readonly bool _isLiveMode;
         private readonly BaseData _factory;
@@ -54,12 +54,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public event EventHandler<CreateStreamReaderErrorEventArgs> CreateStreamReaderError;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TextSubscriptionFactory"/> class
+        /// Initializes a new instance of the <see cref="TextSubscriptionDataSourceReader"/> class
         /// </summary>
         /// <param name="config">The subscription's configuration</param>
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
-        public TextSubscriptionFactory(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public TextSubscriptionDataSourceReader(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             _date = date;
             _config = config;

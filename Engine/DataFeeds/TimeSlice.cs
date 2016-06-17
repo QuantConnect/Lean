@@ -16,15 +16,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Microsoft.Scripting.Utils;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
-using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -169,6 +166,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     count += list.Count;
                 }
 
+                if (!packet.Configuration.IsInternalFeed && packet.Configuration.IsCustomData)
+                {
+                    // This is all the custom data
+                    custom.Add(new UpdateData<Security>(packet.Security, packet.Configuration.Type, list));
+                }
+
                 var securityUpdate = new List<BaseData>(list.Count);
                 var consolidatorUpdate = new List<BaseData>(list.Count);
                 for (int i = 0; i < list.Count; i++)
@@ -178,16 +181,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         // this is all the data that goes into the algorithm
                         allDataForAlgorithm.Add(baseData);
-                        if (packet.Configuration.IsCustomData)
-                        {
-                            // This is all the custom data
-                            // Add the list to the custom data when its unique.
-                            var exists = custom.Any(x => x.DataType == packet.Configuration.Type);
-                            if (!exists)
-                            {
-                                custom.Add(new UpdateData<Security>(packet.Security, packet.Configuration.Type, list));
-                            }
-                        }
                     }
                     // don't add internal feed data to ticks/bars objects
                     if (baseData.DataType != MarketDataType.Auxiliary)

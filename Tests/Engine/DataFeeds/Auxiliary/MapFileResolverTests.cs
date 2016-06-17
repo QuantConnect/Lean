@@ -66,6 +66,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Auxiliary
             Assert.AreEqual(string.Empty, oih1.GetMappedSymbol(new DateTime(2011, 12, 21)));
         }
 
+        [Test]
+        public void ResolvesRemappedSymbolWithBothMapFiles()
+        {
+            var date = new DateTime(2012, 06, 28);
+            var mapFile = _resolver.ResolveMapFile("SPXL", date);
+            Assert.IsNotNull(mapFile);
+            Assert.AreEqual("BGU", mapFile.GetMappedSymbol(date));
+            Assert.AreEqual("SPXL", mapFile.GetMappedSymbol(date.AddDays(1)));
+        }
+
         private static MapFileResolver CreateMapFileResolver()
         {
             return new MapFileResolver(new List<MapFile>
@@ -82,6 +92,18 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Auxiliary
                     new MapFileRow(new DateTime(2004, 08, 19), "goog"),
                     new MapFileRow(new DateTime(2014, 04, 02), "goog"),
                     new MapFileRow(new DateTime(2050, 12, 31), "googl")
+                }),
+                // remapped (with both map files)
+                new MapFile("bgu", new List<MapFileRow>
+                {
+                    new MapFileRow(new DateTime(2008, 11, 05), "bgu"),
+                    new MapFileRow(new DateTime(2012, 06, 28), "bgu")
+                }),
+                new MapFile("spxl", new List<MapFileRow>
+                {
+                    new MapFileRow(new DateTime(2008, 11, 05), "bgu"),
+                    new MapFileRow(new DateTime(2012, 06, 28), "bgu"),
+                    new MapFileRow(new DateTime(2050, 12, 31), "spxl")
                 }),
                 // straight mapping
                 new MapFile("spy", new List<MapFileRow>
