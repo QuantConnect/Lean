@@ -342,15 +342,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             else if (config.Type == typeof (CoarseFundamental))
             {
-                var cf = new CoarseFundamental();
-
-                // load coarse data day by day
-                enumerator = (from date in Time.EachTradeableDayInTimeZone(request.Security.Exchange.Hours, _algorithm.StartDate, _algorithm.EndDate, config.DataTimeZone, config.ExtendedMarketHours)
-                             let source = cf.GetSource(config, date, false)
-                             let factory = SubscriptionDataSourceReader.ForSource(source, config, date, false)
-                             let coarseFundamentalForDate = factory.Read(source)
-                             select new BaseDataCollection(date.AddDays(1), config.Symbol, coarseFundamentalForDate)
-                             ).GetEnumerator();
+                var enumeratorFactory = new BaseDataCollectionSubscripionEnumeratorFactory();
+                enumerator = enumeratorFactory.CreateEnumerator(request);
                 
                 var enqueueable = new EnqueueableEnumerator<BaseData>(true);
                 ScheduleEnumerator(enumerator, enqueueable, 5, 100000, 2);
