@@ -139,6 +139,7 @@
     <Compile Include="Commands\QuitCommand.cs" />
     <Compile Include="Commands\UpdateOrderCommand.cs" />
     <Compile Include="Data\Custom\DailyFx.cs" />
+    <Compile Include="Data\ISubscriptionEnumeratorFactory.cs" />
     <Compile Include="Data\Market\FirstOrderGreeks.cs" />
     <Compile Include="Data\Market\OptionChain.cs" />
     <Compile Include="Data\Market\OptionChains.cs" />
