@@ -501,8 +501,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IEnumerator<BaseData> enumerator;
             if (useSubscriptionDataReader)
             {
-                enumerator = new SubscriptionDataReader(request.Configuration, request.StartTimeLocal, request.EndTimeLocal, _resultHandler, mapFileResolver,
-                _factorFileProvider, tradeableDates, false);
+                var enumeratorFactory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(_resultHandler, mapFileResolver, _factorFileProvider, false, true, r => tradeableDates);
+                enumerator = enumeratorFactory.CreateEnumerator(request);
             }
             else
             {
