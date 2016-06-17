@@ -343,14 +343,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             else if (config.SecurityType == SecurityType.Option && request.Security is Option)
             {
-                var enumeratorFactory = new BaseDataSubscriptionEnumeratorFactory();
-                var configs = request.Universe.GetSubscriptionRequests(request.Security, request.StartTimeUtc, request.EndTimeUtc).Select(sub => sub.Configuration);
-                var enumerators = configs.Select(c => new SubscriptionRequest(request, configuration: c))
-                    .Select(sr => ConfigureEnumerator(request, true, enumeratorFactory.CreateEnumerator(sr))
-                    ).ToList();
-
-                var sync = new SynchronizingEnumerator(enumerators);
-                enumerator = new OptionChainUniverseDataCollectionAggregatorEnumerator(sync, config.Symbol);
+                var enumeratorFactory = new OptionChainUniverseSubscriptionEnumeratorFactory((req, e) => ConfigureEnumerator(req, true, e));
+                enumerator = enumeratorFactory.CreateEnumerator(request);
 
                 var enqueueable = new EnqueueableEnumerator<BaseData>(true);
                 
