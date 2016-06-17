@@ -134,12 +134,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return null;
             }
 
-            // get the map file resolver for this market
-            var mapFileResolver = MapFileResolver.Empty;
-            if (request.Configuration.SecurityType == SecurityType.Equity) mapFileResolver = _mapFileProvider.Get(request.Configuration.Market);
-
             // ReSharper disable once PossibleMultipleEnumeration
-            var enumeratorFactory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(_resultHandler, mapFileResolver, _factorFileProvider, false, true);
+            var enumeratorFactory = GetEnumeratorFactory(request);
             var enumerator = enumeratorFactory.CreateEnumerator(request);
             enumerator = ConfigureEnumerator(request, false, enumerator);
 
@@ -308,71 +304,58 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="request">The subscription request</param>
         private Subscription CreateUniverseSubscription(SubscriptionRequest request)
         {
-            // TODO : Consider moving the creating of universe subscriptions to a separate, testable class
-
             // grab the relevant exchange hours
             var config = request.Universe.Configuration;
-            
+
             // define our data enumerator
-            IEnumerator<BaseData> enumerator;
+            var enumerator = GetEnumeratorFactory(request).CreateEnumerator(request);
 
-            var userDefined = request.Universe as UserDefinedUniverse;
-            if (userDefined != null)
+            var firstLoopCount = 5;
+            var lowerThreshold = GetLowerThreshold(config.Resolution);
+            var upperThreshold = GetUpperThreshold(config.Resolution);
+            if (config.Type == typeof (CoarseFundamental))
             {
-                // spoof a tick on the requested interval to trigger the universe selection function
-                var enumeratorFactory = new UserDefinedUniverseSubcriptionEnumeratorFactory(userDefined, MarketHoursDatabase.FromDataFolder());
-                enumerator = enumeratorFactory.CreateEnumerator(request);
-
-                // route these custom subscriptions through the exchange for buffering
-                var enqueueable = new EnqueueableEnumerator<BaseData>(true);
-
-                // add this enumerator to our exchange
-                ScheduleEnumerator(enumerator, enqueueable, GetLowerThreshold(config.Resolution), GetUpperThreshold(config.Resolution));
-
-                enumerator = enqueueable;
+                firstLoopCount = 2;
+                lowerThreshold = 5;
+                upperThreshold = 100000;
             }
-            else if (config.Type == typeof (CoarseFundamental))
-            {
-                var enumeratorFactory = new BaseDataCollectionSubscripionEnumeratorFactory();
-                enumerator = enumeratorFactory.CreateEnumerator(request);
-                
-                var enqueueable = new EnqueueableEnumerator<BaseData>(true);
-                ScheduleEnumerator(enumerator, enqueueable, 5, 100000, 2);
 
-                enumerator = enqueueable;
-            }
-            else if (config.SecurityType == SecurityType.Option && request.Security is Option)
-            {
-                var enumeratorFactory = new OptionChainUniverseSubscriptionEnumeratorFactory((req, e) => ConfigureEnumerator(req, true, e));
-                enumerator = enumeratorFactory.CreateEnumerator(request);
-
-                var enqueueable = new EnqueueableEnumerator<BaseData>(true);
-                
-                // add this enumerator to our exchange
-                ScheduleEnumerator(enumerator, enqueueable, GetLowerThreshold(config.Resolution), GetUpperThreshold(config.Resolution));
-
-                enumerator = enqueueable;
-            }
-            else
-            {
-                // normal reader for all others
-                var enumeratorFactory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(_resultHandler, MapFileResolver.Empty, _factorFileProvider, false, true);
-
-                enumerator = enumeratorFactory.CreateEnumerator(request);
-                enumerator = ConfigureEnumerator(request, false, enumerator);
-
-                // route these custom subscriptions through the exchange for buffering
-                var enqueueable = new EnqueueableEnumerator<BaseData>(true);
-
-                // add this enumerator to our exchange
-                ScheduleEnumerator(enumerator, enqueueable, GetLowerThreshold(config.Resolution), GetUpperThreshold(config.Resolution));
-
-                enumerator = enqueueable;
-            }
+            var enqueueable = new EnqueueableEnumerator<BaseData>(true);
+            ScheduleEnumerator(enumerator, enqueueable, lowerThreshold, upperThreshold, firstLoopCount);
+            enumerator = enqueueable;
 
             // create the subscription
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
             return new Subscription(request.Universe, request.Security, config, enumerator, timeZoneOffsetProvider, request.StartTimeUtc, request.EndTimeUtc, true);
+        }
+
+        /// <summary>
+        /// Creates the correct enumerator factory for the given request
+        /// </summary>
+        private ISubscriptionEnumeratorFactory GetEnumeratorFactory(SubscriptionRequest request)
+        {
+            if (request.IsUniverseSubscription)
+            {
+                if (request.Universe is UserDefinedUniverse)
+                {
+                    return new UserDefinedUniverseSubcriptionEnumeratorFactory(request.Universe as UserDefinedUniverse, MarketHoursDatabase.FromDataFolder());
+                }
+                if (request.Configuration.Type == typeof (CoarseFundamental))
+                {
+                    return new BaseDataCollectionSubscripionEnumeratorFactory();
+                }
+                if (request.Universe is OptionChainUniverse)
+                {
+                    return new OptionChainUniverseSubscriptionEnumeratorFactory((req, e) => ConfigureEnumerator(req, true, e));
+                }
+            }
+
+            var mapFileResolver = _mapFileProvider.Get(request.Security.Symbol.ID.Market);
+
+            return new PostCreateConfigureSubscriptionEnumeratorFactory(
+                new SubscriptionDataReaderSubscriptionEnumeratorFactory(_resultHandler, mapFileResolver, _factorFileProvider, false, true),
+                enumerator => ConfigureEnumerator(request, false, enumerator)
+                );
         }
 
         /// <summary>
