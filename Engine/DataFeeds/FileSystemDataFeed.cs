@@ -502,7 +502,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             IEnumerator<BaseData> enumerator;
             if (useSubscriptionDataReader)
-        {
+            {
                 enumerator = new SubscriptionDataReader(config, localStartTime, localEndTime, _resultHandler, mapFileResolver,
                 _factorFileProvider, tradeableDates, false);
             }
@@ -517,6 +517,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                               select entry).GetEnumerator();
             }
 
+            return ConfigureEnumerator(security, config, localEndTime, aggregate, enumerator);
+        }
+
+        /// <summary>
+        /// Configures the enumerator with aggregation/fill-forward/filtering behaviors
+        /// </summary>
+        private IEnumerator<BaseData> ConfigureEnumerator(Security security, SubscriptionDataConfig config, DateTime localEndTime, bool aggregate, IEnumerator<BaseData> enumerator)
+        {
             if (aggregate)
             {
                 enumerator = new BaseDataCollectionAggregatorEnumerator(enumerator, config.Symbol);
