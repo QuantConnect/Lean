@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Data.UniverseSelection
@@ -70,6 +71,22 @@ namespace QuantConnect.Data.UniverseSelection
         public DateTime EndTimeLocal
         {
             get { return _localEndTime.Value; }
+        }
+
+        /// <summary>
+        /// Gets the tradable days specified by this request
+        /// </summary>
+        public IEnumerable<DateTime> TradableDays
+        {
+            get
+            {
+                return Time.EachTradeableDayInTimeZone(Security.Exchange.Hours,
+                    StartTimeLocal,
+                    EndTimeLocal,
+                    Configuration.DataTimeZone,
+                    Configuration.ExtendedMarketHours
+                    );
+            }
         }
 
         /// <summary>
