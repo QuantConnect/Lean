@@ -145,7 +145,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (request.Configuration.SecurityType == SecurityType.Equity) mapFileResolver = _mapFileProvider.Get(request.Configuration.Market);
 
             // ReSharper disable once PossibleMultipleEnumeration
-            var enumerator = CreateSubscriptionEnumerator(request, mapFileResolver, tradeableDates, true, false);
+            var enumeratorFactory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(_resultHandler, mapFileResolver, _factorFileProvider, false,
+                true, r => tradeableDates);
+            var enumerator = enumeratorFactory.CreateEnumerator(request);
+            enumerator = ConfigureEnumerator(request, false, enumerator);
 
             var enqueueable = new EnqueueableEnumerator<BaseData>(true);
 
@@ -377,7 +380,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             else
             {
                 // normal reader for all others
-                enumerator = CreateSubscriptionEnumerator(request, MapFileResolver.Empty, tradeableDates, true, false);
+                var enumeratorFactory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(_resultHandler, MapFileResolver.Empty, _factorFileProvider,
+                    false, true, r => tradeableDates);
+
+                enumerator = enumeratorFactory.CreateEnumerator(request);
+                enumerator = ConfigureEnumerator(request, false, enumerator);
 
                 // route these custom subscriptions through the exchange for buffering
                 var enqueueable = new EnqueueableEnumerator<BaseData>(true);
@@ -487,30 +494,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
-        }
-
-        /// <summary>
-        /// Creates an enumerator for the specified security/configuration
-        /// </summary>
-        private IEnumerator<BaseData> CreateSubscriptionEnumerator(SubscriptionRequest request,
-            MapFileResolver mapFileResolver,
-            IEnumerable<DateTime> tradeableDates,
-            bool useSubscriptionDataReader,
-            bool aggregate)
-        {
-            IEnumerator<BaseData> enumerator;
-            if (useSubscriptionDataReader)
-            {
-                var enumeratorFactory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(_resultHandler, mapFileResolver, _factorFileProvider, false, true, r => tradeableDates);
-                enumerator = enumeratorFactory.CreateEnumerator(request);
-            }
-            else
-            {
-                var enumeratorFactory = new BaseDataCollectionSubscripionEnumeratorFactory();
-                enumerator = enumeratorFactory.CreateEnumerator(request);
-            }
-
-            return ConfigureEnumerator(request, aggregate, enumerator);
         }
 
         /// <summary>
