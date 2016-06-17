@@ -514,7 +514,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Configures the enumerator with aggregation/fill-forward/filtering behaviors
+        /// Configure the enumerator with aggregation/fill-forward/filter behaviors. Returns new instance if re-configured
         /// </summary>
         private IEnumerator<BaseData> ConfigureEnumerator(SubscriptionRequest request, bool aggregate, IEnumerator<BaseData> enumerator)
         {
@@ -535,6 +535,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 enumerator = SubscriptionFilterEnumerator.WrapForDataFeed(_resultHandler, enumerator, request.Security, request.EndTimeLocal);
             }
+
             return enumerator;
         }
 
