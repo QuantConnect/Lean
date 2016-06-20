@@ -100,5 +100,10 @@ namespace QuantConnect.Interfaces
         /// Disconnects the client from the broker's remote servers
         /// </summary>
         void Disconnect();
+
+        /// <summary>
+        /// Specifies whether the brokerage will instantly update account balances
+        /// </summary>
+        bool AccountInstantlyUpdated { get; }
     }
 }

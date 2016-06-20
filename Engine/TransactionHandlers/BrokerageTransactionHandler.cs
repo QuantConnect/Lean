@@ -898,10 +898,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 Log.Trace(string.Format("BrokerageTransactionHandler.HandleAccountChanged(): {0} Cash Delta: {1}", account.CurrencySymbol, delta));
             }
 
-            // maybe we don't actually want to do this, this data can be delayed. Must be explicitly allowed by brokerage
-            if (_algorithm.BrokerageModel.AllowAccountUpdates)
+            // maybe we don't actually want to do this, this data can be delayed. Must be explicitly supported by brokerage
+            if (_brokerage.AccountInstantlyUpdated)
             {
-                // override the current cash value so we're always gauranteed to be in sync with the brokerage's push updates
+                // override the current cash value so we're always guaranteed to be in sync with the brokerage's push updates
                 _algorithm.Portfolio.CashBook[account.CurrencySymbol].SetAmount(account.CashBalance);
             }
         }
