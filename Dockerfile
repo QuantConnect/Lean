@@ -1,4 +1,4 @@
-FROM mono:latest
+FROM mono:4.0.5.1
 
 RUN mozroots --import --sync
 
