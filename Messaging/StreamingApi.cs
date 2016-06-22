@@ -68,14 +68,14 @@ namespace QuantConnect.Messaging
                 request.AddParameter("uid", userId);
                 request.AddParameter("token", apiToken);
                 request.AddParameter("tx", tx);
-                Client.ExecuteAsync(request, response =>
+                Client.ExecuteAsyncPost(request, (response, handle) =>
                 {
                     var result = JsonConvert.DeserializeObject<Response>(response.Content);
                     if (result.Type == "error")
                     {
                         Log.Error(new Exception(result.Message), "PacketType: " + packet.Type);
                     }
-                });
+                }, "POST");
             }
             catch (Exception err)
             {
