@@ -103,21 +103,8 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>All subscriptions required by this security</returns>
         protected override IEnumerable<SubscriptionDataConfig> GetSubscriptionConfigurations(Security security)
         {
-            var config = security.SubscriptionDataConfig;
-
-            // canonical also needs underlying price data
-            if (security.Symbol == _option.Symbol)
-            {
-                var underlying = Symbol.Create(config.Symbol.ID.Symbol, SecurityType.Equity, config.Market);
-                var resolution = config.Resolution == Resolution.Tick ? Resolution.Second : config.Resolution;
-                return new[]
-                {
-                    // rewrite the primary to be non-tick and fill forward
-                    new SubscriptionDataConfig(config, resolution: resolution, fillForward: true), 
-                    // add underlying trade data
-                    new SubscriptionDataConfig(config, resolution: resolution, fillForward: true, symbol: underlying, objectType: typeof(TradeBar), tickType: TickType.Trade), 
-                };
-            }
+            // TODO : If supporting multiple resolutions, may want to emit quotes and trade per security.Subscription
+            var config = security.Subscriptions.First();
 
             // we want to return both quote and trade subscriptions
             return QuotesAndTrades.Select(x => new SubscriptionDataConfig(config,
