@@ -15,26 +15,155 @@
 
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using RestSharp;
 
 namespace QuantConnect.Api
 {
     /// <summary>
-    /// Cloud algorithm activity controls
+    /// QuantConnect.com Interaction Via API.
     /// </summary>
     public class Api : IApi
     {
-        private static readonly MarketHoursDatabase MarketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+        private int _userId;
+        private string _token;
+        private ApiConnection _connection;
+        private static MarketHoursDatabase _marketHoursDatabase;
 
         /// <summary>
-        /// Initialize the API.
+        /// Initialize the API using the config.json file.
         /// </summary>
         public virtual void Initialize()
         {
-            //Nothing to initialize in the local copy of the engine.
+            _userId = Config.GetInt("job-user-id", 0);
+            _token = Config.Get("api-access-token", "");
+            _connection = new ApiConnection(_userId, _token);
+            _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
         }
+
+        /// <summary>
+        /// Create a new project
+        /// </summary>
+        public Project ProjectCreate(string name, Language language)
+        {
+            var request = new RestRequest("projects/create", Method.POST);
+            request.RequestFormat = DataFormat.Json;
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                name = name,
+                language = language
+            }), ParameterType.RequestBody);
+
+            Project result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+        
+        /// <summary>
+        /// Read in a project fro mthe API.
+        /// </summary>
+        /// <param name="projectId"></param>
+        /// <returns></returns>
+        public Project ProjectRead(int projectId)
+        {
+            var request = new RestRequest("projects/read", Method.GET);
+            request.RequestFormat = DataFormat.Json;
+            request.AddParameter("projectId", projectId);
+            Project result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
+        /// Fetch a list of the projects
+        /// </summary>
+        /// <returns></returns>
+        public ProjectList ProjectList()
+        {
+            var request = new RestRequest("projects/read", Method.GET);
+            request.RequestFormat = DataFormat.Json;
+            ProjectList result;
+            _connection.TryRequest(request, out result);
+            return result;
+        } 
+
+        /// <summary>
+        /// Update a project
+        /// </summary>
+        /// <param name="projectId"></param>
+        /// <param name="files"></param>
+        /// <returns></returns>
+        public RestResponse UpdateProject(int projectId, List<ProjectFile> files)
+        {
+            var request = new RestRequest("projects/update", Method.POST);
+            request.RequestFormat = DataFormat.Json;
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                projectId = projectId,
+                files = files
+            }), ParameterType.RequestBody);
+            RestResponse result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
+        /// Delete the project with the specified id
+        /// </summary>
+        /// <param name="projectId"></param>
+        /// <returns></returns>
+        public RestResponse Delete(int projectId)
+        {
+            var request = new RestRequest("projects/delete", Method.POST);
+            request.RequestFormat = DataFormat.Json;
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                projectId = projectId
+            }), ParameterType.RequestBody);
+            RestResponse result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         /// <summary>
         /// Calculate the remaining bytes of user log allowed based on the user's cap and daily cumulative usage.
@@ -114,7 +243,7 @@ namespace QuantConnect.Api
                 yield break;
             }
 
-            var hours = MarketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.ID.SecurityType);
+            var hours = _marketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.ID.SecurityType);
             foreach (var segment in hours.MarketHours[time.DayOfWeek].Segments)
             {
                 yield return segment;
@@ -148,5 +277,6 @@ namespace QuantConnect.Api
         {
             // NOP
         }
+
     }
 }
