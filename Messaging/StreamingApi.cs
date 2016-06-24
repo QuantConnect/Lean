@@ -70,6 +70,10 @@ namespace QuantConnect.Messaging
                 request.AddParameter("tx", tx);
                 Client.ExecuteAsyncPost(request, (response, handle) =>
                 {
+                    if (response.Content.Trim() == string.Empty)
+                    {
+                        return;
+                    }
                     var result = JsonConvert.DeserializeObject<Response>(response.Content);
                     if (result.Type == "error")
                     {
