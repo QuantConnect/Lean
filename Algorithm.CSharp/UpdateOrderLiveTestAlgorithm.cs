@@ -34,8 +34,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         private int LastMinute = -1;
         private Security Security;
-        private decimal Quantity = 5m;
-        private const decimal DeltaQuantity = 1m;
+        private int Quantity = 5;
+        private const int DeltaQuantity = 1;
 
         private const decimal StopPercentage = 0.025m;
         private const decimal StopPercentageDelta = 0.005m;

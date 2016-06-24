@@ -121,3 +121,4 @@ fxcm,USDSEK,forex,,SEK,1,0.0001,1000
 fxcm,USDTRY,forex,,TRY,1,0.0001,1000
 fxcm,USDZAR,forex,,ZAR,1,0.0001,1000
 fxcm,ZARJPY,forex,,JPY,1,0.01,1000
+bitfinex,BTCUSD,forex,BTCUSD,USD,1,0.01,0.01

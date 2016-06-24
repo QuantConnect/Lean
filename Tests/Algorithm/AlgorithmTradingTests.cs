@@ -19,6 +19,7 @@ using QuantConnect.Algorithm;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using QuantConnect.Brokerages;
+using Moq;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -1093,6 +1094,70 @@ namespace QuantConnect.Tests.Algorithm
         //    //We want to be 50% long, this is currently +2000 holdings + 50% 50k = $25k/ $50-share=500
         //    Assert.AreEqual(2500, actual);
         //}
+
+        [Test]
+        public void OrderQuantityConversionTest()
+        {
+            Security msft;
+            var algo = GetAlgorithm(out msft, 1, 0);
+            //Set price to $25
+            Update(msft, 25);
+
+            algo.Portfolio.SetCash(150000);
+
+            var mock = new Mock<IOrderProcessor>();
+            var request = new Mock<Orders.SubmitOrderRequest>(null, null, null, null, null, null, null, null);
+            mock.Setup(m => m.Process(It.IsAny<Orders.OrderRequest>())).Returns(new Orders.OrderTicket(null, request.Object));
+            algo.Transactions.SetOrderProcessor(mock.Object);
+
+            algo.Buy(Symbols.MSFT, 1);
+            algo.Buy(Symbols.MSFT, 1.0);
+            algo.Buy(Symbols.MSFT, 1.0m);
+            algo.Buy(Symbols.MSFT, 1.0f);
+
+            algo.Sell(Symbols.MSFT, 1);
+            algo.Sell(Symbols.MSFT, 1.0);
+            algo.Sell(Symbols.MSFT, 1.0m);
+            algo.Sell(Symbols.MSFT, 1.0f);
+
+            algo.Order(Symbols.MSFT, 1);
+            algo.Order(Symbols.MSFT, 1.0);
+            algo.Order(Symbols.MSFT, 1.0m);
+            algo.Order(Symbols.MSFT, 1.0f);
+
+            algo.MarketOrder(Symbols.MSFT, 1);
+            algo.MarketOrder(Symbols.MSFT, 1.0);
+            algo.MarketOrder(Symbols.MSFT, 1.0m);
+            algo.MarketOrder(Symbols.MSFT, 1.0f);
+
+            algo.MarketOnOpenOrder(Symbols.MSFT, 1);
+            algo.MarketOnOpenOrder(Symbols.MSFT, 1.0);
+            algo.MarketOnOpenOrder(Symbols.MSFT, 1.0m);
+
+            algo.MarketOnCloseOrder(Symbols.MSFT, 1);
+            algo.MarketOnCloseOrder(Symbols.MSFT, 1.0);
+            algo.MarketOnCloseOrder(Symbols.MSFT, 1.0m);
+
+            algo.LimitOrder(Symbols.MSFT, 1, 1);
+            algo.LimitOrder(Symbols.MSFT, 1.0, 1);
+            algo.LimitOrder(Symbols.MSFT, 1.0m, 1);
+
+            algo.StopMarketOrder(Symbols.MSFT, 1, 1);
+            algo.StopMarketOrder(Symbols.MSFT, 1.0, 1);
+            algo.StopMarketOrder(Symbols.MSFT, 1.0m, 1);
+
+            algo.StopLimitOrder(Symbols.MSFT, 1, 1, 2);
+            algo.StopLimitOrder(Symbols.MSFT, 1.0, 1, 2);
+            algo.StopLimitOrder(Symbols.MSFT, 1.0m, 1, 2);
+
+            algo.SetHoldings(Symbols.MSFT, 1);
+            algo.SetHoldings(Symbols.MSFT, 1.0);
+            algo.SetHoldings(Symbols.MSFT, 1.0m);
+            algo.SetHoldings(Symbols.MSFT, 1.0f);
+
+            int expected = 32;
+            Assert.AreEqual(expected, algo.Transactions.LastOrderId);
+        }
 
 
         private QCAlgorithm GetAlgorithm(out Security msft, decimal leverage, decimal fee)

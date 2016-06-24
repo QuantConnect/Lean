@@ -152,7 +152,10 @@ namespace QuantConnect.Brokerages
                     
                 case BrokerageName.FxcmBrokerage:
                     return new FxcmBrokerageModel(accountType);
-                    
+
+                case BrokerageName.Bitfinex:
+                    return new DefaultBrokerageModel(accountType);
+
                 default:
                     throw new ArgumentOutOfRangeException("brokerage", brokerage, null);
             }

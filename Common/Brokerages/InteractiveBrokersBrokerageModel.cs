@@ -63,7 +63,7 @@ namespace QuantConnect.Brokerages
                 case SecurityType.Commodity:
                     return true;
                 case SecurityType.Forex:
-                    return IsForexWithinOrderSizeLimits(order.Symbol.Value, (int)Math.Floor(order.Quantity), out message);
+                    return IsForexWithinOrderSizeLimits(order.Symbol.Value, order.Quantity, out message);
                 case SecurityType.Future:
                     return true;
                 default:
@@ -85,7 +85,7 @@ namespace QuantConnect.Brokerages
 
             if (order.SecurityType == SecurityType.Forex && request.Quantity != null)
             {
-                return IsForexWithinOrderSizeLimits(order.Symbol.Value, (int)Math.Floor(request.Quantity.Value), out message);
+                return IsForexWithinOrderSizeLimits(order.Symbol.Value, request.Quantity.Value, out message);
             }
 
             return true;
@@ -109,7 +109,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Returns true if the specified order is within IB's order size limits
         /// </summary>
-        private bool IsForexWithinOrderSizeLimits(string currencyPair, int quantity, out BrokerageMessageEvent message)
+        private bool IsForexWithinOrderSizeLimits(string currencyPair, decimal quantity, out BrokerageMessageEvent message)
         {
             /* https://www.interactivebrokers.com/en/?f=%2Fen%2Ftrading%2FforexOrderSize.php
             Currency    Currency Description	    Minimum Order Size	Maximum Order Size

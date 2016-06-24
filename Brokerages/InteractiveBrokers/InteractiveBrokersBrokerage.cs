@@ -925,7 +925,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 OrderId = ibOrderID,
                 Account = _account,
                 Action = ConvertOrderDirection(order.Direction),
-                TotalQuantity = Math.Abs((int)Math.Floor(order.Quantity)),
+                TotalQuantity = (int)Math.Abs(order.Quantity),
                 OrderType = ConvertOrderType(order.Type),
                 AllOrNone = false,
                 Tif = IB.TimeInForce.GoodTillCancel,
