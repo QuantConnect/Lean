@@ -101,7 +101,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// </remarks>
         /// <param name="security">The security to get subscriptions for</param>
         /// <returns>All subscriptions required by this security</returns>
-        protected override IEnumerable<SubscriptionDataConfig> GetSubscriptionConfigurations(Security security)
+        public override IEnumerable<SubscriptionDataConfig> GetSubscriptionConfigurations(Security security)
         {
             // TODO : If supporting multiple resolutions, may want to emit quotes and trade per security.Subscription
             var config = security.Subscriptions.First();

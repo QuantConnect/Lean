@@ -203,7 +203,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// </remarks>
         /// <param name="security">The security to get subscriptions for</param>
         /// <returns>All subscriptions required by this security</returns>
-        protected virtual IEnumerable<SubscriptionDataConfig> GetSubscriptionConfigurations(Security security)
+        public virtual IEnumerable<SubscriptionDataConfig> GetSubscriptionConfigurations(Security security)
         {
             return security.Subscriptions;
         }
