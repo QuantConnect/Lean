@@ -188,7 +188,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>All subscriptions required by this security</returns>
         public virtual IEnumerable<SubscriptionRequest> GetSubscriptionRequests(Security security, DateTime currentTimeUtc, DateTime maximumEndTimeUtc)
         {
-            return GetSubscriptionConfigurations(security).Select(config =>
+            return security.Subscriptions.Select(config =>
                 new SubscriptionRequest(
                     isUniverseSubscription: false,
                     universe: this,
@@ -198,21 +198,6 @@ namespace QuantConnect.Data.UniverseSelection
                     endTimeUtc: maximumEndTimeUtc
                     )
                 );
-        }
-
-        /// <summary>
-        /// Gets the subscription configs for the specified security
-        /// </summary>
-        /// <remarks>
-        /// In most cases the default implemention of returning the security's configuration is
-        /// sufficient. It's when we want multiple subscriptions (trade/quote data) that we'll need
-        /// to override this
-        /// </remarks>
-        /// <param name="security">The security to get subscriptions for</param>
-        /// <returns>All subscriptions required by this security</returns>
-        public virtual IEnumerable<SubscriptionDataConfig> GetSubscriptionConfigurations(Security security)
-        {
-            return security.Subscriptions;
         }
 
         /// <summary>

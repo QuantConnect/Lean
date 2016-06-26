@@ -92,26 +92,37 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
-        /// Gets the subscription configs for the specified security
+        /// Gets the subscription requests to be added for the specified security
         /// </summary>
-        /// <remarks>
-        /// In most cases the default implementaon of returning the security's configuration is
-        /// sufficient. It's when we want multiple subscriptions (trade/quote data) that we'll need
-        /// to override this
-        /// </remarks>
         /// <param name="security">The security to get subscriptions for</param>
+        /// <param name="currentTimeUtc">The current time in utc. This is the frontier time of the algorithm</param>
+        /// <param name="maximumEndTimeUtc">The max end time</param>
         /// <returns>All subscriptions required by this security</returns>
-        public override IEnumerable<SubscriptionDataConfig> GetSubscriptionConfigurations(Security security)
+        public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(Security security, DateTime currentTimeUtc, DateTime maximumEndTimeUtc)
         {
-            // TODO : If supporting multiple resolutions, may want to emit quotes and trade per security.Subscription
-            var config = security.Subscriptions.First();
-
             // we want to return both quote and trade subscriptions
-            return QuotesAndTrades.Select(x => new SubscriptionDataConfig(config,
-                tickType: x,
-                objectType: GetDataType(config.Resolution, x),
-                isFilteredSubscription: true
-                ));
+            return QuotesAndTrades
+                .Select(tickType => new SubscriptionDataConfig(
+                    objectType: GetDataType(UniverseSettings.Resolution, tickType),
+                    symbol: security.Symbol,
+                    resolution: UniverseSettings.Resolution,
+                    dataTimeZone: Configuration.DataTimeZone,
+                    exchangeTimeZone: security.Exchange.TimeZone,
+                    fillForward: UniverseSettings.FillForward,
+                    extendedHours: UniverseSettings.ExtendedMarketHours,
+                    isInternalFeed: false,
+                    isCustom: false,
+                    tickType: tickType,
+                    isFilteredSubscription: true
+                    ))
+                .Select(config => new SubscriptionRequest(
+                    isUniverseSubscription: false,
+                    universe: this,
+                    security: security,
+                    configuration: config,
+                    startTimeUtc: currentTimeUtc,
+                    endTimeUtc: maximumEndTimeUtc
+                    ));
         }
 
         /// <summary>
