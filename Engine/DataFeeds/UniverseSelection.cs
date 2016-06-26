@@ -108,7 +108,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         _dataFeed.RemoveSubscription(subscription.Configuration);
                     }
 
-                    // remove symbol mappings for symbols removed from universes
+                    // remove symbol mappings for symbols removed from universes // TODO : THIS IS BAD!
                     SymbolCache.TryRemove(member.Symbol);
                 }
             }
@@ -127,8 +127,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 additions.Add(security);
+                universe.AddMember(dateTimeUtc, security);
 
-                var addedSubscription = false;
                 foreach (var request in universe.GetSubscriptionRequests(security, dateTimeUtc, algorithmEndDateUtc))
                 {
                     // ask the limiter if we can add another subscription at that resolution
@@ -143,15 +143,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     // add the new subscriptions to the data feed
-                    if (_dataFeed.AddSubscription(request))
-                    {
-                        addedSubscription = true;
-                    }
-                }
-
-                if (addedSubscription)
-                {
-                    universe.AddMember(dateTimeUtc, security);
+                    _dataFeed.AddSubscription(request);
                 }
             }
 
