@@ -249,9 +249,7 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Defines an initial coarse selection</param>
         public void AddUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> selector)
         {
-            var symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA);
-            var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, true, isFilteredSubscription: false);
-            AddUniverse(new FuncUniverse(config, UniverseSettings, SecurityInitializer, selectionData => selector(selectionData.OfType<CoarseFundamental>())));
+            AddUniverse(new CoarseFundamentalUniverse(UniverseSettings, SecurityInitializer, selector));
         }
 
         /// <summary>
