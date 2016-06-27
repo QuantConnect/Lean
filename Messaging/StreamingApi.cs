@@ -70,14 +70,17 @@ namespace QuantConnect.Messaging
                 request.AddParameter("tx", tx);
                 Client.ExecuteAsyncPost(request, (response, handle) =>
                 {
-                    if (response.Content.Trim() == string.Empty)
+                    try
                     {
-                        return;
+                        var result = JsonConvert.DeserializeObject<Response>(response.Content);
+                        if (result.Type == "error")
+                        {
+                            Log.Error(new Exception(result.Message), "PacketType: " + packet.Type);
+                        }
                     }
-                    var result = JsonConvert.DeserializeObject<Response>(response.Content);
-                    if (result.Type == "error")
+                    catch(Exception)
                     {
-                        Log.Error(new Exception(result.Message), "PacketType: " + packet.Type);
+                        Log.Error("StreamingApi.Client.ExecuteAsyncPost(): respone.Content not set correctly");
                     }
                 }, "POST");
             }
