@@ -78,9 +78,9 @@ namespace QuantConnect.Messaging
                             Log.Error(new Exception(result.Message), "PacketType: " + packet.Type);
                         }
                     }
-                    catch(Exception)
+                    catch
                     {
-                        Log.Error("StreamingApi.Client.ExecuteAsyncPost(): respone.Content not set correctly");
+                        Log.Error("StreamingApi.Client.ExecuteAsyncPost(): Error deserializing JSON content.");
                     }
                 }, "POST");
             }
