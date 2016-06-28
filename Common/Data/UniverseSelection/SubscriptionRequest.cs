@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Data.UniverseSelection
@@ -23,6 +24,9 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class SubscriptionRequest
     {
+        private readonly Lazy<DateTime> _localStartTime;
+        private readonly Lazy<DateTime> _localEndTime; 
+
         /// <summary>
         /// Gets true if the subscription is a universe
         /// </summary>
@@ -54,6 +58,38 @@ namespace QuantConnect.Data.UniverseSelection
         public DateTime EndTimeUtc { get; private set; }
 
         /// <summary>
+        /// Gets the <see cref="StartTimeUtc"/> in the security's exchange time zone
+        /// </summary>
+        public DateTime StartTimeLocal
+        {
+            get { return _localStartTime.Value; }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="EndTimeUtc"/> in the security's exchange time zone
+        /// </summary>
+        public DateTime EndTimeLocal
+        {
+            get { return _localEndTime.Value; }
+        }
+
+        /// <summary>
+        /// Gets the tradable days specified by this request
+        /// </summary>
+        public IEnumerable<DateTime> TradableDays
+        {
+            get
+            {
+                return Time.EachTradeableDayInTimeZone(Security.Exchange.Hours,
+                    StartTimeLocal,
+                    EndTimeLocal,
+                    Configuration.DataTimeZone,
+                    Configuration.ExtendedMarketHours
+                    );
+            }
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="SubscriptionRequest"/> class
         /// </summary>
         public SubscriptionRequest(bool isUniverseSubscription,
@@ -69,6 +105,30 @@ namespace QuantConnect.Data.UniverseSelection
             Configuration = configuration;
             StartTimeUtc = startTimeUtc;
             EndTimeUtc = endTimeUtc;
+
+            _localStartTime = new Lazy<DateTime>(() => StartTimeUtc.ConvertFromUtc(Configuration.ExchangeTimeZone));
+            _localEndTime = new Lazy<DateTime>(() => EndTimeUtc.ConvertFromUtc(Configuration.ExchangeTimeZone));
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SubscriptionRequest"/> class
+        /// </summary>
+        public SubscriptionRequest(SubscriptionRequest template,
+            bool? isUniverseSubscription = null,
+            Universe universe = null,
+            Security security = null,
+            SubscriptionDataConfig configuration = null,
+            DateTime? startTimeUtc = null,
+            DateTime? endTimeUtc = null
+            )
+            : this(isUniverseSubscription ?? template.IsUniverseSubscription,
+                  universe ?? template.Universe,
+                  security ?? template.Security,
+                  configuration ?? template.Configuration,
+                  startTimeUtc ?? template.StartTimeUtc,
+                  endTimeUtc ?? template.EndTimeUtc
+                  )
+        {
         }
     }
 }
