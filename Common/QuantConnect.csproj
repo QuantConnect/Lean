@@ -161,8 +161,11 @@
     <Compile Include="Data\Market\OptionContracts.cs" />
     <Compile Include="Data\Market\QuoteBars.cs" />
     <Compile Include="Data\UniverseSelection\CoarseFundamentalUniverse.cs" />
+    <Compile Include="Data\UniverseSelection\GetSubscriptionRequestsUniverseDecorator.cs" />
+    <Compile Include="Data\UniverseSelection\SelectSymbolsUniverseDecorator.cs" />
     <Compile Include="Data\UniverseSelection\SubscriptionRequest.cs" />
     <Compile Include="Data\UniverseSelection\UniverseDecorator.cs" />
+    <Compile Include="Data\UniverseSelection\UniverseExtensions.cs" />
     <Compile Include="Globals.cs" />
     <Compile Include="Currencies.cs" />
     <Compile Include="Data\Auxiliary\FactorFile.cs" />
