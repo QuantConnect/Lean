@@ -17,17 +17,110 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using QuantConnect.Api;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Interfaces
 {
     /// <summary>
-    /// Messaging Interface with Cloud System
+    /// API for QuantConnect.com 
     /// </summary>
     [InheritedExport(typeof(IApi))]
     public interface IApi : IDisposable
     {
+        /// <summary>
+        /// Create a project with the specified name and language via QuantConnect.com API
+        /// </summary>
+        /// <param name="name">Project name</param>
+        /// <param name="language">Programming language to use</param>
+        /// <returns>Project object from the API.</returns>
+        Project ProjectCreate(string name, Language language);
+
+        /// <summary>
+        /// Read in a project from the QuantConnect.com API.
+        /// </summary>
+        /// <param name="projectId">Project id you own</param>
+        /// <returns></returns>
+        Project ProjectRead(int projectId);
+
+        /// <summary>
+        /// Read back a list of all projects on the account for a user.
+        /// </summary>
+        /// <returns>Container for list of projects</returns>
+        ProjectList ProjectList();
+
+        /// <summary>
+        /// Update a specific project with a list of files. All other files will be deleted.
+        /// </summary>
+        /// <param name="projectId">Project id for project to be updated</param>
+        /// <param name="files">Files list to update</param>
+        /// <returns>RestResponse indicating success</returns>
+        RestResponse UpdateProject(int projectId, List<ProjectFile> files);
+
+        /// <summary>
+        /// Delete a specific project owned by the user from QuantConnect.com
+        /// </summary>
+        /// <param name="projectId">Project id we own and wish to delete</param>
+        /// <returns>RestResponse indicating success</returns>
+        RestResponse Delete(int projectId);
+
+        /// <summary>
+        /// Create a new compile job request for this project id.
+        /// </summary>
+        /// <param name="projectId">Project id we wish to compile.</param>
+        /// <returns>Compile object result</returns>
+        Compile CompileCreate(int projectId);
+
+        /// <summary>
+        /// Read a compile packet job result.
+        /// </summary>
+        /// <param name="projectId">Project id we sent for compile</param>
+        /// <param name="compileId">Compile id return from the creation request</param>
+        /// <returns>Compile object result</returns>
+        Compile CompileRead(int projectId, string compileId);
+
+        /// <summary>
+        /// Create a new backtest from a specified projectId and compileId
+        /// </summary>
+        /// <param name="projectId"></param>
+        /// <param name="compileId"></param>
+        /// <param name="backtestName"></param>
+        /// <returns></returns>
+        Backtest BacktestCreate(int projectId, string compileId, string backtestName);
+
+        /// <summary>
+        /// Read out the full result of a specific backtest
+        /// </summary>
+        /// <param name="projectId">Project id for the backtest we'd like to read</param>
+        /// <param name="backtestId">Backtest id for the backtest we'd like to read</param>
+        /// <returns>Backtest result object</returns>
+        Backtest BacktestRead(int projectId, string backtestId);
+
+        /// <summary>
+        /// Update the backtest name
+        /// </summary>
+        /// <param name="projectId">Project id to update</param>
+        /// <param name="backtestId">Backtest id to update</param>
+        /// <param name="backtestName">New backtest name to set</param>
+        /// <returns>Rest response on success</returns>
+        RestResponse BacktestUpdate(int projectId, string backtestId, string backtestName = "", string note = "");
+
+        /// <summary>
+        /// Delete a backtest from the specified project and backtestId.
+        /// </summary>
+        /// <param name="projectId">Project for the backtest we want to delete</param>
+        /// <param name="backtestId">Backtest id we want to delete</param>
+        /// <returns>RestResponse on success</returns>
+        RestResponse BacktestDelete(int projectId, string backtestId);
+
+        /// <summary>
+        /// Get a list of backtests for a specific project id
+        /// </summary>
+        /// <param name="projectId">Project id to search</param>
+        /// <returns>BacktestList container for list of backtests</returns>
+        BacktestList BacktestList(int projectId);
+
         /// <summary>
         /// Initialize the control system
         /// </summary>

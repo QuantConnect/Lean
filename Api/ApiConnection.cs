@@ -76,9 +76,6 @@ namespace QuantConnect.Api
         public bool TryRequest<T>(RestRequest request, out T result)
             where T : RestResponse
         {
-            //Initialize the assignment.
-            var response = new RestResponse();
-
             try
             {
                 //Generate the hash each request
