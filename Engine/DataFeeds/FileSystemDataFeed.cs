@@ -196,6 +196,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>True if the subscription was created and added successfully, false otherwise</returns>
         public bool AddSubscription(SubscriptionRequest request)
         {
+            if (_subscriptions.Contains(request.Configuration))
+            {
+                // duplicate subscription request
+                return false;
+            }
+
             var subscription = request.IsUniverseSubscription 
                 ? CreateUniverseSubscription(request) 
                 : CreateSubscription(request);
