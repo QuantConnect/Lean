@@ -163,7 +163,7 @@ namespace QuantConnect.AlgorithmFactory
                 {
                     Log.Trace("Loader.TryCreatePythonAlgorithm(): Importing python module...");
                     var algorithmName = Config.Get("algorithm-type-name");
-                    var scope = engine.Runtime.ImportModule(algorithmName);
+                    var scope = engine.Runtime.ImportModule(string.IsNullOrEmpty(algorithmName) ? "main" : algorithmName);
                     items = (List<KeyValuePair<string, dynamic>>)scope.GetItems();
                 }
                 catch (Exception err)
