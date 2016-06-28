@@ -12,37 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Api
 {
-    /// <summary>
-    /// Verify if the credentials are OK.
-    /// </summary>
-    public class AuthenticationResponse : RestResponse
-    {
-
-    }
-
-    /// <summary>
-    /// Response from the compiler on a build event
-    /// </summary>
-    public class Compile : RestResponse
-    {
-        /// <summary>
-        /// True on successful compile
-        /// </summary>
-        public bool BuildSuccess;
-
-        /// <summary>
-        /// Logs of the compilation request
-        /// </summary>
-        public List<string> Logs;
-    }
-
     /// <summary>
     /// Response from reading a project by id.
     /// </summary>
@@ -80,24 +55,6 @@ namespace QuantConnect.Api
     }
 
     /// <summary>
-    /// File for a project
-    /// </summary>
-    public class ProjectFile
-    {
-        /// <summary>
-        /// Name of a project file
-        /// </summary>
-        [JsonProperty(PropertyName = "name")]
-        public string Name;
-
-        /// <summary>
-        /// Contents of the project file
-        /// </summary>
-        [JsonProperty(PropertyName = "code")]
-        public string Code;
-    }
-
-    /// <summary>
     /// Project list response
     /// </summary>
     public class ProjectList : RestResponse
@@ -107,32 +64,5 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "projects")]
         public List<Project> Projects;
-    }
-
-    /// <summary>
-    /// Base API response class for the QuantConnect API.
-    /// </summary>
-    public class RestResponse
-    {
-        /// <summary>
-        /// JSON Constructor
-        /// </summary>
-        public RestResponse()
-        {
-            Success = false;
-            Errors = new List<string>();
-        }
-
-        /// <summary>
-        /// Indicate if the API request was successful.
-        /// </summary>
-        [JsonProperty(PropertyName = "success")]
-        public bool Success;
-
-        /// <summary>
-        /// List of errors with the API call.
-        /// </summary>
-        [JsonProperty(PropertyName = "errors")]
-        public List<string> Errors;
     }
 }

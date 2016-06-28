@@ -16,16 +16,16 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Api;
 using QuantConnect.Configuration;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Tests.API
 {
     [TestFixture]
-    class Api
+    class RestApiTests
     {
 
         //Test languages for the API
@@ -62,45 +62,103 @@ namespace QuantConnect.Tests.API
         }
 
         /// <summary>
-        /// Creates a new QuantConnect Project
+        /// Tests all the API methods linked to a project id.
+        ///  - Creates project,
+        ///  - Adds files to project,
+        ///  - Updates the files, makes sure they are still present,
+        ///  - Builds the project, 
         /// </summary>
         [Test]
-        public void Project_Create_Read_Update_Delete()
+        public void Project_Compile_Backtest()
         {
             // Initialize the test:
             var api = CreateApiAccessor();
+            var testSourceFile = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs");
 
-            // Create a new project
+            // Test create a new project successfully
             var name = DateTime.UtcNow.ToString("u") + " Test " + _testAccount;
             var project = api.ProjectCreate(name, Language.CSharp);
             Assert.IsTrue(project.Success);
             Assert.IsTrue(project.ProjectId > 0);
 
-            // Read back the project we just created
+            // Test read back the project we just created
             var readProject = api.ProjectRead(project.ProjectId);
             Assert.IsTrue(readProject.Success);
             Assert.IsTrue(readProject.Files.Count == 0);
             Assert.IsTrue(readProject.Name == name);
 
-            //Set a project file for the project.
-            var files = new List<ProjectFile>();
-            files.Add(new ProjectFile()
+            // Test set a project file for the project
+            var files = new List<ProjectFile>
             {
-                Name = "Main.cs",
-                Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
-            });
+                new ProjectFile
+                {
+                    Name = "Main.cs",
+                    Code = testSourceFile
+                }
+            };
             var updateProject = api.UpdateProject(project.ProjectId, files);
             Assert.IsTrue(updateProject.Success);
             
-            //Download the project again to validate its got the new file:
+            // Download the project again to validate its got the new file
             var verifyRead = api.ProjectRead(project.ProjectId);
             Assert.IsTrue(verifyRead.Files.Count == 1);
             Assert.IsTrue(verifyRead.Files.First().Name == "Main.cs");
 
+            // Test successfully compile the project we've created
+            var compileCreate = api.CompileCreate(project.ProjectId);
+            Assert.IsTrue(compileCreate.Success);
+            Assert.IsTrue(compileCreate.State == CompileState.InQueue);
+
+            //Read out the compile; wait for it to be completed for 10 seconds
+            var compileSuccess = WaitForCompilerResponse(api, project.ProjectId, compileCreate.CompileId);
+            Assert.IsTrue(compileSuccess.Success);
+            Assert.IsTrue(compileSuccess.State == CompileState.BuildSuccess);
+
+            // Update the file, create a build error, test we get build error
+            files[0].Code += "[Jibberish at end of the file to cause a build error]";
+            api.UpdateProject(project.ProjectId, files);
+            var compileError = api.CompileCreate(project.ProjectId);
+            compileError = WaitForCompilerResponse(api, project.ProjectId, compileError.CompileId);
+            Assert.IsTrue(compileError.Success); // Successfully processed rest request.
+            Assert.IsTrue(compileError.State == CompileState.BuildError); //Resulting in build fail.
+
+            // Using our successful compile; launch a backtest! 
+            var backtestName = DateTime.Now.ToString("u") + " API Backtest";
+            var backtest = api.BacktestCreate(project.ProjectId, compileSuccess.CompileId, backtestName);
+            Assert.IsTrue(backtest.Success);
+           
+            // Now read the backtest and wait for it to complete
+            var backtestRead = WaitForBacktestCompletion(api, project.ProjectId, backtest.BacktestId);
+            Assert.IsTrue(backtestRead.Success);
+            Assert.IsTrue(backtestRead.Progress == 1);
+            Assert.IsTrue(backtestRead.Name == backtestName);
+            Assert.IsTrue(backtestRead.Result.Statistics["Total Trades"] == "1");
+
+            // Verify we have the backtest in our project
+            var listBacktests = api.BacktestList(project.ProjectId);
+            Assert.IsTrue(listBacktests.Success);
+            Assert.IsTrue(listBacktests.Backtests.Count == 1);
+            Assert.IsTrue(listBacktests.Backtests[0].Name == backtestName);
+
+            // Update the backtest name and test its been updated
+            backtestName += "-Amendment";
+            var updateBacktest = api.BacktestUpdate(project.ProjectId, backtest.BacktestId, backtestName);
+            Assert.IsTrue(updateBacktest.Success);
+            backtestRead = WaitForBacktestCompletion(api, project.ProjectId, backtest.BacktestId);
+            Assert.IsTrue(backtestRead.Name == backtestName);
+
+            // Delete the backtest we just created
+            var deleteBacktest = api.BacktestDelete(project.ProjectId, backtest.BacktestId);
+            Assert.IsTrue(deleteBacktest.Success);
+
+            
+
+            // Test delete the project we just created
             var deleteProject = api.Delete(project.ProjectId);
             Assert.IsTrue(deleteProject.Success);
         }
-        
+
+
         /// <summary>
         /// Reads in the files and project properties.
         /// </summary>
@@ -110,42 +168,14 @@ namespace QuantConnect.Tests.API
             var api = CreateApiAccessor();
             var projects = api.ProjectList();
             Assert.IsTrue(projects.Success);
-            Assert.IsTrue(projects.Projects.Count > 0);
         }
         
-
-        /// <summary>
-        /// Create a new compile / build from a project
-        /// </summary>
-        [Test]
-        public void Compiler_Create()
-        {
-            // Todo
-        }
-
-        /// <summary>
-        /// Start a new backtest.
-        /// </summary>
-        [Test]
-        public void Backtests_Create()
-        {
-            // Todo
-        }
-
-        /// <summary>
-        /// Read the result of the previous backtest
-        /// </summary>
-        [Test]
-        public void Backtests_ReadOne()
-        {
-            // Todo
-        }
-
+        
         /// <summary>
         /// Read in a list of the backtest names and properties.
         /// </summary>
         [Test]
-        public void Backtests_ReadAll()
+        public void Backtests_List()
         {
             // Todo
         }
@@ -307,7 +337,7 @@ namespace QuantConnect.Tests.API
         /// Create an authenticated API accessor object.
         /// </summary>
         /// <returns></returns>
-        private QuantConnect.Api.Api CreateApiAccessor()
+        private IApi CreateApiAccessor()
         {
             return CreateApiAccessor(_testAccount, _testToken);
         }
@@ -318,13 +348,54 @@ namespace QuantConnect.Tests.API
         /// <param name="uid">User id</param>
         /// <param name="token">Token string</param>
         /// <returns>API class for placing calls</returns>
-        private QuantConnect.Api.Api CreateApiAccessor(int uid, string token)
+        private IApi CreateApiAccessor(int uid, string token)
         {
             Config.Set("job-user-id", uid.ToString());
             Config.Set("api-access-token", token);
-            var api = new QuantConnect.Api.Api();
+            var api = new Api.Api();
             api.Initialize();
             return api;
+        }
+
+        /// <summary>
+        /// Wait for the compiler to respond to a specified compile request
+        /// </summary>
+        /// <param name="api">API Method</param>
+        /// <param name="projectId"></param>
+        /// <param name="compileId"></param>
+        /// <returns></returns>
+        private Compile WaitForCompilerResponse(IApi api, int projectId, string compileId)
+        {
+            var compile = new Compile();
+            var finish = DateTime.Now.AddSeconds(30);
+            while (DateTime.Now < finish)
+            {
+                compile = api.CompileRead(projectId, compileId);
+                if (compile.State != CompileState.InQueue) break;
+                Thread.Sleep(500);
+            }
+            return compile;
+        }
+
+        /// <summary>
+        /// Wait for the backtest to complete
+        /// </summary>
+        /// <param name="api">IApi Object to make requests</param>
+        /// <param name="projectId">Project id to scan</param>
+        /// <param name="backtestId">Backtest id previously started</param>
+        /// <returns>Completed backtest object</returns>
+        private Backtest WaitForBacktestCompletion(IApi api, int projectId, string backtestId)
+        {
+            var result = new Backtest();
+            var finish = DateTime.Now.AddSeconds(30);
+            while (DateTime.Now < finish)
+            {
+                result = api.BacktestRead(projectId, backtestId);
+                if (result.Progress == 1) break;
+                if (!result.Success) break;
+                Thread.Sleep(500);
+            }
+            return result;
         }
     }
 }
