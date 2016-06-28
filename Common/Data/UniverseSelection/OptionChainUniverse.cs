@@ -92,7 +92,7 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
-        /// Gets the subscriptions to be added for the specified security
+        /// Gets the subscription configs for the specified security
         /// </summary>
         /// <remarks>
         /// In most cases the default implementaon of returning the security's configuration is
@@ -101,7 +101,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// </remarks>
         /// <param name="security">The security to get subscriptions for</param>
         /// <returns>All subscriptions required by this security</returns>
-        public override IEnumerable<SubscriptionDataConfig> GetSubscriptions(Security security)
+        protected override IEnumerable<SubscriptionDataConfig> GetSubscriptionConfigurations(Security security)
         {
             var config = security.SubscriptionDataConfig;
 
