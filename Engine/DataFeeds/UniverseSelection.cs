@@ -126,9 +126,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     security = universe.CreateSecurity(symbol, _algorithm, _marketHoursDatabase, _symbolPropertiesDatabase);
                 }
 
-                additions.Add(security);
                 universe.AddMember(dateTimeUtc, security);
 
+                var addedSubscription = false;
                 foreach (var request in universe.GetSubscriptionRequests(security, dateTimeUtc, algorithmEndDateUtc))
                 {
                     // ask the limiter if we can add another subscription at that resolution
@@ -143,7 +143,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     // add the new subscriptions to the data feed
-                    _dataFeed.AddSubscription(request);
+                    if (_dataFeed.AddSubscription(request))
+                    {
+                        // only update our security changes if we actually added data
+                        if (!request.IsUniverseSubscription)
+                        {
+                            addedSubscription = true;
+                        }
+                    }
+                }
+
+                if (addedSubscription)
+                {
+                    additions.Add(security);
                 }
             }
 
