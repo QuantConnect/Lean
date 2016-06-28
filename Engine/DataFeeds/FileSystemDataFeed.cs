@@ -21,7 +21,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
@@ -30,7 +30,6 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Option;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -217,7 +216,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             if (_subscriptions.TryAdd(subscription))
             {
-            UpdateFillForwardResolution();
+                UpdateFillForwardResolution();
             }
 
             return true;
@@ -237,7 +236,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
-                subscription.Dispose();
+            subscription.Dispose();
             Log.Debug("FileSystemDataFeed.RemoveSubscription(): Removed " + configuration.ToString());
 
             UpdateFillForwardResolution();
@@ -349,6 +348,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (request.Configuration.Type == typeof (CoarseFundamental))
                 {
                     return new BaseDataCollectionSubscripionEnumeratorFactory();
+                }
+                if (request.Configuration.Type == typeof(FineFundamental))
+                {
+                    return new FineFundamentalSubscriptionEnumeratorFactory();
                 }
                 if (request.Universe is OptionChainUniverse)
                 {
