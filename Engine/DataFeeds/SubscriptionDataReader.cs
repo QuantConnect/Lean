@@ -189,6 +189,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (_hasScaleFactors)
                     {
                         _factorFile = factorFile;
+                        _config.SetGetPriceScaleFactor(_factorFile.GetPriceScaleFactor);
                     }
                 }
                 catch (Exception err)

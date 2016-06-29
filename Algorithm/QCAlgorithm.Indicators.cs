@@ -1083,10 +1083,15 @@ namespace QuantConnect.Algorithm
         /// <param name="indicator">The indicator to receive data from the consolidator</param>
         /// <param name="consolidator">The consolidator to receive raw subscription data</param>
         /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
-        public void RegisterIndicator(Symbol symbol, IndicatorBase<IndicatorDataPoint> indicator, IDataConsolidator consolidator, Func<BaseData, decimal> selector = null)
+        public void RegisterIndicator(Symbol symbol, IndicatorBase<IndicatorDataPoint> indicator, IDataConsolidator consolidator, Func<BaseData, decimal> selector = null, bool adjust = true)
         {
             // default our selector to the Value property on BaseData
             selector = selector ?? (x => x.Value);
+
+            if (adjust)
+            {
+                selector = AdjustSelectorOutput(selector);
+            }
 
             // register the consolidator for automatic updates via SubscriptionManager
             SubscriptionManager.AddConsolidator(symbol, consolidator);
@@ -1321,6 +1326,36 @@ namespace QuantConnect.Algorithm
             }
 
             return string.Format("{0}({1}{2})", type, symbol.ToString(), res);
+        }
+
+        /// <summary>
+        /// Ensures indicators always receive adjusted data.
+        /// </summary>
+        /// <param name="selector">Selects a value from the BaseData, adjust it properly and send into the indicator.</param>
+        /// <returns>Adjusted data</returns>
+        private Func<BaseData, decimal> AdjustSelectorOutput(Func<BaseData, decimal> selector)
+        {
+            return data =>
+            {
+                var value = selector(data);
+                var subscription = GetSubscription(data.Symbol);
+
+                if (subscription.DataNormalizationMode == DataNormalizationMode.Adjusted)
+                {
+                    return value;
+                }
+
+                var factor = subscription.GetPriceScaleFactor(data.Time);
+
+                // If selector is returning volume, do not consider the factor
+                var bar = data as TradeBar;
+                if (bar != null && value == bar.Volume)
+                {
+                    factor = 1m;
+                }
+
+                return value * factor;
+            };
         }
 
     } // End Partial Algorithm Template - Indicators.
