@@ -101,6 +101,11 @@ namespace QuantConnect.Data
         public decimal PriceScaleFactor;
 
         /// <summary>
+        /// Gets the price scale factor that includes dividend and split adjustments for the specified search date
+        /// </summary>
+        public Func<DateTime, decimal> GetPriceScaleFactor;
+
+        /// <summary>
         /// Symbol Mapping: When symbols change over time (e.g. CHASE-> JPM) need to update the symbol requested.
         /// </summary>
         public string MappedSymbol
@@ -291,6 +296,15 @@ namespace QuantConnect.Data
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
+
+        /// <summary>
+        /// Sets SubscriptionDataConfig.GetPriceScaleFactor
+        /// </summary>
+        /// <param name="getPriceScaleFactor">Gets the price scale factor that includes dividend and split adjustments for the specified search date</param>
+        public void SetGetPriceScaleFactor(Func<DateTime, decimal> getPriceScaleFactor)
+        {
+            GetPriceScaleFactor = getPriceScaleFactor ?? (x => 1m);
         }
 
         /// <summary>
