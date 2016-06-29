@@ -89,7 +89,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                     DataType = MarketDataType.Auxiliary,
                     Symbol = request.Configuration.Symbol,
                     Time = date,
-                    EndTime = date,
                     FinancialStatements = UpdateFinancialStatements(financialStatementsForDate, ref financialStatements),
                     EarningReports = UpdateEarningReports(earningReportsForDate, ref earningReports),
                     OperationRatios = UpdateOperationRatios(operationRatiosForDate, ref operationRatios),

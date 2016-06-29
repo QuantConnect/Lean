@@ -139,6 +139,7 @@
     <Compile Include="Commands\QuitCommand.cs" />
     <Compile Include="Commands\UpdateOrderCommand.cs" />
     <Compile Include="Data\Custom\DailyFx.cs" />
+    <Compile Include="Data\Fundamental\FineFundamental.cs" />
     <Compile Include="Data\Fundamental\Generated\BalanceSheet.cs" />
     <Compile Include="Data\Fundamental\Generated\CashFlowStatement.cs" />
     <Compile Include="Data\Fundamental\Generated\CompanyReference.cs" />

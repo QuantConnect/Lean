@@ -24,7 +24,7 @@ namespace QuantConnect.Data.Fundamental
 	/// <summary>
 	/// Definition of the FineFundamental class
 	/// </summary>
-	public class FineFundamental : BaseData
+	public partial class FineFundamental : BaseData
 	{
 		/// <summary>
 		/// The instance of the CompanyReference class
@@ -89,19 +89,6 @@ namespace QuantConnect.Data.Fundamental
 			OperationRatios.UpdateValues(previous.OperationRatios);
 			EarningRatios.UpdateValues(previous.EarningRatios);
 			ValuationRatios.UpdateValues(previous.ValuationRatios);
-		}
-
-		/// <summary>
-		/// Creates the universe symbol used for fine fundamental data
-		/// </summary>
-		/// <param name="market">The market</param>
-		/// <returns>A fine universe symbol for the specified market</returns>
-		public static Symbol CreateUniverseSymbol(string market)
-		{
-			market = market.ToLower();
-			var ticker = "qc-universe-fine-" + market;
-			var sid = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, ticker, market);
-			return new Symbol(sid, ticker);
 		}
 	}
 }
