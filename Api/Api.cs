@@ -212,10 +212,10 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Project for the backtest we want to update</param>
         /// <param name="backtestId">Backtest id we want to update</param>
-        /// <param name="backtestName">Name we'd like to assign</param>
+        /// <param name="name">Name we'd like to assign to the backtest</param>
         /// <param name="note">Note attached to the backtest</param>
         /// <returns>Rest response class indicating success</returns>
-        public RestResponse BacktestUpdate(int projectId, string backtestId, string backtestName = "", string note = "")
+        public RestResponse BacktestUpdate(int projectId, string backtestId, string name = "", string note = "")
         {
             var request = new RestRequest("backtests/update", Method.POST);
             request.RequestFormat = DataFormat.Json;
@@ -223,7 +223,7 @@ namespace QuantConnect.Api
             {
                 projectId = projectId,
                 backtestId = backtestId,
-                backtestName = backtestName,
+                name = name,
                 note = note
             }), ParameterType.RequestBody);
             Backtest result;
