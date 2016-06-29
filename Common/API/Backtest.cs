@@ -31,6 +31,12 @@ namespace QuantConnect.Api
         public string Name;
 
         /// <summary>
+        /// Note on the backtest attached by the user
+        /// </summary>
+        [JsonProperty(PropertyName = "note")]
+        public string Note;
+
+        /// <summary>
         /// Assigned backtest Id
         /// </summary>
         [JsonProperty(PropertyName = "backtestId")]
