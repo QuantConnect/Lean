@@ -17,11 +17,11 @@ using System;
 
 namespace QuantConnect.Data.Fundamental
 {
-	/// <summary>
-	/// Definition of the FineFundamental class
-	/// </summary>
-	public partial class FineFundamental
-	{
+    /// <summary>
+    /// Definition of the FineFundamental class
+    /// </summary>
+    public partial class FineFundamental
+    {
         /// <summary>
         /// The end time of this data.
         /// </summary>
@@ -37,11 +37,11 @@ namespace QuantConnect.Data.Fundamental
         /// <param name="market">The market</param>
         /// <returns>A fine universe symbol for the specified market</returns>
         public static Symbol CreateUniverseSymbol(string market)
-		{
-			market = market.ToLower();
-			var ticker = "qc-universe-fine-" + market;
-			var sid = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, ticker, market);
-			return new Symbol(sid, ticker);
-		}
-	}
+        {
+            market = market.ToLower();
+            var ticker = "qc-universe-fine-" + market;
+            var sid = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, ticker, market);
+            return new Symbol(sid, ticker);
+        }
+    }
 }
