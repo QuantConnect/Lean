@@ -137,22 +137,31 @@ namespace QuantConnect.Tests.API
             // Verify we have the backtest in our project
             var listBacktests = api.BacktestList(project.ProjectId);
             Assert.IsTrue(listBacktests.Success);
-            Assert.IsTrue(listBacktests.Backtests.Count == 1);
+            Assert.IsTrue(listBacktests.Backtests.Count >= 1);
             Assert.IsTrue(listBacktests.Backtests[0].Name == backtestName);
 
             // Update the backtest name and test its been updated
             backtestName += "-Amendment";
-            var updateBacktest = api.BacktestUpdate(project.ProjectId, backtest.BacktestId, backtestName);
-            Assert.IsTrue(updateBacktest.Success);
-            backtestRead = WaitForBacktestCompletion(api, project.ProjectId, backtest.BacktestId);
+            var renameBacktest = api.BacktestUpdate(project.ProjectId, backtest.BacktestId, backtestName);
+            Assert.IsTrue(renameBacktest.Success);
+            backtestRead = api.BacktestRead(project.ProjectId, backtest.BacktestId);
             Assert.IsTrue(backtestRead.Name == backtestName);
+
+            //Update the note and make sure its been updated:
+            var newNote = DateTime.Now.ToString("u");
+            var noteBacktest = api.BacktestUpdate(project.ProjectId, backtest.BacktestId, backtestNote: newNote);
+            Assert.IsTrue(noteBacktest.Success);
+            backtestRead = api.BacktestRead(project.ProjectId, backtest.BacktestId);
+            Assert.IsTrue(backtestRead.Note == newNote);
 
             // Delete the backtest we just created
             var deleteBacktest = api.BacktestDelete(project.ProjectId, backtest.BacktestId);
             Assert.IsTrue(deleteBacktest.Success);
 
-            
+            //
 
+
+            
             // Test delete the project we just created
             var deleteProject = api.Delete(project.ProjectId);
             Assert.IsTrue(deleteProject.Success);
