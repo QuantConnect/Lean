@@ -83,12 +83,23 @@ namespace QuantConnect.Data.Fundamental
         }
 
         /// <summary>
+        /// Returns true if the field has at least one value for one period
+        /// </summary>
+        public bool HasValues()
+        {
+            return Store.Count > 0;
+        }
+
+        /// <summary>
         /// Sets period values for non existing periods from a previous instance
         /// </summary>
         /// <remarks>Used to fill-forward values from previous dates</remarks>
 		/// <param name="previous">The previous instance</param>
         public void UpdateValues(MultiPeriodField previous)
         {
+            if (previous == null)
+                return;
+
             foreach (var kvp in previous.Store.Where(kvp => !Store.ContainsKey(kvp.Key)))
             {
                 SetPeriodValue(kvp.Key, kvp.Value);
