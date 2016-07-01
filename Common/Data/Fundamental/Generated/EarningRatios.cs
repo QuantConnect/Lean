@@ -37,6 +37,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 13015
 		/// </remarks>
+		[JsonProperty("13015")]
 		public DilutedEPSGrowth DilutedEPSGrowth { get; set; }
 
 		/// <summary>
@@ -47,6 +48,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 13016
 		/// </remarks>
+		[JsonProperty("13016")]
 		public DilutedContEPSGrowth DilutedContEPSGrowth { get; set; }
 
 		/// <summary>
@@ -57,6 +59,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 13017
 		/// </remarks>
+		[JsonProperty("13017")]
 		public DPSGrowth DPSGrowth { get; set; }
 
 		/// <summary>
@@ -66,6 +69,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 13018
 		/// </remarks>
+		[JsonProperty("13018")]
 		public EquityPerShareGrowth EquityPerShareGrowth { get; set; }
 
 		/// <summary>
@@ -74,6 +78,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 13019
 		/// </remarks>
+		[JsonProperty("13019")]
 		public RegressionGrowthofDividends5Years RegressionGrowthofDividends5Years { get; set; }
 
 		/// <summary>

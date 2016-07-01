@@ -20,6 +20,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using Newtonsoft.Json;
 
 namespace QuantConnect.Data.Fundamental
 {
@@ -36,6 +37,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 1001
 		/// </remarks>
+		[JsonProperty("1001")]
 		public string SecuritySymbol { get; set; }
 
 		/// <summary>
@@ -45,6 +47,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 1002
 		/// </remarks>
+		[JsonProperty("1002")]
 		public string ExchangeId { get; set; }
 
 		/// <summary>
@@ -54,6 +57,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 1004
 		/// </remarks>
+		[JsonProperty("1004")]
 		public string CurrencyId { get; set; }
 
 		/// <summary>
@@ -63,6 +67,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 1005
 		/// </remarks>
+		[JsonProperty("1005")]
 		public string Valoren { get; set; }
 
 		/// <summary>
@@ -75,6 +80,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 1006
 		/// </remarks>
+		[JsonProperty("1006")]
 		public string CUSIP { get; set; }
 
 		/// <summary>
@@ -86,6 +92,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 1007
 		/// </remarks>
+		[JsonProperty("1007")]
 		public string ISIN { get; set; }
 
 		/// <summary>
@@ -96,6 +103,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 1008
 		/// </remarks>
+		[JsonProperty("1008")]
 		public string SEDOL { get; set; }
 
 		/// <summary>
@@ -104,6 +112,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 1009
 		/// </remarks>
+		[JsonProperty("1009")]
 		public DateTime IPODate { get; set; }
 
 		/// <summary>
@@ -112,6 +121,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 1010
 		/// </remarks>
+		[JsonProperty("1010")]
 		public bool IsDepositaryReceipt { get; set; }
 
 		/// <summary>
@@ -120,6 +130,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 1011
 		/// </remarks>
+		[JsonProperty("1011")]
 		public decimal DepositaryReceiptRatio { get; set; }
 
 		/// <summary>
@@ -130,6 +141,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 1012
 		/// </remarks>
+		[JsonProperty("1012")]
 		public string SecurityType { get; set; }
 
 		/// <summary>
@@ -139,6 +151,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 1013
 		/// </remarks>
+		[JsonProperty("1013")]
 		public string ShareClassDescription { get; set; }
 
 		/// <summary>
@@ -152,6 +165,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 1014
 		/// </remarks>
+		[JsonProperty("1014")]
 		public string ShareClassStatus { get; set; }
 
 		/// <summary>
@@ -162,6 +176,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 1015
 		/// </remarks>
+		[JsonProperty("1015")]
 		public bool IsPrimaryShare { get; set; }
 
 		/// <summary>
@@ -170,6 +185,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 1016
 		/// </remarks>
+		[JsonProperty("1016")]
 		public bool IsDividendReinvest { get; set; }
 
 		/// <summary>
@@ -178,6 +194,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 1017
 		/// </remarks>
+		[JsonProperty("1017")]
 		public bool IsDirectInvest { get; set; }
 
 		/// <summary>
@@ -186,6 +203,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 1018
 		/// </remarks>
+		[JsonProperty("1018")]
 		public string InvestmentId { get; set; }
 
 		/// <summary>
@@ -195,6 +213,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 1019
 		/// </remarks>
+		[JsonProperty("1019")]
 		public decimal IPOOfferPrice { get; set; }
 
 		/// <summary>
@@ -203,6 +222,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 1020
 		/// </remarks>
+		[JsonProperty("1020")]
 		public DateTime DelistingDate { get; set; }
 
 		/// <summary>
@@ -212,6 +232,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 1021
 		/// </remarks>
+		[JsonProperty("1021")]
 		public string DelistingReason { get; set; }
 
 		/// <summary>
@@ -221,6 +242,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 1022
 		/// </remarks>
+		[JsonProperty("1022")]
 		public string MIC { get; set; }
 
 		/// <summary>
@@ -231,6 +253,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 1023
 		/// </remarks>
+		[JsonProperty("1023")]
 		public string CommonShareSubType { get; set; }
 
 		/// <summary>
@@ -240,6 +263,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 1024
 		/// </remarks>
+		[JsonProperty("1024")]
 		public string IPOOfferPriceRange { get; set; }
 
 		/// <summary>

@@ -36,6 +36,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14000
 		/// </remarks>
+		[JsonProperty("14000")]
 		public decimal PayoutRatio { get; set; }
 
 		/// <summary>
@@ -44,6 +45,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14001
 		/// </remarks>
+		[JsonProperty("14001")]
 		public decimal SustainableGrowthRate { get; set; }
 
 		/// <summary>
@@ -53,6 +55,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14002
 		/// </remarks>
+		[JsonProperty("14002")]
 		public decimal CashReturn { get; set; }
 
 		/// <summary>
@@ -61,6 +64,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14003
 		/// </remarks>
+		[JsonProperty("14003")]
 		public decimal SalesPerShare { get; set; }
 
 		/// <summary>
@@ -69,6 +73,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14004
 		/// </remarks>
+		[JsonProperty("14004")]
 		public decimal BookValuePerShare { get; set; }
 
 		/// <summary>
@@ -77,6 +82,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14005
 		/// </remarks>
+		[JsonProperty("14005")]
 		public decimal CFOPerShare { get; set; }
 
 		/// <summary>
@@ -85,6 +91,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14006
 		/// </remarks>
+		[JsonProperty("14006")]
 		public decimal FCFPerShare { get; set; }
 
 		/// <summary>
@@ -93,6 +100,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14007
 		/// </remarks>
+		[JsonProperty("14007")]
 		public decimal EarningYield { get; set; }
 
 		/// <summary>
@@ -101,6 +109,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14008
 		/// </remarks>
+		[JsonProperty("14008")]
 		public decimal PERatio { get; set; }
 
 		/// <summary>
@@ -109,6 +118,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14009
 		/// </remarks>
+		[JsonProperty("14009")]
 		public decimal SalesYield { get; set; }
 
 		/// <summary>
@@ -117,6 +127,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14010
 		/// </remarks>
+		[JsonProperty("14010")]
 		public decimal PSRatio { get; set; }
 
 		/// <summary>
@@ -125,6 +136,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14011
 		/// </remarks>
+		[JsonProperty("14011")]
 		public decimal BookValueYield { get; set; }
 
 		/// <summary>
@@ -133,6 +145,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14012
 		/// </remarks>
+		[JsonProperty("14012")]
 		public decimal PBRatio { get; set; }
 
 		/// <summary>
@@ -141,6 +154,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14013
 		/// </remarks>
+		[JsonProperty("14013")]
 		public decimal CFYield { get; set; }
 
 		/// <summary>
@@ -149,6 +163,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14014
 		/// </remarks>
+		[JsonProperty("14014")]
 		public decimal PCFRatio { get; set; }
 
 		/// <summary>
@@ -157,6 +172,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14015
 		/// </remarks>
+		[JsonProperty("14015")]
 		public decimal FCFYield { get; set; }
 
 		/// <summary>
@@ -165,6 +181,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14016
 		/// </remarks>
+		[JsonProperty("14016")]
 		public decimal FCFRatio { get; set; }
 
 		/// <summary>
@@ -173,6 +190,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14017
 		/// </remarks>
+		[JsonProperty("14017")]
 		public decimal TrailingDividendYield { get; set; }
 
 		/// <summary>
@@ -181,6 +199,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14018
 		/// </remarks>
+		[JsonProperty("14018")]
 		public decimal ForwardDividendYield { get; set; }
 
 		/// <summary>
@@ -193,6 +212,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14019
 		/// </remarks>
+		[JsonProperty("14019")]
 		public decimal ForwardEarningYield { get; set; }
 
 		/// <summary>
@@ -202,6 +222,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14020
 		/// </remarks>
+		[JsonProperty("14020")]
 		public decimal ForwardPERatio { get; set; }
 
 		/// <summary>
@@ -210,6 +231,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14021
 		/// </remarks>
+		[JsonProperty("14021")]
 		public decimal PEGRatio { get; set; }
 
 		/// <summary>
@@ -224,6 +246,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14022
 		/// </remarks>
+		[JsonProperty("14022")]
 		public decimal PEGPayback { get; set; }
 
 		/// <summary>
@@ -232,6 +255,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14023
 		/// </remarks>
+		[JsonProperty("14023")]
 		public decimal TangibleBookValuePerShare { get; set; }
 
 		/// <summary>
@@ -240,6 +264,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14024
 		/// </remarks>
+		[JsonProperty("14024")]
 		public decimal TangibleBVPerShare3YrAvg { get; set; }
 
 		/// <summary>
@@ -248,6 +273,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14025
 		/// </remarks>
+		[JsonProperty("14025")]
 		public decimal TangibleBVPerShare5YrAvg { get; set; }
 
 		/// <summary>
@@ -256,6 +282,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14026
 		/// </remarks>
+		[JsonProperty("14026")]
 		public decimal ForwardDividend { get; set; }
 
 		/// <summary>
@@ -264,6 +291,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14027
 		/// </remarks>
+		[JsonProperty("14027")]
 		public decimal WorkingCapitalPerShare { get; set; }
 
 		/// <summary>
@@ -272,6 +300,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14028
 		/// </remarks>
+		[JsonProperty("14028")]
 		public decimal WorkingCapitalPerShare3YrAvg { get; set; }
 
 		/// <summary>
@@ -280,6 +309,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14029
 		/// </remarks>
+		[JsonProperty("14029")]
 		public decimal WorkingCapitalPerShare5YrAvg { get; set; }
 
 		/// <summary>
@@ -288,6 +318,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14030
 		/// </remarks>
+		[JsonProperty("14030")]
 		public decimal EVToEBITDA { get; set; }
 
 		/// <summary>
@@ -296,6 +327,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14031
 		/// </remarks>
+		[JsonProperty("14031")]
 		public decimal BuyBackYield { get; set; }
 
 		/// <summary>
@@ -304,6 +336,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14032
 		/// </remarks>
+		[JsonProperty("14032")]
 		public decimal TotalYield { get; set; }
 
 		/// <summary>
@@ -312,6 +345,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14033
 		/// </remarks>
+		[JsonProperty("14033")]
 		public decimal RatioPE5YearAverage { get; set; }
 
 		/// <summary>
@@ -320,6 +354,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14034
 		/// </remarks>
+		[JsonProperty("14034")]
 		public decimal PriceChange1M { get; set; }
 
 		/// <summary>
@@ -329,6 +364,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14035
 		/// </remarks>
+		[JsonProperty("14035")]
 		public decimal NormalizedPERatio { get; set; }
 
 		/// <summary>
@@ -337,6 +373,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14036
 		/// </remarks>
+		[JsonProperty("14036")]
 		public decimal PricetoEBITDA { get; set; }
 
 		/// <summary>
@@ -345,6 +382,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14037
 		/// </remarks>
+		[JsonProperty("14037")]
 		public decimal DivYield5Year { get; set; }
 
 		/// <summary>

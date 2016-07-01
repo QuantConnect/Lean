@@ -20,6 +20,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using Newtonsoft.Json;
 
 namespace QuantConnect.Data.Fundamental
 {
@@ -34,6 +35,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20007
 		/// </remarks>
+		[JsonProperty("20007")]
 		public AmortizationIncomeStatement Amortization { get; set; }
 
 		/// <summary>
@@ -43,6 +45,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20008
 		/// </remarks>
+		[JsonProperty("20008")]
 		public SecuritiesAmortizationIncomeStatement SecuritiesAmortization { get; set; }
 
 		/// <summary>
@@ -54,6 +57,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20013
 		/// </remarks>
+		[JsonProperty("20013")]
 		public CostOfRevenueIncomeStatement CostOfRevenue { get; set; }
 
 		/// <summary>
@@ -64,6 +68,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20016
 		/// </remarks>
+		[JsonProperty("20016")]
 		public CumulativeEffectOfAccountingChangeIncomeStatement CumulativeEffectOfAccountingChange { get; set; }
 
 		/// <summary>
@@ -72,6 +77,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20017
 		/// </remarks>
+		[JsonProperty("20017")]
 		public DepletionIncomeStatement Depletion { get; set; }
 
 		/// <summary>
@@ -80,6 +86,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20018
 		/// </remarks>
+		[JsonProperty("20018")]
 		public DepreciationIncomeStatement Depreciation { get; set; }
 
 		/// <summary>
@@ -90,6 +97,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20019
 		/// </remarks>
+		[JsonProperty("20019")]
 		public DepreciationAndAmortizationIncomeStatement DepreciationAndAmortization { get; set; }
 
 		/// <summary>
@@ -99,6 +107,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20020
 		/// </remarks>
+		[JsonProperty("20020")]
 		public DepreciationAmortizationDepletionIncomeStatement DepreciationAmortizationDepletion { get; set; }
 
 		/// <summary>
@@ -115,6 +124,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20022
 		/// </remarks>
+		[JsonProperty("20022")]
 		public NetIncomeDiscontinuousOperationsIncomeStatement NetIncomeDiscontinuousOperations { get; set; }
 
 		/// <summary>
@@ -124,6 +134,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20028
 		/// </remarks>
+		[JsonProperty("20028")]
 		public ExciseTaxesIncomeStatement ExciseTaxes { get; set; }
 
 		/// <summary>
@@ -134,6 +145,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20030
 		/// </remarks>
+		[JsonProperty("20030")]
 		public NetIncomeExtraordinaryIncomeStatement NetIncomeExtraordinary { get; set; }
 
 		/// <summary>
@@ -142,6 +154,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20031
 		/// </remarks>
+		[JsonProperty("20031")]
 		public FeeRevenueAndOtherIncomeIncomeStatement FeeRevenueAndOtherIncome { get; set; }
 
 		/// <summary>
@@ -150,6 +163,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20045
 		/// </remarks>
+		[JsonProperty("20045")]
 		public GeneralAndAdministrativeExpenseIncomeStatement GeneralAndAdministrativeExpense { get; set; }
 
 		/// <summary>
@@ -160,6 +174,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20046
 		/// </remarks>
+		[JsonProperty("20046")]
 		public GrossProfitIncomeStatement GrossProfit { get; set; }
 
 		/// <summary>
@@ -168,6 +183,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20057
 		/// </remarks>
+		[JsonProperty("20057")]
 		public InterestExpenseIncomeStatement InterestExpense { get; set; }
 
 		/// <summary>
@@ -177,6 +193,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20064
 		/// </remarks>
+		[JsonProperty("20064")]
 		public InterestExpenseNonOperatingIncomeStatement InterestExpenseNonOperating { get; set; }
 
 		/// <summary>
@@ -185,6 +202,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20065
 		/// </remarks>
+		[JsonProperty("20065")]
 		public InterestExpenseOperatingIncomeStatement InterestExpenseOperating { get; set; }
 
 		/// <summary>
@@ -194,6 +212,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20066
 		/// </remarks>
+		[JsonProperty("20066")]
 		public InterestIncomeAfterProvisionForLoanLossIncomeStatement InterestIncomeAfterProvisionForLoanLoss { get; set; }
 
 		/// <summary>
@@ -202,6 +221,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20075
 		/// </remarks>
+		[JsonProperty("20075")]
 		public InterestIncomeNonOperatingIncomeStatement InterestIncomeNonOperating { get; set; }
 
 		/// <summary>
@@ -210,6 +230,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20076
 		/// </remarks>
+		[JsonProperty("20076")]
 		public InterestIncomeOperatingIncomeStatement InterestIncomeOperating { get; set; }
 
 		/// <summary>
@@ -218,6 +239,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20077
 		/// </remarks>
+		[JsonProperty("20077")]
 		public NetNonOperatingInterestIncomeExpenseIncomeStatement NetNonOperatingInterestIncomeExpense { get; set; }
 
 		/// <summary>
@@ -226,6 +248,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20078
 		/// </remarks>
+		[JsonProperty("20078")]
 		public NetOperatingInterestIncomeExpenseIncomeStatement NetOperatingInterestIncomeExpense { get; set; }
 
 		/// <summary>
@@ -237,6 +260,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20084
 		/// </remarks>
+		[JsonProperty("20084")]
 		public LossAdjustmentExpenseIncomeStatement LossAdjustmentExpense { get; set; }
 
 		/// <summary>
@@ -249,6 +273,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20087
 		/// </remarks>
+		[JsonProperty("20087")]
 		public MinorityInterestsIncomeStatement MinorityInterests { get; set; }
 
 		/// <summary>
@@ -258,6 +283,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20091
 		/// </remarks>
+		[JsonProperty("20091")]
 		public NetIncomeIncomeStatement NetIncome { get; set; }
 
 		/// <summary>
@@ -266,6 +292,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20093
 		/// </remarks>
+		[JsonProperty("20093")]
 		public NetIncomeCommonStockholdersIncomeStatement NetIncomeCommonStockholders { get; set; }
 
 		/// <summary>
@@ -276,6 +303,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20094
 		/// </remarks>
+		[JsonProperty("20094")]
 		public NetIncomeContinuousOperationsIncomeStatement NetIncomeContinuousOperations { get; set; }
 
 		/// <summary>
@@ -285,6 +313,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20095
 		/// </remarks>
+		[JsonProperty("20095")]
 		public NetInterestIncomeIncomeStatement NetInterestIncome { get; set; }
 
 		/// <summary>
@@ -295,6 +324,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20096
 		/// </remarks>
+		[JsonProperty("20096")]
 		public NetInvestmentIncomeIncomeStatement NetInvestmentIncome { get; set; }
 
 		/// <summary>
@@ -305,6 +335,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20100
 		/// </remarks>
+		[JsonProperty("20100")]
 		public TotalRevenueIncomeStatement TotalRevenue { get; set; }
 
 		/// <summary>
@@ -315,6 +346,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20105
 		/// </remarks>
+		[JsonProperty("20105")]
 		public NonInterestExpenseIncomeStatement NonInterestExpense { get; set; }
 
 		/// <summary>
@@ -325,6 +357,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20106
 		/// </remarks>
+		[JsonProperty("20106")]
 		public NonInterestIncomeIncomeStatement NonInterestIncome { get; set; }
 
 		/// <summary>
@@ -334,6 +367,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20108
 		/// </remarks>
+		[JsonProperty("20108")]
 		public OperatingExpenseIncomeStatement OperatingExpense { get; set; }
 
 		/// <summary>
@@ -343,6 +377,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20109
 		/// </remarks>
+		[JsonProperty("20109")]
 		public OperatingIncomeIncomeStatement OperatingIncome { get; set; }
 
 		/// <summary>
@@ -352,6 +387,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20112
 		/// </remarks>
+		[JsonProperty("20112")]
 		public OperatingRevenueIncomeStatement OperatingRevenue { get; set; }
 
 		/// <summary>
@@ -360,6 +396,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20117
 		/// </remarks>
+		[JsonProperty("20117")]
 		public OtherIncomeExpenseIncomeStatement OtherIncomeExpense { get; set; }
 
 		/// <summary>
@@ -369,6 +406,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20125
 		/// </remarks>
+		[JsonProperty("20125")]
 		public PolicyAcquisitionExpenseIncomeStatement PolicyAcquisitionExpense { get; set; }
 
 		/// <summary>
@@ -379,6 +417,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20129
 		/// </remarks>
+		[JsonProperty("20129")]
 		public NetPolicyholderBenefitsAndClaimsIncomeStatement NetPolicyholderBenefitsAndClaims { get; set; }
 
 		/// <summary>
@@ -389,6 +428,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20134
 		/// </remarks>
+		[JsonProperty("20134")]
 		public PreferredStockDividendsIncomeStatement PreferredStockDividends { get; set; }
 
 		/// <summary>
@@ -398,6 +438,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20135
 		/// </remarks>
+		[JsonProperty("20135")]
 		public TotalPremiumsEarnedIncomeStatement TotalPremiumsEarned { get; set; }
 
 		/// <summary>
@@ -406,6 +447,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20136
 		/// </remarks>
+		[JsonProperty("20136")]
 		public PretaxIncomeIncomeStatement PretaxIncome { get; set; }
 
 		/// <summary>
@@ -414,6 +456,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20145
 		/// </remarks>
+		[JsonProperty("20145")]
 		public TaxProvisionIncomeStatement TaxProvision { get; set; }
 
 		/// <summary>
@@ -425,6 +468,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20146
 		/// </remarks>
+		[JsonProperty("20146")]
 		public CreditLossesProvisionIncomeStatement CreditLossesProvision { get; set; }
 
 		/// <summary>
@@ -433,6 +477,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20151
 		/// </remarks>
+		[JsonProperty("20151")]
 		public ResearchAndDevelopmentIncomeStatement ResearchAndDevelopment { get; set; }
 
 		/// <summary>
@@ -441,6 +486,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20158
 		/// </remarks>
+		[JsonProperty("20158")]
 		public SellingAndMarketingExpenseIncomeStatement SellingAndMarketingExpense { get; set; }
 
 		/// <summary>
@@ -453,6 +499,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20159
 		/// </remarks>
+		[JsonProperty("20159")]
 		public SellingGeneralAndAdministrationIncomeStatement SellingGeneralAndAdministration { get; set; }
 
 		/// <summary>
@@ -461,6 +508,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20162
 		/// </remarks>
+		[JsonProperty("20162")]
 		public SpecialIncomeChargesIncomeStatement SpecialIncomeCharges { get; set; }
 
 		/// <summary>
@@ -470,6 +518,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20164
 		/// </remarks>
+		[JsonProperty("20164")]
 		public TotalExpensesIncomeStatement TotalExpenses { get; set; }
 
 		/// <summary>
@@ -481,6 +530,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20176
 		/// </remarks>
+		[JsonProperty("20176")]
 		public AmortizationOfDeferredAcquisitionCostsIncomeStatement AmortizationOfDeferredAcquisitionCosts { get; set; }
 
 		/// <summary>
@@ -489,6 +539,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20177
 		/// </remarks>
+		[JsonProperty("20177")]
 		public InterestIncomeIncomeStatement InterestIncome { get; set; }
 
 		/// <summary>
@@ -497,6 +548,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20186
 		/// </remarks>
+		[JsonProperty("20186")]
 		public PropertyLiabilityInsuranceClaimsIncomeStatement PropertyLiabilityInsuranceClaims { get; set; }
 
 		/// <summary>
@@ -505,6 +557,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20189
 		/// </remarks>
+		[JsonProperty("20189")]
 		public EBITIncomeStatement EBIT { get; set; }
 
 		/// <summary>
@@ -513,6 +566,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20190
 		/// </remarks>
+		[JsonProperty("20190")]
 		public EBITDAIncomeStatement EBITDA { get; set; }
 
 		/// <summary>
@@ -523,6 +577,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20191
 		/// </remarks>
+		[JsonProperty("20191")]
 		public NetIncomeContinuousOperationsNetMinorityInterestIncomeStatement NetIncomeContinuousOperationsNetMinorityInterest { get; set; }
 
 		/// <summary>
@@ -532,6 +587,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20192
 		/// </remarks>
+		[JsonProperty("20192")]
 		public AccretionOnPreferredStockIncomeStatement AccretionOnPreferredStock { get; set; }
 
 		/// <summary>
@@ -541,6 +597,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20193
 		/// </remarks>
+		[JsonProperty("20193")]
 		public AccruedPreferredStockDividendsIncomeStatement AccruedPreferredStockDividends { get; set; }
 
 		/// <summary>
@@ -549,6 +606,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20194
 		/// </remarks>
+		[JsonProperty("20194")]
 		public AcquiredInProcessRnDIncomeStatement AcquiredInProcessRnD { get; set; }
 
 		/// <summary>
@@ -558,6 +616,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20195
 		/// </remarks>
+		[JsonProperty("20195")]
 		public AcquisitionExpenseIncomeStatement AcquisitionExpense { get; set; }
 
 		/// <summary>
@@ -567,6 +626,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20196
 		/// </remarks>
+		[JsonProperty("20196")]
 		public AdministrativeExpenseIncomeStatement AdministrativeExpense { get; set; }
 
 		/// <summary>
@@ -575,6 +635,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20197
 		/// </remarks>
+		[JsonProperty("20197")]
 		public AgencyFeesIncomeStatement AgencyFees { get; set; }
 
 		/// <summary>
@@ -584,6 +645,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20198
 		/// </remarks>
+		[JsonProperty("20198")]
 		public AgencyFeesAndCommissionsIncomeStatement AgencyFeesAndCommissions { get; set; }
 
 		/// <summary>
@@ -594,6 +656,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20199
 		/// </remarks>
+		[JsonProperty("20199")]
 		public AllowancesForConstructionIncomeStatement AllowancesForConstruction { get; set; }
 
 		/// <summary>
@@ -604,6 +667,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20200
 		/// </remarks>
+		[JsonProperty("20200")]
 		public CapitalnBusinessTaxesIncomeStatement CapitalnBusinessTaxes { get; set; }
 
 		/// <summary>
@@ -613,6 +677,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20201
 		/// </remarks>
+		[JsonProperty("20201")]
 		public CededPremiumsIncomeStatement CededPremiums { get; set; }
 
 		/// <summary>
@@ -621,6 +686,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20202
 		/// </remarks>
+		[JsonProperty("20202")]
 		public CommissionExpensesIncomeStatement CommissionExpenses { get; set; }
 
 		/// <summary>
@@ -630,6 +696,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20203
 		/// </remarks>
+		[JsonProperty("20203")]
 		public CommissionRevenueIncomeStatement CommissionRevenue { get; set; }
 
 		/// <summary>
@@ -639,6 +706,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20204
 		/// </remarks>
+		[JsonProperty("20204")]
 		public CreditCardIncomeStatement CreditCard { get; set; }
 
 		/// <summary>
@@ -647,6 +715,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20205
 		/// </remarks>
+		[JsonProperty("20205")]
 		public DevelopmentExpenseIncomeStatement DevelopmentExpense { get; set; }
 
 		/// <summary>
@@ -655,6 +724,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20206
 		/// </remarks>
+		[JsonProperty("20206")]
 		public DividendIncomeIncomeStatement DividendIncome { get; set; }
 
 		/// <summary>
@@ -664,6 +734,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20207
 		/// </remarks>
+		[JsonProperty("20207")]
 		public EarningLossOfEquityInvestmentsIncomeStatement EarningLossOfEquityInvestments { get; set; }
 
 		/// <summary>
@@ -674,6 +745,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20208
 		/// </remarks>
+		[JsonProperty("20208")]
 		public EarningsFromEquityInterestIncomeStatement EarningsFromEquityInterest { get; set; }
 
 		/// <summary>
@@ -684,6 +756,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20209
 		/// </remarks>
+		[JsonProperty("20209")]
 		public ElectricRevenueIncomeStatement ElectricRevenue { get; set; }
 
 		/// <summary>
@@ -694,6 +767,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20210
 		/// </remarks>
+		[JsonProperty("20210")]
 		public EquipmentIncomeStatement Equipment { get; set; }
 
 		/// <summary>
@@ -707,6 +781,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20211
 		/// </remarks>
+		[JsonProperty("20211")]
 		public ExplorationDevelopmentAndMineralPropertyLeaseExpensesIncomeStatement ExplorationDevelopmentAndMineralPropertyLeaseExpenses { get; set; }
 
 		/// <summary>
@@ -715,6 +790,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20212
 		/// </remarks>
+		[JsonProperty("20212")]
 		public FeesIncomeStatement Fees { get; set; }
 
 		/// <summary>
@@ -725,6 +801,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20213
 		/// </remarks>
+		[JsonProperty("20213")]
 		public FeesAndCommissionsIncomeStatement FeesAndCommissions { get; set; }
 
 		/// <summary>
@@ -734,6 +811,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20214
 		/// </remarks>
+		[JsonProperty("20214")]
 		public ForeignExchangeTradingGainsIncomeStatement ForeignExchangeTradingGains { get; set; }
 
 		/// <summary>
@@ -743,6 +821,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20215
 		/// </remarks>
+		[JsonProperty("20215")]
 		public FuelIncomeStatement Fuel { get; set; }
 
 		/// <summary>
@@ -751,6 +830,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20216
 		/// </remarks>
+		[JsonProperty("20216")]
 		public FuelAndPurchasePowerIncomeStatement FuelAndPurchasePower { get; set; }
 
 		/// <summary>
@@ -760,6 +840,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20217
 		/// </remarks>
+		[JsonProperty("20217")]
 		public GainOnSaleOfBusinessIncomeStatement GainOnSaleOfBusiness { get; set; }
 
 		/// <summary>
@@ -769,6 +850,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20218
 		/// </remarks>
+		[JsonProperty("20218")]
 		public GainOnSaleOfPPEIncomeStatement GainOnSaleOfPPE { get; set; }
 
 		/// <summary>
@@ -777,6 +859,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20219
 		/// </remarks>
+		[JsonProperty("20219")]
 		public GainOnSaleOfSecurityIncomeStatement GainOnSaleOfSecurity { get; set; }
 
 		/// <summary>
@@ -786,6 +869,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20220
 		/// </remarks>
+		[JsonProperty("20220")]
 		public GainsLossOnDisposalOfDiscontinuedOperationsIncomeStatement GainsLossOnDisposalOfDiscontinuedOperations { get; set; }
 
 		/// <summary>
@@ -796,6 +880,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20221
 		/// </remarks>
+		[JsonProperty("20221")]
 		public GasRevenueIncomeStatement GasRevenue { get; set; }
 
 		/// <summary>
@@ -805,6 +890,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20222
 		/// </remarks>
+		[JsonProperty("20222")]
 		public GeneralAccountAssetsIncomeStatement GeneralAccountAssets { get; set; }
 
 		/// <summary>
@@ -813,6 +899,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20223
 		/// </remarks>
+		[JsonProperty("20223")]
 		public GeneralExpenseIncomeStatement GeneralExpense { get; set; }
 
 		/// <summary>
@@ -822,6 +909,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20224
 		/// </remarks>
+		[JsonProperty("20224")]
 		public GrossPremiumsWrittenIncomeStatement GrossPremiumsWritten { get; set; }
 
 		/// <summary>
@@ -835,6 +923,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20225
 		/// </remarks>
+		[JsonProperty("20225")]
 		public ImpairmentOfCapitalAssetsIncomeStatement ImpairmentOfCapitalAssets { get; set; }
 
 		/// <summary>
@@ -848,6 +937,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20226
 		/// </remarks>
+		[JsonProperty("20226")]
 		public OtherImpairmentOfCapitalAssetsIncomeStatement OtherImpairmentOfCapitalAssets { get; set; }
 
 		/// <summary>
@@ -858,6 +948,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20227
 		/// </remarks>
+		[JsonProperty("20227")]
 		public IncomeFromEquityMethodInvestmentsIncomeStatement IncomeFromEquityMethodInvestments { get; set; }
 
 		/// <summary>
@@ -867,6 +958,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20228
 		/// </remarks>
+		[JsonProperty("20228")]
 		public AcquiredInProcessRnDIncomeIncomeStatement AcquiredInProcessRnDIncome { get; set; }
 
 		/// <summary>
@@ -875,6 +967,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20229
 		/// </remarks>
+		[JsonProperty("20229")]
 		public RestructringAndMnAIncomeIncomeStatement RestructringAndMnAIncome { get; set; }
 
 		/// <summary>
@@ -886,6 +979,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20230
 		/// </remarks>
+		[JsonProperty("20230")]
 		public IncreaseDecreaseInNetUnearnedPremiumReservesIncomeStatement IncreaseDecreaseInNetUnearnedPremiumReserves { get; set; }
 
 		/// <summary>
@@ -896,6 +990,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20231
 		/// </remarks>
+		[JsonProperty("20231")]
 		public InsuranceAndClaimsIncomeStatement InsuranceAndClaims { get; set; }
 
 		/// <summary>
@@ -904,6 +999,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20232
 		/// </remarks>
+		[JsonProperty("20232")]
 		public InsuranceAndPremiumsIncomeStatement InsuranceAndPremiums { get; set; }
 
 		/// <summary>
@@ -913,6 +1009,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20233
 		/// </remarks>
+		[JsonProperty("20233")]
 		public InterestIncomeFromInterestBearingDepositsIncomeStatement InterestIncomeFromInterestBearingDeposits { get; set; }
 
 		/// <summary>
@@ -921,6 +1018,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20234
 		/// </remarks>
+		[JsonProperty("20234")]
 		public InterestExpenseForCapitalizedLeaseObligationsIncomeStatement InterestExpenseForCapitalizedLeaseObligations { get; set; }
 
 		/// <summary>
@@ -930,6 +1028,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20235
 		/// </remarks>
+		[JsonProperty("20235")]
 		public InterestExpenseForDepositIncomeStatement InterestExpenseForDeposit { get; set; }
 
 		/// <summary>
@@ -939,6 +1038,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20236
 		/// </remarks>
+		[JsonProperty("20236")]
 		public InterestExpenseForFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResellIncomeStatement InterestExpenseForFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell { get; set; }
 
 		/// <summary>
@@ -948,6 +1048,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20237
 		/// </remarks>
+		[JsonProperty("20237")]
 		public InterestExpenseForLongTermDebtIncomeStatement InterestExpenseForLongTermDebt { get; set; }
 
 		/// <summary>
@@ -957,6 +1058,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20238
 		/// </remarks>
+		[JsonProperty("20238")]
 		public InterestExpenseForLongTermDebtAndCapitalSecuritiesIncomeStatement InterestExpenseForLongTermDebtAndCapitalSecurities { get; set; }
 
 		/// <summary>
@@ -966,6 +1068,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20239
 		/// </remarks>
+		[JsonProperty("20239")]
 		public InterestExpenseForShortTermDebtIncomeStatement InterestExpenseForShortTermDebt { get; set; }
 
 		/// <summary>
@@ -974,6 +1077,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20240
 		/// </remarks>
+		[JsonProperty("20240")]
 		public InterestIncomeFromDepositsIncomeStatement InterestIncomeFromDeposits { get; set; }
 
 		/// <summary>
@@ -986,6 +1090,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20241
 		/// </remarks>
+		[JsonProperty("20241")]
 		public InterestIncomeFromFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResellIncomeStatement InterestIncomeFromFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell { get; set; }
 
 		/// <summary>
@@ -995,6 +1100,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20242
 		/// </remarks>
+		[JsonProperty("20242")]
 		public InterestIncomeFromInvestmentSecuritiesIncomeStatement InterestIncomeFromInvestmentSecurities { get; set; }
 
 		/// <summary>
@@ -1003,6 +1109,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20243
 		/// </remarks>
+		[JsonProperty("20243")]
 		public InterestIncomeFromLeasesIncomeStatement InterestIncomeFromLeases { get; set; }
 
 		/// <summary>
@@ -1013,6 +1120,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20244
 		/// </remarks>
+		[JsonProperty("20244")]
 		public InterestIncomeFromLoansIncomeStatement InterestIncomeFromLoans { get; set; }
 
 		/// <summary>
@@ -1021,6 +1129,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20245
 		/// </remarks>
+		[JsonProperty("20245")]
 		public InterestIncomeFromLoansAndLeaseIncomeStatement InterestIncomeFromLoansAndLease { get; set; }
 
 		/// <summary>
@@ -1032,6 +1141,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20246
 		/// </remarks>
+		[JsonProperty("20246")]
 		public InterestIncomeFromSecuritiesIncomeStatement InterestIncomeFromSecurities { get; set; }
 
 		/// <summary>
@@ -1040,6 +1150,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20247
 		/// </remarks>
+		[JsonProperty("20247")]
 		public InterestIncomeFromTradingAccountSecuritiesIncomeStatement InterestIncomeFromTradingAccountSecurities { get; set; }
 
 		/// <summary>
@@ -1051,6 +1162,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20248
 		/// </remarks>
+		[JsonProperty("20248")]
 		public InvestmentBankingProfitIncomeStatement InvestmentBankingProfit { get; set; }
 
 		/// <summary>
@@ -1059,6 +1171,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20249
 		/// </remarks>
+		[JsonProperty("20249")]
 		public LifeAnnuityPremiumsIncomeStatement LifeAnnuityPremiums { get; set; }
 
 		/// <summary>
@@ -1067,6 +1180,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20250
 		/// </remarks>
+		[JsonProperty("20250")]
 		public LoansHeldForResellIncomeStatement LoansHeldForResell { get; set; }
 
 		/// <summary>
@@ -1076,6 +1190,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20251
 		/// </remarks>
+		[JsonProperty("20251")]
 		public LossAndLossAdjustmentExpectedIncurredIncomeStatement LossAndLossAdjustmentExpectedIncurred { get; set; }
 
 		/// <summary>
@@ -1085,6 +1200,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20252
 		/// </remarks>
+		[JsonProperty("20252")]
 		public MaintenanceAndRepairsIncomeStatement MaintenanceAndRepairs { get; set; }
 
 		/// <summary>
@@ -1093,6 +1209,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20253
 		/// </remarks>
+		[JsonProperty("20253")]
 		public MarketingExpenseIncomeStatement MarketingExpense { get; set; }
 
 		/// <summary>
@@ -1101,6 +1218,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20254
 		/// </remarks>
+		[JsonProperty("20254")]
 		public InterestIncomeFromOtherMoneyMarketInvestmentsIncomeStatement InterestIncomeFromOtherMoneyMarketInvestments { get; set; }
 
 		/// <summary>
@@ -1110,6 +1228,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20255
 		/// </remarks>
+		[JsonProperty("20255")]
 		public NetForeignExchangeGainLossIncomeStatement NetForeignExchangeGainLoss { get; set; }
 
 		/// <summary>
@@ -1119,6 +1238,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20256
 		/// </remarks>
+		[JsonProperty("20256")]
 		public NetOccupancyExpenseIncomeStatement NetOccupancyExpense { get; set; }
 
 		/// <summary>
@@ -1127,6 +1247,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20257
 		/// </remarks>
+		[JsonProperty("20257")]
 		public NetPremiumsWrittenIncomeStatement NetPremiumsWritten { get; set; }
 
 		/// <summary>
@@ -1136,6 +1257,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20258
 		/// </remarks>
+		[JsonProperty("20258")]
 		public NetRealizedGainLossOnInvestmentsIncomeStatement NetRealizedGainLossOnInvestments { get; set; }
 
 		/// <summary>
@@ -1144,6 +1266,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20259
 		/// </remarks>
+		[JsonProperty("20259")]
 		public NonRecurringOperationExpenseIncomeStatement NonRecurringOperationExpense { get; set; }
 
 		/// <summary>
@@ -1152,6 +1275,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20260
 		/// </remarks>
+		[JsonProperty("20260")]
 		public OccupancyAndEquipmentIncomeStatement OccupancyAndEquipment { get; set; }
 
 		/// <summary>
@@ -1161,6 +1285,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20261
 		/// </remarks>
+		[JsonProperty("20261")]
 		public OperatingTaxesnLicensesIncomeStatement OperatingTaxesnLicenses { get; set; }
 
 		/// <summary>
@@ -1171,6 +1296,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20262
 		/// </remarks>
+		[JsonProperty("20262")]
 		public OperationAndMaintenanceIncomeStatement OperationAndMaintenance { get; set; }
 
 		/// <summary>
@@ -1179,6 +1305,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20263
 		/// </remarks>
+		[JsonProperty("20263")]
 		public OtherCustomerServicesIncomeStatement OtherCustomerServices { get; set; }
 
 		/// <summary>
@@ -1187,6 +1314,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20264
 		/// </remarks>
+		[JsonProperty("20264")]
 		public OtherGainLossFromDispositionOfDiscontinuedOperationsIncomeStatement OtherGainLossFromDispositionOfDiscontinuedOperations { get; set; }
 
 		/// <summary>
@@ -1195,6 +1323,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20265
 		/// </remarks>
+		[JsonProperty("20265")]
 		public OtherInterestExpenseIncomeStatement OtherInterestExpense { get; set; }
 
 		/// <summary>
@@ -1203,6 +1332,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20266
 		/// </remarks>
+		[JsonProperty("20266")]
 		public OtherInterestIncomeIncomeStatement OtherInterestIncome { get; set; }
 
 		/// <summary>
@@ -1211,6 +1341,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20267
 		/// </remarks>
+		[JsonProperty("20267")]
 		public OtherNonInterestExpenseIncomeStatement OtherNonInterestExpense { get; set; }
 
 		/// <summary>
@@ -1221,6 +1352,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20268
 		/// </remarks>
+		[JsonProperty("20268")]
 		public OtherOperatingRevenueIncomeStatement OtherOperatingRevenue { get; set; }
 
 		/// <summary>
@@ -1229,6 +1361,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20269
 		/// </remarks>
+		[JsonProperty("20269")]
 		public OtherSpecialChargesIncomeStatement OtherSpecialCharges { get; set; }
 
 		/// <summary>
@@ -1237,6 +1370,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20270
 		/// </remarks>
+		[JsonProperty("20270")]
 		public MiscOtherSpecialChargesIncomeStatement MiscOtherSpecialCharges { get; set; }
 
 		/// <summary>
@@ -1245,6 +1379,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20271
 		/// </remarks>
+		[JsonProperty("20271")]
 		public OtherTaxesIncomeStatement OtherTaxes { get; set; }
 
 		/// <summary>
@@ -1253,6 +1388,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20272
 		/// </remarks>
+		[JsonProperty("20272")]
 		public PolicyFeesIncomeStatement PolicyFees { get; set; }
 
 		/// <summary>
@@ -1262,6 +1398,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20273
 		/// </remarks>
+		[JsonProperty("20273")]
 		public PolicyholderBenefitsCededIncomeStatement PolicyholderBenefitsCeded { get; set; }
 
 		/// <summary>
@@ -1271,6 +1408,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20274
 		/// </remarks>
+		[JsonProperty("20274")]
 		public PolicyholderBenefitsGrossIncomeStatement PolicyholderBenefitsGross { get; set; }
 
 		/// <summary>
@@ -1281,6 +1419,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20275
 		/// </remarks>
+		[JsonProperty("20275")]
 		public PolicyholderDividendsIncomeStatement PolicyholderDividends { get; set; }
 
 		/// <summary>
@@ -1290,6 +1429,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20276
 		/// </remarks>
+		[JsonProperty("20276")]
 		public PolicyholderInterestIncomeStatement PolicyholderInterest { get; set; }
 
 		/// <summary>
@@ -1299,6 +1439,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20277
 		/// </remarks>
+		[JsonProperty("20277")]
 		public PolicyholderAndReinsurerAccountsIncomeStatement PolicyholderAndReinsurerAccounts { get; set; }
 
 		/// <summary>
@@ -1308,6 +1449,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20278
 		/// </remarks>
+		[JsonProperty("20278")]
 		public TrustPreferredSecuritiesIncomeStatement TrustPreferredSecurities { get; set; }
 
 		/// <summary>
@@ -1317,6 +1459,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20279
 		/// </remarks>
+		[JsonProperty("20279")]
 		public PrincipleTransactionRevenueIncomeStatement PrincipleTransactionRevenue { get; set; }
 
 		/// <summary>
@@ -1326,6 +1469,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20280
 		/// </remarks>
+		[JsonProperty("20280")]
 		public ProfessionalExpenseAndContractServicesExpenseIncomeStatement ProfessionalExpenseAndContractServicesExpense { get; set; }
 
 		/// <summary>
@@ -1335,6 +1479,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20281
 		/// </remarks>
+		[JsonProperty("20281")]
 		public PromotionAndAdvertisingIncomeStatement PromotionAndAdvertising { get; set; }
 
 		/// <summary>
@@ -1344,6 +1489,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20282
 		/// </remarks>
+		[JsonProperty("20282")]
 		public PropertyCasualtyPremiumsIncomeStatement PropertyCasualtyPremiums { get; set; }
 
 		/// <summary>
@@ -1355,6 +1501,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20283
 		/// </remarks>
+		[JsonProperty("20283")]
 		public ProvisionForDoubtfulAccountsIncomeStatement ProvisionForDoubtfulAccounts { get; set; }
 
 		/// <summary>
@@ -1363,6 +1510,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20284
 		/// </remarks>
+		[JsonProperty("20284")]
 		public ProvisionForGainLossOnDisposalIncomeStatement ProvisionForGainLossOnDisposal { get; set; }
 
 		/// <summary>
@@ -1372,6 +1520,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20285
 		/// </remarks>
+		[JsonProperty("20285")]
 		public PurchasedTransportationServicesIncomeStatement PurchasedTransportationServices { get; set; }
 
 		/// <summary>
@@ -1381,6 +1530,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20286
 		/// </remarks>
+		[JsonProperty("20286")]
 		public RealizedCapitalGainIncomeStatement RealizedCapitalGain { get; set; }
 
 		/// <summary>
@@ -1390,6 +1540,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20287
 		/// </remarks>
+		[JsonProperty("20287")]
 		public RentAndLandingFeesIncomeStatement RentAndLandingFees { get; set; }
 
 		/// <summary>
@@ -1400,6 +1551,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20288
 		/// </remarks>
+		[JsonProperty("20288")]
 		public ResearchExpenseIncomeStatement ResearchExpense { get; set; }
 
 		/// <summary>
@@ -1411,6 +1563,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20289
 		/// </remarks>
+		[JsonProperty("20289")]
 		public RestructuringAndMergernAcquisitionIncomeStatement RestructuringAndMergernAcquisition { get; set; }
 
 		/// <summary>
@@ -1419,6 +1572,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20290
 		/// </remarks>
+		[JsonProperty("20290")]
 		public RevenuesCargoIncomeStatement RevenuesCargo { get; set; }
 
 		/// <summary>
@@ -1428,6 +1582,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20291
 		/// </remarks>
+		[JsonProperty("20291")]
 		public RevenuesPassengerIncomeStatement RevenuesPassenger { get; set; }
 
 		/// <summary>
@@ -1436,6 +1591,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20292
 		/// </remarks>
+		[JsonProperty("20292")]
 		public SalariesAndWagesIncomeStatement SalariesAndWages { get; set; }
 
 		/// <summary>
@@ -1444,6 +1600,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20293
 		/// </remarks>
+		[JsonProperty("20293")]
 		public SecuritiesActivitiesIncomeStatement SecuritiesActivities { get; set; }
 
 		/// <summary>
@@ -1452,6 +1609,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20294
 		/// </remarks>
+		[JsonProperty("20294")]
 		public SellingExpenseIncomeStatement SellingExpense { get; set; }
 
 		/// <summary>
@@ -1463,6 +1621,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20295
 		/// </remarks>
+		[JsonProperty("20295")]
 		public ServiceChargeOnDepositorAccountsIncomeStatement ServiceChargeOnDepositorAccounts { get; set; }
 
 		/// <summary>
@@ -1472,6 +1631,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20296
 		/// </remarks>
+		[JsonProperty("20296")]
 		public ShareInNetIncomeOfUnconsolidatedEntitiesIncomeStatement ShareInNetIncomeOfUnconsolidatedEntities { get; set; }
 
 		/// <summary>
@@ -1483,6 +1643,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20297
 		/// </remarks>
+		[JsonProperty("20297")]
 		public TimeDepositsPlacedIncomeStatement TimeDepositsPlaced { get; set; }
 
 		/// <summary>
@@ -1495,6 +1656,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20298
 		/// </remarks>
+		[JsonProperty("20298")]
 		public TradingGainLossIncomeStatement TradingGainLoss { get; set; }
 
 		/// <summary>
@@ -1504,6 +1666,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20299
 		/// </remarks>
+		[JsonProperty("20299")]
 		public TransportationRevenueIncomeStatement TransportationRevenue { get; set; }
 
 		/// <summary>
@@ -1513,6 +1676,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20300
 		/// </remarks>
+		[JsonProperty("20300")]
 		public TrustFeesbyCommissionsIncomeStatement TrustFeesbyCommissions { get; set; }
 
 		/// <summary>
@@ -1524,6 +1688,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20301
 		/// </remarks>
+		[JsonProperty("20301")]
 		public UnderwritingExpensesIncomeStatement UnderwritingExpenses { get; set; }
 
 		/// <summary>
@@ -1532,6 +1697,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20302
 		/// </remarks>
+		[JsonProperty("20302")]
 		public WriteDownIncomeStatement WriteDown { get; set; }
 
 		/// <summary>
@@ -1540,6 +1706,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20303
 		/// </remarks>
+		[JsonProperty("20303")]
 		public OtherWriteDownIncomeStatement OtherWriteDown { get; set; }
 
 		/// <summary>
@@ -1548,6 +1715,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20304
 		/// </remarks>
+		[JsonProperty("20304")]
 		public WriteOffIncomeStatement WriteOff { get; set; }
 
 		/// <summary>
@@ -1556,6 +1724,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20305
 		/// </remarks>
+		[JsonProperty("20305")]
 		public OtherWriteOffIncomeStatement OtherWriteOff { get; set; }
 
 		/// <summary>
@@ -1564,6 +1733,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20306
 		/// </remarks>
+		[JsonProperty("20306")]
 		public OtherNonInterestIncomeIncomeStatement OtherNonInterestIncome { get; set; }
 
 		/// <summary>
@@ -1573,6 +1743,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20307
 		/// </remarks>
+		[JsonProperty("20307")]
 		public PremiumTaxesCreditIncomeStatement PremiumTaxesCredit { get; set; }
 
 		/// <summary>
@@ -1582,6 +1753,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20308
 		/// </remarks>
+		[JsonProperty("20308")]
 		public AmortizationOfIntangiblesIncomeStatement AmortizationOfIntangibles { get; set; }
 
 		/// <summary>
@@ -1590,6 +1762,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20309
 		/// </remarks>
+		[JsonProperty("20309")]
 		public NetIncomeFromContinuingAndDiscontinuedOperationIncomeStatement NetIncomeFromContinuingAndDiscontinuedOperation { get; set; }
 
 		/// <summary>
@@ -1599,6 +1772,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20310
 		/// </remarks>
+		[JsonProperty("20310")]
 		public NetIncomeFromOtherGainsLossesIncomeStatement NetIncomeFromOtherGainsLosses { get; set; }
 
 		/// <summary>
@@ -1608,6 +1782,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20311
 		/// </remarks>
+		[JsonProperty("20311")]
 		public NetIncomeFromTaxLossCarryforwardIncomeStatement NetIncomeFromTaxLossCarryforward { get; set; }
 
 		/// <summary>
@@ -1617,6 +1792,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20312
 		/// </remarks>
+		[JsonProperty("20312")]
 		public OtherOperatingExpensesIncomeStatement OtherOperatingExpenses { get; set; }
 
 		/// <summary>
@@ -1625,6 +1801,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20313
 		/// </remarks>
+		[JsonProperty("20313")]
 		public TotalMoneyMarketInvestmentsIncomeStatement TotalMoneyMarketInvestments { get; set; }
 
 		/// <summary>
@@ -1634,6 +1811,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20314
 		/// </remarks>
+		[JsonProperty("20314")]
 		public ReconciledCostOfRevenueIncomeStatement ReconciledCostOfRevenue { get; set; }
 
 		/// <summary>
@@ -1642,6 +1820,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20315
 		/// </remarks>
+		[JsonProperty("20315")]
 		public ReconciledDepreciationIncomeStatement ReconciledDepreciation { get; set; }
 
 		/// <summary>
@@ -1651,6 +1830,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20316
 		/// </remarks>
+		[JsonProperty("20316")]
 		public NormalizedIncomeIncomeStatement NormalizedIncome { get; set; }
 
 		/// <summary>
@@ -1660,6 +1840,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20317
 		/// </remarks>
+		[JsonProperty("20317")]
 		public NonOperatingExpensesIncomeStatement NonOperatingExpenses { get; set; }
 
 		/// <summary>
@@ -1670,6 +1851,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20318
 		/// </remarks>
+		[JsonProperty("20318")]
 		public NonOperatingIncomeIncomeStatement NonOperatingIncome { get; set; }
 
 		/// <summary>
@@ -1680,6 +1862,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20331
 		/// </remarks>
+		[JsonProperty("20331")]
 		public NetIncomeFromContinuingOperationNetMinorityInterestIncomeStatement NetIncomeFromContinuingOperationNetMinorityInterest { get; set; }
 
 		/// <summary>
@@ -1688,6 +1871,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20332
 		/// </remarks>
+		[JsonProperty("20332")]
 		public PrincipleInvestmentGainLossIncomeStatement PrincipleInvestmentGainLoss { get; set; }
 
 		/// <summary>
@@ -1697,6 +1881,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20333
 		/// </remarks>
+		[JsonProperty("20333")]
 		public GainLossonSaleofAssetsIncomeStatement GainLossonSaleofAssets { get; set; }
 
 		/// <summary>
@@ -1705,6 +1890,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20334
 		/// </remarks>
+		[JsonProperty("20334")]
 		public GainonSaleofLoansIncomeStatement GainonSaleofLoans { get; set; }
 
 		/// <summary>
@@ -1713,6 +1899,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20335
 		/// </remarks>
+		[JsonProperty("20335")]
 		public GainonSaleofInvestmentPropertyIncomeStatement GainonSaleofInvestmentProperty { get; set; }
 
 		/// <summary>
@@ -1721,6 +1908,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20336
 		/// </remarks>
+		[JsonProperty("20336")]
 		public SpecialIncomeIncomeStatement SpecialIncome { get; set; }
 
 		/// <summary>
@@ -1729,6 +1917,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20337
 		/// </remarks>
+		[JsonProperty("20337")]
 		public AcquiredinProcessRnDIncomeBanksIncomeStatement AcquiredinProcessRnDIncomeBanks { get; set; }
 
 		/// <summary>
@@ -1741,6 +1930,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20338
 		/// </remarks>
+		[JsonProperty("20338")]
 		public RestructuringAndMergerAndAcquisitionIncomeIncomeStatement RestructuringAndMergerAndAcquisitionIncome { get; set; }
 
 		/// <summary>
@@ -1750,6 +1940,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20339
 		/// </remarks>
+		[JsonProperty("20339")]
 		public ImpairmentofCapitalAssetsIncomeIncomeStatement ImpairmentofCapitalAssetsIncome { get; set; }
 
 		/// <summary>
@@ -1761,6 +1952,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20340
 		/// </remarks>
+		[JsonProperty("20340")]
 		public GainonExtinguishmentofDebtIncomeStatement GainonExtinguishmentofDebt { get; set; }
 
 		/// <summary>
@@ -1769,6 +1961,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20342
 		/// </remarks>
+		[JsonProperty("20342")]
 		public SpecialChargeIncomeStatement SpecialCharge { get; set; }
 
 		/// <summary>
@@ -1780,6 +1973,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20343
 		/// </remarks>
+		[JsonProperty("20343")]
 		public LossonExtinguishmentofDebtIncomeStatement LossonExtinguishmentofDebt { get; set; }
 
 		/// <summary>
@@ -1788,6 +1982,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20345
 		/// </remarks>
+		[JsonProperty("20345")]
 		public EarningsfromEquityInterestNetOfTaxIncomeStatement EarningsfromEquityInterestNetOfTax { get; set; }
 
 		/// <summary>
@@ -1796,6 +1991,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20346
 		/// </remarks>
+		[JsonProperty("20346")]
 		public NetIncomeIncludingNoncontrollingInterestsIncomeStatement NetIncomeIncludingNoncontrollingInterests { get; set; }
 
 		/// <summary>
@@ -1804,6 +2000,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20347
 		/// </remarks>
+		[JsonProperty("20347")]
 		public OtherunderPreferredStockDividendIncomeStatement OtherunderPreferredStockDividend { get; set; }
 
 		/// <summary>
@@ -1813,6 +2010,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20348
 		/// </remarks>
+		[JsonProperty("20348")]
 		public EarningsfromEquityInterestRevenueIncomeStatement EarningsfromEquityInterestRevenue { get; set; }
 
 		/// <summary>
@@ -1821,6 +2019,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20349
 		/// </remarks>
+		[JsonProperty("20349")]
 		public GainLossfromDisposalSaleofAssetsIncomeStatement GainLossfromDisposalSaleofAssets { get; set; }
 
 		/// <summary>
@@ -1829,6 +2028,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20350
 		/// </remarks>
+		[JsonProperty("20350")]
 		public GainLossfromDisposalSaleofAssetsOtherIncomeStatement GainLossfromDisposalSaleofAssetsOther { get; set; }
 
 		/// <summary>
@@ -1837,6 +2037,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20351
 		/// </remarks>
+		[JsonProperty("20351")]
 		public GainonSaleofOtherRealEstateOwnedIncomeStatement GainonSaleofOtherRealEstateOwned { get; set; }
 
 		/// <summary>
@@ -1845,6 +2046,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20352
 		/// </remarks>
+		[JsonProperty("20352")]
 		public InterestIncomeRevenueIncomeStatement InterestIncomeRevenue { get; set; }
 
 		/// <summary>
@@ -1853,6 +2055,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20353
 		/// </remarks>
+		[JsonProperty("20353")]
 		public LitigationExpenseIncomeStatement LitigationExpense { get; set; }
 
 		/// <summary>
@@ -1861,6 +2064,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20354
 		/// </remarks>
+		[JsonProperty("20354")]
 		public OtherthanTemporaryImpairmentLossesInvestmentsIncomeStatement OtherthanTemporaryImpairmentLossesInvestments { get; set; }
 
 		/// <summary>
@@ -1869,6 +2073,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20355
 		/// </remarks>
+		[JsonProperty("20355")]
 		public UnrealizedGainorLossIncomeStatement UnrealizedGainorLoss { get; set; }
 
 		/// <summary>
@@ -1877,6 +2082,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20356
 		/// </remarks>
+		[JsonProperty("20356")]
 		public ChangesinInventoriesofFinishedGoodsandWorkinProgressIncomeStatement ChangesinInventoriesofFinishedGoodsandWorkinProgress { get; set; }
 
 		/// <summary>
@@ -1885,6 +2091,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20357
 		/// </remarks>
+		[JsonProperty("20357")]
 		public WorkPerformedbyEntityandCapitalizedIncomeStatement WorkPerformedbyEntityandCapitalized { get; set; }
 
 		/// <summary>
@@ -1893,6 +2100,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20358
 		/// </remarks>
+		[JsonProperty("20358")]
 		public DistributionCostsIncomeStatement DistributionCosts { get; set; }
 
 		/// <summary>
@@ -1901,6 +2109,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20359
 		/// </remarks>
+		[JsonProperty("20359")]
 		public StaffCostsIncomeStatement StaffCosts { get; set; }
 
 		/// <summary>
@@ -1909,6 +2118,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20360
 		/// </remarks>
+		[JsonProperty("20360")]
 		public SocialSecurityCostsIncomeStatement SocialSecurityCosts { get; set; }
 
 		/// <summary>
@@ -1918,6 +2128,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20361
 		/// </remarks>
+		[JsonProperty("20361")]
 		public PensionCostsIncomeStatement PensionCosts { get; set; }
 
 		/// <summary>
@@ -1926,6 +2137,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20363
 		/// </remarks>
+		[JsonProperty("20363")]
 		public OtherOperatingIncomeTotalIncomeStatement OtherOperatingIncomeTotal { get; set; }
 
 		/// <summary>
@@ -1934,6 +2146,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20364
 		/// </remarks>
+		[JsonProperty("20364")]
 		public ShareofOperatingProfitLossfromJointVenturesAndAssociatesIncomeStatement ShareofOperatingProfitLossfromJointVenturesAndAssociates { get; set; }
 
 		/// <summary>
@@ -1942,6 +2155,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20365
 		/// </remarks>
+		[JsonProperty("20365")]
 		public ExceptionalItemsIncomeStatement ExceptionalItems { get; set; }
 
 		/// <summary>
@@ -1950,6 +2164,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20366
 		/// </remarks>
+		[JsonProperty("20366")]
 		public IncomefromSharesinSubsidiariesGroupUndertakingsIncomeStatement IncomefromSharesinSubsidiariesGroupUndertakings { get; set; }
 
 		/// <summary>
@@ -1958,6 +2173,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20367
 		/// </remarks>
+		[JsonProperty("20367")]
 		public IncomefromAssociatesandOtherParticipatingInterestsIncomeStatement IncomefromAssociatesandOtherParticipatingInterests { get; set; }
 
 		/// <summary>
@@ -1966,6 +2182,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20368
 		/// </remarks>
+		[JsonProperty("20368")]
 		public TotalOtherFinanceCostIncomeStatement TotalOtherFinanceCost { get; set; }
 
 		/// <summary>
@@ -1974,6 +2191,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20371
 		/// </remarks>
+		[JsonProperty("20371")]
 		public GrossDividendPaymentIncomeStatement GrossDividendPayment { get; set; }
 
 		/// <summary>
@@ -1983,6 +2201,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20376
 		/// </remarks>
+		[JsonProperty("20376")]
 		public InterestandSimilarIncomeIncomeStatement InterestandSimilarIncome { get; set; }
 
 		/// <summary>
@@ -1991,6 +2210,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20377
 		/// </remarks>
+		[JsonProperty("20377")]
 		public FeesandCommissionIncomeIncomeStatement FeesandCommissionIncome { get; set; }
 
 		/// <summary>
@@ -1999,6 +2219,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20378
 		/// </remarks>
+		[JsonProperty("20378")]
 		public FeesandCommissionExpenseIncomeStatement FeesandCommissionExpense { get; set; }
 
 		/// <summary>
@@ -2007,6 +2228,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20379
 		/// </remarks>
+		[JsonProperty("20379")]
 		public NetTradingIncomeIncomeStatement NetTradingIncome { get; set; }
 
 		/// <summary>
@@ -2015,6 +2237,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20380
 		/// </remarks>
+		[JsonProperty("20380")]
 		public OutwardReinsurancePremiumsIncomeStatement OutwardReinsurancePremiums { get; set; }
 
 		/// <summary>
@@ -2023,6 +2246,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20381
 		/// </remarks>
+		[JsonProperty("20381")]
 		public OtherStaffCostsIncomeStatement OtherStaffCosts { get; set; }
 
 		/// <summary>
@@ -2031,6 +2255,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20382
 		/// </remarks>
+		[JsonProperty("20382")]
 		public ShareBasedPaymentsIncomeStatement ShareBasedPayments { get; set; }
 
 		/// <summary>
@@ -2039,6 +2264,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20383
 		/// </remarks>
+		[JsonProperty("20383")]
 		public GainonInvestmentPropertiesIncomeStatement GainonInvestmentProperties { get; set; }
 
 		/// <summary>
@@ -2049,6 +2275,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20385
 		/// </remarks>
+		[JsonProperty("20385")]
 		public AverageDilutionEarnIncomeStatement AverageDilutionEarn { get; set; }
 
 		/// <summary>
@@ -2057,6 +2284,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20389
 		/// </remarks>
+		[JsonProperty("20389")]
 		public GainonRedemptionandExtinguishmentofDebtIncomeStatement GainonRedemptionandExtinguishmentofDebt { get; set; }
 
 		/// <summary>
@@ -2065,6 +2293,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20390
 		/// </remarks>
+		[JsonProperty("20390")]
 		public MiscellaneousOtherOperatingIncomeIncomeStatement MiscellaneousOtherOperatingIncome { get; set; }
 
 		/// <summary>
@@ -2073,6 +2302,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20391
 		/// </remarks>
+		[JsonProperty("20391")]
 		public GainLossonFinancialInstrumentsDesignatedasCashFlowHedgesIncomeStatement GainLossonFinancialInstrumentsDesignatedasCashFlowHedges { get; set; }
 
 		/// <summary>
@@ -2081,6 +2311,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20392
 		/// </remarks>
+		[JsonProperty("20392")]
 		public GainLossonDerecognitionofAvailableForSaleFinancialAssetsIncomeStatement GainLossonDerecognitionofAvailableForSaleFinancialAssets { get; set; }
 
 		/// <summary>
@@ -2089,6 +2320,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20393
 		/// </remarks>
+		[JsonProperty("20393")]
 		public GainLossonDerecognitionofNonCurrentAssetsNotHeldforSaleTotalIncomeStatement GainLossonDerecognitionofNonCurrentAssetsNotHeldforSaleTotal { get; set; }
 
 		/// <summary>
@@ -2098,6 +2330,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20394
 		/// </remarks>
+		[JsonProperty("20394")]
 		public NegativeGoodwillImmediatelyRecognizedIncomeStatement NegativeGoodwillImmediatelyRecognized { get; set; }
 
 		/// <summary>
@@ -2106,6 +2339,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20395
 		/// </remarks>
+		[JsonProperty("20395")]
 		public GainsLossesonFinancialInstrumentsDuetoFairValueAdjustmentsinHedgeAccountingTotalIncomeStatement GainsLossesonFinancialInstrumentsDuetoFairValueAdjustmentsinHedgeAccountingTotal { get; set; }
 
 		/// <summary>
@@ -2115,6 +2349,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20396
 		/// </remarks>
+		[JsonProperty("20396")]
 		public ImpairmentLossesReversalsFinancialInstrumentsNetIncomeStatement ImpairmentLossesReversalsFinancialInstrumentsNet { get; set; }
 
 		/// <summary>
@@ -2123,6 +2358,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20397
 		/// </remarks>
+		[JsonProperty("20397")]
 		public ShareofProfitLossfromEquityAccountedInvestmentsIncomeStatement ShareofProfitLossfromEquityAccountedInvestments { get; set; }
 
 		/// <summary>
@@ -2131,6 +2367,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20400
 		/// </remarks>
+		[JsonProperty("20400")]
 		public ClaimsandPaidIncurredIncomeStatement ClaimsandPaidIncurred { get; set; }
 
 		/// <summary>
@@ -2139,6 +2376,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20401
 		/// </remarks>
+		[JsonProperty("20401")]
 		public ReinsuranceRecoveriesClaimsandBenefitsIncomeStatement ReinsuranceRecoveriesClaimsandBenefits { get; set; }
 
 		/// <summary>
@@ -2147,6 +2385,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20402
 		/// </remarks>
+		[JsonProperty("20402")]
 		public ChangeinInsuranceLiabilitiesNetofReinsuranceIncomeStatement ChangeinInsuranceLiabilitiesNetofReinsurance { get; set; }
 
 		/// <summary>
@@ -2155,6 +2394,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20405
 		/// </remarks>
+		[JsonProperty("20405")]
 		public ChangeinInvestmentContractIncomeStatement ChangeinInvestmentContract { get; set; }
 
 		/// <summary>
@@ -2163,6 +2403,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20408
 		/// </remarks>
+		[JsonProperty("20408")]
 		public ChangeinReinsuranceAssetsIncomeStatement ChangeinReinsuranceAssets { get; set; }
 
 		/// <summary>
@@ -2174,6 +2415,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20409
 		/// </remarks>
+		[JsonProperty("20409")]
 		public CreditRiskProvisionsIncomeStatement CreditRiskProvisions { get; set; }
 
 		/// <summary>
@@ -2182,6 +2424,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20411
 		/// </remarks>
+		[JsonProperty("20411")]
 		public WagesandSalariesIncomeStatement WagesandSalaries { get; set; }
 
 		/// <summary>
@@ -2190,6 +2433,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20412
 		/// </remarks>
+		[JsonProperty("20412")]
 		public OtherNonOperatingIncomeExpensesIncomeStatement OtherNonOperatingIncomeExpenses { get; set; }
 
 		/// <summary>
@@ -2198,6 +2442,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20413
 		/// </remarks>
+		[JsonProperty("20413")]
 		public InterestIncomeOtherOperatingIncomeIncomeStatement InterestIncomeOtherOperatingIncome { get; set; }
 
 		/// <summary>
@@ -2206,6 +2451,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20414
 		/// </remarks>
+		[JsonProperty("20414")]
 		public OtherNonOperatingIncomeIncomeStatement OtherNonOperatingIncome { get; set; }
 
 		/// <summary>
@@ -2214,6 +2460,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20415
 		/// </remarks>
+		[JsonProperty("20415")]
 		public OtherNonOperatingExpensesIncomeStatement OtherNonOperatingExpenses { get; set; }
 
 		/// <summary>
@@ -2222,6 +2469,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20416
 		/// </remarks>
+		[JsonProperty("20416")]
 		public TotalUnusualItemsIncomeStatement TotalUnusualItems { get; set; }
 
 		/// <summary>
@@ -2230,6 +2478,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20417
 		/// </remarks>
+		[JsonProperty("20417")]
 		public TotalUnusualItemsExcludingGoodwillIncomeStatement TotalUnusualItemsExcludingGoodwill { get; set; }
 
 		/// <summary>
@@ -2238,6 +2487,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20418
 		/// </remarks>
+		[JsonProperty("20418")]
 		public TaxRateForCalcsIncomeStatement TaxRateForCalcs { get; set; }
 
 		/// <summary>
@@ -2246,6 +2496,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20419
 		/// </remarks>
+		[JsonProperty("20419")]
 		public TaxEffectOfUnusualItemsIncomeStatement TaxEffectOfUnusualItems { get; set; }
 
 		/// <summary>
@@ -2254,6 +2505,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20420
 		/// </remarks>
+		[JsonProperty("20420")]
 		public NormalizedEBITDAIncomeStatement NormalizedEBITDA { get; set; }
 
 		/// <summary>
@@ -2263,6 +2515,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20421
 		/// </remarks>
+		[JsonProperty("20421")]
 		public GainOnForeignCurrencyExchangeFromBorrowingsRelatingToInterestCostsIncomeStatement GainOnForeignCurrencyExchangeFromBorrowingsRelatingToInterestCosts { get; set; }
 
 		/// <summary>
@@ -2271,6 +2524,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20422
 		/// </remarks>
+		[JsonProperty("20422")]
 		public StockBasedCompensationIncomeStatement StockBasedCompensation { get; set; }
 
 		/// <summary>
@@ -2279,6 +2533,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20423
 		/// </remarks>
+		[JsonProperty("20423")]
 		public DateTime ISFileDate { get; set; }
 
 		/// <summary>

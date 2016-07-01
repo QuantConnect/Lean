@@ -37,6 +37,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 10001
 		/// </remarks>
+		[JsonProperty("10001")]
 		public RevenueGrowth RevenueGrowth { get; set; }
 
 		/// <summary>
@@ -46,6 +47,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 10002
 		/// </remarks>
+		[JsonProperty("10002")]
 		public OperationIncomeGrowth OperationIncomeGrowth { get; set; }
 
 		/// <summary>
@@ -55,6 +57,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 10003
 		/// </remarks>
+		[JsonProperty("10003")]
 		public NetIncomeGrowth NetIncomeGrowth { get; set; }
 
 		/// <summary>
@@ -66,6 +69,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 10004
 		/// </remarks>
+		[JsonProperty("10004")]
 		public NetIncomeContOpsGrowth NetIncomeContOpsGrowth { get; set; }
 
 		/// <summary>
@@ -75,6 +79,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 10005
 		/// </remarks>
+		[JsonProperty("10005")]
 		public CFOGrowth3MonthAvg CFOGrowth3MonthAvg { get; set; }
 
 		/// <summary>
@@ -85,6 +90,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 10006
 		/// </remarks>
+		[JsonProperty("10006")]
 		public FCFGrowth3MonthAvg FCFGrowth3MonthAvg { get; set; }
 
 		/// <summary>
@@ -94,6 +100,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 10007
 		/// </remarks>
+		[JsonProperty("10007")]
 		public OperationRevenueGrowth3MonthAvg OperationRevenueGrowth3MonthAvg { get; set; }
 
 		/// <summary>
@@ -103,6 +110,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 11001
 		/// </remarks>
+		[JsonProperty("11001")]
 		public GrossMargin GrossMargin { get; set; }
 
 		/// <summary>
@@ -112,6 +120,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 11002
 		/// </remarks>
+		[JsonProperty("11002")]
 		public OperationMargin OperationMargin { get; set; }
 
 		/// <summary>
@@ -121,6 +130,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 11003
 		/// </remarks>
+		[JsonProperty("11003")]
 		public PretaxMargin PretaxMargin { get; set; }
 
 		/// <summary>
@@ -130,6 +140,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 11004
 		/// </remarks>
+		[JsonProperty("11004")]
 		public NetMargin NetMargin { get; set; }
 
 		/// <summary>
@@ -140,6 +151,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 11005
 		/// </remarks>
+		[JsonProperty("11005")]
 		public TaxRate TaxRate { get; set; }
 
 		/// <summary>
@@ -149,6 +161,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 11006
 		/// </remarks>
+		[JsonProperty("11006")]
 		public EBITMargin EBITMargin { get; set; }
 
 		/// <summary>
@@ -158,6 +171,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 11007
 		/// </remarks>
+		[JsonProperty("11007")]
 		public EBITDAMargin EBITDAMargin { get; set; }
 
 		/// <summary>
@@ -167,6 +181,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 11008
 		/// </remarks>
+		[JsonProperty("11008")]
 		public SalesPerEmployee SalesPerEmployee { get; set; }
 
 		/// <summary>
@@ -176,6 +191,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 11009
 		/// </remarks>
+		[JsonProperty("11009")]
 		public CurrentRatio CurrentRatio { get; set; }
 
 		/// <summary>
@@ -186,6 +202,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 11010
 		/// </remarks>
+		[JsonProperty("11010")]
 		public QuickRatio QuickRatio { get; set; }
 
 		/// <summary>
@@ -196,6 +213,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 11011
 		/// </remarks>
+		[JsonProperty("11011")]
 		public LongTermDebtTotalCapitalRatio LongTermDebtTotalCapitalRatio { get; set; }
 
 		/// <summary>
@@ -205,6 +223,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 11012
 		/// </remarks>
+		[JsonProperty("11012")]
 		public InterestCoverage InterestCoverage { get; set; }
 
 		/// <summary>
@@ -215,6 +234,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 11013
 		/// </remarks>
+		[JsonProperty("11013")]
 		public LongTermDebtEquityRatio LongTermDebtEquityRatio { get; set; }
 
 		/// <summary>
@@ -225,6 +245,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 11014
 		/// </remarks>
+		[JsonProperty("11014")]
 		public FinancialLeverage FinancialLeverage { get; set; }
 
 		/// <summary>
@@ -236,6 +257,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 11015
 		/// </remarks>
+		[JsonProperty("11015")]
 		public TotalDebtEquityRatio TotalDebtEquityRatio { get; set; }
 
 		/// <summary>
@@ -245,6 +267,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 11016
 		/// </remarks>
+		[JsonProperty("11016")]
 		public NormalizedNetProfitMargin NormalizedNetProfitMargin { get; set; }
 
 		/// <summary>
@@ -253,6 +276,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 12001
 		/// </remarks>
+		[JsonProperty("12001")]
 		public DaysInSales DaysInSales { get; set; }
 
 		/// <summary>
@@ -261,6 +285,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 12002
 		/// </remarks>
+		[JsonProperty("12002")]
 		public DaysInInventory DaysInInventory { get; set; }
 
 		/// <summary>
@@ -269,6 +294,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 12003
 		/// </remarks>
+		[JsonProperty("12003")]
 		public DaysInPayment DaysInPayment { get; set; }
 
 		/// <summary>
@@ -277,6 +303,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 12004
 		/// </remarks>
+		[JsonProperty("12004")]
 		public CashConversionCycle CashConversionCycle { get; set; }
 
 		/// <summary>
@@ -285,6 +312,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 12005
 		/// </remarks>
+		[JsonProperty("12005")]
 		public ReceivableTurnover ReceivableTurnover { get; set; }
 
 		/// <summary>
@@ -293,6 +321,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 12006
 		/// </remarks>
+		[JsonProperty("12006")]
 		public InventoryTurnover InventoryTurnover { get; set; }
 
 		/// <summary>
@@ -301,6 +330,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 12007
 		/// </remarks>
+		[JsonProperty("12007")]
 		public PaymentTurnover PaymentTurnover { get; set; }
 
 		/// <summary>
@@ -309,6 +339,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 12008
 		/// </remarks>
+		[JsonProperty("12008")]
 		public FixAssetsTuronver FixAssetsTuronver { get; set; }
 
 		/// <summary>
@@ -317,6 +348,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 12009
 		/// </remarks>
+		[JsonProperty("12009")]
 		public AssetsTurnover AssetsTurnover { get; set; }
 
 		/// <summary>
@@ -325,6 +357,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 12010
 		/// </remarks>
+		[JsonProperty("12010")]
 		public ROE ROE { get; set; }
 
 		/// <summary>
@@ -333,6 +366,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 12011
 		/// </remarks>
+		[JsonProperty("12011")]
 		public ROA ROA { get; set; }
 
 		/// <summary>
@@ -341,6 +375,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 12012
 		/// </remarks>
+		[JsonProperty("12012")]
 		public ROIC ROIC { get; set; }
 
 		/// <summary>
@@ -349,6 +384,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 12013
 		/// </remarks>
+		[JsonProperty("12013")]
 		public FCFSalesRatio FCFSalesRatio { get; set; }
 
 		/// <summary>
@@ -357,6 +393,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 12014
 		/// </remarks>
+		[JsonProperty("12014")]
 		public FCFNetIncomeRatio FCFNetIncomeRatio { get; set; }
 
 		/// <summary>
@@ -365,6 +402,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 12015
 		/// </remarks>
+		[JsonProperty("12015")]
 		public CapExSalesRatio CapExSalesRatio { get; set; }
 
 		/// <summary>
@@ -374,6 +412,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 12016
 		/// </remarks>
+		[JsonProperty("12016")]
 		public DebttoAssets DebttoAssets { get; set; }
 
 		/// <summary>
@@ -383,6 +422,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 12017
 		/// </remarks>
+		[JsonProperty("12017")]
 		public CommonEquityToAssets CommonEquityToAssets { get; set; }
 
 		/// <summary>
@@ -392,6 +432,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 12018
 		/// </remarks>
+		[JsonProperty("12018")]
 		public CapitalExpenditureAnnual5YrGrowth CapitalExpenditureAnnual5YrGrowth { get; set; }
 
 		/// <summary>
@@ -400,6 +441,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 12019
 		/// </remarks>
+		[JsonProperty("12019")]
 		public GrossProfitAnnual5YrGrowth GrossProfitAnnual5YrGrowth { get; set; }
 
 		/// <summary>
@@ -409,6 +451,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 12020
 		/// </remarks>
+		[JsonProperty("12020")]
 		public GrossMargin5YrAvg GrossMargin5YrAvg { get; set; }
 
 		/// <summary>
@@ -418,6 +461,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 12021
 		/// </remarks>
+		[JsonProperty("12021")]
 		public PostTaxMargin5YrAvg PostTaxMargin5YrAvg { get; set; }
 
 		/// <summary>
@@ -427,6 +471,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 12022
 		/// </remarks>
+		[JsonProperty("12022")]
 		public PreTaxMargin5YrAvg PreTaxMargin5YrAvg { get; set; }
 
 		/// <summary>
@@ -436,6 +481,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 12023
 		/// </remarks>
+		[JsonProperty("12023")]
 		public ProfitMargin5YrAvg ProfitMargin5YrAvg { get; set; }
 
 		/// <summary>
@@ -445,6 +491,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 12024
 		/// </remarks>
+		[JsonProperty("12024")]
 		public ROE5YrAvg ROE5YrAvg { get; set; }
 
 		/// <summary>
@@ -454,6 +501,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 12025
 		/// </remarks>
+		[JsonProperty("12025")]
 		public ROA5YrAvg ROA5YrAvg { get; set; }
 
 		/// <summary>
@@ -464,6 +512,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 12026
 		/// </remarks>
+		[JsonProperty("12026")]
 		public AVG5YrsROIC AVG5YrsROIC { get; set; }
 
 		/// <summary>
@@ -472,6 +521,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 12027
 		/// </remarks>
+		[JsonProperty("12027")]
 		public NormalizedROIC NormalizedROIC { get; set; }
 
 		/// <summary>
@@ -480,6 +530,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 12028
 		/// </remarks>
+		[JsonProperty("12028")]
 		public RegressionGrowthOperatingRevenue5Years RegressionGrowthOperatingRevenue5Years { get; set; }
 
 		/// <summary>

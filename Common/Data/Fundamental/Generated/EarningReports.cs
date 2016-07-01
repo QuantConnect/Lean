@@ -36,6 +36,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20001
 		/// </remarks>
+		[JsonProperty("20001")]
 		public DateTime PeriodEndingDate { get; set; }
 
 		/// <summary>
@@ -44,6 +45,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20002
 		/// </remarks>
+		[JsonProperty("20002")]
 		public DateTime FileDate { get; set; }
 
 		/// <summary>
@@ -52,6 +54,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20003
 		/// </remarks>
+		[JsonProperty("20003")]
 		public string AccessionNumber { get; set; }
 
 		/// <summary>
@@ -60,6 +63,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20004
 		/// </remarks>
+		[JsonProperty("20004")]
 		public string FormType { get; set; }
 
 		/// <summary>
@@ -69,6 +73,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 29000
 		/// </remarks>
+		[JsonProperty("29000")]
 		public BasicContinuousOperations BasicContinuousOperations { get; set; }
 
 		/// <summary>
@@ -78,6 +83,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 29001
 		/// </remarks>
+		[JsonProperty("29001")]
 		public BasicDiscontinuousOperations BasicDiscontinuousOperations { get; set; }
 
 		/// <summary>
@@ -87,6 +93,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 29002
 		/// </remarks>
+		[JsonProperty("29002")]
 		public BasicExtraordinary BasicExtraordinary { get; set; }
 
 		/// <summary>
@@ -96,6 +103,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 29003
 		/// </remarks>
+		[JsonProperty("29003")]
 		public BasicAccountingChange BasicAccountingChange { get; set; }
 
 		/// <summary>
@@ -104,6 +112,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 29004
 		/// </remarks>
+		[JsonProperty("29004")]
 		public BasicEPS BasicEPS { get; set; }
 
 		/// <summary>
@@ -114,6 +123,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 29005
 		/// </remarks>
+		[JsonProperty("29005")]
 		public DilutedContinuousOperations DilutedContinuousOperations { get; set; }
 
 		/// <summary>
@@ -124,6 +134,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 29006
 		/// </remarks>
+		[JsonProperty("29006")]
 		public DilutedDiscontinuousOperations DilutedDiscontinuousOperations { get; set; }
 
 		/// <summary>
@@ -134,6 +145,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 29007
 		/// </remarks>
+		[JsonProperty("29007")]
 		public DilutedExtraordinary DilutedExtraordinary { get; set; }
 
 		/// <summary>
@@ -144,6 +156,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 29008
 		/// </remarks>
+		[JsonProperty("29008")]
 		public DilutedAccountingChange DilutedAccountingChange { get; set; }
 
 		/// <summary>
@@ -155,6 +168,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 29009
 		/// </remarks>
+		[JsonProperty("29009")]
 		public DilutedEPS DilutedEPS { get; set; }
 
 		/// <summary>
@@ -165,6 +179,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 29010
 		/// </remarks>
+		[JsonProperty("29010")]
 		public BasicAverageShares BasicAverageShares { get; set; }
 
 		/// <summary>
@@ -177,6 +192,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 29011
 		/// </remarks>
+		[JsonProperty("29011")]
 		public DilutedAverageShares DilutedAverageShares { get; set; }
 
 		/// <summary>
@@ -187,6 +203,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 29012
 		/// </remarks>
+		[JsonProperty("29012")]
 		public DividendPerShare DividendPerShare { get; set; }
 
 		/// <summary>
@@ -196,6 +213,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 29013
 		/// </remarks>
+		[JsonProperty("29013")]
 		public BasicEPSOtherGainsLosses BasicEPSOtherGainsLosses { get; set; }
 
 		/// <summary>
@@ -204,6 +222,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 29014
 		/// </remarks>
+		[JsonProperty("29014")]
 		public ContinuingAndDiscontinuedBasicEPS ContinuingAndDiscontinuedBasicEPS { get; set; }
 
 		/// <summary>
@@ -212,6 +231,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 29015
 		/// </remarks>
+		[JsonProperty("29015")]
 		public TaxLossCarryforwardBasicEPS TaxLossCarryforwardBasicEPS { get; set; }
 
 		/// <summary>
@@ -222,6 +242,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 29016
 		/// </remarks>
+		[JsonProperty("29016")]
 		public DilutedEPSOtherGainsLosses DilutedEPSOtherGainsLosses { get; set; }
 
 		/// <summary>
@@ -230,6 +251,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 29017
 		/// </remarks>
+		[JsonProperty("29017")]
 		public ContinuingAndDiscontinuedDilutedEPS ContinuingAndDiscontinuedDilutedEPS { get; set; }
 
 		/// <summary>
@@ -238,6 +260,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 29018
 		/// </remarks>
+		[JsonProperty("29018")]
 		public TaxLossCarryforwardDilutedEPS TaxLossCarryforwardDilutedEPS { get; set; }
 
 		/// <summary>
@@ -247,6 +270,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 29019
 		/// </remarks>
+		[JsonProperty("29019")]
 		public NormalizedBasicEPS NormalizedBasicEPS { get; set; }
 
 		/// <summary>
@@ -256,6 +280,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 29020
 		/// </remarks>
+		[JsonProperty("29020")]
 		public NormalizedDilutedEPS NormalizedDilutedEPS { get; set; }
 
 		/// <summary>
@@ -264,6 +289,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 29021
 		/// </remarks>
+		[JsonProperty("29021")]
 		public TotalDividendPerShare TotalDividendPerShare { get; set; }
 
 		/// <summary>

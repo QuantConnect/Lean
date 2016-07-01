@@ -20,6 +20,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using Newtonsoft.Json;
 
 namespace QuantConnect.Data.Fundamental
 {
@@ -34,6 +35,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 1
 		/// </remarks>
+		[JsonProperty("1")]
 		public string CompanyId { get; set; }
 
 		/// <summary>
@@ -43,6 +45,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 2
 		/// </remarks>
+		[JsonProperty("2")]
 		public string ShortName { get; set; }
 
 		/// <summary>
@@ -51,6 +54,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 3
 		/// </remarks>
+		[JsonProperty("3")]
 		public string StandardName { get; set; }
 
 		/// <summary>
@@ -59,6 +63,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 4
 		/// </remarks>
+		[JsonProperty("4")]
 		public string LegalName { get; set; }
 
 		/// <summary>
@@ -67,6 +72,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 5
 		/// </remarks>
+		[JsonProperty("5")]
 		public string CountryId { get; set; }
 
 		/// <summary>
@@ -75,6 +81,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 6
 		/// </remarks>
+		[JsonProperty("6")]
 		public string CIK { get; set; }
 
 		/// <summary>
@@ -86,6 +93,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 9
 		/// </remarks>
+		[JsonProperty("9")]
 		public string CompanyStatus { get; set; }
 
 		/// <summary>
@@ -94,6 +102,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 10
 		/// </remarks>
+		[JsonProperty("10")]
 		public int FiscalYearEnd { get; set; }
 
 		/// <summary>
@@ -104,6 +113,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 11
 		/// </remarks>
+		[JsonProperty("11")]
 		public string IndustryTemplateCode { get; set; }
 
 		/// <summary>
@@ -114,6 +124,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 12
 		/// </remarks>
+		[JsonProperty("12")]
 		public string PrimaryShareClassID { get; set; }
 
 		/// <summary>
@@ -126,6 +137,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 13
 		/// </remarks>
+		[JsonProperty("13")]
 		public string PrimarySymbol { get; set; }
 
 		/// <summary>
@@ -136,6 +148,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 14
 		/// </remarks>
+		[JsonProperty("14")]
 		public string PrimaryExchangeID { get; set; }
 
 		/// <summary>
@@ -145,6 +158,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 15
 		/// </remarks>
+		[JsonProperty("15")]
 		public string BusinessCountryID { get; set; }
 
 		/// <summary>
@@ -153,6 +167,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 16
 		/// </remarks>
+		[JsonProperty("16")]
 		public string LegalNameLanguageCode { get; set; }
 
 		/// <summary>
@@ -162,6 +177,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 17
 		/// </remarks>
+		[JsonProperty("17")]
 		public string Auditor { get; set; }
 
 		/// <summary>
@@ -170,6 +186,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 18
 		/// </remarks>
+		[JsonProperty("18")]
 		public string AuditorLanguageCode { get; set; }
 
 		/// <summary>
@@ -178,6 +195,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 19
 		/// </remarks>
+		[JsonProperty("19")]
 		public string Advisor { get; set; }
 
 		/// <summary>
@@ -186,6 +204,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20
 		/// </remarks>
+		[JsonProperty("20")]
 		public string AdvisorLanguageCode { get; set; }
 
 		/// <summary>
@@ -195,6 +214,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 21
 		/// </remarks>
+		[JsonProperty("21")]
 		public bool IsLimitedPartnership { get; set; }
 
 		/// <summary>
@@ -203,6 +223,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 22
 		/// </remarks>
+		[JsonProperty("22")]
 		public bool IsREIT { get; set; }
 
 		/// <summary>
@@ -212,6 +233,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23
 		/// </remarks>
+		[JsonProperty("23")]
 		public string PrimaryMIC { get; set; }
 
 		/// <summary>
@@ -222,6 +244,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 24
 		/// </remarks>
+		[JsonProperty("24")]
 		public int ReportStyle { get; set; }
 
 		/// <summary>

@@ -36,6 +36,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20001
 		/// </remarks>
+		[JsonProperty("20001")]
 		public DateTime PeriodEndingDate { get; set; }
 
 		/// <summary>
@@ -44,6 +45,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20002
 		/// </remarks>
+		[JsonProperty("20002")]
 		public DateTime FileDate { get; set; }
 
 		/// <summary>
@@ -52,6 +54,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20003
 		/// </remarks>
+		[JsonProperty("20003")]
 		public string AccessionNumber { get; set; }
 
 		/// <summary>
@@ -60,6 +63,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 20004
 		/// </remarks>
+		[JsonProperty("20004")]
 		public string FormType { get; set; }
 
 		/// <summary>
@@ -68,6 +72,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 28000
 		/// </remarks>
+		[JsonProperty("28000")]
 		public string PeriodAuditor { get; set; }
 
 		/// <summary>
@@ -76,6 +81,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 28001
 		/// </remarks>
+		[JsonProperty("28001")]
 		public string AuditorReportStatus { get; set; }
 
 		/// <summary>
@@ -85,6 +91,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 28002
 		/// </remarks>
+		[JsonProperty("28002")]
 		public string InventoryValuationMethod { get; set; }
 
 		/// <summary>
@@ -93,6 +100,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 28003
 		/// </remarks>
+		[JsonProperty("28003")]
 		public long NumberOfShareHolders { get; set; }
 
 		/// <summary>
@@ -104,6 +112,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 28004
 		/// </remarks>
+		[JsonProperty("28004")]
 		public TotalRiskBasedCapital TotalRiskBasedCapital { get; set; }
 
 		/// <summary>

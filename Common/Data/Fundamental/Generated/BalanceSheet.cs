@@ -20,6 +20,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using Newtonsoft.Json;
 
 namespace QuantConnect.Data.Fundamental
 {
@@ -35,6 +36,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23000
 		/// </remarks>
+		[JsonProperty("23000")]
 		public AccountsPayableBalanceSheet AccountsPayable { get; set; }
 
 		/// <summary>
@@ -43,6 +45,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23001
 		/// </remarks>
+		[JsonProperty("23001")]
 		public AccountsReceivableBalanceSheet AccountsReceivable { get; set; }
 
 		/// <summary>
@@ -52,6 +55,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23004
 		/// </remarks>
+		[JsonProperty("23004")]
 		public CurrentAccruedExpensesBalanceSheet CurrentAccruedExpenses { get; set; }
 
 		/// <summary>
@@ -62,6 +66,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23005
 		/// </remarks>
+		[JsonProperty("23005")]
 		public NonCurrentAccruedExpensesBalanceSheet NonCurrentAccruedExpenses { get; set; }
 
 		/// <summary>
@@ -70,6 +75,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23007
 		/// </remarks>
+		[JsonProperty("23007")]
 		public AccruedInvestmentIncomeBalanceSheet AccruedInvestmentIncome { get; set; }
 
 		/// <summary>
@@ -78,6 +84,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23008
 		/// </remarks>
+		[JsonProperty("23008")]
 		public AccumulatedDepreciationBalanceSheet AccumulatedDepreciation { get; set; }
 
 		/// <summary>
@@ -86,6 +93,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23009
 		/// </remarks>
+		[JsonProperty("23009")]
 		public GainsLossesNotAffectingRetainedEarningsBalanceSheet GainsLossesNotAffectingRetainedEarnings { get; set; }
 
 		/// <summary>
@@ -99,6 +107,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23012
 		/// </remarks>
+		[JsonProperty("23012")]
 		public AdditionalPaidInCapitalBalanceSheet AdditionalPaidInCapital { get; set; }
 
 		/// <summary>
@@ -107,6 +116,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23016
 		/// </remarks>
+		[JsonProperty("23016")]
 		public AllowanceForLoansAndLeaseLossesBalanceSheet AllowanceForLoansAndLeaseLosses { get; set; }
 
 		/// <summary>
@@ -119,6 +129,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23020
 		/// </remarks>
+		[JsonProperty("23020")]
 		public AvailableForSaleSecuritiesBalanceSheet AvailableForSaleSecurities { get; set; }
 
 		/// <summary>
@@ -127,6 +138,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23027
 		/// </remarks>
+		[JsonProperty("23027")]
 		public CapitalStockBalanceSheet CapitalStock { get; set; }
 
 		/// <summary>
@@ -137,6 +149,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23028
 		/// </remarks>
+		[JsonProperty("23028")]
 		public CashBalanceSheet Cash { get; set; }
 
 		/// <summary>
@@ -150,6 +163,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23029
 		/// </remarks>
+		[JsonProperty("23029")]
 		public CashEquivalentsBalanceSheet CashEquivalents { get; set; }
 
 		/// <summary>
@@ -159,6 +173,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23030
 		/// </remarks>
+		[JsonProperty("23030")]
 		public CashAndCashEquivalentsBalanceSheet CashAndCashEquivalents { get; set; }
 
 		/// <summary>
@@ -169,6 +184,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23031
 		/// </remarks>
+		[JsonProperty("23031")]
 		public CashAndDueFromBanksBalanceSheet CashAndDueFromBanks { get; set; }
 
 		/// <summary>
@@ -177,6 +193,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23032
 		/// </remarks>
+		[JsonProperty("23032")]
 		public CashCashEquivalentsAndFederalFundsSoldBalanceSheet CashCashEquivalentsAndFederalFundsSold { get; set; }
 
 		/// <summary>
@@ -185,6 +202,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23033
 		/// </remarks>
+		[JsonProperty("23033")]
 		public CashCashEquivalentsAndMarketableSecuritiesBalanceSheet CashCashEquivalentsAndMarketableSecurities { get; set; }
 
 		/// <summary>
@@ -194,6 +212,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23038
 		/// </remarks>
+		[JsonProperty("23038")]
 		public CommonStockBalanceSheet CommonStock { get; set; }
 
 		/// <summary>
@@ -202,6 +221,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23044
 		/// </remarks>
+		[JsonProperty("23044")]
 		public CurrentAssetsBalanceSheet CurrentAssets { get; set; }
 
 		/// <summary>
@@ -210,6 +230,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23045
 		/// </remarks>
+		[JsonProperty("23045")]
 		public CurrentDebtBalanceSheet CurrentDebt { get; set; }
 
 		/// <summary>
@@ -219,6 +240,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23046
 		/// </remarks>
+		[JsonProperty("23046")]
 		public CurrentDebtAndCapitalLeaseObligationBalanceSheet CurrentDebtAndCapitalLeaseObligation { get; set; }
 
 		/// <summary>
@@ -227,6 +249,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23047
 		/// </remarks>
+		[JsonProperty("23047")]
 		public CurrentLiabilitiesBalanceSheet CurrentLiabilities { get; set; }
 
 		/// <summary>
@@ -236,6 +259,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23048
 		/// </remarks>
+		[JsonProperty("23048")]
 		public CurrentCapitalLeaseObligationBalanceSheet CurrentCapitalLeaseObligation { get; set; }
 
 		/// <summary>
@@ -244,6 +268,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23052
 		/// </remarks>
+		[JsonProperty("23052")]
 		public DeferredAssetsBalanceSheet DeferredAssets { get; set; }
 
 		/// <summary>
@@ -253,6 +278,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23054
 		/// </remarks>
+		[JsonProperty("23054")]
 		public DeferredCostsBalanceSheet DeferredCosts { get; set; }
 
 		/// <summary>
@@ -261,6 +287,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23057
 		/// </remarks>
+		[JsonProperty("23057")]
 		public NonCurrentDeferredLiabilitiesBalanceSheet NonCurrentDeferredLiabilities { get; set; }
 
 		/// <summary>
@@ -269,6 +296,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23058
 		/// </remarks>
+		[JsonProperty("23058")]
 		public CurrentDeferredLiabilitiesBalanceSheet CurrentDeferredLiabilities { get; set; }
 
 		/// <summary>
@@ -277,6 +305,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23059
 		/// </remarks>
+		[JsonProperty("23059")]
 		public DeferredPolicyAcquisitionCostsBalanceSheet DeferredPolicyAcquisitionCosts { get; set; }
 
 		/// <summary>
@@ -288,6 +317,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23061
 		/// </remarks>
+		[JsonProperty("23061")]
 		public CurrentDeferredRevenueBalanceSheet CurrentDeferredRevenue { get; set; }
 
 		/// <summary>
@@ -297,6 +327,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23062
 		/// </remarks>
+		[JsonProperty("23062")]
 		public NonCurrentDeferredRevenueBalanceSheet NonCurrentDeferredRevenue { get; set; }
 
 		/// <summary>
@@ -307,6 +338,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23063
 		/// </remarks>
+		[JsonProperty("23063")]
 		public DeferredTaxAssetsBalanceSheet DeferredTaxAssets { get; set; }
 
 		/// <summary>
@@ -317,6 +349,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23064
 		/// </remarks>
+		[JsonProperty("23064")]
 		public CurrentDeferredTaxesAssetsBalanceSheet CurrentDeferredTaxesAssets { get; set; }
 
 		/// <summary>
@@ -328,6 +361,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23065
 		/// </remarks>
+		[JsonProperty("23065")]
 		public CurrentDeferredTaxesLiabilitiesBalanceSheet CurrentDeferredTaxesLiabilities { get; set; }
 
 		/// <summary>
@@ -338,6 +372,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23066
 		/// </remarks>
+		[JsonProperty("23066")]
 		public NonCurrentDeferredTaxesAssetsBalanceSheet NonCurrentDeferredTaxesAssets { get; set; }
 
 		/// <summary>
@@ -348,6 +383,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23067
 		/// </remarks>
+		[JsonProperty("23067")]
 		public NonCurrentDeferredTaxesLiabilitiesBalanceSheet NonCurrentDeferredTaxesLiabilities { get; set; }
 
 		/// <summary>
@@ -356,6 +392,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23076
 		/// </remarks>
+		[JsonProperty("23076")]
 		public EquityInvestmentsBalanceSheet EquityInvestments { get; set; }
 
 		/// <summary>
@@ -366,6 +403,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23079
 		/// </remarks>
+		[JsonProperty("23079")]
 		public FederalFundsPurchasedAndSecuritiesSoldUnderAgreementToRepurchaseBalanceSheet FederalFundsPurchasedAndSecuritiesSoldUnderAgreementToRepurchase { get; set; }
 
 		/// <summary>
@@ -374,6 +412,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23081
 		/// </remarks>
+		[JsonProperty("23081")]
 		public FederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResellBalanceSheet FederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell { get; set; }
 
 		/// <summary>
@@ -385,6 +424,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23086
 		/// </remarks>
+		[JsonProperty("23086")]
 		public FixedMaturitiesAvailableForSaleBalanceSheet FixedMaturitiesAvailableForSale { get; set; }
 
 		/// <summary>
@@ -394,6 +434,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23087
 		/// </remarks>
+		[JsonProperty("23087")]
 		public FixedMaturitiesHeldToMaturityBalanceSheet FixedMaturitiesHeldToMaturity { get; set; }
 
 		/// <summary>
@@ -402,6 +443,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23088
 		/// </remarks>
+		[JsonProperty("23088")]
 		public FixedMaturitiesTradingBalanceSheet FixedMaturitiesTrading { get; set; }
 
 		/// <summary>
@@ -412,6 +454,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23089
 		/// </remarks>
+		[JsonProperty("23089")]
 		public FixedMaturityInvestmentsBalanceSheet FixedMaturityInvestments { get; set; }
 
 		/// <summary>
@@ -422,6 +465,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23095
 		/// </remarks>
+		[JsonProperty("23095")]
 		public FuturePolicyBenefitsBalanceSheet FuturePolicyBenefits { get; set; }
 
 		/// <summary>
@@ -431,6 +475,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23096
 		/// </remarks>
+		[JsonProperty("23096")]
 		public GeneralPartnershipCapitalBalanceSheet GeneralPartnershipCapital { get; set; }
 
 		/// <summary>
@@ -440,6 +485,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23097
 		/// </remarks>
+		[JsonProperty("23097")]
 		public GoodwillBalanceSheet Goodwill { get; set; }
 
 		/// <summary>
@@ -449,6 +495,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23098
 		/// </remarks>
+		[JsonProperty("23098")]
 		public GoodwillAndOtherIntangibleAssetsBalanceSheet GoodwillAndOtherIntangibleAssets { get; set; }
 
 		/// <summary>
@@ -458,6 +505,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23099
 		/// </remarks>
+		[JsonProperty("23099")]
 		public GrossLoanBalanceSheet GrossLoan { get; set; }
 
 		/// <summary>
@@ -468,6 +516,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23100
 		/// </remarks>
+		[JsonProperty("23100")]
 		public GrossPPEBalanceSheet GrossPPE { get; set; }
 
 		/// <summary>
@@ -476,6 +525,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23102
 		/// </remarks>
+		[JsonProperty("23102")]
 		public HeldToMaturitySecuritiesBalanceSheet HeldToMaturitySecurities { get; set; }
 
 		/// <summary>
@@ -484,6 +534,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23103
 		/// </remarks>
+		[JsonProperty("23103")]
 		public IncomeTaxPayableBalanceSheet IncomeTaxPayable { get; set; }
 
 		/// <summary>
@@ -492,6 +543,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23105
 		/// </remarks>
+		[JsonProperty("23105")]
 		public InterestBearingDepositsLiabilitiesBalanceSheet InterestBearingDepositsLiabilities { get; set; }
 
 		/// <summary>
@@ -501,6 +553,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23106
 		/// </remarks>
+		[JsonProperty("23106")]
 		public InterestPayableBalanceSheet InterestPayable { get; set; }
 
 		/// <summary>
@@ -510,6 +563,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23107
 		/// </remarks>
+		[JsonProperty("23107")]
 		public InterestBearingDepositsAssetsBalanceSheet InterestBearingDepositsAssets { get; set; }
 
 		/// <summary>
@@ -518,6 +572,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23108
 		/// </remarks>
+		[JsonProperty("23108")]
 		public InventoryBalanceSheet Inventory { get; set; }
 
 		/// <summary>
@@ -526,6 +581,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23111
 		/// </remarks>
+		[JsonProperty("23111")]
 		public InvestmentsAndAdvancesBalanceSheet InvestmentsAndAdvances { get; set; }
 
 		/// <summary>
@@ -535,6 +591,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23118
 		/// </remarks>
+		[JsonProperty("23118")]
 		public LimitedPartnershipCapitalBalanceSheet LimitedPartnershipCapital { get; set; }
 
 		/// <summary>
@@ -546,6 +603,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23123
 		/// </remarks>
+		[JsonProperty("23123")]
 		public LongTermDebtBalanceSheet LongTermDebt { get; set; }
 
 		/// <summary>
@@ -554,6 +612,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23124
 		/// </remarks>
+		[JsonProperty("23124")]
 		public LongTermDebtAndCapitalLeaseObligationBalanceSheet LongTermDebtAndCapitalLeaseObligation { get; set; }
 
 		/// <summary>
@@ -563,6 +622,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23126
 		/// </remarks>
+		[JsonProperty("23126")]
 		public LongTermInvestmentsBalanceSheet LongTermInvestments { get; set; }
 
 		/// <summary>
@@ -572,6 +632,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23127
 		/// </remarks>
+		[JsonProperty("23127")]
 		public LongTermCapitalLeaseObligationBalanceSheet LongTermCapitalLeaseObligation { get; set; }
 
 		/// <summary>
@@ -581,6 +642,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23132
 		/// </remarks>
+		[JsonProperty("23132")]
 		public MinorityInterestBalanceSheet MinorityInterest { get; set; }
 
 		/// <summary>
@@ -590,6 +652,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23133
 		/// </remarks>
+		[JsonProperty("23133")]
 		public MoneyMarketInvestmentsBalanceSheet MoneyMarketInvestments { get; set; }
 
 		/// <summary>
@@ -598,6 +661,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23137
 		/// </remarks>
+		[JsonProperty("23137")]
 		public NetLoanBalanceSheet NetLoan { get; set; }
 
 		/// <summary>
@@ -608,6 +672,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23139
 		/// </remarks>
+		[JsonProperty("23139")]
 		public NetPPEBalanceSheet NetPPE { get; set; }
 
 		/// <summary>
@@ -616,6 +681,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23142
 		/// </remarks>
+		[JsonProperty("23142")]
 		public NonInterestBearingDepositsBalanceSheet NonInterestBearingDeposits { get; set; }
 
 		/// <summary>
@@ -624,6 +690,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23143
 		/// </remarks>
+		[JsonProperty("23143")]
 		public CurrentNotesPayableBalanceSheet CurrentNotesPayable { get; set; }
 
 		/// <summary>
@@ -636,6 +703,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23144
 		/// </remarks>
+		[JsonProperty("23144")]
 		public NotesReceivableBalanceSheet NotesReceivable { get; set; }
 
 		/// <summary>
@@ -646,6 +714,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23146
 		/// </remarks>
+		[JsonProperty("23146")]
 		public NonCurrentNoteReceivablesBalanceSheet NonCurrentNoteReceivables { get; set; }
 
 		/// <summary>
@@ -655,6 +724,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23151
 		/// </remarks>
+		[JsonProperty("23151")]
 		public OtherCurrentLiabilitiesBalanceSheet OtherCurrentLiabilities { get; set; }
 
 		/// <summary>
@@ -663,6 +733,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23155
 		/// </remarks>
+		[JsonProperty("23155")]
 		public OtherIntangibleAssetsBalanceSheet OtherIntangibleAssets { get; set; }
 
 		/// <summary>
@@ -672,6 +743,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23163
 		/// </remarks>
+		[JsonProperty("23163")]
 		public OtherShortTermInvestmentsBalanceSheet OtherShortTermInvestments { get; set; }
 
 		/// <summary>
@@ -681,6 +753,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23165
 		/// </remarks>
+		[JsonProperty("23165")]
 		public PayablesBalanceSheet Payables { get; set; }
 
 		/// <summary>
@@ -689,6 +762,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23166
 		/// </remarks>
+		[JsonProperty("23166")]
 		public PayablesAndAccruedExpensesBalanceSheet PayablesAndAccruedExpenses { get; set; }
 
 		/// <summary>
@@ -699,6 +773,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23169
 		/// </remarks>
+		[JsonProperty("23169")]
 		public PolicyReservesBenefitsBalanceSheet PolicyReservesBenefits { get; set; }
 
 		/// <summary>
@@ -708,6 +783,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23171
 		/// </remarks>
+		[JsonProperty("23171")]
 		public PolicyholderFundsBalanceSheet PolicyholderFunds { get; set; }
 
 		/// <summary>
@@ -716,6 +792,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23172
 		/// </remarks>
+		[JsonProperty("23172")]
 		public PreferredSecuritiesOutsideStockEquityBalanceSheet PreferredSecuritiesOutsideStockEquity { get; set; }
 
 		/// <summary>
@@ -724,6 +801,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23174
 		/// </remarks>
+		[JsonProperty("23174")]
 		public PreferredStockBalanceSheet PreferredStock { get; set; }
 
 		/// <summary>
@@ -732,6 +810,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23178
 		/// </remarks>
+		[JsonProperty("23178")]
 		public PremiumsReceivableBalanceSheet PremiumsReceivable { get; set; }
 
 		/// <summary>
@@ -740,6 +819,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23179
 		/// </remarks>
+		[JsonProperty("23179")]
 		public PrepaidAssetsBalanceSheet PrepaidAssets { get; set; }
 
 		/// <summary>
@@ -749,6 +829,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23180
 		/// </remarks>
+		[JsonProperty("23180")]
 		public NonCurrentPrepaidAssetsBalanceSheet NonCurrentPrepaidAssets { get; set; }
 
 		/// <summary>
@@ -758,6 +839,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23189
 		/// </remarks>
+		[JsonProperty("23189")]
 		public ReceivablesBalanceSheet Receivables { get; set; }
 
 		/// <summary>
@@ -766,6 +848,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23191
 		/// </remarks>
+		[JsonProperty("23191")]
 		public RedeemablePreferredStockBalanceSheet RedeemablePreferredStock { get; set; }
 
 		/// <summary>
@@ -776,6 +859,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23196
 		/// </remarks>
+		[JsonProperty("23196")]
 		public ReinsuranceRecoverableBalanceSheet ReinsuranceRecoverable { get; set; }
 
 		/// <summary>
@@ -785,6 +869,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23204
 		/// </remarks>
+		[JsonProperty("23204")]
 		public RetainedEarningsBalanceSheet RetainedEarnings { get; set; }
 
 		/// <summary>
@@ -795,6 +880,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23205
 		/// </remarks>
+		[JsonProperty("23205")]
 		public SecuritiesLendingCollateralBalanceSheet SecuritiesLendingCollateral { get; set; }
 
 		/// <summary>
@@ -805,6 +891,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23207
 		/// </remarks>
+		[JsonProperty("23207")]
 		public SecurityAgreeToBeResellBalanceSheet SecurityAgreeToBeResell { get; set; }
 
 		/// <summary>
@@ -814,6 +901,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23208
 		/// </remarks>
+		[JsonProperty("23208")]
 		public SecuritySoldNotYetRepurchasedBalanceSheet SecuritySoldNotYetRepurchased { get; set; }
 
 		/// <summary>
@@ -822,6 +910,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23209
 		/// </remarks>
+		[JsonProperty("23209")]
 		public SeparateAccountAssetsBalanceSheet SeparateAccountAssets { get; set; }
 
 		/// <summary>
@@ -830,6 +919,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23210
 		/// </remarks>
+		[JsonProperty("23210")]
 		public SeparateAccountBusinessBalanceSheet SeparateAccountBusiness { get; set; }
 
 		/// <summary>
@@ -839,6 +929,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23212
 		/// </remarks>
+		[JsonProperty("23212")]
 		public ShortTermInvestmentsAvailableForSaleBalanceSheet ShortTermInvestmentsAvailableForSale { get; set; }
 
 		/// <summary>
@@ -848,6 +939,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23213
 		/// </remarks>
+		[JsonProperty("23213")]
 		public ShortTermInvestmentsHeldToMaturityBalanceSheet ShortTermInvestmentsHeldToMaturity { get; set; }
 
 		/// <summary>
@@ -856,6 +948,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23214
 		/// </remarks>
+		[JsonProperty("23214")]
 		public ShortTermInvestmentsTradingBalanceSheet ShortTermInvestmentsTrading { get; set; }
 
 		/// <summary>
@@ -865,6 +958,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23215
 		/// </remarks>
+		[JsonProperty("23215")]
 		public StockholdersEquityBalanceSheet StockholdersEquity { get; set; }
 
 		/// <summary>
@@ -874,6 +968,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23217
 		/// </remarks>
+		[JsonProperty("23217")]
 		public TotalTaxPayableBalanceSheet TotalTaxPayable { get; set; }
 
 		/// <summary>
@@ -883,6 +978,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23220
 		/// </remarks>
+		[JsonProperty("23220")]
 		public TotalAssetsBalanceSheet TotalAssets { get; set; }
 
 		/// <summary>
@@ -891,6 +987,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23223
 		/// </remarks>
+		[JsonProperty("23223")]
 		public TotalDepositsBalanceSheet TotalDeposits { get; set; }
 
 		/// <summary>
@@ -900,6 +997,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23224
 		/// </remarks>
+		[JsonProperty("23224")]
 		public TotalInvestmentsBalanceSheet TotalInvestments { get; set; }
 
 		/// <summary>
@@ -909,6 +1007,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23225
 		/// </remarks>
+		[JsonProperty("23225")]
 		public TotalLiabilitiesBalanceSheet TotalLiabilities { get; set; }
 
 		/// <summary>
@@ -918,6 +1017,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23226
 		/// </remarks>
+		[JsonProperty("23226")]
 		public TotalNonCurrentAssetsBalanceSheet TotalNonCurrentAssets { get; set; }
 
 		/// <summary>
@@ -927,6 +1027,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23227
 		/// </remarks>
+		[JsonProperty("23227")]
 		public TotalNonCurrentLiabilitiesBalanceSheet TotalNonCurrentLiabilities { get; set; }
 
 		/// <summary>
@@ -936,6 +1037,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23228
 		/// </remarks>
+		[JsonProperty("23228")]
 		public TotalPartnershipCapitalBalanceSheet TotalPartnershipCapital { get; set; }
 
 		/// <summary>
@@ -945,6 +1047,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23229
 		/// </remarks>
+		[JsonProperty("23229")]
 		public TradingAssetsBalanceSheet TradingAssets { get; set; }
 
 		/// <summary>
@@ -956,6 +1059,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23230
 		/// </remarks>
+		[JsonProperty("23230")]
 		public TradingLiabilitiesBalanceSheet TradingLiabilities { get; set; }
 
 		/// <summary>
@@ -966,6 +1070,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23231
 		/// </remarks>
+		[JsonProperty("23231")]
 		public TradingSecuritiesBalanceSheet TradingSecurities { get; set; }
 
 		/// <summary>
@@ -976,6 +1081,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23232
 		/// </remarks>
+		[JsonProperty("23232")]
 		public TreasuryStockBalanceSheet TreasuryStock { get; set; }
 
 		/// <summary>
@@ -984,6 +1090,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23235
 		/// </remarks>
+		[JsonProperty("23235")]
 		public UnearnedIncomeBalanceSheet UnearnedIncome { get; set; }
 
 		/// <summary>
@@ -992,6 +1099,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23236
 		/// </remarks>
+		[JsonProperty("23236")]
 		public UnearnedPremiumsBalanceSheet UnearnedPremiums { get; set; }
 
 		/// <summary>
@@ -1001,6 +1109,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23237
 		/// </remarks>
+		[JsonProperty("23237")]
 		public UnpaidLossAndLossReserveBalanceSheet UnpaidLossAndLossReserve { get; set; }
 
 		/// <summary>
@@ -1009,6 +1118,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23245
 		/// </remarks>
+		[JsonProperty("23245")]
 		public InvestedCapitalBalanceSheet InvestedCapital { get; set; }
 
 		/// <summary>
@@ -1018,6 +1128,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23252
 		/// </remarks>
+		[JsonProperty("23252")]
 		public CurrentDeferredAssetsBalanceSheet CurrentDeferredAssets { get; set; }
 
 		/// <summary>
@@ -1027,6 +1138,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23253
 		/// </remarks>
+		[JsonProperty("23253")]
 		public NonCurrentDeferredAssetsBalanceSheet NonCurrentDeferredAssets { get; set; }
 
 		/// <summary>
@@ -1035,6 +1147,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23258
 		/// </remarks>
+		[JsonProperty("23258")]
 		public SecuritiesAndInvestmentsBalanceSheet SecuritiesAndInvestments { get; set; }
 
 		/// <summary>
@@ -1044,6 +1157,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23259
 		/// </remarks>
+		[JsonProperty("23259")]
 		public TotalLiabilitiesNetMinorityInterestBalanceSheet TotalLiabilitiesNetMinorityInterest { get; set; }
 
 		/// <summary>
@@ -1053,6 +1167,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23260
 		/// </remarks>
+		[JsonProperty("23260")]
 		public TotalNonCurrentLiabilitiesNetMinorityInterestBalanceSheet TotalNonCurrentLiabilitiesNetMinorityInterest { get; set; }
 
 		/// <summary>
@@ -1062,6 +1177,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23261
 		/// </remarks>
+		[JsonProperty("23261")]
 		public TotalEquityGrossMinorityInterestBalanceSheet TotalEquityGrossMinorityInterest { get; set; }
 
 		/// <summary>
@@ -1070,6 +1186,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23262
 		/// </remarks>
+		[JsonProperty("23262")]
 		public GrossAccountsReceivableBalanceSheet GrossAccountsReceivable { get; set; }
 
 		/// <summary>
@@ -1079,6 +1196,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23263
 		/// </remarks>
+		[JsonProperty("23263")]
 		public NonCurrentAccountsReceivableBalanceSheet NonCurrentAccountsReceivable { get; set; }
 
 		/// <summary>
@@ -1088,6 +1206,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23264
 		/// </remarks>
+		[JsonProperty("23264")]
 		public AccruedInterestReceivableBalanceSheet AccruedInterestReceivable { get; set; }
 
 		/// <summary>
@@ -1097,6 +1216,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23265
 		/// </remarks>
+		[JsonProperty("23265")]
 		public AdvanceFromFederalHomeLoanBanksBalanceSheet AdvanceFromFederalHomeLoanBanks { get; set; }
 
 		/// <summary>
@@ -1105,6 +1225,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23266
 		/// </remarks>
+		[JsonProperty("23266")]
 		public AllowanceForDoubtfulAccountsReceivableBalanceSheet AllowanceForDoubtfulAccountsReceivable { get; set; }
 
 		/// <summary>
@@ -1115,6 +1236,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23267
 		/// </remarks>
+		[JsonProperty("23267")]
 		public AllowanceForNotesReceivableBalanceSheet AllowanceForNotesReceivable { get; set; }
 
 		/// <summary>
@@ -1123,6 +1245,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23268
 		/// </remarks>
+		[JsonProperty("23268")]
 		public AssetsHeldForSaleBalanceSheet AssetsHeldForSale { get; set; }
 
 		/// <summary>
@@ -1131,6 +1254,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23269
 		/// </remarks>
+		[JsonProperty("23269")]
 		public AssetsOfDiscontinuedOperationsBalanceSheet AssetsOfDiscontinuedOperations { get; set; }
 
 		/// <summary>
@@ -1140,6 +1264,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23270
 		/// </remarks>
+		[JsonProperty("23270")]
 		public BankAcceptanceExecutedAndOutstandingBalanceSheet BankAcceptanceExecutedAndOutstanding { get; set; }
 
 		/// <summary>
@@ -1150,6 +1275,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23271
 		/// </remarks>
+		[JsonProperty("23271")]
 		public BankIndebtednessBalanceSheet BankIndebtedness { get; set; }
 
 		/// <summary>
@@ -1158,6 +1284,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23272
 		/// </remarks>
+		[JsonProperty("23272")]
 		public BankLoanBalanceSheet BankLoan { get; set; }
 
 		/// <summary>
@@ -1167,6 +1294,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23273
 		/// </remarks>
+		[JsonProperty("23273")]
 		public BankOwnedLifeInsuranceBalanceSheet BankOwnedLifeInsurance { get; set; }
 
 		/// <summary>
@@ -1176,6 +1304,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23274
 		/// </remarks>
+		[JsonProperty("23274")]
 		public SecurityBorrowedBalanceSheet SecurityBorrowed { get; set; }
 
 		/// <summary>
@@ -1184,6 +1313,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23275
 		/// </remarks>
+		[JsonProperty("23275")]
 		public BuildingsAndImprovementsBalanceSheet BuildingsAndImprovements { get; set; }
 
 		/// <summary>
@@ -1192,6 +1322,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23276
 		/// </remarks>
+		[JsonProperty("23276")]
 		public CasualtyClaimsBalanceSheet CasualtyClaims { get; set; }
 
 		/// <summary>
@@ -1201,6 +1332,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23277
 		/// </remarks>
+		[JsonProperty("23277")]
 		public CededUnearnedPremiumsBalanceSheet CededUnearnedPremiums { get; set; }
 
 		/// <summary>
@@ -1209,6 +1341,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23278
 		/// </remarks>
+		[JsonProperty("23278")]
 		public CommercialLoanBalanceSheet CommercialLoan { get; set; }
 
 		/// <summary>
@@ -1219,6 +1352,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23279
 		/// </remarks>
+		[JsonProperty("23279")]
 		public CommercialPaperBalanceSheet CommercialPaper { get; set; }
 
 		/// <summary>
@@ -1227,6 +1361,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23280
 		/// </remarks>
+		[JsonProperty("23280")]
 		public CommonStockEquityBalanceSheet CommonStockEquity { get; set; }
 
 		/// <summary>
@@ -1235,6 +1370,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23281
 		/// </remarks>
+		[JsonProperty("23281")]
 		public CommonStocksAvailableForSaleBalanceSheet CommonStocksAvailableForSale { get; set; }
 
 		/// <summary>
@@ -1244,6 +1380,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23282
 		/// </remarks>
+		[JsonProperty("23282")]
 		public ConstructionInProgressBalanceSheet ConstructionInProgress { get; set; }
 
 		/// <summary>
@@ -1253,6 +1390,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23283
 		/// </remarks>
+		[JsonProperty("23283")]
 		public ConsumerLoanBalanceSheet ConsumerLoan { get; set; }
 
 		/// <summary>
@@ -1262,6 +1400,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23284
 		/// </remarks>
+		[JsonProperty("23284")]
 		public MinimumPensionLiabilitiesBalanceSheet MinimumPensionLiabilities { get; set; }
 
 		/// <summary>
@@ -1271,6 +1410,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23285
 		/// </remarks>
+		[JsonProperty("23285")]
 		public CustomerAcceptancesBalanceSheet CustomerAcceptances { get; set; }
 
 		/// <summary>
@@ -1280,6 +1420,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23286
 		/// </remarks>
+		[JsonProperty("23286")]
 		public DeferredAcquisitionCostsBalanceSheet DeferredAcquisitionCosts { get; set; }
 
 		/// <summary>
@@ -1289,6 +1430,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23287
 		/// </remarks>
+		[JsonProperty("23287")]
 		public DeferredFinancingCostsBalanceSheet DeferredFinancingCosts { get; set; }
 
 		/// <summary>
@@ -1297,6 +1439,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23288
 		/// </remarks>
+		[JsonProperty("23288")]
 		public DefinedPensionBenefitBalanceSheet DefinedPensionBenefit { get; set; }
 
 		/// <summary>
@@ -1306,6 +1449,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23289
 		/// </remarks>
+		[JsonProperty("23289")]
 		public DerivativeProductLiabilitiesBalanceSheet DerivativeProductLiabilities { get; set; }
 
 		/// <summary>
@@ -1315,6 +1459,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23290
 		/// </remarks>
+		[JsonProperty("23290")]
 		public DerivativeAssetsBalanceSheet DerivativeAssets { get; set; }
 
 		/// <summary>
@@ -1324,6 +1469,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23291
 		/// </remarks>
+		[JsonProperty("23291")]
 		public DividendsPayableBalanceSheet DividendsPayable { get; set; }
 
 		/// <summary>
@@ -1333,6 +1479,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23292
 		/// </remarks>
+		[JsonProperty("23292")]
 		public ESOPDebtGuaranteeBalanceSheet ESOPDebtGuarantee { get; set; }
 
 		/// <summary>
@@ -1342,6 +1489,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23293
 		/// </remarks>
+		[JsonProperty("23293")]
 		public EmployeeBenefitsBalanceSheet EmployeeBenefits { get; set; }
 
 		/// <summary>
@@ -1351,6 +1499,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23294
 		/// </remarks>
+		[JsonProperty("23294")]
 		public FacilitiesAndOtherBalanceSheet FacilitiesAndOther { get; set; }
 
 		/// <summary>
@@ -1360,6 +1509,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23295
 		/// </remarks>
+		[JsonProperty("23295")]
 		public FederalFundsPurchasedBalanceSheet FederalFundsPurchased { get; set; }
 
 		/// <summary>
@@ -1369,6 +1519,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23296
 		/// </remarks>
+		[JsonProperty("23296")]
 		public FederalFundsSoldBalanceSheet FederalFundsSold { get; set; }
 
 		/// <summary>
@@ -1378,6 +1529,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23297
 		/// </remarks>
+		[JsonProperty("23297")]
 		public FederalHomeLoanBankStockBalanceSheet FederalHomeLoanBankStock { get; set; }
 
 		/// <summary>
@@ -1387,6 +1539,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23298
 		/// </remarks>
+		[JsonProperty("23298")]
 		public FinancialAssetsBalanceSheet FinancialAssets { get; set; }
 
 		/// <summary>
@@ -1397,6 +1550,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23299
 		/// </remarks>
+		[JsonProperty("23299")]
 		public FinancialInstrumentsSoldUnderAgreementsToRepurchaseBalanceSheet FinancialInstrumentsSoldUnderAgreementsToRepurchase { get; set; }
 
 		/// <summary>
@@ -1406,6 +1560,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23300
 		/// </remarks>
+		[JsonProperty("23300")]
 		public FinishedGoodsBalanceSheet FinishedGoods { get; set; }
 
 		/// <summary>
@@ -1415,6 +1570,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23301
 		/// </remarks>
+		[JsonProperty("23301")]
 		public FlightFleetVehicleAndRelatedEquipmentsBalanceSheet FlightFleetVehicleAndRelatedEquipments { get; set; }
 
 		/// <summary>
@@ -1425,6 +1581,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23302
 		/// </remarks>
+		[JsonProperty("23302")]
 		public ForeclosedAssetsBalanceSheet ForeclosedAssets { get; set; }
 
 		/// <summary>
@@ -1433,6 +1590,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23303
 		/// </remarks>
+		[JsonProperty("23303")]
 		public ForeignComponentBalanceSheet ForeignComponent { get; set; }
 
 		/// <summary>
@@ -1442,6 +1600,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23304
 		/// </remarks>
+		[JsonProperty("23304")]
 		public ForeignCurrencyTranslationAdjustmentsBalanceSheet ForeignCurrencyTranslationAdjustments { get; set; }
 
 		/// <summary>
@@ -1450,6 +1609,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23305
 		/// </remarks>
+		[JsonProperty("23305")]
 		public FuelAndNaturalGasBalanceSheet FuelAndNaturalGas { get; set; }
 
 		/// <summary>
@@ -1459,6 +1619,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23306
 		/// </remarks>
+		[JsonProperty("23306")]
 		public GuaranteedInvestmentContractBalanceSheet GuaranteedInvestmentContract { get; set; }
 
 		/// <summary>
@@ -1468,6 +1629,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23307
 		/// </remarks>
+		[JsonProperty("23307")]
 		public InventoriesAdjustmentsAllowancesBalanceSheet InventoriesAdjustmentsAllowances { get; set; }
 
 		/// <summary>
@@ -1477,6 +1639,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23308
 		/// </remarks>
+		[JsonProperty("23308")]
 		public InvestmentTaxCreditsBalanceSheet InvestmentTaxCredits { get; set; }
 
 		/// <summary>
@@ -1487,6 +1650,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23309
 		/// </remarks>
+		[JsonProperty("23309")]
 		public InvestmentsInAffiliatesSubsidiariesAssociatesAndJointVenturesBalanceSheet InvestmentsInAffiliatesSubsidiariesAssociatesAndJointVentures { get; set; }
 
 		/// <summary>
@@ -1496,6 +1660,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23310
 		/// </remarks>
+		[JsonProperty("23310")]
 		public InvestmentsInOtherVenturesUnderEquityMethodBalanceSheet InvestmentsInOtherVenturesUnderEquityMethod { get; set; }
 
 		/// <summary>
@@ -1505,6 +1670,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23311
 		/// </remarks>
+		[JsonProperty("23311")]
 		public InvestmentsInVariableInterestEntityBalanceSheet InvestmentsInVariableInterestEntity { get; set; }
 
 		/// <summary>
@@ -1514,6 +1680,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23312
 		/// </remarks>
+		[JsonProperty("23312")]
 		public LandAndImprovementsBalanceSheet LandAndImprovements { get; set; }
 
 		/// <summary>
@@ -1523,6 +1690,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23313
 		/// </remarks>
+		[JsonProperty("23313")]
 		public LeasesBalanceSheet Leases { get; set; }
 
 		/// <summary>
@@ -1532,6 +1700,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23314
 		/// </remarks>
+		[JsonProperty("23314")]
 		public LiabilitiesOfDiscontinuedOperationsBalanceSheet LiabilitiesOfDiscontinuedOperations { get; set; }
 
 		/// <summary>
@@ -1542,6 +1711,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23315
 		/// </remarks>
+		[JsonProperty("23315")]
 		public LimitedPartnershipBalanceSheet LimitedPartnership { get; set; }
 
 		/// <summary>
@@ -1551,6 +1721,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23316
 		/// </remarks>
+		[JsonProperty("23316")]
 		public LineOfCreditBalanceSheet LineOfCredit { get; set; }
 
 		/// <summary>
@@ -1560,6 +1731,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23317
 		/// </remarks>
+		[JsonProperty("23317")]
 		public LoansHeldForSaleBalanceSheet LoansHeldForSale { get; set; }
 
 		/// <summary>
@@ -1568,6 +1740,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23318
 		/// </remarks>
+		[JsonProperty("23318")]
 		public LoansReceivableBalanceSheet LoansReceivable { get; set; }
 
 		/// <summary>
@@ -1577,6 +1750,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23319
 		/// </remarks>
+		[JsonProperty("23319")]
 		public MachineryFurnitureEquipmentBalanceSheet MachineryFurnitureEquipment { get; set; }
 
 		/// <summary>
@@ -1586,6 +1760,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23320
 		/// </remarks>
+		[JsonProperty("23320")]
 		public MaterialsAndSuppliesBalanceSheet MaterialsAndSupplies { get; set; }
 
 		/// <summary>
@@ -1594,6 +1769,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23321
 		/// </remarks>
+		[JsonProperty("23321")]
 		public MineralPropertiesBalanceSheet MineralProperties { get; set; }
 
 		/// <summary>
@@ -1602,6 +1778,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23322
 		/// </remarks>
+		[JsonProperty("23322")]
 		public MortgageLoanBalanceSheet MortgageLoan { get; set; }
 
 		/// <summary>
@@ -1610,6 +1787,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23323
 		/// </remarks>
+		[JsonProperty("23323")]
 		public MortgageAndConsumerloansBalanceSheet MortgageAndConsumerloans { get; set; }
 
 		/// <summary>
@@ -1619,6 +1797,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23324
 		/// </remarks>
+		[JsonProperty("23324")]
 		public NaturalResourceAssetsBalanceSheet NaturalResourceAssets { get; set; }
 
 		/// <summary>
@@ -1627,6 +1806,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23325
 		/// </remarks>
+		[JsonProperty("23325")]
 		public NetOtherUnrealizedGainLossBalanceSheet NetOtherUnrealizedGainLoss { get; set; }
 
 		/// <summary>
@@ -1635,6 +1815,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23326
 		/// </remarks>
+		[JsonProperty("23326")]
 		public NetUnrealizedGainLossForeignCurrencyBalanceSheet NetUnrealizedGainLossForeignCurrency { get; set; }
 
 		/// <summary>
@@ -1643,6 +1824,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23327
 		/// </remarks>
+		[JsonProperty("23327")]
 		public NetUnrealizedGainLossInvestmentsBalanceSheet NetUnrealizedGainLossInvestments { get; set; }
 
 		/// <summary>
@@ -1655,6 +1837,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23328
 		/// </remarks>
+		[JsonProperty("23328")]
 		public GrossNotesReceivableBalanceSheet GrossNotesReceivable { get; set; }
 
 		/// <summary>
@@ -1663,6 +1846,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23329
 		/// </remarks>
+		[JsonProperty("23329")]
 		public OtherAssetsBalanceSheet OtherAssets { get; set; }
 
 		/// <summary>
@@ -1671,6 +1855,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23330
 		/// </remarks>
+		[JsonProperty("23330")]
 		public OtherCapitalStockBalanceSheet OtherCapitalStock { get; set; }
 
 		/// <summary>
@@ -1679,6 +1864,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23331
 		/// </remarks>
+		[JsonProperty("23331")]
 		public OtherCurrentAssetsBalanceSheet OtherCurrentAssets { get; set; }
 
 		/// <summary>
@@ -1687,6 +1873,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23332
 		/// </remarks>
+		[JsonProperty("23332")]
 		public OtherCurrentBorrowingsBalanceSheet OtherCurrentBorrowings { get; set; }
 
 		/// <summary>
@@ -1695,6 +1882,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23333
 		/// </remarks>
+		[JsonProperty("23333")]
 		public OtherDeferredCostsBalanceSheet OtherDeferredCosts { get; set; }
 
 		/// <summary>
@@ -1703,6 +1891,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23334
 		/// </remarks>
+		[JsonProperty("23334")]
 		public OtherDepositsBalanceSheet OtherDeposits { get; set; }
 
 		/// <summary>
@@ -1711,6 +1900,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23335
 		/// </remarks>
+		[JsonProperty("23335")]
 		public OtherEquityAdjustmentsBalanceSheet OtherEquityAdjustments { get; set; }
 
 		/// <summary>
@@ -1719,6 +1909,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23336
 		/// </remarks>
+		[JsonProperty("23336")]
 		public OtherInterestEarningAssetsBalanceSheet OtherInterestEarningAssets { get; set; }
 
 		/// <summary>
@@ -1727,6 +1918,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23337
 		/// </remarks>
+		[JsonProperty("23337")]
 		public OtherInventoriesBalanceSheet OtherInventories { get; set; }
 
 		/// <summary>
@@ -1736,6 +1928,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23338
 		/// </remarks>
+		[JsonProperty("23338")]
 		public OtherInvestedAssetsBalanceSheet OtherInvestedAssets { get; set; }
 
 		/// <summary>
@@ -1744,6 +1937,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23339
 		/// </remarks>
+		[JsonProperty("23339")]
 		public OtherNonCurrentAssetsBalanceSheet OtherNonCurrentAssets { get; set; }
 
 		/// <summary>
@@ -1752,6 +1946,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23340
 		/// </remarks>
+		[JsonProperty("23340")]
 		public OtherPropertiesBalanceSheet OtherProperties { get; set; }
 
 		/// <summary>
@@ -1763,6 +1958,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23341
 		/// </remarks>
+		[JsonProperty("23341")]
 		public OtherRealEstateOwnedBalanceSheet OtherRealEstateOwned { get; set; }
 
 		/// <summary>
@@ -1771,6 +1967,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23342
 		/// </remarks>
+		[JsonProperty("23342")]
 		public OtherReceivablesBalanceSheet OtherReceivables { get; set; }
 
 		/// <summary>
@@ -1779,6 +1976,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23343
 		/// </remarks>
+		[JsonProperty("23343")]
 		public PatentsBalanceSheet Patents { get; set; }
 
 		/// <summary>
@@ -1788,6 +1986,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23344
 		/// </remarks>
+		[JsonProperty("23344")]
 		public NonCurrentPensionAndOtherPostretirementBenefitPlansBalanceSheet NonCurrentPensionAndOtherPostretirementBenefitPlans { get; set; }
 
 		/// <summary>
@@ -1797,6 +1996,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23345
 		/// </remarks>
+		[JsonProperty("23345")]
 		public PolicyLoansBalanceSheet PolicyLoans { get; set; }
 
 		/// <summary>
@@ -1807,6 +2007,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23347
 		/// </remarks>
+		[JsonProperty("23347")]
 		public PreferredStockEquityBalanceSheet PreferredStockEquity { get; set; }
 
 		/// <summary>
@@ -1815,6 +2016,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23348
 		/// </remarks>
+		[JsonProperty("23348")]
 		public PreferredStockOfSubsidiaryBalanceSheet PreferredStockOfSubsidiary { get; set; }
 
 		/// <summary>
@@ -1823,6 +2025,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23349
 		/// </remarks>
+		[JsonProperty("23349")]
 		public PreferredStocksAvailableForSaleBalanceSheet PreferredStocksAvailableForSale { get; set; }
 
 		/// <summary>
@@ -1832,6 +2035,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23350
 		/// </remarks>
+		[JsonProperty("23350")]
 		public PrepaidReinsurancePremiumsBalanceSheet PrepaidReinsurancePremiums { get; set; }
 
 		/// <summary>
@@ -1842,6 +2046,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23351
 		/// </remarks>
+		[JsonProperty("23351")]
 		public PropertiesBalanceSheet Properties { get; set; }
 
 		/// <summary>
@@ -1851,6 +2056,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23352
 		/// </remarks>
+		[JsonProperty("23352")]
 		public CurrentProvisionsBalanceSheet CurrentProvisions { get; set; }
 
 		/// <summary>
@@ -1860,6 +2066,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23353
 		/// </remarks>
+		[JsonProperty("23353")]
 		public LongTermProvisionsBalanceSheet LongTermProvisions { get; set; }
 
 		/// <summary>
@@ -1868,6 +2075,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23354
 		/// </remarks>
+		[JsonProperty("23354")]
 		public PurchasedComponentsBalanceSheet PurchasedComponents { get; set; }
 
 		/// <summary>
@@ -1877,6 +2085,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23355
 		/// </remarks>
+		[JsonProperty("23355")]
 		public RawMaterialsBalanceSheet RawMaterials { get; set; }
 
 		/// <summary>
@@ -1886,6 +2095,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23356
 		/// </remarks>
+		[JsonProperty("23356")]
 		public RealEstateHeldForSaleBalanceSheet RealEstateHeldForSale { get; set; }
 
 		/// <summary>
@@ -1895,6 +2105,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23357
 		/// </remarks>
+		[JsonProperty("23357")]
 		public RealEstateAndRealEstateJointVenturesHeldForInvestmentBalanceSheet RealEstateAndRealEstateJointVenturesHeldForInvestment { get; set; }
 
 		/// <summary>
@@ -1904,6 +2115,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23358
 		/// </remarks>
+		[JsonProperty("23358")]
 		public ReceivablesAdjustmentsAllowancesBalanceSheet ReceivablesAdjustmentsAllowances { get; set; }
 
 		/// <summary>
@@ -1913,6 +2125,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23359
 		/// </remarks>
+		[JsonProperty("23359")]
 		public RegulatoryAssetsBalanceSheet RegulatoryAssets { get; set; }
 
 		/// <summary>
@@ -1923,6 +2136,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23360
 		/// </remarks>
+		[JsonProperty("23360")]
 		public RegulatoryLiabilitiesBalanceSheet RegulatoryLiabilities { get; set; }
 
 		/// <summary>
@@ -1932,6 +2146,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23361
 		/// </remarks>
+		[JsonProperty("23361")]
 		public ReinsuranceBalancesPayableBalanceSheet ReinsuranceBalancesPayable { get; set; }
 
 		/// <summary>
@@ -1943,6 +2158,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23362
 		/// </remarks>
+		[JsonProperty("23362")]
 		public ReinsuranceReceivablesBalanceSheet ReinsuranceReceivables { get; set; }
 
 		/// <summary>
@@ -1951,6 +2167,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23363
 		/// </remarks>
+		[JsonProperty("23363")]
 		public ReinsuranceRecoverableForPaidLossesBalanceSheet ReinsuranceRecoverableForPaidLosses { get; set; }
 
 		/// <summary>
@@ -1959,6 +2176,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23364
 		/// </remarks>
+		[JsonProperty("23364")]
 		public ReinsuranceRecoverableForUnpaidLossesBalanceSheet ReinsuranceRecoverableForUnpaidLosses { get; set; }
 
 		/// <summary>
@@ -1973,6 +2191,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23365
 		/// </remarks>
+		[JsonProperty("23365")]
 		public RestrictedCashBalanceSheet RestrictedCash { get; set; }
 
 		/// <summary>
@@ -1982,6 +2201,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23366
 		/// </remarks>
+		[JsonProperty("23366")]
 		public RestrictedCashAndCashEquivalentsBalanceSheet RestrictedCashAndCashEquivalents { get; set; }
 
 		/// <summary>
@@ -1991,6 +2211,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23367
 		/// </remarks>
+		[JsonProperty("23367")]
 		public RestrictedCashAndInvestmentsBalanceSheet RestrictedCashAndInvestments { get; set; }
 
 		/// <summary>
@@ -2001,6 +2222,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23368
 		/// </remarks>
+		[JsonProperty("23368")]
 		public RestrictedCommonStockBalanceSheet RestrictedCommonStock { get; set; }
 
 		/// <summary>
@@ -2010,6 +2232,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23369
 		/// </remarks>
+		[JsonProperty("23369")]
 		public RestrictedInvestmentsBalanceSheet RestrictedInvestments { get; set; }
 
 		/// <summary>
@@ -2018,6 +2241,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23370
 		/// </remarks>
+		[JsonProperty("23370")]
 		public SecuritiesLendingPayableBalanceSheet SecuritiesLendingPayable { get; set; }
 
 		/// <summary>
@@ -2027,6 +2251,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23371
 		/// </remarks>
+		[JsonProperty("23371")]
 		public StudentLoanBalanceSheet StudentLoan { get; set; }
 
 		/// <summary>
@@ -2037,6 +2262,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23372
 		/// </remarks>
+		[JsonProperty("23372")]
 		public TaxesReceivableBalanceSheet TaxesReceivable { get; set; }
 
 		/// <summary>
@@ -2048,6 +2274,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23373
 		/// </remarks>
+		[JsonProperty("23373")]
 		public TimeDepositsPlacedBalanceSheet TimeDepositsPlaced { get; set; }
 
 		/// <summary>
@@ -2056,6 +2283,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23374
 		/// </remarks>
+		[JsonProperty("23374")]
 		public TotalCapitalizationBalanceSheet TotalCapitalization { get; set; }
 
 		/// <summary>
@@ -2064,6 +2292,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23375
 		/// </remarks>
+		[JsonProperty("23375")]
 		public TotalDeferredCreditsAndOtherNonCurrentLiabilitiesBalanceSheet TotalDeferredCreditsAndOtherNonCurrentLiabilities { get; set; }
 
 		/// <summary>
@@ -2073,6 +2302,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23376
 		/// </remarks>
+		[JsonProperty("23376")]
 		public UnbilledReceivablesBalanceSheet UnbilledReceivables { get; set; }
 
 		/// <summary>
@@ -2081,6 +2311,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23377
 		/// </remarks>
+		[JsonProperty("23377")]
 		public UnrealizedGainLossBalanceSheet UnrealizedGainLoss { get; set; }
 
 		/// <summary>
@@ -2090,6 +2321,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23378
 		/// </remarks>
+		[JsonProperty("23378")]
 		public WorkInProcessBalanceSheet WorkInProcess { get; set; }
 
 		/// <summary>
@@ -2098,6 +2330,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23379
 		/// </remarks>
+		[JsonProperty("23379")]
 		public OtherNonCurrentLiabilitiesBalanceSheet OtherNonCurrentLiabilities { get; set; }
 
 		/// <summary>
@@ -2106,6 +2339,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23380
 		/// </remarks>
+		[JsonProperty("23380")]
 		public CapitalLeaseObligationsBalanceSheet CapitalLeaseObligations { get; set; }
 
 		/// <summary>
@@ -2114,6 +2348,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23381
 		/// </remarks>
+		[JsonProperty("23381")]
 		public OtherLiabilitiesBalanceSheet OtherLiabilities { get; set; }
 
 		/// <summary>
@@ -2122,6 +2357,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23382
 		/// </remarks>
+		[JsonProperty("23382")]
 		public OtherPayableBalanceSheet OtherPayable { get; set; }
 
 		/// <summary>
@@ -2131,6 +2367,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23383
 		/// </remarks>
+		[JsonProperty("23383")]
 		public TangibleBookValueBalanceSheet TangibleBookValue { get; set; }
 
 		/// <summary>
@@ -2139,6 +2376,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23384
 		/// </remarks>
+		[JsonProperty("23384")]
 		public TotalEquityBalanceSheet TotalEquity { get; set; }
 
 		/// <summary>
@@ -2147,6 +2385,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23385
 		/// </remarks>
+		[JsonProperty("23385")]
 		public WorkingCapitalBalanceSheet WorkingCapital { get; set; }
 
 		/// <summary>
@@ -2155,6 +2394,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23386
 		/// </remarks>
+		[JsonProperty("23386")]
 		public TotalDebtBalanceSheet TotalDebt { get; set; }
 
 		/// <summary>
@@ -2164,6 +2404,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23387
 		/// </remarks>
+		[JsonProperty("23387")]
 		public CashValueOfLifeInsuranceBalanceSheet CashValueOfLifeInsurance { get; set; }
 
 		/// <summary>
@@ -2172,6 +2413,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23388
 		/// </remarks>
+		[JsonProperty("23388")]
 		public CommonUtilityPlantBalanceSheet CommonUtilityPlant { get; set; }
 
 		/// <summary>
@@ -2180,6 +2422,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23389
 		/// </remarks>
+		[JsonProperty("23389")]
 		public ElectricUtilityPlantBalanceSheet ElectricUtilityPlant { get; set; }
 
 		/// <summary>
@@ -2189,6 +2432,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23390
 		/// </remarks>
+		[JsonProperty("23390")]
 		public NaturalGasFuelAndOtherBalanceSheet NaturalGasFuelAndOther { get; set; }
 
 		/// <summary>
@@ -2198,6 +2442,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23391
 		/// </remarks>
+		[JsonProperty("23391")]
 		public NetUtilityPlantBalanceSheet NetUtilityPlant { get; set; }
 
 		/// <summary>
@@ -2208,6 +2453,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23392
 		/// </remarks>
+		[JsonProperty("23392")]
 		public WaterProductionBalanceSheet WaterProduction { get; set; }
 
 		/// <summary>
@@ -2216,6 +2462,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23393
 		/// </remarks>
+		[JsonProperty("23393")]
 		public OrdinarySharesNumberBalanceSheet OrdinarySharesNumber { get; set; }
 
 		/// <summary>
@@ -2224,6 +2471,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23394
 		/// </remarks>
+		[JsonProperty("23394")]
 		public PreferredSharesNumberBalanceSheet PreferredSharesNumber { get; set; }
 
 		/// <summary>
@@ -2232,6 +2480,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23395
 		/// </remarks>
+		[JsonProperty("23395")]
 		public TreasurySharesNumberBalanceSheet TreasurySharesNumber { get; set; }
 
 		/// <summary>
@@ -2241,6 +2490,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23399
 		/// </remarks>
+		[JsonProperty("23399")]
 		public TradingAndOtherReceivableBalanceSheet TradingAndOtherReceivable { get; set; }
 
 		/// <summary>
@@ -2250,6 +2500,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23400
 		/// </remarks>
+		[JsonProperty("23400")]
 		public EquityAttributableToOwnersOfParentBalanceSheet EquityAttributableToOwnersOfParent { get; set; }
 
 		/// <summary>
@@ -2259,6 +2510,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23401
 		/// </remarks>
+		[JsonProperty("23401")]
 		public SecuritiesLoanedBalanceSheet SecuritiesLoaned { get; set; }
 
 		/// <summary>
@@ -2268,6 +2520,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23402
 		/// </remarks>
+		[JsonProperty("23402")]
 		public ParticipatingPolicyholderEquityBalanceSheet ParticipatingPolicyholderEquity { get; set; }
 
 		/// <summary>
@@ -2276,6 +2529,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23403
 		/// </remarks>
+		[JsonProperty("23403")]
 		public NetTangibleAssetsBalanceSheet NetTangibleAssets { get; set; }
 
 		/// <summary>
@@ -2284,6 +2538,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23404
 		/// </remarks>
+		[JsonProperty("23404")]
 		public DuefromRelatedPartiesCurrentBalanceSheet DuefromRelatedPartiesCurrent { get; set; }
 
 		/// <summary>
@@ -2292,6 +2547,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23405
 		/// </remarks>
+		[JsonProperty("23405")]
 		public DuefromRelatedPartiesNonCurrentBalanceSheet DuefromRelatedPartiesNonCurrent { get; set; }
 
 		/// <summary>
@@ -2300,6 +2556,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23406
 		/// </remarks>
+		[JsonProperty("23406")]
 		public DuetoRelatedPartiesBalanceSheet DuetoRelatedParties { get; set; }
 
 		/// <summary>
@@ -2308,6 +2565,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23407
 		/// </remarks>
+		[JsonProperty("23407")]
 		public DuetoRelatedPartiesCurrentBalanceSheet DuetoRelatedPartiesCurrent { get; set; }
 
 		/// <summary>
@@ -2316,6 +2574,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23408
 		/// </remarks>
+		[JsonProperty("23408")]
 		public DuetoRelatedPartiesNonCurrentBalanceSheet DuetoRelatedPartiesNonCurrent { get; set; }
 
 		/// <summary>
@@ -2324,6 +2583,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23409
 		/// </remarks>
+		[JsonProperty("23409")]
 		public NetAssetsBalanceSheet NetAssets { get; set; }
 
 		/// <summary>
@@ -2332,6 +2592,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23410
 		/// </remarks>
+		[JsonProperty("23410")]
 		public InvestmentPropertiesBalanceSheet InvestmentProperties { get; set; }
 
 		/// <summary>
@@ -2340,6 +2601,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23411
 		/// </remarks>
+		[JsonProperty("23411")]
 		public InvestmentsinSubsidiariesatCostBalanceSheet InvestmentsinSubsidiariesatCost { get; set; }
 
 		/// <summary>
@@ -2348,6 +2610,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23412
 		/// </remarks>
+		[JsonProperty("23412")]
 		public InvestmentsinAssociatesatCostBalanceSheet InvestmentsinAssociatesatCost { get; set; }
 
 		/// <summary>
@@ -2356,6 +2619,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23413
 		/// </remarks>
+		[JsonProperty("23413")]
 		public InvestmentsinJointVenturesatCostBalanceSheet InvestmentsinJointVenturesatCost { get; set; }
 
 		/// <summary>
@@ -2364,6 +2628,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23414
 		/// </remarks>
+		[JsonProperty("23414")]
 		public InvestmentinFinancialAssetsBalanceSheet InvestmentinFinancialAssets { get; set; }
 
 		/// <summary>
@@ -2373,6 +2638,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23415
 		/// </remarks>
+		[JsonProperty("23415")]
 		public FinanceLeaseReceivablesBalanceSheet FinanceLeaseReceivables { get; set; }
 
 		/// <summary>
@@ -2382,6 +2648,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23418
 		/// </remarks>
+		[JsonProperty("23418")]
 		public ConvertibleLoansCurrentBalanceSheet ConvertibleLoansCurrent { get; set; }
 
 		/// <summary>
@@ -2391,6 +2658,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23419
 		/// </remarks>
+		[JsonProperty("23419")]
 		public BankLoansCurrentBalanceSheet BankLoansCurrent { get; set; }
 
 		/// <summary>
@@ -2400,6 +2668,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23420
 		/// </remarks>
+		[JsonProperty("23420")]
 		public OtherLoansCurrentBalanceSheet OtherLoansCurrent { get; set; }
 
 		/// <summary>
@@ -2409,6 +2678,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23422
 		/// </remarks>
+		[JsonProperty("23422")]
 		public AccruedandDeferredIncomeBalanceSheet AccruedandDeferredIncome { get; set; }
 
 		/// <summary>
@@ -2418,6 +2688,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23426
 		/// </remarks>
+		[JsonProperty("23426")]
 		public BankLoansNonCurrentBalanceSheet BankLoansNonCurrent { get; set; }
 
 		/// <summary>
@@ -2427,6 +2698,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23427
 		/// </remarks>
+		[JsonProperty("23427")]
 		public OtherLoansNonCurrentBalanceSheet OtherLoansNonCurrent { get; set; }
 
 		/// <summary>
@@ -2435,6 +2707,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23430
 		/// </remarks>
+		[JsonProperty("23430")]
 		public OtherReservesBalanceSheet OtherReserves { get; set; }
 
 		/// <summary>
@@ -2443,6 +2716,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23432
 		/// </remarks>
+		[JsonProperty("23432")]
 		public LoansandAdvancestoBankBalanceSheet LoansandAdvancestoBank { get; set; }
 
 		/// <summary>
@@ -2451,6 +2725,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23433
 		/// </remarks>
+		[JsonProperty("23433")]
 		public LoansandAdvancestoCustomerBalanceSheet LoansandAdvancestoCustomer { get; set; }
 
 		/// <summary>
@@ -2459,6 +2734,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23434
 		/// </remarks>
+		[JsonProperty("23434")]
 		public TreasuryBillsandOtherEligibleBillsBalanceSheet TreasuryBillsandOtherEligibleBills { get; set; }
 
 		/// <summary>
@@ -2467,6 +2743,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23435
 		/// </remarks>
+		[JsonProperty("23435")]
 		public EquitySharesInvestmentsBalanceSheet EquitySharesInvestments { get; set; }
 
 		/// <summary>
@@ -2475,6 +2752,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23436
 		/// </remarks>
+		[JsonProperty("23436")]
 		public DepositsbyBankBalanceSheet DepositsbyBank { get; set; }
 
 		/// <summary>
@@ -2484,6 +2762,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23437
 		/// </remarks>
+		[JsonProperty("23437")]
 		public CustomerAccountsBalanceSheet CustomerAccounts { get; set; }
 
 		/// <summary>
@@ -2493,6 +2772,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23438
 		/// </remarks>
+		[JsonProperty("23438")]
 		public ItemsinTheCourseofTransmissiontoOtherBanksBalanceSheet ItemsinTheCourseofTransmissiontoOtherBanks { get; set; }
 
 		/// <summary>
@@ -2501,6 +2781,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23439
 		/// </remarks>
+		[JsonProperty("23439")]
 		public TradingandFinancialLiabilitiesBalanceSheet TradingandFinancialLiabilities { get; set; }
 
 		/// <summary>
@@ -2509,6 +2790,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23440
 		/// </remarks>
+		[JsonProperty("23440")]
 		public DebtSecuritiesinIssueBalanceSheet DebtSecuritiesinIssue { get; set; }
 
 		/// <summary>
@@ -2518,6 +2800,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23441
 		/// </remarks>
+		[JsonProperty("23441")]
 		public SubordinatedLiabilitiesBalanceSheet SubordinatedLiabilities { get; set; }
 
 		/// <summary>
@@ -2527,6 +2810,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23443
 		/// </remarks>
+		[JsonProperty("23443")]
 		public ProvisionsTotalBalanceSheet ProvisionsTotal { get; set; }
 
 		/// <summary>
@@ -2537,6 +2821,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23444
 		/// </remarks>
+		[JsonProperty("23444")]
 		public OperatingLeaseAssetsBalanceSheet OperatingLeaseAssets { get; set; }
 
 		/// <summary>
@@ -2545,6 +2830,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23445
 		/// </remarks>
+		[JsonProperty("23445")]
 		public ClaimsOutstandingBalanceSheet ClaimsOutstanding { get; set; }
 
 		/// <summary>
@@ -2553,6 +2839,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23447
 		/// </remarks>
+		[JsonProperty("23447")]
 		public LongTermContractsBalanceSheet LongTermContracts { get; set; }
 
 		/// <summary>
@@ -2561,6 +2848,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23448
 		/// </remarks>
+		[JsonProperty("23448")]
 		public RealEstateBalanceSheet RealEstate { get; set; }
 
 		/// <summary>
@@ -2569,6 +2857,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23451
 		/// </remarks>
+		[JsonProperty("23451")]
 		public PaymentofBillsBalanceSheet PaymentofBills { get; set; }
 
 		/// <summary>
@@ -2577,6 +2866,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23452
 		/// </remarks>
+		[JsonProperty("23452")]
 		public LiabilitiesHeldforSaleCurrentBalanceSheet LiabilitiesHeldforSaleCurrent { get; set; }
 
 		/// <summary>
@@ -2585,6 +2875,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23453
 		/// </remarks>
+		[JsonProperty("23453")]
 		public LiabilitiesHeldforSaleNonCurrentBalanceSheet LiabilitiesHeldforSaleNonCurrent { get; set; }
 
 		/// <summary>
@@ -2593,6 +2884,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23454
 		/// </remarks>
+		[JsonProperty("23454")]
 		public UnclassifiedCurrentAssetsBalanceSheet UnclassifiedCurrentAssets { get; set; }
 
 		/// <summary>
@@ -2601,6 +2893,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23455
 		/// </remarks>
+		[JsonProperty("23455")]
 		public DebtSecuritiesBalanceSheet DebtSecurities { get; set; }
 
 		/// <summary>
@@ -2611,6 +2904,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23456
 		/// </remarks>
+		[JsonProperty("23456")]
 		public TotalFinancialLeaseObligationsBalanceSheet TotalFinancialLeaseObligations { get; set; }
 
 		/// <summary>
@@ -2620,6 +2914,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23457
 		/// </remarks>
+		[JsonProperty("23457")]
 		public AccruedandDeferredIncomeCurrentBalanceSheet AccruedandDeferredIncomeCurrent { get; set; }
 
 		/// <summary>
@@ -2629,6 +2924,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23458
 		/// </remarks>
+		[JsonProperty("23458")]
 		public AccruedandDeferredIncomeNonCurrentBalanceSheet AccruedandDeferredIncomeNonCurrent { get; set; }
 
 		/// <summary>
@@ -2638,6 +2934,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23459
 		/// </remarks>
+		[JsonProperty("23459")]
 		public FinanceLeaseReceivablesCurrentBalanceSheet FinanceLeaseReceivablesCurrent { get; set; }
 
 		/// <summary>
@@ -2647,6 +2944,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23460
 		/// </remarks>
+		[JsonProperty("23460")]
 		public FinanceLeaseReceivablesNonCurrentBalanceSheet FinanceLeaseReceivablesNonCurrent { get; set; }
 
 		/// <summary>
@@ -2656,6 +2954,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23462
 		/// </remarks>
+		[JsonProperty("23462")]
 		public FinancialLiabilitiesCurrentBalanceSheet FinancialLiabilitiesCurrent { get; set; }
 
 		/// <summary>
@@ -2664,6 +2963,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23463
 		/// </remarks>
+		[JsonProperty("23463")]
 		public FinancialLiabilitiesNonCurrentBalanceSheet FinancialLiabilitiesNonCurrent { get; set; }
 
 		/// <summary>
@@ -2673,6 +2973,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23466
 		/// </remarks>
+		[JsonProperty("23466")]
 		public FinancialAssetsDesignatedasFairValueThroughProfitorLossTotalBalanceSheet FinancialAssetsDesignatedasFairValueThroughProfitorLossTotal { get; set; }
 
 		/// <summary>
@@ -2683,6 +2984,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23468
 		/// </remarks>
+		[JsonProperty("23468")]
 		public TaxesAssetsCurrentBalanceSheet TaxesAssetsCurrent { get; set; }
 
 		/// <summary>
@@ -2691,6 +2993,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23469
 		/// </remarks>
+		[JsonProperty("23469")]
 		public OtherEquityInterestBalanceSheet OtherEquityInterest { get; set; }
 
 		/// <summary>
@@ -2699,6 +3002,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23470
 		/// </remarks>
+		[JsonProperty("23470")]
 		public InterestBearingBorrowingsNonCurrentBalanceSheet InterestBearingBorrowingsNonCurrent { get; set; }
 
 		/// <summary>
@@ -2707,6 +3011,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23471
 		/// </remarks>
+		[JsonProperty("23471")]
 		public NonInterestBearingBorrowingsNonCurrentBalanceSheet NonInterestBearingBorrowingsNonCurrent { get; set; }
 
 		/// <summary>
@@ -2715,6 +3020,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23472
 		/// </remarks>
+		[JsonProperty("23472")]
 		public TradeandOtherPayablesNonCurrentBalanceSheet TradeandOtherPayablesNonCurrent { get; set; }
 
 		/// <summary>
@@ -2723,6 +3029,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23473
 		/// </remarks>
+		[JsonProperty("23473")]
 		public InterestBearingBorrowingsCurrentBalanceSheet InterestBearingBorrowingsCurrent { get; set; }
 
 		/// <summary>
@@ -2731,6 +3038,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23474
 		/// </remarks>
+		[JsonProperty("23474")]
 		public NonInterestBearingBorrowingsCurrentBalanceSheet NonInterestBearingBorrowingsCurrent { get; set; }
 
 		/// <summary>
@@ -2740,6 +3048,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23475
 		/// </remarks>
+		[JsonProperty("23475")]
 		public PensionandOtherPostRetirementBenefitPlansCurrentBalanceSheet PensionandOtherPostRetirementBenefitPlansCurrent { get; set; }
 
 		/// <summary>
@@ -2749,6 +3058,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23476
 		/// </remarks>
+		[JsonProperty("23476")]
 		public CashandBalanceswithCentralBanksBalanceSheet CashandBalanceswithCentralBanks { get; set; }
 
 		/// <summary>
@@ -2757,6 +3067,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23477
 		/// </remarks>
+		[JsonProperty("23477")]
 		public PlacementwithBanksandOtherFinancialInstitutionsBalanceSheet PlacementwithBanksandOtherFinancialInstitutions { get; set; }
 
 		/// <summary>
@@ -2765,6 +3076,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23478
 		/// </remarks>
+		[JsonProperty("23478")]
 		public OtherLoanAssetsBalanceSheet OtherLoanAssets { get; set; }
 
 		/// <summary>
@@ -2774,6 +3086,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23479
 		/// </remarks>
+		[JsonProperty("23479")]
 		public HedgingAssetsTotalBalanceSheet HedgingAssetsTotal { get; set; }
 
 		/// <summary>
@@ -2782,6 +3095,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23480
 		/// </remarks>
+		[JsonProperty("23480")]
 		public AssetsPledgedasCollateralSubjecttoSaleorRepledgingTotalBalanceSheet AssetsPledgedasCollateralSubjecttoSaleorRepledgingTotal { get; set; }
 
 		/// <summary>
@@ -2790,6 +3104,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23481
 		/// </remarks>
+		[JsonProperty("23481")]
 		public TaxAssetsTotalBalanceSheet TaxAssetsTotal { get; set; }
 
 		/// <summary>
@@ -2799,6 +3114,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23482
 		/// </remarks>
+		[JsonProperty("23482")]
 		public AdvancesfromCentralBanksBalanceSheet AdvancesfromCentralBanks { get; set; }
 
 		/// <summary>
@@ -2808,6 +3124,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23483
 		/// </remarks>
+		[JsonProperty("23483")]
 		public CertificatesofDepositsandOtherDebtSecuritiesIssuedBalanceSheet CertificatesofDepositsandOtherDebtSecuritiesIssued { get; set; }
 
 		/// <summary>
@@ -2817,6 +3134,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23484
 		/// </remarks>
+		[JsonProperty("23484")]
 		public DepositCertificatesBalanceSheet DepositCertificates { get; set; }
 
 		/// <summary>
@@ -2826,6 +3144,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23485
 		/// </remarks>
+		[JsonProperty("23485")]
 		public DebenturesandDebtCertificatesBalanceSheet DebenturesandDebtCertificates { get; set; }
 
 		/// <summary>
@@ -2834,6 +3153,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23486
 		/// </remarks>
+		[JsonProperty("23486")]
 		public InterestBearingBorrowingsTotalBalanceSheet InterestBearingBorrowingsTotal { get; set; }
 
 		/// <summary>
@@ -2843,6 +3163,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23487
 		/// </remarks>
+		[JsonProperty("23487")]
 		public NonInterestBearingBorrowingsTotalBalanceSheet NonInterestBearingBorrowingsTotal { get; set; }
 
 		/// <summary>
@@ -2851,6 +3172,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23488
 		/// </remarks>
+		[JsonProperty("23488")]
 		public OtherBorrowedFundsBalanceSheet OtherBorrowedFunds { get; set; }
 
 		/// <summary>
@@ -2859,6 +3181,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23490
 		/// </remarks>
+		[JsonProperty("23490")]
 		public FinancialLiabilitiesDesignatedasFairValueThroughProfitorLossTotalBalanceSheet FinancialLiabilitiesDesignatedasFairValueThroughProfitorLossTotal { get; set; }
 
 		/// <summary>
@@ -2867,6 +3190,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23491
 		/// </remarks>
+		[JsonProperty("23491")]
 		public FinancialLiabilitiesMeasuredatAmortizedCostTotalBalanceSheet FinancialLiabilitiesMeasuredatAmortizedCostTotal { get; set; }
 
 		/// <summary>
@@ -2875,6 +3199,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23492
 		/// </remarks>
+		[JsonProperty("23492")]
 		public LoanCapitalBalanceSheet LoanCapital { get; set; }
 
 		/// <summary>
@@ -2883,6 +3208,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23493
 		/// </remarks>
+		[JsonProperty("23493")]
 		public HedgingLiabilitiesTotalBalanceSheet HedgingLiabilitiesTotal { get; set; }
 
 		/// <summary>
@@ -2891,6 +3217,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23494
 		/// </remarks>
+		[JsonProperty("23494")]
 		public LiabilitiesRecognizedforFairValueChangesinPortfolioHedgeofInterestRateRiskBalanceSheet LiabilitiesRecognizedforFairValueChangesinPortfolioHedgeofInterestRateRisk { get; set; }
 
 		/// <summary>
@@ -2901,6 +3228,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23495
 		/// </remarks>
+		[JsonProperty("23495")]
 		public AccruedLiabilitiesTotalBalanceSheet AccruedLiabilitiesTotal { get; set; }
 
 		/// <summary>
@@ -2910,6 +3238,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23496
 		/// </remarks>
+		[JsonProperty("23496")]
 		public DeferredIncomeTotalBalanceSheet DeferredIncomeTotal { get; set; }
 
 		/// <summary>
@@ -2920,6 +3249,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23497
 		/// </remarks>
+		[JsonProperty("23497")]
 		public DeferredTaxLiabilitiesTotalBalanceSheet DeferredTaxLiabilitiesTotal { get; set; }
 
 		/// <summary>
@@ -2928,6 +3258,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23499
 		/// </remarks>
+		[JsonProperty("23499")]
 		public ReinsuranceAssetsBalanceSheet ReinsuranceAssets { get; set; }
 
 		/// <summary>
@@ -2936,6 +3267,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23500
 		/// </remarks>
+		[JsonProperty("23500")]
 		public ReinsuranceShareofInsuranceContractBalanceSheet ReinsuranceShareofInsuranceContract { get; set; }
 
 		/// <summary>
@@ -2944,6 +3276,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23501
 		/// </remarks>
+		[JsonProperty("23501")]
 		public ReinsuranceShareofAccruedPolicyholderClaimsBalanceSheet ReinsuranceShareofAccruedPolicyholderClaims { get; set; }
 
 		/// <summary>
@@ -2952,6 +3285,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23502
 		/// </remarks>
+		[JsonProperty("23502")]
 		public DepositsMadeunderAssumedReinsuranceContractBalanceSheet DepositsMadeunderAssumedReinsuranceContract { get; set; }
 
 		/// <summary>
@@ -2962,6 +3296,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23503
 		/// </remarks>
+		[JsonProperty("23503")]
 		public InsuranceContractAssetsBalanceSheet InsuranceContractAssets { get; set; }
 
 		/// <summary>
@@ -2971,6 +3306,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23504
 		/// </remarks>
+		[JsonProperty("23504")]
 		public InsuranceReceivablesBalanceSheet InsuranceReceivables { get; set; }
 
 		/// <summary>
@@ -2982,6 +3318,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23505
 		/// </remarks>
+		[JsonProperty("23505")]
 		public InsuranceContractLiabilitiesBalanceSheet InsuranceContractLiabilities { get; set; }
 
 		/// <summary>
@@ -2991,6 +3328,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23506
 		/// </remarks>
+		[JsonProperty("23506")]
 		public InsurancePayablesBalanceSheet InsurancePayables { get; set; }
 
 		/// <summary>
@@ -2999,6 +3337,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23508
 		/// </remarks>
+		[JsonProperty("23508")]
 		public DepositsReceivedunderCededInsuranceContractBalanceSheet DepositsReceivedunderCededInsuranceContract { get; set; }
 
 		/// <summary>
@@ -3007,6 +3346,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23509
 		/// </remarks>
+		[JsonProperty("23509")]
 		public InvestmentContractLiabilitiesBalanceSheet InvestmentContractLiabilities { get; set; }
 
 		/// <summary>
@@ -3016,6 +3356,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23511
 		/// </remarks>
+		[JsonProperty("23511")]
 		public ConstructionGrantsBalanceSheet ConstructionGrants { get; set; }
 
 		/// <summary>
@@ -3025,6 +3366,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23514
 		/// </remarks>
+		[JsonProperty("23514")]
 		public DeferredCostCurrentBalanceSheet DeferredCostCurrent { get; set; }
 
 		/// <summary>
@@ -3035,6 +3377,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23515
 		/// </remarks>
+		[JsonProperty("23515")]
 		public PensionAndOtherPostretirementBenefitPlansTotalBalanceSheet PensionAndOtherPostretirementBenefitPlansTotal { get; set; }
 
 		/// <summary>
@@ -3043,6 +3386,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23516
 		/// </remarks>
+		[JsonProperty("23516")]
 		public LiabilitiesHeldforSaleTotalBalanceSheet LiabilitiesHeldforSaleTotal { get; set; }
 
 		/// <summary>
@@ -3051,6 +3395,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23517
 		/// </remarks>
+		[JsonProperty("23517")]
 		public HedgingAssetsNonCurrentBalanceSheet HedgingAssetsNonCurrent { get; set; }
 
 		/// <summary>
@@ -3059,6 +3404,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23518
 		/// </remarks>
+		[JsonProperty("23518")]
 		public HedgingAssetsCurrentBalanceSheet HedgingAssetsCurrent { get; set; }
 
 		/// <summary>
@@ -3068,6 +3414,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23519
 		/// </remarks>
+		[JsonProperty("23519")]
 		public ConvertibleLoansTotalBalanceSheet ConvertibleLoansTotal { get; set; }
 
 		/// <summary>
@@ -3077,6 +3424,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23520
 		/// </remarks>
+		[JsonProperty("23520")]
 		public BankLoansTotalBalanceSheet BankLoansTotal { get; set; }
 
 		/// <summary>
@@ -3086,6 +3434,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23521
 		/// </remarks>
+		[JsonProperty("23521")]
 		public OtherLoansTotalBalanceSheet OtherLoansTotal { get; set; }
 
 		/// <summary>
@@ -3094,6 +3443,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23522
 		/// </remarks>
+		[JsonProperty("23522")]
 		public HedgingLiabilitiesNonCurrentBalanceSheet HedgingLiabilitiesNonCurrent { get; set; }
 
 		/// <summary>
@@ -3102,6 +3452,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23523
 		/// </remarks>
+		[JsonProperty("23523")]
 		public HedgingLiabilitiesCurrentBalanceSheet HedgingLiabilitiesCurrent { get; set; }
 
 		/// <summary>
@@ -3110,6 +3461,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23524
 		/// </remarks>
+		[JsonProperty("23524")]
 		public InsuranceFundsNonCurrentBalanceSheet InsuranceFundsNonCurrent { get; set; }
 
 		/// <summary>
@@ -3118,6 +3470,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23525
 		/// </remarks>
+		[JsonProperty("23525")]
 		public InsuranceFundsCurrentBalanceSheet InsuranceFundsCurrent { get; set; }
 
 		/// <summary>
@@ -3127,6 +3480,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23528
 		/// </remarks>
+		[JsonProperty("23528")]
 		public DebtTotalBalanceSheet DebtTotal { get; set; }
 
 		/// <summary>
@@ -3136,6 +3490,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23529
 		/// </remarks>
+		[JsonProperty("23529")]
 		public ComTreShaNumBalanceSheet ComTreShaNum { get; set; }
 
 		/// <summary>
@@ -3145,6 +3500,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23530
 		/// </remarks>
+		[JsonProperty("23530")]
 		public PreTreShaNumBalanceSheet PreTreShaNum { get; set; }
 
 		/// <summary>
@@ -3155,6 +3511,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23531
 		/// </remarks>
+		[JsonProperty("23531")]
 		public NetDebtBalanceSheet NetDebt { get; set; }
 
 		/// <summary>
@@ -3165,6 +3522,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23532
 		/// </remarks>
+		[JsonProperty("23532")]
 		public ShareIssuedBalanceSheet ShareIssued { get; set; }
 
 		/// <summary>
@@ -3174,6 +3532,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23533
 		/// </remarks>
+		[JsonProperty("23533")]
 		public AssetsHeldForSaleCurrentBalanceSheet AssetsHeldForSaleCurrent { get; set; }
 
 		/// <summary>
@@ -3183,6 +3542,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23534
 		/// </remarks>
+		[JsonProperty("23534")]
 		public AssetsHeldForSaleNonCurrentBalanceSheet AssetsHeldForSaleNonCurrent { get; set; }
 
 		/// <summary>
@@ -3191,6 +3551,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23535
 		/// </remarks>
+		[JsonProperty("23535")]
 		public BiologicalAssetsBalanceSheet BiologicalAssets { get; set; }
 
 		/// <summary>
@@ -3200,6 +3561,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23536
 		/// </remarks>
+		[JsonProperty("23536")]
 		public CashRestrictedOrPledgedBalanceSheet CashRestrictedOrPledged { get; set; }
 
 		/// <summary>
@@ -3209,6 +3571,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23537
 		/// </remarks>
+		[JsonProperty("23537")]
 		public ConvertibleLoansNonCurrentBalanceSheet ConvertibleLoansNonCurrent { get; set; }
 
 		/// <summary>
@@ -3218,6 +3581,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23538
 		/// </remarks>
+		[JsonProperty("23538")]
 		public FinancialOrDerivativeInvestmentCurrentLiabilitiesBalanceSheet FinancialOrDerivativeInvestmentCurrentLiabilities { get; set; }
 
 		/// <summary>
@@ -3226,6 +3590,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23539
 		/// </remarks>
+		[JsonProperty("23539")]
 		public LoanAndLoanReceivablesBalanceSheet LoanAndLoanReceivables { get; set; }
 
 		/// <summary>
@@ -3235,6 +3600,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23540
 		/// </remarks>
+		[JsonProperty("23540")]
 		public OtherInvestmentsBalanceSheet OtherInvestments { get; set; }
 
 		/// <summary>
@@ -3244,6 +3610,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23541
 		/// </remarks>
+		[JsonProperty("23541")]
 		public TradeAndOtherReceivablesNonCurrentBalanceSheet TradeAndOtherReceivablesNonCurrent { get; set; }
 
 		/// <summary>
@@ -3252,6 +3619,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23542
 		/// </remarks>
+		[JsonProperty("23542")]
 		public DateTime BSFileDate { get; set; }
 
 		/// <summary>
@@ -3260,6 +3628,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <remarks>
 		/// Morningstar DataId: 23543
 		/// </remarks>
+		[JsonProperty("23543")]
 		public DueFromRelatedPartiesBalanceSheet DueFromRelatedParties { get; set; }
 
 		/// <summary>
