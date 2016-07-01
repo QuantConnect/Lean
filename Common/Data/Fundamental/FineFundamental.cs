@@ -14,6 +14,7 @@
 */
 
 using System;
+using Newtonsoft.Json;
 
 namespace QuantConnect.Data.Fundamental
 {
@@ -25,6 +26,7 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// The end time of this data.
         /// </summary>
+        [JsonIgnore]
         public override DateTime EndTime
         {
             get { return Time + QuantConnect.Time.OneDay; }
