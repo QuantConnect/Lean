@@ -111,7 +111,9 @@ namespace QuantConnect.Brokerages.Fxcm
             AutoResetEvent autoResetEvent;
             lock (_locker)
             {
-                _currentRequest = _gateway.requestOpenPositions(_accountId);
+                _currentRequest = _terminal.Equals("Demo") ?
+                    _gateway.requestOpenPositions(Convert.ToInt64(_accountId)) :
+                    _gateway.requestOpenPositions(_accountId);
                 autoResetEvent = new AutoResetEvent(false);
                 _mapRequestsToAutoResetEvents[_currentRequest] = autoResetEvent;
             }
