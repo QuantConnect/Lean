@@ -821,9 +821,6 @@ namespace QuantConnect.Algorithm
 
             } while (orderQuantity > 0 && (marginRequired > marginRemaining || orderValue + orderFees > targetOrderValue));
 
-            //var truncated = this.BrokerageModel.TruncateQuantity(security, orderQuantity);
-            //return (direction == OrderDirection.Sell ? -1 : 1) * truncated;
-
             //Rounding off Order Quantity to the nearest multiple of Lot Size
             if (orderQuantity % security.SymbolProperties.LotSize != 0)
             {
