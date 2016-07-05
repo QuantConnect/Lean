@@ -16,7 +16,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
+using Newtonsoft.Json;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
@@ -31,6 +34,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     public class FineFundamentalSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory
     {
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
+        private Dictionary<string, string> _dateIndex;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FineFundamentalSubscriptionEnumeratorFactory"/> class.
@@ -50,103 +54,56 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request)
         {
             var tradableDays = _tradableDaysProvider(request);
-            
-            var financialStatements = new FinancialStatements();
-            var earningReports = new EarningReports();
-            var operationRatios = new OperationRatios();
-            var earningRatios = new EarningRatios();
-            var valuationRatios = new ValuationRatios();
 
-            var financialStatementsConfiguration = new SubscriptionDataConfig(request.Configuration, typeof(FinancialStatements), request.Security.Symbol);
-            var earningReportsConfiguration = new SubscriptionDataConfig(request.Configuration, typeof(EarningReports), request.Security.Symbol);
-            var operationRatiosConfiguration = new SubscriptionDataConfig(request.Configuration, typeof(OperationRatios), request.Security.Symbol);
-            var earningRatiosConfiguration = new SubscriptionDataConfig(request.Configuration, typeof(EarningRatios), request.Security.Symbol);
-            var valuationRatiosConfiguration = new SubscriptionDataConfig(request.Configuration, typeof(ValuationRatios), request.Security.Symbol);
+            var fineFundamental = new FineFundamental();
+            var fineFundamentalConfiguration = new SubscriptionDataConfig(request.Configuration, typeof(FineFundamental), request.Security.Symbol);
 
             return (
                 from date in tradableDays
 
-                let financialStatementsSource = financialStatements.GetSource(financialStatementsConfiguration, date, false)
-                let earningReportsSource = earningReports.GetSource(earningReportsConfiguration, date, false)
-                let operationRatiosSource = operationRatios.GetSource(operationRatiosConfiguration, date, false)
-                let earningRatiosSource = earningRatios.GetSource(earningRatiosConfiguration, date, false)
-                let valuationRatiosSource = valuationRatios.GetSource(valuationRatiosConfiguration, date, false)
-
-                let financialStatementsFactory = SubscriptionDataSourceReader.ForSource(financialStatementsSource, financialStatementsConfiguration, date, false)
-                let earningReportsFactory = SubscriptionDataSourceReader.ForSource(earningReportsSource, earningReportsConfiguration, date, false)
-                let operationRatiosFactory = SubscriptionDataSourceReader.ForSource(operationRatiosSource, operationRatiosConfiguration, date, false)
-                let earningRatiosFactory = SubscriptionDataSourceReader.ForSource(earningRatiosSource, earningRatiosConfiguration, date, false)
-                let valuationRatiosFactory = SubscriptionDataSourceReader.ForSource(valuationRatiosSource, valuationRatiosConfiguration, date, false)
-
-                let financialStatementsForDate = (FinancialStatements)financialStatementsFactory.Read(financialStatementsSource).FirstOrDefault()
-                let earningReportsForDate = (EarningReports)earningReportsFactory.Read(earningReportsSource).FirstOrDefault()
-                let operationRatiosForDate = (OperationRatios)operationRatiosFactory.Read(operationRatiosSource).FirstOrDefault()
-                let earningRatiosForDate = (EarningRatios)earningRatiosFactory.Read(earningRatiosSource).FirstOrDefault()
-                let valuationRatiosForDate = (ValuationRatios)valuationRatiosFactory.Read(valuationRatiosSource).FirstOrDefault()
+                let fineFundamentalSource = GetSource(fineFundamental, fineFundamentalConfiguration, date)
+                let fineFundamentalFactory = SubscriptionDataSourceReader.ForSource(fineFundamentalSource, fineFundamentalConfiguration, date, false)
+                let fineFundamentalForDate = (FineFundamental)fineFundamentalFactory.Read(fineFundamentalSource).FirstOrDefault()
 
                 select new FineFundamental
                 {
                     DataType = MarketDataType.Auxiliary,
                     Symbol = request.Configuration.Symbol,
                     Time = date,
-                    FinancialStatements = UpdateFinancialStatements(financialStatementsForDate, ref financialStatements),
-                    EarningReports = UpdateEarningReports(earningReportsForDate, ref earningReports),
-                    OperationRatios = UpdateOperationRatios(operationRatiosForDate, ref operationRatios),
-                    EarningRatios = UpdateEarningRatios(earningRatiosForDate, ref earningRatios),
-                    ValuationRatios = UpdateValuationRatios(valuationRatiosForDate, ref valuationRatios)
+                    CompanyReference = fineFundamentalForDate != null ? fineFundamentalForDate.CompanyReference : null,
+                    SecurityReference = fineFundamentalForDate != null ? fineFundamentalForDate.SecurityReference : null,
+                    FinancialStatements = fineFundamentalForDate != null ? fineFundamentalForDate.FinancialStatements : null,
+                    EarningReports = fineFundamentalForDate != null ? fineFundamentalForDate.EarningReports : null,
+                    OperationRatios = fineFundamentalForDate != null ? fineFundamentalForDate.OperationRatios : null,
+                    EarningRatios = fineFundamentalForDate != null ? fineFundamentalForDate.EarningRatios : null,
+                    ValuationRatios = fineFundamentalForDate != null ? fineFundamentalForDate.ValuationRatios : null
                 }
                 ).GetEnumerator();
         }
 
-        private static FinancialStatements UpdateFinancialStatements(FinancialStatements financialStatements, ref FinancialStatements previousFinancialStatements)
+        private SubscriptionDataSource GetSource(FineFundamental fine, SubscriptionDataConfig config, DateTime date)
         {
-            if (financialStatements == null) return previousFinancialStatements;
+            var source = fine.GetSource(config, date, false);
 
-            financialStatements.UpdateValues(previousFinancialStatements);
-            previousFinancialStatements = financialStatements;
+            if (!File.Exists(source.Source))
+            {
+                var fileName = date.ToString("yyyyMMdd");
+                if (_dateIndex == null)
+                {
+                    var folder = Path.GetDirectoryName(source.Source) ?? string.Empty;
+                    var indexFileName = Path.Combine(folder, "index.json");
+                    var indexJson = File.ReadAllText(indexFileName);
+                    _dateIndex = JsonConvert.DeserializeObject<Dictionary<string, string>>(indexJson);
+                }
 
-            return financialStatements;
+                if (_dateIndex.TryGetValue(fileName, out fileName))
+                {
+                    date = DateTime.ParseExact(fileName, "yyyyMMdd", CultureInfo.InvariantCulture);
+                    return fine.GetSource(config, date, false);
+                }
+            }
+
+            return source;
         }
-
-        private static EarningReports UpdateEarningReports(EarningReports earningReports, ref EarningReports previousEarningReports)
-        {
-            if (earningReports == null) return previousEarningReports;
-
-            earningReports.UpdateValues(previousEarningReports);
-            previousEarningReports = earningReports;
-
-            return earningReports;
-        }
-
-        private static OperationRatios UpdateOperationRatios(OperationRatios operationRatios, ref OperationRatios previousOperationRatios)
-        {
-            if (operationRatios == null) return previousOperationRatios;
-
-            operationRatios.UpdateValues(previousOperationRatios);
-            previousOperationRatios = operationRatios;
-
-            return operationRatios;
-        }
-
-        private static EarningRatios UpdateEarningRatios(EarningRatios earningRatios, ref EarningRatios previousEarningRatios)
-        {
-            if (earningRatios == null) return previousEarningRatios;
-
-            earningRatios.UpdateValues(previousEarningRatios);
-            previousEarningRatios = earningRatios;
-
-            return earningRatios;
-        }
-
-        private static ValuationRatios UpdateValuationRatios(ValuationRatios valuationRatios, ref ValuationRatios previousvaValuationRatios)
-        {
-            if (valuationRatios == null) return previousvaValuationRatios;
-
-            valuationRatios.UpdateValues(previousvaValuationRatios);
-            previousvaValuationRatios = valuationRatios;
-
-            return valuationRatios;
-        }
-
     }
 }
