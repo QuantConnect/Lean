@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.IO;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Data.Fundamental
@@ -44,6 +45,27 @@ namespace QuantConnect.Data.Fundamental
             var ticker = "qc-universe-fine-" + market;
             var sid = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, ticker, market);
             return new Symbol(sid, ticker);
+        }
+
+        /// <summary>
+        /// Return the URL string source of the file. This will be converted to a stream 
+        /// </summary>
+        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        {
+            var source =
+                Path.Combine(Globals.DataFolder, "equity", config.Market, "fundamental", "fine", 
+                config.Symbol.Value, date.ToString("yyyyMMdd") + ".zip");
+
+            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+        }
+
+        /// <summary>
+        /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object
+        /// each time it is called. The returned object is assumed to be time stamped in the config.ExchangeTimeZone.
+        /// </summary>
+        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+        {
+            return JsonConvert.DeserializeObject<FineFundamental>(line);
         }
     }
 }
