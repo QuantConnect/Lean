@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using Newtonsoft.Json;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
@@ -34,7 +33,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     public class FineFundamentalSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory
     {
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
-        private Dictionary<string, string> _dateIndex;
+        private string _lastUsedFileName;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FineFundamentalSubscriptionEnumeratorFactory"/> class.
@@ -81,26 +80,61 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 ).GetEnumerator();
         }
 
+        /// <summary>
+        /// Returns a SubscriptionDataSource for the FineFundamental class, 
+        /// returning data from a previous date if not available for the requested date
+        /// </summary>
         private SubscriptionDataSource GetSource(FineFundamental fine, SubscriptionDataConfig config, DateTime date)
         {
             var source = fine.GetSource(config, date, false);
 
+            var fileName = date.ToString("yyyyMMdd");
+
             if (!File.Exists(source.Source))
             {
-                var fileName = date.ToString("yyyyMMdd");
-                if (_dateIndex == null)
+                if (_lastUsedFileName == null)
                 {
-                    var folder = Path.GetDirectoryName(source.Source) ?? string.Empty;
-                    var indexFileName = Path.Combine(folder, "index.json");
-                    var indexJson = File.ReadAllText(indexFileName);
-                    _dateIndex = JsonConvert.DeserializeObject<Dictionary<string, string>>(indexJson);
-                }
+                    // find first file date
+                    var path = Path.GetDirectoryName(source.Source) ?? string.Empty;
+                    var firstFileName = Path.GetFileNameWithoutExtension(Directory.GetFiles(path, "*.zip").OrderBy(x => x).First());
+                    var firstDate = DateTime.ParseExact(firstFileName, "yyyyMMdd", CultureInfo.InvariantCulture);
 
-                if (_dateIndex.TryGetValue(fileName, out fileName))
-                {
-                    date = DateTime.ParseExact(fileName, "yyyyMMdd", CultureInfo.InvariantCulture);
-                    return fine.GetSource(config, date, false);
+                    // requested date before first date, return current invalid source anyway
+                    if (date < firstDate)
+                        return source;
+
+                    // requested date after first date, save date of first existing file
+                    _lastUsedFileName = firstFileName;
+
+                    // loop back in time until we find an existing file
+                    while (string.CompareOrdinal(fileName, _lastUsedFileName) > 0)
+                    {
+                        // get previous date
+                        date = date.AddDays(-1);
+
+                        // get file name for this date
+                        source = fine.GetSource(config, date, false);
+                        fileName = Path.GetFileNameWithoutExtension(source.Source);
+
+                        if (!File.Exists(source.Source))
+                            continue;
+
+                        // we found the file, save its name and return the source
+                        _lastUsedFileName = fileName;
+
+                        break;
+                    }
                 }
+                else
+                {
+                    // return source for last existing file date
+                    date = DateTime.ParseExact(_lastUsedFileName, "yyyyMMdd", CultureInfo.InvariantCulture);
+                    source = fine.GetSource(config, date, false);
+                }
+            }
+            else
+            {
+                _lastUsedFileName = fileName;
             }
 
             return source;
