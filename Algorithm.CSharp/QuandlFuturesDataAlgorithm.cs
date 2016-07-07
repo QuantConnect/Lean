@@ -14,10 +14,9 @@
 */
 
 using System;
-using QuantConnect.Algorithm;
 using QuantConnect.Data.Custom;
 
-namespace QuantConnect
+namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// QuantConnect University: Futures Example
@@ -28,7 +27,7 @@ namespace QuantConnect
     /// QuantConnect has a special deal with Quandl giving you access to Stevens Continuous Futurs (SCF) for free.
     /// If you'd like to download SCF for local backtesting, you can download it through Quandl.com.
     /// </summary>
-    public class QCUQuandlFutures : QCAlgorithm
+    public class QuandlFuturesDataAlgorithm : QCAlgorithm
     {
         string _crude = "SCF/CME_CL1_ON";
 
@@ -51,23 +50,9 @@ namespace QuantConnect
         {
             if (!Portfolio.HoldStock)
             {
-                SetHoldings(_crude, 1);
+                SetHoldings(Symbol(_crude), 1);
                 Debug(Time.ToString("u") + " Purchased Crude Oil: " + _crude);
             }
-        }
-    }
-
-    /// <summary>
-    /// Custom quandl data type for setting customized value column name. Value column is used for the primary trading calculations and charting.
-    /// </summary>
-    public class QuandlFuture : Quandl
-    {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="QuantConnect.QuandlFuture"/> class.
-        /// </summary>
-        public QuandlFuture()
-            : base(valueColumnName: "Settle")
-        {
         }
     }
 }

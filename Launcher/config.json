@@ -79,6 +79,10 @@
   "iqfeed-productName": "",
   "iqfeed-version": "1.0",
 
+  // Required to access data from Quandl
+  // To get your access token go to https://www.quandl.com/account/api
+  "quandl-auth-token": "",
+
   // parameters to set in the algorithm (the below are just samples)
   "parameters": {
     "ema-fast": 10,
