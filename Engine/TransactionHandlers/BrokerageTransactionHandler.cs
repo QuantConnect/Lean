@@ -545,7 +545,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     {
                         // compare in dollars
                         var delta = cash.Amount - balanceCash.Amount;
-                        if (Math.Abs(delta) > _algorithm.Portfolio.CashBook.ConvertToAccountCurrency(delta, cash.Symbol))
+                        if (Math.Abs(_algorithm.Portfolio.CashBook.ConvertToAccountCurrency(delta, cash.Symbol)) > 5)
                         {
                             // log the delta between 
                             Log.LogHandler.Trace("BrokerageTransactionHandler.PerformCashSync(): {0} Delta: {1}", balanceCash.Symbol,
