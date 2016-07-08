@@ -93,6 +93,7 @@
     <Compile Include="OpeningBreakoutAlgorithm.cs" />
     <Compile Include="DropboxUniverseSelectionAlgorithm.cs" />
     <Compile Include="ParameterizedAlgorithm.cs" />
+    <Compile Include="QuandlFuturesDataAlgorithm.cs" />
     <Compile Include="UniverseSelectionDefinitionsAlgorithm.cs" />
     <Compile Include="UserDefinedUniverseAlgorithm.cs" />
     <Compile Include="WarmupAlgorithm.cs" />
@@ -103,7 +104,6 @@
     <Compile Include="MovingAverageCrossAlgorithm.cs" />
     <Compile Include="MultipleSymbolConsolidationAlgorithm.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="QuandlFuturesDataAlgorithm.cs" />
     <Compile Include="QuandlImporterAlgorithm.cs" />
     <Compile Include="RegressionAlgorithm.cs" />
     <Compile Include="RenkoConsolidatorAlgorithm.cs" />
