@@ -46,7 +46,7 @@ namespace QuantConnect.Api
         {
             _token = token;
             _userId = userId.ToString();
-            Client = new RestClient("https://beta.quantconnect.com/api/v2/");
+            Client = new RestClient("https://www.quantconnect.com/api/v2/");
         }
 
         /// <summary>
