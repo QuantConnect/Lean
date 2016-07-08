@@ -39,7 +39,7 @@ namespace QuantConnect.Brokerages.Fxcm
 
         private readonly object _locker = new object();
         private string _currentRequest;
-        private const int ResponseTimeout = 2500;
+        private const int ResponseTimeout = 5000;
         private bool _isOrderUpdateOrCancelRejected;
         private bool _isOrderSubmitRejected;
 
