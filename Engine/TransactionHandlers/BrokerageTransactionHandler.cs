@@ -543,7 +543,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     //update the cash if the entry if found in the balances
                     if (balanceCash != null)
                     {
-                        //compare in dollars
+                        // compare in dollars
                         var delta = cash.Amount - balanceCash.Amount;
                         if (Math.Abs(delta) > _algorithm.Portfolio.CashBook.ConvertToAccountCurrency(delta, cash.Symbol))
                         {
