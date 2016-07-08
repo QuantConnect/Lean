@@ -239,7 +239,7 @@ namespace QuantConnect.Tests.API
         private Backtest WaitForBacktestCompletion(IApi api, int projectId, string backtestId)
         {
             var result = new Backtest();
-            var finish = DateTime.Now.AddSeconds(30);
+            var finish = DateTime.Now.AddSeconds(60);
             while (DateTime.Now < finish)
             {
                 result = api.ReadBacktest(projectId, backtestId);
