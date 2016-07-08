@@ -535,25 +535,30 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 {
                     return;
                 }
-                
+
                 // if we were returned our balances, update everything and flip our flag as having performed sync today
-                foreach (var balance in balances)
+                foreach (var cash in _algorithm.Portfolio.CashBook.Values)
                 {
-                    Cash cash;
-                    if (_algorithm.Portfolio.CashBook.TryGetValue(balance.Symbol, out cash))
+                    var balanceCash = balances.FirstOrDefault(balance => balance.Symbol == cash.Symbol);
+                    //update the cash if the entry if found in the balances
+                    if (balanceCash != null)
                     {
-                        // compare in dollars
-                        var delta = cash.Amount - balance.Amount;
+                        //compare in dollars
+                        var delta = cash.Amount - balanceCash.Amount;
                         if (Math.Abs(delta) > _algorithm.Portfolio.CashBook.ConvertToAccountCurrency(delta, cash.Symbol))
                         {
                             // log the delta between 
-                            Log.LogHandler.Trace("BrokerageTransactionHandler.PerformCashSync(): {0} Delta: {1}", balance.Symbol,
+                            Log.LogHandler.Trace("BrokerageTransactionHandler.PerformCashSync(): {0} Delta: {1}", balanceCash.Symbol,
                                 delta.ToString("0.00"));
                         }
+                        _algorithm.Portfolio.SetCash(balanceCash.Symbol, balanceCash.Amount, balanceCash.ConversionRate);
                     }
-                    _algorithm.Portfolio.SetCash(balance.Symbol, balance.Amount, balance.ConversionRate);
+                    else
+                    {
+                        //Set the cash amount to zero if cash entry not found in the balances
+                        _algorithm.Portfolio.SetCash(cash.Symbol, 0, cash.ConversionRate);
+                    }
                 }
-
                 _syncedLiveBrokerageCashToday = true;
             }
             finally
