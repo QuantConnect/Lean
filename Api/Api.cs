@@ -57,7 +57,7 @@ namespace QuantConnect.Api
         /// <param name="name">Project name</param>
         /// <param name="language">Programming language to use</param>
         /// <returns>Project object from the API.</returns>
-        public Project ProjectCreate(string name, Language language)
+        public Project CreateProject(string name, Language language)
         {
             var request = new RestRequest("projects/create", Method.POST);
             request.RequestFormat = DataFormat.Json;
@@ -77,7 +77,7 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Project id you own</param>
         /// <returns></returns>
-        public Project ProjectRead(int projectId)
+        public Project ReadProject(int projectId)
         {
             var request = new RestRequest("projects/read", Method.GET);
             request.RequestFormat = DataFormat.Json;
@@ -143,7 +143,7 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Project id we wish to compile.</param>
         /// <returns>Compile object result</returns>
-        public Compile CompileCreate(int projectId)
+        public Compile CreateCompile(int projectId)
         {
             var request = new RestRequest("compile/create", Method.POST);
             request.AddParameter("application/json", JsonConvert.SerializeObject(new
@@ -161,7 +161,7 @@ namespace QuantConnect.Api
         /// <param name="projectId">Project id we sent for compile</param>
         /// <param name="compileId">Compile id return from the creation request</param>
         /// <returns>Compile object result</returns>
-        public Compile CompileRead(int projectId, string compileId)
+        public Compile ReadCompile(int projectId, string compileId)
         {
             var request = new RestRequest("compile/read", Method.GET);
             request.RequestFormat = DataFormat.Json;
@@ -180,7 +180,7 @@ namespace QuantConnect.Api
         /// <param name="compileId">Successfuly compile id for the project</param>
         /// <param name="backtestName">Name for the new backtest</param>
         /// <returns>Backtest object</returns>
-        public Backtest BacktestCreate(int projectId, string compileId, string backtestName)
+        public Backtest CreateBacktest(int projectId, string compileId, string backtestName)
         {
             var request = new RestRequest("backtests/create", Method.POST);
             request.AddParameter("projectId", projectId);
@@ -197,7 +197,7 @@ namespace QuantConnect.Api
         /// <param name="projectId">Project id to read</param>
         /// <param name="backtestId">Specific backtest id to read</param>
         /// <returns>Backtest object with the results</returns>
-        public Backtest BacktestRead(int projectId, string backtestId)
+        public Backtest ReadBacktest(int projectId, string backtestId)
         {
             var request = new RestRequest("backtests/read", Method.GET);
             request.AddParameter("backtestId", backtestId);
@@ -215,7 +215,7 @@ namespace QuantConnect.Api
         /// <param name="name">Name we'd like to assign to the backtest</param>
         /// <param name="note">Note attached to the backtest</param>
         /// <returns>Rest response class indicating success</returns>
-        public RestResponse BacktestUpdate(int projectId, string backtestId, string name = "", string note = "")
+        public RestResponse UpdateBacktest(int projectId, string backtestId, string name = "", string note = "")
         {
             var request = new RestRequest("backtests/update", Method.POST);
             request.RequestFormat = DataFormat.Json;
@@ -251,7 +251,7 @@ namespace QuantConnect.Api
         /// <param name="projectId">Project for the backtest we want to delete</param>
         /// <param name="backtestId">Backtest id we want to delete</param>
         /// <returns></returns>
-        public RestResponse BacktestDelete(int projectId, string backtestId)
+        public RestResponse DeleteBacktest(int projectId, string backtestId)
         {
             var request = new RestRequest("backtests/delete", Method.POST);
             request.RequestFormat = DataFormat.Json;
@@ -261,36 +261,6 @@ namespace QuantConnect.Api
             _connection.TryRequest(request, out result);
             return result;
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         /// <summary>
         /// Calculate the remaining bytes of user log allowed based on the user's cap and daily cumulative usage.

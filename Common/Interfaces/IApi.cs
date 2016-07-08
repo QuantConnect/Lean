@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Api;
-using QuantConnect.Packets;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Interfaces
@@ -30,25 +29,24 @@ namespace QuantConnect.Interfaces
     public interface IApi : IDisposable
     {
         /// <summary>
+        /// Initialize the control system
+        /// </summary>
+        void Initialize();
+
+        /// <summary>
         /// Create a project with the specified name and language via QuantConnect.com API
         /// </summary>
         /// <param name="name">Project name</param>
         /// <param name="language">Programming language to use</param>
         /// <returns>Project object from the API.</returns>
-        Project ProjectCreate(string name, Language language);
+        Project CreateProject(string name, Language language);
 
         /// <summary>
         /// Read in a project from the QuantConnect.com API.
         /// </summary>
         /// <param name="projectId">Project id you own</param>
         /// <returns></returns>
-        Project ProjectRead(int projectId);
-
-        /// <summary>
-        /// Read back a list of all projects on the account for a user.
-        /// </summary>
-        /// <returns>Container for list of projects</returns>
-        ProjectList ProjectList();
+        Project ReadProject(int projectId);
 
         /// <summary>
         /// Update a specific project with a list of files. All other files will be deleted.
@@ -66,11 +64,17 @@ namespace QuantConnect.Interfaces
         RestResponse Delete(int projectId);
 
         /// <summary>
+        /// Read back a list of all projects on the account for a user.
+        /// </summary>
+        /// <returns>Container for list of projects</returns>
+        ProjectList ProjectList();
+
+        /// <summary>
         /// Create a new compile job request for this project id.
         /// </summary>
         /// <param name="projectId">Project id we wish to compile.</param>
         /// <returns>Compile object result</returns>
-        Compile CompileCreate(int projectId);
+        Compile CreateCompile(int projectId);
 
         /// <summary>
         /// Read a compile packet job result.
@@ -78,7 +82,7 @@ namespace QuantConnect.Interfaces
         /// <param name="projectId">Project id we sent for compile</param>
         /// <param name="compileId">Compile id return from the creation request</param>
         /// <returns>Compile object result</returns>
-        Compile CompileRead(int projectId, string compileId);
+        Compile ReadCompile(int projectId, string compileId);
 
         /// <summary>
         /// Create a new backtest from a specified projectId and compileId
@@ -87,7 +91,7 @@ namespace QuantConnect.Interfaces
         /// <param name="compileId"></param>
         /// <param name="backtestName"></param>
         /// <returns></returns>
-        Backtest BacktestCreate(int projectId, string compileId, string backtestName);
+        Backtest CreateBacktest(int projectId, string compileId, string backtestName);
 
         /// <summary>
         /// Read out the full result of a specific backtest
@@ -95,7 +99,7 @@ namespace QuantConnect.Interfaces
         /// <param name="projectId">Project id for the backtest we'd like to read</param>
         /// <param name="backtestId">Backtest id for the backtest we'd like to read</param>
         /// <returns>Backtest result object</returns>
-        Backtest BacktestRead(int projectId, string backtestId);
+        Backtest ReadBacktest(int projectId, string backtestId);
 
         /// <summary>
         /// Update the backtest name
@@ -103,8 +107,9 @@ namespace QuantConnect.Interfaces
         /// <param name="projectId">Project id to update</param>
         /// <param name="backtestId">Backtest id to update</param>
         /// <param name="backtestName">New backtest name to set</param>
+        /// <param name="backtestNote">Note attached to the backtest</param>
         /// <returns>Rest response on success</returns>
-        RestResponse BacktestUpdate(int projectId, string backtestId, string backtestName = "", string note = "");
+        RestResponse UpdateBacktest(int projectId, string backtestId, string backtestName = "", string backtestNote = "");
 
         /// <summary>
         /// Delete a backtest from the specified project and backtestId.
@@ -112,7 +117,7 @@ namespace QuantConnect.Interfaces
         /// <param name="projectId">Project for the backtest we want to delete</param>
         /// <param name="backtestId">Backtest id we want to delete</param>
         /// <returns>RestResponse on success</returns>
-        RestResponse BacktestDelete(int projectId, string backtestId);
+        RestResponse DeleteBacktest(int projectId, string backtestId);
 
         /// <summary>
         /// Get a list of backtests for a specific project id
@@ -121,10 +126,15 @@ namespace QuantConnect.Interfaces
         /// <returns>BacktestList container for list of backtests</returns>
         BacktestList BacktestList(int projectId);
 
-        /// <summary>
-        /// Initialize the control system
-        /// </summary>
-        void Initialize();
+        //Status StatusRead(int projectId, string algorithmId);
+        //RestResponse StatusUpdate(int projectId, string algorithmId, AlgorithmStatus status, string message = "");
+        //LogControl LogAllowanceRead();
+        //void LogAllowanceUpdate(string backtestId, string url, int length);
+        //void StatisticsUpdate(int projectId, string algorithmId, decimal unrealized, decimal fees, decimal netProfit, decimal holdings, decimal equity, decimal netReturn, decimal volume, int trades, double sharpe);
+        //void NotifyOwner(int projectId, string algorithmId, string subject, string body);
+        //IEnumerable<MarketHoursSegment> MarketHours(int projectId, DateTime time, Symbol symbol);
+
+
 
         /// <summary>
         /// Read the maximum log allowance
