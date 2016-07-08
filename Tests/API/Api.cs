@@ -38,7 +38,6 @@ namespace QuantConnect.Tests.API
 
         //Test Authentication Credentials
         private int _testAccount = 1;
-        private string _email = "tests@quantconnect.com";
         private string _testToken = "ec87b337ac970da4cbea648f24f1c851";
 
         /// <summary>
@@ -73,115 +72,119 @@ namespace QuantConnect.Tests.API
         {
             // Initialize the test:
             var api = CreateApiAccessor();
-            var testSourceFile = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs");
-
-            // Test create a new project successfully
-            var name = DateTime.UtcNow.ToString("u") + " Test " + _testAccount;
-            var project = api.CreateProject(name, Language.CSharp);
-            Assert.IsTrue(project.Success);
-            Assert.IsTrue(project.ProjectId > 0);
-            Console.WriteLine("API Test: Project created successfully");
-
-            // Gets the list of projects from the account. 
-            // Should at least be the one we created.
-            var projects = api.ProjectList();
-            Assert.IsTrue(projects.Success);
-            Assert.IsTrue(projects.Projects.Count >= 1);
-            Console.WriteLine("API Test: Projects listed successfully");
-
-            // Test read back the project we just created
-            var readProject = api.ReadProject(project.ProjectId);
-            Assert.IsTrue(readProject.Success);
-            Assert.IsTrue(readProject.Files.Count == 0);
-            Assert.IsTrue(readProject.Name == name);
-            Console.WriteLine("API Test: Project read successfully");
-
-            // Test set a project file for the project
-            var files = new List<ProjectFile>
+            var sources = new List<TestAlgorithm>()
             {
-                new ProjectFile
-                {
-                    Name = "Main.cs",
-                    Code = testSourceFile
-                }
+                new TestAlgorithm(Language.CSharp, "main.cs", File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")),
+                new TestAlgorithm(Language.FSharp, "main.fs", File.ReadAllText("../../../Algorithm.FSharp/BasicTemplateAlgorithm.fs")),
+                new TestAlgorithm(Language.Python, "main.py", File.ReadAllText("../../../Algorithm.Python/BasicTemplateAlgorithm.py"))
             };
-            var updateProject = api.UpdateProject(project.ProjectId, files);
-            Assert.IsTrue(updateProject.Success);
-            Console.WriteLine("API Test: Project updated successfully");
 
-            // Download the project again to validate its got the new file
-            var verifyRead = api.ReadProject(project.ProjectId);
-            Assert.IsTrue(verifyRead.Files.Count == 1);
-            Assert.IsTrue(verifyRead.Files.First().Name == "Main.cs");
-            Console.WriteLine("API Test: Project re-read successfully");
+            foreach (var source in sources)
+            {
+                // Test create a new project successfully
+                var name = DateTime.UtcNow.ToString("u") + " Test " + _testAccount + " Lang " + source.Language;
+                var project = api.CreateProject(name, source.Language);
+                Assert.IsTrue(project.Success);
+                Assert.IsTrue(project.ProjectId > 0);
+                Console.WriteLine("API Test: {0} Project created successfully", source.Language);
 
-            // Test successfully compile the project we've created
-            var compileCreate = api.CreateCompile(project.ProjectId);
-            Assert.IsTrue(compileCreate.Success);
-            Assert.IsTrue(compileCreate.State == CompileState.InQueue);
-            Console.WriteLine("API Test: Compile created successfully");
+                // Gets the list of projects from the account. 
+                // Should at least be the one we created.
+                var projects = api.ProjectList();
+                Assert.IsTrue(projects.Success);
+                Assert.IsTrue(projects.Projects.Count >= 1);
+                Console.WriteLine("API Test: All Projects listed successfully");
 
-            //Read out the compile; wait for it to be completed for 10 seconds
-            var compileSuccess = WaitForCompilerResponse(api, project.ProjectId, compileCreate.CompileId);
-            Assert.IsTrue(compileSuccess.Success);
-            Assert.IsTrue(compileSuccess.State == CompileState.BuildSuccess);
-            Console.WriteLine("API Test: Project built successfully");
+                // Test read back the project we just created
+                var readProject = api.ReadProject(project.ProjectId);
+                Assert.IsTrue(readProject.Success);
+                Assert.IsTrue(readProject.Files.Count == 0);
+                Assert.IsTrue(readProject.Name == name);
+                Console.WriteLine("API Test: {0} Project read successfully", source.Language);
 
-            // Update the file, create a build error, test we get build error
-            files[0].Code += "[Jibberish at end of the file to cause a build error]";
-            api.UpdateProject(project.ProjectId, files);
-            var compileError = api.CreateCompile(project.ProjectId);
-            compileError = WaitForCompilerResponse(api, project.ProjectId, compileError.CompileId);
-            Assert.IsTrue(compileError.Success); // Successfully processed rest request.
-            Assert.IsTrue(compileError.State == CompileState.BuildError); //Resulting in build fail.
-            Console.WriteLine("API Test: Project errored successfully");
+                // Test set a project file for the project
+                var files = new List<ProjectFile>
+                {
+                    new ProjectFile { Name = source.Name, Code = source.Code }
+                };
+                var updateProject = api.UpdateProject(project.ProjectId, files);
+                Assert.IsTrue(updateProject.Success);
+                Console.WriteLine("API Test: {0} Project updated successfully", source.Language);
 
-            // Using our successful compile; launch a backtest! 
-            var backtestName = DateTime.Now.ToString("u") + " API Backtest";
-            var backtest = api.CreateBacktest(project.ProjectId, compileSuccess.CompileId, backtestName);
-            Assert.IsTrue(backtest.Success);
-            Console.WriteLine("API Test: Backtest created successfully");
+                // Download the project again to validate its got the new file
+                var verifyRead = api.ReadProject(project.ProjectId);
+                Assert.IsTrue(verifyRead.Files.Count == 1);
+                Assert.IsTrue(verifyRead.Files.First().Name == source.Name);
+                Console.WriteLine("API Test: {0} Project read back successfully", source.Language);
 
-            // Now read the backtest and wait for it to complete
-            var backtestRead = WaitForBacktestCompletion(api, project.ProjectId, backtest.BacktestId);
-            Assert.IsTrue(backtestRead.Success);
-            Assert.IsTrue(backtestRead.Progress == 1);
-            Assert.IsTrue(backtestRead.Name == backtestName);
-            Assert.IsTrue(backtestRead.Result.Statistics["Total Trades"] == "1");
-            Console.WriteLine("API Test: Backtest completed successfully");
+                // Test successfully compile the project we've created
+                var compileCreate = api.CreateCompile(project.ProjectId);
+                Assert.IsTrue(compileCreate.Success);
+                Assert.IsTrue(compileCreate.State == CompileState.InQueue);
+                Console.WriteLine("API Test: {0} Compile created successfully", source.Language);
 
-            // Verify we have the backtest in our project
-            var listBacktests = api.BacktestList(project.ProjectId);
-            Assert.IsTrue(listBacktests.Success);
-            Assert.IsTrue(listBacktests.Backtests.Count >= 1);
-            Assert.IsTrue(listBacktests.Backtests[0].Name == backtestName);
-            Console.WriteLine("API Test: Backtests listed successfully");
+                //Read out the compile; wait for it to be completed for 10 seconds
+                var compileSuccess = WaitForCompilerResponse(api, project.ProjectId, compileCreate.CompileId);
+                Assert.IsTrue(compileSuccess.Success);
+                Assert.IsTrue(compileSuccess.State == CompileState.BuildSuccess);
+                Console.WriteLine("API Test: {0} Project built successfully", source.Language);
 
-            // Update the backtest name and test its been updated
-            backtestName += "-Amendment";
-            var renameBacktest = api.UpdateBacktest(project.ProjectId, backtest.BacktestId, backtestName);
-            Assert.IsTrue(renameBacktest.Success);
-            backtestRead = api.ReadBacktest(project.ProjectId, backtest.BacktestId);
-            Assert.IsTrue(backtestRead.Name == backtestName);
-            Console.WriteLine("API Test: Backtest renamed successfully");
+                // Update the file, create a build error, test we get build error
+                files[0].Code += "[Jibberish at end of the file to cause a build error]";
+                api.UpdateProject(project.ProjectId, files);
+                var compileError = api.CreateCompile(project.ProjectId);
+                compileError = WaitForCompilerResponse(api, project.ProjectId, compileError.CompileId);
+                Assert.IsTrue(compileError.Success); // Successfully processed rest request.
+                Assert.IsTrue(compileError.State == CompileState.BuildError); //Resulting in build fail.
+                Console.WriteLine("API Test: {0} Project errored successfully", source.Language);
 
-            //Update the note and make sure its been updated:
-            var newNote = DateTime.Now.ToString("u");
-            var noteBacktest = api.UpdateBacktest(project.ProjectId, backtest.BacktestId, backtestNote: newNote);
-            Assert.IsTrue(noteBacktest.Success);
-            backtestRead = api.ReadBacktest(project.ProjectId, backtest.BacktestId);
-            Assert.IsTrue(backtestRead.Note == newNote);
-            Console.WriteLine("API Test: Backtest note added successfully");
+                // Using our successful compile; launch a backtest! 
+                var backtestName = DateTime.Now.ToString("u") + " API Backtest";
+                var backtest = api.CreateBacktest(project.ProjectId, compileSuccess.CompileId, backtestName);
+                Assert.IsTrue(backtest.Success);
+                Console.WriteLine("API Test: {0} Backtest created successfully", source.Language);
 
-            // Delete the backtest we just created
-            var deleteBacktest = api.DeleteBacktest(project.ProjectId, backtest.BacktestId);
-            Assert.IsTrue(deleteBacktest.Success);
-            Console.WriteLine("API Test: Backtest deleted successfully");
+                // Now read the backtest and wait for it to complete
+                var backtestRead = WaitForBacktestCompletion(api, project.ProjectId, backtest.BacktestId);
+                Assert.IsTrue(backtestRead.Success);
+                Assert.IsTrue(backtestRead.Progress == 1);
+                Assert.IsTrue(backtestRead.Name == backtestName);
+                Assert.IsTrue(backtestRead.Result.Statistics["Total Trades"] == "1");
+                Console.WriteLine("API Test: {0} Backtest completed successfully", source.Language);
 
-            // Test delete the project we just created
-            var deleteProject = api.Delete(project.ProjectId);
-            Assert.IsTrue(deleteProject.Success);
-            Console.WriteLine("API Test: Project deleted successfully");
+                // Verify we have the backtest in our project
+                var listBacktests = api.BacktestList(project.ProjectId);
+                Assert.IsTrue(listBacktests.Success);
+                Assert.IsTrue(listBacktests.Backtests.Count >= 1);
+                Assert.IsTrue(listBacktests.Backtests[0].Name == backtestName);
+                Console.WriteLine("API Test: {0} Backtests listed successfully", source.Language);
+
+                // Update the backtest name and test its been updated
+                backtestName += "-Amendment";
+                var renameBacktest = api.UpdateBacktest(project.ProjectId, backtest.BacktestId, backtestName);
+                Assert.IsTrue(renameBacktest.Success);
+                backtestRead = api.ReadBacktest(project.ProjectId, backtest.BacktestId);
+                Assert.IsTrue(backtestRead.Name == backtestName);
+                Console.WriteLine("API Test: {0} Backtest renamed successfully", source.Language);
+
+                //Update the note and make sure its been updated:
+                var newNote = DateTime.Now.ToString("u");
+                var noteBacktest = api.UpdateBacktest(project.ProjectId, backtest.BacktestId, backtestNote: newNote);
+                Assert.IsTrue(noteBacktest.Success);
+                backtestRead = api.ReadBacktest(project.ProjectId, backtest.BacktestId);
+                Assert.IsTrue(backtestRead.Note == newNote);
+                Console.WriteLine("API Test: {0} Backtest note added successfully", source.Language);
+
+                // Delete the backtest we just created
+                var deleteBacktest = api.DeleteBacktest(project.ProjectId, backtest.BacktestId);
+                Assert.IsTrue(deleteBacktest.Success);
+                Console.WriteLine("API Test: {0} Backtest deleted successfully", source.Language);
+
+                // Test delete the project we just created
+                var deleteProject = api.Delete(project.ProjectId);
+                Assert.IsTrue(deleteProject.Success);
+                Console.WriteLine("API Test: {0} Project deleted successfully", source.Language);
+            }
         }
 
 
@@ -249,5 +252,21 @@ namespace QuantConnect.Tests.API
             }
             return result;
         }
+
+        class TestAlgorithm
+        {
+            public Language Language;
+            public string Code;
+            public string Name;
+
+            public TestAlgorithm(Language language, string name, string code)
+            {
+                Language = language;
+                Code = code;
+                Name = name;
+            }
+        }
     }
+
+    
 }
