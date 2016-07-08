@@ -24,7 +24,7 @@ using QuantConnect.Interfaces;
 
 namespace QuantConnect.Tests.API
 {
-    [TestFixture]
+    [TestFixture, Category("TravisExclude")]
     class RestApiTests
     {
 
@@ -45,7 +45,7 @@ namespace QuantConnect.Tests.API
         /// Test successfully authenticates with the API using valid credentials.
         /// </summary>
         [Test]
-        public void Authentication_AuthenticatesSuccessfully()
+        public void AuthenticatesSuccessfully()
         {
             var connection = new ApiConnection(_testAccount, _testToken);
             Assert.IsTrue(connection.Connected);
@@ -55,7 +55,7 @@ namespace QuantConnect.Tests.API
         /// Rejects invalid credentials
         /// </summary>
         [Test]
-        public void Authentication_RejectsInvalidCredentials()
+        public void RejectsInvalidCredentials()
         {
             var connection = new ApiConnection(_testAccount, "");
             Assert.IsFalse(connection.Connected);
@@ -69,7 +69,7 @@ namespace QuantConnect.Tests.API
         ///  - Builds the project, 
         /// </summary>
         [Test]
-        public void Project_Compile_Backtest()
+        public void CreatesProjectCompilesAndBacktestsProject()
         {
             // Initialize the test:
             var api = CreateApiAccessor();
@@ -77,15 +77,24 @@ namespace QuantConnect.Tests.API
 
             // Test create a new project successfully
             var name = DateTime.UtcNow.ToString("u") + " Test " + _testAccount;
-            var project = api.ProjectCreate(name, Language.CSharp);
+            var project = api.CreateProject(name, Language.CSharp);
             Assert.IsTrue(project.Success);
             Assert.IsTrue(project.ProjectId > 0);
+            Console.WriteLine("API Test: Project created successfully");
+
+            // Gets the list of projects from the account. 
+            // Should at least be the one we created.
+            var projects = api.ProjectList();
+            Assert.IsTrue(projects.Success);
+            Assert.IsTrue(projects.Projects.Count >= 1);
+            Console.WriteLine("API Test: Projects listed successfully");
 
             // Test read back the project we just created
-            var readProject = api.ProjectRead(project.ProjectId);
+            var readProject = api.ReadProject(project.ProjectId);
             Assert.IsTrue(readProject.Success);
             Assert.IsTrue(readProject.Files.Count == 0);
             Assert.IsTrue(readProject.Name == name);
+            Console.WriteLine("API Test: Project read successfully");
 
             // Test set a project file for the project
             var files = new List<ProjectFile>
@@ -98,249 +107,83 @@ namespace QuantConnect.Tests.API
             };
             var updateProject = api.UpdateProject(project.ProjectId, files);
             Assert.IsTrue(updateProject.Success);
-            
+            Console.WriteLine("API Test: Project updated successfully");
+
             // Download the project again to validate its got the new file
-            var verifyRead = api.ProjectRead(project.ProjectId);
+            var verifyRead = api.ReadProject(project.ProjectId);
             Assert.IsTrue(verifyRead.Files.Count == 1);
             Assert.IsTrue(verifyRead.Files.First().Name == "Main.cs");
+            Console.WriteLine("API Test: Project re-read successfully");
 
             // Test successfully compile the project we've created
-            var compileCreate = api.CompileCreate(project.ProjectId);
+            var compileCreate = api.CreateCompile(project.ProjectId);
             Assert.IsTrue(compileCreate.Success);
             Assert.IsTrue(compileCreate.State == CompileState.InQueue);
+            Console.WriteLine("API Test: Compile created successfully");
 
             //Read out the compile; wait for it to be completed for 10 seconds
             var compileSuccess = WaitForCompilerResponse(api, project.ProjectId, compileCreate.CompileId);
             Assert.IsTrue(compileSuccess.Success);
             Assert.IsTrue(compileSuccess.State == CompileState.BuildSuccess);
+            Console.WriteLine("API Test: Project built successfully");
 
             // Update the file, create a build error, test we get build error
             files[0].Code += "[Jibberish at end of the file to cause a build error]";
             api.UpdateProject(project.ProjectId, files);
-            var compileError = api.CompileCreate(project.ProjectId);
+            var compileError = api.CreateCompile(project.ProjectId);
             compileError = WaitForCompilerResponse(api, project.ProjectId, compileError.CompileId);
             Assert.IsTrue(compileError.Success); // Successfully processed rest request.
             Assert.IsTrue(compileError.State == CompileState.BuildError); //Resulting in build fail.
+            Console.WriteLine("API Test: Project errored successfully");
 
             // Using our successful compile; launch a backtest! 
             var backtestName = DateTime.Now.ToString("u") + " API Backtest";
-            var backtest = api.BacktestCreate(project.ProjectId, compileSuccess.CompileId, backtestName);
+            var backtest = api.CreateBacktest(project.ProjectId, compileSuccess.CompileId, backtestName);
             Assert.IsTrue(backtest.Success);
-           
+            Console.WriteLine("API Test: Backtest created successfully");
+
             // Now read the backtest and wait for it to complete
             var backtestRead = WaitForBacktestCompletion(api, project.ProjectId, backtest.BacktestId);
             Assert.IsTrue(backtestRead.Success);
             Assert.IsTrue(backtestRead.Progress == 1);
             Assert.IsTrue(backtestRead.Name == backtestName);
             Assert.IsTrue(backtestRead.Result.Statistics["Total Trades"] == "1");
+            Console.WriteLine("API Test: Backtest completed successfully");
 
             // Verify we have the backtest in our project
             var listBacktests = api.BacktestList(project.ProjectId);
             Assert.IsTrue(listBacktests.Success);
             Assert.IsTrue(listBacktests.Backtests.Count >= 1);
             Assert.IsTrue(listBacktests.Backtests[0].Name == backtestName);
+            Console.WriteLine("API Test: Backtests listed successfully");
 
             // Update the backtest name and test its been updated
             backtestName += "-Amendment";
-            var renameBacktest = api.BacktestUpdate(project.ProjectId, backtest.BacktestId, backtestName);
+            var renameBacktest = api.UpdateBacktest(project.ProjectId, backtest.BacktestId, backtestName);
             Assert.IsTrue(renameBacktest.Success);
-            backtestRead = api.BacktestRead(project.ProjectId, backtest.BacktestId);
+            backtestRead = api.ReadBacktest(project.ProjectId, backtest.BacktestId);
             Assert.IsTrue(backtestRead.Name == backtestName);
+            Console.WriteLine("API Test: Backtest renamed successfully");
 
             //Update the note and make sure its been updated:
             var newNote = DateTime.Now.ToString("u");
-            var noteBacktest = api.BacktestUpdate(project.ProjectId, backtest.BacktestId, backtestNote: newNote);
+            var noteBacktest = api.UpdateBacktest(project.ProjectId, backtest.BacktestId, backtestNote: newNote);
             Assert.IsTrue(noteBacktest.Success);
-            backtestRead = api.BacktestRead(project.ProjectId, backtest.BacktestId);
+            backtestRead = api.ReadBacktest(project.ProjectId, backtest.BacktestId);
             Assert.IsTrue(backtestRead.Note == newNote);
+            Console.WriteLine("API Test: Backtest note added successfully");
 
             // Delete the backtest we just created
-            var deleteBacktest = api.BacktestDelete(project.ProjectId, backtest.BacktestId);
+            var deleteBacktest = api.DeleteBacktest(project.ProjectId, backtest.BacktestId);
             Assert.IsTrue(deleteBacktest.Success);
+            Console.WriteLine("API Test: Backtest deleted successfully");
 
-            //
-
-
-            
             // Test delete the project we just created
             var deleteProject = api.Delete(project.ProjectId);
             Assert.IsTrue(deleteProject.Success);
+            Console.WriteLine("API Test: Project deleted successfully");
         }
 
-
-        /// <summary>
-        /// Reads in the files and project properties.
-        /// </summary>
-        [Test]
-        public void Project_List()
-        {
-            var api = CreateApiAccessor();
-            var projects = api.ProjectList();
-            Assert.IsTrue(projects.Success);
-        }
-        
-        
-        /// <summary>
-        /// Read in a list of the backtest names and properties.
-        /// </summary>
-        [Test]
-        public void Backtests_List()
-        {
-            // Todo
-        }
-
-        /// <summary>
-        /// Stop an executing backtest
-        /// </summary>
-        [Test]
-        public void Backtests_Update_Stop()
-        {
-            // Todo
-        }
-
-        /// <summary>
-        /// Delete the backtest specified.
-        /// </summary>
-        [Test]
-        public void Backtests_Delete()
-        {
-            // Todo
-        }
-
-        /// <summary>
-        /// Deploy a new live trading algorithm to the specified brokerage with the specified credentials.
-        /// </summary>
-        [Test]
-        public void Live_Deploy_Paper()
-        {
-            // Todo
-        }
-
-        /// <summary>
-        /// Deploy a new live trading algorithm to the specified brokerage with the specified credentials.
-        /// </summary>
-        [Test]
-        public void Live_Deploy_Interactive()
-        {
-            // Todo
-        }
-
-        /// <summary>
-        /// Deploy a new live trading algorithm to the specified brokerage with the specified credentials.
-        /// </summary>
-        [Test]
-        public void Live_Deploy_Oanda()
-        {
-            // Todo
-        }
-
-        /// <summary>
-        /// Deploy a new live trading algorithm to the specified brokerage with the specified credentials.
-        /// </summary>
-        [Test]
-        public void Live_Deploy_FXCM()
-        {
-            // Todo
-        }
-
-        /// <summary>
-        /// Read the list of live trading algorithm names.
-        /// </summary>
-        [Test]
-        public void Live_ReadAll()
-        {
-            // Todo
-        }
-
-        /// <summary>
-        /// Read the code files for this live trading algorithm
-        /// </summary>
-        [Test]
-        public void Live_ReadsOne_Files()
-        {
-            //Todo
-        }
-
-        /// <summary>
-        /// Read the logs for this live trading algorithm for the specified date range.
-        /// </summary>
-        [Test]
-        public void Live_ReadsOne_Logs()
-        {
-            // Todo
-        }
-
-        /// <summary>
-        /// Read the specified charts for the specified date range, for one live algorithm
-        /// </summary>
-        [Test]
-        public void Live_ReadsOne_Charts()
-        {
-            // Todo
-        }
-
-        /// <summary>
-        /// Set the chart we're subscribed to.
-        /// </summary>
-        [Test]
-        public void Live_Update_SetChartSubscription()
-        {
-            // Todo
-        }
-
-        /// <summary>
-        /// Stop a live trading algorithm
-        /// </summary>
-        [Test]
-        public void Live_Update_Stop()
-        {
-            // Todo
-        }
-
-        /// <summary>
-        /// Update the statistics for a live running algorthm
-        /// </summary>
-        [Test]
-        public void Live_Update_Statistics()
-        {
-            // Todo
-        }
-
-        /// <summary>
-        /// Liquidate holdings and stop a live trading algorithm
-        /// </summary>
-        [Test]
-        public void Live_Update_Liquidate()
-        {
-            // Todo
-        }
-
-        /// <summary>
-        /// Add a backtest log to the records.
-        /// </summary>
-        [Test]
-        public void LogRecords_Create_AddBacktest()
-        {
-            // Todo
-        }
-
-        /// <summary>
-        /// Read the backtest log allowance.
-        /// </summary>
-        [Test]
-        public void Logs_ReadAllowance()
-        {
-            // Todo
-        }
-
-        /// <summary>
-        /// Get the market hours for the provided date/symbol pair.
-        /// </summary>
-        [Test]
-        public void MarketHour_Read()
-        {
-            // Todo
-        }
 
         /// <summary>
         /// Create an authenticated API accessor object.
@@ -379,7 +222,7 @@ namespace QuantConnect.Tests.API
             var finish = DateTime.Now.AddSeconds(30);
             while (DateTime.Now < finish)
             {
-                compile = api.CompileRead(projectId, compileId);
+                compile = api.ReadCompile(projectId, compileId);
                 if (compile.State != CompileState.InQueue) break;
                 Thread.Sleep(500);
             }
@@ -399,7 +242,7 @@ namespace QuantConnect.Tests.API
             var finish = DateTime.Now.AddSeconds(30);
             while (DateTime.Now < finish)
             {
-                result = api.BacktestRead(projectId, backtestId);
+                result = api.ReadBacktest(projectId, backtestId);
                 if (result.Progress == 1) break;
                 if (!result.Success) break;
                 Thread.Sleep(500);

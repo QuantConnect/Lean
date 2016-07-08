@@ -40,8 +40,8 @@ namespace QuantConnect.Api
         /// <summary>
         /// Create a new Api Connection Class.
         /// </summary>
-        /// <param name="userId"></param>
-        /// <param name="token"></param>
+        /// <param name="userId">User Id number from QuantConnect.com account. Found at www.quantconnect.com/account </param>
+        /// <param name="token">Access token for the QuantConnect account. Found at www.quantconnect.com/account </param>
         public ApiConnection(int userId, string token)
         {
             _token = token;
