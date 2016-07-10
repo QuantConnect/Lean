@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using System.Runtime.CompilerServices;
 
 // common assembly attributes
 [assembly: AssemblyDescription("Lean Algorithmic Trading Engine - QuantConnect.com")]

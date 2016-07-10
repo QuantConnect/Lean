@@ -401,11 +401,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 foreach(var request in _orderRequestQueue.GetConsumingEnumerable(_cancellationTokenSource.Token))
                 {
-                    var response = HandleOrderRequest(request);
-
-                    // we've finally finished processing the request, mark as processed
-                    request.SetResponse(response, OrderRequestStatus.Processed);
-
+                    HandleOrderRequest(request);
                     ProcessAsynchronousEvents();
                 }
             }
@@ -585,19 +581,26 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         /// <param name="request"><see cref="OrderRequest"/> to be handled</param>
         /// <returns><see cref="OrderResponse"/> for request</returns>
-        public OrderResponse HandleOrderRequest(OrderRequest request)
+        public void HandleOrderRequest(OrderRequest request)
         {
+            OrderResponse response;
             switch (request.OrderRequestType)
             {
                 case OrderRequestType.Submit:
-                    return HandleSubmitOrderRequest((SubmitOrderRequest)request);
+                    response = HandleSubmitOrderRequest((SubmitOrderRequest)request);
+                    break;
                 case OrderRequestType.Update:
-                    return HandleUpdateOrderRequest((UpdateOrderRequest)request);
+                    response = HandleUpdateOrderRequest((UpdateOrderRequest)request);
+                    break;
                 case OrderRequestType.Cancel:
-                    return HandleCancelOrderRequest((CancelOrderRequest)request);
+                    response = HandleCancelOrderRequest((CancelOrderRequest)request);
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+
+            // mark request as processed
+            request.SetResponse(response, OrderRequestStatus.Processed);
         }
 
         /// <summary>

@@ -63,11 +63,11 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             // Act
             var orderTicket = transactionHandler.Process(orderRequest);
             Assert.IsTrue(orderTicket.Status == OrderStatus.New);
-            var orderResponse = transactionHandler.HandleOrderRequest(orderRequest);
+            transactionHandler.HandleOrderRequest(orderRequest);
 
             // Assert
-            Assert.IsTrue(orderResponse.IsProcessed);
-            Assert.IsTrue(orderResponse.IsSuccess);
+            Assert.IsTrue(orderRequest.Response.IsProcessed);
+            Assert.IsTrue(orderRequest.Response.IsSuccess);
             Assert.IsTrue(orderTicket.Status == OrderStatus.Submitted);
             // 1600 after round off becomes 1000
             Assert.AreEqual(1000, orderTicket.Quantity);
@@ -92,11 +92,11 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             // Act
             var orderTicket = transactionHandler.Process(orderRequest);
             Assert.IsTrue(orderTicket.Status == OrderStatus.New);
-            var orderResponse = transactionHandler.HandleOrderRequest(orderRequest);
+            transactionHandler.HandleOrderRequest(orderRequest);
 
             // Assert
-            Assert.IsTrue(orderResponse.IsProcessed);
-            Assert.IsTrue(orderResponse.IsSuccess);
+            Assert.IsTrue(orderRequest.Response.IsProcessed);
+            Assert.IsTrue(orderRequest.Response.IsSuccess);
             Assert.IsTrue(orderTicket.Status == OrderStatus.Submitted);
             // -1600 after round off becomes -1000
             Assert.AreEqual(-1000, orderTicket.Quantity);
@@ -121,11 +121,11 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             // Act
             var orderTicket = transactionHandler.Process(orderRequest);
             Assert.IsTrue(orderTicket.Status == OrderStatus.New);
-            var orderResponse = transactionHandler.HandleOrderRequest(orderRequest);
+            transactionHandler.HandleOrderRequest(orderRequest);
 
-            Assert.IsTrue(orderResponse.IsProcessed);
+            Assert.IsTrue(orderRequest.Response.IsProcessed);
             // 600 after round off becomes 0 -> order is not placed
-            Assert.IsFalse(orderResponse.IsSuccess);
+            Assert.IsFalse(orderRequest.Response.IsSuccess);
         }
     }
 }
