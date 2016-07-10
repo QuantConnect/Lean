@@ -7,9 +7,6 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyCompany("QuantConnect")]
 [assembly: AssemblyTrademark("QuantConnect")]
 [assembly: AssemblyVersion("2.2.0.2")]
-
-[assembly: InternalsVisibleTo("QuantConnect.Tests")]
-
 #if DEBUG
     [assembly: AssemblyConfiguration("Debug")]
 #else

@@ -40,7 +40,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             _algorithm.SetBrokerageModel(BrokerageName.FxcmBrokerage);
             _algorithm.SetCash(100000);
             _algorithm.AddSecurity(SecurityType.Forex, Ticker);
-            _algorithm.IsWarmingUp = false;
+            _algorithm.SetFinishedWarmingUp();
         }
 
         [Test]

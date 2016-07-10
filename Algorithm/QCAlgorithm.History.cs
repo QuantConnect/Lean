@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm
         public bool IsWarmingUp
         {
             get;
-            internal set;
+            private set;
         }
 
         /// <summary>

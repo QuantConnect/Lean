@@ -585,7 +585,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         /// <param name="request"><see cref="OrderRequest"/> to be handled</param>
         /// <returns><see cref="OrderResponse"/> for request</returns>
-        internal OrderResponse HandleOrderRequest(OrderRequest request)
+        public OrderResponse HandleOrderRequest(OrderRequest request)
         {
             switch (request.OrderRequestType)
             {
