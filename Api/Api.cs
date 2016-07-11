@@ -29,19 +29,15 @@ namespace QuantConnect.Api
     /// </summary>
     public class Api : IApi
     {
-        private int _userId;
-        private string _token;
         private ApiConnection _connection;
         private static MarketHoursDatabase _marketHoursDatabase;
 
         /// <summary>
         /// Initialize the API using the config.json file.
         /// </summary>
-        public virtual void Initialize()
+        public virtual void Initialize(int userId, string token)
         {
-            _userId = Config.GetInt("job-user-id", 0);
-            _token = Config.Get("api-access-token", "");
-            _connection = new ApiConnection(_userId, _token);
+            _connection = new ApiConnection(userId, token);
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
 
             //Allow proper decoding of orders from the API.

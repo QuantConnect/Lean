@@ -31,7 +31,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Initialize the control system
         /// </summary>
-        void Initialize();
+        void Initialize(int userId, string token);
 
         /// <summary>
         /// Create a project with the specified name and language via QuantConnect.com API
