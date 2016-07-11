@@ -326,7 +326,8 @@ namespace QuantConnect.Brokerages.Fxcm
                 //base currency
                 var baseCurrency = trade.getCurrency();
                 //quote currency
-                var quoteCurrency = trade.getInstrument().getSymbol().Substring(4, 3);
+                var quoteCurrency = FxcmSymbolMapper.ConvertFxcmSymbolToLeanSymbol(trade.getInstrument().getSymbol());
+                quoteCurrency = quoteCurrency.Substring(quoteCurrency.Length - 3);
 
                 var baseCurrencyObject = (from cash in cashBook where cash.Symbol == baseCurrency select cash).FirstOrDefault();
                 //update the value of the base currency
