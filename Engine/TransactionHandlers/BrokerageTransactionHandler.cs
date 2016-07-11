@@ -401,25 +401,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 foreach(var request in _orderRequestQueue.GetConsumingEnumerable(_cancellationTokenSource.Token))
                 {
-                    OrderResponse response;
-                    switch (request.OrderRequestType)
-                    {
-                        case OrderRequestType.Submit:
-                            response = HandleSubmitOrderRequest((SubmitOrderRequest) request);
-                            break;
-                        case OrderRequestType.Update:
-                            response = HandleUpdateOrderRequest((UpdateOrderRequest) request);
-                            break;
-                        case OrderRequestType.Cancel:
-                            response = HandleCancelOrderRequest((CancelOrderRequest) request);
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
-
-                    // we've finally finished processing the request, mark as processed
-                    request.SetResponse(response, OrderRequestStatus.Processed);
-
+                    HandleOrderRequest(request);
                     ProcessAsynchronousEvents();
                 }
             }
@@ -595,6 +577,33 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
+        /// Handles a generic order request
+        /// </summary>
+        /// <param name="request"><see cref="OrderRequest"/> to be handled</param>
+        /// <returns><see cref="OrderResponse"/> for request</returns>
+        public void HandleOrderRequest(OrderRequest request)
+        {
+            OrderResponse response;
+            switch (request.OrderRequestType)
+            {
+                case OrderRequestType.Submit:
+                    response = HandleSubmitOrderRequest((SubmitOrderRequest)request);
+                    break;
+                case OrderRequestType.Update:
+                    response = HandleUpdateOrderRequest((UpdateOrderRequest)request);
+                    break;
+                case OrderRequestType.Cancel:
+                    response = HandleCancelOrderRequest((CancelOrderRequest)request);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            // mark request as processed
+            request.SetResponse(response, OrderRequestStatus.Processed);
+        }
+
+        /// <summary>
         /// Handles a request to submit a new order
         /// </summary>
         private OrderResponse HandleSubmitOrderRequest(SubmitOrderRequest request)
@@ -608,6 +617,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             // rounds off the order towards 0 to the nearest multiple of lot size
             order.Quantity = RoundOffOrder(order, security);
+
+            if (order.Quantity == 0)
+            {
+                return OrderResponse.ZeroQuantity(request);
+            }
 
             if (!_orders.TryAdd(order.Id, order))
             {
@@ -669,7 +683,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 Log.Error(err);
                 orderPlaced = false;
-             }
+            }
 
             if (!orderPlaced)
             {
@@ -935,7 +949,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <summary>
         /// Rounds off the order towards 0 to the nearest multiple of Lot Size
         /// </summary>
-        public int RoundOffOrder(Order order, Security security)
+        private int RoundOffOrder(Order order, Security security)
         {
             var orderLotMod = order.Quantity%Convert.ToInt32(security.SymbolProperties.LotSize);
 
