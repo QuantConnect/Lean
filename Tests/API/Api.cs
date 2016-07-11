@@ -27,15 +27,6 @@ namespace QuantConnect.Tests.API
     [TestFixture, Category("TravisExclude")]
     class RestApiTests
     {
-
-        //Test languages for the API
-        private Language[] _languages =
-        {
-            Language.CSharp,
-            Language.Python,
-            Language.FSharp
-        };
-
         //Test Authentication Credentials
         private int _testAccount = 1;
         private string _testToken = "ec87b337ac970da4cbea648f24f1c851";
@@ -205,10 +196,8 @@ namespace QuantConnect.Tests.API
         /// <returns>API class for placing calls</returns>
         private IApi CreateApiAccessor(int uid, string token)
         {
-            Config.Set("job-user-id", uid.ToString());
-            Config.Set("api-access-token", token);
             var api = new Api.Api();
-            api.Initialize();
+            api.Initialize(uid, token);
             return api;
         }
 
