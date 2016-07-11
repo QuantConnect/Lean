@@ -253,12 +253,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var data = new List<DataFeedPacket>();
                     foreach (var subscription in Subscriptions)
                     {
+                        var current = subscription.Current;
                         var packet = new DataFeedPacket(subscription.Security, subscription.Configuration);
 
                         // dequeue data that is time stamped at or before this frontier
-                        while (subscription.MoveNext() && subscription.Current != null)
+                        while (subscription.MoveNext() && current != null)
                         {
-                            packet.Add(subscription.Current);
+                            // clone all data to avoid potential reference shenanigans
+                            var clone = current.Clone(current.IsFillForward);
+                            packet.Add(clone);
                         }
 
                         // if we have data, add it to be added to the bridge
