@@ -536,6 +536,17 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     return;
                 }
 
+                //Adds currency to the cashbook that the user might have deposited
+                foreach (var balance in balances)
+                {
+                    Cash cash;
+                    if (!_algorithm.Portfolio.CashBook.TryGetValue(balance.Symbol, out cash))
+                    {
+                        Log.LogHandler.Trace("BrokerageTransactionHandler.PerformCashSync(): Unexpected cash found {0} {1}", balance.Amount, balance.Symbol);
+                        _algorithm.Portfolio.SetCash(balance.Symbol, balance.Amount, balance.ConversionRate);
+                    }
+                }
+
                 // if we were returned our balances, update everything and flip our flag as having performed sync today
                 foreach (var cash in _algorithm.Portfolio.CashBook.Values)
                 {
