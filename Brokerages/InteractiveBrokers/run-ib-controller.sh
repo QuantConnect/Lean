@@ -7,6 +7,7 @@ IBC_PATH=$1   #/Lean/Interactive/IBController
 TWS_PATH=$2   #/Lean/Interactive/IBJts 
 TWSUSERID=$3
 TWSPASSWORD=$4
+APP=%5
 TWS_MAJOR_VRSN=952
 TRADING_MODE=
 IBC_INI=$IBC_PATH/IBController.ini
@@ -25,7 +26,6 @@ export DISPLAY=:1
 
 # Launch the IB Controller + IB Gateway
 
-APP=GATEWAY
 TWS_CONFIG_PATH="$TWS_PATH"
 
 export TWS_MAJOR_VRSN
