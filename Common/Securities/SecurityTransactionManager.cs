@@ -313,6 +313,9 @@ namespace QuantConnect.Securities
                 return false;
             }
 
+            int remainingQuantity;
+            if (TryGetRemainingQuantity(order, security, out remainingQuantity)) return true;
+
             var freeMargin = security.MarginModel.GetMarginRemaining(portfolio, security, order.Direction);
             var initialMarginRequiredForOrder = security.MarginModel.GetInitialMarginRequiredForOrder(security, order);
 
@@ -352,6 +355,31 @@ namespace QuantConnect.Securities
         private static bool Completed(Order order)
         {
             return order.Status == OrderStatus.Filled || order.Status == OrderStatus.PartiallyFilled || order.Status == OrderStatus.Invalid || order.Status == OrderStatus.Canceled;
+        }
+
+        /// <summary>
+        /// Returns true when order quantity close or reduce position
+        /// </summary>
+        /// <param name="order">Order we're checking</param>
+        /// <param name="security">Security that the order tries to close or reduce size</param>
+        /// <param name="value">Remaining quantity to close position</param>
+        /// <returns>True if order close or reduce position</returns>
+        private bool TryGetRemainingQuantity(Order order, Security security, out int value)
+        {
+            value = 0;
+            var orderQuantity = order.Quantity;
+            var securityQuantity = security.Holdings.Quantity;
+
+            var isReduced =
+                (orderQuantity ^ securityQuantity) < 0 &&
+                Math.Abs(orderQuantity) <= Math.Abs(securityQuantity);
+
+            if (isReduced)
+            {
+                value = orderQuantity + securityQuantity;
+            }
+
+            return isReduced;
         }
     }
 }
