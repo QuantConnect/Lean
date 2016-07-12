@@ -304,11 +304,56 @@ namespace QuantConnect.Brokerages.Fxcm
         public override List<Cash> GetCashBalance()
         {
             Log.Trace("FxcmBrokerage.GetCashBalance()");
+            var cashBook = new List<Cash>();
 
-            return new List<Cash>
+            //Adds the account currency USD to the cashbook.
+            cashBook.Add(new Cash(_fxcmAccountCurrency,
+                        Convert.ToDecimal(_accounts[_accountId].getCashOutstanding()),
+                        GetUsdConversion(_fxcmAccountCurrency)));
+
+            foreach (var trade in _openPositions.Values)
             {
-                new Cash(_fxcmAccountCurrency, Convert.ToDecimal(_accounts[_accountId].getCashOutstanding()), GetUsdConversion(_fxcmAccountCurrency))
-            };
+                //settlement price for the trade
+                var settlementPrice = Convert.ToDecimal(trade.getSettlPrice());
+                //direction of trade
+                var direction = trade.getPositionQty().getLongQty() > 0 ? 1 : -1;
+                //quantity of the asset
+                var quantity = Convert.ToDecimal(trade.getPositionQty().getQty());
+                //quantity of base currency
+                var baseQuantity = direction * quantity;
+                //quantity of quote currency
+                var quoteQuantity = -direction * quantity * settlementPrice;
+                //base currency
+                var baseCurrency = trade.getCurrency();
+                //quote currency
+                var quoteCurrency = FxcmSymbolMapper.ConvertFxcmSymbolToLeanSymbol(trade.getInstrument().getSymbol());
+                quoteCurrency = quoteCurrency.Substring(quoteCurrency.Length - 3);
+
+                var baseCurrencyObject = (from cash in cashBook where cash.Symbol == baseCurrency select cash).FirstOrDefault();
+                //update the value of the base currency
+                if (baseCurrencyObject != null)
+                {
+                    baseCurrencyObject.AddAmount(baseQuantity);
+                }
+                else
+                {
+                    //add the base currency if not present
+                    cashBook.Add(new Cash(baseCurrency, baseQuantity, GetUsdConversion(baseCurrency)));
+                }
+
+                var quoteCurrencyObject = (from cash in cashBook where cash.Symbol == quoteCurrency select cash).FirstOrDefault();
+                //update the value of the quote currency
+                if (quoteCurrencyObject != null)
+                {
+                    quoteCurrencyObject.AddAmount(quoteQuantity);
+                }
+                else
+                {
+                    //add the quote currency if not present
+                    cashBook.Add(new Cash(quoteCurrency, quoteQuantity, GetUsdConversion(quoteCurrency)));
+                }
+            }
+            return cashBook;
         }
 
         /// <summary>
