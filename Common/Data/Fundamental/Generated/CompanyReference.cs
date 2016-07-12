@@ -248,6 +248,15 @@ namespace QuantConnect.Data.Fundamental
 		public int ReportStyle { get; set; }
 
 		/// <summary>
+		/// The year a company was founded.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 25
+		/// </remarks>
+		[JsonProperty("25")]
+		public string YearofEstablishment { get; set; }
+
+		/// <summary>
 		/// Creates an instance of the CompanyReference class
 		/// </summary>
 		public CompanyReference()

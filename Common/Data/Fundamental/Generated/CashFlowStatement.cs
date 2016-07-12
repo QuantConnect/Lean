@@ -2354,6 +2354,25 @@ namespace QuantConnect.Data.Fundamental
 		public DateTime CFFileDate { get; set; }
 
 		/// <summary>
+		/// The profit or loss of the entity from discontinued operations, represeted as a cash inflow/outflow within operating cashflow.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 26297
+		/// </remarks>
+		[JsonProperty("26297")]
+		public NetIncomeFromDiscontinuedOperationsCashFlowStatement NetIncomeFromDiscontinuedOperations { get; set; }
+
+		/// <summary>
+		/// The net cash from an entity's operating activities before real cash inflow or outflow for Dividend, Interest, Tax, or other unclassified
+		/// operating activities.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 26298
+		/// </remarks>
+		[JsonProperty("26298")]
+		public CashGeneratedfromOperatingActivitiesCashFlowStatement CashGeneratedfromOperatingActivities { get; set; }
+
+		/// <summary>
 		/// Creates an instance of the CashFlowStatement class
 		/// </summary>
 		public CashFlowStatement()
@@ -2601,6 +2620,8 @@ namespace QuantConnect.Data.Fundamental
 			CashPaidtoReinsurers = new CashPaidtoReinsurersCashFlowStatement();
 			OtherUnderwritingExpensesPaid = new OtherUnderwritingExpensesPaidCashFlowStatement();
 			CashDividendsForMinorities = new CashDividendsForMinoritiesCashFlowStatement();
+			NetIncomeFromDiscontinuedOperations = new NetIncomeFromDiscontinuedOperationsCashFlowStatement();
+			CashGeneratedfromOperatingActivities = new CashGeneratedfromOperatingActivitiesCashFlowStatement();
 		}
 
 		/// <summary>
@@ -2853,6 +2874,8 @@ namespace QuantConnect.Data.Fundamental
 			CashPaidtoReinsurers.UpdateValues(previous.CashPaidtoReinsurers);
 			OtherUnderwritingExpensesPaid.UpdateValues(previous.OtherUnderwritingExpensesPaid);
 			CashDividendsForMinorities.UpdateValues(previous.CashDividendsForMinorities);
+			NetIncomeFromDiscontinuedOperations.UpdateValues(previous.NetIncomeFromDiscontinuedOperations);
+			CashGeneratedfromOperatingActivities.UpdateValues(previous.CashGeneratedfromOperatingActivities);
 		}
 	}
 }

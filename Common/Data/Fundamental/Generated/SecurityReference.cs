@@ -258,13 +258,22 @@ namespace QuantConnect.Data.Fundamental
 
 		/// <summary>
 		/// The estimated offer price range (low-high) for a new IPO. The field should be used until the final IPO price becomes available, as
-		/// populated in the data field “IPOPrice
+		/// populated in the data field “IPOPrice”.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 1024
 		/// </remarks>
 		[JsonProperty("1024")]
 		public string IPOOfferPriceRange { get; set; }
+
+		/// <summary>
+		/// Classification to denote different Marketplace or Market tiers within a stock exchange.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 1025
+		/// </remarks>
+		[JsonProperty("1025")]
+		public string ExchangeSubMarketGlobalId { get; set; }
 
 		/// <summary>
 		/// Creates an instance of the SecurityReference class

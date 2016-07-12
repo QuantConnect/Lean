@@ -15677,7 +15677,7 @@ namespace QuantConnect.Data.Fundamental
 	/// Common Equity. The adjustments usually include the interest expense of debentures when assumed converted and preferred
 	/// dividends of convertible preferred stock when assumed converted.
 	/// </summary>
-	public class AverageDilutionEarnIncomeStatement : MultiPeriodField
+	public class AverageDilutionEarningsIncomeStatement : MultiPeriodField
 	{
 		/// <summary>
 		/// Gets the default period for the field
@@ -15725,14 +15725,14 @@ namespace QuantConnect.Data.Fundamental
 		}
 
 		/// <summary>
-		/// Creates an instance of the AverageDilutionEarnIncomeStatement class
+		/// Creates an instance of the AverageDilutionEarningsIncomeStatement class
 		/// </summary>
-		public AverageDilutionEarnIncomeStatement() { Store = new Dictionary<string, decimal>(); }
+		public AverageDilutionEarningsIncomeStatement() { Store = new Dictionary<string, decimal>(); }
 
 		/// <summary>
-		/// Creates an instance of the AverageDilutionEarnIncomeStatement class
+		/// Creates an instance of the AverageDilutionEarningsIncomeStatement class
 		/// </summary>
-		public AverageDilutionEarnIncomeStatement(IDictionary<string, decimal> store) { Store = store; }
+		public AverageDilutionEarningsIncomeStatement(IDictionary<string, decimal> store) { Store = store; }
 	}
 
 	/// <summary>
@@ -17409,6 +17409,556 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
+	/// Net income to calculate Diluted EPS, accounting for adjustments assuming that all the convertible instruments are being converted
+	/// to Common Equity.
+	/// </summary>
+	public class DilutedNIAvailtoComStockholdersIncomeStatement : MultiPeriodField
+	{
+		/// <summary>
+		/// Gets the default period for the field
+		/// </summary>
+		protected override string DefaultPeriod { get { return Period.TwelveMonths; } }
+
+		/// <summary>
+		/// Gets/sets the ThreeMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.ThreeMonths)]
+		public decimal ThreeMonths
+		{
+			get { return GetPeriodValue(Period.ThreeMonths); }
+			set { SetPeriodValue(Period.ThreeMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the SixMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.SixMonths)]
+		public decimal SixMonths
+		{
+			get { return GetPeriodValue(Period.SixMonths); }
+			set { SetPeriodValue(Period.SixMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the NineMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.NineMonths)]
+		public decimal NineMonths
+		{
+			get { return GetPeriodValue(Period.NineMonths); }
+			set { SetPeriodValue(Period.NineMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the TwelveMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.TwelveMonths)]
+		public decimal TwelveMonths
+		{
+			get { return GetPeriodValue(Period.TwelveMonths); }
+			set { SetPeriodValue(Period.TwelveMonths, value); }
+		}
+
+		/// <summary>
+		/// Creates an instance of the DilutedNIAvailtoComStockholdersIncomeStatement class
+		/// </summary>
+		public DilutedNIAvailtoComStockholdersIncomeStatement() { Store = new Dictionary<string, decimal>(); }
+
+		/// <summary>
+		/// Creates an instance of the DilutedNIAvailtoComStockholdersIncomeStatement class
+		/// </summary>
+		public DilutedNIAvailtoComStockholdersIncomeStatement(IDictionary<string, decimal> store) { Store = store; }
+	}
+
+	/// <summary>
+	/// Income/Expenses due to the insurer's liabilities incurred in Investment Contracts.
+	/// </summary>
+	public class InvestmentContractLiabilitiesIncurredIncomeStatement : MultiPeriodField
+	{
+		/// <summary>
+		/// Gets the default period for the field
+		/// </summary>
+		protected override string DefaultPeriod { get { return Period.TwelveMonths; } }
+
+		/// <summary>
+		/// Gets/sets the ThreeMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.ThreeMonths)]
+		public decimal ThreeMonths
+		{
+			get { return GetPeriodValue(Period.ThreeMonths); }
+			set { SetPeriodValue(Period.ThreeMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the SixMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.SixMonths)]
+		public decimal SixMonths
+		{
+			get { return GetPeriodValue(Period.SixMonths); }
+			set { SetPeriodValue(Period.SixMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the NineMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.NineMonths)]
+		public decimal NineMonths
+		{
+			get { return GetPeriodValue(Period.NineMonths); }
+			set { SetPeriodValue(Period.NineMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the TwelveMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.TwelveMonths)]
+		public decimal TwelveMonths
+		{
+			get { return GetPeriodValue(Period.TwelveMonths); }
+			set { SetPeriodValue(Period.TwelveMonths, value); }
+		}
+
+		/// <summary>
+		/// Creates an instance of the InvestmentContractLiabilitiesIncurredIncomeStatement class
+		/// </summary>
+		public InvestmentContractLiabilitiesIncurredIncomeStatement() { Store = new Dictionary<string, decimal>(); }
+
+		/// <summary>
+		/// Creates an instance of the InvestmentContractLiabilitiesIncurredIncomeStatement class
+		/// </summary>
+		public InvestmentContractLiabilitiesIncurredIncomeStatement(IDictionary<string, decimal> store) { Store = store; }
+	}
+
+	/// <summary>
+	/// Income/Expense due to recoveries from reinsurers for Investment Contracts.
+	/// </summary>
+	public class ReinsuranceRecoveriesofInvestmentContractIncomeStatement : MultiPeriodField
+	{
+		/// <summary>
+		/// Gets the default period for the field
+		/// </summary>
+		protected override string DefaultPeriod { get { return Period.TwelveMonths; } }
+
+		/// <summary>
+		/// Gets/sets the ThreeMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.ThreeMonths)]
+		public decimal ThreeMonths
+		{
+			get { return GetPeriodValue(Period.ThreeMonths); }
+			set { SetPeriodValue(Period.ThreeMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the SixMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.SixMonths)]
+		public decimal SixMonths
+		{
+			get { return GetPeriodValue(Period.SixMonths); }
+			set { SetPeriodValue(Period.SixMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the NineMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.NineMonths)]
+		public decimal NineMonths
+		{
+			get { return GetPeriodValue(Period.NineMonths); }
+			set { SetPeriodValue(Period.NineMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the TwelveMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.TwelveMonths)]
+		public decimal TwelveMonths
+		{
+			get { return GetPeriodValue(Period.TwelveMonths); }
+			set { SetPeriodValue(Period.TwelveMonths, value); }
+		}
+
+		/// <summary>
+		/// Creates an instance of the ReinsuranceRecoveriesofInvestmentContractIncomeStatement class
+		/// </summary>
+		public ReinsuranceRecoveriesofInvestmentContractIncomeStatement() { Store = new Dictionary<string, decimal>(); }
+
+		/// <summary>
+		/// Creates an instance of the ReinsuranceRecoveriesofInvestmentContractIncomeStatement class
+		/// </summary>
+		public ReinsuranceRecoveriesofInvestmentContractIncomeStatement(IDictionary<string, decimal> store) { Store = store; }
+	}
+
+	/// <summary>
+	/// Total amount paid in dividends to equity securities investors.
+	/// </summary>
+	public class TotalDividendPaymentofEquitySharesIncomeStatement : MultiPeriodField
+	{
+		/// <summary>
+		/// Gets the default period for the field
+		/// </summary>
+		protected override string DefaultPeriod { get { return Period.TwelveMonths; } }
+
+		/// <summary>
+		/// Gets/sets the ThreeMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.ThreeMonths)]
+		public decimal ThreeMonths
+		{
+			get { return GetPeriodValue(Period.ThreeMonths); }
+			set { SetPeriodValue(Period.ThreeMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the SixMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.SixMonths)]
+		public decimal SixMonths
+		{
+			get { return GetPeriodValue(Period.SixMonths); }
+			set { SetPeriodValue(Period.SixMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the NineMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.NineMonths)]
+		public decimal NineMonths
+		{
+			get { return GetPeriodValue(Period.NineMonths); }
+			set { SetPeriodValue(Period.NineMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the TwelveMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.TwelveMonths)]
+		public decimal TwelveMonths
+		{
+			get { return GetPeriodValue(Period.TwelveMonths); }
+			set { SetPeriodValue(Period.TwelveMonths, value); }
+		}
+
+		/// <summary>
+		/// Creates an instance of the TotalDividendPaymentofEquitySharesIncomeStatement class
+		/// </summary>
+		public TotalDividendPaymentofEquitySharesIncomeStatement() { Store = new Dictionary<string, decimal>(); }
+
+		/// <summary>
+		/// Creates an instance of the TotalDividendPaymentofEquitySharesIncomeStatement class
+		/// </summary>
+		public TotalDividendPaymentofEquitySharesIncomeStatement(IDictionary<string, decimal> store) { Store = store; }
+	}
+
+	/// <summary>
+	/// Total amount paid in dividends to Non-Equity securities investors.
+	/// </summary>
+	public class TotalDividendPaymentofNonEquitySharesIncomeStatement : MultiPeriodField
+	{
+		/// <summary>
+		/// Gets the default period for the field
+		/// </summary>
+		protected override string DefaultPeriod { get { return Period.TwelveMonths; } }
+
+		/// <summary>
+		/// Gets/sets the ThreeMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.ThreeMonths)]
+		public decimal ThreeMonths
+		{
+			get { return GetPeriodValue(Period.ThreeMonths); }
+			set { SetPeriodValue(Period.ThreeMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the SixMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.SixMonths)]
+		public decimal SixMonths
+		{
+			get { return GetPeriodValue(Period.SixMonths); }
+			set { SetPeriodValue(Period.SixMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the NineMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.NineMonths)]
+		public decimal NineMonths
+		{
+			get { return GetPeriodValue(Period.NineMonths); }
+			set { SetPeriodValue(Period.NineMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the TwelveMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.TwelveMonths)]
+		public decimal TwelveMonths
+		{
+			get { return GetPeriodValue(Period.TwelveMonths); }
+			set { SetPeriodValue(Period.TwelveMonths, value); }
+		}
+
+		/// <summary>
+		/// Creates an instance of the TotalDividendPaymentofNonEquitySharesIncomeStatement class
+		/// </summary>
+		public TotalDividendPaymentofNonEquitySharesIncomeStatement() { Store = new Dictionary<string, decimal>(); }
+
+		/// <summary>
+		/// Creates an instance of the TotalDividendPaymentofNonEquitySharesIncomeStatement class
+		/// </summary>
+		public TotalDividendPaymentofNonEquitySharesIncomeStatement(IDictionary<string, decimal> store) { Store = store; }
+	}
+
+	/// <summary>
+	/// The change in the amount of the unearned premium reserves maintained by insurers.
+	/// </summary>
+	public class ChangeinTheGrossProvisionforUnearnedPremiumsIncomeStatement : MultiPeriodField
+	{
+		/// <summary>
+		/// Gets the default period for the field
+		/// </summary>
+		protected override string DefaultPeriod { get { return Period.TwelveMonths; } }
+
+		/// <summary>
+		/// Gets/sets the ThreeMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.ThreeMonths)]
+		public decimal ThreeMonths
+		{
+			get { return GetPeriodValue(Period.ThreeMonths); }
+			set { SetPeriodValue(Period.ThreeMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the SixMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.SixMonths)]
+		public decimal SixMonths
+		{
+			get { return GetPeriodValue(Period.SixMonths); }
+			set { SetPeriodValue(Period.SixMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the NineMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.NineMonths)]
+		public decimal NineMonths
+		{
+			get { return GetPeriodValue(Period.NineMonths); }
+			set { SetPeriodValue(Period.NineMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the TwelveMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.TwelveMonths)]
+		public decimal TwelveMonths
+		{
+			get { return GetPeriodValue(Period.TwelveMonths); }
+			set { SetPeriodValue(Period.TwelveMonths, value); }
+		}
+
+		/// <summary>
+		/// Creates an instance of the ChangeinTheGrossProvisionforUnearnedPremiumsIncomeStatement class
+		/// </summary>
+		public ChangeinTheGrossProvisionforUnearnedPremiumsIncomeStatement() { Store = new Dictionary<string, decimal>(); }
+
+		/// <summary>
+		/// Creates an instance of the ChangeinTheGrossProvisionforUnearnedPremiumsIncomeStatement class
+		/// </summary>
+		public ChangeinTheGrossProvisionforUnearnedPremiumsIncomeStatement(IDictionary<string, decimal> store) { Store = store; }
+	}
+
+	/// <summary>
+	/// The change in the amount of unearned premium reserve to be covered by reinsurers.
+	/// </summary>
+	public class ChangeinTheGrossProvisionforUnearnedPremiumsReinsurersShareIncomeStatement : MultiPeriodField
+	{
+		/// <summary>
+		/// Gets the default period for the field
+		/// </summary>
+		protected override string DefaultPeriod { get { return Period.TwelveMonths; } }
+
+		/// <summary>
+		/// Gets/sets the ThreeMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.ThreeMonths)]
+		public decimal ThreeMonths
+		{
+			get { return GetPeriodValue(Period.ThreeMonths); }
+			set { SetPeriodValue(Period.ThreeMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the SixMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.SixMonths)]
+		public decimal SixMonths
+		{
+			get { return GetPeriodValue(Period.SixMonths); }
+			set { SetPeriodValue(Period.SixMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the NineMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.NineMonths)]
+		public decimal NineMonths
+		{
+			get { return GetPeriodValue(Period.NineMonths); }
+			set { SetPeriodValue(Period.NineMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the TwelveMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.TwelveMonths)]
+		public decimal TwelveMonths
+		{
+			get { return GetPeriodValue(Period.TwelveMonths); }
+			set { SetPeriodValue(Period.TwelveMonths, value); }
+		}
+
+		/// <summary>
+		/// Creates an instance of the ChangeinTheGrossProvisionforUnearnedPremiumsReinsurersShareIncomeStatement class
+		/// </summary>
+		public ChangeinTheGrossProvisionforUnearnedPremiumsReinsurersShareIncomeStatement() { Store = new Dictionary<string, decimal>(); }
+
+		/// <summary>
+		/// Creates an instance of the ChangeinTheGrossProvisionforUnearnedPremiumsReinsurersShareIncomeStatement class
+		/// </summary>
+		public ChangeinTheGrossProvisionforUnearnedPremiumsReinsurersShareIncomeStatement(IDictionary<string, decimal> store) { Store = store; }
+	}
+
+	/// <summary>
+	/// Income/Expense due to the insurer's changes in insurance liabilities.
+	/// </summary>
+	public class ClaimsandChangeinInsuranceLiabilitiesIncomeStatement : MultiPeriodField
+	{
+		/// <summary>
+		/// Gets the default period for the field
+		/// </summary>
+		protected override string DefaultPeriod { get { return Period.TwelveMonths; } }
+
+		/// <summary>
+		/// Gets/sets the ThreeMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.ThreeMonths)]
+		public decimal ThreeMonths
+		{
+			get { return GetPeriodValue(Period.ThreeMonths); }
+			set { SetPeriodValue(Period.ThreeMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the SixMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.SixMonths)]
+		public decimal SixMonths
+		{
+			get { return GetPeriodValue(Period.SixMonths); }
+			set { SetPeriodValue(Period.SixMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the NineMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.NineMonths)]
+		public decimal NineMonths
+		{
+			get { return GetPeriodValue(Period.NineMonths); }
+			set { SetPeriodValue(Period.NineMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the TwelveMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.TwelveMonths)]
+		public decimal TwelveMonths
+		{
+			get { return GetPeriodValue(Period.TwelveMonths); }
+			set { SetPeriodValue(Period.TwelveMonths, value); }
+		}
+
+		/// <summary>
+		/// Creates an instance of the ClaimsandChangeinInsuranceLiabilitiesIncomeStatement class
+		/// </summary>
+		public ClaimsandChangeinInsuranceLiabilitiesIncomeStatement() { Store = new Dictionary<string, decimal>(); }
+
+		/// <summary>
+		/// Creates an instance of the ClaimsandChangeinInsuranceLiabilitiesIncomeStatement class
+		/// </summary>
+		public ClaimsandChangeinInsuranceLiabilitiesIncomeStatement(IDictionary<string, decimal> store) { Store = store; }
+	}
+
+	/// <summary>
+	/// Income/Expense due to recoveries from reinsurers for insurance liabilities.
+	/// </summary>
+	public class ReinsuranceRecoveriesofInsuranceLiabilitiesIncomeStatement : MultiPeriodField
+	{
+		/// <summary>
+		/// Gets the default period for the field
+		/// </summary>
+		protected override string DefaultPeriod { get { return Period.TwelveMonths; } }
+
+		/// <summary>
+		/// Gets/sets the ThreeMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.ThreeMonths)]
+		public decimal ThreeMonths
+		{
+			get { return GetPeriodValue(Period.ThreeMonths); }
+			set { SetPeriodValue(Period.ThreeMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the SixMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.SixMonths)]
+		public decimal SixMonths
+		{
+			get { return GetPeriodValue(Period.SixMonths); }
+			set { SetPeriodValue(Period.SixMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the NineMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.NineMonths)]
+		public decimal NineMonths
+		{
+			get { return GetPeriodValue(Period.NineMonths); }
+			set { SetPeriodValue(Period.NineMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the TwelveMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.TwelveMonths)]
+		public decimal TwelveMonths
+		{
+			get { return GetPeriodValue(Period.TwelveMonths); }
+			set { SetPeriodValue(Period.TwelveMonths, value); }
+		}
+
+		/// <summary>
+		/// Creates an instance of the ReinsuranceRecoveriesofInsuranceLiabilitiesIncomeStatement class
+		/// </summary>
+		public ReinsuranceRecoveriesofInsuranceLiabilitiesIncomeStatement() { Store = new Dictionary<string, decimal>(); }
+
+		/// <summary>
+		/// Creates an instance of the ReinsuranceRecoveriesofInsuranceLiabilitiesIncomeStatement class
+		/// </summary>
+		public ReinsuranceRecoveriesofInsuranceLiabilitiesIncomeStatement(IDictionary<string, decimal> store) { Store = store; }
+	}
+
+	/// <summary>
 	/// Any money that a company owes its suppliers for goods and services purchased on credit and is expected to pay within the next
 	/// year or operating cycle.
 	/// </summary>
@@ -18454,7 +19004,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// Includes cash on hand(currency and coin), cash items in process of collection, non-interest bearing deposits due from other
+	/// Includes cash on hand (currency and coin), cash items in process of collection, non-interest bearing deposits due from other
 	/// financial institutions (including corporate credit unions), and balances with the Federal Reserve Banks, Federal Home Loan Banks
 	/// and central banks.
 	/// </summary>
@@ -19608,7 +20158,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// The non-current portion of deferred revenue amount as of the  balance sheet date. Deferred revenue is a liability related to revenue
+	/// The non-current portion of deferred revenue amount as of the balance sheet date. Deferred revenue is a liability related to revenue
 	/// producing activity for which revenue has not yet been recognized, and is not expected be recognized in the next twelve months.
 	/// </summary>
 	public class NonCurrentDeferredRevenueBalanceSheet : MultiPeriodField
@@ -22397,7 +22947,7 @@ namespace QuantConnect.Data.Fundamental
 
 	/// <summary>
 	/// The aggregate amount of short term investments, which will be expired within one year that are not specifically classified as
-	/// Avaialable-for-Sale, Held-to-Maturity,  nor Trading investments.
+	/// Available-for-Sale, Held-to-Maturity,  nor Trading investments.
 	/// </summary>
 	public class OtherShortTermInvestmentsBalanceSheet : MultiPeriodField
 	{
@@ -23164,7 +23714,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// Type of preferred stock  which may be bought back by the issuing company on a specified date or after a specified period of notice.
+	/// Type of preferred stock which may be bought back by the issuing company on a specified date or after a specified period of notice.
 	/// </summary>
 	public class RedeemablePreferredStockBalanceSheet : MultiPeriodField
 	{
@@ -37803,6 +38353,127 @@ namespace QuantConnect.Data.Fundamental
 		/// Creates an instance of the DueFromRelatedPartiesBalanceSheet class
 		/// </summary>
 		public DueFromRelatedPartiesBalanceSheet(IDictionary<string, decimal> store) { Store = store; }
+	}
+
+	/// <summary>
+	/// Preferred security issued by a trust created by the company, that is treated as a long-term liability.
+	/// </summary>
+	public class TrustPreferredSecuritiesBalanceSheet : MultiPeriodField
+	{
+		/// <summary>
+		/// Gets the default period for the field
+		/// </summary>
+		protected override string DefaultPeriod { get { return Period.TwelveMonths; } }
+
+		/// <summary>
+		/// Gets/sets the ThreeMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.ThreeMonths)]
+		public decimal ThreeMonths
+		{
+			get { return GetPeriodValue(Period.ThreeMonths); }
+			set { SetPeriodValue(Period.ThreeMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the TwelveMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.TwelveMonths)]
+		public decimal TwelveMonths
+		{
+			get { return GetPeriodValue(Period.TwelveMonths); }
+			set { SetPeriodValue(Period.TwelveMonths, value); }
+		}
+
+		/// <summary>
+		/// Creates an instance of the TrustPreferredSecuritiesBalanceSheet class
+		/// </summary>
+		public TrustPreferredSecuritiesBalanceSheet() { Store = new Dictionary<string, decimal>(); }
+
+		/// <summary>
+		/// Creates an instance of the TrustPreferredSecuritiesBalanceSheet class
+		/// </summary>
+		public TrustPreferredSecuritiesBalanceSheet(IDictionary<string, decimal> store) { Store = store; }
+	}
+
+	/// <summary>
+	/// </summary>
+	public class CooperativesShareCapitalRepayableonDemandBalanceSheet : MultiPeriodField
+	{
+		/// <summary>
+		/// Gets the default period for the field
+		/// </summary>
+		protected override string DefaultPeriod { get { return Period.TwelveMonths; } }
+
+		/// <summary>
+		/// Gets/sets the ThreeMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.ThreeMonths)]
+		public decimal ThreeMonths
+		{
+			get { return GetPeriodValue(Period.ThreeMonths); }
+			set { SetPeriodValue(Period.ThreeMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the TwelveMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.TwelveMonths)]
+		public decimal TwelveMonths
+		{
+			get { return GetPeriodValue(Period.TwelveMonths); }
+			set { SetPeriodValue(Period.TwelveMonths, value); }
+		}
+
+		/// <summary>
+		/// Creates an instance of the CooperativesShareCapitalRepayableonDemandBalanceSheet class
+		/// </summary>
+		public CooperativesShareCapitalRepayableonDemandBalanceSheet() { Store = new Dictionary<string, decimal>(); }
+
+		/// <summary>
+		/// Creates an instance of the CooperativesShareCapitalRepayableonDemandBalanceSheet class
+		/// </summary>
+		public CooperativesShareCapitalRepayableonDemandBalanceSheet(IDictionary<string, decimal> store) { Store = store; }
+	}
+
+	/// <summary>
+	/// </summary>
+	public class UnallocatedSurplusBalanceSheet : MultiPeriodField
+	{
+		/// <summary>
+		/// Gets the default period for the field
+		/// </summary>
+		protected override string DefaultPeriod { get { return Period.TwelveMonths; } }
+
+		/// <summary>
+		/// Gets/sets the ThreeMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.ThreeMonths)]
+		public decimal ThreeMonths
+		{
+			get { return GetPeriodValue(Period.ThreeMonths); }
+			set { SetPeriodValue(Period.ThreeMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the TwelveMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.TwelveMonths)]
+		public decimal TwelveMonths
+		{
+			get { return GetPeriodValue(Period.TwelveMonths); }
+			set { SetPeriodValue(Period.TwelveMonths, value); }
+		}
+
+		/// <summary>
+		/// Creates an instance of the UnallocatedSurplusBalanceSheet class
+		/// </summary>
+		public UnallocatedSurplusBalanceSheet() { Store = new Dictionary<string, decimal>(); }
+
+		/// <summary>
+		/// Creates an instance of the UnallocatedSurplusBalanceSheet class
+		/// </summary>
+		public UnallocatedSurplusBalanceSheet(IDictionary<string, decimal> store) { Store = store; }
 	}
 
 	/// <summary>
@@ -54197,6 +54868,129 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
+	/// The profit or loss of the entity from discontinued operations, represeted as a cash inflow/outflow within operating cashflow.
+	/// </summary>
+	public class NetIncomeFromDiscontinuedOperationsCashFlowStatement : MultiPeriodField
+	{
+		/// <summary>
+		/// Gets the default period for the field
+		/// </summary>
+		protected override string DefaultPeriod { get { return Period.TwelveMonths; } }
+
+		/// <summary>
+		/// Gets/sets the ThreeMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.ThreeMonths)]
+		public decimal ThreeMonths
+		{
+			get { return GetPeriodValue(Period.ThreeMonths); }
+			set { SetPeriodValue(Period.ThreeMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the SixMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.SixMonths)]
+		public decimal SixMonths
+		{
+			get { return GetPeriodValue(Period.SixMonths); }
+			set { SetPeriodValue(Period.SixMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the NineMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.NineMonths)]
+		public decimal NineMonths
+		{
+			get { return GetPeriodValue(Period.NineMonths); }
+			set { SetPeriodValue(Period.NineMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the TwelveMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.TwelveMonths)]
+		public decimal TwelveMonths
+		{
+			get { return GetPeriodValue(Period.TwelveMonths); }
+			set { SetPeriodValue(Period.TwelveMonths, value); }
+		}
+
+		/// <summary>
+		/// Creates an instance of the NetIncomeFromDiscontinuedOperationsCashFlowStatement class
+		/// </summary>
+		public NetIncomeFromDiscontinuedOperationsCashFlowStatement() { Store = new Dictionary<string, decimal>(); }
+
+		/// <summary>
+		/// Creates an instance of the NetIncomeFromDiscontinuedOperationsCashFlowStatement class
+		/// </summary>
+		public NetIncomeFromDiscontinuedOperationsCashFlowStatement(IDictionary<string, decimal> store) { Store = store; }
+	}
+
+	/// <summary>
+	/// The net cash from an entity's operating activities before real cash inflow or outflow for Dividend, Interest, Tax, or other unclassified
+	/// operating activities.
+	/// </summary>
+	public class CashGeneratedfromOperatingActivitiesCashFlowStatement : MultiPeriodField
+	{
+		/// <summary>
+		/// Gets the default period for the field
+		/// </summary>
+		protected override string DefaultPeriod { get { return Period.TwelveMonths; } }
+
+		/// <summary>
+		/// Gets/sets the ThreeMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.ThreeMonths)]
+		public decimal ThreeMonths
+		{
+			get { return GetPeriodValue(Period.ThreeMonths); }
+			set { SetPeriodValue(Period.ThreeMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the SixMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.SixMonths)]
+		public decimal SixMonths
+		{
+			get { return GetPeriodValue(Period.SixMonths); }
+			set { SetPeriodValue(Period.SixMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the NineMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.NineMonths)]
+		public decimal NineMonths
+		{
+			get { return GetPeriodValue(Period.NineMonths); }
+			set { SetPeriodValue(Period.NineMonths, value); }
+		}
+
+		/// <summary>
+		/// Gets/sets the TwelveMonths period value for the field
+		/// </summary>
+		[JsonProperty(Period.TwelveMonths)]
+		public decimal TwelveMonths
+		{
+			get { return GetPeriodValue(Period.TwelveMonths); }
+			set { SetPeriodValue(Period.TwelveMonths, value); }
+		}
+
+		/// <summary>
+		/// Creates an instance of the CashGeneratedfromOperatingActivitiesCashFlowStatement class
+		/// </summary>
+		public CashGeneratedfromOperatingActivitiesCashFlowStatement() { Store = new Dictionary<string, decimal>(); }
+
+		/// <summary>
+		/// Creates an instance of the CashGeneratedfromOperatingActivitiesCashFlowStatement class
+		/// </summary>
+		public CashGeneratedfromOperatingActivitiesCashFlowStatement(IDictionary<string, decimal> store) { Store = store; }
+	}
+
+	/// <summary>
 	/// The sum of Tier 1 and Tier 2 Capital. Tier 1 capital consists of common shareholders equity, perpetual preferred shareholders equity
 	/// with non-cumulative dividends, retained earnings, and minority interests in the equity accounts of consolidated subsidiaries. Tier 2
 	/// capital consists of subordinated debt, intermediate-term preferred stock, cumulative and long-term preferred stock, and a portion of
@@ -56147,10 +56941,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// The growth in the company’s net income from continuing operations on a percentage basis. Morningstar calculates the growth
-	/// percentage based on the underlying net income from continuing operations data reported in the Income Statement within the
-	/// company filings or reports. This figure represents the rate of net income growth for parts of the business that will continue to
-	/// generate revenue in the future.
+	/// The growth in the company’s net income from continuing operati
 	/// </summary>
 	public class NetIncomeContOpsGrowth : MultiPeriodField
 	{
@@ -56214,7 +57005,7 @@ namespace QuantConnect.Data.Fundamental
 	/// The growth in the company’s cash flow from operations on a percentage basis. Morningstar calculates the growth percentage
 	/// based on the underlying cash flow from operations data reported in the Cash Flow Statement within the company filings or reports.
 	/// </summary>
-	public class CFOGrowth3MonthAvg : MultiPeriodField
+	public class CFOGrowth : MultiPeriodField
 	{
 		/// <summary>
 		/// Gets the default period for the field
@@ -56252,14 +57043,14 @@ namespace QuantConnect.Data.Fundamental
 		}
 
 		/// <summary>
-		/// Creates an instance of the CFOGrowth3MonthAvg class
+		/// Creates an instance of the CFOGrowth class
 		/// </summary>
-		public CFOGrowth3MonthAvg() { Store = new Dictionary<string, decimal>(); }
+		public CFOGrowth() { Store = new Dictionary<string, decimal>(); }
 
 		/// <summary>
-		/// Creates an instance of the CFOGrowth3MonthAvg class
+		/// Creates an instance of the CFOGrowth class
 		/// </summary>
-		public CFOGrowth3MonthAvg(IDictionary<string, decimal> store) { Store = store; }
+		public CFOGrowth(IDictionary<string, decimal> store) { Store = store; }
 	}
 
 	/// <summary>
@@ -56267,7 +57058,7 @@ namespace QuantConnect.Data.Fundamental
 	/// underlying cash flow from operations and capital expenditures data reported in the Cash Flow Statement within the company filings
 	/// or reports:   Free Cash Flow = Cash flow from operations – Capital Expenditures.
 	/// </summary>
-	public class FCFGrowth3MonthAvg : MultiPeriodField
+	public class FCFGrowth : MultiPeriodField
 	{
 		/// <summary>
 		/// Gets the default period for the field
@@ -56305,14 +57096,14 @@ namespace QuantConnect.Data.Fundamental
 		}
 
 		/// <summary>
-		/// Creates an instance of the FCFGrowth3MonthAvg class
+		/// Creates an instance of the FCFGrowth class
 		/// </summary>
-		public FCFGrowth3MonthAvg() { Store = new Dictionary<string, decimal>(); }
+		public FCFGrowth() { Store = new Dictionary<string, decimal>(); }
 
 		/// <summary>
-		/// Creates an instance of the FCFGrowth3MonthAvg class
+		/// Creates an instance of the FCFGrowth class
 		/// </summary>
-		public FCFGrowth3MonthAvg(IDictionary<string, decimal> store) { Store = store; }
+		public FCFGrowth(IDictionary<string, decimal> store) { Store = store; }
 	}
 
 	/// <summary>

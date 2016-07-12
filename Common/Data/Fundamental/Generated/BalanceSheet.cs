@@ -177,7 +177,7 @@ namespace QuantConnect.Data.Fundamental
 		public CashAndCashEquivalentsBalanceSheet CashAndCashEquivalents { get; set; }
 
 		/// <summary>
-		/// Includes cash on hand(currency and coin), cash items in process of collection, non-interest bearing deposits due from other
+		/// Includes cash on hand (currency and coin), cash items in process of collection, non-interest bearing deposits due from other
 		/// financial institutions (including corporate credit unions), and balances with the Federal Reserve Banks, Federal Home Loan Banks
 		/// and central banks.
 		/// </summary>
@@ -321,7 +321,7 @@ namespace QuantConnect.Data.Fundamental
 		public CurrentDeferredRevenueBalanceSheet CurrentDeferredRevenue { get; set; }
 
 		/// <summary>
-		/// The non-current portion of deferred revenue amount as of the  balance sheet date. Deferred revenue is a liability related to revenue
+		/// The non-current portion of deferred revenue amount as of the balance sheet date. Deferred revenue is a liability related to revenue
 		/// producing activity for which revenue has not yet been recognized, and is not expected be recognized in the next twelve months.
 		/// </summary>
 		/// <remarks>
@@ -738,7 +738,7 @@ namespace QuantConnect.Data.Fundamental
 
 		/// <summary>
 		/// The aggregate amount of short term investments, which will be expired within one year that are not specifically classified as
-		/// Avaialable-for-Sale, Held-to-Maturity,  nor Trading investments.
+		/// Available-for-Sale, Held-to-Maturity,  nor Trading investments.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 23163
@@ -843,7 +843,7 @@ namespace QuantConnect.Data.Fundamental
 		public ReceivablesBalanceSheet Receivables { get; set; }
 
 		/// <summary>
-		/// Type of preferred stock  which may be bought back by the issuing company on a specified date or after a specified period of notice.
+		/// Type of preferred stock which may be bought back by the issuing company on a specified date or after a specified period of notice.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 23191
@@ -3632,6 +3632,31 @@ namespace QuantConnect.Data.Fundamental
 		public DueFromRelatedPartiesBalanceSheet DueFromRelatedParties { get; set; }
 
 		/// <summary>
+		/// Preferred security issued by a trust created by the company, that is treated as a long-term liability.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 23544
+		/// </remarks>
+		[JsonProperty("23544")]
+		public TrustPreferredSecuritiesBalanceSheet TrustPreferredSecurities { get; set; }
+
+		/// <summary>
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 23545
+		/// </remarks>
+		[JsonProperty("23545")]
+		public CooperativesShareCapitalRepayableonDemandBalanceSheet CooperativesShareCapitalRepayableonDemand { get; set; }
+
+		/// <summary>
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 23546
+		/// </remarks>
+		[JsonProperty("23546")]
+		public UnallocatedSurplusBalanceSheet UnallocatedSurplus { get; set; }
+
+		/// <summary>
 		/// Creates an instance of the BalanceSheet class
 		/// </summary>
 		public BalanceSheet()
@@ -4003,6 +4028,9 @@ namespace QuantConnect.Data.Fundamental
 			OtherInvestments = new OtherInvestmentsBalanceSheet();
 			TradeAndOtherReceivablesNonCurrent = new TradeAndOtherReceivablesNonCurrentBalanceSheet();
 			DueFromRelatedParties = new DueFromRelatedPartiesBalanceSheet();
+			TrustPreferredSecurities = new TrustPreferredSecuritiesBalanceSheet();
+			CooperativesShareCapitalRepayableonDemand = new CooperativesShareCapitalRepayableonDemandBalanceSheet();
+			UnallocatedSurplus = new UnallocatedSurplusBalanceSheet();
 		}
 
 		/// <summary>
@@ -4379,6 +4407,9 @@ namespace QuantConnect.Data.Fundamental
 			OtherInvestments.UpdateValues(previous.OtherInvestments);
 			TradeAndOtherReceivablesNonCurrent.UpdateValues(previous.TradeAndOtherReceivablesNonCurrent);
 			DueFromRelatedParties.UpdateValues(previous.DueFromRelatedParties);
+			TrustPreferredSecurities.UpdateValues(previous.TrustPreferredSecurities);
+			CooperativesShareCapitalRepayableonDemand.UpdateValues(previous.CooperativesShareCapitalRepayableonDemand);
+			UnallocatedSurplus.UpdateValues(previous.UnallocatedSurplus);
 		}
 	}
 }

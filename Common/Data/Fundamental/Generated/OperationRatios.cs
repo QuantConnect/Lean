@@ -61,10 +61,7 @@ namespace QuantConnect.Data.Fundamental
 		public NetIncomeGrowth NetIncomeGrowth { get; set; }
 
 		/// <summary>
-		/// The growth in the company’s net income from continuing operations on a percentage basis. Morningstar calculates the growth
-		/// percentage based on the underlying net income from continuing operations data reported in the Income Statement within the
-		/// company filings or reports. This figure represents the rate of net income growth for parts of the business that will continue to
-		/// generate revenue in the future.
+		/// The growth in the company’s net income from continuing operati
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 10004
@@ -80,7 +77,7 @@ namespace QuantConnect.Data.Fundamental
 		/// Morningstar DataId: 10005
 		/// </remarks>
 		[JsonProperty("10005")]
-		public CFOGrowth3MonthAvg CFOGrowth3MonthAvg { get; set; }
+		public CFOGrowth CFOGrowth { get; set; }
 
 		/// <summary>
 		/// The growth in the company’s free cash flow on a percentage basis. Morningstar calculates the growth percentage based on the
@@ -91,7 +88,7 @@ namespace QuantConnect.Data.Fundamental
 		/// Morningstar DataId: 10006
 		/// </remarks>
 		[JsonProperty("10006")]
-		public FCFGrowth3MonthAvg FCFGrowth3MonthAvg { get; set; }
+		public FCFGrowth FCFGrowth { get; set; }
 
 		/// <summary>
 		/// The growth in the company’s operating revenue on a percentage basis. Morningstar calculates the growth percentage based on
@@ -542,8 +539,8 @@ namespace QuantConnect.Data.Fundamental
 			OperationIncomeGrowth = new OperationIncomeGrowth();
 			NetIncomeGrowth = new NetIncomeGrowth();
 			NetIncomeContOpsGrowth = new NetIncomeContOpsGrowth();
-			CFOGrowth3MonthAvg = new CFOGrowth3MonthAvg();
-			FCFGrowth3MonthAvg = new FCFGrowth3MonthAvg();
+			CFOGrowth = new CFOGrowth();
+			FCFGrowth = new FCFGrowth();
 			OperationRevenueGrowth3MonthAvg = new OperationRevenueGrowth3MonthAvg();
 			GrossMargin = new GrossMargin();
 			OperationMargin = new OperationMargin();
@@ -602,8 +599,8 @@ namespace QuantConnect.Data.Fundamental
 			OperationIncomeGrowth.UpdateValues(previous.OperationIncomeGrowth);
 			NetIncomeGrowth.UpdateValues(previous.NetIncomeGrowth);
 			NetIncomeContOpsGrowth.UpdateValues(previous.NetIncomeContOpsGrowth);
-			CFOGrowth3MonthAvg.UpdateValues(previous.CFOGrowth3MonthAvg);
-			FCFGrowth3MonthAvg.UpdateValues(previous.FCFGrowth3MonthAvg);
+			CFOGrowth.UpdateValues(previous.CFOGrowth);
+			FCFGrowth.UpdateValues(previous.FCFGrowth);
 			OperationRevenueGrowth3MonthAvg.UpdateValues(previous.OperationRevenueGrowth3MonthAvg);
 			GrossMargin.UpdateValues(previous.GrossMargin);
 			OperationMargin.UpdateValues(previous.OperationMargin);

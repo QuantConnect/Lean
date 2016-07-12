@@ -2276,7 +2276,7 @@ namespace QuantConnect.Data.Fundamental
 		/// Morningstar DataId: 20385
 		/// </remarks>
 		[JsonProperty("20385")]
-		public AverageDilutionEarnIncomeStatement AverageDilutionEarn { get; set; }
+		public AverageDilutionEarningsIncomeStatement AverageDilutionEarnings { get; set; }
 
 		/// <summary>
 		/// Gain on the redemption of the loan or repayment of the loan.
@@ -2537,6 +2537,88 @@ namespace QuantConnect.Data.Fundamental
 		public DateTime ISFileDate { get; set; }
 
 		/// <summary>
+		/// Net income to calculate Diluted EPS, accounting for adjustments assuming that all the convertible instruments are being converted
+		/// to Common Equity.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 20424
+		/// </remarks>
+		[JsonProperty("20424")]
+		public DilutedNIAvailtoComStockholdersIncomeStatement DilutedNIAvailtoComStockholders { get; set; }
+
+		/// <summary>
+		/// Income/Expenses due to the insurer's liabilities incurred in Investment Contracts.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 20425
+		/// </remarks>
+		[JsonProperty("20425")]
+		public InvestmentContractLiabilitiesIncurredIncomeStatement InvestmentContractLiabilitiesIncurred { get; set; }
+
+		/// <summary>
+		/// Income/Expense due to recoveries from reinsurers for Investment Contracts.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 20426
+		/// </remarks>
+		[JsonProperty("20426")]
+		public ReinsuranceRecoveriesofInvestmentContractIncomeStatement ReinsuranceRecoveriesofInvestmentContract { get; set; }
+
+		/// <summary>
+		/// Total amount paid in dividends to equity securities investors.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 20429
+		/// </remarks>
+		[JsonProperty("20429")]
+		public TotalDividendPaymentofEquitySharesIncomeStatement TotalDividendPaymentofEquityShares { get; set; }
+
+		/// <summary>
+		/// Total amount paid in dividends to Non-Equity securities investors.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 20430
+		/// </remarks>
+		[JsonProperty("20430")]
+		public TotalDividendPaymentofNonEquitySharesIncomeStatement TotalDividendPaymentofNonEquityShares { get; set; }
+
+		/// <summary>
+		/// The change in the amount of the unearned premium reserves maintained by insurers.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 20431
+		/// </remarks>
+		[JsonProperty("20431")]
+		public ChangeinTheGrossProvisionforUnearnedPremiumsIncomeStatement ChangeinTheGrossProvisionforUnearnedPremiums { get; set; }
+
+		/// <summary>
+		/// The change in the amount of unearned premium reserve to be covered by reinsurers.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 20432
+		/// </remarks>
+		[JsonProperty("20432")]
+		public ChangeinTheGrossProvisionforUnearnedPremiumsReinsurersShareIncomeStatement ChangeinTheGrossProvisionforUnearnedPremiumsReinsurersShare { get; set; }
+
+		/// <summary>
+		/// Income/Expense due to the insurer's changes in insurance liabilities.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 20433
+		/// </remarks>
+		[JsonProperty("20433")]
+		public ClaimsandChangeinInsuranceLiabilitiesIncomeStatement ClaimsandChangeinInsuranceLiabilities { get; set; }
+
+		/// <summary>
+		/// Income/Expense due to recoveries from reinsurers for insurance liabilities.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 20434
+		/// </remarks>
+		[JsonProperty("20434")]
+		public ReinsuranceRecoveriesofInsuranceLiabilitiesIncomeStatement ReinsuranceRecoveriesofInsuranceLiabilities { get; set; }
+
+		/// <summary>
 		/// Creates an instance of the IncomeStatement class
 		/// </summary>
 		public IncomeStatement()
@@ -2766,7 +2848,7 @@ namespace QuantConnect.Data.Fundamental
 			OtherStaffCosts = new OtherStaffCostsIncomeStatement();
 			ShareBasedPayments = new ShareBasedPaymentsIncomeStatement();
 			GainonInvestmentProperties = new GainonInvestmentPropertiesIncomeStatement();
-			AverageDilutionEarn = new AverageDilutionEarnIncomeStatement();
+			AverageDilutionEarnings = new AverageDilutionEarningsIncomeStatement();
 			GainonRedemptionandExtinguishmentofDebt = new GainonRedemptionandExtinguishmentofDebtIncomeStatement();
 			MiscellaneousOtherOperatingIncome = new MiscellaneousOtherOperatingIncomeIncomeStatement();
 			GainLossonFinancialInstrumentsDesignatedasCashFlowHedges = new GainLossonFinancialInstrumentsDesignatedasCashFlowHedgesIncomeStatement();
@@ -2794,6 +2876,15 @@ namespace QuantConnect.Data.Fundamental
 			NormalizedEBITDA = new NormalizedEBITDAIncomeStatement();
 			GainOnForeignCurrencyExchangeFromBorrowingsRelatingToInterestCosts = new GainOnForeignCurrencyExchangeFromBorrowingsRelatingToInterestCostsIncomeStatement();
 			StockBasedCompensation = new StockBasedCompensationIncomeStatement();
+			DilutedNIAvailtoComStockholders = new DilutedNIAvailtoComStockholdersIncomeStatement();
+			InvestmentContractLiabilitiesIncurred = new InvestmentContractLiabilitiesIncurredIncomeStatement();
+			ReinsuranceRecoveriesofInvestmentContract = new ReinsuranceRecoveriesofInvestmentContractIncomeStatement();
+			TotalDividendPaymentofEquityShares = new TotalDividendPaymentofEquitySharesIncomeStatement();
+			TotalDividendPaymentofNonEquityShares = new TotalDividendPaymentofNonEquitySharesIncomeStatement();
+			ChangeinTheGrossProvisionforUnearnedPremiums = new ChangeinTheGrossProvisionforUnearnedPremiumsIncomeStatement();
+			ChangeinTheGrossProvisionforUnearnedPremiumsReinsurersShare = new ChangeinTheGrossProvisionforUnearnedPremiumsReinsurersShareIncomeStatement();
+			ClaimsandChangeinInsuranceLiabilities = new ClaimsandChangeinInsuranceLiabilitiesIncomeStatement();
+			ReinsuranceRecoveriesofInsuranceLiabilities = new ReinsuranceRecoveriesofInsuranceLiabilitiesIncomeStatement();
 		}
 
 		/// <summary>
@@ -3028,7 +3119,7 @@ namespace QuantConnect.Data.Fundamental
 			OtherStaffCosts.UpdateValues(previous.OtherStaffCosts);
 			ShareBasedPayments.UpdateValues(previous.ShareBasedPayments);
 			GainonInvestmentProperties.UpdateValues(previous.GainonInvestmentProperties);
-			AverageDilutionEarn.UpdateValues(previous.AverageDilutionEarn);
+			AverageDilutionEarnings.UpdateValues(previous.AverageDilutionEarnings);
 			GainonRedemptionandExtinguishmentofDebt.UpdateValues(previous.GainonRedemptionandExtinguishmentofDebt);
 			MiscellaneousOtherOperatingIncome.UpdateValues(previous.MiscellaneousOtherOperatingIncome);
 			GainLossonFinancialInstrumentsDesignatedasCashFlowHedges.UpdateValues(previous.GainLossonFinancialInstrumentsDesignatedasCashFlowHedges);
@@ -3056,6 +3147,15 @@ namespace QuantConnect.Data.Fundamental
 			NormalizedEBITDA.UpdateValues(previous.NormalizedEBITDA);
 			GainOnForeignCurrencyExchangeFromBorrowingsRelatingToInterestCosts.UpdateValues(previous.GainOnForeignCurrencyExchangeFromBorrowingsRelatingToInterestCosts);
 			StockBasedCompensation.UpdateValues(previous.StockBasedCompensation);
+			DilutedNIAvailtoComStockholders.UpdateValues(previous.DilutedNIAvailtoComStockholders);
+			InvestmentContractLiabilitiesIncurred.UpdateValues(previous.InvestmentContractLiabilitiesIncurred);
+			ReinsuranceRecoveriesofInvestmentContract.UpdateValues(previous.ReinsuranceRecoveriesofInvestmentContract);
+			TotalDividendPaymentofEquityShares.UpdateValues(previous.TotalDividendPaymentofEquityShares);
+			TotalDividendPaymentofNonEquityShares.UpdateValues(previous.TotalDividendPaymentofNonEquityShares);
+			ChangeinTheGrossProvisionforUnearnedPremiums.UpdateValues(previous.ChangeinTheGrossProvisionforUnearnedPremiums);
+			ChangeinTheGrossProvisionforUnearnedPremiumsReinsurersShare.UpdateValues(previous.ChangeinTheGrossProvisionforUnearnedPremiumsReinsurersShare);
+			ClaimsandChangeinInsuranceLiabilities.UpdateValues(previous.ClaimsandChangeinInsuranceLiabilities);
+			ReinsuranceRecoveriesofInsuranceLiabilities.UpdateValues(previous.ReinsuranceRecoveriesofInsuranceLiabilities);
 		}
 	}
 }

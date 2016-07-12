@@ -31,7 +31,7 @@ namespace QuantConnect.Data.Fundamental
 	public class ValuationRatios : BaseData
 	{
 		/// <summary>
-		/// Dividend per share / Diluted earning per share
+		/// Dividend per share / Diluted earnings per share
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 14000
@@ -384,6 +384,51 @@ namespace QuantConnect.Data.Fundamental
 		/// </remarks>
 		[JsonProperty("14037")]
 		public decimal DivYield5Year { get; set; }
+
+		/// <summary>
+		/// Indicates the method used to calculate Forward Dividend. There are three options: Annual, Look-back and Manual.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14042
+		/// </remarks>
+		[JsonProperty("14042")]
+		public string ForwardCalculationStyle { get; set; }
+
+		/// <summary>
+		/// Used to collect the forward dividend for companies where our formula will not produce the correct value.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14043
+		/// </remarks>
+		[JsonProperty("14043")]
+		public decimal ActualForwardDividend { get; set; }
+
+		/// <summary>
+		/// Indicates the method used to calculate Trailing Dividend. There are two options: Look-back and Manual.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14044
+		/// </remarks>
+		[JsonProperty("14044")]
+		public string TrailingCalculationStyle { get; set; }
+
+		/// <summary>
+		/// Used to collect the trailing dividend for companies where our formula will not produce the correct value.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14045
+		/// </remarks>
+		[JsonProperty("14045")]
+		public decimal ActualTrailingDividend { get; set; }
+
+		/// <summary>
+		/// The growth rate from the TrailingDividend to the Forward Dividend: {(Forward Dividend/Trailing Dividend) – 1}*100.
+		/// </summary>
+		/// <remarks>
+		/// Morningstar DataId: 14047
+		/// </remarks>
+		[JsonProperty("14047")]
+		public decimal ExpectedDividendGrowthRate { get; set; }
 
 		/// <summary>
 		/// Creates an instance of the ValuationRatios class
