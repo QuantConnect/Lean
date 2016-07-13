@@ -618,11 +618,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // rounds off the order towards 0 to the nearest multiple of lot size
             order.Quantity = RoundOffOrder(order, security);
 
-            if (order.Quantity == 0)
-            {
-                return OrderResponse.ZeroQuantity(request);
-            }
-
             if (!_orders.TryAdd(order.Id, order))
             {
                 Log.Error("BrokerageTransactionHandler.HandleSubmitOrderRequest(): Unable to add new order, order not processed.");
@@ -636,6 +631,15 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             // update the ticket's internal storage with this new order reference
             ticket.SetOrder(order);
+
+            if (order.Quantity == 0)
+            {
+                order.Status = OrderStatus.Invalid;
+                var response = OrderResponse.ZeroQuantity(request);
+                _algorithm.Error(response.ErrorMessage);
+                HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m, "Unable to add order for zero quantity"));
+                return response;
+            }
 
             // check to see if we have enough money to place the order
             bool sufficientCapitalForOrder;
