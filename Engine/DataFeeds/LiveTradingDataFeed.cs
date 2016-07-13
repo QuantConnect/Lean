@@ -256,9 +256,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         var packet = new DataFeedPacket(subscription.Security, subscription.Configuration);
 
                         // dequeue data that is time stamped at or before this frontier
-                        while (subscription.MoveNext() && subscription.Current != null)
+                        while (subscription.MoveNext())
                         {
-                            packet.Add(subscription.Current);
+                            var current = subscription.Current;
+                            if (current == null) break;
+                            packet.Add(current);
                         }
 
                         // if we have data, add it to be added to the bridge
