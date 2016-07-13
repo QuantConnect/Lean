@@ -122,6 +122,7 @@
     <Compile Include="Common\Data\SubscriptionDataSourceTests.cs" />
     <Compile Include="Common\Data\TickQuoteBarConsolidatorTests.cs" />
     <Compile Include="Common\MarketTests.cs" />
+    <Compile Include="Common\Orders\Fills\ImmediateFillModelTests.cs" />
     <Compile Include="Common\Orders\Fills\PartialMarketFillModelTests.cs" />
     <Compile Include="Common\Orders\OrderJsonConverterTests.cs" />
     <Compile Include="Common\Orders\OrderTests.cs" />
