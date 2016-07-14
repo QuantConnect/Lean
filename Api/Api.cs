@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using QuantConnect.API;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
@@ -240,7 +241,7 @@ namespace QuantConnect.Api
             _connection.TryRequest(request, out result);
             return result;
         }
-
+        
         /// <summary>
         /// Delete a backtest from the specified project and backtestId.
         /// </summary>
@@ -257,6 +258,19 @@ namespace QuantConnect.Api
             _connection.TryRequest(request, out result);
             return result;
         }
+
+        /// <summary>
+        /// Get a list of live running algorithms for a logged in user.
+        /// </summary>
+        /// <returns>List of live algorithm instances</returns>
+        public LiveList LiveList()
+        {
+            var request = new RestRequest("live/read", Method.GET);
+            LiveList result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
 
         /// <summary>
         /// Calculate the remaining bytes of user log allowed based on the user's cap and daily cumulative usage.

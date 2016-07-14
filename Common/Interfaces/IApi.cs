@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Api;
+using QuantConnect.API;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Interfaces
@@ -125,6 +126,15 @@ namespace QuantConnect.Interfaces
         /// <param name="projectId">Project id to search</param>
         /// <returns>BacktestList container for list of backtests</returns>
         BacktestList BacktestList(int projectId);
+
+        /// <summary>
+        /// Get a list of live running algorithms for a logged in user.
+        /// </summary>
+        /// <returns>List of live algorithm instances</returns>
+        LiveList LiveList();
+        
+
+
 
         //Status StatusRead(int projectId, string algorithmId);
         //RestResponse StatusUpdate(int projectId, string algorithmId, AlgorithmStatus status, string message = "");

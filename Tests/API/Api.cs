@@ -180,6 +180,21 @@ namespace QuantConnect.Tests.API
 
 
         /// <summary>
+        /// Live algorithm tests
+        /// </summary>
+        [Test]
+        public void ListAccountLiveAlgorithms()
+        {
+            var api = CreateApiAccessor();
+
+            // List all previously deployed algorithms
+            var liveAlgorithms = api.LiveList();
+            Assert.IsTrue(liveAlgorithms.Success);
+            Assert.IsTrue(liveAlgorithms.Algorithms.Any());
+        }
+
+
+        /// <summary>
         /// Create an authenticated API accessor object.
         /// </summary>
         /// <returns></returns>
