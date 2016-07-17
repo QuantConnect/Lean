@@ -110,21 +110,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // we have new universe data to select based on, store the subscription data until the end
                     if (subscription.IsUniverseSelectionSubscription && packet.Count > 0)
                     {
+                        // assume that if the first item is a base data collection then the enumerator handled the aggregation,
+                        // otherwise, load all the the data into a new collection instance
+                        var packetBaseDataCollection = packet.Data[0] as BaseDataCollection;
+                        var packetData = packetBaseDataCollection == null
+                            ? packet.Data
+                            : packetBaseDataCollection.Data;
+
                         BaseDataCollection collection;
                         if (!universeData.TryGetValue(subscription.Universe, out collection))
                         {
-                            collection = new BaseDataCollection(frontier, subscription.Configuration.Symbol, packet.Data);
+                            collection = new BaseDataCollection(frontier, subscription.Configuration.Symbol, packetData);
                             universeData[subscription.Universe] = collection;
                         }
                         else
                         {
-                            // assume that if the first item is a base data collection then the enumerator handled the aggregation,
-                            // otherwise, load all the the data into a new collection instance
-                            var packetBaseDataCollection = packet.Data[0] as BaseDataCollection;
-                            var packetData = packetBaseDataCollection == null
-                                ? packet.Data
-                                : packetBaseDataCollection.Data;
-
                             collection.Data.AddRange(packetData);
                         }
                     }
