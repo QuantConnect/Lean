@@ -7,8 +7,8 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Messaging;
 using QuantConnect.Packets;
-//using Gecko;
-//using Gecko.JQuery;
+using Gecko;
+using Gecko.JQuery;
 
 namespace QuantConnect.Views.WinForms
 {
@@ -19,7 +19,7 @@ namespace QuantConnect.Views.WinForms
         private readonly QueueLogHandler _logging;
         private readonly EventMessagingHandler _messaging;
         private readonly bool _liveMode = false;
-        //private GeckoWebBrowser _geckoBrowser;
+        private GeckoWebBrowser _geckoBrowser;
 
         /// <summary>
         /// Create the UX.
@@ -44,18 +44,21 @@ namespace QuantConnect.Views.WinForms
             //GECKO WEB BROWSER: Create the browser control
             // https://www.nuget.org/packages/GeckoFX/
             // -> If you don't have IE.
-            //_geckoBrowser = new GeckoWebBrowser { Dock = DockStyle.Fill, Name = "browser" };
-            //_geckoBrowser.DOMContentLoaded += BrowserOnDomContentLoaded;
-            //_geckoBrowser.Navigate(url);
-            //splitPanel.Panel1.Controls.Add(_geckoBrowser);
+#if !__MonoCS__
+            Gecko.Xpcom.Initialize();
 
+            _geckoBrowser = new GeckoWebBrowser { Dock = DockStyle.Fill, Name = "browser" };
+            _geckoBrowser.DOMContentLoaded += BrowserOnDomContentLoaded;
+            _geckoBrowser.Navigate(url);
+            splitPanel.Panel1.Controls.Add(_geckoBrowser);
+#else
             // MONO WEB BROWSER: Create the browser control
             // Default shipped with VS and Mono. Works OK in Windows, and compiles in linux.
             _monoBrowser = new WebBrowser() {Dock = DockStyle.Fill, Name = "Browser"};
             _monoBrowser.DocumentCompleted += MonoBrowserOnDocumentCompleted;
             _monoBrowser.Navigate(url);
             splitPanel.Panel1.Controls.Add(_monoBrowser);
-
+#endif
             //Setup Event Handlers:
             _messaging.DebugEvent += MessagingOnDebugEvent;
             _messaging.LogEvent += MessagingOnLogEvent;
@@ -107,22 +110,11 @@ namespace QuantConnect.Views.WinForms
         /// <summary>
         /// GECKO BROWSER: Browser content has completely loaded.
         /// </summary>
-        //private void BrowserOnDomContentLoaded(object sender, DomEventArgs domEventArgs)
-        //{
-        //    _messaging.OnConsumerReadyEvent();
-        //}
-
-        /// <summary>
-        /// Onload Form Initialization
-        /// </summary>
-        private void LeanWinForm_Load(object sender, EventArgs e)
+        private void BrowserOnDomContentLoaded(object sender, DomEventArgs domEventArgs)
         {
-            if (OS.IsWindows && !WBEmulator.IsBrowserEmulationSet())
-            {
-                WBEmulator.SetBrowserEmulationVersion();
-            }
+            _messaging.OnConsumerReadyEvent();
         }
-
+        
         /// <summary>
         /// Update the status label at the bottom of the form
         /// </summary>
@@ -151,7 +143,7 @@ namespace QuantConnect.Views.WinForms
                 }
             }
         }
-         
+
         /// <summary>
         /// Backtest result packet
         /// </summary>
@@ -179,14 +171,15 @@ namespace QuantConnect.Views.WinForms
             var json = JsonConvert.SerializeObject(final);
 
             //GECKO RESULT SET:
-            //_geckoBrowser.DOMContentLoaded += (sender, args) =>
-            //{
-            //    var executor = new JQueryExecutor(_geckoBrowser.Window);
-            //    executor.ExecuteJQuery("window.jnBacktest = JSON.parse('" + json + "');");
-            //    executor.ExecuteJQuery("$.holdReady(false)");
-            //};
-            //_geckoBrowser.Navigate(url);
-
+#if !__MonoCS__
+            _geckoBrowser.DOMContentLoaded += (sender, args) =>
+            {
+                var executor = new JQueryExecutor(_geckoBrowser.Window);
+                executor.ExecuteJQuery("window.jnBacktest = JSON.parse('" + json + "');");
+                executor.ExecuteJQuery("$.holdReady(false)");
+            };
+            _geckoBrowser.Navigate(url);
+#else
             //MONO WEB BROWSER RESULT SET:
             _monoBrowser.DocumentCompleted += (sender, args) =>
             {
@@ -195,6 +188,7 @@ namespace QuantConnect.Views.WinForms
                 _monoBrowser.Document.InvokeScript("eval", new object[] { "$.holdReady(false)" });
             };
             _monoBrowser.Navigate(url);
+#endif
 
             foreach (var pair in packet.Results.Statistics)
             {
@@ -245,6 +239,9 @@ namespace QuantConnect.Views.WinForms
         private void LeanWinForm_FormClosed(object sender, FormClosedEventArgs e)
         {
             Log.Trace("LeanWinForm(): Form closed.");
+#if !__MonoCS__
+            _geckoBrowser.Dispose();
+#endif
             Environment.Exit(0);
         }
     }
