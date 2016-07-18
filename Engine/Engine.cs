@@ -300,13 +300,11 @@ namespace QuantConnect.Lean.Engine
                                                 : 0;
 
                                 //Add other fixed parameters.
-                                banner.Add("Unrealized:", "$" + algorithm.Portfolio.TotalUnrealizedProfit.ToString("N2"));
-                                banner.Add("Fees:", "-$" + algorithm.Portfolio.TotalFees.ToString("N2"));
-                                banner.Add("Net Profit:", "$" + algorithm.Portfolio.TotalProfit.ToString("N2"));
-                                banner.Add("Return:", netReturn.ToString("P"));
-                                banner.Add("Equity:", "$" + algorithm.Portfolio.TotalPortfolioValue.ToString("N2"));
-                                banner.Add("Holdings:", "$" + algorithm.Portfolio.TotalHoldingsValue.ToString("N2"));
-                                banner.Add("Volume:", "$" + algorithm.Portfolio.TotalSaleVolume.ToString("N2"));
+                                banner.Add("Unrealized", "$" + algorithm.Portfolio.TotalUnrealizedProfit.ToString("N2"));
+                                banner.Add("Fees", "-$" + algorithm.Portfolio.TotalFees.ToString("N2"));
+                                banner.Add("Net Profit", "$" + algorithm.Portfolio.TotalProfit.ToString("N2"));
+                                banner.Add("Return", netReturn.ToString("P"));
+                                banner.Add("Equity", "$" + algorithm.Portfolio.TotalPortfolioValue.ToString("N2"));
                             }
                         }
                         catch (Exception err)

@@ -287,7 +287,7 @@ namespace QuantConnect.AlgorithmFactory
 
                     if (string.IsNullOrEmpty(types[0]))
                     {
-                        errorMessage = "Unable to resolve multiple algorithm types to a single type.";
+                        errorMessage = "Please verify algorithm type name matches the algorithm name in the configuration file. Unable to resolve multiple algorithm types to a single type.";
                         Log.Error("Loader.TryCreateILAlgorithm(): Failed resolving multiple algorithm types to a single type.");
                         return false;
                     }

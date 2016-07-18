@@ -58,7 +58,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="useTws">True to use Trader Work Station, false to just launch the API gateway</param>
         public static void Start(string ibControllerDirectory, string twsDirectory, string userID, string password, bool useTws = false)
         {
-            var useTwsSwitch = useTws ? "-tws" : "";
+            var useTwsSwitch = useTws ? "TWS" : "GATEWAY";
             var batchFilename = Path.Combine("InteractiveBrokers", "run-ib-controller.bat");
             var bashFilename = Path.Combine("InteractiveBrokers", "run-ib-controller.sh");
 

@@ -123,9 +123,10 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.IsTrue(orderTicket.Status == OrderStatus.New);
             transactionHandler.HandleOrderRequest(orderRequest);
 
-            Assert.IsTrue(orderRequest.Response.IsProcessed);
             // 600 after round off becomes 0 -> order is not placed
-            Assert.IsFalse(orderRequest.Response.IsSuccess);
+            Assert.IsTrue(orderRequest.Response.IsProcessed);
+            Assert.IsTrue(orderRequest.Response.IsError);
+            Assert.IsTrue(orderTicket.Status == OrderStatus.Invalid);
         }
     }
 }

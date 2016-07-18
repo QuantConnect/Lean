@@ -298,7 +298,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="portfolio">Our portfolio</param>
         /// <param name="order">Order we're checking</param>
-        /// <returns>True if suficient capital.</returns>
+        /// <returns>True if sufficient capital.</returns>
         public bool GetSufficientCapitalForOrder(SecurityPortfolioManager portfolio, Order order)
         {
             // short circuit the div 0 case
@@ -312,6 +312,9 @@ namespace QuantConnect.Securities
                 Log.Error("SecurityTransactionManager.GetSufficientCapitalForOrder(): Null order ticket for id: " + order.Id);
                 return false;
             }
+
+            // When order only reduces or closes a security position, capital is always sufficient
+            if (security.Holdings.Quantity * order.Quantity < 0 && Math.Abs(security.Holdings.Quantity) >= Math.Abs(order.Quantity)) return true;
 
             var freeMargin = security.MarginModel.GetMarginRemaining(portfolio, security, order.Direction);
             var initialMarginRequiredForOrder = security.MarginModel.GetInitialMarginRequiredForOrder(security, order);

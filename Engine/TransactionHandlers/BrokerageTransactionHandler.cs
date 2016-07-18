@@ -517,25 +517,41 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 {
                     return;
                 }
-                
-                // if we were returned our balances, update everything and flip our flag as having performed sync today
+
+                //Adds currency to the cashbook that the user might have deposited
                 foreach (var balance in balances)
                 {
                     Cash cash;
-                    if (_algorithm.Portfolio.CashBook.TryGetValue(balance.Symbol, out cash))
+                    if (!_algorithm.Portfolio.CashBook.TryGetValue(balance.Symbol, out cash))
                     {
-                        // compare in dollars
-                        var delta = cash.Amount - balance.Amount;
-                        if (Math.Abs(delta) > _algorithm.Portfolio.CashBook.ConvertToAccountCurrency(delta, cash.Symbol))
-                        {
-                            // log the delta between 
-                            Log.LogHandler.Trace("BrokerageTransactionHandler.PerformCashSync(): {0} Delta: {1}", balance.Symbol,
-                                delta.ToString("0.00"));
-                        }
+                        Log.LogHandler.Trace("BrokerageTransactionHandler.PerformCashSync(): Unexpected cash found {0} {1}", balance.Amount, balance.Symbol);
+                        _algorithm.Portfolio.SetCash(balance.Symbol, balance.Amount, balance.ConversionRate);
                     }
-                    _algorithm.Portfolio.SetCash(balance.Symbol, balance.Amount, balance.ConversionRate);
                 }
 
+                // if we were returned our balances, update everything and flip our flag as having performed sync today
+                foreach (var cash in _algorithm.Portfolio.CashBook.Values)
+                {
+                    var balanceCash = balances.FirstOrDefault(balance => balance.Symbol == cash.Symbol);
+                    //update the cash if the entry if found in the balances
+                    if (balanceCash != null)
+                    {
+                        // compare in dollars
+                        var delta = cash.Amount - balanceCash.Amount;
+                        if (Math.Abs(_algorithm.Portfolio.CashBook.ConvertToAccountCurrency(delta, cash.Symbol)) > 5)
+                        {
+                            // log the delta between 
+                            Log.LogHandler.Trace("BrokerageTransactionHandler.PerformCashSync(): {0} Delta: {1}", balanceCash.Symbol,
+                                delta.ToString("0.00"));
+                        }
+                        _algorithm.Portfolio.SetCash(balanceCash.Symbol, balanceCash.Amount, balanceCash.ConversionRate);
+                    }
+                    else
+                    {
+                        //Set the cash amount to zero if cash entry not found in the balances
+                        _algorithm.Portfolio.SetCash(cash.Symbol, 0, cash.ConversionRate);
+                    }
+                }
                 _syncedLiveBrokerageCashToday = true;
             }
             finally
@@ -618,11 +634,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // rounds off the order towards 0 to the nearest multiple of lot size
             order.Quantity = RoundOffOrder(order, security);
 
-            if (order.Quantity == 0)
-            {
-                return OrderResponse.ZeroQuantity(request);
-            }
-
             if (!_orders.TryAdd(order.Id, order))
             {
                 Log.Error("BrokerageTransactionHandler.HandleSubmitOrderRequest(): Unable to add new order, order not processed.");
@@ -636,6 +647,15 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             // update the ticket's internal storage with this new order reference
             ticket.SetOrder(order);
+
+            if (order.Quantity == 0)
+            {
+                order.Status = OrderStatus.Invalid;
+                var response = OrderResponse.ZeroQuantity(request);
+                _algorithm.Error(response.ErrorMessage);
+                HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m, "Unable to add order for zero quantity"));
+                return response;
+            }
 
             // check to see if we have enough money to place the order
             bool sufficientCapitalForOrder;
