@@ -33,7 +33,7 @@ namespace QuantConnect.Data.Fundamental
 	public class EarningRatios : BaseData
 	{
 		/// <summary>
-		/// The growth in the company’s diluted earnings per share (EPS) on a percentage basis. Morningstar calculates the annualized growth
+		/// The growth in the company's diluted earnings per share (EPS) on a percentage basis. Morningstar calculates the annualized growth
 		/// percentage based on the underlying diluted EPS reported in the Income Statement within the company filings or reports.
 		/// </summary>
 		/// <remarks>
@@ -43,7 +43,7 @@ namespace QuantConnect.Data.Fundamental
 		public DilutedEPSGrowth DilutedEPSGrowth { get; set; }
 
 		/// <summary>
-		/// The growth in the company’s diluted EPS from continuing operations on a percentage basis. Morningstar calculates the annualized
+		/// The growth in the company's diluted EPS from continuing operations on a percentage basis. Morningstar calculates the annualized
 		/// growth percentage based on the underlying diluted EPS from continuing operations reported in the Income Statement within the
 		/// company filings or reports.
 		/// </summary>
@@ -54,7 +54,7 @@ namespace QuantConnect.Data.Fundamental
 		public DilutedContEPSGrowth DilutedContEPSGrowth { get; set; }
 
 		/// <summary>
-		/// The growth in the company’s dividends per share (DPS) on a percentage basis. Morningstar calculates the annualized growth
+		/// The growth in the company's dividends per share (DPS) on a percentage basis. Morningstar calculates the annualized growth
 		/// percentage based on the underlying DPS from its dividend database.  Morningstar collects its DPS from company filings and
 		/// reports, as well as from third party sources.
 		/// </summary>
@@ -65,7 +65,7 @@ namespace QuantConnect.Data.Fundamental
 		public DPSGrowth DPSGrowth { get; set; }
 
 		/// <summary>
-		/// The growth in the company’s book value per share on a percentage basis. Morningstar calculates the annualized growth
+		/// The growth in the company's book value per share on a percentage basis. Morningstar calculates the annualized growth
 		/// percentage based on the underlying equity and end of period shares outstanding reported in the company filings or reports.
 		/// </summary>
 		/// <remarks>

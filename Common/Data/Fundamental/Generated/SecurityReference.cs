@@ -33,7 +33,7 @@ namespace QuantConnect.Data.Fundamental
 	{
 		/// <summary>
 		/// An arrangement of characters (often letters) representing a particular security listed on an exchange or otherwise traded publicly.
-		/// Note: Morningstar’s multi-share class symbols will often contain a “period” within the symbol; e.g. BRK.B for Berkshire Hathaway
+		/// Note: Morningstar's multi-share class symbols will often contain a "period" within the symbol; e.g. BRK.B for Berkshire Hathaway
 		/// Class B.
 		/// </summary>
 		/// <remarks>
@@ -76,7 +76,7 @@ namespace QuantConnect.Data.Fundamental
 		/// The acronym for the Committee for Uniform Security Identification Procedures. The Committee is appointed by the National
 		/// Association of Securities Dealers (NASD) to assign identification numbers to nearly all publicly traded stock and bond certificates.
 		/// CUSIPs are 9-digit numbers designed to be unique numerical identifiers for traded securities.
-		/// NOTE: CUSIPS are proprietary to Standard &amp; Poor’s CUSIP Service Bureau through an exclusive agreement with American Bankers
+		/// NOTE: CUSIPS are proprietary to Standard &amp; Poor's CUSIP Service Bureau through an exclusive agreement with American Bankers
 		/// Association.  CUSIP number is provided for matching purposes only; no redistribution rights apply.
 		/// </summary>
 		/// <remarks>
@@ -99,7 +99,7 @@ namespace QuantConnect.Data.Fundamental
 
 		/// <summary>
 		/// The acronym for Stock Exchange Daily Official List. An identification code, consisting of at least seven alphanumeric characters,
-		/// that is assigned to all securities trading on the London Stock Exchange and on other smaller exchanges in the U.K….U.K. stocks
+		/// that is assigned to all securities trading on the London Stock Exchange and on other smaller exchanges in the U.K....U.K. stocks
 		/// that do not trade in the U.S. can be identified by their SEDOL code.
 		/// </summary>
 		/// <remarks>
@@ -137,8 +137,8 @@ namespace QuantConnect.Data.Fundamental
 
 		/// <summary>
 		/// Each security will be assigned to one of the below security type classifications;
-		///  Common Stock (ST00000001)
-		///  Preferred Stock (ST00000002)
+		/// - Common Stock (ST00000001)
+		/// - Preferred Stock (ST00000002)
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 1012
@@ -159,10 +159,10 @@ namespace QuantConnect.Data.Fundamental
 		/// <summary>
 		/// At the ShareClass level; each share is assigned to 1 of 4 possible status classifications; (A) Active, (D) Deactive, (I) Inactive, or (O)
 		/// Obsolete:
-		///  Active-Share class is currently trading in a public market, and we have fundamental data available.
-		///  Deactive-Share class was once Active, but is no longer trading due to share being delisted from the exchange.
-		///  Inactive-Share class is currently trading in a public market, but no fundamental data is available.
-		///  Obsolete-Share class was once Inactive, but is no longer trading due to share being delisted from the exchange.
+		/// - Active-Share class is currently trading in a public market, and we have fundamental data available.
+		/// - Deactive-Share class was once Active, but is no longer trading due to share being delisted from the exchange.
+		/// - Inactive-Share class is currently trading in a public market, but no fundamental data is available.
+		/// - Obsolete-Share class was once Inactive, but is no longer trading due to share being delisted from the exchange.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 1014
@@ -171,8 +171,8 @@ namespace QuantConnect.Data.Fundamental
 		public string ShareClassStatus { get; set; }
 
 		/// <summary>
-		/// This indicator will denote if the indicated share is the primary share for the company. A “1” denotes the primary share, a “0”
-		/// denotes a share that is not the primary share. The primary share is defined as the first share that a company IPO’d with and is still
+		/// This indicator will denote if the indicated share is the primary share for the company. A "1" denotes the primary share, a "0"
+		/// denotes a share that is not the primary share. The primary share is defined as the first share that a company IPO'd with and is still
 		/// actively trading. If this share is no longer trading, we will denote the primary share as the share with the highest volume.
 		/// </summary>
 		/// <remarks>
@@ -228,7 +228,7 @@ namespace QuantConnect.Data.Fundamental
 		public DateTime DelistingDate { get; set; }
 
 		/// <summary>
-		/// The reason for an inactive security’s delisting from an exchange. The full list of Delisting Reason codes can be found within the Data
+		/// The reason for an inactive security's delisting from an exchange. The full list of Delisting Reason codes can be found within the Data
 		/// Definitions- Appendix A DelistingReason Codes tab.
 		/// </summary>
 		/// <remarks>
@@ -249,8 +249,8 @@ namespace QuantConnect.Data.Fundamental
 
 		/// <summary>
 		/// Refers to the type of securities that can be found within the equity database. For the vast majority, this value will populate as null
-		/// for regular common shares. For a minority of shareclasses, this will populate as either “Participating Preferred” or “Closed-End
-		/// Fund”, which reflects our limited coverage of these types of securities within our equity database.
+		/// for regular common shares. For a minority of shareclasses, this will populate as either "Participating Preferred" or "Closed-End
+		/// Fund", which reflects our limited coverage of these types of securities within our equity database.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 1023
@@ -260,7 +260,7 @@ namespace QuantConnect.Data.Fundamental
 
 		/// <summary>
 		/// The estimated offer price range (low-high) for a new IPO. The field should be used until the final IPO price becomes available, as
-		/// populated in the data field “IPOPrice”.
+		/// populated in the data field "IPOPrice".
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 1024

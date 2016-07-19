@@ -33,7 +33,7 @@ namespace QuantConnect.Data.Fundamental
 	public class OperationRatios : BaseData
 	{
 		/// <summary>
-		/// The growth in the company’s revenue on a percentage basis. Morningstar calculates the growth percentage based on the
+		/// The growth in the company's revenue on a percentage basis. Morningstar calculates the growth percentage based on the
 		/// underlying revenue data reported in the Income Statement within the company filings or reports.
 		/// </summary>
 		/// <remarks>
@@ -43,7 +43,7 @@ namespace QuantConnect.Data.Fundamental
 		public RevenueGrowth RevenueGrowth { get; set; }
 
 		/// <summary>
-		/// The growth in the company’s operating income on a percentage basis. Morningstar calculates the growth percentage based on the
+		/// The growth in the company's operating income on a percentage basis. Morningstar calculates the growth percentage based on the
 		/// underlying operating income data reported in the Income Statement within the company filings or reports.
 		/// </summary>
 		/// <remarks>
@@ -53,7 +53,7 @@ namespace QuantConnect.Data.Fundamental
 		public OperationIncomeGrowth OperationIncomeGrowth { get; set; }
 
 		/// <summary>
-		/// The growth in the company’s net income on a percentage basis. Morningstar calculates the growth percentage based on the
+		/// The growth in the company's net income on a percentage basis. Morningstar calculates the growth percentage based on the
 		/// underlying net income data reported in the Income Statement within the company filings or reports.
 		/// </summary>
 		/// <remarks>
@@ -63,7 +63,7 @@ namespace QuantConnect.Data.Fundamental
 		public NetIncomeGrowth NetIncomeGrowth { get; set; }
 
 		/// <summary>
-		/// The growth in the company’s net income from continuing operati
+		/// The growth in the company's net income from continuing operati
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 10004
@@ -72,7 +72,7 @@ namespace QuantConnect.Data.Fundamental
 		public NetIncomeContOpsGrowth NetIncomeContOpsGrowth { get; set; }
 
 		/// <summary>
-		/// The growth in the company’s cash flow from operations on a percentage basis. Morningstar calculates the growth percentage
+		/// The growth in the company's cash flow from operations on a percentage basis. Morningstar calculates the growth percentage
 		/// based on the underlying cash flow from operations data reported in the Cash Flow Statement within the company filings or reports.
 		/// </summary>
 		/// <remarks>
@@ -82,9 +82,9 @@ namespace QuantConnect.Data.Fundamental
 		public CFOGrowth CFOGrowth { get; set; }
 
 		/// <summary>
-		/// The growth in the company’s free cash flow on a percentage basis. Morningstar calculates the growth percentage based on the
+		/// The growth in the company's free cash flow on a percentage basis. Morningstar calculates the growth percentage based on the
 		/// underlying cash flow from operations and capital expenditures data reported in the Cash Flow Statement within the company filings
-		/// or reports:   Free Cash Flow = Cash flow from operations – Capital Expenditures.
+		/// or reports:   Free Cash Flow = Cash flow from operations - Capital Expenditures.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 10006
@@ -93,7 +93,7 @@ namespace QuantConnect.Data.Fundamental
 		public FCFGrowth FCFGrowth { get; set; }
 
 		/// <summary>
-		/// The growth in the company’s operating revenue on a percentage basis. Morningstar calculates the growth percentage based on
+		/// The growth in the company's operating revenue on a percentage basis. Morningstar calculates the growth percentage based on
 		/// the underlying operating revenue data reported in the Income Statement within the company filings or reports.
 		/// </summary>
 		/// <remarks>
@@ -104,7 +104,7 @@ namespace QuantConnect.Data.Fundamental
 
 		/// <summary>
 		/// Refers to the ratio of gross profit to revenue. Morningstar calculates the ratio by using the underlying data reported in the company
-		/// filings or reports:   (Revenue – Cost of Goods Sold) / Revenue.
+		/// filings or reports:   (Revenue - Cost of Goods Sold) / Revenue.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 11001
@@ -207,7 +207,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <summary>
 		/// Refers to the ratio of Long Term Debt to Total Capital. Morningstar calculates the ratio by using the underlying data reported in the
 		/// Balance Sheet within the company filings or reports:    Long-Term Debt And Capital Lease Obligation / (Long-Term Debt And Capital
-		/// Lease Obligation + Total Shareholder’s Equity)
+		/// Lease Obligation + Total Shareholder's Equity)
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 11011
@@ -228,7 +228,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <summary>
 		/// Refers to the ratio of Long Term Debt to Common Equity. Morningstar calculates the ratio by using the underlying data reported in
 		/// the Balance Sheet within the company filings or reports:    Long-Term Debt And Capital Lease Obligation / Common Equity.
-		/// [Note: Common Equity = Total Shareholder’s Equity – Preferred Stock]
+		/// [Note: Common Equity = Total Shareholder's Equity - Preferred Stock]
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 11013
@@ -239,7 +239,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <summary>
 		/// Refers to the ratio of Total Assets to Common Equity. Morningstar calculates the ratio by using the underlying data reported in the
 		/// Balance Sheet within the company filings or reports:    Total Assets / Common Equity.   [Note: Common Equity = Total
-		/// Shareholder’s Equity – Preferred Stock]
+		/// Shareholder's Equity - Preferred Stock]
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 11014
@@ -250,7 +250,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <summary>
 		/// Refers to the ratio of Current Debt and Long Term Debt to Common Equity. Morningstar calculates the ratio by using the underlying
 		/// data reported in the Balance Sheet within the company filings or reports:    (Current Debt And Current Capital Lease Obligation +
-		/// Long-Term Debt And Long-Term Capital Lease Obligation / Common Equity.   [Note: Common Equity = Total Shareholder’s Equity –
+		/// Long-Term Debt And Long-Term Capital Lease Obligation / Common Equity.   [Note: Common Equity = Total Shareholder's Equity -
 		/// Preferred Stock]
 		/// </summary>
 		/// <remarks>
@@ -297,7 +297,7 @@ namespace QuantConnect.Data.Fundamental
 		public DaysInPayment DaysInPayment { get; set; }
 
 		/// <summary>
-		/// Days In Inventory + Days In Sales – Days In Payment
+		/// Days In Inventory + Days In Sales - Days In Payment
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 12004

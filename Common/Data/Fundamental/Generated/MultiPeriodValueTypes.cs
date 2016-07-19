@@ -183,7 +183,7 @@ namespace QuantConnect.Data.Fundamental
 	/// The aggregate cost of goods produced and sold and services rendered during the reporting period. It excludes all operating
 	/// expenses such as depreciation, depletion, amortization, and SG&amp;A. For the must have cost industry, if the number is not reported
 	/// by the company, it will be calculated based on accounting equation.
-	/// Cost of Revenue = Revenue – Operating Expenses – Operating Profit.
+	/// Cost of Revenue = Revenue - Operating Expenses - Operating Profit.
 	/// </summary>
 	public class CostOfRevenueIncomeStatement : MultiPeriodField
 	{
@@ -1002,7 +1002,7 @@ namespace QuantConnect.Data.Fundamental
 	/// <summary>
 	/// Total revenue less cost of revenue. The number is as reported by the company on the income statement; however, the number will
 	/// be calculated if it is not reported. This field is null if the cost of revenue is not given.
-	/// Gross Profit = Total Revenue – Cost of Revenue.
+	/// Gross Profit = Total Revenue - Cost of Revenue.
 	/// </summary>
 	public class GrossProfitIncomeStatement : MultiPeriodField
 	{
@@ -1715,7 +1715,7 @@ namespace QuantConnect.Data.Fundamental
 	/// <summary>
 	/// Losses generally refer to (1) the amount of reduction in the value of an insured's property caused by an insured peril, (2) the amount
 	/// sought through an insured's claim, or (3) the amount paid on behalf of an insured under an insurance contract.  Loss Adjustment
-	/// Expenses is expenses incurred in the course of investigating and settling claims that includes any legal and adjusters’ fees and the
+	/// Expenses is expenses incurred in the course of investigating and settling claims that includes any legal and adjusters' fees and the
 	/// costs of paying claims and all related expenses.
 	/// </summary>
 	public class LossAdjustmentExpenseIncomeStatement : MultiPeriodField
@@ -2253,7 +2253,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// All revenues, sales and income that the company deems as a total sum of all of their income as reported in the company’s income
+	/// All revenues, sales and income that the company deems as a total sum of all of their income as reported in the company's income
 	/// statement.
 	/// Bank:  Total Revenue = Net Interest Income + Non-Interest Income.
 	/// </summary>
@@ -3037,7 +3037,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// Premiums earned is the portion of an insurance written premium which is considered “earned” by the insurer, based on the part of
+	/// Premiums earned is the portion of an insurance written premium which is considered "earned" by the insurer, based on the part of
 	/// the policy period that the insurance has been in effect, and during which the insurer has been exposed to loss.
 	/// </summary>
 	public class TotalPremiumsEarnedIncomeStatement : MultiPeriodField
@@ -3261,7 +3261,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// A charge to income which represents an expense deemed adequate by management given the composition of a bank’s credit
+	/// A charge to income which represents an expense deemed adequate by management given the composition of a bank's credit
 	/// portfolios, their probability of default, the economic environment and the allowance for credit losses already established. Specific
 	/// provisions are established to reduce the book value of specific assets (primarily loans) to establish the amount expected to be
 	/// recovered on the loans.
@@ -3498,9 +3498,9 @@ namespace QuantConnect.Data.Fundamental
 
 	/// <summary>
 	/// The aggregate total costs related to selling a firm's product and services, as well as all other general and administrative expenses.
-	/// Selling expenses are those directly related to the company’s efforts to generate sales (e.g., sales salaries, commissions,
+	/// Selling expenses are those directly related to the company's efforts to generate sales (e.g., sales salaries, commissions,
 	/// advertising, delivery expenses). General and administrative expenses are expenses related to general administration of the
-	/// company’s operation (e.g., officers and office salaries, office supplies, telephone, accounting and legal services, and business
+	/// company's operation (e.g., officers and office salaries, office supplies, telephone, accounting and legal services, and business
 	/// licenses and fees).
 	/// </summary>
 	public class SellingGeneralAndAdministrationIncomeStatement : MultiPeriodField
@@ -4176,7 +4176,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// Two situations may lead to accretion on a preferred stock – accretion related redemption premium and interest-like returns on
+	/// Two situations may lead to accretion on a preferred stock - accretion related redemption premium and interest-like returns on
 	/// accrued, but unpaid dividends that accumulated from accumulated preferred stock.
 	/// </summary>
 	public class AccretionOnPreferredStockIncomeStatement : MultiPeriodField
@@ -5233,7 +5233,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// The earning or loss resulting from the proportional part of the associated company’s net income. This item is usually only available
+	/// The earning or loss resulting from the proportional part of the associated company's net income. This item is usually only available
 	/// for bank industry.
 	/// </summary>
 	public class EarningLossOfEquityInvestmentsIncomeStatement : MultiPeriodField
@@ -6508,7 +6508,7 @@ namespace QuantConnect.Data.Fundamental
 	/// cash flows is less than the carrying value of the asset, then the asset would be considered impaired and would have to be written
 	/// down to its fair value. Once an asset is written down, it may only be written back up under very few circumstances. Usually the
 	/// company uses the sum of undiscounted future cash flows to determine if the impairment should occur, and uses the sum of
-	/// discounted future cash flows to make the impairment judgment. The impairment decision emphasizes on capital assets’ future
+	/// discounted future cash flows to make the impairment judgment. The impairment decision emphasizes on capital assets' future
 	/// profit collection ability.
 	/// </summary>
 	public class ImpairmentOfCapitalAssetsIncomeStatement : MultiPeriodField
@@ -6594,7 +6594,7 @@ namespace QuantConnect.Data.Fundamental
 	/// cash flows is less than the carrying value of the asset, then the asset would be considered impaired and would have to be written
 	/// down to its fair value. Once an asset is written down, it may only be written back up under very few circumstances. Usually the
 	/// company uses the sum of undiscounted future cash flows to determine if the impairment should occur, and uses the sum of
-	/// discounted future cash flows to make the impairment judgment. The impairment decision emphasizes on capital assets’ future
+	/// discounted future cash flows to make the impairment judgment. The impairment decision emphasizes on capital assets' future
 	/// profit collection ability; This item is usually not available for bank and insurance industries.
 	/// </summary>
 	public class OtherImpairmentOfCapitalAssetsIncomeStatement : MultiPeriodField
@@ -10617,7 +10617,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// The amount by which an asset’s selling price exceeds its initial purchase price is called capital gain. A realized capital gain is when
+	/// The amount by which an asset's selling price exceeds its initial purchase price is called capital gain. A realized capital gain is when
 	/// it has been sold at a profit. This item is usually not available for bank and insurance industries.
 	/// </summary>
 	public class RealizedCapitalGainIncomeStatement : MultiPeriodField
@@ -17207,7 +17207,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// EBITDA – Total Unusual Items
+	/// EBITDA - Total Unusual Items
 	/// </summary>
 	public class NormalizedEBITDAIncomeStatement : MultiPeriodField
 	{
@@ -18485,9 +18485,9 @@ namespace QuantConnect.Data.Fundamental
 	/// Excess of issue price over par or stated value of the entity's capital stock and amounts received from other transactions involving
 	/// the entity's stock or stockholders. Includes adjustments to additional paid in capital. There are two major categories of additional
 	/// paid in capital: 1) Paid in capital in excess of par/stated value, which is the difference between the actual issue price of the shares
-	/// and the shares’ par/stated value. 2) Paid in capital from other transactions which includes treasury stock, retirement of stock, stock
+	/// and the shares' par/stated value. 2) Paid in capital from other transactions which includes treasury stock, retirement of stock, stock
 	/// dividends recorded at market, lapse of stock purchase warrants, conversion of convertible bonds in excess of the par value of the
-	/// stock, and any other additional capital from the company’s own stock transactions.
+	/// stock, and any other additional capital from the company's own stock transactions.
 	/// </summary>
 	public class AdditionalPaidInCapitalBalanceSheet : MultiPeriodField
 	{
@@ -19221,8 +19221,8 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// Common stock (all issues) at par value, as reported within the Stockholder’s Equity section of the balance sheet; i.e. it is one
-	/// component of Common Stockholder’s Equity
+	/// Common stock (all issues) at par value, as reported within the Stockholder's Equity section of the balance sheet; i.e. it is one
+	/// component of Common Stockholder's Equity
 	/// </summary>
 	public class CommonStockBalanceSheet : MultiPeriodField
 	{
@@ -20452,7 +20452,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// A result of timing differences between taxable incomes reported on the income statement and taxable income from the company’s
+	/// A result of timing differences between taxable incomes reported on the income statement and taxable income from the company's
 	/// tax return. Depending on the positioning of deferred income taxes, the field may be either current (within current assets) or non-
 	/// current (below total current assets). Typically a company will have two deferred income taxes fields.
 	/// </summary>
@@ -22319,7 +22319,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// Short-term (typical maturity is less than one year), highly liquid government or corporate debt instrument such as bankers’
+	/// Short-term (typical maturity is less than one year), highly liquid government or corporate debt instrument such as bankers'
 	/// acceptance, promissory notes, and treasury bills.
 	/// </summary>
 	public class MoneyMarketInvestmentsBalanceSheet : MultiPeriodField
@@ -22785,8 +22785,8 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// Other current liabilities = Total current liabilities – Payables and accrued Expenses – Current debt and capital lease obligaton –
-	/// provisions, current – deferred liabilities, current
+	/// Other current liabilities = Total current liabilities - Payables and accrued Expenses - Current debt and capital lease obligaton -
+	/// provisions, current - deferred liabilities, current
 	/// </summary>
 	public class OtherCurrentLiabilitiesBalanceSheet : MultiPeriodField
 	{
@@ -23359,7 +23359,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// Preferred stock (all issues) at par value, as reported within the Stockholder’s Equity section of the balance sheet.
+	/// Preferred stock (all issues) at par value, as reported within the Stockholder's Equity section of the balance sheet.
 	/// </summary>
 	public class PreferredStockBalanceSheet : MultiPeriodField
 	{
@@ -23956,7 +23956,7 @@ namespace QuantConnect.Data.Fundamental
 
 	/// <summary>
 	/// The carrying value of funds outstanding loaned in the form of security resale agreements if the agreement requires the purchaser to
-	/// resell the identical security purchased or a security that meets the definition of “substantially the same” in the case of a dollar roll.
+	/// resell the identical security purchased or a security that meets the definition of "substantially the same" in the case of a dollar roll.
 	/// Also includes purchases of participations in pools of securities that are subject to a resale agreement.
 	/// </summary>
 	public class SecurityAgreeToBeResellBalanceSheet : MultiPeriodField
@@ -24247,7 +24247,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// The residual interest in the assets of the enterprise that remains after deducting its liabilities. Equity is increased by owners’
+	/// The residual interest in the assets of the enterprise that remains after deducting its liabilities. Equity is increased by owners'
 	/// investments and by comprehensive income, and it is reduced by distributions to the owners.
 	/// </summary>
 	public class StockholdersEquityBalanceSheet : MultiPeriodField
@@ -25310,7 +25310,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// Invested capital = common shareholders’ equity + long term debt + current debt
+	/// Invested capital = common shareholders' equity + long term debt + current debt
 	/// </summary>
 	public class InvestedCapitalBalanceSheet : MultiPeriodField
 	{
@@ -25791,7 +25791,7 @@ namespace QuantConnect.Data.Fundamental
 
 	/// <summary>
 	/// Residual interest, gross of minority interest, that remains in the assets of the enterprise after deducting its liabilities. Equity is
-	/// increased by owners’ investments and by comprehensive income, and it is reduced by distributions to the owners.
+	/// increased by owners' investments and by comprehensive income, and it is reduced by distributions to the owners.
 	/// </summary>
 	public class TotalEquityGrossMinorityInterestBalanceSheet : MultiPeriodField
 	{
@@ -26317,9 +26317,9 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// It means all indebtedness for borrowed money or the deferred purchase price of property or services，including without limitation
-	/// reimbursement and other obligations with respect to surety bonds and letters of credit，all obligations evidenced by notes, bonds
-	/// debentures or similar instruments, all capital lease obligations and all contingent obligations．
+	/// It means all indebtedness for borrowed money or the deferred purchase price of property or services, including without limitation
+	/// reimbursement and other obligations with respect to surety bonds and letters of credit, all obligations evidenced by notes, bonds
+	/// debentures or similar instruments, all capital lease obligations and all contingent obligations. 
 	/// </summary>
 	public class BankIndebtednessBalanceSheet : MultiPeriodField
 	{
@@ -27494,7 +27494,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// ESOP Debt Guarantee represents all transactions related to a company’s Employee Stock Ownership Plan (ESOP), such as
+	/// ESOP Debt Guarantee represents all transactions related to a company's Employee Stock Ownership Plan (ESOP), such as
 	/// shares/debt/loans owned by ESOP.
 	/// </summary>
 	public class ESOPDebtGuaranteeBalanceSheet : MultiPeriodField
@@ -30622,7 +30622,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// This is preferred stock of a subsidiary, which belongs to the company’s equity. This item is usually only available for utility industry.
+	/// This is preferred stock of a subsidiary, which belongs to the company's equity. This item is usually only available for utility industry.
 	/// </summary>
 	public class PreferredStockOfSubsidiaryBalanceSheet : MultiPeriodField
 	{
@@ -33301,7 +33301,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// This will serve as the “parent” value to AccountsReceivable (DataId 23001) and OtherReceivables (DataId 23342) for all company
+	/// This will serve as the "parent" value to AccountsReceivable (DataId 23001) and OtherReceivables (DataId 23342) for all company
 	/// financials reported in the IFRS GAAP.
 	/// </summary>
 	public class TradingAndOtherReceivableBalanceSheet : MultiPeriodField
@@ -33560,7 +33560,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// Amounts owed to the company from a non-arm’s length entity, due within the company's current operating cycle.
+	/// Amounts owed to the company from a non-arm's length entity, due within the company's current operating cycle.
 	/// </summary>
 	public class DuefromRelatedPartiesCurrentBalanceSheet : MultiPeriodField
 	{
@@ -33601,7 +33601,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// Amounts owed to the company from a non-arm’s length entity, due after the company's current operating cycle.
+	/// Amounts owed to the company from a non-arm's length entity, due after the company's current operating cycle.
 	/// </summary>
 	public class DuefromRelatedPartiesNonCurrentBalanceSheet : MultiPeriodField
 	{
@@ -33642,7 +33642,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// Amounts owed by the company to a non-arm’s length entity.
+	/// Amounts owed by the company to a non-arm's length entity.
 	/// </summary>
 	public class DuetoRelatedPartiesBalanceSheet : MultiPeriodField
 	{
@@ -33683,7 +33683,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// Amounts owed by the company to a non-arm’s length entity that has to be repaid within the company's current operating cycle.
+	/// Amounts owed by the company to a non-arm's length entity that has to be repaid within the company's current operating cycle.
 	/// </summary>
 	public class DuetoRelatedPartiesCurrentBalanceSheet : MultiPeriodField
 	{
@@ -33724,7 +33724,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// Amounts owed by the company to a non-arm’s length entity that has to be repaid after the company's current operating cycle.
+	/// Amounts owed by the company to a non-arm's length entity that has to be repaid after the company's current operating cycle.
 	/// </summary>
 	public class DuetoRelatedPartiesNonCurrentBalanceSheet : MultiPeriodField
 	{
@@ -39127,7 +39127,7 @@ namespace QuantConnect.Data.Fundamental
 
 	/// <summary>
 	/// The net cash inflow (outflow) from financing activity for the period, which involve changes to the long-term liabilities and
-	/// stockholders’ equity.
+	/// stockholders' equity.
 	/// </summary>
 	public class FinancingCashFlowCashFlowStatement : MultiPeriodField
 	{
@@ -47242,7 +47242,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// The gain or loss from the entity’s ongoing operations.
+	/// The gain or loss from the entity's ongoing operations.
 	/// </summary>
 	public class OperatingGainsLossesCashFlowStatement : MultiPeriodField
 	{
@@ -49661,7 +49661,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// A non-cash adjustment for share of associates’ income in respect of operating activities.
+	/// A non-cash adjustment for share of associates' income in respect of operating activities.
 	/// </summary>
 	public class ShareofAssociatesCashFlowStatement : MultiPeriodField
 	{
@@ -56513,7 +56513,7 @@ namespace QuantConnect.Data.Fundamental
 
 	/// <summary>
 	/// The basic normalized earnings per share. Normalized EPS removes onetime and unusual items from EPS, to provide investors with a
-	/// more accurate measure of the company’s true earnings. Normalized Earnings / Basic Weighted Average Shares Outstanding.
+	/// more accurate measure of the company's true earnings. Normalized Earnings / Basic Weighted Average Shares Outstanding.
 	/// </summary>
 	public class NormalizedBasicEPS : MultiPeriodField
 	{
@@ -56595,7 +56595,7 @@ namespace QuantConnect.Data.Fundamental
 
 	/// <summary>
 	/// The diluted normalized earnings per share. Normalized EPS removes onetime and unusual items from EPS, to provide investors with
-	/// a more accurate measure of the company’s true earnings. Normalized Earnings / Diluted Weighted Average Shares Outstanding.
+	/// a more accurate measure of the company's true earnings. Normalized Earnings / Diluted Weighted Average Shares Outstanding.
 	/// </summary>
 	public class NormalizedDilutedEPS : MultiPeriodField
 	{
@@ -56757,7 +56757,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// The growth in the company’s revenue on a percentage basis. Morningstar calculates the growth percentage based on the
+	/// The growth in the company's revenue on a percentage basis. Morningstar calculates the growth percentage based on the
 	/// underlying revenue data reported in the Income Statement within the company filings or reports.
 	/// </summary>
 	public class RevenueGrowth : MultiPeriodField
@@ -56819,7 +56819,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// The growth in the company’s operating income on a percentage basis. Morningstar calculates the growth percentage based on the
+	/// The growth in the company's operating income on a percentage basis. Morningstar calculates the growth percentage based on the
 	/// underlying operating income data reported in the Income Statement within the company filings or reports.
 	/// </summary>
 	public class OperationIncomeGrowth : MultiPeriodField
@@ -56881,7 +56881,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// The growth in the company’s net income on a percentage basis. Morningstar calculates the growth percentage based on the
+	/// The growth in the company's net income on a percentage basis. Morningstar calculates the growth percentage based on the
 	/// underlying net income data reported in the Income Statement within the company filings or reports.
 	/// </summary>
 	public class NetIncomeGrowth : MultiPeriodField
@@ -56943,7 +56943,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// The growth in the company’s net income from continuing operati
+	/// The growth in the company's net income from continuing operati
 	/// </summary>
 	public class NetIncomeContOpsGrowth : MultiPeriodField
 	{
@@ -57004,7 +57004,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// The growth in the company’s cash flow from operations on a percentage basis. Morningstar calculates the growth percentage
+	/// The growth in the company's cash flow from operations on a percentage basis. Morningstar calculates the growth percentage
 	/// based on the underlying cash flow from operations data reported in the Cash Flow Statement within the company filings or reports.
 	/// </summary>
 	public class CFOGrowth : MultiPeriodField
@@ -57056,9 +57056,9 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// The growth in the company’s free cash flow on a percentage basis. Morningstar calculates the growth percentage based on the
+	/// The growth in the company's free cash flow on a percentage basis. Morningstar calculates the growth percentage based on the
 	/// underlying cash flow from operations and capital expenditures data reported in the Cash Flow Statement within the company filings
-	/// or reports:   Free Cash Flow = Cash flow from operations – Capital Expenditures.
+	/// or reports:   Free Cash Flow = Cash flow from operations - Capital Expenditures.
 	/// </summary>
 	public class FCFGrowth : MultiPeriodField
 	{
@@ -57109,7 +57109,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// The growth in the company’s operating revenue on a percentage basis. Morningstar calculates the growth percentage based on
+	/// The growth in the company's operating revenue on a percentage basis. Morningstar calculates the growth percentage based on
 	/// the underlying operating revenue data reported in the Income Statement within the company filings or reports.
 	/// </summary>
 	public class OperationRevenueGrowth3MonthAvg : MultiPeriodField
@@ -57172,7 +57172,7 @@ namespace QuantConnect.Data.Fundamental
 
 	/// <summary>
 	/// Refers to the ratio of gross profit to revenue. Morningstar calculates the ratio by using the underlying data reported in the company
-	/// filings or reports:   (Revenue – Cost of Goods Sold) / Revenue.
+	/// filings or reports:   (Revenue - Cost of Goods Sold) / Revenue.
 	/// </summary>
 	public class GrossMargin : MultiPeriodField
 	{
@@ -57995,7 +57995,7 @@ namespace QuantConnect.Data.Fundamental
 	/// <summary>
 	/// Refers to the ratio of Long Term Debt to Total Capital. Morningstar calculates the ratio by using the underlying data reported in the
 	/// Balance Sheet within the company filings or reports:    Long-Term Debt And Capital Lease Obligation / (Long-Term Debt And Capital
-	/// Lease Obligation + Total Shareholder’s Equity)
+	/// Lease Obligation + Total Shareholder's Equity)
 	/// </summary>
 	public class LongTermDebtTotalCapitalRatio : MultiPeriodField
 	{
@@ -58160,7 +58160,7 @@ namespace QuantConnect.Data.Fundamental
 	/// <summary>
 	/// Refers to the ratio of Long Term Debt to Common Equity. Morningstar calculates the ratio by using the underlying data reported in
 	/// the Balance Sheet within the company filings or reports:    Long-Term Debt And Capital Lease Obligation / Common Equity.
-	/// [Note: Common Equity = Total Shareholder’s Equity – Preferred Stock]
+	/// [Note: Common Equity = Total Shareholder's Equity - Preferred Stock]
 	/// </summary>
 	public class LongTermDebtEquityRatio : MultiPeriodField
 	{
@@ -58243,7 +58243,7 @@ namespace QuantConnect.Data.Fundamental
 	/// <summary>
 	/// Refers to the ratio of Total Assets to Common Equity. Morningstar calculates the ratio by using the underlying data reported in the
 	/// Balance Sheet within the company filings or reports:    Total Assets / Common Equity.   [Note: Common Equity = Total
-	/// Shareholder’s Equity – Preferred Stock]
+	/// Shareholder's Equity - Preferred Stock]
 	/// </summary>
 	public class FinancialLeverage : MultiPeriodField
 	{
@@ -58326,7 +58326,7 @@ namespace QuantConnect.Data.Fundamental
 	/// <summary>
 	/// Refers to the ratio of Current Debt and Long Term Debt to Common Equity. Morningstar calculates the ratio by using the underlying
 	/// data reported in the Balance Sheet within the company filings or reports:    (Current Debt And Current Capital Lease Obligation +
-	/// Long-Term Debt And Long-Term Capital Lease Obligation / Common Equity.   [Note: Common Equity = Total Shareholder’s Equity –
+	/// Long-Term Debt And Long-Term Capital Lease Obligation / Common Equity.   [Note: Common Equity = Total Shareholder's Equity -
 	/// Preferred Stock]
 	/// </summary>
 	public class TotalDebtEquityRatio : MultiPeriodField
@@ -58643,7 +58643,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// Days In Inventory + Days In Sales – Days In Payment
+	/// Days In Inventory + Days In Sales - Days In Payment
 	/// </summary>
 	public class CashConversionCycle : MultiPeriodField
 	{
@@ -59769,7 +59769,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// The growth in the company’s diluted earnings per share (EPS) on a percentage basis. Morningstar calculates the annualized growth
+	/// The growth in the company's diluted earnings per share (EPS) on a percentage basis. Morningstar calculates the annualized growth
 	/// percentage based on the underlying diluted EPS reported in the Income Statement within the company filings or reports.
 	/// </summary>
 	public class DilutedEPSGrowth : MultiPeriodField
@@ -59831,7 +59831,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// The growth in the company’s diluted EPS from continuing operations on a percentage basis. Morningstar calculates the annualized
+	/// The growth in the company's diluted EPS from continuing operations on a percentage basis. Morningstar calculates the annualized
 	/// growth percentage based on the underlying diluted EPS from continuing operations reported in the Income Statement within the
 	/// company filings or reports.
 	/// </summary>
@@ -59894,7 +59894,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// The growth in the company’s dividends per share (DPS) on a percentage basis. Morningstar calculates the annualized growth
+	/// The growth in the company's dividends per share (DPS) on a percentage basis. Morningstar calculates the annualized growth
 	/// percentage based on the underlying DPS from its dividend database.  Morningstar collects its DPS from company filings and
 	/// reports, as well as from third party sources.
 	/// </summary>
@@ -59957,7 +59957,7 @@ namespace QuantConnect.Data.Fundamental
 	}
 
 	/// <summary>
-	/// The growth in the company’s book value per share on a percentage basis. Morningstar calculates the annualized growth
+	/// The growth in the company's book value per share on a percentage basis. Morningstar calculates the annualized growth
 	/// percentage based on the underlying equity and end of period shares outstanding reported in the company filings or reports.
 	/// </summary>
 	public class EquityPerShareGrowth : MultiPeriodField

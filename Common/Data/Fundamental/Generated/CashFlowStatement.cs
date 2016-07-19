@@ -122,7 +122,7 @@ namespace QuantConnect.Data.Fundamental
 
 		/// <summary>
 		/// The net cash inflow (outflow) from financing activity for the period, which involve changes to the long-term liabilities and
-		/// stockholders’ equity.
+		/// stockholders' equity.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 26012
@@ -1197,7 +1197,7 @@ namespace QuantConnect.Data.Fundamental
 		public CashFromDiscontinuedOperatingActivitiesCashFlowStatement CashFromDiscontinuedOperatingActivities { get; set; }
 
 		/// <summary>
-		/// The gain or loss from the entity’s ongoing operations.
+		/// The gain or loss from the entity's ongoing operations.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 26163
@@ -1526,7 +1526,7 @@ namespace QuantConnect.Data.Fundamental
 		public RepaymentinLeaseFinancingCashFlowStatement RepaymentinLeaseFinancing { get; set; }
 
 		/// <summary>
-		/// A non-cash adjustment for share of associates’ income in respect of operating activities.
+		/// A non-cash adjustment for share of associates' income in respect of operating activities.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 26203

@@ -33,7 +33,7 @@ namespace QuantConnect.Data.Fundamental
 	public class FinancialStatements : BaseData
 	{
 		/// <summary>
-		/// The exact date that is given in the financial statements for each quarter’s end.
+		/// The exact date that is given in the financial statements for each quarter's end.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 20001
@@ -87,7 +87,7 @@ namespace QuantConnect.Data.Fundamental
 		public string AuditorReportStatus { get; set; }
 
 		/// <summary>
-		/// Which method of inventory valuation was used – LIFO, FIFO, Average, Standard costs, Net realizable value, Others, LIFO and FIFO,
+		/// Which method of inventory valuation was used - LIFO, FIFO, Average, Standard costs, Net realizable value, Others, LIFO and FIFO,
 		/// FIFO and Average, FIFO and other, LIFO and Average, LIFO and other, Average and other, 3 or more methods, None
 		/// </summary>
 		/// <remarks>

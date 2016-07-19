@@ -102,9 +102,9 @@ namespace QuantConnect.Data.Fundamental
 		/// Excess of issue price over par or stated value of the entity's capital stock and amounts received from other transactions involving
 		/// the entity's stock or stockholders. Includes adjustments to additional paid in capital. There are two major categories of additional
 		/// paid in capital: 1) Paid in capital in excess of par/stated value, which is the difference between the actual issue price of the shares
-		/// and the shares’ par/stated value. 2) Paid in capital from other transactions which includes treasury stock, retirement of stock, stock
+		/// and the shares' par/stated value. 2) Paid in capital from other transactions which includes treasury stock, retirement of stock, stock
 		/// dividends recorded at market, lapse of stock purchase warrants, conversion of convertible bonds in excess of the par value of the
-		/// stock, and any other additional capital from the company’s own stock transactions.
+		/// stock, and any other additional capital from the company's own stock transactions.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 23012
@@ -208,8 +208,8 @@ namespace QuantConnect.Data.Fundamental
 		public CashCashEquivalentsAndMarketableSecuritiesBalanceSheet CashCashEquivalentsAndMarketableSecurities { get; set; }
 
 		/// <summary>
-		/// Common stock (all issues) at par value, as reported within the Stockholder’s Equity section of the balance sheet; i.e. it is one
-		/// component of Common Stockholder’s Equity
+		/// Common stock (all issues) at par value, as reported within the Stockholder's Equity section of the balance sheet; i.e. it is one
+		/// component of Common Stockholder's Equity
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 23038
@@ -367,7 +367,7 @@ namespace QuantConnect.Data.Fundamental
 		public CurrentDeferredTaxesLiabilitiesBalanceSheet CurrentDeferredTaxesLiabilities { get; set; }
 
 		/// <summary>
-		/// A result of timing differences between taxable incomes reported on the income statement and taxable income from the company’s
+		/// A result of timing differences between taxable incomes reported on the income statement and taxable income from the company's
 		/// tax return. Depending on the positioning of deferred income taxes, the field may be either current (within current assets) or non-
 		/// current (below total current assets). Typically a company will have two deferred income taxes fields.
 		/// </summary>
@@ -648,7 +648,7 @@ namespace QuantConnect.Data.Fundamental
 		public MinorityInterestBalanceSheet MinorityInterest { get; set; }
 
 		/// <summary>
-		/// Short-term (typical maturity is less than one year), highly liquid government or corporate debt instrument such as bankers’
+		/// Short-term (typical maturity is less than one year), highly liquid government or corporate debt instrument such as bankers'
 		/// acceptance, promissory notes, and treasury bills.
 		/// </summary>
 		/// <remarks>
@@ -720,8 +720,8 @@ namespace QuantConnect.Data.Fundamental
 		public NonCurrentNoteReceivablesBalanceSheet NonCurrentNoteReceivables { get; set; }
 
 		/// <summary>
-		/// Other current liabilities = Total current liabilities – Payables and accrued Expenses – Current debt and capital lease obligaton –
-		/// provisions, current – deferred liabilities, current
+		/// Other current liabilities = Total current liabilities - Payables and accrued Expenses - Current debt and capital lease obligaton -
+		/// provisions, current - deferred liabilities, current
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 23151
@@ -798,7 +798,7 @@ namespace QuantConnect.Data.Fundamental
 		public PreferredSecuritiesOutsideStockEquityBalanceSheet PreferredSecuritiesOutsideStockEquity { get; set; }
 
 		/// <summary>
-		/// Preferred stock (all issues) at par value, as reported within the Stockholder’s Equity section of the balance sheet.
+		/// Preferred stock (all issues) at par value, as reported within the Stockholder's Equity section of the balance sheet.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 23174
@@ -887,7 +887,7 @@ namespace QuantConnect.Data.Fundamental
 
 		/// <summary>
 		/// The carrying value of funds outstanding loaned in the form of security resale agreements if the agreement requires the purchaser to
-		/// resell the identical security purchased or a security that meets the definition of “substantially the same” in the case of a dollar roll.
+		/// resell the identical security purchased or a security that meets the definition of "substantially the same" in the case of a dollar roll.
 		/// Also includes purchases of participations in pools of securities that are subject to a resale agreement.
 		/// </summary>
 		/// <remarks>
@@ -954,7 +954,7 @@ namespace QuantConnect.Data.Fundamental
 		public ShortTermInvestmentsTradingBalanceSheet ShortTermInvestmentsTrading { get; set; }
 
 		/// <summary>
-		/// The residual interest in the assets of the enterprise that remains after deducting its liabilities. Equity is increased by owners’
+		/// The residual interest in the assets of the enterprise that remains after deducting its liabilities. Equity is increased by owners'
 		/// investments and by comprehensive income, and it is reduced by distributions to the owners.
 		/// </summary>
 		/// <remarks>
@@ -1115,7 +1115,7 @@ namespace QuantConnect.Data.Fundamental
 		public UnpaidLossAndLossReserveBalanceSheet UnpaidLossAndLossReserve { get; set; }
 
 		/// <summary>
-		/// Invested capital = common shareholders’ equity + long term debt + current debt
+		/// Invested capital = common shareholders' equity + long term debt + current debt
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 23245
@@ -1174,7 +1174,7 @@ namespace QuantConnect.Data.Fundamental
 
 		/// <summary>
 		/// Residual interest, gross of minority interest, that remains in the assets of the enterprise after deducting its liabilities. Equity is
-		/// increased by owners’ investments and by comprehensive income, and it is reduced by distributions to the owners.
+		/// increased by owners' investments and by comprehensive income, and it is reduced by distributions to the owners.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 23261
@@ -1270,9 +1270,9 @@ namespace QuantConnect.Data.Fundamental
 		public BankAcceptanceExecutedAndOutstandingBalanceSheet BankAcceptanceExecutedAndOutstanding { get; set; }
 
 		/// <summary>
-		/// It means all indebtedness for borrowed money or the deferred purchase price of property or services，including without limitation
-		/// reimbursement and other obligations with respect to surety bonds and letters of credit，all obligations evidenced by notes, bonds
-		/// debentures or similar instruments, all capital lease obligations and all contingent obligations．
+		/// It means all indebtedness for borrowed money or the deferred purchase price of property or services, including without limitation
+		/// reimbursement and other obligations with respect to surety bonds and letters of credit, all obligations evidenced by notes, bonds
+		/// debentures or similar instruments, all capital lease obligations and all contingent obligations. 
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 23271
@@ -1475,7 +1475,7 @@ namespace QuantConnect.Data.Fundamental
 		public DividendsPayableBalanceSheet DividendsPayable { get; set; }
 
 		/// <summary>
-		/// ESOP Debt Guarantee represents all transactions related to a company’s Employee Stock Ownership Plan (ESOP), such as
+		/// ESOP Debt Guarantee represents all transactions related to a company's Employee Stock Ownership Plan (ESOP), such as
 		/// shares/debt/loans owned by ESOP.
 		/// </summary>
 		/// <remarks>
@@ -2013,7 +2013,7 @@ namespace QuantConnect.Data.Fundamental
 		public PreferredStockEquityBalanceSheet PreferredStockEquity { get; set; }
 
 		/// <summary>
-		/// This is preferred stock of a subsidiary, which belongs to the company’s equity. This item is usually only available for utility industry.
+		/// This is preferred stock of a subsidiary, which belongs to the company's equity. This item is usually only available for utility industry.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 23348
@@ -2486,7 +2486,7 @@ namespace QuantConnect.Data.Fundamental
 		public TreasurySharesNumberBalanceSheet TreasurySharesNumber { get; set; }
 
 		/// <summary>
-		/// This will serve as the “parent” value to AccountsReceivable (DataId 23001) and OtherReceivables (DataId 23342) for all company
+		/// This will serve as the "parent" value to AccountsReceivable (DataId 23001) and OtherReceivables (DataId 23342) for all company
 		/// financials reported in the IFRS GAAP.
 		/// </summary>
 		/// <remarks>
@@ -2535,7 +2535,7 @@ namespace QuantConnect.Data.Fundamental
 		public NetTangibleAssetsBalanceSheet NetTangibleAssets { get; set; }
 
 		/// <summary>
-		/// Amounts owed to the company from a non-arm’s length entity, due within the company's current operating cycle.
+		/// Amounts owed to the company from a non-arm's length entity, due within the company's current operating cycle.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 23404
@@ -2544,7 +2544,7 @@ namespace QuantConnect.Data.Fundamental
 		public DuefromRelatedPartiesCurrentBalanceSheet DuefromRelatedPartiesCurrent { get; set; }
 
 		/// <summary>
-		/// Amounts owed to the company from a non-arm’s length entity, due after the company's current operating cycle.
+		/// Amounts owed to the company from a non-arm's length entity, due after the company's current operating cycle.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 23405
@@ -2553,7 +2553,7 @@ namespace QuantConnect.Data.Fundamental
 		public DuefromRelatedPartiesNonCurrentBalanceSheet DuefromRelatedPartiesNonCurrent { get; set; }
 
 		/// <summary>
-		/// Amounts owed by the company to a non-arm’s length entity.
+		/// Amounts owed by the company to a non-arm's length entity.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 23406
@@ -2562,7 +2562,7 @@ namespace QuantConnect.Data.Fundamental
 		public DuetoRelatedPartiesBalanceSheet DuetoRelatedParties { get; set; }
 
 		/// <summary>
-		/// Amounts owed by the company to a non-arm’s length entity that has to be repaid within the company's current operating cycle.
+		/// Amounts owed by the company to a non-arm's length entity that has to be repaid within the company's current operating cycle.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 23407
@@ -2571,7 +2571,7 @@ namespace QuantConnect.Data.Fundamental
 		public DuetoRelatedPartiesCurrentBalanceSheet DuetoRelatedPartiesCurrent { get; set; }
 
 		/// <summary>
-		/// Amounts owed by the company to a non-arm’s length entity that has to be repaid after the company's current operating cycle.
+		/// Amounts owed by the company to a non-arm's length entity that has to be repaid after the company's current operating cycle.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 23408
