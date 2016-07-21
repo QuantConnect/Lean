@@ -110,7 +110,8 @@ namespace QuantConnect.Lean.Engine
                     algorithm = _algorithmHandlers.Setup.CreateAlgorithmInstance(assemblyPath, job.Language);
 
                     // Initialize the brokerage
-                    brokerage = _algorithmHandlers.Setup.CreateBrokerage(job, algorithm);
+                    IBrokerageFactory factory;
+                    brokerage = _algorithmHandlers.Setup.CreateBrokerage(job, algorithm, out factory);
 
                     // Initialize the data feed before we initialize so he can intercept added securities/universes via events
                     _algorithmHandlers.DataFeed.Initialize(algorithm, job, _algorithmHandlers.Results, _algorithmHandlers.MapFileProvider, _algorithmHandlers.FactorFileProvider);
@@ -131,7 +132,8 @@ namespace QuantConnect.Lean.Engine
                     algorithm.HistoryProvider = _algorithmHandlers.HistoryProvider;
 
                     // initialize the default brokerage message handler
-                    algorithm.BrokerageMessageHandler = new DefaultBrokerageMessageHandler(algorithm, job, _systemHandlers.Api);
+                    algorithm.BrokerageMessageHandler = factory.CreateBrokerageMessageHandler(algorithm, job,
+                        _systemHandlers.Api);
 
                     //Initialize the internal state of algorithm and job: executes the algorithm.Initialize() method.
                     initializeComplete = _algorithmHandlers.Setup.Setup(algorithm, brokerage, job, _algorithmHandlers.Results, _algorithmHandlers.Transactions, _algorithmHandlers.RealTime);
