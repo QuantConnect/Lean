@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine;
 using QuantConnect.Packets;
 using QuantConnect.Util;
 
@@ -105,5 +106,13 @@ namespace QuantConnect.Brokerages.Fxcm
         {
         }
 
+        /// <summary>
+        /// Gets a brokerage message handler
+        /// </summary>
+        public override IBrokerageMessageHandler CreateBrokerageMessageHandler(IAlgorithm algorithm, AlgorithmNodePacket job, IApi api,
+            TimeSpan? initialDelay = null, TimeSpan? openThreshold = null)
+        {
+            return new DefaultBrokerageMessageHandler(algorithm, job, api, initialDelay, TimeSpan.FromMinutes(-30));
+        }
     }
 }

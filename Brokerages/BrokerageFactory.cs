@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Brokerages
@@ -63,6 +64,15 @@ namespace QuantConnect.Brokerages
         /// <param name="algorithm">The algorithm instance</param>
         /// <returns>A new brokerage instance</returns>
         public abstract IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm);
+
+        /// <summary>
+        /// Gets a brokerage message handler
+        /// </summary>
+        public virtual IBrokerageMessageHandler CreateBrokerageMessageHandler(IAlgorithm algorithm, AlgorithmNodePacket job, IApi api,
+            TimeSpan? initialDelay = null, TimeSpan? openThreshold = null)
+        {
+            return new DefaultBrokerageMessageHandler(algorithm, job, api);
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BrokerageFactory"/> class for the specified <paramref name="brokerageType"/>
