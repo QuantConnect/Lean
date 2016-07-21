@@ -67,7 +67,8 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <summary>
         ///Initializes a new instance of the <see cref="BacktestingBrokerageFactory"/> class
         /// </summary>
-        public BacktestingBrokerageFactory() : base(typeof(BacktestingBrokerageFactory))
+        public BacktestingBrokerageFactory() 
+            : base(typeof(BacktestingBrokerage))
         {
         }
     }

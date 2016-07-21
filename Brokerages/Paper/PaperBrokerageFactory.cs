@@ -69,7 +69,7 @@ namespace QuantConnect.Brokerages.Paper
         /// Initializes a new instance of the <see cref="PaperBrokerageFactory"/> class
         /// </summary>
         public PaperBrokerageFactory()
-            : base(typeof(PaperBrokerageFactory))
+            : base(typeof(PaperBrokerage))
         {
         }
     }
