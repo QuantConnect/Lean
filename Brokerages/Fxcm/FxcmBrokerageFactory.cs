@@ -111,7 +111,7 @@ namespace QuantConnect.Brokerages.Fxcm
         public override IBrokerageMessageHandler CreateBrokerageMessageHandler(IAlgorithm algorithm, AlgorithmNodePacket job, IApi api)
         {
             //We have chosen a timespan of negative 30 beacause FXCM market hours don't always open on time.
-            return new DefaultBrokerageMessageHandler(algorithm, job, api, null, TimeSpan.FromMinutes(-30));
+            return new DefaultBrokerageMessageHandler(algorithm, job, api, openThreshold: TimeSpan.FromMinutes(-30));
         }
     }
 }
