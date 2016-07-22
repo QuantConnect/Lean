@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine;
 using QuantConnect.Packets;
 using QuantConnect.Util;
 

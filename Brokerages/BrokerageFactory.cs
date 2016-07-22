@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Brokerages
