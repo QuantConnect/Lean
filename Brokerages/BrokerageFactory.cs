@@ -67,8 +67,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Gets a brokerage message handler
         /// </summary>
-        public virtual IBrokerageMessageHandler CreateBrokerageMessageHandler(IAlgorithm algorithm, AlgorithmNodePacket job, IApi api,
-            TimeSpan? initialDelay = null, TimeSpan? openThreshold = null)
+        public virtual IBrokerageMessageHandler CreateBrokerageMessageHandler(IAlgorithm algorithm, AlgorithmNodePacket job, IApi api)
         {
             return new DefaultBrokerageMessageHandler(algorithm, job, api);
         }
