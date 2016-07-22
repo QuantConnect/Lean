@@ -17,13 +17,11 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using QuantConnect.Brokerages;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 
-namespace QuantConnect.Lean.Engine
+namespace QuantConnect.Brokerages
 {
     /// <summary>
     /// Provides a default implementation o <see cref="IBrokerageMessageHandler"/> that will forward
