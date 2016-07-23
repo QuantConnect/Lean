@@ -621,6 +621,88 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsFalse(sufficientCapital);
         }
 
+        [TestCase("XIV", SecurityType.Equity, Market.USA)]
+        [TestCase("EURUSD", SecurityType.Forex, Market.FXCM)]
+        public void IssueMarginCallsProperlyWithLeverage(string ticker, SecurityType securityType, string market)
+        {
+            const decimal leverage = 2m;
+            const int amount = 2000;
+            const int quantity = 675;
+            var symbol = Symbol.Create(ticker, securityType, market);
+            var securities = new SecurityManager(TimeKeeper);
+            var transactions = new SecurityTransactionManager(securities);
+            var orderProcessor = new OrderProcessor();
+            transactions.SetOrderProcessor(orderProcessor);
+            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            portfolio.CashBook["USD"].SetAmount(amount);
+
+            if (securityType == SecurityType.Forex) portfolio.CashBook.Add("EUR", 0, 1m);
+
+            var config = CreateTradeBarDataConfig(securityType, symbol);
+            var cash = new Cash(CashBook.AccountCurrency, 0, 1m);
+            var symbolProperties = SymbolProperties.GetDefault(CashBook.AccountCurrency);
+            Security security;
+            switch (securityType)
+            {
+                case SecurityType.Equity:
+                    security = new QuantConnect.Securities.Equity.Equity(SecurityExchangeHours, config, cash, symbolProperties);
+                    break;
+                case SecurityType.Forex:
+                    security = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, cash, config, symbolProperties);
+                    break;
+                default:
+                    throw new ArgumentException("Invalid SecurityType: " + securityType);
+            }
+            
+            securities.Add(security);
+            security.SetLeverage(leverage);
+
+            var time = DateTime.UtcNow;
+            var price = 5.91m;
+            security.SetMarketPrice(new TradeBar(time, symbol, price, price, price, price, 1));
+            if (securityType == SecurityType.Forex) portfolio.CashBook["EUR"].ConversionRate = price;
+
+            var order = new MarketOrder(symbol, quantity, time) { Price = price };
+            var fill = new OrderEvent(order, DateTime.UtcNow, 0) { FillPrice = price, FillQuantity = quantity };
+            orderProcessor.AddOrder(order);
+            var request = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, order.Quantity, 0, 0, order.Time, null);
+            request.SetOrderId(0);
+            orderProcessor.AddTicket(new OrderTicket(null, request));
+
+            portfolio.ProcessFill(fill);
+
+            // price drops 1 cent
+            price = 5.90m;
+            security.SetMarketPrice(new TradeBar(time, symbol, price, price, price, price, 1));
+            if (securityType == SecurityType.Forex) portfolio.CashBook["EUR"].ConversionRate = price;
+
+            // should not issue margin call warnings nor create margin call order
+            bool issueMarginCallWarning;
+            var orderRequests = portfolio.ScanForMarginCall(out issueMarginCallWarning);
+            Assert.IsFalse(issueMarginCallWarning);
+            Assert.AreEqual(0, orderRequests.Count);
+
+            // price drops 1 dollar
+            price = 4.90m;
+            security.SetMarketPrice(new TradeBar(time, symbol, price, price, price, price, 1));
+            if (securityType == SecurityType.Forex) portfolio.CashBook["EUR"].ConversionRate = price;
+
+            // should not issue margin call warnings nor create margin call order
+            orderRequests = portfolio.ScanForMarginCall(out issueMarginCallWarning);
+            Assert.IsFalse(issueMarginCallWarning);
+            Assert.AreEqual(0, orderRequests.Count);
+
+            // price drops another 50%
+            price /= 2;
+            security.SetMarketPrice(new TradeBar(time, symbol, price, price, price, price, 1));
+            if (securityType == SecurityType.Forex) portfolio.CashBook["EUR"].ConversionRate = price;
+
+            // should issue margin call warnings and create margin call order
+            orderRequests = portfolio.ScanForMarginCall(out issueMarginCallWarning);
+            Assert.IsTrue(issueMarginCallWarning);
+            Assert.AreEqual(1, orderRequests.Count);
+        }
+
         private SubscriptionDataConfig CreateTradeBarDataConfig(SecurityType type, Symbol symbol)
         {
             if (type == SecurityType.Equity)

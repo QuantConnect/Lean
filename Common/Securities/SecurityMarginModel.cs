@@ -188,7 +188,7 @@ namespace QuantConnect.Securities
             // leave a buffer in default implementation
             const decimal marginBuffer = 0.10m;
 
-            if (totalMargin <= netLiquidationValue*(1 + marginBuffer))
+            if (totalMargin <= netLiquidationValue * security.Leverage * (1 + marginBuffer))
             {
                 return null;
             }
