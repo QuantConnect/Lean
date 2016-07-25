@@ -1022,6 +1022,9 @@ namespace QuantConnect.Lean.Engine.Results
                             var last = security.GetLastData();
                             if (last != null)
                             {
+                                // Prevents changes in previous bar
+                                last = last.Clone(last.IsFillForward);
+
                                 last.Value = price;
                                 security.SetRealTimePrice(last);
 
