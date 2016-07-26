@@ -12,12 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *	TRADIER BROKERAGE MODEL
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using Newtonsoft.Json;
 
 namespace QuantConnect.Brokerages.Tradier

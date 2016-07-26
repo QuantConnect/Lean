@@ -13,29 +13,22 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
-using System.IO;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 
 namespace QuantConnect 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Operating systems class for managing anything that is operation system specific.
     /// </summary>
     /// <remarks>Good design should remove the need for this function. Over time it should disappear.</remarks>
     public static class OS 
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         private static PerformanceCounter _ramTotalCounter;
         private static PerformanceCounter _ramAvailableBytes;
+        private static PerformanceCounter _cpuUsageCounter;
 
         /// <summary>
         /// Total Physical Ram on the Machine:
@@ -59,9 +52,6 @@ namespace QuantConnect
             }
         }
 
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
         /// <summary>
         /// Memory free on the machine available for use:
         /// </summary>
@@ -81,6 +71,21 @@ namespace QuantConnect
                     }
                 }
                 return _ramAvailableBytes;
+            }
+        }
+
+        /// <summary>
+        /// Total CPU usage as a percentage
+        /// </summary>
+        public static PerformanceCounter CpuUsage
+        {
+            get
+            {
+                if (_cpuUsageCounter == null)
+                {
+                    _cpuUsageCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+                }
+                return _cpuUsageCounter;
             }
         }
 
@@ -126,14 +131,45 @@ namespace QuantConnect
         { 
             get 
             {
-                var drives = DriveInfo.GetDrives();
-                //User 1 GB Maximum As Cache
-                if (drives.Length <= 0) return 1024;
-                var d = drives[0];
+                var d = GetDrive();
                 return d.AvailableFreeSpace / (1024 * 1024);
             }
         }
 
+        /// <summary>
+        /// Get the drive space remaining on windows and linux in MB
+        /// </summary>
+        public static long DriveSpaceUsed
+        {
+            get
+            {
+                var d = GetDrive();
+                return (d.TotalSize - d.AvailableFreeSpace) / (1024 * 1024);
+            }
+        }
+
+
+        /// <summary>
+        /// Total space on the drive
+        /// </summary>
+        public static long DriveTotalSpace
+        {
+            get
+            {
+                var d = GetDrive();
+                return d.TotalSize / (1024 * 1024);
+            }
+        }
+
+        /// <summary>
+        /// Get the drive.
+        /// </summary>
+        /// <returns></returns>
+        private static DriveInfo GetDrive()
+        {
+            var drives = DriveInfo.GetDrives();
+            return drives[0];
+        }
 
         /// <summary>
         /// Get the RAM remaining on the machine:
@@ -157,7 +193,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Get the RAM remaining on the machine:
+        /// Get the RAM used on the machine:
         /// </summary>
         public static long TotalPhysicalMemoryUsed
         {
@@ -167,5 +203,28 @@ namespace QuantConnect
             }
         }
 
+        /// <summary>
+        /// Gets the RAM remaining on the machine
+        /// </summary>
+        private static long FreePhysicalMemory
+        {
+            get { return TotalPhysicalMemory - TotalPhysicalMemoryUsed; }
+        }
+
+        /// <summary>
+        /// Gets the statistics of the machine, including CPU% and RAM
+        /// </summary>
+        public static Dictionary<string, string> GetServerStatistics()
+        {
+            return new Dictionary<string, string>
+            {
+                {"CPU Usage",            CpuUsage.NextValue().ToString("0.0") + "%"},
+                {"Used RAM (MB)",        TotalPhysicalMemoryUsed.ToString()},
+                {"Total RAM (MB)",        TotalPhysicalMemory.ToString()},
+                {"Used Disk Space (MB)", DriveSpaceUsed.ToString() },
+                {"Total Disk Space (MB)", DriveTotalSpace.ToString() },
+                {"LEAN Version", "v" + Globals.Version}
+            };
+        }
     } // End OS Class
 } // End QC Namespace

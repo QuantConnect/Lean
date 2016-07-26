@@ -14,20 +14,22 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Timers;
 using QuantConnect.Algorithm;
 using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages;
+using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Setup
 {
@@ -36,17 +38,11 @@ namespace QuantConnect.Lean.Engine.Setup
     /// </summary>
     public class BacktestingSetupHandler : ISetupHandler
     {
-        /******************************************************** 
-        * PRIVATE VARIABLES
-        *********************************************************/
         private TimeSpan _maxRuntime = TimeSpan.FromSeconds(300);
         private decimal _startingCaptial = 0;
         private int _maxOrders = 0;
         private DateTime _startingDate = new DateTime(1998, 01, 01);
 
-        /******************************************************** 
-        * PUBLIC PROPERTIES
-        *********************************************************/
         /// <summary>
         /// Internal errors list from running the setup proceedures.
         /// </summary>
@@ -68,13 +64,12 @@ namespace QuantConnect.Lean.Engine.Setup
             }
         }
 
-
         /// <summary>
         /// Starting capital according to the users initialize routine.
         /// </summary>
         /// <remarks>Set from the user code.</remarks>
         /// <seealso cref="QCAlgorithm.SetCash(decimal)"/>
-        public decimal StartingCapital
+        public decimal StartingPortfolioValue
         {
             get 
             {
@@ -106,9 +101,6 @@ namespace QuantConnect.Lean.Engine.Setup
             }
         }
 
-        /******************************************************** 
-        * PUBLIC CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Initialize the backtest setup handler.
         /// </summary>
@@ -117,26 +109,36 @@ namespace QuantConnect.Lean.Engine.Setup
             Errors = new List<string>();
         }
 
-        /******************************************************** 
-        * PUBLIC METHODS
-        *********************************************************/
         /// <summary>
         /// Creates a new algorithm instance. Verified there's only one defined in the assembly and requires
         /// instantiation to take less than 10 seconds
         /// </summary>
         /// <param name="assemblyPath">Physical location of the assembly.</param>
+        /// <param name="language">Language of the DLL</param>
         /// <returns>Algorithm instance.</returns>
-        public IAlgorithm CreateAlgorithmInstance(string assemblyPath)
+        public IAlgorithm CreateAlgorithmInstance(string assemblyPath, Language language)
         {
             string error;
             IAlgorithm algorithm;
 
             // limit load times to 10 seconds and force the assembly to have exactly one derived type
-            var loader = new Loader(TimeSpan.FromSeconds(10), names => names.SingleOrDefault());
-            bool complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, out algorithm, out error);
+            var loader = new Loader(language, TimeSpan.FromSeconds(15), names => names.SingleOrDefault());
+            var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, out algorithm, out error);
             if (!complete) throw new Exception(error + " Try re-building algorithm.");
 
             return algorithm;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="BacktestingBrokerage"/> instance
+        /// </summary>
+        /// <param name="algorithmNodePacket">Job packet</param>
+        /// <param name="uninitializedAlgorithm">The algorithm instance before Initialize has been called</param>
+        /// <returns>The brokerage instance, or throws if error creating instance</returns>
+        public IBrokerage CreateBrokerage(AlgorithmNodePacket algorithmNodePacket, IAlgorithm uninitializedAlgorithm, out IBrokerageFactory factory)
+        {
+            factory = new BacktestingBrokerageFactory();
+            return new BacktestingBrokerage(uninitializedAlgorithm);
         }
 
         /// <summary>
@@ -145,11 +147,19 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="algorithm">Algorithm instance</param>
         /// <param name="brokerage">Brokerage instance</param>
         /// <param name="baseJob">Algorithm job</param>
+        /// <param name="resultHandler">The configured result handler</param>
+        /// <param name="transactionHandler">The configurated transaction handler</param>
+        /// <param name="realTimeHandler">The configured real time handler</param>
         /// <returns>Boolean true on successfully initializing the algorithm</returns>
-        public bool Setup(IAlgorithm algorithm, out IBrokerage brokerage, AlgorithmNodePacket baseJob)
+        public bool Setup(IAlgorithm algorithm, IBrokerage brokerage, AlgorithmNodePacket baseJob, IResultHandler resultHandler, ITransactionHandler transactionHandler, IRealTimeHandler realTimeHandler)
         {
             var job = baseJob as BacktestNodePacket;
-            brokerage = new Brokerage(); //Not used.
+            if (job == null)
+            {
+                throw new ArgumentException("Expected BacktestNodePacket but received " + baseJob.GetType().Name);
+            }
+
+            Log.Trace(string.Format("BacktestingSetupHandler.Setup(): Setting up job: Plan: {0}, UID: {1}, PID: {2}, Version: {3}, Source: {4}", job.UserPlan, job.UserId, job.ProjectId, job.Version, job.RequestSource));
 
             if (algorithm == null)
             {
@@ -158,23 +168,28 @@ namespace QuantConnect.Lean.Engine.Setup
             }
 
             //Make sure the algorithm start date ok.
-            if (job.PeriodStart == null)
+            if (job.PeriodStart == default(DateTime))
             {
-                Errors.Add("Algorithm start date is null");
+                Errors.Add("Algorithm start date was never set");
                 return false;
             }
-            
-            //Execute the initialize code:
-            var initializeComplete = Isolator.ExecuteWithTimeLimit(TimeSpan.FromSeconds(10), () =>
+
+            var controls = job.Controls;
+            var isolator = new Isolator();
+            var initializeComplete = isolator.ExecuteWithTimeLimit(TimeSpan.FromMinutes(5), () =>
             {
                 try
                 {
-                    //0.0 Set the algorithm time before we even initialize:
-                    algorithm.SetDateTime(job.PeriodStart);
-                    //1.0 Initialise the algorithm, get the required data:
+                    //Set our parameters
+                    algorithm.SetParameters(job.Parameters);
+                    //Algorithm is backtesting, not live:
+                    algorithm.SetLiveMode(false);
+                    //Set the algorithm time before we even initialize:
+                    algorithm.SetDateTime(job.PeriodStart.ConvertToUtc(algorithm.TimeZone));
+                    //Set the source impl for the event scheduling
+                    algorithm.Schedule.SetEventSchedule(realTimeHandler);
+                    //Initialise the algorithm, get the required data:
                     algorithm.Initialize();
-                    //1.2 Set the algorithm to locked to avoid messing with cash:
-                    algorithm.SetLocked();
                 }
                 catch (Exception err)
                 {
@@ -185,15 +200,29 @@ namespace QuantConnect.Lean.Engine.Setup
             //Before continuing, detect if this is ready:
             if (!initializeComplete) return false;
 
+            algorithm.Transactions.SetOrderProcessor(transactionHandler);
+            algorithm.PostInitialize();
+
             //Calculate the max runtime for the strategy
             _maxRuntime = GetMaximumRuntime(job.PeriodStart, job.PeriodFinish, algorithm.SubscriptionManager.Count);
 
             //Get starting capital:
             _startingCaptial = algorithm.Portfolio.Cash;
 
-            //Max Orders: 100 per day:
-            _maxOrders = (int)(job.PeriodFinish - job.PeriodStart).TotalDays * 100;
+            //Max Orders: 10k per backtest:
+            if (job.UserPlan == UserPlan.Free)
+            {
+                _maxOrders = 10000;
+            }
+            else
+            {
+                _maxOrders = int.MaxValue;
+                _maxRuntime += _maxRuntime;
+            }
 
+            //Set back to the algorithm,
+            algorithm.SetMaximumOrders(_maxOrders);
+            
             //Starting date of the algorithm:
             _startingDate = job.PeriodStart;
 
@@ -207,7 +236,6 @@ namespace QuantConnect.Lean.Engine.Setup
             }
             return initializeComplete;
         }
-
 
         /// <summary>
         /// Calculate the maximum runtime for this algorithm job.
@@ -247,17 +275,13 @@ namespace QuantConnect.Lean.Engine.Setup
         }
 
         /// <summary>
-        /// Setup error handlers for the backtest.
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
-        /// <param name="results">Result handler</param>
-        /// <param name="brokerage">Brokerage interface</param>
-        /// <returns>Boolean true on successful setup</returns>
-        /// <remarks>Not used in a backtesting setup handler. This is primarily for setting up brokerage error handler functions</remarks>
-        public bool SetupErrorHandler(IResultHandler results, IBrokerage brokerage)
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
         {
-            return true;
+            // nothing to clean up
         }
-
     } // End Result Handler Thread:
 
 } // End Namespace

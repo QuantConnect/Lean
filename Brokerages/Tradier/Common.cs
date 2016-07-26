@@ -12,21 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *	TRADIER BROKERAGE MODEL
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
+using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using System.Runtime.Serialization;
 
 namespace QuantConnect.Brokerages.Tradier
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Rate limiting categorization
     /// </summary>
@@ -170,6 +163,9 @@ namespace QuantConnect.Brokerages.Tradier
     [JsonConverter(typeof(StringEnumConverter))]
     public enum TradierAccountStatus
     {
+        /// TradierAccountStatus: New
+        [EnumMember(Value = "New")]
+        New,
         /// TradierAccountStatus: Approved
         [EnumMember(Value = "Approved")]
         Approved,
@@ -276,7 +272,10 @@ namespace QuantConnect.Brokerages.Tradier
         Roth_Ira,
         /// Account Classification Joint
         [EnumMember(Value = "joint")]
-        Joint
+        Joint,
+        /// Account Classification Entity
+        [EnumMember(Value = "entity")]
+        Entity
     }
 
     /// <summary>
@@ -325,14 +324,11 @@ namespace QuantConnect.Brokerages.Tradier
         /// Order Type: Market
         [EnumMember(Value = "market")]
         Market,
-        /// Order Type: Stop
-        [EnumMember(Value = "stop")]
-        Stop,
         /// Order Type: Stop Limit
         [EnumMember(Value = "stop_limit")]
         StopLimit,
         /// Order Type: Stop Market
-        [EnumMember(Value = "stop_market")]
+        [EnumMember(Value = "stop")]
         StopMarket,
 
         // OPTIONS ONLY vvvvvvvvvvvvvvvvvvvvvvvv

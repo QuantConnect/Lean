@@ -12,21 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *	TRADIER BROKERAGE MODEL
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Tradier
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Order parent class for deserialization
     /// </summary>
@@ -34,6 +28,7 @@ namespace QuantConnect.Brokerages.Tradier
     {
         /// Orders Contents:
         [JsonProperty(PropertyName = "orders")]
+        [JsonConverter(typeof(NullStringValueConverter<TradierOrders>))]
         public TradierOrders Orders;
 
         /// Constructor: Orders parent:
@@ -48,6 +43,7 @@ namespace QuantConnect.Brokerages.Tradier
     {
         /// Array of user account details:
         [JsonProperty(PropertyName = "order")]
+        [JsonConverter(typeof(SingleValueListConverter<TradierOrder>))]
         public List<TradierOrder> Orders = new List<TradierOrder>();
 
         /// Null Constructor:
@@ -118,7 +114,7 @@ namespace QuantConnect.Brokerages.Tradier
 
         /// Date order was created.
         [JsonProperty(PropertyName = "transaction_date")]
-        public DateTime TransacionDate;
+        public DateTime TransactionDate;
 
         ///Classification of order (equity, option, multileg, combo)
         [JsonProperty(PropertyName = "class")]
@@ -169,6 +165,7 @@ namespace QuantConnect.Brokerages.Tradier
     {
         /// List of errors
         [JsonProperty(PropertyName = "error")]
+        [JsonConverter(typeof(SingleValueListConverter<string>))]
         public List<string> Errors;
     }
 
@@ -213,7 +210,7 @@ namespace QuantConnect.Brokerages.Tradier
 
         /// Stop Price
         [JsonProperty(PropertyName = "stop_price")]
-        public string StopPrice;
+        public decimal StopPrice;
     }
 
     /// <summary>

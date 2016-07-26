@@ -13,29 +13,15 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using System;
 
 namespace QuantConnect.Data
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Base Data Class: Type, Timestamp, Key -- Base Features.
     /// </summary>
     public interface IBaseData
     {
-        /******************************************************** 
-        * CLASS PRIVATE VARIABLES
-        *********************************************************/
-
-        /******************************************************** 
-        * CLASS PUBLIC VARIABLES
-        *********************************************************/
         /// <summary>
         /// Market Data Type of this data - does it come in individual price packets or is it grouped into OHLC.
         /// </summary>
@@ -58,7 +44,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Symbol for underlying Security
         /// </summary>
-        string Symbol
+        Symbol Symbol
         {
             get;
             set;
@@ -83,9 +69,6 @@ namespace QuantConnect.Data
             get;
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Reader Method :: using set of arguements we specify read out type. Enumerate
         /// until the end of the data stream or file. E.g. Read CSV file line by line and convert
@@ -103,7 +86,6 @@ namespace QuantConnect.Data
         /// <param name="date">Date of this source file</param>
         /// <returns>String URL of source file.</returns>
         string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed);
-
 
         /// <summary>
         /// Return a new instance clone of this object

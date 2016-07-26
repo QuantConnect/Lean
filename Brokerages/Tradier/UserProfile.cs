@@ -12,21 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *	TRADIER BROKERAGE MODEL
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Tradier
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Model for a TradierUser returned from the API.
     /// </summary>
@@ -56,6 +50,7 @@ namespace QuantConnect.Brokerages.Tradier
 
         /// Array of user account details:
         [JsonProperty(PropertyName = "account")]
+        [JsonConverter(typeof(SingleValueListConverter<TradierUserAccount>))]
         public List<TradierUserAccount> Accounts { get; set; }
 
         /// Empty Constructor

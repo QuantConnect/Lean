@@ -14,10 +14,6 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -108,6 +104,9 @@ namespace QuantConnect.Packets
         /// Node -> User Algorithm Runtime Error
         RuntimeError,
 
+        /// Error is an internal handled error packet inside users algorithm
+        HandledError,
+
         /// Nodes -> User Log Message
         Log,
 
@@ -115,6 +114,18 @@ namespace QuantConnect.Packets
         Debug,
 
         /// Nodes -> User, Order Update Event
-        OrderEvent
+        OrderEvent,
+
+        /// Boolean true/false success
+        Success,
+
+        /// History live job packets
+        History,
+
+        /// Result from a command
+        CommandResult,
+
+        /// Hook from git hub
+        GitHubHook
     }
 }

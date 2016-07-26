@@ -39,6 +39,11 @@ namespace QuantConnect.Data.Consolidators
         BaseData Consolidated { get; }
 
         /// <summary>
+        /// Gets a clone of the data being currently consolidated
+        /// </summary>
+        BaseData WorkingData { get; }
+
+        /// <summary>
         /// Gets the type consumed by this consolidator
         /// </summary>
         Type InputType { get; }
@@ -53,6 +58,12 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         /// <param name="data">The new data for the consolidator</param>
         void Update(BaseData data);
+
+        /// <summary>
+        /// Scans this consolidator to see if it should emit a bar due to time passing
+        /// </summary>
+        /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
+        void Scan(DateTime currentLocalTime);
 
         /// <summary>
         /// Event handler that fires when a new piece of data is produced

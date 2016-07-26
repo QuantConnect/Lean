@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+
 namespace QuantConnect.Indicators
 {
     /// <summary>
@@ -20,7 +21,23 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class SimpleMovingAverage : WindowIndicator<IndicatorDataPoint>
     {
-        private decimal _sum;
+        /// <summary>A rolling sum for computing the average for the given period</summary>
+        public IndicatorBase<IndicatorDataPoint> RollingSum { get; private set; }
+
+        /// <summary>
+        ///     Gets a flag indicating when this indicator is ready and fully initialized
+        /// </summary>
+        public override bool IsReady{
+            get { return RollingSum.IsReady; }
+        }
+
+        /// <summary>
+        /// Resets this indicator to its initial state
+        /// </summary>
+        public override void Reset() {
+            RollingSum.Reset();
+            base.Reset();
+        }
 
         /// <summary>
         ///     Initializes a new instance of the SimpleMovingAverage class with the specified name and period
@@ -30,6 +47,7 @@ namespace QuantConnect.Indicators
         public SimpleMovingAverage(string name, int period)
             : base(name, period)
         {
+            RollingSum = new Sum(name + "_Sum", period);
         }
 
         /// <summary>
@@ -49,12 +67,8 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
-            _sum += input.Value;
-            if (window.IsReady)
-            {
-                _sum -= window.MostRecentlyRemoved.Value;
-            }
-            return _sum / window.Count;
+            RollingSum.Update(input.Time, input.Value);
+            return RollingSum.Current.Value / window.Count;
         }
     }
 }

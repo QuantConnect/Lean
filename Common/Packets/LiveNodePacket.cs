@@ -14,26 +14,16 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
-using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Packets
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Live job task packet: container for any live specific job variables
     /// </summary>
     public class LiveNodePacket : AlgorithmNodePacket 
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         /// <summary>
         /// Deploy Id for this live algorithm.
         /// </summary>
@@ -47,44 +37,24 @@ namespace QuantConnect.Packets
         public string Brokerage = "";
 
         /// <summary>
-        /// Access token for the broker login (oAuth 2.0)
+        /// String-String Dictionary of Brokerage Data for this Live Job
         /// </summary>
-        [JsonProperty(PropertyName = "sAccessToken")]
-        public string AccessToken = "";
+        [JsonProperty(PropertyName = "aBrokerageData")]
+        public Dictionary<string, string> BrokerageData = new Dictionary<string, string>();
 
-        /// <summary>
-        /// Refresh token for brokerage login (oAuth 2.0)
-        /// </summary>
-        [JsonProperty(PropertyName = "sRefreshToken")]
-        public string RefreshToken = "";
-
-        /// <summary>
-        /// DateTime the RefreshToken was issued (oAuth 2.0)
-        /// </summary>
-        [JsonProperty(PropertyName = "dtIssuedAt")]
-        public DateTime IssuedAt = new DateTime();
-
-        /// <summary>
-        /// Life span of the issued access token (oAuth 2.0)
-        /// </summary>
-        [JsonProperty(PropertyName = "iLifeTime")]
-        public TimeSpan LifeTime = TimeSpan.FromSeconds(0);
-
-        /// <summary>
-        /// Account Id for specified brokerage
-        /// </summary>
-        [JsonProperty(PropertyName = "iAccountID")]
-        public int AccountId = 0;
-
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Default constructor for JSON of the Live Task Packet
         /// </summary>
         public LiveNodePacket() 
             : base(PacketType.LiveNode)
-        { }
+        {
+            Controls = new Controls
+            {
+                MinuteLimit = 50,
+                SecondLimit = 25,
+                TickLimit = 15
+            };
+        }
 
     } // End Work Packet:
 

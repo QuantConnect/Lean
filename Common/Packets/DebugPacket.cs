@@ -14,25 +14,15 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using Newtonsoft.Json;
 
 namespace QuantConnect.Packets
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Send a simple debug message from the users algorithm to the console.
     /// </summary>
     public class DebugPacket : Packet
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         /// <summary>
         /// String debug message to send to the users console
         /// </summary>
@@ -57,23 +47,13 @@ namespace QuantConnect.Packets
         [JsonProperty(PropertyName = "iProjectID")]
         public int ProjectId;
 
-        /// Boolean flag indicating this is a live message and should bypass messaging restrictions
-        [JsonProperty(PropertyName = "bLiveMessage")]
-        public bool LiveMessage 
-        {
-            get
-            {
-                if (AlgorithmId != null && AlgorithmId.Length > 2)
-                {
-                    return AlgorithmId.Substring(0, 2) == "L:";
-                }
-                return false;
-            }
-        }
+        /// <summary>
+        /// True to emit message as a popup notification (toast),
+        /// false to emit message in console as text
+        /// </summary>
+        [JsonProperty(PropertyName = "bToast")]
+        public bool Toast;
 
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Default constructor for JSON
         /// </summary>
@@ -84,13 +64,14 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Create a new instance of the notify debug packet:
         /// </summary>
-        public DebugPacket(int projectId, string algorithmId, string compileId, string message)
+        public DebugPacket(int projectId, string algorithmId, string compileId, string message, bool toast = false)
             : base(PacketType.Debug)
         {
             ProjectId = projectId;
             Message = message;
             CompileId = compileId;
             AlgorithmId = algorithmId;
+            Toast = toast;
         }
     
     } // End Work Packet:

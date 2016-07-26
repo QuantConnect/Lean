@@ -14,26 +14,16 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using System;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Packets
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Algorithm backtest task information packet.
     /// </summary>
     public class BacktestNodePacket : AlgorithmNodePacket
-    { 
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
+    {
         /// <summary>
         /// Name of the backtest as randomly defined in the IDE.
         /// </summary>
@@ -72,15 +62,19 @@ namespace QuantConnect.Packets
         [JsonProperty(PropertyName = "eRunMode")]
         public RunMode RunMode = RunMode.Series;
 
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Default constructor for JSON
         /// </summary>
         public BacktestNodePacket() 
             : base(PacketType.BacktestNode)
-        { }
+        {
+            Controls = new Controls
+            {
+                MinuteLimit = 500,
+                SecondLimit = 100,
+                TickLimit = 30
+            };
+        }
 
         /// <summary>
         /// Initialize the backtest task packet.
@@ -94,17 +88,13 @@ namespace QuantConnect.Packets
             ProjectId = projectId;
             UserPlan = userPlan;
             Name = name;
+            Language = Language.CSharp;
+            Controls = new Controls
+            {
+                MinuteLimit = 500,
+                SecondLimit = 100,
+                TickLimit = 30
+            };
         }
-
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
-
-
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
-            
-    } // End Queue Packet:
-
-} // End of Namespace:
+    }
+}

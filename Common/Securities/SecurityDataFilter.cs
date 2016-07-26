@@ -13,39 +13,22 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using QuantConnect.Data;
 using QuantConnect.Securities.Interfaces;
 
 namespace QuantConnect.Securities 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Base class implementation for packet by packet data filtering mechanism to dynamically detect bad ticks.
     /// </summary>
     public class SecurityDataFilter : ISecurityDataFilter
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
-
-        /******************************************************** 
-        * CONSTRUCTOR/DELEGATE DEFINITIONS
-        *********************************************************/
         /// <summary>
         /// Initialize data filter class
         /// </summary>
         public SecurityDataFilter()
         { }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Filter the data packet passing through this method by returning true to accept, or false to fail/reject the data point.
         /// </summary>

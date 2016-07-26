@@ -12,28 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 
 using System;
-using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Packets
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
-    /// <summary>
-    /// Wrapper Containers for Deserializing Calendar Information from API.
-    /// </summary>
-    public class MarketTodayContainer
-    {
-        /// Todays Data: aMarkets
-        [JsonProperty(PropertyName = "aSecurityTypes")]
-        public Dictionary<SecurityType, MarketToday> Markets;
-    }
 
     /// <summary>
     /// Market today information class
@@ -41,47 +25,38 @@ namespace QuantConnect.Packets
     public class MarketToday
     {
         /// <summary>
-        /// Time this packet was generated.
-        /// </summary>
-        [JsonProperty(PropertyName = "dtNow")]
-        public readonly DateTime Now = new DateTime();
-
-        /// <summary>
         /// Date this packet was generated.
         /// </summary>
-        public DateTime Date
-        {
-            get 
-            {
-                return Now.Date;
-            }
-        }
+        [JsonProperty(PropertyName = "date")]
+        public DateTime Date { get; set; }
 
         /// <summary>
         /// Given the dates and times above, what is the current market status - open or closed.
         /// </summary>
-        [JsonProperty(PropertyName = "sStatus")]
+        [JsonProperty(PropertyName = "status")]
         public string Status = "";
-        
+
         /// <summary>
         /// Premarket hours for today
         /// </summary>
-        [JsonProperty(PropertyName = "aPremarket")]
-        public MarketHours PreMarket = new MarketHours(4, 9.5);
-        
+        [JsonProperty(PropertyName = "premarket")]
+        public MarketHours PreMarket;
+
         /// <summary>
         /// Normal trading market hours for today
         /// </summary>
-        [JsonProperty(PropertyName = "aOpen")]
-        public MarketHours Open = new MarketHours(9.5, 16);
-        
+        [JsonProperty(PropertyName = "open")]
+        public MarketHours Open;
+
         /// <summary>
         /// Post market hours for today
         /// </summary>
-        [JsonProperty(PropertyName = "aPostmarket")]
-        public MarketHours PostMarket = new MarketHours(16, 20);
-        
-        /// Default Constructor:
+        [JsonProperty(PropertyName = "postmarket")]
+        public MarketHours PostMarket;
+
+        /// <summary>
+        /// Default constructor (required for JSON serialization)
+        /// </summary>
         public MarketToday()
         { }
     }
@@ -94,25 +69,30 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Start time for this market hour category
         /// </summary>
-        [JsonProperty(PropertyName = "tsStart")]
-        public TimeSpan Start;
+        [JsonProperty(PropertyName = "start")]
+        public DateTime Start;
 
         /// <summary>
         /// End time for this market hour category
         /// </summary>
-        [JsonProperty(PropertyName = "tsEnd")]
-        public TimeSpan End;
-        
+        [JsonProperty(PropertyName = "end")]
+        public DateTime End;
+
         /// <summary>
         /// Market hours initializer given an hours since midnight measure for the market hours today
         /// </summary>
+        /// <param name="referenceDate">Reference date used for as base date from the specified hour offsets</param>
         /// <param name="defaultStart">Time in hours since midnight to start this open period.</param>
         /// <param name="defaultEnd">Time in hours since midnight to end this open period.</param>
-        public MarketHours(double defaultStart, double defaultEnd)
+        public MarketHours(DateTime referenceDate, double defaultStart, double defaultEnd)
         {
-            Start = TimeSpan.FromHours(defaultStart);
-            End = TimeSpan.FromHours(defaultEnd);
+            Start = referenceDate.Date.AddHours(defaultStart);
+            End = referenceDate.Date.AddHours(defaultEnd);
+            if (defaultEnd == 24)
+            {
+                // when we mark it as the end of the day other code that relies on .TimeOfDay has issues
+                End = End.AddTicks(-1);
+            }
         }
     }
-
-} // End QC Namespace
+}

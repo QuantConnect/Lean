@@ -53,6 +53,14 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
+        /// Gets a clone of the data being currently consolidated
+        /// </summary>
+        public BaseData WorkingData
+        {
+            get { return Second.WorkingData; }
+        }
+
+        /// <summary>
         /// Gets the type consumed by this consolidator
         /// </summary>
         public Type InputType
@@ -78,6 +86,15 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
+        /// Scans this consolidator to see if it should emit a bar due to time passing
+        /// </summary>
+        /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
+        public void Scan(DateTime currentLocalTime)
+        {
+            First.Scan(currentLocalTime);
+        }
+
+        /// <summary>
         /// Event handler that fires when a new piece of data is produced
         /// </summary>
         public event DataConsolidatedHandler DataConsolidated;
@@ -90,7 +107,7 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="second">The consolidator to receive first's output</param>
         public SequentialConsolidator(IDataConsolidator first, IDataConsolidator second)
         {
-            if (first.OutputType != second.InputType)
+            if (!second.InputType.IsAssignableFrom(first.OutputType))
             {
                 throw new ArgumentException("first.OutputType must equal second.OutputType!");
             }
@@ -99,6 +116,21 @@ namespace QuantConnect.Data.Consolidators
 
             // wire up the second one to get data from the first
             first.DataConsolidated += (sender, consolidated) => second.Update(consolidated);
+            
+            // wire up the second one's events to also fire this consolidator's event so consumers
+            // can attach
+            second.DataConsolidated += (sender, consolidated) => OnDataConsolidated(consolidated);
+        }
+
+        /// <summary>
+        /// Event invocator for the DataConsolidated event. This should be invoked
+        /// by derived classes when they have consolidated a new piece of data.
+        /// </summary>
+        /// <param name="consolidated">The newly consolidated data</param>
+        protected virtual void OnDataConsolidated(BaseData consolidated)
+        {
+            var handler = DataConsolidated;
+            if (handler != null) handler(this, consolidated);
         }
     }
 }

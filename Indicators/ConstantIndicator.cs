@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Data;
 
 namespace QuantConnect.Indicators
@@ -21,13 +22,13 @@ namespace QuantConnect.Indicators
     /// An indicator that will always return the same value.
     /// </summary>
     /// <typeparam name="T">The type of input this indicator takes</typeparam>
-    public class ConstantIndicator<T> : IndicatorBase<T>
+    public sealed class ConstantIndicator<T> : IndicatorBase<T>
         where T : BaseData
     {
         private readonly decimal _value;
 
         /// <summary>
-        /// Gets a flag indicating when this indicator is ready and fully initialized
+        /// Gets true since the ConstantIndicator is always ready to return the same value
         /// </summary>
         public override bool IsReady
         {
@@ -43,6 +44,10 @@ namespace QuantConnect.Indicators
             : base(name)
         {
             _value = value;
+
+            // set this immediatelyso it always has the .Value property correctly set, the
+            // time will be updated anytime this indicators Update method gets called.
+            Current = new IndicatorDataPoint(DateTime.MinValue, value);
         }
 
         /// <summary>
@@ -53,6 +58,17 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(T input)
         {
             return _value;
+        }
+
+        /// <summary>
+        /// Resets this indicator to its initial state
+        /// </summary>
+        public override void Reset()
+        {
+            base.Reset();
+
+            // re-initialize the current value, constant should ALWAYS return this value
+            Current = new IndicatorDataPoint(DateTime.MinValue, _value);
         }
     }
 }

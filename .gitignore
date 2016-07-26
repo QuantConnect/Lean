@@ -18,7 +18,7 @@
 *.lo
 
 # Shared objects (inc. Windows DLLs)
-*.dll
+#*.dll
 *.so
 *.so.*
 *.dylib
@@ -41,8 +41,10 @@
 *Engine/bin/Debug/cache/data/*.zip
 */obj/*
 */bin/*
+*Data/*
 *Docker/*
 */Docker/*
+*Algorithm.Python/Lib/*
 */[Ee]xtensions/*
 !**/Libraries/*
 
@@ -57,6 +59,7 @@
 *.user
 *.userosscache
 *.sln.docstates
+*.userprefs
 
 # Build results
 [Dd]ebug/
@@ -65,6 +68,7 @@
 [Rr]eleases/
 x64/
 x86/
+.vs/
 build/
 bld/
 [Bb]in/
@@ -190,6 +194,8 @@ publish/
 !**/packages/build/
 # If using the old MSBuild-Integrated Package Restore, uncomment this:
 #!**/packages/repositories.config
+# ignore sln level nuget
+.nuget/
 
 # Windows Azure Build Output
 csx/
@@ -233,3 +239,16 @@ UpgradeLog*.htm
 
 # Microsoft Fakes
 FakesAssemblies/
+
+# Test Runner
+testrunner/
+
+# Meld original diff files
+*.orig
+
+# Output chart data
+Charts/
+
+# NCrunch files
+*.ncrunchsolution
+*.ncrunchproject

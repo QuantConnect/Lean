@@ -12,22 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *	TRADIER BROKERAGE MODEL
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using Newtonsoft.Json;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Tradier
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Container for timeseries array
     /// </summary>
@@ -35,6 +28,7 @@ namespace QuantConnect.Brokerages.Tradier
     {
         /// Data Time Series
         [JsonProperty(PropertyName = "data")]
+        [JsonConverter(typeof(SingleValueListConverter<TradierTimeSeries>))]
         public List<TradierTimeSeries> TimeSeries;
     }
 
@@ -80,6 +74,7 @@ namespace QuantConnect.Brokerages.Tradier
     {
         /// Price Quotes:
         [JsonProperty(PropertyName = "quote")]
+        [JsonConverter(typeof(SingleValueListConverter<TradierQuote>))]
         public List<TradierQuote> Quotes;
     }
 
@@ -134,20 +129,19 @@ namespace QuantConnect.Brokerages.Tradier
 
         /// Open Price
         [JsonProperty(PropertyName = "open")]
-        public decimal Open = 0;
+        public decimal? Open = 0;
 
         /// High Price
         [JsonProperty(PropertyName = "high")]
-        public decimal High = 0;
+        public decimal? High = 0;
 
         /// Low Price
         [JsonProperty(PropertyName = "low")]
-        public decimal Low = 0;
+        public decimal? Low = 0;
 
         /// Closng Price
-        [DefaultValue(-1)]
         [JsonProperty(PropertyName = "close")]
-        public decimal ? Close = 0;
+        public decimal? Close = 0;
 
         /// Previous Close
         [JsonProperty(PropertyName = "prevclose")]
@@ -233,6 +227,7 @@ namespace QuantConnect.Brokerages.Tradier
     {
         /// Historical Data Contents
         [JsonProperty(PropertyName = "day")]
+        [JsonConverter(typeof(SingleValueListConverter<TradierHistoryBar>))]
         public List<TradierHistoryBar> Data;
     }
 
@@ -317,6 +312,7 @@ namespace QuantConnect.Brokerages.Tradier
     {
         /// Trading Calendar: Days List
         [JsonProperty(PropertyName = "day")]
+        [JsonConverter(typeof(SingleValueListConverter<TradierCalendarDay>))]
         public List<TradierCalendarDay> Days;
     }
 

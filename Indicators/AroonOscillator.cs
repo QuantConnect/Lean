@@ -62,16 +62,18 @@ namespace QuantConnect.Indicators
         public AroonOscillator(string name, int upPeriod, int downPeriod)
             : base(name)
         {
-            var max = new Maximum(name + "_Max", upPeriod);
+            var max = new Maximum(name + "_Max", upPeriod + 1);
             AroonUp = new FunctionalIndicator<IndicatorDataPoint>(name + "_AroonUp",
-                input => ComputeAroonUp(upPeriod, max, input), 
-                aroonUp => max.IsReady
+                input => ComputeAroonUp(upPeriod, max, input),
+                aroonUp => max.IsReady,
+                () => max.Reset()
                 );
 
-            var min = new Minimum(name + "_Min", downPeriod);
+            var min = new Minimum(name + "_Min", downPeriod + 1);
             AroonDown = new FunctionalIndicator<IndicatorDataPoint>(name + "_AroonDown",
                 input => ComputeAroonDown(downPeriod, min, input),
-                aroonDown => min.IsReady
+                aroonDown => min.IsReady,
+                () => min.Reset()
                 );
         }
 
@@ -112,6 +114,16 @@ namespace QuantConnect.Indicators
         {
             min.Update(input);
             return 100m * (downPeriod - min.PeriodsSinceMinimum) / downPeriod;
+        }
+
+        /// <summary>
+        /// Resets this indicator and both sub-indicators (AroonUp and AroonDown)
+        /// </summary>
+        public override void Reset()
+        {
+            AroonUp.Reset();
+            AroonDown.Reset();
+            base.Reset();
         }
     }
 }

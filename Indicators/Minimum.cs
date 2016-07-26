@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,7 +40,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="period">The period over which to look back</param>
         public Minimum(int period)
-            : base("Min" + period, period)
+            : base("MIN" + period, period)
         {
         }
 
@@ -54,6 +54,7 @@ namespace QuantConnect.Indicators
         {
         }
 
+        /// <inheritdoc />
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
             if (Samples == 1 || input.Value <= Current.Value)
@@ -64,14 +65,14 @@ namespace QuantConnect.Indicators
                 return input.Value;
             }
 
-            if (PeriodsSinceMinimum >= Period)
+            if (PeriodsSinceMinimum >= Period - 1)
             {
                 // at this point we need to find a new minimum
                 // the window enumerates from most recent to oldest
                 // so let's scour the window for the max and it's index
 
                 // this could be done more efficiently if we were to intelligently keep track of the 'next'
-                // minimum, so when one falls off, we have the other... but then we would also need the 'next, next' 
+                // minimum, so when one falls off, we have the other... but then we would also need the 'next, next'
                 // minimum, so on and so forth, for now this works.
 
                 var minimum = window.Select((v, i) => new

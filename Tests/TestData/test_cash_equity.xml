@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<ArrayOfDecimal xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <decimal>100000</decimal>
+  <decimal>100000</decimal>
+  <decimal>100100</decimal>
+  <decimal>100150</decimal>
+  <decimal>100100.0</decimal>
+  <decimal>100000.0</decimal>
+  <decimal>99950.0</decimal>
+  <decimal>100000.0</decimal>
+  <decimal>100100.0</decimal>
+  <decimal>100150.0</decimal>
+  <decimal>100100.0</decimal>
+  <decimal>100000.0</decimal>
+  <decimal>99950.0</decimal>
+  <decimal>99950.0</decimal>
+</ArrayOfDecimal>

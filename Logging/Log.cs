@@ -13,71 +13,51 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
-using System.Threading;
-using System.Text;
 using System.Collections;
-using System.Diagnostics;
+using System.Text;
+using System.Threading;
 
 namespace QuantConnect.Logging 
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Logging management class.
     /// </summary>
-    public class Log 
+    public static class Log
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         private static string _lastTraceText = "";
         private static string _lastErrorText = "";
-        private const string _dateFormat = "yyyyMMdd HH:mm:ss";
-        private static bool _debuggingEnabled = false;
+        private static bool _debuggingEnabled;
         private static int _level = 1;
-       
-        /******************************************************** 
-        * CLASS PROPERTIES
-        *********************************************************/
+        private static ILogHandler _logHandler = new ConsoleLogHandler();
+
+        /// <summary>
+        /// Gets or sets the ILogHandler instance used as the global logging implementation.
+        /// </summary>
+        public static ILogHandler LogHandler
+        {
+            get { return _logHandler; }
+            set { _logHandler = value; }
+        }
+
         /// <summary>
         /// Global flag whether to enable debugging logging:
         /// </summary>
         public static bool DebuggingEnabled
         {
-            get
-            {
-                return _debuggingEnabled;
-            }
-            set
-            {
-                _debuggingEnabled = value;
-            }
+            get { return _debuggingEnabled; }
+            set { _debuggingEnabled = value; }
         }
-
 
         /// <summary>
         /// Set the minimum message level:
         /// </summary>
         public static int DebuggingLevel
         {
-            get
-            {
-                return _level;
-            }
-            set
-            {
-                _level = value;
-            }
+            get { return _level; }
+            set { _level = value; }
         }
 
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
         /// <summary>
         /// Log error
         /// </summary>
@@ -88,30 +68,8 @@ namespace QuantConnect.Logging
             try 
             {
                 if (error == _lastErrorText && !overrideMessageFloodProtection) return;
-                Console.WriteLine(DateTime.Now.ToString(_dateFormat) + " ERROR:: " + error);
+                _logHandler.Error(error);
                 _lastErrorText = error; //Stop message flooding filling diskspace.
-
-                //Log to system log:
-                //Only run logger on Linux, this conditional copied from OS.IsLinux and then inverted
-                var platform = (int)Environment.OSVersion.Platform;
-                if (platform != 4 && platform != 6 && platform != 128) return;
-
-                try
-                {
-                    var cExecutable = new ProcessStartInfo
-                    {
-                        FileName = "logger",
-                        UseShellExecute = true,
-                        RedirectStandardOutput = false,
-                        Arguments = "'" + error + "'",
-                    };
-                    //Don't wait for exit:
-                    Process.Start(cExecutable);
-                }
-                catch (Exception err)
-                {
-                    Console.WriteLine("Log.SystemLog(): Error with system log: " + err.Message);
-                }
             } 
             catch (Exception err)
             {
@@ -119,6 +77,29 @@ namespace QuantConnect.Logging
             }
         }
 
+        /// <summary>
+        /// Log error. This overload is usefull when exceptions are being thrown from within an anonymous function.
+        /// </summary>
+        /// <param name="method">The method identifier to be used</param>
+        /// <param name="exception">The exception to be logged</param>
+        /// <param name="message">An optional message to be logged, if null/whitespace the messge text will be extracted</param>
+        /// <param name="overrideMessageFloodProtection">Force sending a message, overriding the "do not flood" directive</param>
+        private static void Error(string method, Exception exception, string message = null, bool overrideMessageFloodProtection = false)
+        {
+            message = method + "(): " + (message ?? string.Empty) + " " + exception;
+            Error(message, overrideMessageFloodProtection);
+        }
+
+        /// <summary>
+        /// Log error
+        /// </summary>
+        /// <param name="exception">The exception to be logged</param>
+        /// <param name="message">An optional message to be logged, if null/whitespace the messge text will be extracted</param>
+        /// <param name="overrideMessageFloodProtection">Force sending a message, overriding the "do not flood" directive</param>
+        public static void Error(Exception exception, string message = null, bool overrideMessageFloodProtection = false)
+        {
+            Error(WhoCalledMe.GetMethodName(1), exception, message, overrideMessageFloodProtection);
+        }
 
         /// <summary>
         /// Log trace
@@ -128,13 +109,29 @@ namespace QuantConnect.Logging
             try 
             {
                 if (traceText == _lastTraceText && !overrideMessageFloodProtection) return;
-                Console.WriteLine(DateTime.Now.ToString(_dateFormat) + " Trace:: " + traceText);
+                _logHandler.Trace(traceText);
                 _lastTraceText = traceText;
             } 
             catch (Exception err) 
             {
                 Console.WriteLine("Log.Trace(): Error writing trace: "  +err.Message);
             }
+        }
+
+        /// <summary>
+        /// Writes the message in normal text
+        /// </summary>
+        public static void Trace(string format, params object[] args)
+        {
+            Trace(string.Format(format, args));
+        }
+
+        /// <summary>
+        /// Writes the message in red
+        /// </summary>
+        public static void Error(string format, params object[] args)
+        {
+            Error(string.Format(format, args));
         }
 
         /// <summary>
@@ -145,9 +142,16 @@ namespace QuantConnect.Logging
         /// <param name="delay"></param>
         public static void Debug(string text, int level = 1, int delay = 0)
         {
-            if (!_debuggingEnabled || level < _level) return;
-            Console.WriteLine(DateTime.Now.ToString(_dateFormat) + " DEBUGGING :: " + text);
-            Thread.Sleep(delay);
+            try
+            {
+                if (!_debuggingEnabled || level < _level) return;
+                _logHandler.Debug(text);
+                Thread.Sleep(delay);
+            }
+            catch (Exception err)
+            {
+                Console.WriteLine("Log.Debug(): Error writing debug: " + err.Message);
+            }
         }
 
         /// <summary>

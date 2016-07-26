@@ -12,21 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *	TRADIER BROKERAGE MODEL
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Tradier
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Gain loss parent class for deserialization
     /// </summary>
@@ -48,6 +42,7 @@ namespace QuantConnect.Brokerages.Tradier
     {
         /// Array of user account details:
         [JsonProperty(PropertyName = "closed_position")]
+        [JsonConverter(typeof(SingleValueListConverter<TradierGainLoss>))]
         public List<TradierGainLoss> ClosedPositions = new List<TradierGainLoss>();
     }
 

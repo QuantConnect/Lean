@@ -13,14 +13,8 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 namespace QuantConnect.Securities.Equity
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    ********************************************************/
     /// <summary>
     /// Equity cache override.
     /// </summary>
@@ -28,25 +22,12 @@ namespace QuantConnect.Securities.Equity
     /// <seealso cref="SecurityCache"/>
     public class EquityCache : SecurityCache
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
-
-        /******************************************************** 
-        * CONSTRUCTOR/DELEGATE DEFINITIONS
-        *********************************************************/
         /// <summary>
         /// Start a new Cache for the set Index Code
         /// </summary>
-        public EquityCache() :
-            base()
+        public EquityCache()
+            : base()
         {
-            //Nothing to do:
         }
-
-        /******************************************************** 
-        * CLASS METHODS
-        *********************************************************/
-
-    } //End EquityCache Class
-} //End Namespace
+    }
+}

@@ -110,5 +110,52 @@ namespace QuantConnect.Tests.Indicators
             window.Reset();
             Assert.AreEqual(0, window.Samples);
         }
+        [Test]
+        public void RetievesNonZeroIndexProperlyAfterReset()
+        {
+            var window = new RollingWindow<int>(3);
+            window.Add(0);
+            Assert.AreEqual(1, window.Count);
+            Assert.AreEqual(0, window[0]);
+
+            window.Add(1);
+            Assert.AreEqual(2, window.Count);
+            Assert.AreEqual(0, window[1]);
+            Assert.AreEqual(1, window[0]);
+
+            window.Add(2);
+            Assert.AreEqual(3, window.Count);
+            Assert.AreEqual(0, window[2]);
+            Assert.AreEqual(1, window[1]);
+            Assert.AreEqual(2, window[0]);
+
+            window.Add(3);
+            Assert.AreEqual(3, window.Count);
+            Assert.AreEqual(1, window[2]);
+            Assert.AreEqual(2, window[1]);
+            Assert.AreEqual(3, window[0]);
+
+            window.Reset();
+            window.Add(0);
+            Assert.AreEqual(1, window.Count);
+            Assert.AreEqual(0, window[0]);
+
+            window.Add(1);
+            Assert.AreEqual(2, window.Count);
+            Assert.AreEqual(0, window[1]);
+            Assert.AreEqual(1, window[0]);
+
+            window.Add(2);
+            Assert.AreEqual(3, window.Count);
+            Assert.AreEqual(0, window[2]);
+            Assert.AreEqual(1, window[1]);
+            Assert.AreEqual(2, window[0]);
+
+            window.Add(3);
+            Assert.AreEqual(3, window.Count);
+            Assert.AreEqual(1, window[2]);
+            Assert.AreEqual(2, window[1]);
+            Assert.AreEqual(3, window[0]);
+        }
     }
 }

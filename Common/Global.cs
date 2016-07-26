@@ -1,11 +1,11 @@
-﻿/*
+﻿﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,86 +13,136 @@
  * limitations under the License.
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using Newtonsoft.Json;
-using QuantConnect.Logging;
+using Newtonsoft.Json.Converters;
+using QuantConnect.Securities;
+using QuantConnect.Securities.Cfd;
+using QuantConnect.Securities.Forex;
 
-namespace QuantConnect 
+namespace QuantConnect
 {
-    /******************************************************** 
-    * GLOBAL CONST
-    *********************************************************/
     /// <summary>
     /// Shortcut date format strings
     /// </summary>
-    public static class DateFormat 
+    public static class DateFormat
     {
         /// Year-Month-Date 6 Character Date Representation
-        public static string SixCharacter = "yyMMdd";
+        public const string SixCharacter = "yyMMdd";
         /// YYYY-MM-DD Eight Character Date Representation
-        public static string EightCharacter = "yyyyMMdd";
+        public const string EightCharacter = "yyyyMMdd";
+        /// Daily and hourly time format
+        public const string TwelveCharacter = "yyyyMMdd HH:mm";
         /// JSON Format Date Representation
         public static string JsonFormat = "yyyy-MM-ddThh:mm:ss";
         /// MySQL Format Date Representation
         public const string DB = "yyyy-MM-dd HH:mm:ss";
         /// QuantConnect UX Date Representation
-        public const string UI = "yyyyMMdd HH:mm:ss";
-        /// EXT Web Date Representation
-        public const string EXT = "yyyy-MM-dd HH:mm:ss";
+        public const string UI = "yyyy-MM-dd HH:mm:ss";
+        /// en-US format
+        public const string US = "M/d/yyyy h:mm:ss tt";
+        /// Date format of QC forex data
+        public const string Forex = "yyyyMMdd HH:mm:ss.ffff";
     }
 
-
-    /******************************************************** 
-    * GLOBAL STRUCT DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Singular holding of assets from backend live nodes:
     /// </summary>
-    [JsonObjectAttribute]
+    [JsonObject]
     public class Holding
     {
         /// Symbol of the Holding:
-        public string Symbol = "";
+        public Symbol Symbol = Symbol.Empty;
 
-        /// Average Price of our Holding
-        public decimal AveragePrice = 0;
+        /// Type of the security
+        public SecurityType Type;
+
+        /// The currency symbol of the holding, such as $
+        public string CurrencySymbol;
+
+        /// Average Price of our Holding in the currency the symbol is traded in
+        public decimal AveragePrice;
 
         /// Quantity of Symbol We Hold.
-        public decimal Quantity = 0;
+        public decimal Quantity;
 
-        /// Current Market Price of the Asset
-        public decimal MarketPrice = 0;
+        /// Current Market Price of the Asset in the currency the symbol is traded in
+        public decimal MarketPrice;
+
+        /// Current market conversion rate into the account currency
+        public decimal ConversionRate;
 
         /// Create a new default holding:
         public Holding()
-        { }
+        {
+            CurrencySymbol = "$";
+            ConversionRate = 1m;
+        }
 
         /// <summary>
         /// Create a simple JSON holdings from a Security holding class.
         /// </summary>
-        /// <param name="holding"></param>
-        public Holding(Securities.SecurityHolding holding)
+        /// <param name="security">The security instance</param>
+        public Holding(Security security)
+             : this()
         {
+            var holding = security.Holdings;
+
             Symbol = holding.Symbol;
+            Type = holding.Type;
             Quantity = holding.Quantity;
-            AveragePrice = holding.AveragePrice;
-            MarketPrice = holding.Price;
+            CurrencySymbol = Currencies.CurrencySymbols[security.QuoteCurrency.Symbol];
+            ConversionRate = security.QuoteCurrency.ConversionRate;
+
+            var rounding = 2;
+            if (holding.Type == SecurityType.Forex || holding.Type == SecurityType.Cfd)
+            {
+                rounding = 5;
+            }
+
+            AveragePrice = Math.Round(holding.AveragePrice, rounding);
+            MarketPrice = Math.Round(holding.Price, rounding);
+        }
+
+        /// <summary>
+        /// Clones this instance
+        /// </summary>
+        /// <returns>A new Holding object with the same values as this one</returns>
+        public Holding Clone()
+        {
+            return new Holding
+            {
+                AveragePrice = AveragePrice,
+                Symbol = Symbol,
+                Type = Type,
+                Quantity = Quantity,
+                MarketPrice = MarketPrice,
+                ConversionRate  = ConversionRate,
+                CurrencySymbol = CurrencySymbol
+            };
+        }
+
+        /// <summary>
+        /// Writes out the properties of this instance to string
+        /// </summary>
+        public override string ToString()
+        {
+            if (ConversionRate == 1.0m)
+            {
+                return string.Format("{0}: {1} @ {2}{3} - Market: {2}{4}", Symbol, Quantity, CurrencySymbol, AveragePrice, MarketPrice);
+            }
+            return string.Format("{0}: {1} @ {2}{3} - Market: {2}{4} - Conversion: {5}", Symbol, Quantity, CurrencySymbol, AveragePrice, MarketPrice, ConversionRate);
         }
     }
 
-    /******************************************************** 
-    * GLOBAL ENUMS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Processing runmode of the backtest.
     /// </summary>
     /// <obsolete>The runmode enum is now obsolete and all tasks are run in series mode. This was done to ensure algorithms have memory of the day before.</obsolete>
-    public enum RunMode 
-    { 
+    public enum RunMode
+    {
         /// Automatically detect the runmode of the algorithm: series for minute data, parallel for second-tick
         Automatic,
         /// Series runmode for the algorithm
@@ -103,133 +153,171 @@ namespace QuantConnect
 
 
     /// <summary>
-    /// Multilanguage support enum: which language is this project
+    /// Multilanguage support enum: which language is this project for the interop bridge converter.
     /// </summary>
-    public enum Language 
-    { 
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum Language
+    {
+        /// <summary>
         /// C# Language Project
+        /// </summary>
+        [EnumMember(Value = "C#")]
         CSharp,
+
+        /// <summary>
+        /// FSharp Project
+        /// </summary>
+        [EnumMember(Value = "F#")]
+        FSharp,
+
+        /// <summary>
+        /// Visual Basic Project
+        /// </summary>
+        [EnumMember(Value = "VB")]
+        VisualBasic,
+
+        /// <summary>
         /// Java Language Project
+        /// </summary>
+        [EnumMember(Value = "Ja")]
         Java,
+
+        /// <summary>
         /// Python Language Project
+        /// </summary>
+        [EnumMember(Value = "Py")]
         Python
     }
 
 
     /// <summary>
-    /// User subscription level
+    /// User / Algorithm Job Subscription Level
     /// </summary>
-    /// <remarks>Currently there are only hobbyist plans</remarks>
-    public enum UserPlan 
+    public enum UserPlan
     {
-        /// Free User 
+        /// <summary>
+        /// Free User (Backtesting).
+        /// </summary>
         Free,
-        /// Hobbyist User 
+
+        /// <summary>
+        /// Hobbyist User with Included 512mb Server.
+        /// </summary>
         Hobbyist
+    }
+
+
+    /// <summary>
+    /// Live server types available through the web IDE. / QC deployment.
+    /// </summary>
+    public enum ServerType
+    {
+        /// <summary>
+        /// Additional server
+        /// </summary>
+        Server512,
+
+        /// <summary>
+        /// Upgraded server
+        /// </summary>
+        Server1024,
+
+        /// <summary>
+        /// Server with 2048 MB Ram.
+        /// </summary>
+        Server2048
     }
 
 
     /// <summary>
     /// Type of tradable security / underlying asset
     /// </summary>
-    public enum SecurityType 
+    public enum SecurityType
     {
-        /// Base class for all security types: 
+        /// <summary>
+        /// Base class for all security types:
+        /// </summary>
         Base,
+
+        /// <summary>
         /// US Equity Security
+        /// </summary>
         Equity,
+
+        /// <summary>
         /// Option Security Type
+        /// </summary>
         Option,
+
+        /// <summary>
         /// Commodity Security Type
+        /// </summary>
         Commodity,
-        /// FOREX Security 
+
+        /// <summary>
+        /// FOREX Security
+        /// </summary>
         Forex,
+
+        /// <summary>
         /// Future Security Type
-        Future
+        /// </summary>
+        Future,
+
+        /// <summary>
+        /// Contract For a Difference Security Type.
+        /// </summary>
+        Cfd
+    }
+
+    /// <summary>
+    /// Account type: margin or cash
+    /// </summary>
+    public enum AccountType
+    {
+        /// <summary>
+        /// Margin account type
+        /// </summary>
+        Margin,
+
+        /// <summary>
+        /// Cash account type
+        /// </summary>
+        Cash
     }
 
     /// <summary>
     /// Market data style: is the market data a summary (OHLC style) bar, or is it a time-price value.
     /// </summary>
-    public enum MarketDataType 
+    public enum MarketDataType
     {
         /// Base market data type
         Base,
         /// TradeBar market data type (OHLC summary bar)
         TradeBar,
         /// Tick market data type (price-time pair)
-        Tick
+        Tick,
+        /// Data associated with an instrument
+        Auxiliary,
+        /// QuoteBar market data type [Bid(OHLC), Ask(OHLC) and Mid(OHLC) summary bar]
+        QuoteBar,
+        /// Option chain data
+        OptionChain
     }
 
     /// <summary>
     /// Datafeed enum options for selecting the source of the datafeed.
     /// </summary>
-    public enum DataFeedEndpoint 
-    { 
+    public enum DataFeedEndpoint
+    {
         /// Backtesting Datafeed Endpoint
         Backtesting,
         /// Loading files off the local system
         FileSystem,
         /// Getting datafeed from a QC-Live-Cloud
         LiveTrading,
-        /// Tradier Supplied Free Data Feed 
-        Tradier
-    }
-
-    /// <summary>
-    /// Realtime events handler options for handling realtime events in the algorithm
-    /// </summary>
-    public enum RealTimeEndpoint
-    { 
-        /// Backtesting Faked RealTime Events
-        Backtesting,
-        /// Live Trading RealTime Events
-        LiveTrading
-    }
-
-    /// <summary>
-    /// Result events handler options for processing algorithm messages
-    /// </summary>
-    public enum ResultHandlerEndpoint
-    {
-        /// Send Results to the Backtesting Web Application
-        Backtesting,
-        /// Send the Results to the Local Console
-        Console,
-        /// Send Results to the Live Web Application
-        LiveTrading,
-    }
-
-    /// <summary>
-    /// Setup handler options for setting up algorithm state and the livetrading/backtest requirements.
-    /// </summary>
-    public enum SetupHandlerEndpoint
-    {
-        /// Configure algorithm+job for backtesting:
-        Backtesting,
-        /// Configure algorithm+job for the console:
-        Console,
-        /// Paper trading algorithm+job internal state configuration
-        PaperTrading,
-        /// Tradier Setup Handler
-        Tradier
-    }
-
-    /// <summary>
-    /// Transaction handler options for selecting who processes the transactions
-    /// </summary>
-    public enum TransactionHandlerEndpoint 
-    { 
-        /// Use Backtesting Models to Process Transactions
-        Backtesting,
-        /// Use Paper Trading Model to Process Transactions
-        PaperTrading,
-        /// Use Tradier to Process Transactions
-        Tradier,
-        /// Use Interactive Brokers to Process Transactions
-        InteractiveBrokers,
-        /// Use FXCM to Process Transactions
-        FXCM
+        /// Database
+        Database
     }
 
     /// <summary>
@@ -248,7 +336,7 @@ namespace QuantConnect
     /// Types of tick data - trades or quote ticks.
     /// </summary>
     /// <remarks>QuantConnect currently only has trade tick data but can handle quote tick data with the same data structures.</remarks>
-    public enum TickType 
+    public enum TickType
     {
         /// Trade type tick object.
         Trade,
@@ -257,10 +345,26 @@ namespace QuantConnect
     }
 
     /// <summary>
+    /// Specifies the type of <see cref="QuantConnect.Data.Market.Delisting"/> data
+    /// </summary>
+    public enum DelistingType
+    {
+        /// <summary>
+        /// Specifies a warning of an imminent delisting
+        /// </summary>
+        Warning = 0,
+
+        /// <summary>
+        /// Specifies the symbol has been delisted
+        /// </summary>
+        Delisted = 1
+    }
+
+    /// <summary>
     /// Resolution of data requested.
     /// </summary>
     /// <remarks>Always sort the enum from the smallest to largest resolution</remarks>
-    public enum Resolution 
+    public enum Resolution
     {
         /// Tick Resolution (1)
         Tick,
@@ -275,12 +379,74 @@ namespace QuantConnect
     }
 
     /// <summary>
+    /// Specifies the different types of options
+    /// </summary>
+    public enum OptionRight
+    {
+        /// <summary>
+        /// A call option, the right to buy at the strike price
+        /// </summary>
+        Call,
+
+        /// <summary>
+        /// A put option, the right to sell at the strike price
+        /// </summary>
+        Put
+    }
+
+    /// <summary>
+    /// Specifies the style of an option
+    /// </summary>
+    public enum OptionStyle
+    {
+        /// <summary>
+        /// American style options are able to be exercised at any time on or before the expiration date
+        /// </summary>
+        American,
+
+        /// <summary>
+        /// European style options are able to be exercised on the expiration date only.
+        /// </summary>
+        European
+    }
+
+    /// <summary>
+    /// Wrapper for algorithm status enum to include the charting subscription.
+    /// </summary>
+    public class AlgorithmControl
+    {
+        /// <summary>
+        /// Default initializer for algorithm control class.
+        /// </summary>
+        public AlgorithmControl()
+        {
+            // default to true, API can override
+            HasSubscribers = true;
+            Status = AlgorithmStatus.Running;
+            ChartSubscription = "Strategy Equity";
+        }
+
+        /// <summary>
+        /// Current run status of the algorithm id.
+        /// </summary>
+        public AlgorithmStatus Status;
+
+        /// <summary>
+        /// Currently requested chart.
+        /// </summary>
+        public string ChartSubscription;
+
+        /// <summary>
+        /// True if there's subscribers on the channel
+        /// </summary>
+        public bool HasSubscribers;
+    }
+
+    /// <summary>
     /// States of a live deployment.
     /// </summary>
     public enum AlgorithmStatus
     {
-        /// User initiated a quit request
-        Quit,           //0
         /// Error compiling algorithm at start
         DeployError,    //1
         /// Waiting for a server
@@ -294,56 +460,105 @@ namespace QuantConnect
         /// Algorithm has been deleted
         Deleted,        //6
         /// Algorithm completed running
-        Completed       //7
+        Completed,      //7
+        /// Runtime Error Stoped Algorithm
+        RuntimeError,    //8
+        /// Error in the algorithm id (not used).
+        Invalid,
+        /// The algorithm is logging into the brokerage
+        LoggingIn,
+        /// The algorithm is initializing
+        Initializing,
+        /// History status update
+        History
     }
 
+    /// <summary>
+    /// Specifies where a subscription's data comes from
+    /// </summary>
+    public enum SubscriptionTransportMedium
+    {
+        /// <summary>
+        /// The subscription's data comes from disk
+        /// </summary>
+        LocalFile,
+
+        /// <summary>
+        /// The subscription's data is downloaded from a remote source
+        /// </summary>
+        RemoteFile,
+
+        /// <summary>
+        /// The subscription's data comes from a rest call that is polled and returns a single line/data point of information
+        /// </summary>
+        Rest
+    }
 
     /// <summary>
     /// enum Period - Enum of all the analysis periods, AS integers. Reference "Period" Array to access the values
     /// </summary>
-    public enum Period 
+    public enum Period
     {
-        /// Period Short Codes - 10 
+        /// Period Short Codes - 10
         TenSeconds = 10,
-        /// Period Short Codes - 30 Second 
+        /// Period Short Codes - 30 Second
         ThirtySeconds = 30,
-        /// Period Short Codes - 60 Second 
+        /// Period Short Codes - 60 Second
         OneMinute = 60,
-        /// Period Short Codes - 120 Second 
+        /// Period Short Codes - 120 Second
         TwoMinutes = 120,
-        /// Period Short Codes - 180 Second 
+        /// Period Short Codes - 180 Second
         ThreeMinutes = 180,
-        /// Period Short Codes - 300 Second 
+        /// Period Short Codes - 300 Second
         FiveMinutes = 300,
-        /// Period Short Codes - 600 Second 
+        /// Period Short Codes - 600 Second
         TenMinutes = 600,
-        /// Period Short Codes - 900 Second 
+        /// Period Short Codes - 900 Second
         FifteenMinutes = 900,
-        /// Period Short Codes - 1200 Second 
+        /// Period Short Codes - 1200 Second
         TwentyMinutes = 1200,
-        /// Period Short Codes - 1800 Second 
+        /// Period Short Codes - 1800 Second
         ThirtyMinutes = 1800,
-        /// Period Short Codes - 3600 Second 
+        /// Period Short Codes - 3600 Second
         OneHour = 3600,
-        /// Period Short Codes - 7200 Second 
+        /// Period Short Codes - 7200 Second
         TwoHours = 7200,
-        /// Period Short Codes - 14400 Second 
+        /// Period Short Codes - 14400 Second
         FourHours = 14400,
-        /// Period Short Codes - 21600 Second 
+        /// Period Short Codes - 21600 Second
         SixHours = 21600
     }
 
+    /// <summary>
+    /// Specifies how data is normalized before being sent into an algorithm
+    /// </summary>
+    public enum DataNormalizationMode
+    {
+        /// <summary>
+        /// The raw price with dividends added to cash book
+        /// </summary>
+        Raw,
+        /// <summary>
+        /// The adjusted prices with splits and dividendends factored in
+        /// </summary>
+        Adjusted,
+        /// <summary>
+        /// The adjusted prices with only splits factored in, dividends paid out to the cash book
+        /// </summary>
+        SplitAdjusted,
+        /// <summary>
+        /// The split adjusted price plus dividends
+        /// </summary>
+        TotalReturn
+    }
 
-    /******************************************************** 
-    * GLOBAL MARKETS
-    *********************************************************/
     /// <summary>
     /// Global Market Short Codes and their full versions: (used in tick objects)
     /// </summary>
-    public static class MarketCodes 
+    public static class MarketCodes
     {
         /// US Market Codes
-        public static Dictionary<string, string> US = new Dictionary<string, string>() 
+        public static Dictionary<string, string> US = new Dictionary<string, string>()
         {
             {"A", "American Stock Exchange"},
             {"B", "Boston Stock Exchange"},
@@ -366,24 +581,38 @@ namespace QuantConnect
         };
 
         /// Canada Market Short Codes:
-        public static Dictionary<string, string> Canada = new Dictionary<string, string>() 
+        public static Dictionary<string, string> Canada = new Dictionary<string, string>()
         {
             {"T", "Toronto"},
             {"V", "Venture"}
         };
     }
 
+    /// <summary>
+    /// Defines the different channel status values
+    /// </summary>
+    public static class ChannelStatus
+    {
+        /// <summary>
+        /// The channel is empty
+        /// </summary>
+        public const string Vacated = "channel_vacated";
+        /// <summary>
+        /// The channel has subscribers
+        /// </summary>
+        public const string Occupied = "channel_occupied";
+    }
 
     /// <summary>
     /// US Public Holidays - Not Tradeable:
     /// </summary>
-    public static class USHoliday 
+    public static class USHoliday
     {
         /// <summary>
         /// Public Holidays
         /// </summary>
-        public static List<DateTime> Dates = new List<DateTime>() 
-        { 
+        public static readonly HashSet<DateTime> Dates = new HashSet<DateTime>
+        {
             /* New Years Day*/
             new DateTime(1998, 01, 01),
             new DateTime(1999, 01, 01),
@@ -402,7 +631,7 @@ namespace QuantConnect
             new DateTime(2014, 01, 01),
             new DateTime(2015, 01, 01),
             new DateTime(2016, 01, 01),
-            
+
             /* Day of Mouring */
             new DateTime(2007, 01, 02),
 
@@ -525,7 +754,7 @@ namespace QuantConnect
             new DateTime(2015, 07, 03),
             new DateTime(2016, 07, 04),
 
-            /* Labour Day */
+            /* Labor Day */
             new DateTime(1998, 09, 07),
             new DateTime(1999, 09, 06),
             new DateTime(2000, 09, 04),
@@ -567,7 +796,7 @@ namespace QuantConnect
             new DateTime(2015, 11, 26),
             new DateTime(2016, 11, 24),
 
-            /* Christmas 1998-2014 */
+            /* Christmas */
             new DateTime(1998, 12, 25),
             new DateTime(1999, 12, 24),
             new DateTime(2000, 12, 25),
@@ -589,4 +818,4 @@ namespace QuantConnect
             new DateTime(2016, 12, 25)
         };
     }
-} // End QC Namespace:
+}

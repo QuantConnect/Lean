@@ -14,10 +14,6 @@
  *
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
-
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
@@ -26,17 +22,11 @@ using QuantConnect.Orders;
 
 namespace QuantConnect.Packets
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Live result packet from a lean engine algorithm.
     /// </summary>
     public class LiveResultPacket : Packet 
     {
-        /******************************************************** 
-        * CLASS VARIABLES
-        *********************************************************/
         /// <summary>
         /// User Id sending result packet
         /// </summary>
@@ -79,9 +69,6 @@ namespace QuantConnect.Packets
         [JsonProperty(PropertyName = "dProcessingTime")]
         public double ProcessingTime = 0;
 
-        /******************************************************** 
-        * CLASS CONSTRUCTOR
-        *********************************************************/
         /// <summary>
         /// Default constructor for JSON Serialization
         /// </summary>
@@ -110,10 +97,9 @@ namespace QuantConnect.Packets
             } 
             catch (Exception err)
             {
-                Log.Trace("LiveResultPacket(): Error converting json: " + err.Message);
+                Log.Trace("LiveResultPacket(): Error converting json: " + err);
             }
         }
-
 
         /// <summary>
         /// Compose Live Result Data Packet - With tradable dates
@@ -135,7 +121,7 @@ namespace QuantConnect.Packets
                 Channel = job.Channel;
             }
             catch (Exception err) {
-                Log.Error("LiveResultPacket.Constructor: " + err.Message);
+                Log.Error(err);
             }
         }
     } // End Queue Packet:
@@ -178,6 +164,11 @@ namespace QuantConnect.Packets
         public Dictionary<string, string> RuntimeStatistics = new Dictionary<string, string>();
 
         /// <summary>
+        /// Server status information, including CPU/RAM usage, ect...
+        /// </summary>
+        public Dictionary<string, string> ServerStatistics = new Dictionary<string, string>();
+
+        /// <summary>
         /// Default Constructor
         /// </summary>
         public LiveResult() 
@@ -186,7 +177,7 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Constructor for the result class for dictionary objects
         /// </summary>
-        public LiveResult(Dictionary<string, Chart> charts, Dictionary<int, Order> orders, Dictionary<DateTime, decimal> profitLoss, Dictionary<string, Holding> holdings, Dictionary<string, string> statistics, Dictionary<string, string> runtime)
+        public LiveResult(Dictionary<string, Chart> charts, Dictionary<int, Order> orders, Dictionary<DateTime, decimal> profitLoss, Dictionary<string, Holding> holdings, Dictionary<string, string> statistics, Dictionary<string, string> runtime, Dictionary<string, string> serverStatistics = null)
         {
             Charts = charts;
             Orders = orders;
@@ -194,7 +185,8 @@ namespace QuantConnect.Packets
             Statistics = statistics;
             Holdings = holdings;
             RuntimeStatistics = runtime;
-        }
+            ServerStatistics = serverStatistics ?? OS.GetServerStatistics();
+        } 
     }
 
 } // End of Namespace:

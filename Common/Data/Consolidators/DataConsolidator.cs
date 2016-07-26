@@ -24,7 +24,7 @@ namespace QuantConnect.Data.Consolidators
     /// </summary>
     /// <typeparam name="TInput">The type consumed by the consolidator</typeparam>
     public abstract class DataConsolidator<TInput> : IDataConsolidator
-        where TInput : BaseData
+        where TInput : class, IBaseData
     {
         /// <summary>
         /// Updates this consolidator with the specified data
@@ -35,10 +35,16 @@ namespace QuantConnect.Data.Consolidators
             var typedData = data as TInput;
             if (typedData == null)
             {
-                throw new ArgumentNullException("data");
+                throw new ArgumentNullException("data", "Received type of " + data.GetType().Name + " but expected " + typeof(TInput).Name);
             }
             Update(typedData);
         }
+
+        /// <summary>
+        /// Scans this consolidator to see if it should emit a bar due to time passing
+        /// </summary>
+        /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
+        public abstract void Scan(DateTime currentLocalTime);
 
         /// <summary>
         /// Event handler that fires when a new piece of data is produced
@@ -52,6 +58,14 @@ namespace QuantConnect.Data.Consolidators
         public BaseData Consolidated
         {
             get; private set;
+        }
+
+        /// <summary>
+        /// Gets a clone of the data being currently consolidated
+        /// </summary>
+        public abstract BaseData WorkingData
+        {
+            get;
         }
 
         /// <summary>
@@ -87,7 +101,7 @@ namespace QuantConnect.Data.Consolidators
             var handler = DataConsolidated;
             if (handler != null) handler(this, consolidated);
 
-            // assign the Consolidated property after the even handlers are fired,
+            // assign the Consolidated property after the event handlers are fired,
             // this allows the event handlers to look at the new consolidated data
             // and the previous consolidated data at the same time without extra bookkeeping
             Consolidated = consolidated;

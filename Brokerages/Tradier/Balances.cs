@@ -12,19 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *	TRADIER BROKERAGE MODEL
 */
 
-/**********************************************************
-* USING NAMESPACES
-**********************************************************/
 using Newtonsoft.Json;
 
 namespace QuantConnect.Brokerages.Tradier
 {
-    /******************************************************** 
-    * CLASS DEFINITIONS
-    *********************************************************/
     /// <summary>
     /// Inside "Account" User-account balance information.
     /// </summary>
@@ -223,11 +216,11 @@ namespace QuantConnect.Brokerages.Tradier
 
         ///"Cash Available"
         [JsonProperty(PropertyName = "cash_available")]
-        public int CashAvailable;
+        public decimal CashAvailable;
 
         ///"Unsettled."
         [JsonProperty(PropertyName = "unsettled_funds")]
-        public int UnsettledFunds;
+        public decimal UnsettledFunds;
 
         /// Constructor
         public TradierAccountTypeCash()
