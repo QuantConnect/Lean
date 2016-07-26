@@ -105,6 +105,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CheckMissingDays.cs" />
     <Compile Include="Data\Custom\Quandl.cs" />
     <Compile Include="Data\DynamicData.cs" />
     <Compile Include="Data\Consolidators\DataConsolidator.cs" />
