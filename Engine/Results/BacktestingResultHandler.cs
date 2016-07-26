@@ -327,11 +327,11 @@ namespace QuantConnect.Lean.Engine.Results
                         runtimeStatistics.Add(pair.Key, pair.Value);
                     }
                 }
-                runtimeStatistics.Add("Unrealized:", "$" + _algorithm.Portfolio.TotalUnrealizedProfit.ToString("N2"));
-                runtimeStatistics.Add("Fees:", "-$" + _algorithm.Portfolio.TotalFees.ToString("N2"));
-                runtimeStatistics.Add("Net Profit:", "$" + _algorithm.Portfolio.TotalProfit.ToString("N2"));
-                runtimeStatistics.Add("Return:", ((_algorithm.Portfolio.TotalPortfolioValue - _setupHandler.StartingPortfolioValue) / _setupHandler.StartingPortfolioValue).ToString("P"));
-                runtimeStatistics.Add("Equity:", "$" + _algorithm.Portfolio.TotalPortfolioValue.ToString("N2"));
+                runtimeStatistics.Add("Unrealized", "$" + _algorithm.Portfolio.TotalUnrealizedProfit.ToString("N2"));
+                runtimeStatistics.Add("Fees", "-$" + _algorithm.Portfolio.TotalFees.ToString("N2"));
+                runtimeStatistics.Add("Net Profit", "$" + _algorithm.Portfolio.TotalProfit.ToString("N2"));
+                runtimeStatistics.Add("Return", ((_algorithm.Portfolio.TotalPortfolioValue - _setupHandler.StartingPortfolioValue) / _setupHandler.StartingPortfolioValue).ToString("P"));
+                runtimeStatistics.Add("Equity", "$" + _algorithm.Portfolio.TotalPortfolioValue.ToString("N2"));
 
                 //Profit Loss Changes:
                 var progress = Convert.ToDecimal(_daysProcessed / _jobDays);
