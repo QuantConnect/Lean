@@ -1029,9 +1029,11 @@ namespace QuantConnect.Lean.Engine.Results
                                 security.SetRealTimePrice(last);
 
                                 // Update CashBook for Forex securities
-                                Cash cash;
-                                var forex = security as Forex;
-                                if (forex != null && _algorithm.Portfolio.CashBook.TryGetValue(forex.BaseCurrencySymbol, out cash))
+                                var cash = (from c in _algorithm.Portfolio.CashBook.Values
+                                    where c.SecuritySymbol == last.Symbol
+                                    select c).SingleOrDefault();
+
+                                if (cash != null)
                                 {
                                     cash.Update(last);
                                 }

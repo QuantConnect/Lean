@@ -84,7 +84,6 @@ namespace QuantConnect.Securities
         public void Update(BaseData data)
         {
             if (_isBaseCurrency) return;
-            if (!data.Symbol.Value.Contains(CashBook.AccountCurrency)) return;
             
             var rate = data.Value;
             if (_invertRealTimePrice)
