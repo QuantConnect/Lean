@@ -1007,6 +1007,8 @@ namespace QuantConnect.Lean.Engine.Results
                 //Set next sample time: 4000 samples per backtest
                 _nextSample = time.Add(ResamplePeriod);
 
+                var canSampleEquity = false;
+
                 //Update the asset prices to take a real time sample of the market price even though we're using minute bars
                 if (_dataFeed != null)
                 {
@@ -1018,6 +1020,12 @@ namespace QuantConnect.Lean.Engine.Results
                         {
                             //Sample Portfolio Value:
                             var price = subscription.RealtimePrice;
+
+                            var now = DateTime.UtcNow.ConvertFromUtc(security.Exchange.TimeZone);
+                            if (!security.Exchange.Hours.IsOpen(now, security.IsExtendedMarketHours)) continue;
+
+                            // if one security was updated, we can sample equity
+                            canSampleEquity = price > 0;
 
                             var last = security.GetLastData();
                             if (last != null)
@@ -1050,11 +1058,14 @@ namespace QuantConnect.Lean.Engine.Results
                     }
                 }
 
-                //Sample the portfolio value over time for chart.
-                SampleEquity(time, Math.Round(_algorithm.Portfolio.TotalPortfolioValue, 4));
+                if (canSampleEquity)
+                {
+                    //Sample the portfolio value over time for chart.
+                    SampleEquity(time, Math.Round(_algorithm.Portfolio.TotalPortfolioValue, 4));
 
-                //Also add the user samples / plots to the result handler tracking:
-                SampleRange(_algorithm.GetChartUpdates(true));
+                    //Also add the user samples / plots to the result handler tracking:
+                    SampleRange(_algorithm.GetChartUpdates(true));
+                }
             }
 
             // wait until after we're warmed up to start sending running status each minute
