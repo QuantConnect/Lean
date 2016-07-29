@@ -176,7 +176,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        private void Log(string msg)
+        private new void Log(string msg)
         {
             // redirect live logs to debug window
             if (LiveMode)
