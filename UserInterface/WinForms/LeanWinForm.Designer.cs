@@ -140,7 +140,6 @@
             this.Text = "QuantConnect Lean Algorithmic Trading Engine: v0.00";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.LeanWinForm_FormClosed);
-            this.Load += new System.EventHandler(this.LeanWinForm_Load);
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
             this.splitPanel.Panel2.ResumeLayout(false);

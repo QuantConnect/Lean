@@ -220,7 +220,6 @@
     <Compile Include="DataFeeds\UniverseSelection.cs" />
     <Compile Include="DataFeeds\UpdateData.cs" />
     <Compile Include="DataFeeds\ZipEntryNameSubscriptionDataSourceReader.cs" />
-    <Compile Include="DefaultBrokerageMessageHandler.cs" />
     <Compile Include="HistoricalData\SubscriptionDataReaderHistoryProvider.cs" />
     <Compile Include="LeanEngineAlgorithmHandlers.cs" />
     <Compile Include="LeanEngineSystemHandlers.cs" />

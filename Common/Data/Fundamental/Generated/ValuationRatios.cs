@@ -19,6 +19,8 @@
 // the code is regenerated.
 //------------------------------------------------------------------------------
 
+// To get up to date fundamental definition files for your hedgefund contact sales@quantconnect.com
+
 using System;
 using System.IO;
 using Newtonsoft.Json;
@@ -40,7 +42,7 @@ namespace QuantConnect.Data.Fundamental
 		public decimal PayoutRatio { get; set; }
 
 		/// <summary>
-		/// ROE * (1 – Payout Ratio)
+		/// ROE * (1 - Payout Ratio)
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 14001
@@ -68,7 +70,7 @@ namespace QuantConnect.Data.Fundamental
 		public decimal SalesPerShare { get; set; }
 
 		/// <summary>
-		/// Common Shareholder’s Equity / Diluted Shares Outstanding
+		/// Common Shareholder's Equity / Diluted Shares Outstanding
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 14004
@@ -205,8 +207,8 @@ namespace QuantConnect.Data.Fundamental
 		/// <summary>
 		/// Estimated Earnings Per Share / Price
 		/// Note:
-		/// a) The “Next” Year’s EPS Estimate is used; For instance, if today’s actual date is March 1, 2009, the “Current” EPS Estimate for
-		/// MSFT is June 2009, and the “Next” EPS Estimate for MSFT is June 2010; the latter is used.
+		/// a) The "Next" Year's EPS Estimate is used; For instance, if today's actual date is March 1, 2009, the "Current" EPS Estimate for
+		/// MSFT is June 2009, and the "Next" EPS Estimate for MSFT is June 2010; the latter is used.
 		/// b) The eps estimated data is sourced from a third party.
 		/// </summary>
 		/// <remarks>
@@ -240,7 +242,7 @@ namespace QuantConnect.Data.Fundamental
 		/// [ Log (PG/E + 1)  / Log (1 + G) ] - 1
 		/// Where
 		/// P=Price
-		/// E=Next Fiscal Year’s Estimated EPS
+		/// E=Next Fiscal Year's Estimated EPS
 		/// G=Long-term Average Earning Growth
 		/// </summary>
 		/// <remarks>
@@ -250,7 +252,7 @@ namespace QuantConnect.Data.Fundamental
 		public decimal PEGPayback { get; set; }
 
 		/// <summary>
-		/// The company’s total book value less the value of any intangible assets dividend by number of shares.
+		/// The company's total book value less the value of any intangible assets dividend by number of shares.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 14023
@@ -286,7 +288,7 @@ namespace QuantConnect.Data.Fundamental
 		public decimal ForwardDividend { get; set; }
 
 		/// <summary>
-		/// (Current Assets – Current Liabilities)/number of shares
+		/// (Current Assets - Current Liabilities)/number of shares
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 14027
@@ -340,7 +342,7 @@ namespace QuantConnect.Data.Fundamental
 		public decimal TotalYield { get; set; }
 
 		/// <summary>
-		/// The five-year average of the company’s price-to-earnings ratio.
+		/// The five-year average of the company's price-to-earnings ratio.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 14033
@@ -359,7 +361,7 @@ namespace QuantConnect.Data.Fundamental
 
 		/// <summary>
 		/// Adjusted Close Price/ Normalized EPS. Normalized EPS removes onetime and unusual items from net EPS, to provide investors with
-		/// a more accurate measure of the company’s true earnings. If the result is negative, zero, &gt;10,000 or &lt;0.001, then null.
+		/// a more accurate measure of the company's true earnings. If the result is negative, zero, &gt;10,000 or &lt;0.001, then null.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 14035
@@ -422,7 +424,7 @@ namespace QuantConnect.Data.Fundamental
 		public decimal ActualTrailingDividend { get; set; }
 
 		/// <summary>
-		/// The growth rate from the TrailingDividend to the Forward Dividend: {(Forward Dividend/Trailing Dividend) – 1}*100.
+		/// The growth rate from the TrailingDividend to the Forward Dividend: {(Forward Dividend/Trailing Dividend) - 1}*100.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 14047

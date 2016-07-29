@@ -19,6 +19,8 @@
 // the code is regenerated.
 //------------------------------------------------------------------------------
 
+// To get up to date fundamental definition files for your hedgefund contact sales@quantconnect.com
+
 namespace QuantConnect.Data.Fundamental
 {
 	/// <summary>

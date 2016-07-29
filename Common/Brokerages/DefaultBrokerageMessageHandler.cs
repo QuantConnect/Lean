@@ -17,13 +17,11 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using QuantConnect.Brokerages;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 
-namespace QuantConnect.Lean.Engine
+namespace QuantConnect.Brokerages
 {
     /// <summary>
     /// Provides a default implementation o <see cref="IBrokerageMessageHandler"/> that will forward
@@ -41,7 +39,6 @@ namespace QuantConnect.Lean.Engine
 
         private readonly IApi _api;
         private readonly IAlgorithm _algorithm;
-        private readonly IResultHandler _results;
         private readonly TimeSpan _openThreshold;
         private readonly AlgorithmNodePacket _job;
         private readonly TimeSpan _initialDelay;
@@ -56,11 +53,10 @@ namespace QuantConnect.Lean.Engine
         /// <param name="api">The api for the algorithm</param>
         /// <param name="initialDelay"></param>
         /// <param name="openThreshold">Defines how long before market open to re-check for brokerage reconnect message</param>
-        public DefaultBrokerageMessageHandler(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler results, IApi api, TimeSpan? initialDelay = null, TimeSpan? openThreshold = null)
+        public DefaultBrokerageMessageHandler(IAlgorithm algorithm, AlgorithmNodePacket job, IApi api, TimeSpan? initialDelay = null, TimeSpan? openThreshold = null)
         {
             _api = api;
             _job = job;
-            _results = results;
             _algorithm = algorithm;
             _connected = true;
             _openThreshold = openThreshold ?? DefaultOpenThreshold;
@@ -77,16 +73,16 @@ namespace QuantConnect.Lean.Engine
             switch (message.Type)
             {
                 case BrokerageMessageType.Information:
-                    _results.DebugMessage("Brokerage Info: " + message.Message);
+                    _algorithm.Debug("Brokerage Info: " + message.Message);
                     break;
                 
                 case BrokerageMessageType.Warning:
-                    _results.ErrorMessage("Brokerage Warning: " + message.Message);
+                    _algorithm.Error("Brokerage Warning: " + message.Message);
                     _api.SendUserEmail(_job.AlgorithmId, "Brokerage Warning", message.Message);
                     break;
 
                 case BrokerageMessageType.Error:
-                    _results.ErrorMessage("Brokerage Error: " + message.Message);
+                    _algorithm.Error("Brokerage Error: " + message.Message);
                     _algorithm.RunTimeError = new Exception(message.Message);
                     break;
 
@@ -172,7 +168,7 @@ namespace QuantConnect.Lean.Engine
             if (!_connected)
             {
                 Log.Error("DefaultBrokerageMessageHandler.Handle(): Still disconnected, goodbye.");
-                _results.ErrorMessage("Brokerage Disconnect: " + message.Message);
+                _algorithm.Error("Brokerage Disconnect: " + message.Message);
                 _algorithm.RunTimeError = new Exception(message.Message);
             }
         }

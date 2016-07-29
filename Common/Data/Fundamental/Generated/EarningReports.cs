@@ -19,6 +19,8 @@
 // the code is regenerated.
 //------------------------------------------------------------------------------
 
+// To get up to date fundamental definition files for your hedgefund contact sales@quantconnect.com
+
 using System;
 using System.IO;
 using Newtonsoft.Json;
@@ -31,7 +33,7 @@ namespace QuantConnect.Data.Fundamental
 	public class EarningReports : BaseData
 	{
 		/// <summary>
-		/// The exact date that is given in the financial statements for each quarter’s end.
+		/// The exact date that is given in the financial statements for each quarter's end.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 20001
@@ -265,7 +267,7 @@ namespace QuantConnect.Data.Fundamental
 
 		/// <summary>
 		/// The basic normalized earnings per share. Normalized EPS removes onetime and unusual items from EPS, to provide investors with a
-		/// more accurate measure of the company’s true earnings. Normalized Earnings / Basic Weighted Average Shares Outstanding.
+		/// more accurate measure of the company's true earnings. Normalized Earnings / Basic Weighted Average Shares Outstanding.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 29019
@@ -275,7 +277,7 @@ namespace QuantConnect.Data.Fundamental
 
 		/// <summary>
 		/// The diluted normalized earnings per share. Normalized EPS removes onetime and unusual items from EPS, to provide investors with
-		/// a more accurate measure of the company’s true earnings. Normalized Earnings / Diluted Weighted Average Shares Outstanding.
+		/// a more accurate measure of the company's true earnings. Normalized Earnings / Diluted Weighted Average Shares Outstanding.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 29020

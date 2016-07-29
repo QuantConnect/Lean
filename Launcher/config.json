@@ -183,7 +183,7 @@
       "log-handler": "QuantConnect.Logging.QueueLogHandler"
     },
 
-    // defines the 'backtesting-desktop' environment
+    // defines the 'live-desktop' environment
     "live-desktop": {
       "live-mode": true,
       "send-via-api": true,

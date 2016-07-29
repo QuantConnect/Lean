@@ -19,6 +19,8 @@
 // the code is regenerated.
 //------------------------------------------------------------------------------
 
+// To get up to date fundamental definition files for your hedgefund contact sales@quantconnect.com
+
 using System;
 using Newtonsoft.Json;
 
@@ -52,7 +54,7 @@ namespace QuantConnect.Data.Fundamental
 		/// The aggregate cost of goods produced and sold and services rendered during the reporting period. It excludes all operating
 		/// expenses such as depreciation, depletion, amortization, and SG&amp;A. For the must have cost industry, if the number is not reported
 		/// by the company, it will be calculated based on accounting equation.
-		/// Cost of Revenue = Revenue – Operating Expenses – Operating Profit.
+		/// Cost of Revenue = Revenue - Operating Expenses - Operating Profit.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 20013
@@ -169,7 +171,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <summary>
 		/// Total revenue less cost of revenue. The number is as reported by the company on the income statement; however, the number will
 		/// be calculated if it is not reported. This field is null if the cost of revenue is not given.
-		/// Gross Profit = Total Revenue – Cost of Revenue.
+		/// Gross Profit = Total Revenue - Cost of Revenue.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 20046
@@ -254,7 +256,7 @@ namespace QuantConnect.Data.Fundamental
 		/// <summary>
 		/// Losses generally refer to (1) the amount of reduction in the value of an insured's property caused by an insured peril, (2) the amount
 		/// sought through an insured's claim, or (3) the amount paid on behalf of an insured under an insurance contract.  Loss Adjustment
-		/// Expenses is expenses incurred in the course of investigating and settling claims that includes any legal and adjusters’ fees and the
+		/// Expenses is expenses incurred in the course of investigating and settling claims that includes any legal and adjusters' fees and the
 		/// costs of paying claims and all related expenses.
 		/// </summary>
 		/// <remarks>
@@ -328,7 +330,7 @@ namespace QuantConnect.Data.Fundamental
 		public NetInvestmentIncomeIncomeStatement NetInvestmentIncome { get; set; }
 
 		/// <summary>
-		/// All revenues, sales and income that the company deems as a total sum of all of their income as reported in the company’s income
+		/// All revenues, sales and income that the company deems as a total sum of all of their income as reported in the company's income
 		/// statement.
 		/// Bank:  Total Revenue = Net Interest Income + Non-Interest Income.
 		/// </summary>
@@ -432,7 +434,7 @@ namespace QuantConnect.Data.Fundamental
 		public PreferredStockDividendsIncomeStatement PreferredStockDividends { get; set; }
 
 		/// <summary>
-		/// Premiums earned is the portion of an insurance written premium which is considered “earned” by the insurer, based on the part of
+		/// Premiums earned is the portion of an insurance written premium which is considered "earned" by the insurer, based on the part of
 		/// the policy period that the insurance has been in effect, and during which the insurer has been exposed to loss.
 		/// </summary>
 		/// <remarks>
@@ -460,7 +462,7 @@ namespace QuantConnect.Data.Fundamental
 		public TaxProvisionIncomeStatement TaxProvision { get; set; }
 
 		/// <summary>
-		/// A charge to income which represents an expense deemed adequate by management given the composition of a bank’s credit
+		/// A charge to income which represents an expense deemed adequate by management given the composition of a bank's credit
 		/// portfolios, their probability of default, the economic environment and the allowance for credit losses already established. Specific
 		/// provisions are established to reduce the book value of specific assets (primarily loans) to establish the amount expected to be
 		/// recovered on the loans.
@@ -491,9 +493,9 @@ namespace QuantConnect.Data.Fundamental
 
 		/// <summary>
 		/// The aggregate total costs related to selling a firm's product and services, as well as all other general and administrative expenses.
-		/// Selling expenses are those directly related to the company’s efforts to generate sales (e.g., sales salaries, commissions,
+		/// Selling expenses are those directly related to the company's efforts to generate sales (e.g., sales salaries, commissions,
 		/// advertising, delivery expenses). General and administrative expenses are expenses related to general administration of the
-		/// company’s operation (e.g., officers and office salaries, office supplies, telephone, accounting and legal services, and business
+		/// company's operation (e.g., officers and office salaries, office supplies, telephone, accounting and legal services, and business
 		/// licenses and fees).
 		/// </summary>
 		/// <remarks>
@@ -581,7 +583,7 @@ namespace QuantConnect.Data.Fundamental
 		public NetIncomeContinuousOperationsNetMinorityInterestIncomeStatement NetIncomeContinuousOperationsNetMinorityInterest { get; set; }
 
 		/// <summary>
-		/// Two situations may lead to accretion on a preferred stock – accretion related redemption premium and interest-like returns on
+		/// Two situations may lead to accretion on a preferred stock - accretion related redemption premium and interest-like returns on
 		/// accrued, but unpaid dividends that accumulated from accumulated preferred stock.
 		/// </summary>
 		/// <remarks>
@@ -728,7 +730,7 @@ namespace QuantConnect.Data.Fundamental
 		public DividendIncomeIncomeStatement DividendIncome { get; set; }
 
 		/// <summary>
-		/// The earning or loss resulting from the proportional part of the associated company’s net income. This item is usually only available
+		/// The earning or loss resulting from the proportional part of the associated company's net income. This item is usually only available
 		/// for bank industry.
 		/// </summary>
 		/// <remarks>
@@ -917,7 +919,7 @@ namespace QuantConnect.Data.Fundamental
 		/// cash flows is less than the carrying value of the asset, then the asset would be considered impaired and would have to be written
 		/// down to its fair value. Once an asset is written down, it may only be written back up under very few circumstances. Usually the
 		/// company uses the sum of undiscounted future cash flows to determine if the impairment should occur, and uses the sum of
-		/// discounted future cash flows to make the impairment judgment. The impairment decision emphasizes on capital assets’ future
+		/// discounted future cash flows to make the impairment judgment. The impairment decision emphasizes on capital assets' future
 		/// profit collection ability.
 		/// </summary>
 		/// <remarks>
@@ -931,7 +933,7 @@ namespace QuantConnect.Data.Fundamental
 		/// cash flows is less than the carrying value of the asset, then the asset would be considered impaired and would have to be written
 		/// down to its fair value. Once an asset is written down, it may only be written back up under very few circumstances. Usually the
 		/// company uses the sum of undiscounted future cash flows to determine if the impairment should occur, and uses the sum of
-		/// discounted future cash flows to make the impairment judgment. The impairment decision emphasizes on capital assets’ future
+		/// discounted future cash flows to make the impairment judgment. The impairment decision emphasizes on capital assets' future
 		/// profit collection ability; This item is usually not available for bank and insurance industries.
 		/// </summary>
 		/// <remarks>
@@ -1524,7 +1526,7 @@ namespace QuantConnect.Data.Fundamental
 		public PurchasedTransportationServicesIncomeStatement PurchasedTransportationServices { get; set; }
 
 		/// <summary>
-		/// The amount by which an asset’s selling price exceeds its initial purchase price is called capital gain. A realized capital gain is when
+		/// The amount by which an asset's selling price exceeds its initial purchase price is called capital gain. A realized capital gain is when
 		/// it has been sold at a profit. This item is usually not available for bank and insurance industries.
 		/// </summary>
 		/// <remarks>
@@ -2500,7 +2502,7 @@ namespace QuantConnect.Data.Fundamental
 		public TaxEffectOfUnusualItemsIncomeStatement TaxEffectOfUnusualItems { get; set; }
 
 		/// <summary>
-		/// EBITDA – Total Unusual Items
+		/// EBITDA - Total Unusual Items
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 20420

@@ -19,6 +19,8 @@
 // the code is regenerated.
 //------------------------------------------------------------------------------
 
+// To get up to date fundamental definition files for your hedgefund contact sales@quantconnect.com
+
 using System;
 using Newtonsoft.Json;
 
@@ -40,7 +42,7 @@ namespace QuantConnect.Data.Fundamental
 
 		/// <summary>
 		/// 25-character max abbreviated name of the firm.  In most cases, the short name will simply be the Legal Name less the
-		/// “Corporation”, “Corp.”, “Inc.”, “Incorporated”, etc…
+		/// "Corporation", "Corp.", "Inc.", "Incorporated", etc...
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 2
@@ -86,9 +88,9 @@ namespace QuantConnect.Data.Fundamental
 
 		/// <summary>
 		/// At the Company level; each company is assigned to 1 of 3 possible status classifications; (U) Public, (V) Private, or (O) Obsolete:
-		///  Public-Firm is operating and currently has at least one common share class that is currently trading on a public exchange.
-		///  Private-Firm is operating but does not have any common share classes currently trading on a public exchange.
-		///  Obsolete-Firm is no longer operating because it closed its business, or was acquired.
+		/// - Public-Firm is operating and currently has at least one common share class that is currently trading on a public exchange.
+		/// - Private-Firm is operating but does not have any common share classes currently trading on a public exchange.
+		/// - Obsolete-Firm is no longer operating because it closed its business, or was acquired.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 9
@@ -97,7 +99,7 @@ namespace QuantConnect.Data.Fundamental
 		public string CompanyStatus { get; set; }
 
 		/// <summary>
-		/// The Month of the company’s latest fiscal year.
+		/// The Month of the company's latest fiscal year.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 10
@@ -131,7 +133,7 @@ namespace QuantConnect.Data.Fundamental
 		/// The symbol of the Primary Share of the company, composed of an arrangement of characters (often letters) representing a
 		/// particular security listed on an exchange or otherwise traded publicly.   The primary share of a company is defined as the first share
 		/// that was traded publicly and is still actively trading. If this share is no longer trading, the primary share will be the share with the
-		/// highest volume. Note: Morningstar’s multi-share class symbols will often contain a “period” within the symbol; e.g. BRK.B for
+		/// highest volume. Note: Morningstar's multi-share class symbols will often contain a "period" within the symbol; e.g. BRK.B for
 		/// Berkshire Hathaway Class B.
 		/// </summary>
 		/// <remarks>
@@ -171,8 +173,8 @@ namespace QuantConnect.Data.Fundamental
 		public string LegalNameLanguageCode { get; set; }
 
 		/// <summary>
-		/// The legal (registered) name of the company’s current auditor. Distinct from DataID 28000 Period Auditor that identifies the Auditor
-		/// related to that period’s financial statements.
+		/// The legal (registered) name of the company's current auditor. Distinct from DataID 28000 Period Auditor that identifies the Auditor
+		/// related to that period's financial statements.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 17
@@ -181,7 +183,7 @@ namespace QuantConnect.Data.Fundamental
 		public string Auditor { get; set; }
 
 		/// <summary>
-		/// The ISO code denoting the language text for Auditor’s name and contact information.
+		/// The ISO code denoting the language text for Auditor's name and contact information.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 18
@@ -237,9 +239,9 @@ namespace QuantConnect.Data.Fundamental
 		public string PrimaryMIC { get; set; }
 
 		/// <summary>
-		/// This refers to the financial template used to collect the company’s financial statements. There are two report styles representing
-		/// two different financial template structures. Report style “1” is most commonly used by US and Canadian companies, and Report
-		/// style “3” is most commonly used by the rest of the universe. Contact your client manager for access to the respective templates.
+		/// This refers to the financial template used to collect the company's financial statements. There are two report styles representing
+		/// two different financial template structures. Report style "1" is most commonly used by US and Canadian companies, and Report
+		/// style "3" is most commonly used by the rest of the universe. Contact your client manager for access to the respective templates.
 		/// </summary>
 		/// <remarks>
 		/// Morningstar DataId: 24
