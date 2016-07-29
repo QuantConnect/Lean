@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
         private const decimal LimitPercentage = 0.025m;
         private const decimal LimitPercentageDelta = 0.005m;
 
-        private const string Symbol = "SPY";
+        private new const string Symbol = "SPY";
         private const SecurityType SecType = SecurityType.Equity;
 
         private readonly CircularQueue<OrderType> _orderTypesQueue = new CircularQueue<OrderType>(new []
