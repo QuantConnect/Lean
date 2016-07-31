@@ -343,11 +343,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 if (request.Universe is UserDefinedUniverse)
                 {
-                    return new UserDefinedUniverseSubcriptionEnumeratorFactory(request.Universe as UserDefinedUniverse, MarketHoursDatabase.FromDataFolder());
+                    return new UserDefinedUniverseSubscriptionEnumeratorFactory(request.Universe as UserDefinedUniverse, MarketHoursDatabase.FromDataFolder());
                 }
                 if (request.Configuration.Type == typeof (CoarseFundamental))
                 {
-                    return new BaseDataCollectionSubscripionEnumeratorFactory();
+                    return new BaseDataCollectionSubscriptionEnumeratorFactory();
                 }
                 if (request.Configuration.Type == typeof(FineFundamental))
                 {

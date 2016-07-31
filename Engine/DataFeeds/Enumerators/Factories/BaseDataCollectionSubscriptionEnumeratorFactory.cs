@@ -27,16 +27,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     /// an entire <see cref="SubscriptionDataSource"/> into a single <see cref="BaseDataCollection"/>
     /// to be emitted on the tradable date at midnight
     /// </summary>
-    public class BaseDataCollectionSubscripionEnumeratorFactory : ISubscriptionEnumeratorFactory
+    public class BaseDataCollectionSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory
     {
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BaseDataCollectionSubscripionEnumeratorFactory"/> class.
+        /// Initializes a new instance of the <see cref="BaseDataCollectionSubscriptionEnumeratorFactory"/> class.
         /// </summary>
         /// <param name="tradableDaysProvider">Function used to provide the tradable dates to be enumerator.
         /// Specify null to default to <see cref="SubscriptionRequest.TradableDays"/></param>
-        public BaseDataCollectionSubscripionEnumeratorFactory(Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null)
+        public BaseDataCollectionSubscriptionEnumeratorFactory(Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null)
         {
             _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
         }

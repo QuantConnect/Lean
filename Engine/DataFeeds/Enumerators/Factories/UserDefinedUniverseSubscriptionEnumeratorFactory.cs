@@ -27,17 +27,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     /// ticks based on <see cref="UserDefinedUniverse.GetTriggerTimes"/>, allowing universe
     /// selection to fire at planned times.
     /// </summary>
-    public class UserDefinedUniverseSubcriptionEnumeratorFactory : ISubscriptionEnumeratorFactory
+    public class UserDefinedUniverseSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory
     {
         private readonly UserDefinedUniverse _universe;
         private readonly MarketHoursDatabase _marketHoursDatabase;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="UserDefinedUniverseSubcriptionEnumeratorFactory"/> class
+        /// Initializes a new instance of the <see cref="UserDefinedUniverseSubscriptionEnumeratorFactory"/> class
         /// </summary>
         /// <param name="universe">The user defined universe</param>
         /// <param name="marketHoursDatabase">The market hours database</param>
-        public UserDefinedUniverseSubcriptionEnumeratorFactory(UserDefinedUniverse universe, MarketHoursDatabase marketHoursDatabase)
+        public UserDefinedUniverseSubscriptionEnumeratorFactory(UserDefinedUniverse universe, MarketHoursDatabase marketHoursDatabase)
         {
             _universe = universe;
             _marketHoursDatabase = marketHoursDatabase;

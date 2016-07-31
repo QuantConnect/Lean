@@ -402,7 +402,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var refresher = new RefreshEnumerator<BaseData>(() =>
                     {
                         var dateInDataTimeZone = DateTime.UtcNow.ConvertFromUtc(request.Configuration.DataTimeZone).Date;
-                        var enumeratorFactory = new BaseDataCollectionSubscripionEnumeratorFactory(r => new [] {dateInDataTimeZone});
+                        var enumeratorFactory = new BaseDataCollectionSubscriptionEnumeratorFactory(r => new [] {dateInDataTimeZone});
                         var factoryReadEnumerator = enumeratorFactory.CreateEnumerator(request);
                         var maximumDataAge = TimeSpan.FromTicks(Math.Max(request.Configuration.Increment.Ticks, TimeSpan.FromSeconds(5).Ticks));
                         return new FastForwardEnumerator(factoryReadEnumerator, _timeProvider, request.Security.Exchange.TimeZone, maximumDataAge);
@@ -491,7 +491,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating user defined universe: " + config.Symbol.ToString());
 
                 // spoof a tick on the requested interval to trigger the universe selection function
-                var enumeratorFactory = new UserDefinedUniverseSubcriptionEnumeratorFactory(userDefined, MarketHoursDatabase.FromDataFolder());
+                var enumeratorFactory = new UserDefinedUniverseSubscriptionEnumeratorFactory(userDefined, MarketHoursDatabase.FromDataFolder());
                 enumerator = enumeratorFactory.CreateEnumerator(request);
 
                 enumerator = new FrontierAwareEnumerator(enumerator, _timeProvider, tzOffsetProvider);
