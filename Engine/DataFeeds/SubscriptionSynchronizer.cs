@@ -120,7 +120,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         BaseDataCollection collection;
                         if (!universeData.TryGetValue(subscription.Universe, out collection))
                         {
-                            collection = new BaseDataCollection(frontier, subscription.Configuration.Symbol, packetData);
+                            if (packetBaseDataCollection is OptionChainUniverseDataCollection)
+                            {
+                                var current = subscription.Current as OptionChainUniverseDataCollection;
+                                var underlying = current != null ? current.Underlying : null;
+                                collection = new OptionChainUniverseDataCollection(frontier, subscription.Configuration.Symbol, packetData, underlying);
+                            }
+                            else
+                            {
+                                collection = new BaseDataCollection(frontier, subscription.Configuration.Symbol, packetData);
+                            }
+
                             universeData[subscription.Universe] = collection;
                         }
                         else
