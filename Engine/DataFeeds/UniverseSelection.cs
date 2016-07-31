@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -137,13 +136,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     // add the new subscriptions to the data feed
-                    if (_dataFeed.AddSubscription(request))
+                    _dataFeed.AddSubscription(request);
+
+                    // only update our security changes if we actually added data
+                    if (!request.IsUniverseSubscription)
                     {
-                        // only update our security changes if we actually added data
-                        if (!request.IsUniverseSubscription)
-                        {
-                            addedSubscription = true;
-                        }
+                        addedSubscription = true;
                     }
                 }
 
