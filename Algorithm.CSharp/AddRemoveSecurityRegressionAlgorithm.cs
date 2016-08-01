@@ -51,7 +51,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (!Portfolio.Invested)
             {
-                SetHoldings("SPY", 0.5);
+                SetHoldings(Securities["SPY"].Symbol, 0.5);
                 lastAction = Time;
             }
             if (Time.DayOfWeek == DayOfWeek.Tuesday)
@@ -62,14 +62,14 @@ namespace QuantConnect.Algorithm.CSharp
             }
             else if (Time.DayOfWeek == DayOfWeek.Wednesday)
             {
-                SetHoldings("AIG", .25);
-                SetHoldings("BAC", .25);
+                SetHoldings(Securities["AIG"].Symbol, .25);
+                SetHoldings(Securities["BAC"].Symbol, .25);
                 lastAction = Time;
             }
             else if (Time.DayOfWeek == DayOfWeek.Thursday)
             {
-                RemoveSecurity("BAC");
-                RemoveSecurity("AIG");
+                RemoveSecurity(Securities["BAC"].Symbol);
+                RemoveSecurity(Securities["AIG"].Symbol);
                 lastAction = Time;
             }
         }
