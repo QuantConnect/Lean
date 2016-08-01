@@ -242,9 +242,9 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="e">The consolidated data</param>
         protected virtual void OnDataConsolidated(TConsolidated e)
         {
+            base.OnDataConsolidated(e);
             var handler = DataConsolidated;
             if (handler != null) handler(this, e);
-            base.OnDataConsolidated(e);
         }
     }
 }

@@ -49,6 +49,7 @@ namespace QuantConnect.Views.WinForms
 
             _geckoBrowser = new GeckoWebBrowser { Dock = DockStyle.Fill, Name = "browser" };
             _geckoBrowser.DOMContentLoaded += BrowserOnDomContentLoaded;
+            _geckoBrowser.Load += (s, e) => { _messaging.SendEnqueuedPackets(); };
             _geckoBrowser.Navigate(url);
             splitPanel.Panel1.Controls.Add(_geckoBrowser);
 #else
