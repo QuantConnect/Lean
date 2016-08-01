@@ -1020,7 +1020,7 @@ namespace QuantConnect.Lean.Engine.Results
                             var price = subscription.RealtimePrice;
 
                             var last = security.GetLastData();
-                            if (last != null)
+                            if (last != null && price > 0)
                             {
                                 // Prevents changes in previous bar
                                 last = last.Clone(last.IsFillForward);
