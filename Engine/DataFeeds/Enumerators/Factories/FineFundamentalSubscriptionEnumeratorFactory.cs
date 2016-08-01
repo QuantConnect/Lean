@@ -69,13 +69,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                     DataType = MarketDataType.Auxiliary,
                     Symbol = request.Configuration.Symbol,
                     Time = date,
-                    CompanyReference = fineFundamentalForDate != null ? fineFundamentalForDate.CompanyReference : null,
-                    SecurityReference = fineFundamentalForDate != null ? fineFundamentalForDate.SecurityReference : null,
-                    FinancialStatements = fineFundamentalForDate != null ? fineFundamentalForDate.FinancialStatements : null,
-                    EarningReports = fineFundamentalForDate != null ? fineFundamentalForDate.EarningReports : null,
-                    OperationRatios = fineFundamentalForDate != null ? fineFundamentalForDate.OperationRatios : null,
-                    EarningRatios = fineFundamentalForDate != null ? fineFundamentalForDate.EarningRatios : null,
-                    ValuationRatios = fineFundamentalForDate != null ? fineFundamentalForDate.ValuationRatios : null
+                    CompanyReference = fineFundamentalForDate != null ? fineFundamentalForDate.CompanyReference : new CompanyReference(),
+                    SecurityReference = fineFundamentalForDate != null ? fineFundamentalForDate.SecurityReference : new SecurityReference(),
+                    FinancialStatements = fineFundamentalForDate != null ? fineFundamentalForDate.FinancialStatements : new FinancialStatements(),
+                    EarningReports = fineFundamentalForDate != null ? fineFundamentalForDate.EarningReports : new EarningReports(),
+                    OperationRatios = fineFundamentalForDate != null ? fineFundamentalForDate.OperationRatios : new OperationRatios(),
+                    EarningRatios = fineFundamentalForDate != null ? fineFundamentalForDate.EarningRatios : new EarningRatios(),
+                    ValuationRatios = fineFundamentalForDate != null ? fineFundamentalForDate.ValuationRatios : new ValuationRatios()
                 }
                 ).GetEnumerator();
         }
@@ -96,6 +96,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 {
                     // find first file date
                     var path = Path.GetDirectoryName(source.Source) ?? string.Empty;
+                    if (string.IsNullOrEmpty(path) || !Directory.Exists(path))
+                        return source;
+
                     var firstFileName = Path.GetFileNameWithoutExtension(Directory.GetFiles(path, "*.zip").OrderBy(x => x).First());
                     var firstDate = DateTime.ParseExact(firstFileName, "yyyyMMdd", CultureInfo.InvariantCulture);
 
