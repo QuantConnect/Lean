@@ -310,7 +310,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private Subscription CreateUniverseSubscription(SubscriptionRequest request)
         {
             // grab the relevant exchange hours
-            var config = request.Universe.Configuration;
+            var config = request.Configuration;
 
             // define our data enumerator
             var enumerator = GetEnumeratorFactory(request).CreateEnumerator(request);
