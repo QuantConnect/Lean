@@ -134,7 +134,19 @@ namespace QuantConnect.Brokerages.Fxcm
             var loginProperties = new FXCMLoginProperties(_userName, _password, _terminal, _server);
 
             // log in
-            _gateway.login(loginProperties);
+            try
+            {
+                _gateway.login(loginProperties);
+            }
+            catch (Exception err)
+            {
+                var message =
+                    err.Message.Contains("ORA-20101") ? "Incorrect login credentials" :
+                    err.Message.Contains("ORA-20003") ? "API connections are not available on Mini accounts" :
+                    err.Message;
+
+                throw new BrokerageException(message, err.InnerException);
+            }
 
             // create new thread to manage disconnections and reconnections
             _connectionMonitorThread = new Thread(() =>
