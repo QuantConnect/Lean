@@ -43,7 +43,7 @@ namespace QuantConnect.Algorithm.Examples
             AddSecurity(SecurityType.Equity, "IBM", Resolution.Hour);
             AddSecurity(SecurityType.Equity, "SPY", Resolution.Daily);
 
-            macd = MACD(_ibm, 12, 26, 9, MovingAverageType.Wilders, Resolution.Daily, Field.Close);
+            macd = MACD(_spy, 12, 26, 9, MovingAverageType.Wilders, Resolution.Daily, Field.Close);
             ema = EMA(_ibm, 15*6, Resolution.Hour, Field.SevenBar);
 
             Securities[_ibm].SetLeverage(1.0m);
