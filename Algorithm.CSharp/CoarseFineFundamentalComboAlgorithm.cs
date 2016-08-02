@@ -63,10 +63,10 @@ namespace QuantConnect.Algorithm.CSharp
             return new List<Symbol>
             {
                 QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, "usa"),
-                QuantConnect.Symbol.Create("IBM", SecurityType.Equity, "usa"),
-                QuantConnect.Symbol.Create("INTL", SecurityType.Equity, "usa"),
-                QuantConnect.Symbol.Create("MSFT", SecurityType.Equity, "usa"),
-                QuantConnect.Symbol.Create("ORCL", SecurityType.Equity, "usa")
+                QuantConnect.Symbol.Create("AIG", SecurityType.Equity, "usa"),
+                QuantConnect.Symbol.Create("BAC", SecurityType.Equity, "usa"),
+                QuantConnect.Symbol.Create("GOOG", SecurityType.Equity, "usa"),
+                QuantConnect.Symbol.Create("IBM", SecurityType.Equity, "usa")
             };
         }
 
@@ -80,13 +80,13 @@ namespace QuantConnect.Algorithm.CSharp
             var topFine = sortedByPeRatio.Take(NumberOfSymbolsFine);
 
             // we need to return only the symbol objects
-            //return topFine.Select(x => x.Symbol);
+            return topFine.Select(x => x.Symbol);
 
-            return new List<Symbol>
-            {
-                QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, "usa"),
-                QuantConnect.Symbol.Create("IBM", SecurityType.Equity, "usa"),
-            };
+            //return new List<Symbol>
+            //{
+            //    QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, "usa"),
+            //    QuantConnect.Symbol.Create("IBM", SecurityType.Equity, "usa"),
+            //};
         }
 
         //Data Event Handler: New data arrives here. "TradeBars" type is a dictionary of strings so you can access it by symbol.
@@ -121,11 +121,11 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (changes.AddedSecurities.Count > 0)
             {
-                Debug("Securities added: " + string.Join(",", changes.AddedSecurities));
+                Debug("Securities added: " + string.Join(",", changes.AddedSecurities.Select(x => x.Symbol.Value)));
             }
             if (changes.RemovedSecurities.Count > 0)
             {
-                Debug("Securities removed: " + string.Join(",", changes.RemovedSecurities));
+                Debug("Securities removed: " + string.Join(",", changes.RemovedSecurities.Select(x => x.Symbol.Value)));
             }
         }
     }
