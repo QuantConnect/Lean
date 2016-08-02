@@ -30,6 +30,8 @@ namespace QuantConnect.Algorithm.CSharp
     public class CustomModelsAlgorithm : QCAlgorithm
     {
         private Security _security;
+        private Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+
         public override void Initialize()
         {
             SetStartDate(2012, 01, 01);
@@ -37,7 +39,7 @@ namespace QuantConnect.Algorithm.CSharp
             AddSecurity(SecurityType.Equity, "SPY", Resolution.Hour);
 
             // set our models
-            _security = Securities["SPY"];
+            _security = Securities[_spy];
             _security.FeeModel = new CustomFeeModel(this);
             _security.FillModel = new CustomFillModel(this);
             _security.SlippageModel = new CustomSlippageModel(this);
@@ -45,20 +47,20 @@ namespace QuantConnect.Algorithm.CSharp
 
         public void OnData(TradeBars data)
         {
-            var openOrders = Transactions.GetOpenOrders("SPY");
+            var openOrders = Transactions.GetOpenOrders(_spy);
             if (openOrders.Count != 0) return;
 
             if (Time.Day > 10 && _security.Holdings.Quantity <= 0)
             {
-                var quantity = CalculateOrderQuantity("SPY", .5m);
+                var quantity = CalculateOrderQuantity(_spy, .5m);
                 Log("MarketOrder: " + quantity);
-                MarketOrder("SPY", quantity, asynchronous: true); // async needed for partial fill market orders
+                MarketOrder(_spy, quantity, asynchronous: true); // async needed for partial fill market orders
             }
             else if (Time.Day > 20 && _security.Holdings.Quantity >= 0)
             {
-                var quantity = CalculateOrderQuantity("SPY", -.5m);
+                var quantity = CalculateOrderQuantity(_spy, -.5m);
                 Log("MarketOrder: " + quantity);
-                MarketOrder("SPY", quantity, asynchronous: true); // async needed for partial fill market orders
+                MarketOrder(_spy, quantity, asynchronous: true); // async needed for partial fill market orders
             }
         }
 
