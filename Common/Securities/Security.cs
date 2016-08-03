@@ -38,6 +38,8 @@ namespace QuantConnect.Securities
     {
         private readonly Symbol _symbol;
         private LocalTimeKeeper _localTimeKeeper;
+        private bool _isRealTimeExchangeClosed;
+        private DateTime _nextExchangeStateDateTime;
         // using concurrent bag to avoid list enumeration threading issues
         protected readonly ConcurrentBag<SubscriptionDataConfig> SubscriptionsBag;
 
@@ -595,7 +597,7 @@ namespace QuantConnect.Securities
         public void SetRealTimePrice(BaseData data)
         {
             //Add new point to cache:
-            if (data == null) return;
+            if (data == null || IsExchangeClosed()) return;
             Cache.AddData(data);
             Holdings.UpdateMarketPrice(Price);
         }
@@ -641,6 +643,23 @@ namespace QuantConnect.Securities
             if (subscription.Symbol != _symbol) throw new ArgumentException("Symbols must match.", "subscription.Symbol");
             if (!subscription.ExchangeTimeZone.Equals(Exchange.TimeZone)) throw new ArgumentException("ExchangeTimeZones must match.", "subscription.ExchangeTimeZone");
             SubscriptionsBag.Add(subscription);
+        }
+
+        /// <summary>
+        /// Evaluate whether Exchange for this Security is Closed or not
+        /// </summary>
+        /// <returns>True if Exchange is closed</returns>
+        private bool IsExchangeClosed()
+        {
+            if (LocalTime >= _nextExchangeStateDateTime)
+            {
+                _isRealTimeExchangeClosed = !Exchange.Hours.IsOpen(LocalTime, IsExtendedMarketHours);
+                _nextExchangeStateDateTime = _isRealTimeExchangeClosed
+                    ? Exchange.Hours.GetNextMarketOpen(LocalTime, IsExtendedMarketHours)
+                    : Exchange.Hours.GetNextMarketClose(LocalTime, IsExtendedMarketHours);
+            }
+
+            return _isRealTimeExchangeClosed;
         }
     }
 }
