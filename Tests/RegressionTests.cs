@@ -329,6 +329,29 @@ namespace QuantConnect.Tests
                 {"Total Fees", "$10.61"},
             };
 
+            var coarseFineFundamentalComboAlgorithmStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "6"},
+                {"Average Win", "0.18%"},
+                {"Average Loss", "-1.48%"},
+                {"Compounding Annual Return", "-55.247%"},
+                {"Drawdown", "9.100%"},
+                {"Expectancy", "-0.440"},
+                {"Net Profit", "-6.395%"},
+                {"Sharpe Ratio", "-2.856"},
+                {"Loss Rate", "50%"},
+                {"Win Rate", "50%"},
+                {"Profit-Loss Ratio", "0.12"},
+                {"Alpha", "-0.715"},
+                {"Beta", "1.256"},
+                {"Annual Standard Deviation", "0.216"},
+                {"Annual Variance", "0.047"},
+                {"Information Ratio", "-4.302"},
+                {"Tracking Error", "0.162"},
+                {"Treynor Ratio", "-0.491"},
+                {"Total Fees", "$13.94"},
+            };
+
             return new List<AlgorithmStatisticsTestParameters>
             {
                 // CSharp
@@ -345,6 +368,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("UpdateOrderRegressionAlgorithm", updateOrderRegressionStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("HistoryAlgorithm", historyAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("CoarseFundamentalTop5Algorithm", coarseFundamentalTop5AlgorithmStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("CoarseFineFundamentalComboAlgorithm", coarseFineFundamentalComboAlgorithmStatistics, Language.CSharp),
 
                 // FSharp
                 // new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.FSharp),

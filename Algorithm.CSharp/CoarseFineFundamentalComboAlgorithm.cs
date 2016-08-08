@@ -28,18 +28,17 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class CoarseFineFundamentalComboAlgorithm : QCAlgorithm
     {
-        private const int NumberOfSymbolsCoarse = 5;
         private const int NumberOfSymbolsFine = 2;
 
         // initialize our changes to nothing
-        SecurityChanges _changes = SecurityChanges.None;
+        private SecurityChanges _changes = SecurityChanges.None;
 
         public override void Initialize()
         {
             UniverseSettings.Resolution = Resolution.Daily;
 
             SetStartDate(2014, 04, 01);
-            SetEndDate(2014, 04, 07);
+            SetEndDate(2014, 04, 30);
             SetCash(50000);
 
             // this add universe method accepts two parameters:
@@ -48,30 +47,29 @@ namespace QuantConnect.Algorithm.CSharp
             AddUniverse(CoarseSelectionFunction, FineSelectionFunction);
         }
 
-        // sort the data by daily dollar volume and take the top 'NumberOfSymbolsCoarse'
-        public static IEnumerable<Symbol> CoarseSelectionFunction(IEnumerable<CoarseFundamental> coarse)
+        // return a list of three fixed symbol objects
+        public IEnumerable<Symbol> CoarseSelectionFunction(IEnumerable<CoarseFundamental> coarse)
         {
-            // sort descending by daily dollar volume
-            //var sortedByDollarVolume = coarse.OrderByDescending(x => x.DollarVolume);
-
-            // take the top entries from our sorted collection
-            //var topCoarse = sortedByDollarVolume.Take(NumberOfSymbolsCoarse);
-
-            // we need to return only the symbol objects
-            //return topCoarse.Select(x => x.Symbol);
+            if (Time.Date < new DateTime(2014, 4, 5))
+            {
+                return new List<Symbol>
+                {
+                    QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, "usa"),
+                    QuantConnect.Symbol.Create("AIG", SecurityType.Equity, "usa"),
+                    QuantConnect.Symbol.Create("IBM", SecurityType.Equity, "usa"),
+                };
+            }
 
             return new List<Symbol>
             {
-                QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, "usa"),
-                QuantConnect.Symbol.Create("AIG", SecurityType.Equity, "usa"),
                 QuantConnect.Symbol.Create("BAC", SecurityType.Equity, "usa"),
                 QuantConnect.Symbol.Create("GOOG", SecurityType.Equity, "usa"),
-                QuantConnect.Symbol.Create("IBM", SecurityType.Equity, "usa")
+                QuantConnect.Symbol.Create("SPY", SecurityType.Equity, "usa"),
             };
         }
 
         // sort the data by P/E ratio and take the top 'NumberOfSymbolsFine'
-        public static IEnumerable<Symbol> FineSelectionFunction(IEnumerable<FineFundamental> fine)
+        public IEnumerable<Symbol> FineSelectionFunction(IEnumerable<FineFundamental> fine)
         {
             // sort descending by P/E ratio
             var sortedByPeRatio = fine.OrderByDescending(x => x.ValuationRatios.PERatio);
@@ -81,12 +79,6 @@ namespace QuantConnect.Algorithm.CSharp
 
             // we need to return only the symbol objects
             return topFine.Select(x => x.Symbol);
-
-            //return new List<Symbol>
-            //{
-            //    QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, "usa"),
-            //    QuantConnect.Symbol.Create("IBM", SecurityType.Equity, "usa"),
-            //};
         }
 
         //Data Event Handler: New data arrives here. "TradeBars" type is a dictionary of strings so you can access it by symbol.
@@ -101,6 +93,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if (security.Invested)
                 {
                     Liquidate(security.Symbol);
+                    Debug("Liquidated Stock: " + security.Symbol.Value);
                 }
             }
 
