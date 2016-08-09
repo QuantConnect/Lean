@@ -25,6 +25,7 @@ namespace QuantConnect.Tests
         [Test, TestCaseSource("GetRegressionTestParameters")]
         public void AlgorithmStatisticsRegression(AlgorithmStatisticsTestParameters parameters)
         {
+            QuantConnect.Configuration.Config.Set("quandl-auth-token", "WyAazVXnq7ATy_fefTqm");
             AlgorithmRunner.RunLocalBacktest(parameters.Algorithm, parameters.Statistics, parameters.Language);
         }
 
@@ -296,13 +297,13 @@ namespace QuantConnect.Tests
                 {"Loss Rate", "0%"},
                 {"Win Rate", "0%"},
                 {"Profit-Loss Ratio", "0"},
-                {"Alpha", "0.774"},
-                {"Beta", "0.182"},
+                {"Alpha", "0.006"},
+                {"Beta", "0.997"},
                 {"Annual Standard Deviation", "0.193"},
                 {"Annual Variance", "0.037"},
-                {"Information Ratio", "1.319"},
-                {"Tracking Error", "0.247"},
-                {"Treynor Ratio", "4.798"},
+                {"Information Ratio", "6.231"},
+                {"Tracking Error", "0.001"},
+                {"Treynor Ratio", "0.876"},
                 {"Total Fees", "$3.09"},
             };
 
