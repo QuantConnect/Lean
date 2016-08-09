@@ -39,7 +39,7 @@ namespace QuantConnect.Brokerages.Tradier
     {
         ///Account Number
         [JsonProperty(PropertyName = "account_number")]
-        public long AccountNumber;
+        public string AccountNumber;
 
         ///Account Type (margin, cash, pdt)
         [JsonProperty(PropertyName = "account_type")]

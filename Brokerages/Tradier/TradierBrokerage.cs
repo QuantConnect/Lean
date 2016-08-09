@@ -46,7 +46,7 @@ namespace QuantConnect.Brokerages.Tradier
     /// </summary>
     public class TradierBrokerage : Brokerage
     {
-        private readonly long _accountID;
+        private readonly string _accountID;
 
         // we're reusing the equity exchange here to grab typical exchange hours
         private static readonly EquityExchange Exchange =
@@ -124,7 +124,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Create a new Tradier Object:
         /// </summary>
-        public TradierBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, long accountID)
+        public TradierBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string accountID)
             : base("Tradier Brokerage")
         {
             _orderProvider = orderProvider;
@@ -400,7 +400,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// Returns null if the request was unsucessful
         /// </remarks>
         /// <returns>Balance</returns>
-        public TradierBalanceDetails GetBalanceDetails(long accountId)
+        public TradierBalanceDetails GetBalanceDetails(string accountId)
         {
             var request = new RestRequest("accounts/{accountId}/balances", Method.GET);
             request.AddParameter("accountId", accountId, ParameterType.UrlSegment);
@@ -514,7 +514,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// Place Order through API.
         /// accounts/{account-id}/orders
         /// </summary>
-        public TradierOrderResponse PlaceOrder(long accountId,
+        public TradierOrderResponse PlaceOrder(string accountId,
             TradierOrderClass classification,
             TradierOrderDirection direction,
             string symbol,
@@ -551,7 +551,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Update an exiting Tradier Order:
         /// </summary>
-        public TradierOrderResponse ChangeOrder(long accountId,
+        public TradierOrderResponse ChangeOrder(string accountId,
             long orderId,
             TradierOrderType type = TradierOrderType.Market,
             TradierOrderDuration duration = TradierOrderDuration.GTC,
@@ -577,7 +577,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Cancel the order with this account and id number
         /// </summary>
-        public TradierOrderResponse CancelOrder(long accountId, long orderId)
+        public TradierOrderResponse CancelOrder(string accountId, long orderId)
         {
             //Compose Request:
             var request = new RestRequest("accounts/{accountId}/orders/{orderId}");
