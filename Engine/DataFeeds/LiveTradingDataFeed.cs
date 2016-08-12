@@ -166,6 +166,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             if (_subscriptions.Contains(request.Configuration))
             {
+                // changes in a subscription
+                var userDefined = request.Universe as UserDefinedUniverse;
+                if (userDefined != null && request.IsUniverseSubscription)
+                {
+                    var collection = new BaseDataCollection(_frontierUtc, request.Configuration.Symbol);
+                    _universeSelection.ApplyUniverseSelection(userDefined, _frontierUtc, collection);
+                    return true;
+                }
                 // duplicate subscription request
                 return false;
             }
