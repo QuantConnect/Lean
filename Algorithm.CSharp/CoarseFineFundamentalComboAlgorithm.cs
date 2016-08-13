@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.Fundamental;
@@ -28,6 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class CoarseFineFundamentalComboAlgorithm : QCAlgorithm
     {
+        private const int NumberOfSymbolsCoarse = 5;
         private const int NumberOfSymbolsFine = 2;
 
         // initialize our changes to nothing
@@ -47,25 +47,19 @@ namespace QuantConnect.Algorithm.CSharp
             AddUniverse(CoarseSelectionFunction, FineSelectionFunction);
         }
 
-        // return a list of three fixed symbol objects
+        // sort the data by daily dollar volume and take the top 'NumberOfSymbolsCoarse'
         public IEnumerable<Symbol> CoarseSelectionFunction(IEnumerable<CoarseFundamental> coarse)
         {
-            if (Time.Date < new DateTime(2014, 4, 5))
-            {
-                return new List<Symbol>
-                {
-                    QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, "usa"),
-                    QuantConnect.Symbol.Create("AIG", SecurityType.Equity, "usa"),
-                    QuantConnect.Symbol.Create("IBM", SecurityType.Equity, "usa"),
-                };
-            }
+            // select only symbols with fundamental data and sort descending by daily dollar volume
+            var sortedByDollarVolume = coarse
+                .Where(x => x.HasFundamentalData)
+                .OrderByDescending(x => x.DollarVolume);
 
-            return new List<Symbol>
-            {
-                QuantConnect.Symbol.Create("BAC", SecurityType.Equity, "usa"),
-                QuantConnect.Symbol.Create("GOOG", SecurityType.Equity, "usa"),
-                QuantConnect.Symbol.Create("SPY", SecurityType.Equity, "usa"),
-            };
+            // take the top entries from our sorted collection
+            var top5 = sortedByDollarVolume.Take(NumberOfSymbolsCoarse);
+
+            // we need to return only the symbol objects
+            return top5.Select(x => x.Symbol);
         }
 
         // sort the data by P/E ratio and take the top 'NumberOfSymbolsFine'
