@@ -54,7 +54,7 @@ namespace QuantConnect.Data.Fundamental
         {
             var source =
                 Path.Combine(Globals.DataFolder, "equity", config.Market, "fundamental", "fine", 
-                config.Symbol.Value, date.ToString("yyyyMMdd") + ".zip");
+                config.Symbol.Value.ToLower(), date.ToString("yyyyMMdd") + ".zip");
 
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }

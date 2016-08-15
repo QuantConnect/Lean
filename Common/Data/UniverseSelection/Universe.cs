@@ -34,9 +34,16 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         public static readonly UnchangedUniverse Unchanged = UnchangedUniverse.Instance;
 
-        private HashSet<Symbol> _previousSelections; 
+        private HashSet<Symbol> _previousSelections;
 
-        private readonly ConcurrentDictionary<Symbol, Member> _securities;
+        /// <summary>
+        /// Gets the internal security collection used to define membership in this universe
+        /// </summary>
+        internal virtual ConcurrentDictionary<Symbol, Member> Securities
+        {
+            get;
+            private set;
+        }
 
         /// <summary>
         /// Gets the security type of this universe
@@ -84,7 +91,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         public Dictionary<Symbol, Security> Members
         {
-            get { return _securities.Select(x => x.Value.Security).ToDictionary(x => x.Symbol); }
+            get { return Securities.Select(x => x.Value.Security).ToDictionary(x => x.Symbol); }
         }
 
         /// <summary>
@@ -95,10 +102,10 @@ namespace QuantConnect.Data.UniverseSelection
         protected Universe(SubscriptionDataConfig config, ISecurityInitializer securityInitializer = null)
         {
             _previousSelections = new HashSet<Symbol>();
-            _securities = new ConcurrentDictionary<Symbol, Member>();
+            Securities = new ConcurrentDictionary<Symbol, Member>();
 
             Configuration = config;
-            SecurityInitializer = securityInitializer ?? Securities.SecurityInitializer.Null;
+            SecurityInitializer = securityInitializer ?? QuantConnect.Securities.SecurityInitializer.Null;
         }
 
         /// <summary>
@@ -113,7 +120,7 @@ namespace QuantConnect.Data.UniverseSelection
         public virtual bool CanRemoveMember(DateTime utcTime, Security security)
         {
             Member member;
-            if (_securities.TryGetValue(security.Symbol, out member))
+            if (Securities.TryGetValue(security.Symbol, out member))
             {
                 var timeInUniverse = utcTime - member.Added;
                 if (timeInUniverse >= UniverseSettings.MinimumTimeInUniverse)
@@ -173,18 +180,24 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
-        /// Gets the subscriptions to be added for the specified security
+        /// Gets the subscription requests to be added for the specified security
         /// </summary>
-        /// <remarks>
-        /// In most cases the default implementaon of returning the security's configuration is
-        /// sufficient. It's when we want multiple subscriptions (trade/quote data) that we'll need
-        /// to override this
-        /// </remarks>
         /// <param name="security">The security to get subscriptions for</param>
+        /// <param name="currentTimeUtc">The current time in utc. This is the frontier time of the algorithm</param>
+        /// <param name="maximumEndTimeUtc">The max end time</param>
         /// <returns>All subscriptions required by this security</returns>
-        public virtual IEnumerable<SubscriptionDataConfig> GetSubscriptions(Security security)
+        public virtual IEnumerable<SubscriptionRequest> GetSubscriptionRequests(Security security, DateTime currentTimeUtc, DateTime maximumEndTimeUtc)
         {
-            return security.Subscriptions;
+            return security.Subscriptions.Select(config =>
+                new SubscriptionRequest(
+                    isUniverseSubscription: false,
+                    universe: this,
+                    security: security,
+                    configuration: config,
+                    startTimeUtc: currentTimeUtc,
+                    endTimeUtc: maximumEndTimeUtc
+                    )
+                );
         }
 
         /// <summary>
@@ -194,7 +207,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>True if the specified symbol is part of this universe, false otherwise</returns>
         public bool ContainsMember(Symbol symbol)
         {
-            return _securities.ContainsKey(symbol);
+            return Securities.ContainsKey(symbol);
         }
 
         /// <summary>
@@ -206,11 +219,11 @@ namespace QuantConnect.Data.UniverseSelection
         /// false if the security was already in the universe</returns>
         internal bool AddMember(DateTime utcTime, Security security)
         {
-            if (_securities.ContainsKey(security.Symbol))
+            if (Securities.ContainsKey(security.Symbol))
             {
                 return false;
             }
-            return _securities.TryAdd(security.Symbol, new Member(utcTime, security));
+            return Securities.TryAdd(security.Symbol, new Member(utcTime, security));
         }
 
         /// <summary>
@@ -227,7 +240,7 @@ namespace QuantConnect.Data.UniverseSelection
             if (CanRemoveMember(utcTime, security))
             {
                 Member member;
-                return _securities.TryRemove(security.Symbol, out member);
+                return Securities.TryRemove(security.Symbol, out member);
             }
             return false;
         }
@@ -248,7 +261,7 @@ namespace QuantConnect.Data.UniverseSelection
             IEnumerator IEnumerable.GetEnumerator() { yield break; }
         }
 
-        private sealed class Member
+        internal sealed class Member
         {
             public readonly DateTime Added;
             public readonly Security Security;

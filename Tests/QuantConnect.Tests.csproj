@@ -181,6 +181,7 @@
     <Compile Include="Engine\DataFeeds\BaseDataExchangeTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\BaseDataCollectionAggregatorEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\EnqueableEnumeratorTests.cs" />
+    <Compile Include="Engine\DataFeeds\Enumerators\Factories\FineFundamentalSubscriptionEnumeratorFactoryTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\FastForwardEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\FrontierAwareEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\LiveFillForwardEnumeratorTests.cs" />

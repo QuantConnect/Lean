@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
 
@@ -243,15 +244,34 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new univese and adds it to the algorithm. This is for coarse fundamntal US Equity data and
+        /// Creates a new universe and adds it to the algorithm. This is for coarse fundamental US Equity data and
         /// will be executed on day changes in the NewYork time zone (<see cref="TimeZones.NewYork"/>
         /// </summary>
         /// <param name="selector">Defines an initial coarse selection</param>
         public void AddUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> selector)
         {
-            var symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA);
-            var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, true, isFilteredSubscription: false);
-            AddUniverse(new FuncUniverse(config, UniverseSettings, SecurityInitializer, selectionData => selector(selectionData.OfType<CoarseFundamental>())));
+            AddUniverse(new CoarseFundamentalUniverse(UniverseSettings, SecurityInitializer, selector));
+        }
+
+        /// <summary>
+        /// Creates a new universe and adds it to the algorithm. This is for coarse and fine fundamental US Equity data and
+        /// will be executed on day changes in the NewYork time zone (<see cref="TimeZones.NewYork"/>
+        /// </summary>
+        /// <param name="coarseSelector">Defines an initial coarse selection</param>
+        /// <param name="fineSelector">Defines a more detailed selection with access to more data</param>
+        public void AddUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarseSelector, Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> fineSelector)
+        {
+            // create a new universe for coarse fundamental data
+            var coarse = new CoarseFundamentalUniverse(UniverseSettings, SecurityInitializer, coarseSelector);
+
+            // create a new universe for fine fundamental data
+            var fine = new FineFundamentalUniverse(UniverseSettings, SecurityInitializer, fineSelector);
+
+            // wire them up such that the results from coarse will be piped into fine
+            var chained = coarse.ChainedTo(fine, configurationPerSymbol: true);
+
+            // finally add the chained universe
+            AddUniverse(chained);
         }
 
         /// <summary>

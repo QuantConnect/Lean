@@ -15,7 +15,6 @@
 
 using System;
 using System.IO;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -38,6 +37,11 @@ namespace QuantConnect.Data.UniverseSelection
         /// Gets the day's total volume
         /// </summary>
         public long Volume { get; set; }
+
+        /// <summary>
+        /// Returns whether the symbol has fundamental data for the given date
+        /// </summary>
+        public bool HasFundamentalData { get; set; }
 
         /// <summary>
         /// The end time of this data.
@@ -83,7 +87,7 @@ namespace QuantConnect.Data.UniverseSelection
             try
             {
                 var csv = line.Split(',');
-                return new CoarseFundamental
+                var coarse = new CoarseFundamental
                 {
                     Symbol = new Symbol(SecurityIdentifier.Parse(csv[0]), csv[1]),
                     Time = date,
@@ -92,6 +96,13 @@ namespace QuantConnect.Data.UniverseSelection
                     Volume = csv[3].ToInt64(),
                     DollarVolume = csv[4].ToDecimal()
                 };
+
+                if (csv.Length > 5)
+                {
+                    coarse.HasFundamentalData = Convert.ToBoolean(csv[5]);
+                }
+
+                return coarse;
             }
             catch (Exception)
             {
@@ -113,7 +124,8 @@ namespace QuantConnect.Data.UniverseSelection
                 Market = Market,
                 Value = Value,
                 Volume = Volume,
-                DataType = MarketDataType.Auxiliary
+                DataType = MarketDataType.Auxiliary,
+                HasFundamentalData = HasFundamentalData
             };
         }
 
