@@ -330,7 +330,7 @@ namespace QuantConnect.Tests
                 {"Total Fees", "$10.61"},
             };
 
-            var coarseFineFundamentalComboAlgorithmStatistics = new Dictionary<string, string>
+            var coarseFineFundamentalRegressionAlgorithmStatistics = new Dictionary<string, string>
             {
                 {"Total Trades", "6"},
                 {"Average Win", "0.18%"},
@@ -369,7 +369,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("UpdateOrderRegressionAlgorithm", updateOrderRegressionStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("HistoryAlgorithm", historyAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("CoarseFundamentalTop5Algorithm", coarseFundamentalTop5AlgorithmStatistics, Language.CSharp),
-                new AlgorithmStatisticsTestParameters("CoarseFineFundamentalComboAlgorithm", coarseFineFundamentalComboAlgorithmStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("CoarseFineFundamentalRegressionAlgorithm", coarseFineFundamentalRegressionAlgorithmStatistics, Language.CSharp),
 
                 // FSharp
                 // new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.FSharp),
