@@ -211,8 +211,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             // remove the subscription from our collection
             Subscription subscription;
-            if (!_subscriptions.TryGetValue(configuration, out subscription))
+            if (!_subscriptions.TryRemove(configuration, out subscription))
             {
+                Log.Error("LiveTradingDataFeed.RemoveSubscription(): Unable to remove: " + configuration.ToString());
                 return false;
             }
 
