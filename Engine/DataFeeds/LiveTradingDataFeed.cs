@@ -178,11 +178,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // for some reason we couldn't create the subscription
             if (subscription == null)
             {
-                Log.Trace("Unable to add subscription for: " + request.Security.Symbol.ToString());
+                Log.Trace("Unable to add subscription for: " + request.Configuration);
                 return false;
             }
 
-            Log.Trace("LiveTradingDataFeed.AddSubscription(): Added " + request.Security.Symbol.ToString());
+            Log.Trace("LiveTradingDataFeed.AddSubscription(): Added " + request.Configuration);
 
             _subscriptions.TryAdd(subscription);
 
@@ -237,7 +237,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _changes += SecurityChanges.Removed(security);
 
 
-            Log.Trace("LiveTradingDataFeed.RemoveSubscription(): Removed " + configuration.ToString());
+            Log.Trace("LiveTradingDataFeed.RemoveSubscription(): Removed " + configuration);
             UpdateFillForwardResolution();
 
             return true;
