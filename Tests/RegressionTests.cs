@@ -148,25 +148,25 @@ namespace QuantConnect.Tests
 
             var universeSelectionRegressionStatistics = new Dictionary<string, string>
             {
-                {"Total Trades", "4"},
+                {"Total Trades", "5"},
                 {"Average Win", "0.70%"},
                 {"Average Loss", "0%"},
-                {"Compounding Annual Return", "-56.034%"},
-                {"Drawdown", "3.800%"},
+                {"Compounding Annual Return", "-73.872%"},
+                {"Drawdown", "6.600%"},
                 {"Expectancy", "0"},
-                {"Net Profit", "-3.755%"},
-                {"Sharpe Ratio", "-3.629"},
+                {"Net Profit", "-6.060%"},
+                {"Sharpe Ratio", "-3.562"},
                 {"Loss Rate", "0%"},
                 {"Win Rate", "100%"},
                 {"Profit-Loss Ratio", "0"},
-                {"Alpha", "-0.424"},
-                {"Beta", "1.25"},
-                {"Annual Standard Deviation", "0.173"},
-                {"Annual Variance", "0.03"},
-                {"Information Ratio", "-3.62"},
-                {"Tracking Error", "0.128"},
+                {"Alpha", "-0.681"},
+                {"Beta", "2.014"},
+                {"Annual Standard Deviation", "0.284"},
+                {"Annual Variance", "0.08"},
+                {"Information Ratio", "-3.67"},
+                {"Tracking Error", "0.231"},
                 {"Treynor Ratio", "-0.502"},
-                {"Total Fees", "$2.00"}
+                {"Total Fees", "$5.00"}
             };
 
             var customDataRegressionStatistics = new Dictionary<string, string>
