@@ -258,7 +258,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var feed = RunDataFeed(algorithm);
 
             int count = 0;
-            bool receivedData = false;
+            //bool receivedData = false;
             var stopwatch = Stopwatch.StartNew();
             Console.WriteLine("start: " + DateTime.UtcNow.ToString("o"));
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
@@ -271,7 +271,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 if (ts.Slice.Count == 0) return;
 
                 count++;
-                receivedData = true;
+                //receivedData = true;
                 var time = ts.Slice.Min(x => x.Value.EndTime).ConvertToUtc(TimeZones.NewYork);
                 // make sure within 2 seconds
                 var delta = DateTime.UtcNow.Subtract(time);

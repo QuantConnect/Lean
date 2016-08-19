@@ -74,7 +74,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void ResetsProperly()
+        public void ResetsProperly2()
         {
             var min = new Minimum(3);
             min.Update(DateTime.Today, 1m);

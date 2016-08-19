@@ -93,7 +93,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void ResetsProperly()
+        public void ResetsProperly2()
         {
             var max = new Maximum(3);
             max.Update(DateTime.Today, 1m);

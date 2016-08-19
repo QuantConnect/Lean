@@ -398,7 +398,7 @@ namespace QuantConnect.Tests.Brokerages
         [Test, Ignore("This test requires reading the output and selection of a low volume security for the Brokerageage")]
         public void PartialFills()
         {
-            bool orderFilled = false;
+            //bool orderFilled = false;
             var manualResetEvent = new ManualResetEvent(false);
 
             var qty = 1000000;
@@ -412,7 +412,7 @@ namespace QuantConnect.Tests.Brokerages
                     Console.WriteLine("Remaining: " + remaining + " FillQuantity: " + orderEvent.FillQuantity);
                     if (orderEvent.Status == OrderStatus.Filled)
                     {
-                        orderFilled = true;
+                        //orderFilled = true;
                         manualResetEvent.Set();
                     }
                 }
