@@ -84,7 +84,6 @@ namespace QuantConnect.Tests.Common.Data
         public void CyclesUpAndDown()
         {
             RenkoBar bar = null;
-            int count = 0;
             int rcount = 0;
             var consolidator = new RenkoConsolidator(1m, x => x.Value, x => 0);
             consolidator.DataConsolidated += (sender, consolidated) =>

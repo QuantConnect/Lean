@@ -47,7 +47,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void ResetsProperly2()
+        public void ResetsProperlyStandardDeviation()
         {
             var std = new StandardDeviation(3);
             std.Update(DateTime.Today, 1m);
