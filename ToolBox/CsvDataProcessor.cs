@@ -29,7 +29,6 @@ namespace QuantConnect.ToolBox
     public class CsvDataProcessor : IDataProcessor
     {
         private const int TicksPerFlush = 50;
-        private static readonly object DirectoryCreateSync = new object();
         
         private readonly string _dataDirectory;
         private readonly Resolution _resolution;
@@ -94,11 +93,7 @@ namespace QuantConnect.ToolBox
                 .Replace(".zip", string.Empty);
             var path = Path.Combine(Path.Combine(_dataDirectory, relativePath), entry);
             var directory = new FileInfo(path).Directory.FullName;
-            if (!Directory.Exists(directory))
-            {
-                // lock before checking again
-                lock (DirectoryCreateSync) if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
-            }
+			Directory.CreateDirectory(directory);
 
             return new Writer(path, new StreamWriter(path));
         }

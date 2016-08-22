@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -33,7 +33,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>QuantConnect.ToolBox.CryptoiqDownloader.Program</StartupObject>
+    <StartupObject>QuantConnect.ToolBox.AlgoSeekOptionsConverter.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="IKVM.AWT.WinForms">
@@ -117,14 +117,6 @@
     <Reference Include="Ionic.Zip">
       <HintPath>..\packages\DotNetZip.1.9.3\lib\net20\Ionic.Zip.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="NodaTime, Version=1.3.0.0, Culture=neutral, PublicKeyToken=4226afe0d9b296d1, processorArchitecture=MSIL">
-      <HintPath>..\packages\NodaTime.1.3.1\lib\net35-Client\NodaTime.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="QuantConnect.Fxcm">
       <HintPath>..\Brokerages\Fxcm\QuantConnect.Fxcm.dll</HintPath>
     </Reference>
@@ -140,9 +132,14 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="NodaTime">
+      <HintPath>..\packages\NodaTime.1.3.2\lib\net35-Client\NodaTime.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsParser.cs" />
     <Compile Include="AlgoSeekOptionsConverter\Program.cs" />
     <Compile Include="Bz2StreamProvider.cs" />
     <Compile Include="CoarseUniverseGenerator\Program.cs" />
@@ -195,6 +192,11 @@
     <Compile Include="YahooDownloader\YahooDataDownloader.cs" />
     <Compile Include="CsvDataProcessor.cs" />
     <Compile Include="ZipStreamProvider.cs" />
+    <Compile Include="AlgoSeekOptionsConverter\InMemoryDataProcessor.cs" />
+    <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsReader.cs" />
+    <Compile Include="AlgoSeekOptionsConverter\Utilities.cs" />
+    <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsConverter.cs" />
+    <Compile Include="AlgoSeekOptionsConverter\TestMethods.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CoarseUniverseGenerator\config.json">
@@ -213,19 +215,19 @@
       <Name>QuantConnect.Brokerages</Name>
     </ProjectReference>
     <ProjectReference Include="..\Common\QuantConnect.csproj">
-      <Project>{2545c0b4-fabb-49c9-8dd1-9ad7ee23f86b}</Project>
+      <Project>{2545C0B4-FABB-49C9-8DD1-9AD7EE23F86B}</Project>
       <Name>QuantConnect</Name>
     </ProjectReference>
     <ProjectReference Include="..\Compression\QuantConnect.Compression.csproj">
-      <Project>{bc3bc77e-0502-43db-a727-b94f9765d74b}</Project>
+      <Project>{BC3BC77E-0502-43DB-A727-B94F9765D74B}</Project>
       <Name>QuantConnect.Compression</Name>
     </ProjectReference>
     <ProjectReference Include="..\Configuration\QuantConnect.Configuration.csproj">
-      <Project>{0aeb4ea3-28c8-476e-89fd-926f06590b4c}</Project>
+      <Project>{0AEB4EA3-28C8-476E-89FD-926F06590B4C}</Project>
       <Name>QuantConnect.Configuration</Name>
     </ProjectReference>
     <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj">
-      <Project>{01911409-86be-4e7d-9947-df714138610d}</Project>
+      <Project>{01911409-86BE-4E7D-9947-DF714138610D}</Project>
       <Name>QuantConnect.Logging</Name>
     </ProjectReference>
   </ItemGroup>
@@ -251,4 +253,7 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <ItemGroup>
+    <Folder Include="Tests\" />
+  </ItemGroup>
 </Project>

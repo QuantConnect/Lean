@@ -99,31 +99,36 @@ namespace QuantConnect.ToolBox
 
         private static IDataConsolidator CreateConsolidator(Resolution resolution, TickType tickType, BaseData data, bool sourceIsTick)
         {
-            var securityType = data.Symbol.ID.SecurityType;
-            switch (securityType)
-            {
-                case SecurityType.Base:
-                case SecurityType.Equity:
-                case SecurityType.Cfd:
-                case SecurityType.Forex:
-                    return new TickConsolidator(resolution.ToTimeSpan());
-
-                case SecurityType.Option:
-                    if (tickType == TickType.Trade)
-                    {
-                        return sourceIsTick
-                            ? new TickConsolidator(resolution.ToTimeSpan())
-                            : (IDataConsolidator) new TradeBarConsolidator(resolution.ToTimeSpan());
-                    }
-                    if (tickType == TickType.Quote)
-                    {
-                        return sourceIsTick
-                            ? new TickQuoteBarConsolidator(resolution.ToTimeSpan())
-                            : (IDataConsolidator) new QuoteBarConsolidator(resolution.ToTimeSpan());
-                    }
-                    break;
-            }
-            throw new NotImplementedException("Consolidator creation is not defined for " + securityType + " " + tickType);
+			return CreateConsolidator(resolution, tickType, data.Symbol, sourceIsTick);
         }
+
+		public static IDataConsolidator CreateConsolidator(Resolution resolution, TickType tickType, Symbol symbol, bool sourceIsTick = true)
+		{
+			var securityType =symbol.ID.SecurityType;
+			switch (securityType)
+			{
+			case SecurityType.Base:
+			case SecurityType.Equity:
+			case SecurityType.Cfd:
+			case SecurityType.Forex:
+				return new TickConsolidator(resolution.ToTimeSpan());
+
+			case SecurityType.Option:
+				if (tickType == TickType.Trade)
+				{
+					return sourceIsTick
+						? new TickConsolidator(resolution.ToTimeSpan())
+							: (IDataConsolidator) new TradeBarConsolidator(resolution.ToTimeSpan());
+				}
+				if (tickType == TickType.Quote)
+				{
+					return sourceIsTick
+						? new TickQuoteBarConsolidator(resolution.ToTimeSpan())
+							: (IDataConsolidator) new QuoteBarConsolidator(resolution.ToTimeSpan());
+				}
+				break;
+			}
+			throw new NotImplementedException("Consolidator creation is not defined for " + securityType + " " + tickType);
+		}
     }
 }
