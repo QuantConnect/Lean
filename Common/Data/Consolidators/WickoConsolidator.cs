@@ -26,15 +26,25 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Event handler that fires when a new piece of data is produced
         /// </summary>
-        public new EventHandler<WickoBar> DataConsolidated; 
-        
+        public new EventHandler<WickoBar> DataConsolidated;
+
         private WickoBar _currentBar;
 
         private readonly decimal _barSize;
         private readonly bool _evenBars;
         private readonly Func<IBaseData, decimal> _selector;
         private readonly Func<IBaseData, long> _volumeSelector;
-        
+
+        private bool firstTick = true;
+        private WickoBar lastWicko = null;
+
+        private DateTime openOn;
+        private DateTime closeOn;
+        private decimal openRate;
+        private decimal highRate;
+        private decimal lowRate;
+        private decimal closeRate;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="WickoConsolidator"/> class using the specified <paramref name="barSize"/>.
         /// The value selector will by default select <see cref="IBaseData.Value"/>
@@ -96,6 +106,43 @@ namespace QuantConnect.Data.Consolidators
             get { return typeof(WickoBar); }
         }
 
+        private void Rising(IBaseData data)
+        {
+            decimal limit;
+
+            while (closeRate > (limit = (openRate + BarSize)))
+            {
+                var wicko = new WickoBar(data.Symbol, data.Time,
+                    BarSize, openRate, limit, lowRate, limit);
+
+                lastWicko = wicko;
+
+                OnDataConsolidated(wicko);
+
+                openOn = closeOn;
+                openRate = limit;
+                lowRate = limit;
+            }
+        }
+
+        private void Falling(IBaseData data)
+        {
+            decimal limit;
+
+            while (closeRate < (limit = (openRate - BarSize)))
+            {
+                var wicko = new WickoBar(data.Symbol, data.Time,
+                    BarSize, openRate, highRate, limit, limit);
+
+                lastWicko = wicko;
+
+                OnDataConsolidated(wicko);
+
+                openOn = closeOn;
+                openRate = limit;
+                highRate = limit;
+            }
+        }
 
 
         /// <summary>
@@ -105,36 +152,88 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="data">The new data for the consolidator</param>
         public override void Update(IBaseData data)
         {
+            var rate = data.Price;
 
+            if (firstTick)
+            {
+                firstTick = false;
 
-            //var currentValue = _selector(data);
-            //var volume = _volumeSelector(data);
+                openOn = data.Time;
+                closeOn = data.Time;
+                openRate = rate;
+                highRate = rate;
+                lowRate = rate;
+                closeRate = rate;
+            }
+            else
+            {
+                closeOn = data.Time;
 
-            //decimal? close = null;
-            
-            //// if we're already in a bar then update it
-            //if (_currentBar != null)
-            //{
-            //    _currentBar.Update(data.Time, currentValue, volume);
+                if (rate > highRate)
+                    highRate = rate;
 
-            //    // if the update caused this bar to close, fire the event and reset the bar
-            //    if (_currentBar.IsClosed)
-            //    {
-            //        close = _currentBar.Close;
-            //        OnDataConsolidated(_currentBar);
-            //        _currentBar = null;
-            //    }
-            //}
+                if (rate < lowRate)
+                    lowRate = rate;
 
-            //if (_currentBar == null)
-            //{
-            //    var open = close ?? currentValue;
-            //    if (_evenBars && !close.HasValue)
-            //    {
-            //        open = Math.Ceiling(open/_barSize)*_barSize;
-            //    }
-            //    _currentBar = new WickoBar(data.Symbol, data.Time, _barSize, open, volume);
-            //}
+                closeRate = rate;
+
+                if (closeRate > openRate)
+                {
+                    if (lastWicko == null ||
+                        (lastWicko.Trend == Trend.Rising))
+                    {
+                        Rising(data);
+
+                        return;
+                    }
+
+                    var limit = (lastWicko.Open + BarSize);
+
+                    if (closeRate > limit)
+                    {
+                        var wicko = new WickoBar(data.Symbol, data.Time,
+                            BarSize, lastWicko.Open, limit, lowRate, limit);
+
+                        lastWicko = wicko;
+
+                        OnDataConsolidated(wicko);
+
+                        openOn = closeOn;
+                        openRate = limit;
+                        lowRate = limit;
+
+                        Rising(data);
+                    }
+                }
+                else if (closeRate < openRate)
+                {
+                    if (lastWicko == null ||
+                        (lastWicko.Trend == Trend.Falling))
+                    {
+                        Falling(data);
+
+                        return;
+                    }
+
+                    var limit = (lastWicko.Open - BarSize);
+
+                    if (closeRate < limit)
+                    {
+                        var wicko = new WickoBar(data.Symbol, data.Time,
+                            BarSize, lastWicko.Open, highRate, limit, limit);
+
+                        lastWicko = wicko;
+
+                        OnDataConsolidated(wicko);
+
+                        openOn = closeOn;
+                        openRate = limit;
+                        highRate = limit;
+
+                        Falling(data);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -176,7 +275,7 @@ namespace QuantConnect.Data.Consolidators
         /// not aggregate volume per bar.</param>
         /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
         public WickoConsolidator(decimal barSize, Func<TInput, decimal> selector, Func<TInput, long> volumeSelector = null, bool evenBars = true)
-            : base(barSize, x => selector((TInput)x), volumeSelector == null ? (Func<IBaseData, long>) null : x => volumeSelector((TInput)x), evenBars)
+            : base(barSize, x => selector((TInput)x), volumeSelector == null ? (Func<IBaseData, long>)null : x => volumeSelector((TInput)x), evenBars)
         {
         }
 

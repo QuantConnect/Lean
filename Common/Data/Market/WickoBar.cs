@@ -137,6 +137,19 @@ namespace QuantConnect.Data.Market
             Low = open;
         }
 
+        public Trend Trend
+        {
+            get
+            {
+                if (Open < Close)
+                    return Trend.Rising;
+                else if (Open > Close)
+                    return Trend.Falling;
+                else
+                    return Trend.NoDelta;
+            }
+        }
+
         /// <summary>
         /// Updates this <see cref="WickoBar"/> with the specified values and returns whether or not this bar is closed
         /// </summary>
