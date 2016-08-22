@@ -101,7 +101,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     member.Cache.Reset();
                     foreach (var subscription in universe.GetSubscriptionRequests(member, dateTimeUtc, algorithmEndDateUtc))
                     {
-                        _dataFeed.RemoveSubscription(subscription.Configuration);
+                        if (subscription.IsUniverseSubscription)
+                        {
+                            removals.Remove(member);
+                        }
+                        else
+                        {
+                            _dataFeed.RemoveSubscription(subscription.Configuration);
+                        }
                     }
 
                     // remove symbol mappings for symbols removed from universes // TODO : THIS IS BAD!
