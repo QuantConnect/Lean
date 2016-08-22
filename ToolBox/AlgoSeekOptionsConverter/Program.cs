@@ -52,7 +52,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
 			AlgoSeekOptionsConverter.ConvertToFineResolution(sourceDirectory, destinationDirectory, flushInterval);
 			sw.Stop();
 
-//			AlgoSeekOptionsConverter.ExtractSymbol("goog", "/cache/TestData/RawAll/20151224", "/cache/TestData/RawGoog/20151224");
+//			git aAlgoSeekOptionsConverter.ExtractSymbol("goog", "/cache/TestData/RawAll/20151224", "/cache/TestData/RawGoog/20151224");
 
 			Log.Trace(String.Format("Conversion finished in time: {0}", sw.Elapsed));
             
