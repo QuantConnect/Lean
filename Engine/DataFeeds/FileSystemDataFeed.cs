@@ -229,6 +229,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>True if the subscription was successfully removed, false otherwise</returns>
         public bool RemoveSubscription(SubscriptionDataConfig configuration)
         {
+            // remove the subscription from our collection
             Subscription subscription;
             if (!_subscriptions.TryRemove(configuration, out subscription))
             {
