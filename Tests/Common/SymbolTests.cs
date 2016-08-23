@@ -86,7 +86,7 @@ namespace QuantConnect.Tests.Common
 
         [Test]
         public void UsesSidForDictionaryKey()
-        {
+        {   
             var sid = SecurityIdentifier.GenerateEquity("SPY", Market.USA);
             var dictionary = new Dictionary<Symbol, int>
             {
@@ -105,6 +105,54 @@ namespace QuantConnect.Tests.Common
             var json = JsonConvert.SerializeObject(expected, Settings);
             var actual = JsonConvert.DeserializeObject<Symbol>(json, Settings);
             Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void CreatesOptionWithUnderlying()
+        {
+            var option = Symbol.CreateOption("XLRE", Market.USA, OptionStyle.American, OptionRight.Call, 21m, new DateTime(2016, 08, 19));
+
+            Assert.AreEqual(option.ID.Date, new DateTime(2016, 08, 19));
+            Assert.AreEqual(option.ID.StrikePrice, 21m);
+            Assert.AreEqual(option.ID.OptionRight, OptionRight.Call);
+            Assert.AreEqual(option.ID.OptionStyle, OptionStyle.American);
+            Assert.AreEqual(option.Underlying.ID.Symbol, "XLRE");
+
+        }
+        [Test]
+        public void SurvivesRoundtripSerializationOption()
+        {
+            var expected = Symbol.CreateOption("XLRE", Market.USA, OptionStyle.American, OptionRight.Call, 21m, new DateTime(2016, 08, 19));
+
+            var json = JsonConvert.SerializeObject(expected, Settings);
+            var actual = JsonConvert.DeserializeObject<Symbol>(json, Settings);
+            Assert.AreEqual(expected, actual);
+
+            Assert.AreEqual(expected.ID, actual.ID);
+            Assert.AreEqual(expected.Value, actual.Value);
+            Assert.AreEqual(expected.ID.Date, actual.ID.Date);
+            Assert.AreEqual(expected.ID.StrikePrice, actual.ID.StrikePrice);
+            Assert.AreEqual(expected.ID.OptionRight, actual.ID.OptionRight);
+            Assert.AreEqual(expected.ID.OptionStyle, actual.ID.OptionStyle);
+
+            Assert.AreEqual(expected.Underlying.ID, actual.Underlying.ID);
+            Assert.AreEqual(expected.Underlying.Value, actual.Underlying.Value);
+        }
+
+        [Test]
+        public void SurvivesRoundtripSerializationCanonicalOption()
+        {
+            var expected = Symbol.Create("SPY", SecurityType.Option, Market.USA);
+
+            var json = JsonConvert.SerializeObject(expected, Settings);
+            var actual = JsonConvert.DeserializeObject<Symbol>(json, Settings);
+            Assert.AreEqual(expected, actual);
+
+            Assert.AreEqual(SecurityIdentifier.DefaultDate, actual.ID.Date);
+            Assert.AreEqual(0m, actual.ID.StrikePrice);
+            Assert.AreEqual(default(OptionRight), actual.ID.OptionRight);
+            Assert.AreEqual(default(OptionStyle), actual.ID.OptionStyle);
+            Assert.AreNotEqual(default(Symbol), actual.Underlying);
         }
 
         [Test]

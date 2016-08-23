@@ -46,6 +46,7 @@ namespace QuantConnect
         public static Symbol Create(string ticker, SecurityType securityType, string market, string alias = null)
         {
             SecurityIdentifier sid;
+            Symbol underlyingSumbol = null;
             switch (securityType)
             {
                 case SecurityType.Base:
@@ -62,8 +63,9 @@ namespace QuantConnect
                     break;
                 case SecurityType.Option:
                     alias = alias ?? "?" + ticker.ToUpper();
-                    var underlying = SecurityIdentifier.GenerateEquity(ticker, market);
-                    sid = SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, underlying, market, 0, default(OptionRight), default(OptionStyle));
+                    var underlyingSid = SecurityIdentifier.GenerateEquity(ticker, market);
+                    sid = SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, underlyingSid, market, 0, default(OptionRight), default(OptionStyle));
+                    underlyingSumbol = new Symbol(underlyingSid, ticker);
                     break;
                 case SecurityType.Commodity:
                 case SecurityType.Future:
@@ -71,7 +73,7 @@ namespace QuantConnect
                     throw new NotImplementedException("The security type has not been implemented yet: " + securityType);
             }
 
-            return new Symbol(sid, alias ?? ticker);
+            return new Symbol(sid, alias ?? ticker, underlyingSumbol);
         }
 
         /// <summary>
@@ -90,11 +92,14 @@ namespace QuantConnect
         {
             var underlyingSid = SecurityIdentifier.GenerateEquity(underlying, market);
             var sid = SecurityIdentifier.GenerateOption(expiry, underlyingSid, market, strike, right, style);
+            var underlyingSumbol = new Symbol(underlyingSid, underlying);
+
             var sym = sid.Symbol;
             if (sym.Length > 5) sym += " ";
             // format spec: http://www.optionsclearing.com/components/docs/initiatives/symbology/symbology_initiative_v1_8.pdf
             alias = alias ?? string.Format("{0,-6}{1}{2}{3:00000000}", sym, sid.Date.ToString(DateFormat.SixCharacter), sid.OptionRight.ToString()[0], sid.StrikePrice * 1000m);
-            return new Symbol(sid, alias);
+
+            return new Symbol(sid, alias, underlyingSumbol); 
         }
 
         #region Properties
@@ -108,6 +113,20 @@ namespace QuantConnect
         /// Gets the security identifier for this symbol
         /// </summary>
         public SecurityIdentifier ID { get; private set; }
+
+        /// <summary>
+        /// Gets whether or not this <see cref="Symbol"/> is a derivative,
+        /// that is, it has a valid <see cref="Underlying"/> property
+        /// </summary>
+        public bool HasUnderlying
+        {
+            get { return !ReferenceEquals(Underlying, null); }
+        }
+
+        /// <summary>
+        /// Gets the security underlying symbol, if any
+        /// </summary>
+        public Symbol Underlying { get; private set; }
 
         #endregion
 
@@ -126,6 +145,23 @@ namespace QuantConnect
             }
             ID = sid;
             Value = value.ToUpper();
+        }
+
+        /// <summary>
+        /// Priviate constructor initializes a new instance of the <see cref="Symbol"/> class with underlying
+        /// </summary>
+        /// <param name="sid">The security identifier for this symbol</param>
+        /// <param name="value">The current ticker symbol value</param>
+        /// <param name="underlying">The underlying symbol</param>
+        internal Symbol(SecurityIdentifier sid, string value, Symbol underlying)
+        {
+            if (value == null)
+            {
+                throw new ArgumentNullException("value");
+            }
+            ID = sid;
+            Value = value.ToUpper();
+            Underlying = underlying;
         }
 
         #endregion
