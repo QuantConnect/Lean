@@ -47,7 +47,7 @@ namespace QuantConnect.Data.UniverseSelection
                     security: security,
                     configuration: configurationPerSymbol ? new SubscriptionDataConfig(prefilteredSecond.Configuration, symbol: security.Symbol) : prefilteredSecond.Configuration,
                     startTimeUtc: currentTimeUtc - prefilteredSecond.Configuration.Resolution.ToTimeSpan(),
-                    endTimeUtc: currentTimeUtc
+                    endTimeUtc: currentTimeUtc.AddSeconds(-1)
                     ));
             });
         }
