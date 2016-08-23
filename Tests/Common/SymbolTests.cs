@@ -49,6 +49,23 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(expected, symbol.Value);
         }
 
+        [Theory]
+        [TestCaseSource("GetSymbolCreateTestCaseData")]
+        public void SymbolCreate(string ticker, SecurityType securityType, string market, Symbol expected)
+        {
+            Assert.AreEqual(Symbol.Create(ticker, securityType, market), expected);
+        }
+
+        private TestCaseData[] GetSymbolCreateTestCaseData()
+        {
+            return new []
+            {
+                new TestCaseData("SPY", SecurityType.Equity, Market.USA, new Symbol(SecurityIdentifier.GenerateEquity("SPY", Market.USA), "SPY")),
+                new TestCaseData("EURUSD", SecurityType.Forex, Market.FXCM, new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD")),
+                new TestCaseData("SPY", SecurityType.Option, Market.USA, new Symbol(SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, Symbols.SPY.ID, Market.USA, 0, default(OptionRight), default(OptionStyle)), "?SPY"))
+            };
+        }
+
         [Test]
         public void SymbolCreateWithOptionSecurityTypeCreatesCanonicalOptionSymbol()
         {
@@ -246,7 +263,7 @@ namespace QuantConnect.Tests.Common
         {
 #pragma warning disable 0618 // This test requires implicit operators
             // this doesn't exist in the symbol cache
-            var eurusd = new Symbol(SecurityIdentifier.GenerateForex("NOT A SECURITY", Market.FXCM), "EURUSD");
+            var eurusd = new Symbol(SecurityIdentifier.GenerateForex("NOT-A-SECURITY", Market.FXCM), "EURUSD");
             string stringEurusd = eurusd;
             Assert.AreEqual(eurusd.ID.ToString(), stringEurusd);
 
