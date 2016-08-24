@@ -70,7 +70,7 @@ namespace QuantConnect.Brokerages
             if (order.Type == OrderType.MarketOnOpen || order.Type == OrderType.MarketOnClose)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    "This model only supports Market orders. No MarketOnOpen or MarketOnClose order supported."
+                    "This model only supports Market orders. MarketOnOpen or MarketOnClose orders not supported."
                     );
 
                 return false;
