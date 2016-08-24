@@ -115,9 +115,8 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                         var optionRight = csv[5][0] == 'P' ? OptionRight.Put : OptionRight.Call;
                         var expiry = DateTime.ParseExact(csv[6], "yyyyMMdd", null);
                         var strike = csv[7].ToDecimal()/10000m;
-                        var optionStyle = OptionStyle.American; // couldn't see this specified in the file, maybe need a reference file
-                        var sid = SecurityIdentifier.GenerateOption(expiry, underlying, Market.USA, strike, optionRight, optionStyle);
-                        var symbol = new Symbol(sid, underlying);
+                        const OptionStyle optionStyle = OptionStyle.American; // couldn't see this specified in the file, maybe need a reference file
+                        var symbol = Symbol.CreateOption(underlying, Market.USA, optionStyle, optionRight, strike, expiry);
                         
                         var price = csv[9].ToDecimal() / 10000m;
                         var quantity = csv[8].ToInt32();
