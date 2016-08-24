@@ -67,6 +67,15 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
+            if (order.Type == OrderType.MarketOnOpen || order.Type == OrderType.MarketOnClose)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    "This model only supports Market orders. No MarketOnOpen or MarketOnClose order supported."
+                    );
+
+                return false;
+            }
+
             if (!CanExecuteOrder(security, order))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "ExtendedMarket",
