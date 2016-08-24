@@ -344,6 +344,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 if (request.Universe is UserDefinedUniverse)
                 {
+                    // Trigger universe selection when security added manually after Initialize
+                    var universe = (UserDefinedUniverse) request.Universe;
+                    universe.CollectionChanged += (sender, args) =>
+                    {
+                        if (args.NewItems == null) return;
+
+                        var symbol = args.NewItems.OfType<Symbol>().FirstOrDefault();
+                        if (symbol == null) return;
+
+                        var collection = new BaseDataCollection(_frontierUtc, symbol);
+                        var changes = _universeSelection.ApplyUniverseSelection(universe, _frontierUtc, collection);
+                        _algorithm.OnSecuritiesChanged(changes);
+                    };
+
                     return new UserDefinedUniverseSubscriptionEnumeratorFactory(request.Universe as UserDefinedUniverse, MarketHoursDatabase.FromDataFolder());
                 }
                 if (request.Configuration.Type == typeof (CoarseFundamental))
