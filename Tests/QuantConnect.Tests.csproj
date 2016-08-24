@@ -118,6 +118,7 @@
     <Compile Include="Common\Data\Market\TickTests.cs" />
     <Compile Include="Common\Data\Market\TradeBarTests.cs" />
     <Compile Include="Common\Data\QuoteBarConsolidatorTests.cs" />
+    <Compile Include="Common\Data\WickoConsolidatorTests.cs" />
     <Compile Include="Common\Data\SliceTests.cs" />
     <Compile Include="Common\Data\SubscriptionDataSourceTests.cs" />
     <Compile Include="Common\Data\TickQuoteBarConsolidatorTests.cs" />

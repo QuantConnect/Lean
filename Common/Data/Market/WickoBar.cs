@@ -99,42 +99,21 @@ namespace QuantConnect.Data.Market
         /// <param name="time">The start time of the bar</param>
         /// <param name="brickSize">The size of each wicko brick</param>
         /// <param name="open">The opening price for the new bar</param>
-        /// <param name="volume">Any initial volume associated with the data</param>
-        public WickoBar(Symbol symbol, DateTime time, decimal brickSize, decimal open, long volume)
-        {
-            Symbol = symbol;
-            Start = time;
-            EndTime = time;
-            BrickSize = brickSize;
-            Open = open;
-            Close = open;
-            Volume = 0;
-            High = open;
-            Low = open;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="WickoBar"/> class with the specified values
-        /// </summary>
-        /// <param name="symbol">The symbol of this data</param>
-        /// <param name="time">The start time of the bar</param>
-        /// <param name="brickSize">The size of each wicko brick</param>
-        /// <param name="open">The opening price for the new bar</param>
         /// <param name="high">The high price for the new bar</param>
         /// <param name="low">The low price for the new bar</param>
         /// <param name="close">The closing price for the new bar</param>
-        public WickoBar(Symbol symbol, DateTime time, decimal brickSize,
-            decimal open, decimal high, decimal low, decimal close)
+        public WickoBar(Symbol symbol, DateTime start, DateTime endTime,
+            decimal brickSize, decimal open, decimal high, decimal low, decimal close)
         {
             Symbol = symbol;
-            Start = time;
-            EndTime = time;
+            Start = start;
+            EndTime = endTime;
             BrickSize = brickSize;
             Open = open;
-            Close = open;
+            Close = close;
             Volume = 0;
-            High = open;
-            Low = open;
+            High = high;
+            Low = low;
         }
 
         public Trend Trend
@@ -149,6 +128,15 @@ namespace QuantConnect.Data.Market
                     return Trend.NoDelta;
             }
         }
+
+        public decimal Spread
+        {
+            get
+            {
+                return Math.Abs(Close - Open);
+            }
+        }
+        
 
         /// <summary>
         /// Updates this <see cref="WickoBar"/> with the specified values and returns whether or not this bar is closed

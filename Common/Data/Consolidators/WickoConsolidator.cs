@@ -31,9 +31,7 @@ namespace QuantConnect.Data.Consolidators
         private WickoBar _currentBar;
 
         private readonly decimal _barSize;
-        private readonly bool _evenBars;
         private readonly Func<IBaseData, decimal> _selector;
-        private readonly Func<IBaseData, long> _volumeSelector;
 
         private bool firstTick = true;
         private WickoBar lastWicko = null;
@@ -56,8 +54,6 @@ namespace QuantConnect.Data.Consolidators
         {
             _barSize = barSize;
             _selector = x => x.Value;
-            _volumeSelector = x => 0;
-            _evenBars = evenBars;
         }
 
         /// <summary>
@@ -66,10 +62,7 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="barSize">The size of each bar in units of the value produced by <paramref name="selector"/></param>
         /// <param name="selector">Extracts the value from a data instance to be formed into a <see cref="WickoBar"/>. The default
         /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
-        /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does 
-        /// not aggregate volume per bar.</param>
-        /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
-        public WickoConsolidator(decimal barSize, Func<IBaseData, decimal> selector, Func<IBaseData, long> volumeSelector = null, bool evenBars = true)
+        public WickoConsolidator(decimal barSize, Func<IBaseData, decimal> selector)
         {
             if (barSize < Extensions.GetDecimalEpsilon())
             {
@@ -77,9 +70,7 @@ namespace QuantConnect.Data.Consolidators
             }
 
             _barSize = barSize;
-            _evenBars = evenBars;
             _selector = selector ?? (x => x.Value);
-            _volumeSelector = volumeSelector ?? (x => 0);
         }
 
         /// <summary>
@@ -95,6 +86,7 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         public override BaseData WorkingData
         {
+            // TODO: Should this be NULL?
             get { return _currentBar == null ? null : _currentBar.Clone(); }
         }
 
@@ -106,13 +98,22 @@ namespace QuantConnect.Data.Consolidators
             get { return typeof(WickoBar); }
         }
 
+        public WickoBar OpenWickoBar
+        {
+            get
+            {
+                return new WickoBar(null, openOn, closeOn,
+                    BarSize, openRate, highRate, lowRate, lowRate);
+            }
+        }
+
         private void Rising(IBaseData data)
         {
             decimal limit;
 
             while (closeRate > (limit = (openRate + BarSize)))
             {
-                var wicko = new WickoBar(data.Symbol, data.Time,
+                var wicko = new WickoBar(data.Symbol, openOn, closeOn,
                     BarSize, openRate, limit, lowRate, limit);
 
                 lastWicko = wicko;
@@ -131,7 +132,7 @@ namespace QuantConnect.Data.Consolidators
 
             while (closeRate < (limit = (openRate - BarSize)))
             {
-                var wicko = new WickoBar(data.Symbol, data.Time,
+                var wicko = new WickoBar(data.Symbol, openOn, closeOn,
                     BarSize, openRate, highRate, limit, limit);
 
                 lastWicko = wicko;
@@ -191,7 +192,7 @@ namespace QuantConnect.Data.Consolidators
 
                     if (closeRate > limit)
                     {
-                        var wicko = new WickoBar(data.Symbol, data.Time,
+                        var wicko = new WickoBar(data.Symbol, openOn, closeOn,
                             BarSize, lastWicko.Open, limit, lowRate, limit);
 
                         lastWicko = wicko;
@@ -219,7 +220,7 @@ namespace QuantConnect.Data.Consolidators
 
                     if (closeRate < limit)
                     {
-                        var wicko = new WickoBar(data.Symbol, data.Time,
+                        var wicko = new WickoBar(data.Symbol, openOn, closeOn,
                             BarSize, lastWicko.Open, highRate, limit, limit);
 
                         lastWicko = wicko;
@@ -271,11 +272,8 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="barSize">The size of each bar in units of the value produced by <paramref name="selector"/></param>
         /// <param name="selector">Extracts the value from a data instance to be formed into a <see cref="WickoBar"/>. The default
         /// value is (x => x.Value) the <see cref="IBaseData.Value"/> property on <see cref="IBaseData"/></param>
-        /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does 
-        /// not aggregate volume per bar.</param>
-        /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
-        public WickoConsolidator(decimal barSize, Func<TInput, decimal> selector, Func<TInput, long> volumeSelector = null, bool evenBars = true)
-            : base(barSize, x => selector((TInput)x), volumeSelector == null ? (Func<IBaseData, long>)null : x => volumeSelector((TInput)x), evenBars)
+        public WickoConsolidator(decimal barSize, Func<TInput, decimal> selector)
+            : base(barSize, x => selector((TInput)x))
         {
         }
 
@@ -285,9 +283,8 @@ namespace QuantConnect.Data.Consolidators
         /// The volume selector will by default select zero.
         /// </summary>
         /// <param name="barSize">The constant value size of each bar</param>
-        /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
-        public WickoConsolidator(decimal barSize, bool evenBars = true)
-            : base(barSize, evenBars)
+        public WickoConsolidator(decimal barSize)
+            : base(barSize)
         {
         }
 
