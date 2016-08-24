@@ -1645,8 +1645,6 @@ namespace QuantConnect.Brokerages.Tradier
             switch (type)
             {
                 case OrderType.Market:
-                case OrderType.MarketOnOpen:
-                case OrderType.MarketOnClose:
                     return TradierOrderType.Market;
 
                 case OrderType.Limit:
@@ -1895,7 +1893,7 @@ namespace QuantConnect.Brokerages.Tradier
                 case OrderType.StopLimit:
                     return TradierOrderType.StopLimit;
                 default:
-                    throw new ArgumentOutOfRangeException(order.Type + " not supported");
+                    throw new ArgumentOutOfRangeException("type", order.Type, order.Type + " not supported");
             }
         }
 
