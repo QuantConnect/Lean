@@ -500,6 +500,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var enqueueable = new EnqueueableEnumerator<BaseData>();
                 _customExchange.AddEnumerator(new EnumeratorHandler(config.Symbol, enumerator, enqueueable));
                 enumerator = enqueueable;
+
+                // Trigger universe selection when security added manually after Initialize
+                userDefined.CollectionChanged += (sender, args) =>
+                {
+                    if (args.NewItems == null) return;
+
+                    var symbol = args.NewItems.OfType<Symbol>().FirstOrDefault();
+                    if (symbol == null) return;
+
+                    var collection = new BaseDataCollection(_frontierUtc, symbol);
+                    var changes = _universeSelection.ApplyUniverseSelection(userDefined, _frontierUtc, collection);
+                    _algorithm.OnSecuritiesChanged(changes);
+                };
             }
             else if (config.Type == typeof (CoarseFundamental))
             {
