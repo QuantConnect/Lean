@@ -664,7 +664,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             // verify that our current brokerage can actually take the order
             BrokerageMessageEvent message;
-            if (!_algorithm.LiveMode && !_algorithm.BrokerageModel.CanSubmitOrder(security, order, out message))
+            if (!_algorithm.BrokerageModel.CanSubmitOrder(security, order, out message))
             {
                 // if we couldn't actually process the order, mark it as invalid and bail
                 order.Status = OrderStatus.Invalid;

@@ -1895,7 +1895,7 @@ namespace QuantConnect.Brokerages.Tradier
                 case OrderType.StopLimit:
                     return TradierOrderType.StopLimit;
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(order.Type + " not supported");
             }
         }
 
