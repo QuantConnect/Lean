@@ -504,7 +504,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // Trigger universe selection when security added manually after Initialize
                 userDefined.CollectionChanged += (sender, args) =>
                 {
-                    if (args.NewItems == null) return;
+                    if (args.NewItems == null || _frontierUtc == DateTime.MinValue) return;
 
                     var symbol = args.NewItems.OfType<Symbol>().FirstOrDefault();
                     if (symbol == null) return;

@@ -348,7 +348,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var universe = (UserDefinedUniverse) request.Universe;
                     universe.CollectionChanged += (sender, args) =>
                     {
-                        if (args.NewItems == null) return;
+                        if (args.NewItems == null || _frontierUtc == DateTime.MinValue) return;
 
                         var symbol = args.NewItems.OfType<Symbol>().FirstOrDefault();
                         if (symbol == null) return;
