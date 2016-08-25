@@ -109,7 +109,7 @@ namespace QuantConnect.Data
             set
             {
                 _mappedSymbol = value;
-                _symbol = new Symbol(_sid, value);
+                _symbol = new Symbol(_sid, value, _symbol.Underlying);
             }
         }
 
@@ -175,6 +175,7 @@ namespace QuantConnect.Data
             SecurityType = symbol.ID.SecurityType;
             Resolution = resolution;
             _sid = symbol.ID;
+            _symbol = symbol;
             FillDataForward = fillForward;
             ExtendedMarketHours = extendedHours;
             PriceScaleFactor = 1;

@@ -118,7 +118,8 @@ namespace QuantConnect.Data.UniverseSelection
                     break;
                 
                 case SecurityType.Option:
-                    sid = SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, ticker, market, 0, 0, 0);
+                    var underlying = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, ticker, market);
+                    sid = SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, underlying, market, 0, 0, 0);
                     break;
                 
                 case SecurityType.Forex:

@@ -174,7 +174,7 @@ namespace QuantConnect.Util
 
                 case SecurityType.Option:
                     // options uses the underlying symbol for pathing
-                    return !isHourOrDaily ? Path.Combine(directory, symbol.ID.Symbol.ToLower()) : directory;
+                    return !isHourOrDaily ? Path.Combine(directory, symbol.Underlying.Value.ToLower()) : directory;
 
                 case SecurityType.Commodity:
                 case SecurityType.Future:
@@ -237,7 +237,7 @@ namespace QuantConnect.Util
                     if (isHourOrDaily)
                     {
                         return string.Join("_",
-                            symbol.ID.Symbol.ToLower(), // underlying
+                            symbol.Underlying.Value.ToLower(), // underlying
                             tickType.ToLower(),
                             symbol.ID.OptionStyle.ToLower(),
                             symbol.ID.OptionRight.ToLower(),
@@ -248,7 +248,7 @@ namespace QuantConnect.Util
 
                     return string.Join("_",
                         formattedDate,
-                        symbol.ID.Symbol.ToLower(), // underlying
+                        symbol.Underlying.Value.ToLower(), // underlying
                         resolution.ToLower(),
                         tickType.ToLower(),
                         symbol.ID.OptionStyle.ToLower(),
@@ -321,7 +321,7 @@ namespace QuantConnect.Util
                     if (isHourOrDaily)
                     {
                         return string.Format("{0}_{1}_{2}.zip", 
-                            symbol.ID.Symbol.ToLower(), // underlying
+                            symbol.Underlying.Value.ToLower(), // underlying
                             tickTypeString,
                             symbol.ID.OptionStyle.ToLower()
                             );

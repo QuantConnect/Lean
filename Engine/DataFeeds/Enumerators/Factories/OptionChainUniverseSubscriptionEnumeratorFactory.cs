@@ -61,7 +61,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         {
             // canonical also needs underlying price data
             var config = request.Configuration;
-            var underlying = Symbol.Create(config.Symbol.ID.Symbol, SecurityType.Equity, config.Market);
+            var underlying = config.Symbol.Underlying;
             var resolution = config.Resolution == Resolution.Tick ? Resolution.Second : config.Resolution;
             return new[]
             {
