@@ -331,6 +331,20 @@ namespace QuantConnect.Lean.Engine
                 // process fill models on the updated data before entering algorithm, applies to all non-market orders
                 transactions.ProcessSynchronousEvents();
 
+                if (delistingTickets.Count != 0)
+                {
+                    for (int i = 0; i < delistingTickets.Count; i++)
+                    {
+                        var ticket = delistingTickets[i];
+                        if (ticket.Status == OrderStatus.Filled)
+                        {
+                            algorithm.RemoveSecurity(ticket.Symbol);
+                            delistingTickets.RemoveAt(i--);
+                            Log.Trace("AlgorithmManager.Run(): Delisted Security removed: " + ticket.Symbol.ToString());
+                        }
+                    }
+                }
+
                 //Check if the user's signalled Quit: loop over data until day changes.
                 if (algorithm.Status == AlgorithmStatus.Stopped)
                 {
@@ -846,7 +860,11 @@ namespace QuantConnect.Lean.Engine
                 {
                     Log.Trace("AlgorithmManager.Run(): Security delisting warning: " + delisting.Symbol.ToString());
                     var security = algorithm.Securities[delisting.Symbol];
-                    if (security.Holdings.Quantity == 0) continue;
+                    if (security.Holdings.Quantity == 0)
+                    {
+                        algorithm.RemoveSecurity(delisting.Symbol);
+                        continue;
+                    }
                     var submitOrderRequest = new SubmitOrderRequest(OrderType.MarketOnClose, security.Type, security.Symbol,
                         -security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Liquidate from delisting");
                     var ticket = algorithm.Transactions.ProcessRequest(submitOrderRequest);
@@ -856,7 +874,7 @@ namespace QuantConnect.Lean.Engine
                 else
                 {
                     Log.Trace("AlgorithmManager.Run(): Security delisted: " + delisting.Symbol.ToString());
-                    algorithm.Securities.Remove(delisting.Symbol);
+                    algorithm.RemoveSecurity(delisting.Symbol);
                     Log.Trace("AlgorithmManager.Run(): Security removed: " + delisting.Symbol.ToString());
                 }
             }
