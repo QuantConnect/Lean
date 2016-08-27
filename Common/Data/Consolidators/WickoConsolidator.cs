@@ -33,15 +33,15 @@ namespace QuantConnect.Data.Consolidators
         private readonly decimal _barSize;
         private readonly Func<IBaseData, decimal> _selector;
 
-        private bool firstTick = true;
-        private WickoBar lastWicko = null;
+        private bool _firstTick = true;
+        private WickoBar _lastWicko = null;
 
-        private DateTime openOn;
-        private DateTime closeOn;
-        private decimal openRate;
-        private decimal highRate;
-        private decimal lowRate;
-        private decimal closeRate;
+        private DateTime _openOn;
+        private DateTime _closeOn;
+        private decimal _openRate;
+        private decimal _highRate;
+        private decimal _lowRate;
+        private decimal _closeRate;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WickoConsolidator"/> class using the specified <paramref name="barSize"/>.
@@ -101,8 +101,8 @@ namespace QuantConnect.Data.Consolidators
         {
             get
             {
-                return new WickoBar(null, openOn, closeOn,
-                    BarSize, openRate, highRate, lowRate, closeRate);
+                return new WickoBar(null, _openOn, _closeOn,
+                    BarSize, _openRate, _highRate, _lowRate, _closeRate);
             }
         }
 
@@ -110,18 +110,18 @@ namespace QuantConnect.Data.Consolidators
         {
             decimal limit;
 
-            while (closeRate > (limit = (openRate + BarSize)))
+            while (_closeRate > (limit = (_openRate + BarSize)))
             {
-                var wicko = new WickoBar(data.Symbol, openOn, closeOn,
-                    BarSize, openRate, limit, lowRate, limit);
+                var wicko = new WickoBar(data.Symbol, _openOn, _closeOn,
+                    BarSize, _openRate, limit, _lowRate, limit);
 
-                lastWicko = wicko;
+                _lastWicko = wicko;
 
                 OnDataConsolidated(wicko);
 
-                openOn = closeOn;
-                openRate = limit;
-                lowRate = limit;
+                _openOn = _closeOn;
+                _openRate = limit;
+                _lowRate = limit;
             }
         }
 
@@ -129,18 +129,18 @@ namespace QuantConnect.Data.Consolidators
         {
             decimal limit;
 
-            while (closeRate < (limit = (openRate - BarSize)))
+            while (_closeRate < (limit = (_openRate - BarSize)))
             {
-                var wicko = new WickoBar(data.Symbol, openOn, closeOn,
-                    BarSize, openRate, highRate, limit, limit);
+                var wicko = new WickoBar(data.Symbol, _openOn, _closeOn,
+                    BarSize, _openRate, _highRate, limit, limit);
 
-                lastWicko = wicko;
+                _lastWicko = wicko;
 
                 OnDataConsolidated(wicko);
 
-                openOn = closeOn;
-                openRate = limit;
-                highRate = limit;
+                _openOn = _closeOn;
+                _openRate = limit;
+                _highRate = limit;
             }
         }
 
@@ -153,81 +153,81 @@ namespace QuantConnect.Data.Consolidators
         {
             var rate = data.Price;
 
-            if (firstTick)
+            if (_firstTick)
             {
-                firstTick = false;
+                _firstTick = false;
 
-                openOn = data.Time;
-                closeOn = data.Time;
-                openRate = rate;
-                highRate = rate;
-                lowRate = rate;
-                closeRate = rate;
+                _openOn = data.Time;
+                _closeOn = data.Time;
+                _openRate = rate;
+                _highRate = rate;
+                _lowRate = rate;
+                _closeRate = rate;
             }
             else
             {
-                closeOn = data.Time;
+                _closeOn = data.Time;
 
-                if (rate > highRate)
-                    highRate = rate;
+                if (rate > _highRate)
+                    _highRate = rate;
 
-                if (rate < lowRate)
-                    lowRate = rate;
+                if (rate < _lowRate)
+                    _lowRate = rate;
 
-                closeRate = rate;
+                _closeRate = rate;
 
-                if (closeRate > openRate)
+                if (_closeRate > _openRate)
                 {
-                    if (lastWicko == null ||
-                        (lastWicko.Trend == WickoBarTrend.Rising))
+                    if (_lastWicko == null ||
+                        (_lastWicko.Trend == WickoBarTrend.Rising))
                     {
                         Rising(data);
 
                         return;
                     }
 
-                    var limit = (lastWicko.Open + BarSize);
+                    var limit = (_lastWicko.Open + BarSize);
 
-                    if (closeRate > limit)
+                    if (_closeRate > limit)
                     {
-                        var wicko = new WickoBar(data.Symbol, openOn, closeOn,
-                            BarSize, lastWicko.Open, limit, lowRate, limit);
+                        var wicko = new WickoBar(data.Symbol, _openOn, _closeOn,
+                            BarSize, _lastWicko.Open, limit, _lowRate, limit);
 
-                        lastWicko = wicko;
+                        _lastWicko = wicko;
 
                         OnDataConsolidated(wicko);
 
-                        openOn = closeOn;
-                        openRate = limit;
-                        lowRate = limit;
+                        _openOn = _closeOn;
+                        _openRate = limit;
+                        _lowRate = limit;
 
                         Rising(data);
                     }
                 }
-                else if (closeRate < openRate)
+                else if (_closeRate < _openRate)
                 {
-                    if (lastWicko == null ||
-                        (lastWicko.Trend == WickoBarTrend.Falling))
+                    if (_lastWicko == null ||
+                        (_lastWicko.Trend == WickoBarTrend.Falling))
                     {
                         Falling(data);
 
                         return;
                     }
 
-                    var limit = (lastWicko.Open - BarSize);
+                    var limit = (_lastWicko.Open - BarSize);
 
-                    if (closeRate < limit)
+                    if (_closeRate < limit)
                     {
-                        var wicko = new WickoBar(data.Symbol, openOn, closeOn,
-                            BarSize, lastWicko.Open, highRate, limit, limit);
+                        var wicko = new WickoBar(data.Symbol, _openOn, _closeOn,
+                            BarSize, _lastWicko.Open, _highRate, limit, limit);
 
-                        lastWicko = wicko;
+                        _lastWicko = wicko;
 
                         OnDataConsolidated(wicko);
 
-                        openOn = closeOn;
-                        openRate = limit;
-                        highRate = limit;
+                        _openOn = _closeOn;
+                        _openRate = limit;
+                        _highRate = limit;
 
                         Falling(data);
                     }
