@@ -101,7 +101,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     member.Cache.Reset();
                     foreach (var subscription in universe.GetSubscriptionRequests(member, dateTimeUtc, algorithmEndDateUtc))
                     {
-                        _dataFeed.RemoveSubscription(subscription.Configuration);
+                        if (subscription.IsUniverseSubscription)
+                        {
+                            removals.Remove(member);
+                        }
+                        else
+                        {
+                            _dataFeed.RemoveSubscription(subscription.Configuration);
+                        }
                     }
 
                     // remove symbol mappings for symbols removed from universes // TODO : THIS IS BAD!
@@ -119,7 +126,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     security = universe.CreateSecurity(symbol, _algorithm, _marketHoursDatabase, _symbolPropertiesDatabase);
                 }
 
-                universe.AddMember(dateTimeUtc, security);
+                var addedMember = universe.AddMember(dateTimeUtc, security);
 
                 var addedSubscription = false;
                 foreach (var request in universe.GetSubscriptionRequests(security, dateTimeUtc, algorithmEndDateUtc))
@@ -141,7 +148,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // only update our security changes if we actually added data
                     if (!request.IsUniverseSubscription)
                     {
-                        addedSubscription = true;
+                        addedSubscription = addedMember;
                     }
                 }
 

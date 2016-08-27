@@ -964,32 +964,7 @@ namespace QuantConnect.Brokerages.Tradier
                     CancelOrder(qcOrder);
                 }
             }
-
-
-            // tradier supports market on open by allowing placement of market orders after hours
-            // however, tradier does not support market on close orders, so we need to simulate it
-            // we'll place the market order at 3:59:45 PM, this allows 15 seconds for process and fill
-            if (order.Type == OrderType.MarketOnClose && DateTime.Now < DateTime.Today.Add(new TimeSpan(12+3, 59, 40))) // stop this behavior at 3:59:40
-            {
-                // just recall this PlaceOrder function so it can go through the normal path
-                Timer t = null;
-                t = new Timer(state =>
-                {
-                    PlaceOrder(order);
-                    // be sure to dispose of this
-                    t.Dispose();
-                });
-
-                // Figure how much time until 3:59:45
-                var now = DateTime.Now;
-                var placeOrderTime = now.Date.Add(new TimeSpan(12+3, 59, 45));
-
-                // set timer for delta between now and when we want it to execute
-                int milliseconds = (int)((placeOrderTime - now).TotalMilliseconds);
-                t.Change(milliseconds, Timeout.Infinite);
-                // even though 't' goes out of scope here, the internal scheduler (TimerQueue) maintains a reference
-            }
-
+            
             var holdingQuantity = _securityProvider.GetHoldingsQuantity(order.Symbol);
 
             var orderRequest = new TradierPlaceOrderRequest(order, TradierOrderClass.Equity,  holdingQuantity);
@@ -1670,8 +1645,6 @@ namespace QuantConnect.Brokerages.Tradier
             switch (type)
             {
                 case OrderType.Market:
-                case OrderType.MarketOnOpen:
-                case OrderType.MarketOnClose:
                     return TradierOrderType.Market;
 
                 case OrderType.Limit:
@@ -1920,7 +1893,7 @@ namespace QuantConnect.Brokerages.Tradier
                 case OrderType.StopLimit:
                     return TradierOrderType.StopLimit;
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException("type", order.Type, order.Type + " not supported");
             }
         }
 

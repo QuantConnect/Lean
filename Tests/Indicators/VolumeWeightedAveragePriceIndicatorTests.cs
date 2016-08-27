@@ -38,7 +38,7 @@ namespace QuantConnect.Tests.Indicators
             {
                 var datum = data[i];
                 seen.Add(datum);
-                ind.Update(new TradeBar(DateTime.Now.AddSeconds(i), "SPY", datum, datum, datum, datum, volume));
+                ind.Update(new TradeBar(DateTime.Now.AddSeconds(i), Symbols.SPY, datum, datum, datum, datum, volume));
                 // When volume is constant, VWAP is a simple moving average
                 Assert.AreEqual(Enumerable.Reverse(seen).Take(period).Average(), ind.Current.Value);
             }
@@ -49,10 +49,10 @@ namespace QuantConnect.Tests.Indicators
         {
             var ind = new VolumeWeightedAveragePriceIndicator(3);
 
-            ind.Update(new TradeBar(DateTime.UtcNow, "SPY", 1m, 1m, 1m, 1m, 1));
-            ind.Update(new TradeBar(DateTime.UtcNow, "SPY", 1m, 1m, 1m, 1m, 1));
+            ind.Update(new TradeBar(DateTime.UtcNow, Symbols.SPY, 1m, 1m, 1m, 1m, 1));
+            ind.Update(new TradeBar(DateTime.UtcNow, Symbols.SPY, 1m, 1m, 1m, 1m, 1));
             Assert.IsFalse(ind.IsReady);
-            ind.Update(new TradeBar(DateTime.UtcNow, "SPY", 1m, 1m, 1m, 1m, 1));
+            ind.Update(new TradeBar(DateTime.UtcNow, Symbols.SPY, 1m, 1m, 1m, 1m, 1));
             Assert.IsTrue(ind.IsReady);
         }
 
@@ -70,7 +70,7 @@ namespace QuantConnect.Tests.Indicators
             ind.Reset();
 
             TestHelper.AssertIndicatorIsInDefaultState(ind);
-            ind.Update(new TradeBar(DateTime.UtcNow, "SPY", 2m, 2m, 2m, 2m, 1));
+            ind.Update(new TradeBar(DateTime.UtcNow, Symbols.SPY, 2m, 2m, 2m, 2m, 1));
             Assert.AreEqual(ind.Current.Value, 2m);
         }
 

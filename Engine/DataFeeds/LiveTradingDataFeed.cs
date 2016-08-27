@@ -178,11 +178,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // for some reason we couldn't create the subscription
             if (subscription == null)
             {
-                Log.Trace("Unable to add subscription for: " + request.Security.Symbol.ToString());
+                Log.Trace("Unable to add subscription for: " + request.Configuration);
                 return false;
             }
 
-            Log.Trace("LiveTradingDataFeed.AddSubscription(): Added " + request.Security.Symbol.ToString());
+            Log.Trace("LiveTradingDataFeed.AddSubscription(): Added " + request.Configuration);
 
             _subscriptions.TryAdd(subscription);
 
@@ -211,8 +211,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             // remove the subscription from our collection
             Subscription subscription;
-            if (!_subscriptions.TryGetValue(configuration, out subscription))
+            if (!_subscriptions.TryRemove(configuration, out subscription))
             {
+                Log.Error("LiveTradingDataFeed.RemoveSubscription(): Unable to remove: " + configuration.ToString());
                 return false;
             }
 
@@ -237,7 +238,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _changes += SecurityChanges.Removed(security);
 
 
-            Log.Trace("LiveTradingDataFeed.RemoveSubscription(): Removed " + configuration.ToString());
+            Log.Trace("LiveTradingDataFeed.RemoveSubscription(): Removed " + configuration);
             UpdateFillForwardResolution();
 
             return true;
@@ -499,6 +500,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var enqueueable = new EnqueueableEnumerator<BaseData>();
                 _customExchange.AddEnumerator(new EnumeratorHandler(config.Symbol, enumerator, enqueueable));
                 enumerator = enqueueable;
+
+                // Trigger universe selection when security added manually after Initialize
+                userDefined.CollectionChanged += (sender, args) =>
+                {
+                    if (args.NewItems == null || _frontierUtc == DateTime.MinValue) return;
+
+                    var symbol = args.NewItems.OfType<Symbol>().FirstOrDefault();
+                    if (symbol == null) return;
+
+                    var collection = new BaseDataCollection(_frontierUtc, symbol);
+                    var changes = _universeSelection.ApplyUniverseSelection(userDefined, _frontierUtc, collection);
+                    _algorithm.OnSecuritiesChanged(changes);
+                };
             }
             else if (config.Type == typeof (CoarseFundamental))
             {

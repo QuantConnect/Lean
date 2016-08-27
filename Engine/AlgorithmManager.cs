@@ -331,20 +331,6 @@ namespace QuantConnect.Lean.Engine
                 // process fill models on the updated data before entering algorithm, applies to all non-market orders
                 transactions.ProcessSynchronousEvents();
 
-                if (delistingTickets.Count != 0)
-                {
-                    for (int i = 0; i < delistingTickets.Count; i++)
-                    {
-                        var ticket = delistingTickets[i];
-                        if (ticket.Status == OrderStatus.Filled)
-                        {
-                            algorithm.Securities.Remove(ticket.Symbol);
-                            delistingTickets.RemoveAt(i--);
-                            Log.Trace("AlgorithmManager.Run(): Delisted Security removed: " + ticket.Symbol.ToString());
-                        }
-                    }
-                }
-
                 //Check if the user's signalled Quit: loop over data until day changes.
                 if (algorithm.Status == AlgorithmStatus.Stopped)
                 {

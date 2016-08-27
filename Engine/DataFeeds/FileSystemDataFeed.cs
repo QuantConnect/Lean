@@ -21,6 +21,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -212,7 +213,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
-            Log.Debug("FileSystemDataFeed.AddSubscription(): Added " + request.Security.Symbol.ID + " Start: " + request.StartTimeUtc + " End: " + request.EndTimeUtc);
+            Log.Debug("FileSystemDataFeed.AddSubscription(): Added " + request.Configuration + " Start: " + request.StartTimeUtc + " End: " + request.EndTimeUtc);
 
             if (_subscriptions.TryAdd(subscription))
             {
@@ -229,15 +230,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>True if the subscription was successfully removed, false otherwise</returns>
         public bool RemoveSubscription(SubscriptionDataConfig configuration)
         {
+            // remove the subscription from our collection
             Subscription subscription;
             if (!_subscriptions.TryRemove(configuration, out subscription))
             {
-                Log.Error("FileSystemDataFeed.RemoveSubscription(): Unable to remove: " + configuration.ToString());
+                Log.Error("FileSystemDataFeed.RemoveSubscription(): Unable to remove: " + configuration);
                 return false;
             }
 
             subscription.Dispose();
-            Log.Debug("FileSystemDataFeed.RemoveSubscription(): Removed " + configuration.ToString());
+            Log.Debug("FileSystemDataFeed.RemoveSubscription(): Removed " + configuration);
 
             UpdateFillForwardResolution();
 
@@ -343,6 +345,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 if (request.Universe is UserDefinedUniverse)
                 {
+                    // Trigger universe selection when security added manually after Initialize
+                    var universe = (UserDefinedUniverse) request.Universe;
+                    universe.CollectionChanged += (sender, args) =>
+                    {
+                        if (args.NewItems == null || _frontierUtc == DateTime.MinValue) return;
+
+                        var symbol = args.NewItems.OfType<Symbol>().FirstOrDefault();
+                        if (symbol == null) return;
+
+                        var collection = new BaseDataCollection(_frontierUtc, symbol);
+                        var changes = _universeSelection.ApplyUniverseSelection(universe, _frontierUtc, collection);
+                        _algorithm.OnSecuritiesChanged(changes);
+                    };
+
                     return new UserDefinedUniverseSubscriptionEnumeratorFactory(request.Universe as UserDefinedUniverse, MarketHoursDatabase.FromDataFolder());
                 }
                 if (request.Configuration.Type == typeof (CoarseFundamental))
@@ -359,7 +375,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
-            var mapFileResolver = _mapFileProvider.Get(request.Security.Symbol.ID.Market);
+            var mapFileResolver = request.Configuration.SecurityType == SecurityType.Equity
+                ? _mapFileProvider.Get(request.Security.Symbol.ID.Market) 
+                : MapFileResolver.Empty;
 
             return new PostCreateConfigureSubscriptionEnumeratorFactory(
                 new SubscriptionDataReaderSubscriptionEnumeratorFactory(_resultHandler, mapFileResolver, _factorFileProvider, false, true),
@@ -407,7 +425,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             syncer.SubscriptionFinished += (sender, subscription) =>
             {
                 RemoveSubscription(subscription.Configuration);
-                    Log.Debug(string.Format("FileSystemDataFeed.GetEnumerator(): Finished subscription: {0} at {1} UTC", subscription.Security.Symbol.ID, _frontierUtc));
+                Log.Debug(string.Format("FileSystemDataFeed.GetEnumerator(): Finished subscription: {0} at {1} UTC", subscription.Configuration, _frontierUtc));
             };
 
             while (!_cancellationTokenSource.IsCancellationRequested)
