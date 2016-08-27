@@ -86,7 +86,6 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         public override BaseData WorkingData
         {
-            // TODO: Should this be NULL?
             get { return _currentBar == null ? null : _currentBar.Clone(); }
         }
 
@@ -98,12 +97,12 @@ namespace QuantConnect.Data.Consolidators
             get { return typeof(WickoBar); }
         }
 
-        public WickoBar OpenWickoBar
+        internal WickoBar OpenWickoBar
         {
             get
             {
                 return new WickoBar(null, openOn, closeOn,
-                    BarSize, openRate, highRate, lowRate, lowRate);
+                    BarSize, openRate, highRate, lowRate, closeRate);
             }
         }
 
@@ -145,7 +144,6 @@ namespace QuantConnect.Data.Consolidators
             }
         }
 
-
         /// <summary>
         /// Updates this consolidator with the specified data. This method is
         /// responsible for raising the DataConsolidated event
@@ -181,7 +179,7 @@ namespace QuantConnect.Data.Consolidators
                 if (closeRate > openRate)
                 {
                     if (lastWicko == null ||
-                        (lastWicko.Trend == Trend.Rising))
+                        (lastWicko.Trend == WickoBarTrend.Rising))
                     {
                         Rising(data);
 
@@ -209,7 +207,7 @@ namespace QuantConnect.Data.Consolidators
                 else if (closeRate < openRate)
                 {
                     if (lastWicko == null ||
-                        (lastWicko.Trend == Trend.Falling))
+                        (lastWicko.Trend == WickoBarTrend.Falling))
                     {
                         Falling(data);
 

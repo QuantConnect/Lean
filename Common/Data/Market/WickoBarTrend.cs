@@ -1,6 +1,6 @@
 ﻿namespace QuantConnect.Data.Market
 {
-    public enum Trend
+    public enum WickoBarTrend
     {
         Rising,
         NoDelta,

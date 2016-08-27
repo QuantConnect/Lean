@@ -96,7 +96,8 @@ namespace QuantConnect.Data.Market
         /// Initializes a new instance of the <see cref="WickoBar"/> class with the specified values
         /// </summary>
         /// <param name="symbol">The symbol of this data</param>
-        /// <param name="time">The start time of the bar</param>
+        /// <param name="start">The start time of the bar</param>
+        /// <param name="endTime">The end time of the bar</param>
         /// <param name="brickSize">The size of each wicko brick</param>
         /// <param name="open">The opening price for the new bar</param>
         /// <param name="high">The high price for the new bar</param>
@@ -116,19 +117,25 @@ namespace QuantConnect.Data.Market
             Low = low;
         }
 
-        public Trend Trend
+        /// <summary>
+        /// The trend of the bar (i.. Rising, Falling or NoDelta)
+        /// </summary>
+        public WickoBarTrend Trend
         {
             get
             {
                 if (Open < Close)
-                    return Trend.Rising;
+                    return WickoBarTrend.Rising;
                 else if (Open > Close)
-                    return Trend.Falling;
+                    return WickoBarTrend.Falling;
                 else
-                    return Trend.NoDelta;
+                    return WickoBarTrend.NoDelta;
             }
         }
 
+        /// <summary>
+        /// The "spread" of the bar
+        /// </summary>
         public decimal Spread
         {
             get
