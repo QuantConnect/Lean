@@ -349,9 +349,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var universe = (UserDefinedUniverse) request.Universe;
                     universe.CollectionChanged += (sender, args) =>
                     {
-                        IList items =
-                            args.Action == NotifyCollectionChangedAction.Add ? items = args.NewItems :
-                            args.Action == NotifyCollectionChangedAction.Remove ? items = args.OldItems : null;
+                        var items =
+                            args.Action == NotifyCollectionChangedAction.Add ? args.NewItems :
+                            args.Action == NotifyCollectionChangedAction.Remove ? args.OldItems : null;
 
                         if (items == null || _frontierUtc == DateTime.MinValue) return;
 
