@@ -29,16 +29,16 @@ namespace QuantConnect.Algorithm.Examples
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2014, 05, 01);
-            SetEndDate(2014, 05, 15);
+            SetStartDate(2012, 01, 01);
+            SetEndDate(2013, 01, 01);
 
-            AddSecurity(SecurityType.Forex, "EURUSD");
+            AddSecurity(SecurityType.Equity, "SPY");
 
             // this is the simple constructor that will perform the renko logic to the Value
             // property of the data it receives.
 
-            // break EURUSD into $2.5 renko bricks and send that data to our 'OnRenkoBar' method
-            var renkoClose = new RenkoConsolidator(0.0001m);
+            // break SPY into $2.5 renko bricks and send that data to our 'OnRenkoBar' method
+            var renkoClose = new RenkoConsolidator(2.5m);
             renkoClose.DataConsolidated += (sender, consolidated) =>
             {
                 // call our event handler for renko data
@@ -46,21 +46,21 @@ namespace QuantConnect.Algorithm.Examples
             };
 
             // register the consolidator for updates
-            SubscriptionManager.AddConsolidator("EURUSD", renkoClose);
+            SubscriptionManager.AddConsolidator("SPY", renkoClose);
 
 
             // this is the full constructor that can accept a value selector and a volume selector
             // this allows us to perform the renko logic on values other than Close, even computed values!
 
-            // break EURUSD into (2*o + h + l + 3*c)/7
-            var renko7bar = new RenkoConsolidator<TradeBar>(0.0001m, x => (2*x.Open + x.High + x.Low + 3*x.Close)/7m, x => x.Volume);
+            // break SPY into (2*o + h + l + 3*c)/7
+            var renko7bar = new RenkoConsolidator<TradeBar>(2.5m, x => (2 * x.Open + x.High + x.Low + 3 * x.Close) / 7m, x => x.Volume);
             renko7bar.DataConsolidated += (sender, consolidated) =>
             {
                 HandleRenko7Bar(consolidated);
             };
 
             // register the consolidator for updates
-            SubscriptionManager.AddConsolidator("EURUSD", renko7bar);
+            SubscriptionManager.AddConsolidator("SPY", renko7bar);
         }
 
         /// <summary>
