@@ -338,9 +338,7 @@ namespace QuantConnect.Lean.Engine
                         var ticket = delistingTickets[i];
                         if (ticket.Status == OrderStatus.Filled)
                         {
-                            algorithm.RemoveSecurity(ticket.Symbol);
                             delistingTickets.RemoveAt(i--);
-                            Log.Trace("AlgorithmManager.Run(): Delisted Security removed: " + ticket.Symbol.ToString());
                         }
                     }
                 }
@@ -862,7 +860,6 @@ namespace QuantConnect.Lean.Engine
                     var security = algorithm.Securities[delisting.Symbol];
                     if (security.Holdings.Quantity == 0)
                     {
-                        algorithm.RemoveSecurity(delisting.Symbol);
                         continue;
                     }
                     var submitOrderRequest = new SubmitOrderRequest(OrderType.MarketOnClose, security.Type, security.Symbol,
@@ -874,8 +871,6 @@ namespace QuantConnect.Lean.Engine
                 else
                 {
                     Log.Trace("AlgorithmManager.Run(): Security delisted: " + delisting.Symbol.ToString());
-                    algorithm.RemoveSecurity(delisting.Symbol);
-                    Log.Trace("AlgorithmManager.Run(): Security removed: " + delisting.Symbol.ToString());
                 }
             }
         }
