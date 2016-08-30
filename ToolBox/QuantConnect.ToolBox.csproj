@@ -140,10 +140,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AlgoSeekOptionsConverter\Program.cs" />
     <Compile Include="Bz2StreamProvider.cs" />
     <Compile Include="CoarseUniverseGenerator\Program.cs" />
-    <Compile Include="ConsolidatorDataProcessor.cs" />
     <Compile Include="CryptoiqDownloader\CryptoiqBitcoin.cs" />
     <Compile Include="CryptoiqDownloader\CryptoiqDownloader.cs" />
     <Compile Include="CryptoiqDownloader\Program.cs" />
@@ -151,12 +149,10 @@
     <Compile Include="DukascopyDownloader\DukascopySymbolMapper.cs" />
     <Compile Include="DukascopyDownloader\Program.cs" />
     <Compile Include="FileStreamProvider.cs" />
-    <Compile Include="FilteredDataProcessor.cs" />
     <Compile Include="FxcmDownloader\FxcmDataDownloader.cs" />
     <Compile Include="FxcmDownloader\Program.cs" />
     <Compile Include="GoogleDownloader\GoogleDataDownloader.cs" />
     <Compile Include="GoogleDownloader\Program.cs" />
-    <Compile Include="IDataProcessor.cs" />
     <Compile Include="IQFeed\IQFeedDataQueueHandler.cs" />
     <Compile Include="IQFeed\IQ\DataStructures.cs" />
     <Compile Include="IQFeed\IQ\IQAdminSocketClient.cs" />
@@ -181,22 +177,18 @@
     <Compile Include="OandaDownloader\OandaRestLibrary\Request.cs" />
     <Compile Include="OandaDownloader\OandaRestLibrary\Instrument.cs" />
     <Compile Include="OandaDownloader\Program.cs" />
-    <Compile Include="PipeDataProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QuandlBitfinexDownloader\Program.cs" />
     <Compile Include="QuandlBitfinexDownloader\QuandlBitfinexDownloader.cs" />
     <Compile Include="QuantQuoteConverter\Program.cs" />
     <Compile Include="IDataDownloader.cs" />
-    <Compile Include="RawFileProcessor.cs" />
     <Compile Include="YahooDownloader\Program.cs" />
     <Compile Include="YahooDownloader\YahooDataDownloader.cs" />
-    <Compile Include="CsvDataProcessor.cs" />
     <Compile Include="ZipStreamProvider.cs" />
-    <Compile Include="AlgoSeekOptionsConverter\InMemoryDataProcessor.cs" />
     <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsReader.cs" />
-    <Compile Include="AlgoSeekOptionsConverter\Utilities.cs" />
     <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsConverter.cs" />
-    <Compile Include="AlgoSeekOptionsConverter\TestMethods.cs" />
+    <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsProcessor.cs" />
+    <Compile Include="AlgoSeekOptionsConverter\Program.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CoarseUniverseGenerator\config.json">
@@ -240,6 +232,7 @@
     <Content Include="CoarseUniverseGenerator\exclusions.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="config.json" />
     <None Include="instruments_fxcm.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

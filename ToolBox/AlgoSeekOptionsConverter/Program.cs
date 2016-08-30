@@ -13,51 +13,48 @@
  * limitations under the License.
 */
 
-using System.IO;
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using QuantConnect.Logging;
-using  System.Diagnostics;
-using QuantConnect.Data.Market;
-using QuantConnect.Data;
+using System.Diagnostics;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
 {
     public class Program
     {
-        private const string LogFilePath = "AlgoSeekOptionsConverter.txt";
-
-        static void Main()
+      public static void Main()
         {
 			Environment.SetEnvironmentVariable("MONO_MANAGED_WATCHER", "disabled");
 
-			var sourceDirectory = "/cache/TestData/RawGoog/20151224";
-			var destinationDirectory = "/cache/TestData/Converted";
+			var sourceDirectory = "/Users/jona8276/Projects/QuantConnect/TestData/RawGoog/20151224";
+			var destinationDirectory = "/Users/jona8276/Projects/QuantConnect/TestData";
 
-//			var sourceDirectory = "/cache/DevData/RawDataSmall/20140516";
-//			var destinationDirectory = "/cache/DevData/ConvertedData";
+//            var sourceDirectory = Config.Get("sourceDirectory");
+//            var destinationDirectory = Config.Get("destinationDirectory");
 
+//            var logFilePath = Config.Get("logFilePath");
+            var logFilePath = "AlgoSeekOptionsConverter";
             Log.LogHandler = new CompositeLogHandler(new ILogHandler[]
             {
                 new ConsoleLogHandler(),
-                new FileLogHandler(LogFilePath)
+                new FileLogHandler(logFilePath)
             });
 
-			var flushInterval = 1000000L;
+//			var flushInterval = long.Parse(Config.Get("flushInterval"));
+            var flushInterval = 1000000L;
+            var converter = new AlgoSeekOptionsConverter();
 
-			Stopwatch sw = Stopwatch.StartNew();
-			AlgoSeekOptionsConverter.ConvertToFineResolution(sourceDirectory, destinationDirectory, flushInterval);
-			sw.Stop();
+			var conversionTimer = Stopwatch.StartNew();
+			converter.ConvertToFineResolution(sourceDirectory, destinationDirectory, flushInterval);
+			conversionTimer.Stop();
 
-//			git aAlgoSeekOptionsConverter.ExtractSymbol("goog", "/cache/TestData/RawAll/20151224", "/cache/TestData/RawGoog/20151224");
+			Log.Trace(string.Format("Conversion finished in time: {0}", conversionTimer.Elapsed));
 
-			Log.Trace(String.Format("Conversion finished in time: {0}", sw.Elapsed));
-            
-			// TODO Coarse Resolution
-			// TODO Compression
+//            var compressionTimer = Stopwatch.StartNew();
+//            converter.Compress(destinationDirectory, 1);
+//            compressionTimer.Stop();
+//
+//            Log.Trace(string.Format("Compression finished in time: {0}", compressionTimer.Elapsed));
         }
     }
 }

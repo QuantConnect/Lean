@@ -14,10 +14,10 @@
 */
 
 using System;
-using System.Linq;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.IO;
-using System.Threading;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
@@ -25,36 +25,36 @@ using QuantConnect.Logging;
 
 namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
 {
-	public class AlgoSeekOptionsReader : IDisposable
+	public class AlgoSeekOptionsReader : IEnumerator<BaseData>
 	{
-		private const int LogInterval = 1000000;
-
 		private readonly string _file;
 		private readonly Stream _stream;
 		private readonly StreamReader _streamReader;
 		private readonly DateTime _referenceDate;
 
-		private BaseData _nextLine = null;
+	    public bool HasNext { get { return Current != null; } }
 
-		public bool HasNext { get { return _nextLine != null; } }
+	    object IEnumerator.Current { get { return Current; } }
 
-		public BaseData Peek { get { return _nextLine; } }
+	    public BaseData Current { get; private set; }
 
-		public long Count { get; private set; }
+	    public long Count { get; private set; }
+
+		public long InvalidLines { get; private set; }
 
 		private bool IsEOF { get { return _streamReader.Peek() == -1; } }
 
-		public AlgoSeekOptionsReader(string file)
+		public AlgoSeekOptionsReader(string file, DateTime referenceDate)
 		{
-			_file = file;
+		    Current = null;
+		    _file = file;
+			_referenceDate = referenceDate;
 
 			var streamProvider = StreamProvider.ForExtension(Path.GetExtension(file));
 			_stream = streamProvider.Open(file).First();
 			_streamReader = new StreamReader(_stream);
 
-			_nextLine = GetNextValidLine();
-
-			_referenceDate = DateTime.ParseExact(new FileInfo(file).Directory.Name, DateFormat.EightCharacter, null);
+			MoveNext();
 		}
 
 		public void Dispose()
@@ -67,19 +67,31 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
 
 		public BaseData Take()
 		{
-			var thisLine = _nextLine;
-			_nextLine = GetNextValidLine();
+			var thisLine = Current;
+			MoveNext();
 			return thisLine;
 		}
 
-		private BaseData GetNextValidLine()
+		public bool MoveNext()
 		{
-			BaseData nextValidLine = null;
-			while (nextValidLine == null && !IsEOF)
+			Current = NextValidEntry();
+			return Current != null;
+		}
+
+	    public void Reset()
+	    {
+	        throw new NotImplementedException("Reset not implemented for AlgoSeekOptionsReader.");
+	    }
+
+		private BaseData NextValidEntry()
+		{
+			BaseData nextValidEntry = null;
+			while (nextValidEntry == null && !IsEOF)
 			{
-				nextValidLine = ParseNextLine();
+				InvalidLines++;
+				nextValidEntry = ParseNextLine();
 			}
-			return nextValidLine;
+			return nextValidEntry;
 		}
 
 		private BaseData ParseNextLine()
@@ -93,13 +105,6 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
 			try
 			{
 				var line = _streamReader.ReadLine();
-				Count++;
-
-				if (Count%LogInterval == 0)
-				{
-					Log.Trace("({0}): Parsed {1,3}M lines", _file, Count/LogInterval);
-				}
-				
 				tick = ParseIntoTick(line);
 			}
 			catch (Exception err)
@@ -126,6 +131,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
 			{
 				return null;
 			}
+			Count++;
 
 			// ignoring time zones completely -- this is all in the 'data-time-zone'
 			var timeString = csv[0];
