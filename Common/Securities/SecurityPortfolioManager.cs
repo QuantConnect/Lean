@@ -610,7 +610,23 @@ namespace QuantConnect.Securities
         /// <param name="split">The split to be applied</param>
         public void ApplySplit(Split split)
         {
+            ApplySplitToEquities(split);
+            ApplySplitToOptions(split);
+        }
+
+        /// <summary>
+        /// Applies a split to the portfolio equity positions
+        /// </summary>
+        /// <param name="split">The split to be applied</param>
+        private void ApplySplitToEquities(Split split)
+        {
             var security = Securities[split.Symbol];
+
+            // only apply splits to equities
+            if (security.Type != SecurityType.Equity)
+            {
+                return;
+            }
 
             // only apply splits in raw data mode, 
             var mode = security.DataNormalizationMode;
@@ -620,15 +636,15 @@ namespace QuantConnect.Securities
             }
 
             // we need to modify our holdings in lght of the split factor
-            var quantity = security.Holdings.Quantity/split.SplitFactor;
-            var avgPrice = security.Holdings.AveragePrice*split.SplitFactor;
+            var quantity = security.Holdings.Quantity / split.SplitFactor;
+            var avgPrice = security.Holdings.AveragePrice * split.SplitFactor;
 
             // we'll model this as a cash adjustment
-            var leftOver = quantity - (int) quantity;
-            var extraCash = leftOver*split.ReferencePrice;
+            var leftOver = quantity - (int)quantity;
+            var extraCash = leftOver * split.ReferencePrice;
             _baseCurrencyCash.AddAmount(extraCash);
 
-            security.Holdings.SetHoldings(avgPrice, (int) quantity);
+            security.Holdings.SetHoldings(avgPrice, (int)quantity);
 
             // build a 'next' value to update the market prices in light of the split factor
             var next = security.GetLastData();
@@ -650,7 +666,7 @@ namespace QuantConnect.Securities
                 tradeBar.High *= split.SplitFactor;
                 tradeBar.Low *= split.SplitFactor;
             }
-            
+
             // make sure to modify bid/ask as well for tradebar data types
             var tick = next as Tick;
             if (tick != null)
@@ -660,6 +676,33 @@ namespace QuantConnect.Securities
             }
 
             security.SetMarketPrice(next);
+        }
+        /// <summary>
+        /// Applies a split to the portfolio equity options positions
+        /// </summary>
+        /// <param name="split">The split to be applied</param>
+        private void ApplySplitToOptions(Split split)
+        {
+            // only apply to the option positions that have correct underlying symbol
+            var optionSecurities = Securities
+                                   .Where(x => x.Value.Type == SecurityType.Option && split.Symbol == x.Key.Underlying);
+
+            foreach (var securityKV in optionSecurities)
+            {
+                var symbol = securityKV.Key;
+                var security = securityKV.Value;
+
+                // only apply splits in raw data mode, 
+                var mode = security.DataNormalizationMode;
+                if (mode != DataNormalizationMode.Raw)
+                {
+                    continue;
+                }
+
+                var splitFactor = split.SplitFactor;
+                var optionHoldings = (Option.OptionHolding)security.Holdings;
+                optionHoldings.SetUnderlyingSplit(splitFactor);
+            }
         }
 
         /// <summary>

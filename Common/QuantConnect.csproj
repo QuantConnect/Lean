@@ -254,6 +254,9 @@
     <Compile Include="Orders\Fills\IFillModel.cs" />
     <Compile Include="Orders\MarketOnCloseOrder.cs" />
     <Compile Include="Orders\MarketOnOpenOrder.cs" />
+    <Compile Include="Orders\OptionExerciseOrder.cs" />
+    <Compile Include="Orders\OptionExercise\DefaultExerciseModel.cs" />
+    <Compile Include="Orders\OptionExercise\IOptionExerciseModel.cs" />
     <Compile Include="Orders\OrderField.cs" />
     <Compile Include="Orders\OrderJsonConverter.cs" />
     <Compile Include="Orders\OrderRequest.cs" />
@@ -320,7 +323,9 @@
     <Compile Include="Securities\Option\OptionDataFilter.cs" />
     <Compile Include="Securities\Option\OptionExchange.cs" />
     <Compile Include="Securities\Option\OptionHolding.cs" />
+    <Compile Include="Securities\Option\OptionPortfolioModel.cs" />
     <Compile Include="Securities\Option\OptionPriceModelResult.cs" />
+    <Compile Include="Securities\Option\OptionSymbolProperties.cs" />
     <Compile Include="Securities\PatternDayTradingMarginModel.cs" />
     <Compile Include="Securities\RelativeStandardDeviationVolatilityModel.cs" />
     <Compile Include="Securities\SecurityDatabaseKey.cs" />

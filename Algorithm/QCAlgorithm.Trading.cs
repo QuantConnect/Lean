@@ -19,6 +19,7 @@ using System.Linq;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Forex;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm
 {
@@ -304,6 +305,38 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Send an exercise order to the transaction handler
+        /// </summary>
+        /// <param name="optionSymbol">String symbol for the option position</param>
+        /// <param name="quantity">Quantity of options contracts</param>
+        /// <param name="asynchronous">Send the order asynchrously (false). Otherwise we'll block until it fills</param>
+        /// <param name="tag">String tag for the order (optional)</param>
+        public OrderTicket ExerciseOption(Symbol optionSymbol, int quantity, bool asynchronous = false, string tag = "")
+        {
+            var option = (Option)Securities[optionSymbol];
+
+            var request = CreateSubmitOrderRequest(OrderType.OptionExercise, option, quantity, tag);
+
+            //Initialize the exercise order parameters
+            var preOrderCheckResponse = PreOrderChecks(request);
+            if (preOrderCheckResponse.IsError)
+            {
+                return OrderTicket.InvalidSubmitRequest(Transactions, request, preOrderCheckResponse);
+            }
+
+            //Add the order and create a new order Id.
+            var ticket = Transactions.AddOrder(request);
+
+            // Wait for the order event to process, only if the exchange is open
+            if (!asynchronous)
+            {
+                Transactions.WaitForOrder(ticket.OrderId);
+            }
+
+            return ticket;
+        }
+        
+        /// <summary>
         /// Perform preorder checks to ensure we have sufficient capital, 
         /// the market is open, and we haven't exceeded maximum realistic orders per day.
         /// </summary>
@@ -351,7 +384,13 @@ namespace QuantConnect.Algorithm
             {
                 return OrderResponse.Error(request, OrderResponseErrorCode.ExchangeNotOpen, request.OrderType + " order and exchange not open.");
             }
-            
+
+            //Check the exchange is open before sending a exercise orders
+            if (request.OrderType == OrderType.OptionExercise && !security.Exchange.ExchangeOpen)
+            {
+                return OrderResponse.Error(request, OrderResponseErrorCode.ExchangeNotOpen, request.OrderType + " order and exchange not open.");
+            }
+
             if (price == 0)
             {
                 return OrderResponse.Error(request, OrderResponseErrorCode.SecurityPriceZero, request.Symbol.ToString() + ": asset price is $0. If using custom data make sure you've set the 'Value' property.");
@@ -396,7 +435,22 @@ namespace QuantConnect.Algorithm
                 Status = AlgorithmStatus.Stopped;
                 return OrderResponse.Error(request, OrderResponseErrorCode.ExceededMaximumOrders, string.Format("You have exceeded maximum number of orders ({0}), for unlimited orders upgrade your account.", _maxOrders));
             }
-            
+
+            if (request.OrderType == OrderType.OptionExercise)
+            {
+                if (security.Type != SecurityType.Option)
+                    return OrderResponse.Error(request, OrderResponseErrorCode.NonExercisableSecurity, "The security with symbol '" + request.Symbol.ToString() + "' is not exercisable.");
+
+                if (security.Holdings.IsShort)
+                    return OrderResponse.Error(request, OrderResponseErrorCode.UnsupportedRequestType, "The security with symbol '" + request.Symbol.ToString() + "' has a short option position. Only long option positions are exercisable.");
+                
+                if (request.Quantity > security.Holdings.Quantity)
+                    return OrderResponse.Error(request, OrderResponseErrorCode.UnsupportedRequestType, "Cannot exercise more contracts of '" + request.Symbol.ToString() + "' than is currently available in the portfolio. ");
+
+                if (request.Quantity <= 0.0m)
+                    OrderResponse.ZeroQuantity(request);
+            }
+
             if (request.OrderType == OrderType.MarketOnClose)
             {
                 var nextMarketClose = security.Exchange.Hours.GetNextMarketClose(security.LocalTime, false);

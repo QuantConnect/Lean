@@ -271,6 +271,9 @@ namespace QuantConnect.Orders
                 case OrderType.MarketOnClose:
                     order = new MarketOnCloseOrder(request.Symbol, request.Quantity, request.Time, request.Tag);
                     break;
+                case OrderType.OptionExercise:
+                    order = new OptionExerciseOrder(request.Symbol, request.Quantity, request.Time, request.Tag);
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }

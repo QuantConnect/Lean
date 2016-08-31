@@ -16,7 +16,7 @@
 using System;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Forex;
+
 
 namespace QuantConnect.Orders.Fees
 {
@@ -46,6 +46,18 @@ namespace QuantConnect.Orders.Fees
         /// <returns>The cost of the order in units of the account currency</returns>
         public decimal GetOrderFee(Security security, Order order)
         {
+            // Option exercise for equity options is free of charge
+            if (order.Type == OrderType.OptionExercise)
+            {
+                var optionOrder = (OptionExerciseOrder)order;
+
+                if (optionOrder.Symbol.ID.SecurityType == SecurityType.Option &&
+                    optionOrder.Symbol.ID.Underlying.SecurityType == SecurityType.Equity)
+                {
+                    return 0m;
+                }
+            }
+
             switch (security.Type)
             {
                 case SecurityType.Forex:
