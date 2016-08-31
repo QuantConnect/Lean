@@ -56,7 +56,7 @@ namespace QuantConnect.Brokerages.Fxcm
         public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
             var symbolsToSubscribe = (from symbol in symbols 
-                                      where !_subscribedSymbols.Contains(symbol) 
+                                      where !_subscribedSymbols.Contains(symbol) && CanSubscribe(symbol)
                                       select symbol).ToList();
             if (symbolsToSubscribe.Count == 0)
                 return;
@@ -114,6 +114,19 @@ namespace QuantConnect.Brokerages.Fxcm
             {
                 _subscribedSymbols.Remove(symbol);
             }
+        }
+
+        /// <summary>
+        /// Returns true if this brokerage supports the specified symbol
+        /// </summary>
+        private static bool CanSubscribe(Symbol symbol)
+        {
+            // ignore unsupported security types
+            if (symbol.ID.SecurityType != SecurityType.Forex && symbol.ID.SecurityType != SecurityType.Cfd)
+                return false;
+
+            // ignore universe symbols
+            return !symbol.Value.Contains("-UNIVERSE-");
         }
 
         #endregion

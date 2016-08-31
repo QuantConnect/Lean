@@ -1361,7 +1361,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
         public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
-            foreach (var symbol in symbols)
+            foreach (var symbol in symbols.Where(CanSubscribe))
             {
                 var id = GetNextRequestID();
                 var contract = CreateContract(symbol);
@@ -1393,7 +1393,20 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
         }
 
-        
+        /// <summary>
+        /// Returns true if this brokerage supports the specified symbol
+        /// </summary>
+        private static bool CanSubscribe(Symbol symbol)
+        {
+            // ignore unsupported security types
+            if (symbol.ID.SecurityType != SecurityType.Equity && symbol.ID.SecurityType != SecurityType.Forex &&
+                symbol.ID.SecurityType != SecurityType.Option && symbol.ID.SecurityType != SecurityType.Future)
+                return false;
+
+            // ignore universe symbols
+            return !symbol.Value.Contains("-UNIVERSE-");
+        }
+
         void HandleTickPrice(object sender, IB.TickPriceEventArgs e)
         {
             var symbol = default(Symbol);
