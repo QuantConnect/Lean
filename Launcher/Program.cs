@@ -87,11 +87,7 @@ namespace QuantConnect.Lean.Launcher
 
             if (environment.EndsWith("-desktop"))
             {
-                Application.EnableVisualStyles();
-                var messagingHandler = leanEngineSystemHandlers.Notify;
-                var thread = new Thread(() => LaunchUX(messagingHandler, job));
-                thread.SetApartmentState(ApartmentState.STA);
-                thread.Start();
+
             }
 
             // log the job endpoints
@@ -135,17 +131,6 @@ namespace QuantConnect.Lean.Launcher
                 leanEngineAlgorithmHandlers.Dispose();
                 Log.LogHandler.Dispose();
             }
-        }
-
-        /// <summary>
-        /// Form launcher method for thread.
-        /// </summary>
-        static void LaunchUX(IMessagingHandler messaging, AlgorithmNodePacket job)
-        {
-            //Launch the UX
-            //var form = Composer.Instance.GetExportedValueByTypeName<Form>("desktop-ux-classname");
-            var form = new Views.WinForms.LeanWinForm(messaging, job);
-            Application.Run(form);
         }
     }
 }
