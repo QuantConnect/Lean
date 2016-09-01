@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using Newtonsoft.Json;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
@@ -9,7 +10,7 @@ namespace QuantConnect.Views
 {
     public class DesktopClient
     {
-        private bool _stopServer = false;
+        private volatile bool _stopServer = false;
 
         /// <summary>
         /// This 0MQ Pull socket accepts certain messages from a 0MQ Push socket

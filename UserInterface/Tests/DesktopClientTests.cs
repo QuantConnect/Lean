@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 using Moq;
 using NetMQ;
@@ -13,6 +16,7 @@ namespace QuantConnect.Views.Tests
     class DesktopClientTests
     {
         private string _port = "1235";
+        private Thread _thread;
         private DesktopClient _desktopMessageHandler;
 
         [TestFixtureSetUp]
@@ -25,13 +29,14 @@ namespace QuantConnect.Views.Tests
         public void TearDown()
         {
             _desktopMessageHandler.StopServer();
+            _thread.Join();
         }
 
         private void StartClientThread(IDesktopMessageHandler messageHandler)
         {
-            var thread = new Thread(() => _desktopMessageHandler.Run(_port, messageHandler));
-            thread.SetApartmentState(ApartmentState.STA);
-            thread.Start();
+            _thread = new Thread(() => _desktopMessageHandler.Run(_port, messageHandler));
+            _thread.SetApartmentState(ApartmentState.STA);
+            _thread.Start();
         }
 
         [Test]
@@ -95,6 +100,54 @@ namespace QuantConnect.Views.Tests
             Thread.Sleep(500);
 
             Assert.IsTrue(packets.Count == 0);
+        }
+
+        [Test]
+        public void DesktopClient_WillShutDown_WhenStopServerIsCalled_FromAnotherThread()
+        {
+            Queue<Packet> packets = new Queue<Packet>();
+            var messageHandler = new Mock<IDesktopMessageHandler>();
+            messageHandler.Setup(mh => mh.DisplayLogPacket(It.IsAny<LogPacket>()))
+            .Callback((LogPacket packet) =>
+            {
+                packets.Enqueue(packet);
+            })
+            .Verifiable();
+
+            StartClientThread(messageHandler.Object);
+
+            // Try to send a message when the DesktopClient is listening
+            using (PushSocket server = new PushSocket("@tcp://*:" + _port))
+            {
+                var message = new NetMQMessage();
+
+                message.Append(JsonConvert.SerializeObject(new LogPacket()));
+
+                server.SendMultipartMessage(message);
+            }
+
+            // Give NetMQ time to send the message
+            Thread.Sleep(2000);
+            Assert.IsTrue(packets.Count == 1);
+
+            // Shut down the server
+            _desktopMessageHandler.StopServer();
+            Thread.Sleep(2000);
+
+            // Try to send another message when the DesktopClient is not listening
+            using (PushSocket server = new PushSocket("@tcp://*:" + _port))
+            {
+                var message = new NetMQMessage();
+
+                message.Append(JsonConvert.SerializeObject(new LogPacket()));
+
+                server.SendMultipartMessage(message);
+            }
+
+            // Give NetMQ time to send the message
+            Thread.Sleep(2000);
+            // Nothing should have made it so the count should be the same
+            Assert.IsTrue(packets.Count == 1);
         }
     }
 }
