@@ -5,11 +5,12 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Configuration;
 using QuantConnect.Messaging;
+using QuantConnect.Orders;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Tests.Messaging
 {
-    [TestFixture, Ignore("This tests requires an open TCP port.")]
+    [TestFixture, Ignore("This test requires an open TCP to be configured.")]
     public class StreamingMessageHandlerTests
     {
         private readonly string _port = "1234";
@@ -33,8 +34,6 @@ namespace QuantConnect.Tests.Messaging
         [Test]
         public void MessageHandler_WillSend_MultipartMessage()
         {
-            var resource = typeof(LogPacket).Name;
-
             using (var pullSocket = new PullSocket(">tcp://localhost:" + _port))
             {
                 var logPacket = new LogPacket
@@ -44,19 +43,25 @@ namespace QuantConnect.Tests.Messaging
 
                 var tx = JsonConvert.SerializeObject(logPacket);
 
-                _messageHandler.Transmit(logPacket, resource);
+                _messageHandler.Transmit(logPacket);
 
                 var message = pullSocket.ReceiveMultipartMessage();
 
-                Assert.IsTrue(message.FrameCount == 2);
-                Assert.IsTrue(message[0].ConvertToString() == resource);
-                Assert.IsTrue(message[1].ConvertToString() == tx);
+                Assert.IsTrue(message.FrameCount == 1);
+                Assert.IsTrue(message[0].ConvertToString() == tx);
             }
         }
 
         [Test]
         public void MessageHandler_SendsCorrectPackets_ToCorrectRoutes()
         {
+            //Allow proper decoding of orders.
+            JsonConvert.DefaultSettings = () => new JsonSerializerSettings
+            {
+                Converters = { new OrderJsonConverter() }
+            };
+
+            // Create list of packets to test
             var debug = new DebugPacket();
             var log = new LogPacket();
             var backtest = new BacktestResultPacket();
@@ -80,25 +85,25 @@ namespace QuantConnect.Tests.Messaging
 
                     var message = pullSocket.ReceiveMultipartMessage();
 
-                    var resource = message[0].ConvertToString();
-                    var packet = message[1].ConvertToString();
+                    var payload = message[0].ConvertToString();
+                    var packet = JsonConvert.DeserializeObject<Packet>(payload);
 
-                    Assert.IsTrue(message.FrameCount == 2);
+                    Assert.IsTrue(message.FrameCount == 1);
 
-                    if (typeof(DebugPacket).Name == resource)
-                        Assert.IsTrue(packet == JsonConvert.SerializeObject(debug));
+                    if (PacketType.Debug == packet.Type)
+                        Assert.IsTrue(payload == JsonConvert.SerializeObject(debug));
 
-                    if (typeof(HandledErrorPacket).Name == resource)
-                        Assert.IsTrue(packet == JsonConvert.SerializeObject(handled));
+                    if (PacketType.HandledError == packet.Type)
+                        Assert.IsTrue(payload == JsonConvert.SerializeObject(handled));
 
-                    if (typeof(BacktestResultPacket).Name == resource)
-                        Assert.IsTrue(packet == JsonConvert.SerializeObject(backtest));
+                    if (PacketType.BacktestResult == packet.Type)
+                        Assert.IsTrue(payload == JsonConvert.SerializeObject(backtest));
 
-                    if (typeof(RuntimeErrorPacket).Name == resource)
-                        Assert.IsTrue(packet == JsonConvert.SerializeObject(error));
+                    if (PacketType.RuntimeError == packet.Type)
+                        Assert.IsTrue(payload == JsonConvert.SerializeObject(error));
 
-                    if (typeof(LogPacket).Name == resource)
-                        Assert.IsTrue(packet == JsonConvert.SerializeObject(log));
+                    if (PacketType.Log == packet.Type)
+                        Assert.IsTrue(payload == JsonConvert.SerializeObject(log));
 
                     count++;
                 }
@@ -116,12 +121,12 @@ namespace QuantConnect.Tests.Messaging
 
                 var message = pullSocket.ReceiveMultipartMessage();
 
-                var resource = message[0].ConvertToString();
-                var packet = message[1].ConvertToString();
+                var payload = message[0].ConvertToString();
+                var packet = JsonConvert.DeserializeObject<Packet>(payload);
 
-                Assert.IsTrue(message.FrameCount == 2);
-                Assert.IsTrue(resource == typeof(BacktestNodePacket).Name);
-                Assert.IsTrue(packet == JsonConvert.SerializeObject(backtest));
+                Assert.IsTrue(message.FrameCount == 1);
+                Assert.IsTrue(PacketType.BacktestNode == packet.Type);
+                Assert.IsTrue(payload == JsonConvert.SerializeObject(backtest));
             }
         }
 
@@ -134,12 +139,12 @@ namespace QuantConnect.Tests.Messaging
 
                 var message = pullSocket.ReceiveMultipartMessage();
 
-                var resource = message[0].ConvertToString();
-                var packet = message[1].ConvertToString();
+                var payload = message[0].ConvertToString();
+                var packet = JsonConvert.DeserializeObject<Packet>(payload);
 
-                Assert.IsTrue(message.FrameCount == 2);
-                Assert.IsTrue(resource == typeof(LiveNodePacket).Name);
-                Assert.IsTrue(packet == JsonConvert.SerializeObject(new LiveNodePacket()));
+                Assert.IsTrue(message.FrameCount == 1);
+                Assert.IsTrue(PacketType.LiveNode == packet.Type);
+                Assert.IsTrue(payload == JsonConvert.SerializeObject(new LiveNodePacket()));
             }
         }
     }

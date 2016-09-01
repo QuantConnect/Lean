@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using System;
+using Newtonsoft.Json;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using NetMQ;
@@ -29,59 +30,43 @@ namespace QuantConnect.Views
                 {
                     var message = pullSocket.ReceiveMultipartMessage();
 
-                    // There should only be 2 part messages
-                    if (message.FrameCount != 2) continue;
+                    // There should only be 1 part messages
+                    if (message.FrameCount != 1) continue;
 
-                    var resource = message[0].ConvertToString();
-                    var packet = message[1].ConvertToString();
+                    var payload = message[0].ConvertToString();
 
+                    var packet = JsonConvert.DeserializeObject<Packet>(payload);
 
-                    if (typeof(LiveNodePacket).Name == resource)
+                    switch (packet.Type)
                     {
-                        var liveJobModel = JsonConvert.DeserializeObject<LiveNodePacket>(packet);
-                        handler.Initialize(liveJobModel);
-                        continue;
-                    }
-                    if (typeof(BacktestNodePacket).Name == resource)
-                    {
-                        var backtestJobModel = JsonConvert.DeserializeObject<BacktestNodePacket>(packet);
-                        handler.Initialize(backtestJobModel);
-                        continue;
-                    }
-                    if (typeof(DebugPacket).Name == resource)
-                    {
-                        var debugEventModel = JsonConvert.DeserializeObject<DebugPacket>(packet);
-                        handler.DisplayDebugPacket(debugEventModel);
-                        continue;
-                    }
-
-                    if (typeof(HandledErrorPacket).Name == resource)
-                    {
-                        var handleErrorEventModel = JsonConvert.DeserializeObject<HandledErrorPacket>(packet);
-                        handler.DisplayHandledErrorPacket(handleErrorEventModel);
-                        continue;
-                    }
-
-                    if (typeof(BacktestResultPacket).Name == resource)
-                    {
-                        var backtestResultEventModel = JsonConvert.DeserializeObject<BacktestResultPacket>(packet);
-                        handler.DisplayBacktestResultsPacket(backtestResultEventModel);
-                        continue;
-                    }
-
-
-                    if (typeof(RuntimeErrorPacket).Name == resource)
-                    {
-                        var runtimeErrorEventModel = JsonConvert.DeserializeObject<RuntimeErrorPacket>(packet);
-                        handler.DisplayRuntimeErrorPacket(runtimeErrorEventModel);
-                        continue;
-                    }
-
-
-                    if (typeof(LogPacket).Name == resource)
-                    {
-                        var logEventModel = JsonConvert.DeserializeObject<LogPacket>(packet);
-                        handler.DisplayLogPacket(logEventModel);
+                        case PacketType.BacktestNode:
+                            var backtestJobModel = JsonConvert.DeserializeObject<BacktestNodePacket>(payload);
+                            handler.Initialize(backtestJobModel);
+                            break;
+                        case PacketType.LiveNode:
+                            var liveJobModel = JsonConvert.DeserializeObject<LiveNodePacket>(payload);
+                            handler.Initialize(liveJobModel);
+                            break;
+                        case PacketType.Debug:
+                            var debugEventModel = JsonConvert.DeserializeObject<DebugPacket>(payload);
+                            handler.DisplayDebugPacket(debugEventModel);
+                            break;
+                        case PacketType.HandledError:
+                            var handleErrorEventModel = JsonConvert.DeserializeObject<HandledErrorPacket>(payload);
+                            handler.DisplayHandledErrorPacket(handleErrorEventModel);
+                            break;
+                        case PacketType.BacktestResult:
+                            var backtestResultEventModel = JsonConvert.DeserializeObject<BacktestResultPacket>(payload);
+                            handler.DisplayBacktestResultsPacket(backtestResultEventModel);
+                            break;
+                        case PacketType.RuntimeError:
+                            var runtimeErrorEventModel = JsonConvert.DeserializeObject<RuntimeErrorPacket>(payload);
+                            handler.DisplayRuntimeErrorPacket(runtimeErrorEventModel);
+                            break;
+                        case PacketType.Log:
+                            var logEventModel = JsonConvert.DeserializeObject<LogPacket>(payload);
+                            handler.DisplayLogPacket(logEventModel);
+                            break;
                     }
                 }
             }

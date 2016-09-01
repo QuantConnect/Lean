@@ -44,12 +44,7 @@ namespace QuantConnect.Messaging
         public void SetAuthentication(AlgorithmNodePacket job)
         {
             _job = job;
-
-            if (_job is LiveNodePacket)
-            {
-                Transmit(_job, typeof(LiveNodePacket).Name);
-            }
-            Transmit(_job, typeof(BacktestNodePacket).Name);
+            Transmit(_job);
         }
 
         /// <summary>
@@ -68,38 +63,11 @@ namespace QuantConnect.Messaging
         }
 
         /// <summary>
-        /// Send certain types of messages with a base type of Packet.
+        /// Send all types of packets
         /// </summary>
         public void Send(Packet packet)
         {
-            //Packets we handled in the UX.
-            switch (packet.Type)
-            {
-                case PacketType.Debug:
-                    var debug = (DebugPacket)packet;
-                    Transmit(debug, typeof(DebugPacket).Name);
-                    break;
-
-                case PacketType.Log:
-                    var log = (LogPacket)packet;
-                    Transmit(log, typeof(LogPacket).Name);
-                    break;
-
-                case PacketType.RuntimeError:
-                    var runtime = (RuntimeErrorPacket)packet;
-                    Transmit(runtime, typeof(RuntimeErrorPacket).Name);
-                    break;
-
-                case PacketType.HandledError:
-                    var handled = (HandledErrorPacket)packet;
-                    Transmit(handled, typeof(HandledErrorPacket).Name);
-                    break;
-
-                case PacketType.BacktestResult:
-                    var result = (BacktestResultPacket)packet;
-                    Transmit(result, typeof(BacktestResultPacket).Name);
-                    break;
-            }
+           Transmit(packet);
 
             if (StreamingApi.IsEnabled)
             {
@@ -111,14 +79,12 @@ namespace QuantConnect.Messaging
         /// Send a message to the _server using ZeroMQ
         /// </summary>
         /// <param name="packet">Packet to transmit</param>
-        /// <param name="resource">The resource where the packet will be sent</param>
-        public void Transmit(Packet packet, string resource)
+        public void Transmit(Packet packet)
         {
             var payload = JsonConvert.SerializeObject(packet);
 
             var message = new NetMQMessage();
 
-            message.Append(resource);
             message.Append(payload);
 
             _server.SendMultipartMessage(message);

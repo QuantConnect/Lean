@@ -9,7 +9,7 @@ using QuantConnect.Packets;
 
 namespace QuantConnect.Views.Tests
 {
-    [TestFixture]
+    [TestFixture, Ignore("This test requires an open TCP to be configured.")]
     class DesktopClientTests
     {
         private string _port = "1235";
@@ -35,13 +35,13 @@ namespace QuantConnect.Views.Tests
         }
 
         [Test]
-        public void DesktopClient_WillNotAccept_SinglePartMessages()
+        public void DesktopClient_WillAccept_SinglePartMessages()
         {
             Queue<Packet> packets = new Queue<Packet>();
             // Mock the the message handler processor
             var messageHandler = new Mock<IDesktopMessageHandler>();
-            messageHandler.Setup(mh => mh.DisplayBacktestResultsPacket(It.IsAny<BacktestResultPacket>())).Callback(
-                (BacktestResultPacket packet) =>
+            messageHandler.Setup(mh => mh.DisplayLogPacket(It.IsAny<LogPacket>())).Callback(
+                (LogPacket packet) =>
                 {
                     packets.Enqueue(packet);
                 }).Verifiable();
@@ -53,38 +53,6 @@ namespace QuantConnect.Views.Tests
             {
                 var message = new NetMQMessage();
 
-                message.Append(typeof(BacktestResultPacket).Name);
-
-                server.SendMultipartMessage(message);
-            }
-
-            // Give NetMQ time to send the message
-            Thread.Sleep(500);
-
-            Assert.IsTrue(packets.Count == 0);
-        }
-
-        [Test]
-        public void DesktopClient_WillAccept_TwoPartMessages()
-        {
-            Queue<Packet> packets = new Queue<Packet>();
-            // Mock the the message handler processor
-            var messageHandler = new Mock<IDesktopMessageHandler>();
-            messageHandler.Setup(mh => mh.DisplayLogPacket(It.IsAny<LogPacket>()))
-                .Callback((LogPacket packet) =>
-                {
-                    packets.Enqueue(packet);
-                })
-                .Verifiable();
-
-            // Setup Client
-            StartClientThread(messageHandler.Object);
-
-            using (PushSocket server = new PushSocket("@tcp://*:" + _port))
-            {
-                var message = new NetMQMessage();
-
-                message.Append(typeof(LogPacket).Name);
                 message.Append(JsonConvert.SerializeObject(new LogPacket()));
 
                 server.SendMultipartMessage(message);
@@ -97,7 +65,7 @@ namespace QuantConnect.Views.Tests
         }
 
         [Test]
-        public void DesktopClient_WillNotAccept_MoreThanTwoPartMessages()
+        public void DesktopClient_WillNotAccept_MoreThanOnePartMessages()
         {
             Queue<Packet> packets = new Queue<Packet>();
             // Mock the the message handler processor
