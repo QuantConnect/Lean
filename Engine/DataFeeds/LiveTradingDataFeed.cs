@@ -501,12 +501,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _customExchange.AddEnumerator(new EnumeratorHandler(config.Symbol, enumerator, enqueueable));
                 enumerator = enqueueable;
 
-                // Trigger universe selection when security added manually after Initialize
+                // Trigger universe selection when security added/removed after Initialize
                 userDefined.CollectionChanged += (sender, args) =>
                 {
-                    if (args.NewItems == null || _frontierUtc == DateTime.MinValue) return;
+                    var items =
+                           args.Action == NotifyCollectionChangedAction.Add ? args.NewItems :
+                           args.Action == NotifyCollectionChangedAction.Remove ? args.OldItems : null;
 
-                    var symbol = args.NewItems.OfType<Symbol>().FirstOrDefault();
+                    if (items == null || _frontierUtc == DateTime.MinValue) return;
+
+                    var symbol = items.OfType<Symbol>().FirstOrDefault();
                     if (symbol == null) return;
 
                     var collection = new BaseDataCollection(_frontierUtc, symbol);

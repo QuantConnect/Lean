@@ -471,6 +471,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 date = _tradeableDates.Current;
 
                 CheckForDelisting(date);
+                if (_delisted)
+                {
+                    return true;
+                }
 
                 if (!_mapFile.HasData(date))
                 {
