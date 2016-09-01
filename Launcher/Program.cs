@@ -89,9 +89,13 @@ namespace QuantConnect.Lean.Launcher
 
             if (environment.EndsWith("-desktop"))
             {
-                // Handle both Linux and Windows paths
-                var exePath = Config.Get("desktop-exe").Replace('/', Path.DirectorySeparatorChar);
-                Process.Start(exePath, Config.Get("desktop-http-port"));
+                var info = new ProcessStartInfo
+                {
+                    UseShellExecute = false,
+                    FileName  = Config.Get("desktop-exe"),
+                    Arguments = Config.Get("desktop-http-port")
+                };
+                Process.Start(info);
             }
 
             // log the job endpoints
