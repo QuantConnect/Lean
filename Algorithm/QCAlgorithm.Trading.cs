@@ -325,21 +325,19 @@ namespace QuantConnect.Algorithm
         /// <returns>OrderResponse. If no error, order request is submitted.</returns>
         private OrderResponse PreOrderChecksImpl(SubmitOrderRequest request)
         {
-            //Ordering 0 is useless.
-            if (request.Quantity == 0 || request.Symbol == null || request.Symbol == QuantConnect.Symbol.Empty)
+            //Most order methods use security objects; so this isn't really used. 
+            // todo: Left here for now but should review 
+            Security security;
+            if (!Securities.TryGetValue(request.Symbol, out security))
             {
-                return OrderResponse.ZeroQuantity(request);
-            }
-
-            //If we're not tracking this symbol: throw error:
-            if (!Securities.ContainsKey(request.Symbol) && !_sentNoDataError)
-            {
-                _sentNoDataError = true;
                 return OrderResponse.Error(request, OrderResponseErrorCode.MissingSecurity, "You haven't requested " + request.Symbol.ToString() + " data. Add this with AddSecurity() in the Initialize() Method.");
             }
 
-            //Set a temporary price for validating order for market orders:
-            var security = Securities[request.Symbol];
+            //Ordering 0 is useless.
+            if (request.Quantity == 0 || request.Symbol == null || request.Symbol == QuantConnect.Symbol.Empty || Math.Abs(request.Quantity) < security.SymbolProperties.LotSize)
+            {
+                return OrderResponse.ZeroQuantity(request);
+            }
 
             if (!security.IsTradable)
             {

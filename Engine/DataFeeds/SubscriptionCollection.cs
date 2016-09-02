@@ -126,7 +126,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public bool TryRemove(SubscriptionDataConfig configuration, out Subscription subscription)
         {
             ConcurrentDictionary<SubscriptionDataConfig, Subscription> dictionary;
-            if (!_subscriptions.TryRemove(configuration.Symbol, out dictionary))
+            if (!_subscriptions.TryGetValue(configuration.Symbol, out dictionary))
             {
                 subscription = null;
                 return false;

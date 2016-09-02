@@ -61,10 +61,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             nextFrontier = DateTime.MaxValue;
             var earlyBirdTicks = nextFrontier.Ticks;
             var data = new List<DataFeedPacket>();
-
+            var universeData = new Dictionary<Universe, BaseDataCollection>();
+            
             SecurityChanges newChanges;
             do
             {
+
+                universeData.Clear();
                 newChanges = SecurityChanges.None;
                 foreach (var subscription in subscriptions)
                 {
@@ -104,13 +107,36 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
                     }
 
-                    // we have new universe data to select based on
+                    // we have new universe data to select based on, store the subscription data until the end
                     if (subscription.IsUniverseSelectionSubscription && packet.Count > 0)
                     {
                         // assume that if the first item is a base data collection then the enumerator handled the aggregation,
                         // otherwise, load all the the data into a new collection instance
-                        var collection = packet.Data[0] as BaseDataCollection ?? new BaseDataCollection(frontier, subscription.Configuration.Symbol, packet.Data);
-                        newChanges += _universeSelection.ApplyUniverseSelection(subscription.Universe, frontier, collection);
+                        var packetBaseDataCollection = packet.Data[0] as BaseDataCollection;
+                        var packetData = packetBaseDataCollection == null
+                            ? packet.Data
+                            : packetBaseDataCollection.Data;
+
+                        BaseDataCollection collection;
+                        if (!universeData.TryGetValue(subscription.Universe, out collection))
+                        {
+                            if (packetBaseDataCollection is OptionChainUniverseDataCollection)
+                            {
+                                var current = subscription.Current as OptionChainUniverseDataCollection;
+                                var underlying = current != null ? current.Underlying : null;
+                                collection = new OptionChainUniverseDataCollection(frontier, subscription.Configuration.Symbol, packetData, underlying);
+                            }
+                            else
+                            {
+                                collection = new BaseDataCollection(frontier, subscription.Configuration.Symbol, packetData);
+                            }
+
+                            universeData[subscription.Universe] = collection;
+                        }
+                        else
+                        {
+                            collection.Data.AddRange(packetData);
+                        }
                     }
 
                     if (subscription.Current != null)
@@ -118,6 +144,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // take the earliest between the next piece of data or the next tz discontinuity
                         earlyBirdTicks = Math.Min(earlyBirdTicks, Math.Min(subscription.Current.EndTime.Ticks - currentOffsetTicks, offsetProvider.GetNextDiscontinuity()));
                     }
+                }
+
+                foreach (var kvp in universeData)
+                {
+                    var universe = kvp.Key;
+                    var baseDataCollection = kvp.Value;
+                    newChanges += _universeSelection.ApplyUniverseSelection(universe, frontier, baseDataCollection);
                 }
 
                 changes += newChanges;

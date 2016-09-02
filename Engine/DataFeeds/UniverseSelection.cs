@@ -58,8 +58,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="universeData">The data provided to perform selection with</param>
         public SecurityChanges ApplyUniverseSelection(Universe universe, DateTime dateTimeUtc, BaseDataCollection universeData)
         {
-            var settings = universe.UniverseSettings;
-
             // perform initial filtering and limit the result
             var selectSymbolsResult = universe.PerformSelection(dateTimeUtc, universeData);
 
@@ -72,11 +70,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // materialize the enumerable into a set for processing
             var selections = selectSymbolsResult.ToHashSet();
 
-            // create a hash set of our existing subscriptions by sid
-            var existingSubscriptions = _dataFeed.Subscriptions.Where(x => !x.EndOfStream).ToHashSet(x => x.Security.Symbol);
-
             var additions = new List<Security>();
             var removals = new List<Security>();
+            var algorithmEndDateUtc = _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone);
 
             // determine which data subscriptions need to be removed from this universe
             foreach (var member in universe.Members.Values)
@@ -103,12 +99,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // it is expected that this function is called while in sync with the algo thread,
                     // so we can make direct edits to the security here
                     member.Cache.Reset();
-                    foreach (var configuration in universe.GetSubscriptions(member))
+                    foreach (var subscription in universe.GetSubscriptionRequests(member, dateTimeUtc, algorithmEndDateUtc))
                     {
-                        _dataFeed.RemoveSubscription(configuration);
+                        if (subscription.IsUniverseSubscription)
+                        {
+                            removals.Remove(member);
+                        }
+                        else
+                        {
+                            _dataFeed.RemoveSubscription(subscription.Configuration);
+                        }
                     }
 
-                    // remove symbol mappings for symbols removed from universes
+                    // remove symbol mappings for symbols removed from universes // TODO : THIS IS BAD!
                     SymbolCache.TryRemove(member.Symbol);
                 }
             }
@@ -116,9 +119,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // find new selections and add them to the algorithm
             foreach (var symbol in selections)
             {
-                // we already have a subscription for this symbol so don't re-add it
-                if (existingSubscriptions.Contains(symbol)) continue;
-
                 // create the new security, the algorithm thread will add this at the appropriate time
                 Security security;
                 if (!_algorithm.Securities.TryGetValue(symbol, out security))
@@ -126,30 +126,35 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     security = universe.CreateSecurity(symbol, _algorithm, _marketHoursDatabase, _symbolPropertiesDatabase);
                 }
 
-                additions.Add(security);
+                var addedMember = universe.AddMember(dateTimeUtc, security);
 
                 var addedSubscription = false;
-                foreach (var config in universe.GetSubscriptions(security))
+                foreach (var request in universe.GetSubscriptionRequests(security, dateTimeUtc, algorithmEndDateUtc))
                 {
                     // ask the limiter if we can add another subscription at that resolution
                     string reason;
-                    if (!_limiter.CanAddSubscription(config.Resolution, out reason))
+                    if (!_limiter.CanAddSubscription(request.Configuration.Resolution, out reason))
                     {
+                        // should we be counting universe subscriptions against user subscriptions limits?
+
                         _algorithm.Error(reason);
-                        Log.Trace("UniverseSelection.ApplyUniverseSelection(): Skipping adding subscription: " + config.Symbol.ToString() + ": " + reason);
+                        Log.Trace("UniverseSelection.ApplyUniverseSelection(): Skipping adding subscription: " + request.Configuration.Symbol.ToString() + ": " + reason);
                         continue;
                     }
 
                     // add the new subscriptions to the data feed
-                    if (_dataFeed.AddSubscription(universe, security, config, dateTimeUtc, _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone)))
+                    _dataFeed.AddSubscription(request);
+
+                    // only update our security changes if we actually added data
+                    if (!request.IsUniverseSubscription)
                     {
-                        addedSubscription = true;
+                        addedSubscription = addedMember;
                     }
                 }
 
                 if (addedSubscription)
                 {
-                    universe.AddMember(dateTimeUtc, security);
+                    additions.Add(security);
                 }
             }
 
@@ -160,7 +165,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 foreach (var security in addedSecurities)
                 {
                     // assume currency feeds are always one subscription per, these are typically quote subscriptions
-                    _dataFeed.AddSubscription(universe, security, security.Subscriptions.First(), dateTimeUtc, _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone));
+                    _dataFeed.AddSubscription(new SubscriptionRequest(false, universe, security, security.Subscriptions.First(), dateTimeUtc, algorithmEndDateUtc));
                 }
             }
 

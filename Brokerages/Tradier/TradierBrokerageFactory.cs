@@ -47,9 +47,9 @@ namespace QuantConnect.Brokerages.Tradier
             /// <summary>
             /// Gets the account ID to be used when instantiating a brokerage
             /// </summary>
-            public static long AccountID
+            public static string AccountID
             {
-                get { return Config.GetInt("tradier-account-id"); }
+                get { return Config.Get("tradier-account-id"); }
             }
 
             /// <summary>
@@ -155,7 +155,7 @@ namespace QuantConnect.Brokerages.Tradier
         public override IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm)
         {
             var errors = new List<string>();
-            var accountID = Read<long>(job.BrokerageData, "tradier-account-id", errors);
+            var accountID = Read<string>(job.BrokerageData, "tradier-account-id", errors);
             var accessToken = Read<string>(job.BrokerageData, "tradier-access-token", errors);
             var refreshToken = Read<string>(job.BrokerageData, "tradier-refresh-token", errors);
             var issuedAt = Read<DateTime>(job.BrokerageData, "tradier-issued-at", errors);

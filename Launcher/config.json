@@ -79,6 +79,10 @@
   "iqfeed-productName": "",
   "iqfeed-version": "1.0",
 
+  // Required to access data from Quandl
+  // To get your access token go to https://www.quandl.com/account/api
+  "quandl-auth-token": "",
+
   // parameters to set in the algorithm (the below are just samples)
   "parameters": {
     "ema-fast": 10,
@@ -175,11 +179,13 @@
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed",
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler",
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler",
-      "messaging-handler": "QuantConnect.Messaging.EventMessagingHandler",
-      "log-handler": "QuantConnect.Logging.QueueLogHandler"
+      "messaging-handler": "QuantConnect.Messaging.StreamingMessageHandler",
+        "log-handler": "QuantConnect.Logging.QueueLogHandler",
+        "desktop-http-port": "1234",
+        "desktop-exe": "../../../UserInterface/bin/Debug/QuantConnect.Views.exe"
     },
 
-    // defines the 'backtesting-desktop' environment
+    // defines the 'live-desktop' environment
     "live-desktop": {
       "live-mode": true,
       "send-via-api": true,
@@ -198,8 +204,10 @@
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
-      "messaging-handler": "QuantConnect.Messaging.EventMessagingHandler",
-      "log-handler": "QuantConnect.Logging.QueueLogHandler"
+      "messaging-handler": "QuantConnect.Messaging.StreamingMessageHandler",
+        "log-handler": "QuantConnect.Logging.QueueLogHandler",
+        "desktop-http-port": "1234",
+        "desktop-exe": "../../../UserInterface/bin/Release/QuantConnect.Views.exe"
     }
   }
 }

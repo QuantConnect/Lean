@@ -228,7 +228,7 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <summary>
         /// Converts an FXCM symbol to a Lean symbol string
         /// </summary>
-        private static string ConvertFxcmSymbolToLeanSymbol(string fxcmSymbol)
+        public static string ConvertFxcmSymbolToLeanSymbol(string fxcmSymbol)
         {
             string leanSymbol;
             return MapFxcmToLean.TryGetValue(fxcmSymbol, out leanSymbol) ? leanSymbol : string.Empty;

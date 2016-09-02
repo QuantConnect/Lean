@@ -70,10 +70,17 @@ namespace QuantConnect.Messaging
                 request.AddParameter("tx", tx);
                 Client.ExecuteAsyncPost(request, (response, handle) =>
                 {
-                    var result = JsonConvert.DeserializeObject<Response>(response.Content);
-                    if (result.Type == "error")
+                    try
                     {
-                        Log.Error(new Exception(result.Message), "PacketType: " + packet.Type);
+                        var result = JsonConvert.DeserializeObject<Response>(response.Content);
+                        if (result.Type == "error")
+                        {
+                            Log.Error(new Exception(result.Message), "PacketType: " + packet.Type);
+                        }
+                    }
+                    catch
+                    {
+                        Log.Error("StreamingApi.Client.ExecuteAsyncPost(): Error deserializing JSON content.");
                     }
                 }, "POST");
             }

@@ -25,6 +25,7 @@ namespace QuantConnect.Tests
         [Test, TestCaseSource("GetRegressionTestParameters")]
         public void AlgorithmStatisticsRegression(AlgorithmStatisticsTestParameters parameters)
         {
+            QuantConnect.Configuration.Config.Set("quandl-auth-token", "WyAazVXnq7ATy_fefTqm");
             AlgorithmRunner.RunLocalBacktest(parameters.Algorithm, parameters.Statistics, parameters.Language);
         }
 
@@ -147,25 +148,25 @@ namespace QuantConnect.Tests
 
             var universeSelectionRegressionStatistics = new Dictionary<string, string>
             {
-                {"Total Trades", "4"},
+                {"Total Trades", "5"},
                 {"Average Win", "0.70%"},
                 {"Average Loss", "0%"},
-                {"Compounding Annual Return", "-56.034%"},
-                {"Drawdown", "3.800%"},
+                {"Compounding Annual Return", "-73.872%"},
+                {"Drawdown", "6.600%"},
                 {"Expectancy", "0"},
-                {"Net Profit", "-3.755%"},
-                {"Sharpe Ratio", "-3.629"},
+                {"Net Profit", "-6.060%"},
+                {"Sharpe Ratio", "-3.562"},
                 {"Loss Rate", "0%"},
                 {"Win Rate", "100%"},
                 {"Profit-Loss Ratio", "0"},
-                {"Alpha", "-0.424"},
-                {"Beta", "1.25"},
-                {"Annual Standard Deviation", "0.173"},
-                {"Annual Variance", "0.03"},
-                {"Information Ratio", "-3.62"},
-                {"Tracking Error", "0.128"},
+                {"Alpha", "-0.681"},
+                {"Beta", "2.014"},
+                {"Annual Standard Deviation", "0.284"},
+                {"Annual Variance", "0.08"},
+                {"Information Ratio", "-3.67"},
+                {"Tracking Error", "0.231"},
                 {"Treynor Ratio", "-0.502"},
-                {"Total Fees", "$2.00"}
+                {"Total Fees", "$5.00"}
             };
 
             var customDataRegressionStatistics = new Dictionary<string, string>
@@ -296,37 +297,60 @@ namespace QuantConnect.Tests
                 {"Loss Rate", "0%"},
                 {"Win Rate", "0%"},
                 {"Profit-Loss Ratio", "0"},
-                {"Alpha", "0.774"},
-                {"Beta", "0.182"},
+                {"Alpha", "0.006"},
+                {"Beta", "0.997"},
                 {"Annual Standard Deviation", "0.193"},
                 {"Annual Variance", "0.037"},
-                {"Information Ratio", "1.319"},
-                {"Tracking Error", "0.247"},
-                {"Treynor Ratio", "4.798"},
+                {"Information Ratio", "6.231"},
+                {"Tracking Error", "0.001"},
+                {"Treynor Ratio", "0.876"},
                 {"Total Fees", "$3.09"},
             };
 
             var coarseFundamentalTop5AlgorithmStatistics = new Dictionary<string, string>
             {
-                {"Total Trades", "8"},
-                {"Average Win", "1.39%"},
-                {"Average Loss", "-0.66%"},
-                {"Compounding Annual Return", "-0.622%"},
-                {"Drawdown", "2.600%"},
-                {"Expectancy", "-0.229"},
-                {"Net Profit", "-0.622%"},
-                {"Sharpe Ratio", "-0.228"},
-                {"Loss Rate", "75%"},
-                {"Win Rate", "25%"},
-                {"Profit-Loss Ratio", "2.09"},
-                {"Alpha", "-0.009"},
-                {"Beta", "0.04"},
-                {"Annual Standard Deviation", "0.021"},
-                {"Annual Variance", "0"},
-                {"Information Ratio", "-0.966"},
+                {"Total Trades", "10"},
+                {"Average Win", "1.15%"},
+                {"Average Loss", "-0.47%"},
+                {"Compounding Annual Return", "-0.746%"},
+                {"Drawdown", "3.000%"},
+                {"Expectancy", "-0.313"},
+                {"Net Profit", "-0.746%"},
+                {"Sharpe Ratio", "-0.242"},
+                {"Loss Rate", "80%"},
+                {"Win Rate", "20%"},
+                {"Profit-Loss Ratio", "2.44"},
+                {"Alpha", "-0.01"},
+                {"Beta", "0.044"},
+                {"Annual Standard Deviation", "0.024"},
+                {"Annual Variance", "0.001"},
+                {"Information Ratio", "-0.973"},
                 {"Tracking Error", "0.1"},
-                {"Treynor Ratio", "-0.121"},
-                {"Total Fees", "$8.64"},
+                {"Treynor Ratio", "-0.13"},
+                {"Total Fees", "$10.61"},
+            };
+
+            var coarseFineFundamentalRegressionAlgorithmStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "6"},
+                {"Average Win", "0.17%"},
+                {"Average Loss", "-1.72%"},
+                {"Compounding Annual Return", "-66.722%"},
+                {"Drawdown", "10.100%"},
+                {"Expectancy", "-0.449"},
+                {"Net Profit", "-8.647%"},
+                {"Sharpe Ratio", "-4.116"},
+                {"Loss Rate", "50%"},
+                {"Win Rate", "50%"},
+                {"Profit-Loss Ratio", "0.10"},
+                {"Alpha", "-0.945"},
+                {"Beta", "1.155"},
+                {"Annual Standard Deviation", "0.208"},
+                {"Annual Variance", "0.043"},
+                {"Information Ratio", "-5.869"},
+                {"Tracking Error", "0.159"},
+                {"Treynor Ratio", "-0.739"},
+                {"Total Fees", "$13.90"},
             };
 
             return new List<AlgorithmStatisticsTestParameters>
@@ -345,6 +369,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("UpdateOrderRegressionAlgorithm", updateOrderRegressionStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("HistoryAlgorithm", historyAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("CoarseFundamentalTop5Algorithm", coarseFundamentalTop5AlgorithmStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("CoarseFineFundamentalRegressionAlgorithm", coarseFineFundamentalRegressionAlgorithmStatistics, Language.CSharp),
 
                 // FSharp
                 // new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.FSharp),

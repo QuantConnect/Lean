@@ -231,6 +231,25 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Extract .gz files to disk
+        /// </summary>
+        /// <param name="gzipFileName"></param>
+        /// <param name="targetDirectory"></param>
+        public static string UnGZip(string gzipFileName, string targetDirectory)
+        {
+            // Use a 4K buffer. Any larger is a waste.
+            var dataBuffer = new byte[4096];
+            var newFileOutput = Path.Combine(targetDirectory, Path.GetFileNameWithoutExtension(gzipFileName));
+            using (Stream fileStream = new FileStream(gzipFileName, FileMode.Open, FileAccess.Read))
+            using (var gzipStream = new GZipInputStream(fileStream))
+            using (var fileOutput = File.Create(newFileOutput))
+            {
+                StreamUtils.Copy(gzipStream, fileOutput, dataBuffer);
+            }
+            return newFileOutput;
+        }
+
+        /// <summary>
         /// Compress a given file and delete the original file. Automatically rename the file to name.zip.
         /// </summary>
         /// <param name="textPath">Path of the original file</param>
@@ -443,7 +462,7 @@ namespace QuantConnect
                         var entry = zip.FirstOrDefault(x => zipEntryName == null || string.Compare(x.FileName, zipEntryName, StringComparison.OrdinalIgnoreCase) == 0);
                         if (entry == null)
                         {
-                            Log.Error("Compression.Unzip(): Unable to locate zip entry with name: " + zipEntryName);
+                            Log.Error("Compression.Unzip(): Unable to locate zip entry with name: " + zipEntryName + " in file: " + filename);
                             return null;
                         }
 

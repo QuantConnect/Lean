@@ -58,6 +58,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.cs" />
+    <Compile Include="CoarseFineFundamentalRegressionAlgorithm.cs" />
+    <Compile Include="CoarseFineFundamentalComboAlgorithm.cs" />
     <Compile Include="FuzzyInferenceAlgorithm.cs" />
     <Compile Include="PortfolioOptimizationNumericsAlgorithm.cs" />
     <Compile Include="DailyFxAlgorithm.cs" />
@@ -148,4 +150,3 @@
   </Target>
   -->
 </Project>
-

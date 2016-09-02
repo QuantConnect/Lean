@@ -162,6 +162,32 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void EnsureInternalCurrencyDataFeedsForNonUsdQuoteCurrencyGetAdded()
+        {
+            const int quantity = 100;
+            const decimal conversionRate = 1 / 100m;
+            var cashJPY = new Cash("JPY", quantity, conversionRate);
+            var cashGBP = new Cash("GBP", quantity, conversionRate);
+            var cashBook = new CashBook();
+            cashBook.Add("JPY", cashJPY);
+            cashBook.Add("GBP", cashGBP);
+
+            var symbol = Symbol.Create("GBPJPY", SecurityType.Forex, Market.FXCM);
+
+            var subscriptions = new SubscriptionManager(TimeKeeper);
+            var securities = new SecurityManager(TimeKeeper);
+            securities.Add(symbol, new Security(SecurityExchangeHours, subscriptions.Add(symbol, Resolution.Minute, TimeZone, TimeZone), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
+
+            cashJPY.EnsureCurrencyDataFeed(securities, subscriptions, MarketHoursDatabase.AlwaysOpen, SymbolPropertiesDatabase.FromDataFolder(), MarketMap, cashBook);
+            var config1 = subscriptions.Subscriptions.Single(x => x.Symbol == Symbols.USDJPY);
+            Assert.IsTrue(config1.IsInternalFeed);
+
+            cashGBP.EnsureCurrencyDataFeed(securities, subscriptions, MarketHoursDatabase.AlwaysOpen, SymbolPropertiesDatabase.FromDataFolder(), MarketMap, cashBook);
+            var config2 = subscriptions.Subscriptions.Single(x => x.Symbol == Symbols.GBPUSD);
+            Assert.IsTrue(config2.IsInternalFeed);
+        }
+
+        [Test]
         public void UpdateModifiesConversionRateAsInvertedValue()
         {
             const int quantity = 100;

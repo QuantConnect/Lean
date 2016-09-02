@@ -39,7 +39,7 @@ namespace QuantConnect.Brokerages.Fxcm
 
         private readonly object _locker = new object();
         private string _currentRequest;
-        private const int ResponseTimeout = 2500;
+        private const int ResponseTimeout = 5000;
         private bool _isOrderUpdateOrCancelRejected;
         private bool _isOrderSubmitRejected;
 
@@ -111,7 +111,9 @@ namespace QuantConnect.Brokerages.Fxcm
             AutoResetEvent autoResetEvent;
             lock (_locker)
             {
-                _currentRequest = _gateway.requestOpenPositions(_accountId);
+                _currentRequest = _terminal.Equals("Demo") ?
+                    _gateway.requestOpenPositions(Convert.ToInt64(_accountId)) :
+                    _gateway.requestOpenPositions(_accountId);
                 autoResetEvent = new AutoResetEvent(false);
                 _mapRequestsToAutoResetEvents[_currentRequest] = autoResetEvent;
             }

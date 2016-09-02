@@ -163,7 +163,7 @@ namespace QuantConnect.AlgorithmFactory
                 {
                     Log.Trace("Loader.TryCreatePythonAlgorithm(): Importing python module...");
                     var algorithmName = Config.Get("algorithm-type-name");
-                    var scope = engine.Runtime.ImportModule(algorithmName);
+                    var scope = engine.Runtime.ImportModule(string.IsNullOrEmpty(algorithmName) ? "main" : algorithmName);
                     items = (List<KeyValuePair<string, dynamic>>)scope.GetItems();
                 }
                 catch (Exception err)
@@ -287,7 +287,7 @@ namespace QuantConnect.AlgorithmFactory
 
                     if (string.IsNullOrEmpty(types[0]))
                     {
-                        errorMessage = "Unable to resolve multiple algorithm types to a single type.";
+                        errorMessage = "Please verify algorithm type name matches the algorithm name in the configuration file. Unable to resolve multiple algorithm types to a single type.";
                         Log.Error("Loader.TryCreateILAlgorithm(): Failed resolving multiple algorithm types to a single type.");
                         return false;
                     }

@@ -26,7 +26,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <summary>
         /// The list of known Oanda symbols.
         /// </summary>
-        private static readonly HashSet<string> KnownSymbols = new HashSet<string>
+        public static readonly HashSet<string> KnownSymbols = new HashSet<string>
         {
             "AU200_AUD",
             "AUD_CAD",
@@ -159,7 +159,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         private static readonly HashSet<string> KnownCurrencies = new HashSet<string>
         {
-            "AUD", "CAD", "CHF", "CNY", "CZK", "DKK", "EUR", "GBP", "HKD", "HUF", "INR", "JPY", 
+            "AUD", "CAD", "CHF", "CNH", "CNY", "CZK", "DKK", "EUR", "GBP", "HKD", "HUF", "INR", "JPY",
             "MXN", "NOK", "NZD", "PLN", "SAR", "SEK", "SGD", "THB", "TRY", "TWD", "USD", "ZAR"
         };
 
