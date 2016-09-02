@@ -48,7 +48,7 @@ namespace QuantConnect.Lean.Launcher
    
             //Name thread for the profiler:
             Thread.CurrentThread.Name = "Algorithm Analysis Thread";
-            Log.Trace("Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v" + Globals.Version + " Mode: " + mode);
+            Log.Trace("Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v" + Globals.Version + " Mode: " + mode + " (" + (Environment.Is64BitProcess ? "64" : "32") + "bit)");
             Log.Trace("Engine.Main(): Started " + DateTime.Now.ToShortTimeString());
             Log.Trace("Engine.Main(): Memory " + OS.ApplicationMemoryUsed + "Mb-App  " + +OS.TotalPhysicalMemoryUsed + "Mb-Used  " + OS.TotalPhysicalMemory + "Mb-Total");
 
