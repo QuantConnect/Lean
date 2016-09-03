@@ -25,9 +25,12 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Net;
 using System.Threading;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 using Timer = System.Timers.Timer;
+using QuantConnect.Lean.Engine.DataFeeds.Transport;
+
 
 namespace QuantConnect.ToolBox.IQFeed
 {
@@ -40,6 +43,7 @@ namespace QuantConnect.ToolBox.IQFeed
         private int _dataPointCount;
         private readonly HashSet<Symbol> _symbols;
         private readonly object _sync = new object();
+        private readonly IQFeedDataQueueUniverseProvider _symbolUniverse;
 
         //Socket connections:
         private AdminPort _adminPort;
@@ -62,6 +66,8 @@ namespace QuantConnect.ToolBox.IQFeed
         {
             _symbols = new HashSet<Symbol>();
             _outputCollection = new BlockingCollection<BaseData>();
+            _symbolUniverse = new IQFeedDataQueueUniverseProvider();
+
             if (!IsConnected) Connect();
         }
 
@@ -76,6 +82,8 @@ namespace QuantConnect.ToolBox.IQFeed
                 yield return tick;
             }
         }
+
+
 
         /// <summary>
         /// Adds the specified symbols to the subscription: new IQLevel1WatchItem("IBM", true)
@@ -238,6 +246,7 @@ namespace QuantConnect.ToolBox.IQFeed
             _isConnected = false;
             Log.Trace("IQFeed.Disconnect(): Disconnected");
         }
+
 
         /// <summary>
         /// Returns true if this data provide can handle the specified symbol

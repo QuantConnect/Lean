@@ -161,6 +161,7 @@
     <Compile Include="GoogleDownloader\Program.cs" />
     <Compile Include="IDataProcessor.cs" />
     <Compile Include="IQFeed\IQFeedDataQueueHandler.cs" />
+    <Compile Include="IQFeed\IQFeedDataQueueUniverseProvider.cs" />
     <Compile Include="IQFeed\IQ\DataStructures.cs" />
     <Compile Include="IQFeed\IQ\IQAdminSocketClient.cs" />
     <Compile Include="IQFeed\IQ\IQConnect.cs" />
@@ -223,6 +224,10 @@
     <ProjectReference Include="..\Configuration\QuantConnect.Configuration.csproj">
       <Project>{0aeb4ea3-28c8-476e-89fd-926f06590b4c}</Project>
       <Name>QuantConnect.Configuration</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Engine\QuantConnect.Lean.Engine.csproj">
+      <Project>{12156f46-d07e-4e3d-ad2b-7409e82ab62f}</Project>
+      <Name>QuantConnect.Lean.Engine</Name>
     </ProjectReference>
     <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj">
       <Project>{01911409-86be-4e7d-9947-df714138610d}</Project>

@@ -191,6 +191,7 @@
     <Compile Include="Engine\DataFeeds\Enumerators\TradeBarBuilderEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\FileSystemDataFeedTests.cs" />
     <Compile Include="Engine\DataFeeds\FillForwardEnumeratorTest.cs" />
+    <Compile Include="Engine\DataFeeds\IQFeedRealtimeDataFeedTests.cs" />
     <Compile Include="Engine\DataFeeds\RemoteFileBaseData.cs" />
     <Compile Include="Engine\DataFeeds\RestApiBaseData.cs" />
     <Compile Include="Engine\DataFeeds\FuncDataQueueHandler.cs" />
@@ -392,6 +393,10 @@
     <ProjectReference Include="..\Queues\QuantConnect.Queues.csproj">
       <Project>{d6633172-1368-4df6-9444-825c3e00c819}</Project>
       <Name>QuantConnect.Queues</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ToolBox\QuantConnect.ToolBox.csproj">
+      <Project>{AC9A142C-B485-44D7-91FF-015C22C43D05}</Project>
+      <Name>QuantConnect.ToolBox</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
