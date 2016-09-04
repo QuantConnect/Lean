@@ -57,7 +57,7 @@
   "tradier-access-token": "",
   "tradier-refresh-token": "",
   "tradier-issued-at": "",
-  "trader-lifespan": "",
+  "tradier-lifespan": "",
 
   // oanda configuration
   "oanda-environment": "Practice",
