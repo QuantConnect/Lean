@@ -164,6 +164,20 @@
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler"
     },
 
+    // defines the 'live-oanda' environment
+    "live-oanda": {
+      "live-mode": true,
+
+      // real brokerage implementations require the BrokerageTransactionHandler
+      "live-mode-brokerage": "OandaBrokerage",
+      "data-queue-handler": "OandaBrokerage",
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler"
+    },
+
     // defines the 'backtesting-desktop' environment
     "backtesting-desktop": {
       "live-mode": false,
@@ -180,9 +194,9 @@
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler",
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler",
       "messaging-handler": "QuantConnect.Messaging.StreamingMessageHandler",
-        "log-handler": "QuantConnect.Logging.QueueLogHandler",
-        "desktop-http-port": "1234",
-        "desktop-exe": "../../../UserInterface/bin/Debug/QuantConnect.Views.exe"
+      "log-handler": "QuantConnect.Logging.QueueLogHandler",
+      "desktop-http-port": "1234",
+      "desktop-exe": "../../../UserInterface/bin/Debug/QuantConnect.Views.exe"
     },
 
     // defines the 'live-desktop' environment
@@ -205,9 +219,9 @@
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
       "messaging-handler": "QuantConnect.Messaging.StreamingMessageHandler",
-        "log-handler": "QuantConnect.Logging.QueueLogHandler",
-        "desktop-http-port": "1234",
-        "desktop-exe": "../../../UserInterface/bin/Release/QuantConnect.Views.exe"
+      "log-handler": "QuantConnect.Logging.QueueLogHandler",
+      "desktop-http-port": "1234",
+      "desktop-exe": "../../../UserInterface/bin/Release/QuantConnect.Views.exe"
     }
   }
 }
