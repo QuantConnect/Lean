@@ -37,11 +37,9 @@
   "map-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskMapFileProvider",
   "factor-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskFactorFileProvider",
 
-  // if one uses "true" as string in following token, market hours
-  // will remain open all hours and all days.
-  // Any other string beside "true" will make lean operate
-  // only during regular market hours.
-  "force-exchange-always-open": "false",
+  // if one uses true in following token, market hours will remain open all hours and all days.
+  // if one uses false will make lean operate only during regular market hours.
+  "force-exchange-always-open": false,
 
   // interactive brokers configuration
   "ib-account": "DUxxxx",
@@ -50,7 +48,7 @@
   "ib-host": "127.0.0.1",
   "ib-port": "4001",
   "ib-agent-description": "Individual",
-  "ib-use-tws": "false",
+  "ib-use-tws": false,
   "ib-tws-dir": "C:\\Jts",
   "ib-controller-dir": "C:\\IBController",
 
@@ -59,7 +57,7 @@
   "tradier-access-token": "",
   "tradier-refresh-token": "",
   "tradier-issued-at": "",
-  "trader-lifespan": "",
+  "tradier-lifespan": "",
 
   // oanda configuration
   "oanda-environment": "Practice",
@@ -104,7 +102,7 @@
 
     // defines the 'live-paper' environment
     "live-paper": {
-      "live-mode": "true",
+      "live-mode": true,
 
       // the paper brokerage requires the BacktestingTransactionHandler
       "live-mode-brokerage": "PaperBrokerage",
@@ -164,6 +162,20 @@
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler"
     },
 
+    // defines the 'live-oanda' environment
+    "live-oanda": {
+      "live-mode": true,
+
+      // real brokerage implementations require the BrokerageTransactionHandler
+      "live-mode-brokerage": "OandaBrokerage",
+      "data-queue-handler": "OandaBrokerage",
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler"
+    },
+
     // defines the 'backtesting-desktop' environment
     "backtesting-desktop": {
       "live-mode": false,
@@ -180,9 +192,9 @@
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler",
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler",
       "messaging-handler": "QuantConnect.Messaging.StreamingMessageHandler",
-        "log-handler": "QuantConnect.Logging.QueueLogHandler",
-        "desktop-http-port": "1234",
-        "desktop-exe": "../../../UserInterface/bin/Debug/QuantConnect.Views.exe"
+      "log-handler": "QuantConnect.Logging.QueueLogHandler",
+      "desktop-http-port": "1234",
+      "desktop-exe": "../../../UserInterface/bin/Debug/QuantConnect.Views.exe"
     },
 
     // defines the 'live-desktop' environment
@@ -205,9 +217,9 @@
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
       "messaging-handler": "QuantConnect.Messaging.StreamingMessageHandler",
-        "log-handler": "QuantConnect.Logging.QueueLogHandler",
-        "desktop-http-port": "1234",
-        "desktop-exe": "../../../UserInterface/bin/Release/QuantConnect.Views.exe"
+      "log-handler": "QuantConnect.Logging.QueueLogHandler",
+      "desktop-http-port": "1234",
+      "desktop-exe": "../../../UserInterface/bin/Release/QuantConnect.Views.exe"
     }
   }
 }
