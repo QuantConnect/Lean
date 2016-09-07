@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -22,6 +23,7 @@ using System.Text;
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
+using Ionic.Zip;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using ZipEntry = ICSharpCode.SharpZipLib.Zip.ZipEntry;
@@ -45,32 +47,21 @@ namespace QuantConnect
         /// <returns>True on successfully creating the zip file.</returns>
         public static bool ZipData(string zipPath, Dictionary<string, string> filenamesAndData)
         {
-            var success = true;
-            var buffer = new byte[4096];
-
             try
             {
                 //Create our output
                 using (var stream = new ZipOutputStream(File.Create(zipPath)))
                 {
+                    stream.SetLevel(0);
                     foreach (var filename in filenamesAndData.Keys)
                     {
                         //Create the space in the zip file:
                         var entry = new ZipEntry(filename);
-                        //Get a Byte[] of the file data:
-                        var file = Encoding.Default.GetBytes(filenamesAndData[filename]);
+                        var data = filenamesAndData[filename];
+                        var bytes = Encoding.Default.GetBytes(data);
                         stream.PutNextEntry(entry);
-
-                        using (var ms = new MemoryStream(file))
-                        {
-                            int sourceBytes;
-                            do
-                            {
-                                sourceBytes = ms.Read(buffer, 0, buffer.Length);
-                                stream.Write(buffer, 0, sourceBytes);
-                            }
-                            while (sourceBytes > 0);
-                        }
+                        stream.Write(bytes, 0, bytes.Length);
+                        stream.CloseEntry();
                     } // End For Each File.
 
                     //Close stream:
@@ -81,9 +72,9 @@ namespace QuantConnect
             catch (Exception err)
             {
                 Log.Error(err);
-                success = false;
+                return false;
             }
-            return success;
+            return true;
         }
 
         /// <summary>
@@ -162,6 +153,42 @@ namespace QuantConnect
                 Log.Error(err);
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Append the zip data to the file-entry specified.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="entry"></param>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public static bool ZipCreateAppendData(string path, string entry, string data)
+        {
+            try
+            {
+                if (File.Exists(path))
+                {
+                    using (var zip = ZipFile.Read(path))
+                    {
+                        zip.AddEntry(entry, data);
+                        zip.Save();
+                    }
+                }
+                else
+                {
+                    using (var zip = new ZipFile(path))
+                    {
+                        zip.AddEntry(entry, data);
+                        zip.Save();
+                    }
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+                return false;
+            }
+            return true;
         }
 
         /// <summary>
