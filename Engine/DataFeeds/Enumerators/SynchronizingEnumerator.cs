@@ -128,7 +128,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private static IEnumerator<BaseData> GetSynchronizedEnumerator(IEnumerator<BaseData>[] enumerators)
         {
             var streamCount = enumerators.Length;
-            if (streamCount < 50)
+            if (streamCount < 500)
             {
                 //Less than 50 streams use the brute force method:
                 return GetBruteForceMethod(enumerators);
