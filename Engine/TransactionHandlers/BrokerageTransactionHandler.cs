@@ -634,6 +634,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // rounds off the order towards 0 to the nearest multiple of lot size
             order.Quantity = RoundOffOrder(order, security);
 
+            // rounds the order prices to nearest fractional of pip size
+            RoundOrderPrices(order, security);
+
             if (!_orders.TryAdd(order.Id, order))
             {
                 Log.Error("BrokerageTransactionHandler.HandleSubmitOrderRequest(): Unable to add new order, order not processed.");
@@ -757,6 +760,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             // modify the values of the order object
             order.ApplyUpdateOrderRequest(request);
+
+            // rounds the order prices to nearest fractional of pip size
+            RoundOrderPrices(order, security);
+
             ticket.SetOrder(order);
 
             bool orderUpdated;
@@ -990,6 +997,72 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             else
             {
                 return order.Quantity;
+            }
+        }
+
+        /// <summary>
+        /// Rounds the order prices to the nearest fraction of Pip Size.
+        /// <remarks>
+        /// This procedure is needed to meet brokerage precision requirements.
+        /// </remarks>
+        /// </summary>
+        private void RoundOrderPrices(Order order, Security security)
+        {
+            // Only round prices of FXCM or Oanda securities
+            var market = security.Symbol.ID.Market;
+            if (market != Market.FXCM && market != Market.Oanda)
+            {
+                return;
+            }
+            
+            // Do not need to round market orders
+            if (order.Type == OrderType.Market || order.Type == OrderType.MarketOnOpen || order.Type == OrderType.MarketOnClose)
+            {
+                return;
+            }
+
+            // An increment is a tenth of a pip (pipette).
+            var increment = security.SymbolProperties.PipSize / 10m;
+            if (increment == 0) return;
+
+            var limitPrice = 0m;
+            var limitRound = 0m;
+            var stopPrice = 0m;
+            var stopRound = 0m;
+
+            switch (order.Type)
+            {
+                case OrderType.Limit:
+                    limitPrice = ((LimitOrder)order).LimitPrice;
+                    ((LimitOrder)order).LimitPrice = Math.Round(limitPrice / increment) * increment;
+                    limitRound = ((LimitOrder)order).LimitPrice;
+                    break;
+                case OrderType.StopMarket:
+                    stopPrice = ((StopMarketOrder)order).StopPrice;
+                    ((StopMarketOrder)order).StopPrice = Math.Round(stopPrice / increment) * increment;
+                    stopRound = ((StopMarketOrder)order).StopPrice;
+                    break;
+                case OrderType.StopLimit:
+                    limitPrice = ((StopLimitOrder)order).LimitPrice;
+                    ((StopLimitOrder)order).LimitPrice = Math.Round(limitPrice / increment) * increment;
+                    limitRound = ((StopLimitOrder)order).LimitPrice;
+                    stopPrice = ((StopLimitOrder)order).StopPrice;
+                    ((StopLimitOrder)order).StopPrice = Math.Round(stopPrice / increment) * increment;
+                    stopRound = ((StopLimitOrder)order).StopPrice;
+                    break;
+                default:
+                    break;
+            }
+
+            var format = "Warning: To meet brokerage precision requirements, order {0}Price was rounded to {1} from {2}";
+
+             if (!limitPrice.Equals(limitRound))
+            {
+                _algorithm.Error(string.Format(format, "Limit", limitRound, limitPrice));
+            }
+            if (!stopPrice.Equals(stopRound))
+            {
+                _algorithm.Error(string.Format(format, "Stop", stopRound, stopPrice));
             }
         }
     }
