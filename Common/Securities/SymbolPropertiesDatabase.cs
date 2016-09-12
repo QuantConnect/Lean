@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using QuantConnect.Util;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Securities
 {
@@ -54,6 +55,13 @@ namespace QuantConnect.Securities
                 // now check with null symbol key
                 if (!_entries.TryGetValue(new SecurityDatabaseKey(market, null, securityType), out symbolProperties))
                 {
+                    // no properties found for CFD or Forex, log an error and throw an exception
+                    if (securityType == SecurityType.Cfd || securityType == SecurityType.Forex)
+                    {
+                        Log.Error(string.Format("SymbolPropertiesDatabase.GetSymbolProperties(): Unable to locate symbol properties for {0}. Please update symbol-properties-database.csv", key));
+
+                        throw new ArgumentException("Unable to locate symbol properties for " + key);
+                    }
                     // no properties found, return object with default property values
                     return SymbolProperties.GetDefault(defaultQuoteCurrency);
                 }

@@ -243,6 +243,7 @@ namespace QuantConnect
             {"SGD", "$"},
             {"XAG", "Ag"},
             {"CNY", "¥"},
+            {"CNH", "¥"},
             {"CZK", "Kč"},
             {"DKK", "kr"},
             {"HUF", "Ft"},
