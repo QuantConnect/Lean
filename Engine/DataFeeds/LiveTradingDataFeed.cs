@@ -533,6 +533,33 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 });
                 enumerator = enqueable;
             }
+            else if (request.Universe is OptionChainUniverse)
+            {
+                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating option chain universe: " + config.Symbol.ToString());
+
+                Func<SubscriptionRequest, IEnumerator<BaseData>, IEnumerator<BaseData>> configure = (subRequest, input) =>
+                {
+                    // we check if input enumerator is an underlying enumerator. If yes, we subscribe it to the data.
+                    var aggregator = input as TradeBarBuilderEnumerator;
+
+                    if (aggregator != null)
+                    {
+                        _exchange.SetDataHandler(request.Configuration.Symbol, data =>
+                        {
+                            aggregator.ProcessData((Tick)data);
+                        });
+                    }
+                   
+                    return input;
+                };
+
+                var symbolUniverse = _dataQueueHandler as IDataQueueUniverseProvider;
+
+                var enumeratorFactory = new OptionChainUniverseSubscriptionEnumeratorFactory(configure, symbolUniverse, _timeProvider);
+                enumerator = enumeratorFactory.CreateEnumerator(request);
+
+                enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, tzOffsetProvider);
+            }
             else
             {
                 Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating custom universe: " + config.Symbol.ToString());

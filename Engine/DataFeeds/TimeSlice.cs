@@ -317,7 +317,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             OptionContract contract;
             if (!chain.Contracts.TryGetValue(baseData.Symbol, out contract))
             {
-                var underlyingSymbol = Symbol.Create(baseData.Symbol.ID.Symbol, SecurityType.Equity, baseData.Symbol.ID.Market);
+                var underlyingSymbol = baseData.Symbol.Underlying;
                 contract = new OptionContract(baseData.Symbol, underlyingSymbol)
                 {
                     Time = baseData.EndTime,

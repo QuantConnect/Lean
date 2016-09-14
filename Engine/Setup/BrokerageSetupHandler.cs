@@ -27,6 +27,7 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Util;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.Setup
 {
@@ -287,7 +288,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 {
                     // populate the algorithm with the account's current holdings
                     var holdings = brokerage.GetAccountHoldings();
-                    var supportedSecurityTypes = new HashSet<SecurityType> { SecurityType.Equity, SecurityType.Forex, SecurityType.Cfd };
+                    var supportedSecurityTypes = new HashSet<SecurityType> { SecurityType.Equity, SecurityType.Forex, SecurityType.Cfd, SecurityType.Option };
                     var minResolution = new Lazy<Resolution>(() => algorithm.Securities.Select(x => x.Value.Resolution).DefaultIfEmpty(Resolution.Second).Min());
                     foreach (var holding in holdings)
                     {
@@ -307,9 +308,30 @@ namespace QuantConnect.Lean.Engine.Setup
                         if (!algorithm.Portfolio.ContainsKey(holding.Symbol))
                         {
                             Log.Trace("BrokerageSetupHandler.Setup(): Adding unrequested security: " + holding.Symbol.ToString());
-                            // for items not directly requested set leverage to 1 and at the min resolution
-                            algorithm.AddSecurity(holding.Type, holding.Symbol.Value, minResolution.Value, null, true, 1.0m, false);
+
+                            // if we adding option, we have to add the option universe, so we take underlying symbol
+                            // Implemented solution is temporary. We will remove this code once it is the idea on how to refactor IAlgorithm is matured. 
+                            if (holding.Type == SecurityType.Option)
+                            {
+                                var underlying = holding.Symbol.Underlying.Value;
+                                var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+                                var symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
+
+                                // adding entire option universe to the system
+                                var canonicalOption = algorithm.AddSecurity(holding.Type, underlying, minResolution.Value, null, true, 1.0m, false);
+                                var universe = algorithm.UniverseManager.Where(x => x.Key == canonicalOption.Symbol).First().Value;
+
+                                // adding current option contract to the system
+                                var option = universe.CreateSecurity(holding.Symbol, algorithm, marketHoursDatabase, symbolPropertiesDatabase);
+                                algorithm.Securities.Add(holding.Symbol, option);
+                            }
+                            else
+                            {
+                                // for items not directly requested set leverage to 1 and at the min resolution
+                                algorithm.AddSecurity(holding.Type, holding.Symbol.Value, minResolution.Value, null, true, 1.0m, false);
+                            }
                         }
+
                         algorithm.Portfolio[holding.Symbol].SetHoldings(holding.AveragePrice, (int) holding.Quantity);
                         algorithm.Securities[holding.Symbol].SetMarketPrice(new TradeBar
                         {

@@ -545,8 +545,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 throw new ArgumentException("Expected order with populated BrokerId for updating orders.");
             }
 
-            var ibOrder = ConvertOrder(order, contract, ibOrderID);
-            _client.PlaceOrder(ibOrder.OrderId, contract, ibOrder);
+            if (order.Type == OrderType.OptionExercise)
+            {
+                _client.ExerciseOptions(ibOrderID, contract, 1, order.Quantity, _account, 0);
+            }
+            else
+            {
+                var ibOrder = ConvertOrder(order, contract, ibOrderID);
+                _client.PlaceOrder(ibOrder.OrderId, contract, ibOrder);
+            }
         }
 
         private string GetPrimaryExchange(IB.Contract contract)
@@ -1053,7 +1060,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 contract.Expiry = symbol.ID.Date.ToString(DateFormat.EightCharacter);
                 contract.Right = symbol.ID.OptionRight == OptionRight.Call ? IB.RightType.Call : IB.RightType.Put;
                 contract.Strike = Convert.ToDouble(symbol.ID.StrikePrice);
-                contract.Symbol = symbol.ID.Symbol;
+                contract.Symbol = ibSymbol;
             }
 
             // some contracts require this, such as MSFT
@@ -1260,7 +1267,18 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var ibSymbol = securityType == SecurityType.Forex ? contract.Symbol + contract.Currency : contract.Symbol;
             var market = securityType == SecurityType.Forex ? Market.FXCM : Market.USA;
 
-            return _symbolMapper.GetLeanSymbol(ibSymbol, securityType, market);
+            if (securityType == SecurityType.Option)
+            {
+                var expiryDate = DateTime.ParseExact(contract.Expiry, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+                var right = contract.Right == IB.RightType.Call ? OptionRight.Call : OptionRight.Put;
+                var strike = Convert.ToDecimal(contract.Strike);
+
+                return _symbolMapper.GetLeanSymbol(ibSymbol, securityType, market, expiryDate, strike, right);
+            }
+            else
+            {
+                return _symbolMapper.GetLeanSymbol(ibSymbol, securityType, market);
+            }
         }
 
         private decimal RoundPrice(decimal input, decimal minTick)

@@ -26,6 +26,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
+using System.Linq;
 using System.Threading;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 using Timer = System.Timers.Timer;
@@ -37,11 +38,12 @@ namespace QuantConnect.ToolBox.IQFeed
     /// <summary>
     /// IQFeedDataQueueHandler is an implementation of IDataQueueHandler and IHistoryProvider
     /// </summary>
-    public class IQFeedDataQueueHandler : IDataQueueHandler, IHistoryProvider
+    public class IQFeedDataQueueHandler : IDataQueueHandler, IHistoryProvider, IDataQueueUniverseProvider
     {
         private bool _isConnected;
         private int _dataPointCount;
         private readonly HashSet<Symbol> _symbols;
+        private readonly Dictionary<Symbol, Symbol> _underlyings;
         private readonly object _sync = new object();
         private readonly IQFeedDataQueueUniverseProvider _symbolUniverse;
 
@@ -65,6 +67,7 @@ namespace QuantConnect.ToolBox.IQFeed
         public IQFeedDataQueueHandler()
         {
             _symbols = new HashSet<Symbol>();
+            _underlyings = new Dictionary<Symbol, Symbol>();
             _outputCollection = new BlockingCollection<BaseData>();
             _symbolUniverse = new IQFeedDataQueueUniverseProvider();
 
@@ -80,6 +83,13 @@ namespace QuantConnect.ToolBox.IQFeed
             foreach (var tick in _outputCollection.GetConsumingEnumerable())
             {
                 yield return tick;
+
+                if (_underlyings.ContainsKey(tick.Symbol))
+                {
+                    var underlyingTick = tick.Clone();
+                    underlyingTick.Symbol = _underlyings[tick.Symbol];
+                    yield return underlyingTick;
+                }
             }
         }
 
@@ -102,11 +112,18 @@ namespace QuantConnect.ToolBox.IQFeed
                         {
                             Log.Trace("IQFeed.Subscribe(): Subscribe Request: " + symbol.ToString());
 
-                            var type = symbol.ID.SecurityType;
                             if (_symbols.Add(symbol))
                             {
-                                var ticker = symbol.Value;
-                                if (type == SecurityType.Forex) ticker += ".FXCM";
+                                // processing canonical option symbol to subscribe to underlying prices
+                                var subscribeSymbol = symbol;
+
+                                if (symbol.ID.SecurityType == SecurityType.Option && symbol.ID.StrikePrice == 0.0m)
+                                {
+                                    subscribeSymbol = symbol.Underlying;
+                                    _underlyings.Add(subscribeSymbol, symbol);
+                                }
+
+                                var ticker = _symbolUniverse.GetBrokerageSymbol(subscribeSymbol);
                                 _level1Port.Subscribe(ticker);
 
                                 Log.Trace("IQFeed.Subscribe(): Subscribe Processed: " + symbol.ToString());
@@ -135,11 +152,18 @@ namespace QuantConnect.ToolBox.IQFeed
                     lock (_sync)
                     {
                         Log.Trace("IQFeed.Unsubscribe(): " + symbol.ToString());
-                        var type = symbol.ID.SecurityType;
-                        _symbols.Remove(symbol);
-                        var ticker = symbol.Value;
-                        if (type == SecurityType.Forex) ticker += ".FXCM";
 
+                        _symbols.Remove(symbol);
+
+                        var subscribeSymbol = symbol;
+
+                        if (symbol.ID.SecurityType == SecurityType.Option && symbol.ID.StrikePrice == 0.0m)
+                        {
+                            subscribeSymbol = symbol.Underlying;
+                            _underlyings.Remove(subscribeSymbol);
+                        }
+
+                        var ticker = _symbolUniverse.GetBrokerageSymbol(subscribeSymbol);
                         if (_level1Port.Contains(ticker))
                         {
                             _level1Port.Unsubscribe(ticker);
@@ -215,12 +239,12 @@ namespace QuantConnect.ToolBox.IQFeed
                 _adminPort.ConnectedEvent += AdminPortOnConnectedEvent;
 
                 Log.Trace("IQFeed.Connect(): Connecting to L1 data...");
-                _level1Port = new Level1Port(_outputCollection);
+                _level1Port = new Level1Port(_outputCollection, _symbolUniverse);
                 _level1Port.Connect();
                 _level1Port.SetClientName("Level1");
 
                 Log.Trace("IQFeed.Connect(): Connecting to Historical data...");
-                _historyPort = new HistoryPort();
+                _historyPort = new HistoryPort(_symbolUniverse);
                 _historyPort.Connect();
                 _historyPort.SetClientName("History");
 
@@ -259,7 +283,8 @@ namespace QuantConnect.ToolBox.IQFeed
             var securityType = symbol.ID.SecurityType;
             return
                 (securityType == SecurityType.Equity && market == Market.USA) ||
-                (securityType == SecurityType.Forex && market == Market.FXCM);
+                (securityType == SecurityType.Forex && market == Market.FXCM) ||
+                (securityType == SecurityType.Option && market == Market.USA);
         }
 
         /// <summary>
@@ -303,6 +328,7 @@ namespace QuantConnect.ToolBox.IQFeed
             private readonly Timer _timer;
             private readonly BlockingCollection<BaseData> _dataQueue;
             private readonly ConcurrentDictionary<string, double> _prices;
+            private readonly IQFeedDataQueueUniverseProvider _symbolUniverse;
 
             public DateTime FeedTime
             {
@@ -318,13 +344,14 @@ namespace QuantConnect.ToolBox.IQFeed
                 }
             }
 
-            public Level1Port(BlockingCollection<BaseData> dataQueue)
+            public Level1Port(BlockingCollection<BaseData> dataQueue, IQFeedDataQueueUniverseProvider symbolUniverse)
                 : base(80)
             {
                 start = DateTime.Now;
                 _prices = new ConcurrentDictionary<string, double>();
 
                 _dataQueue = dataQueue;
+                _symbolUniverse = symbolUniverse;
                 Level1SummaryUpdateEvent += OnLevel1SummaryUpdateEvent;
                 Level1TimerEvent += OnLevel1TimerEvent;
                 Level1ServerDisconnectedEvent += OnLevel1ServerDisconnected;
@@ -364,8 +391,9 @@ namespace QuantConnect.ToolBox.IQFeed
                     // it at all
                     double referencePrice;
                     _prices.TryGetValue(e.Symbol, out referencePrice);
-                    var sid = SecurityIdentifier.GenerateEquity(e.Symbol, Market.USA);
-                    var split = new Split(new Symbol(sid, e.Symbol), FeedTime, (decimal) referencePrice, (decimal) e.SplitFactor1);
+
+                    var symbol = _symbolUniverse.GetLeanSymbol(e.Symbol, SecurityType.Forex, Market.FXCM);
+                    var split = new Split(symbol, FeedTime, (decimal) referencePrice, (decimal) e.SplitFactor1);
                     _dataQueue.Add(split);
                 }
             }
@@ -390,12 +418,9 @@ namespace QuantConnect.ToolBox.IQFeed
                 var symbol = Symbol.Create(e.Symbol, SecurityType.Equity, Market.USA);
                 var last = (decimal)(e.TypeOfUpdate == Level1SummaryUpdateEventArgs.UpdateType.ExtendedTrade ? e.ExtendedTradingLast : e.Last);
 
-                if (e.Symbol.Contains(".FXCM"))
-                {
-                    // the feed time is in NYC/EDT, convert it into EST
-                    time = FeedTime.ConvertTo(TimeZones.NewYork, TimeZones.EasternStandard);
-                    symbol = Symbol.Create(e.Symbol.Replace(".FXCM", string.Empty), SecurityType.Forex, Market.FXCM);
-                }
+                // the feed time is in NYC/EDT, convert it into EST
+                time = FeedTime.ConvertTo(TimeZones.NewYork, TimeZones.EasternStandard);
+                symbol = _symbolUniverse.GetLeanSymbol(e.Symbol, SecurityType.Forex, Market.FXCM);
 
                 var tick = new Tick(time, symbol, last, (decimal)e.Bid, (decimal)e.Ask)
                 {
@@ -463,6 +488,19 @@ namespace QuantConnect.ToolBox.IQFeed
             }
         }
 
+        /// <summary>
+        /// Method returns a collection of Symbols that are available at the data source. 
+        /// </summary>
+        /// <param name="lookupName">String representing the name to lookup</param>
+        /// <param name="securityType">Expected security type of the returned symbols (if any)</param>
+        /// <param name="securityCurrency">Expected security currency(if any)</param>
+        /// <param name="securityExchange">Expected security exchange name(if any)</param>
+        /// <returns></returns>
+        public IEnumerable<Symbol> LookupSymbols(string lookupName, SecurityType securityType, string securityCurrency = null, string securityExchange = null)
+        {
+            return _symbolUniverse.LookupSymbols(lookupName, securityType, securityCurrency, securityExchange);
+        }
+
         // this type is expected to be used for exactly one job at a time
         public class HistoryPort : IQLookupHistorySymbolClient
         {
@@ -471,15 +509,32 @@ namespace QuantConnect.ToolBox.IQFeed
             private ConcurrentDictionary<string, List<BaseData>> _currentRequest;
             private readonly string DataDirectory = Config.Get("data-directory", "../../../Data");
             private readonly double MaxHistoryRequestMinutes = Config.GetDouble("max-history-minutes", 5);
+            private readonly IQFeedDataQueueUniverseProvider _symbolUniverse;
 
             /// <summary>
             /// ... 
             /// </summary>
-            public HistoryPort()
+            public HistoryPort(IQFeedDataQueueUniverseProvider symbolUniverse)
                 : base(80)
             {
+                _symbolUniverse = symbolUniverse;
                 _requestDataByRequestId = new ConcurrentDictionary<string, HistoryRequest>();
                 _currentRequest = new ConcurrentDictionary<string, List<BaseData>>();
+            }
+
+            /// <summary>
+            /// Returns true if this data provide can handle the specified symbol
+            /// </summary>
+            /// <param name="symbol">The symbol to be handled</param>
+            /// <returns>True if this data provider can get data for the symbol, false otherwise</returns>
+            private bool CanHandle(Symbol symbol)
+            {
+                var market = symbol.ID.Market;
+                var securityType = symbol.ID.SecurityType;
+                return
+                    (securityType == SecurityType.Equity && market == Market.USA) ||
+                    (securityType == SecurityType.Forex && market == Market.FXCM) ||
+                    (securityType == SecurityType.Option && market == Market.USA);
             }
 
             /// <summary>
@@ -487,8 +542,7 @@ namespace QuantConnect.ToolBox.IQFeed
             /// </summary>
             public IEnumerable<Slice> ProcessHistoryRequests(HistoryRequest request)
             {                
-                // we can only process equity/forex types here
-                if (request.SecurityType != SecurityType.Forex && request.SecurityType != SecurityType.Equity)
+                if (!CanHandle(request.Symbol))
                 {
                     yield break;
                 }
@@ -496,12 +550,7 @@ namespace QuantConnect.ToolBox.IQFeed
                 // Set this process status
                 _inProgress = true;
 
-                var symbol = request.Symbol.Value;
-                if (request.SecurityType == SecurityType.Forex)
-                {
-                    symbol = symbol + ".FXCM";
-                }
-
+                var ticker = _symbolUniverse.GetBrokerageSymbol(request.Symbol);
                 var start = request.StartTimeUtc.ConvertFromUtc(TimeZones.NewYork);
                 DateTime? end = request.EndTimeUtc.ConvertFromUtc(TimeZones.NewYork);
                 // if we're within a minute of now, don't set the end time
@@ -510,7 +559,7 @@ namespace QuantConnect.ToolBox.IQFeed
                     end = null;
                 }
 
-                Log.Trace(string.Format("HistoryPort.ProcessHistoryJob(): Submitting request: {0}-{1}: {2} {3}->{4}", request.SecurityType, symbol, request.Resolution, start, end ?? DateTime.UtcNow.AddMinutes(-1)));
+                Log.Trace(string.Format("HistoryPort.ProcessHistoryJob(): Submitting request: {0}-{1}: {2} {3}->{4}", request.SecurityType, ticker, request.Resolution, start, end ?? DateTime.UtcNow.AddMinutes(-1)));
 
                 int id;
                 var reqid = string.Empty;
@@ -518,16 +567,16 @@ namespace QuantConnect.ToolBox.IQFeed
                 switch (request.Resolution)
                 {
                     case Resolution.Tick:
-                        id = RequestTickData(symbol, start, end, true);
+                        id = RequestTickData(ticker, start, end, true);
                         reqid = CreateRequestID(LookupType.REQ_HST_TCK, id);
                         break;
                     case Resolution.Daily:
-                        id = RequestDailyData(symbol, start, end, true);
+                        id = RequestDailyData(ticker, start, end, true);
                         reqid = CreateRequestID(LookupType.REQ_HST_DWM, id);
                         break;
                     default:
                         var interval = new Interval(GetPeriodType(request.Resolution), 1);
-                        id = RequestIntervalData(symbol, interval, start, end, true);
+                        id = RequestIntervalData(ticker, interval, start, end, true);
                         reqid = CreateRequestID(LookupType.REQ_HST_INT, id);
                         break;
                 }

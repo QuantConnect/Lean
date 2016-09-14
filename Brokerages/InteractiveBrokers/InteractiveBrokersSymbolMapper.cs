@@ -40,6 +40,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             if (symbol.ID.SecurityType == SecurityType.Forex && symbol.Value.Length != 6)
                 throw new ArgumentException("Forex symbol length must be equal to 6: " + symbol.Value);
 
+            if (symbol.ID.SecurityType == SecurityType.Option)
+            {
+                return symbol.Underlying.Value;
+            }
+
             return symbol.Value;
         }
 
@@ -49,16 +54,28 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="brokerageSymbol">The InteractiveBrokers symbol</param>
         /// <param name="securityType">The security type</param>
         /// <param name="market">The market</param>
+        /// <param name="expirationDate">Expiration date of the security(if applicable)</param>
+        /// <param name="strike">The strike of the security (if applicable)</param>
+        /// <param name="optionRight">The option right of the security (if applicable)</param>
         /// <returns>A new Lean Symbol instance</returns>
-        public Symbol GetLeanSymbol(string brokerageSymbol, SecurityType securityType, string market)
+        public Symbol GetLeanSymbol(string brokerageSymbol, SecurityType securityType, string market, DateTime expirationDate = default(DateTime), decimal strike = 0, OptionRight optionRight = 0)
         {
             if (string.IsNullOrWhiteSpace(brokerageSymbol))
                 throw new ArgumentException("Invalid symbol: " + brokerageSymbol);
 
-            if (securityType != SecurityType.Forex && securityType != SecurityType.Equity)
+            if (securityType != SecurityType.Forex && 
+                securityType != SecurityType.Equity &&
+                securityType != SecurityType.Option)
                 throw new ArgumentException("Invalid security type: " + securityType);
 
-            return Symbol.Create(brokerageSymbol, securityType, market);
+            if (securityType == SecurityType.Option)
+            {
+                return Symbol.CreateOption(brokerageSymbol, market, OptionStyle.American, optionRight, strike, expirationDate);
+            }
+            else
+            {
+                return Symbol.Create(brokerageSymbol, securityType, market);
+            }
         }
     }
 }

@@ -483,8 +483,7 @@ namespace QuantConnect.Algorithm
             // add option underlying securities if not present
             foreach (var option in Securities.Select(x => x.Value).OfType<Option>())
             {
-                var sid = option.Symbol.ID;
-                var underlying = QuantConnect.Symbol.Create(sid.Symbol, SecurityType.Equity, sid.Market);
+                var underlying = option.Symbol.Underlying;
                 Security equity;
                 if (!Securities.TryGetValue(underlying, out equity))
                 {
@@ -1227,6 +1226,12 @@ namespace QuantConnect.Algorithm
         /// <param name="extendedMarketHours">ExtendedMarketHours send in data from 4am - 8pm, not used for FOREX</param>
         public Security AddSecurity(SecurityType securityType, string symbol, Resolution resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours)
         {
+            // if AddSecurity method is called to add an option, we delegate a call to AddOption methods
+            if (securityType == SecurityType.Option)
+            {
+                return AddOption(symbol, resolution, market, fillDataForward, leverage);
+            }
+
             try
             {
                 if (market == null)
@@ -1309,12 +1314,46 @@ namespace QuantConnect.Algorithm
             Universe universe;
             if (!UniverseManager.TryGetValue(canonicalSymbol, out universe))
             {
-                var settings = new UniverseSettings(resolution, leverage, false, false, TimeSpan.Zero);
+                var settings = new UniverseSettings(resolution, leverage, true, false, TimeSpan.Zero);
                 universe = new OptionChainUniverse(canonicalSecurity, settings, SecurityInitializer);
                 UniverseManager.Add(canonicalSymbol, universe);
             }
 
             return canonicalSecurity;
+        }
+
+        /// <summary>
+        ///  This is a private method that adds single option contract
+        /// </summary>
+        private Security AddSingleOption(string symbol, Resolution resolution, string market, bool fillDataForward, decimal leverage)
+        {
+            try
+            {
+                if (market == null)
+                {
+                    if (!BrokerageModel.DefaultMarkets.TryGetValue(SecurityType.Option, out market))
+                    {
+                        throw new Exception("No default market set for security type: " + SecurityType.Option);
+                    }
+                }
+
+                var sid = SecurityIdentifier.Parse(symbol);
+                var optionSymbol = QuantConnect.Symbol.CreateOption(sid.Underlying.Symbol, sid.Market, sid.OptionStyle, sid.OptionRight, sid.StrikePrice, sid.Date);
+
+                var marketHoursEntry = _marketHoursDatabase.GetEntry(market, optionSymbol.Underlying.Value, SecurityType.Option);
+                var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(market, optionSymbol.Underlying.Value, SecurityType.Option, CashBook.AccountCurrency);
+                var security = (Option)SecurityManager.CreateSecurity(typeof(ZipEntryName), Portfolio, SubscriptionManager,
+                    marketHoursEntry.ExchangeHours, marketHoursEntry.DataTimeZone, symbolProperties, SecurityInitializer, optionSymbol, resolution,
+                    fillDataForward, leverage, false, false, false, true, false);
+
+                Securities.Add(security);
+                return security;
+            }
+            catch (Exception err)
+            {
+                Error("Algorithm.AddSingleOption(): " + err);
+                return null;
+            }
         }
 
         /// <summary>

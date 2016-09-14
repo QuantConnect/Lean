@@ -21,6 +21,7 @@ using QuantConnect.Logging;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -59,8 +60,11 @@ namespace QuantConnect.ToolBox.IQFeed
         /// <param name="ticker">IQFeed ticker</param>
         /// <param name="securityType">The security type</param>
         /// <param name="market">The market</param>
+        /// <param name="expirationDate">Expiration date of the security(if applicable)</param>
+        /// <param name="strike">The strike of the security (if applicable)</param>
+        /// <param name="optionRight">The option right of the security (if applicable)</param>
         /// <returns>A new Lean Symbol instance</returns>
-        public Symbol GetLeanSymbol(string ticker, SecurityType securityType, string market)
+        public Symbol GetLeanSymbol(string ticker, SecurityType securityType, string market, DateTime expirationDate = default(DateTime), decimal strike = 0, OptionRight optionRight = 0)
         {
             return _tickers.ContainsKey(ticker) ? _tickers[ticker] : Symbol.Empty;
         }
@@ -114,8 +118,23 @@ namespace QuantConnect.ToolBox.IQFeed
 
             Log.Trace("Loading IQFeed symbol universe file ({0})...", uri);
 
-            var reader = new RemoteFileSubscriptionStreamReader(uri, Globals.Cache);
+            if (!Directory.Exists(Globals.Cache)) Directory.CreateDirectory(Globals.Cache);
 
+            // we try to check if we already downloaded the file and it is in cache. If yes, we use it. Otherwise, download new file. 
+            IStreamReader reader;
+            var todayFileName = "IQFeed-symbol-universe-" + DateTime.Today.ToString("yyyy-MM-dd") + ".zip";
+            var todayFullName = Path.Combine(Globals.Cache, todayFileName);
+
+            if (!File.Exists(todayFullName))
+            {
+                reader = new RemoteFileSubscriptionStreamReader(uri, Globals.Cache, todayFileName);
+            }
+            else
+            {
+                Log.Trace("Found up-to-date file in local cache. Loading it...");
+                reader = new LocalFileSubscriptionStreamReader(todayFullName);
+            }
+            
             while (!reader.EndOfStream)
             {
                 var line = reader.ReadLine();

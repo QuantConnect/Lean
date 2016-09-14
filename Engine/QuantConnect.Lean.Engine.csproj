@@ -177,6 +177,7 @@
     <Compile Include="DataFeeds\Enumerators\EnqueueableEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\BaseDataCollectionSubscriptionEnumeratorFactory.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\BaseDataSubscriptionEnumeratorFactory.cs" />
+    <Compile Include="DataFeeds\Enumerators\Factories\DataQueueOptionChainUniverseDataCollectionEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\FineFundamentalSubscriptionEnumeratorFactory.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\OptionChainUniverseSubscriptionEnumeratorFactory.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\PostCreateConfigureSubscriptionEnumeratorFactory.cs" />
