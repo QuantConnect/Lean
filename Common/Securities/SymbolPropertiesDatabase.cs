@@ -128,8 +128,8 @@ namespace QuantConnect.Securities
             return new SymbolProperties(
                 description: csv[3], 
                 quoteCurrency: csv[4],
-                contractMultiplier: csv[5].ToDecimal(), 
-                pipSize: csv[6].ToDecimal(),
+                contractMultiplier: csv[5].ToDecimal(),
+                minimumPriceVariation: csv[6].ToDecimal(),
                 lotSize: csv[7].ToDecimal());
         }
 
