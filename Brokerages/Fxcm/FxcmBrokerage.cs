@@ -170,8 +170,10 @@ namespace QuantConnect.Brokerages.Fxcm
                             OnMessage(BrokerageMessageEvent.Disconnected("Connection with FXCM server lost. " +
                                                                          "This could be because of internet connectivity issues. "));
                         }
-                        else if (_connectionLost && elapsed <= TimeSpan.FromSeconds(5))
+                        else if (_connectionLost && elapsed <= TimeSpan.FromSeconds(5) && IsWithinTradingHours())
                         {
+                            Log.Trace("FxcmBrokerage.Connect(): Attempting reconnection...");
+
                             try
                             {
                                 _gateway.relogin();
@@ -185,8 +187,10 @@ namespace QuantConnect.Brokerages.Fxcm
                                 Log.Error(exception);
                             }
                         }
-                        else if (_connectionError)
+                        else if (_connectionError && IsWithinTradingHours())
                         {
+                            Log.Trace("FxcmBrokerage.Connect(): Attempting reconnection...");
+
                             try
                             {
                                 // log out
@@ -239,6 +243,23 @@ namespace QuantConnect.Brokerages.Fxcm
             LoadAccounts();
             LoadOpenOrders();
             LoadOpenPositions();
+        }
+
+        /// <summary>
+        /// Returns true if we are within FXCM trading hours
+        /// </summary>
+        /// <returns></returns>
+        private static bool IsWithinTradingHours()
+        {
+            var time = DateTime.UtcNow.ConvertFromUtc(TimeZones.EasternStandard);
+
+            // FXCM Trading Hours: http://help.fxcm.com/us/Trading-Basics/New-to-Forex/38757093/What-are-the-Trading-Hours.htm
+
+            return !(time.DayOfWeek == DayOfWeek.Friday && time.TimeOfDay > new TimeSpan(16, 55, 0) ||
+                     time.DayOfWeek == DayOfWeek.Saturday ||
+                     time.DayOfWeek == DayOfWeek.Sunday && time.TimeOfDay < new TimeSpan(17, 0, 0) ||
+                     time.Month == 12 && time.Day == 25 ||
+                     time.Month == 1 && time.Day == 1);
         }
 
         /// <summary>
