@@ -467,6 +467,36 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup Condition="$(Platform) == 'x64'">
+    <Reference Include="NQuantLib, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Lib\x64\NQuantLib.dll</HintPath>
+    </Reference>
+    <Content Include="Lib\x64\NQuantLibc.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Link>NQuantLibc.dll</Link>
+    </Content>
+  </ItemGroup>
+  <ItemGroup Condition="$(Platform) == 'x86'">
+    <Reference Include="NQuantLib, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Lib\x86\NQuantLib.dll</HintPath>
+    </Reference>
+    <Content Include="Lib\x86\NQuantLibc.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Link>NQuantLibc.dll</Link>
+    </Content>
+  </ItemGroup>
+  <ItemGroup Condition="$(Platform) == 'AnyCPU'">
+    <Reference Include="NQuantLib, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Lib\x64\NQuantLib.dll</HintPath>
+    </Reference>
+    <Content Include="Lib\x64\NQuantLibc.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Link>NQuantLibc.dll</Link>
+    </Content>
+  </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
