@@ -335,7 +335,109 @@ namespace QuantConnect.Algorithm
 
             return ticket;
         }
-        
+
+        // Support for option strategies trading
+
+        /// <summary>
+        /// Buy Option Strategy (Alias of Order)
+        /// </summary>
+        /// <param name="strategy">Specification of the strategy to trade</param>
+        /// <param name="quantity">Quantity of the strategy to trade</param>
+        /// <returns>Sequence of order ids</returns>
+        public IEnumerable<OrderTicket> Buy(OptionStrategy strategy, int quantity)
+        {
+            return Order(strategy, Math.Abs(quantity));
+        }
+
+        /// <summary>
+        /// Sell Option Strategy (alias of Order)
+        /// </summary>
+        /// <param name="strategy">Specification of the strategy to trade</param>
+        /// <param name="quantity">Quantity of the strategy to trade</param>
+        /// <returns>Sequence of order ids</returns>
+        public IEnumerable<OrderTicket> Sell(OptionStrategy strategy, int quantity)
+        {
+            return Order(strategy, Math.Abs(quantity) * -1);
+        }
+
+        /// <summary>
+        ///  Issue an order/trade for buying/selling an option strategy 
+        /// </summary>
+        /// <param name="strategy">Specification of the strategy to trade</param>
+        /// <param name="quantity">Quantity of the strategy to trade</param>
+        /// <returns>Sequence of order ids</returns>
+        public IEnumerable<OrderTicket> Order(OptionStrategy strategy, int quantity)
+        {
+            return GenerateOrders(strategy, quantity);
+        }
+
+        private IEnumerable<OrderTicket> GenerateOrders(OptionStrategy strategy, int strategyQuantity)
+        {
+            var orders = new List<OrderTicket>();
+
+            // setting up the tag text for all orders of one strategy
+            var strategyTag = strategy.Name + " (" + strategyQuantity.ToString() + ")";
+
+            // walking through all option legs and issuing orders
+            foreach (var optionLeg in strategy.OptionLegs)
+            {
+                var optionSeq = Securities.Where(kv => kv.Key.Underlying == strategy.Underlying &&
+                                                        kv.Key.ID.OptionRight == optionLeg.Right &&
+                                                        kv.Key.ID.Date == optionLeg.Expiration &&
+                                                        kv.Key.ID.StrikePrice == optionLeg.Strike);
+
+                if (optionSeq.Count() != 1)
+                {
+                    var error = string.Format("Couldn't find the option contract in algorithm securities list. Underlying: {0}, option {1}, strike {2}, expiration: {3}",
+                            strategy.Underlying.ToString(), optionLeg.Right.ToString(), optionLeg.Strike.ToString(), optionLeg.Expiration.ToString());
+                    throw new InvalidOperationException(error);
+                }
+
+                var option = optionSeq.First().Key;
+
+                switch (optionLeg.OrderType)
+                {
+                    case OrderType.Market:
+                        var marketOrder = MarketOrder(option, optionLeg.Quantity * strategyQuantity, tag: strategyTag);
+                        orders.Add(marketOrder);
+                        break;
+                    case OrderType.Limit:
+                        var limitOrder = LimitOrder(option, optionLeg.Quantity * strategyQuantity, optionLeg.OrderPrice, tag: strategyTag);
+                        orders.Add(limitOrder);
+                        break;
+                    default:
+                        throw new InvalidOperationException("Order type is not supported in option strategy: " + optionLeg.OrderType.ToString());
+                }
+            }
+
+            // walking through all underlying legs and issuing orders
+            foreach (var underlyingLeg in strategy.UnderlyingLegs)
+            {
+                if (!Securities.ContainsKey(strategy.Underlying))
+                {
+                    var error = string.Format("Couldn't find the option contract underlying in algorithm securities list. Underlying: {0}", strategy.Underlying.ToString());
+                    throw new InvalidOperationException(error);
+                }
+
+                switch (underlyingLeg.OrderType)
+                {
+                    case OrderType.Market:
+                        var marketOrder = MarketOrder(strategy.Underlying, underlyingLeg.Quantity * strategyQuantity, tag: strategyTag);
+                        orders.Add(marketOrder);
+                        break;
+                    case OrderType.Limit:
+                        var limitOrder = LimitOrder(strategy.Underlying, underlyingLeg.Quantity * strategyQuantity, underlyingLeg.OrderPrice, tag: strategyTag);
+                        orders.Add(limitOrder);
+                        break;
+                    default:
+                        throw new InvalidOperationException("Order type is not supported in option strategy: " + underlyingLeg.OrderType.ToString());
+                }
+            }
+            return orders;
+        }
+
+
+
         /// <summary>
         /// Perform preorder checks to ensure we have sufficient capital, 
         /// the market is open, and we haven't exceeded maximum realistic orders per day.
