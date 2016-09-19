@@ -314,12 +314,7 @@ namespace QuantConnect.Api
                 return false;
 
             // Save csv in same folder heirarchy as Lean
-            string path;
-            
-            if (resolution == Resolution.Daily || resolution == Resolution.Hour)
-                path = Config.Get("data-folder") + "/" + symbol.ID.SecurityType.ToLower() + "/" + symbol.ID.Market.ToLower() + "/" + resolution.ToLower() + "/" + symbol.Value.ToLower() + ".zip";
-            else
-                path = Config.Get("data-folder") + "/" + symbol.ID.SecurityType.ToLower() + "/" + symbol.ID.Market.ToLower() + "/" + resolution.ToLower() + "/" + symbol.Value.ToLower() + "/" + date.ToString("yyyyMMdd") + "_quote.zip";
+            var path = CreatePathForDownloadedData(symbol, resolution, date);
 
             // Make sure the directory exist before writing
             (new FileInfo(path)).Directory.Create();
@@ -415,6 +410,28 @@ namespace QuantConnect.Api
             {
                 yield return segment;
             }
+        }
+
+        /// <summary>
+        /// Creates the path for the downloaded data to be saved in the same folder heirarchy as Lean
+        /// </summary>
+        /// <param name="symbol">Symbol of security of which data will be requested.</param>
+        /// <param name="resolution">Resolution of data requested.</param>
+        /// <param name="date">Date of the data requested.</param>
+        /// <returns>Path that specifies where data will be downloaded</returns>
+        private string CreatePathForDownloadedData(Symbol symbol, Resolution resolution, DateTime date)
+        {
+            string path;
+
+            if (resolution == Resolution.Daily || resolution == Resolution.Hour)
+                path = Config.Get("data-folder") + symbol.ID.SecurityType.ToLower() + "/" + symbol.ID.Market.ToLower() +
+                       "/" + resolution.ToLower() + "/" + symbol.Value.ToLower() + ".zip";
+            else
+                path = Config.Get("data-folder") + symbol.ID.SecurityType.ToLower() + "/" + symbol.ID.Market.ToLower() +
+                       "/" + resolution.ToLower() + "/" + symbol.Value.ToLower() + "/" + date.ToString("yyyyMMdd") +
+                       "_quote.zip";
+
+            return path;
         }
 
         /// <summary>
