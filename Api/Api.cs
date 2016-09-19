@@ -35,14 +35,16 @@ namespace QuantConnect.Api
     {
         private ApiConnection _connection;
         private static MarketHoursDatabase _marketHoursDatabase;
+        private string _dataFolder;
 
         /// <summary>
         /// Initialize the API using the config.json file.
         /// </summary>
-        public virtual void Initialize(int userId, string token)
+        public virtual void Initialize(int userId, string token, string dataFolder)
         {
             _connection = new ApiConnection(userId, token);
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+            _dataFolder = dataFolder;
 
             //Allow proper decoding of orders from the API.
             JsonConvert.DefaultSettings = () => new JsonSerializerSettings
@@ -339,8 +341,9 @@ namespace QuantConnect.Api
             (new FileInfo(path)).Directory.Create();
 
             // Download and save the data
-            var client = new RestClient("https://www.quantconnect.com/processDataDownload/");
-            var request = new RestRequest(link.DataLink.Split('/').Last(), Method.GET);
+            var uri     = new Uri(link.DataLink);
+            var client  = new RestClient(uri.Scheme + "://" + uri.Host);
+            var request = new RestRequest(uri.PathAndQuery, Method.GET);
             client.DownloadData(request).SaveAs(path);
 
             return true;
@@ -443,10 +446,10 @@ namespace QuantConnect.Api
             string path;
 
             if (resolution == Resolution.Daily || resolution == Resolution.Hour)
-                path = Config.Get("data-folder") + symbol.ID.SecurityType.ToLower() + "/" + symbol.ID.Market.ToLower() +
+                path = _dataFolder + symbol.ID.SecurityType.ToLower() + "/" + symbol.ID.Market.ToLower() +
                        "/" + resolution.ToLower() + "/" + symbol.Value.ToLower() + ".zip";
             else
-                path = Config.Get("data-folder") + symbol.ID.SecurityType.ToLower() + "/" + symbol.ID.Market.ToLower() +
+                path = _dataFolder + symbol.ID.SecurityType.ToLower() + "/" + symbol.ID.Market.ToLower() +
                        "/" + resolution.ToLower() + "/" + symbol.Value.ToLower() + "/" + date.ToString("yyyyMMdd") +
                        "_quote.zip";
 

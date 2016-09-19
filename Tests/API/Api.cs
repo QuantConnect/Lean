@@ -30,6 +30,7 @@ namespace QuantConnect.Tests.API
         //Test Authentication Credentials
         private int _testAccount = 1;
         private string _testToken = "ec87b337ac970da4cbea648f24f1c851";
+        private string _dataFolder = Config.Get("data-folder");
 
         /// <summary>
         /// Test successfully authenticates with the API using valid credentials.
@@ -256,8 +257,8 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(downloadedMinuteData);
             Assert.IsTrue(downloadedDailyData);
             
-            Assert.IsTrue(File.Exists(Config.Get("data-folder") + "forex/oanda/daily/eurusd.zip"));
-            Assert.IsTrue(File.Exists(Config.Get("data-folder") + "forex/oanda/minute/eurusd/20131011_quote.zip"));
+            Assert.IsTrue(File.Exists(_dataFolder + "forex/oanda/daily/eurusd.zip"));
+            Assert.IsTrue(File.Exists(_dataFolder + "forex/oanda/minute/eurusd/20131011_quote.zip"));
         }
 
         /// <summary>
@@ -281,7 +282,7 @@ namespace QuantConnect.Tests.API
         /// <returns></returns>
         private IApi CreateApiAccessor()
         {
-            return CreateApiAccessor(_testAccount, _testToken);
+            return CreateApiAccessor(_testAccount, _testToken, _dataFolder);
         }
 
         /// <summary>
@@ -289,11 +290,12 @@ namespace QuantConnect.Tests.API
         /// </summary>
         /// <param name="uid">User id</param>
         /// <param name="token">Token string</param>
+        /// <param name="dataFolder">Folder to save the downloaded data to</param>
         /// <returns>API class for placing calls</returns>
-        private IApi CreateApiAccessor(int uid, string token)
+        private IApi CreateApiAccessor(int uid, string token, string dataFolder)
         {
             var api = new Api.Api();
-            api.Initialize(uid, token);
+            api.Initialize(uid, token, dataFolder);
             return api;
         }
 
