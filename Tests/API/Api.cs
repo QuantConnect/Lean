@@ -180,7 +180,9 @@ namespace QuantConnect.Tests.API
 
 
         /// <summary>
-        /// Live algorithm tests
+        /// Live algorithm tests 
+        ///   - Get a list of live algorithms
+        ///   - Test getting the logs for a live algorithm
         /// </summary>
         [Test]
         public void ListAccountLiveAlgorithms()
@@ -189,8 +191,19 @@ namespace QuantConnect.Tests.API
 
             // List all previously deployed algorithms
             var liveAlgorithms = api.LiveList();
+            
+            // Get the first live algorithm
+            var firstLiveAlgo = liveAlgorithms.Algorithms[0];
+
+            // Get the logs for the first algorithm
+            var liveLogs = api.ReadLiveLogs(firstLiveAlgo.ProjectId.ToInt32(), firstLiveAlgo.DeployId);
+
+
             Assert.IsTrue(liveAlgorithms.Success);
             Assert.IsTrue(liveAlgorithms.Algorithms.Any());
+
+            Assert.IsTrue(liveLogs.Success);
+            Assert.IsTrue(liveLogs.Logs.Any());
         }
 
         /// <summary>
