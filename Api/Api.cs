@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Newtonsoft.Json;
 using QuantConnect.API;
 using QuantConnect.Configuration;
@@ -22,6 +23,8 @@ using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using RestSharp;
+using RestSharp.Extensions;
+using System.Linq;
 
 namespace QuantConnect.Api
 {
@@ -294,6 +297,40 @@ namespace QuantConnect.Api
             return result;
         }
 
+        /// <summary>
+        /// Method to download and save the data purchased through QuantConnect
+        /// </summary>
+        /// <param name="symbol">Symbol of security of which data will be requested.</param>
+        /// <param name="resolution">Resolution of data requested.</param>
+        /// <param name="date">Date of the data requested.</param>
+        /// <returns>A bool indicating whether the data was successfully downloaded or not.</returns>
+        public bool DownloadData(Symbol symbol, Resolution resolution, DateTime date)
+        {
+            // Get a link to the data
+            var link = ReadDataLink(symbol, resolution, date);
+
+            // Make sure the link was successfully retrieved
+            if (!link.Success)
+                return false;
+
+            // Save csv in same folder heirarchy as Lean
+            string path;
+            
+            if (resolution == Resolution.Daily || resolution == Resolution.Hour)
+                path = Config.Get("data-folder") + "/" + symbol.ID.SecurityType.ToLower() + "/" + symbol.ID.Market.ToLower() + "/" + resolution.ToLower() + "/" + symbol.Value.ToLower() + ".zip";
+            else
+                path = Config.Get("data-folder") + "/" + symbol.ID.SecurityType.ToLower() + "/" + symbol.ID.Market.ToLower() + "/" + resolution.ToLower() + "/" + symbol.Value.ToLower() + "/" + date.ToString("yyyyMMdd") + "_quote.zip";
+
+            // Make sure the directory exist before writing
+            (new FileInfo(path)).Directory.Create();
+
+            // Download and save the data
+            var client = new RestClient("https://www.quantconnect.com/processDataDownload/");
+            var request = new RestRequest(link.DataLink.Split('/').Last(), Method.GET);
+            client.DownloadData(request).SaveAs(path);
+
+            return true;
+        }
 
         /// <summary>
         /// Calculate the remaining bytes of user log allowed based on the user's cap and daily cumulative usage.
