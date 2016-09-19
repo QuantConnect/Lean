@@ -134,6 +134,14 @@ namespace QuantConnect.Interfaces
         LiveList LiveList();
 
         /// <summary>
+        /// Gets the logs of a specific live algorithm 
+        /// </summary>
+        /// <param name="projectId">Project Id of the live running algorithm</param>
+        /// <param name="algorithmId">Algorithm Id of the live running algorithm</param>
+        /// <returns>List of strings that represent the logs of the algorithm</returns>
+        LiveLog ReadLiveLogs(int projectId, string algorithmId);
+
+        /// <summary>
         /// Gets the link to the downloadable data.
         /// </summary>
         /// <param name="symbol">Symbol of security of which data will be requested.</param>

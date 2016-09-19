@@ -275,6 +275,25 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
+        /// Gets the logs of a specific live algorithm 
+        /// </summary>
+        /// <param name="projectId">Project Id of the live running algorithm</param>
+        /// <param name="algorithmId">Algorithm Id of the live running algorithm</param>
+        /// <returns>List of strings that represent the logs of the algorithm</returns>
+        public LiveLog ReadLiveLogs(int projectId, string algorithmId)
+        {
+            var request = new RestRequest("live/read/log", Method.GET);
+
+            request.AddParameter("format", "json");
+            request.AddParameter("projectId", projectId);
+            request.AddParameter("algorithmId", algorithmId);
+            
+            LiveLog result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
         /// Gets the link to the downloadable data.
         /// </summary>
         /// <param name="symbol">Symbol of security of which data will be requested.</param>
