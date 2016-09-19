@@ -271,6 +271,29 @@ namespace QuantConnect.Api
             return result;
         }
 
+        /// <summary>
+        /// Gets the link to the downloadable data.
+        /// </summary>
+        /// <param name="symbol">Symbol of security of which data will be requested.</param>
+        /// <param name="resolution">Resolution of data requested.</param>
+        /// <param name="date">Date of the data requested.</param>
+        /// <returns>Link to the downloadable data.</returns>
+        public Link ReadDataLink(Symbol symbol, Resolution resolution, DateTime date)
+        {
+            var request = new RestRequest("data/read", Method.GET);
+
+            request.AddParameter("format", "link");
+            request.AddParameter("ticker", symbol.Value.ToLower());
+            request.AddParameter("type", symbol.ID.SecurityType.ToLower());
+            request.AddParameter("market", symbol.ID.Market);
+            request.AddParameter("resolution", resolution);
+            request.AddParameter("date", date.ToString("yyyyMMdd"));
+
+            Link result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
 
         /// <summary>
         /// Calculate the remaining bytes of user log allowed based on the user's cap and daily cumulative usage.
