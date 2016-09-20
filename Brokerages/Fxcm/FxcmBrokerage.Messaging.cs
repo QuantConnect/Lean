@@ -24,6 +24,7 @@ using com.fxcm.fix.posttrade;
 using com.fxcm.fix.pretrade;
 using com.fxcm.fix.trade;
 using com.fxcm.messaging;
+using javax.security.auth.callback;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -278,6 +279,8 @@ namespace QuantConnect.Brokerages.Fxcm
             }
         }
 
+
+       
         /// <summary>
         /// MarketDataSnapshot message handler
         /// </summary>
