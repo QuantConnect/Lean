@@ -16,12 +16,9 @@
 namespace QuantConnect.Data.Market
 {
     /// <summary>
-    /// Defines the first-order greeks
+    /// Defines the greeks
     /// </summary>
-    /// <remarks>
-    /// We can later add second and third order greeks as sub-classes
-    /// </remarks>
-    public class FirstOrderGreeks
+    public class Greeks
     {
         /// <summary>
         /// Gets the delta.
@@ -31,6 +28,18 @@ namespace QuantConnect.Data.Market
         /// </para>
         /// </summary>
         public decimal Delta
+        {
+            get; private set;
+        }
+
+        /// <summary>
+        /// Gets the gamma.
+        /// <para>
+        /// Gamma measures the rate of change of Delta with respect to changes in
+        /// the underlying asset'sprice. (∂²V/∂S²)
+        /// </para>
+        /// </summary>
+        public decimal Gamma
         {
             get; private set;
         }
@@ -85,18 +94,19 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Initializes a new default instance of the <see cref="FirstOrderGreeks"/> class
+        /// Initializes a new default instance of the <see cref="Greeks"/> class
         /// </summary>
-        public FirstOrderGreeks()
+        public Greeks()
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="FirstOrderGreeks"/> class
+        /// Initializes a new instance of the <see cref="Greeks"/> class
         /// </summary>
-        public FirstOrderGreeks(decimal delta, decimal vega, decimal theta, decimal rho, decimal lambda)
+        public Greeks(decimal delta, decimal gamma, decimal vega, decimal theta, decimal rho, decimal lambda)
         {
             Delta = delta;
+            Gamma = gamma;
             Vega = vega;
             Theta = theta;
             Rho = rho;

@@ -28,7 +28,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
     /// <summary>
     /// Provides an implementation of <see cref="ISubscriptionEnumeratorFactory"/> that reads
-    /// a live dataset provided by <see cref="IDataQueueUniverseProvider"/> into a <see cref="OptionChainUniverseDataCollection"/> enumerator
+    /// a live dataset provided by symbol universe provider into a <see cref="OptionChainUniverseDataCollection"/> enumerator
     /// </summary>
     public class DataQueueOptionChainUniverseDataCollectionEnumerator : IEnumerator<OptionChainUniverseDataCollection>
     {
@@ -43,7 +43,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         /// <param name="symbol">Option contract symbol</param>
         /// <param name="underlying">Underlying enumerator</param>
-        /// <param name="symbolUniverse">Symbol universe provider of the data queue</param>
+        /// <param name="symbolUniverse">Symbol universe of the data queue</param>
         public DataQueueOptionChainUniverseDataCollectionEnumerator(Symbol symbol, IEnumerator<BaseData> underlying, List<BaseData> symbolUniverse)
         {
             _symbolUniverse = symbolUniverse;

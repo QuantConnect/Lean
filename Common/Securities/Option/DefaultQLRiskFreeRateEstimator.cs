@@ -14,31 +14,47 @@
 */
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Util;
+using QuantLib;
 
 namespace QuantConnect.Securities.Option
 {
     /// <summary>
-    /// Provides a default implementation of <see cref="IOptionPriceModel"/> that does not compute any
-    /// greeks and uses the current price for the theoretical price. 
-    /// <remarks>This is a stub implementation until the real models are implemented</remarks>
+    /// Class implements default flat risk free curve, implementing <see cref="IRiskFreeRateEstimator"/>.
     /// </summary>
-    public class CurrentPriceOptionPriceModel : IOptionPriceModel
+    public class DefaultQLRiskFreeRateEstimator : IRiskFreeRateEstimator
     {
+        private readonly decimal _riskFreeRate;
         /// <summary>
-        /// Creates a new <see cref="OptionPriceModelResult"/> containing the current <see cref="Security.Price"/>
-        /// and a default, empty instance of <see cref="FirstOrderGreeks"/>
+        /// Constructor initializes class with risk free rate constant
+        /// </summary>
+        /// <param name="riskFreeRate"></param>
+        public DefaultQLRiskFreeRateEstimator(decimal riskFreeRate = 0.01m)
+        {
+            _riskFreeRate = riskFreeRate;
+        }
+
+        /// <summary>
+        /// Returns current flat estimate of the risk free rate
         /// </summary>
         /// <param name="security">The option security object</param>
         /// <param name="slice">The current data slice. This can be used to access other information
         /// available to the algorithm</param>
         /// <param name="contract">The option contract to evaluate</param>
-        /// <returns>An instance of <see cref="OptionPriceModelResult"/> containing the theoretical
-        /// price of the specified option contract</returns>
-        public OptionPriceModelResult Evaluate(Security security, Slice slice, OptionContract contract)
+        /// <returns>The estimate</returns>
+        public YieldTermStructureHandle Estimate(Security security, Slice slice, OptionContract contract)
         {
-            return new OptionPriceModelResult(security.Price, new Greeks());
+            var dayCounter = new Actual365Fixed();
+            var settlementDate = contract.Time.Date.AddDays(Option.DefaultSettlementDays).ToQLDate();
+
+            return new YieldTermStructureHandle(
+                        new FlatForward(settlementDate, (double)_riskFreeRate, dayCounter));
         }
     }
 }

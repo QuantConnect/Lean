@@ -164,7 +164,7 @@
     <Compile Include="Data\Fundamental\Generated\SecurityReference.cs" />
     <Compile Include="Data\Fundamental\Generated\ValuationRatios.cs" />
     <Compile Include="Data\ISubscriptionEnumeratorFactory.cs" />
-    <Compile Include="Data\Market\FirstOrderGreeks.cs" />
+    <Compile Include="Data\Market\Greeks.cs" />
     <Compile Include="Data\Market\OptionChain.cs" />
     <Compile Include="Data\Market\OptionChains.cs" />
     <Compile Include="Data\Market\OptionContract.cs" />
@@ -318,7 +318,13 @@
     <Compile Include="Securities\MarketHoursSegment.cs" />
     <Compile Include="Securities\MarketHoursState.cs" />
     <Compile Include="Securities\Option\CurrentPriceOptionPriceModel.cs" />
+    <Compile Include="Securities\Option\DefaultQLDividendYieldEstimator.cs" />
+    <Compile Include="Securities\Option\DefaultQLRiskFreeRateEstimator.cs" />
+    <Compile Include="Securities\Option\DefaultQLUnderlyingVolatilityEstimator.cs" />
+    <Compile Include="Securities\Option\IDividendYieldEstimator.cs" />
     <Compile Include="Securities\Option\IOptionPriceModel.cs" />
+    <Compile Include="Securities\Option\IRiskFreeRateEstimator.cs" />
+    <Compile Include="Securities\Option\IUnderlyingVolatilityEstimator.cs" />
     <Compile Include="Securities\Option\Option.cs" />
     <Compile Include="Securities\Option\OptionCache.cs" />
     <Compile Include="Securities\Option\OptionDataFilter.cs" />
@@ -326,7 +332,12 @@
     <Compile Include="Securities\Option\OptionHolding.cs" />
     <Compile Include="Securities\Option\OptionPortfolioModel.cs" />
     <Compile Include="Securities\Option\OptionPriceModelResult.cs" />
+    <Compile Include="Securities\Option\OptionPriceModels.cs" />
+    <Compile Include="Securities\Option\OptionStrategies.cs" />
+    <Compile Include="Securities\Option\OptionStrategy.cs" />
     <Compile Include="Securities\Option\OptionSymbolProperties.cs" />
+    <Compile Include="Securities\Option\OptionMarginModel.cs" />
+    <Compile Include="Securities\Option\QLOptionPriceModel.cs" />
     <Compile Include="Securities\PatternDayTradingMarginModel.cs" />
     <Compile Include="Securities\RelativeStandardDeviationVolatilityModel.cs" />
     <Compile Include="Securities\SecurityDatabaseKey.cs" />
@@ -441,6 +452,7 @@
     <Compile Include="Util\ParallelRunner.cs" />
     <Compile Include="Util\ParallelRunnerWorker.cs" />
     <Compile Include="Util\ColorJsonConverter.cs" />
+    <Compile Include="Util\QuantLibUtils.cs" />
     <Compile Include="Util\SecurityExtensions.cs" />
     <Compile Include="Util\SecurityIdentifierJsonConverter.cs" />
     <Compile Include="Util\TypeChangeJsonConverter.cs" />
@@ -468,7 +480,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup Condition="$(Platform) == 'x64'">
-    <Reference Include="NQuantLib, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
+    <Reference Include="NQuantLib, Version=0.0.0.0, Culture=neutral, processorArchitecture=x64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Lib\x64\NQuantLib.dll</HintPath>
     </Reference>
@@ -488,11 +500,11 @@
     </Content>
   </ItemGroup>
   <ItemGroup Condition="$(Platform) == 'AnyCPU'">
-    <Reference Include="NQuantLib, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
+    <Reference Include="NQuantLib, Version=0.0.0.0, Culture=neutral, processorArchitecture=AnyCPU">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>Lib\x64\NQuantLib.dll</HintPath>
+      <HintPath>Lib\x86\NQuantLib.dll</HintPath>
     </Reference>
-    <Content Include="Lib\x64\NQuantLibc.dll">
+    <Content Include="Lib\x86\NQuantLibc.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <Link>NQuantLibc.dll</Link>
     </Content>

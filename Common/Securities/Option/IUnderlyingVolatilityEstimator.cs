@@ -13,32 +13,31 @@
  * limitations under the License.
 */
 
-using System;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantLib;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace QuantConnect.Securities.Option
 {
     /// <summary>
-    /// Provides a default implementation of <see cref="IOptionPriceModel"/> that does not compute any
-    /// greeks and uses the current price for the theoretical price. 
-    /// <remarks>This is a stub implementation until the real models are implemented</remarks>
+    /// Defines QuantLib underlying volatility estimator for option pricing model. User may define his own estimators, 
+    /// including those forward and backward looking ones.
     /// </summary>
-    public class CurrentPriceOptionPriceModel : IOptionPriceModel
+    public interface IUnderlyingVolatilityEstimator
     {
         /// <summary>
-        /// Creates a new <see cref="OptionPriceModelResult"/> containing the current <see cref="Security.Price"/>
-        /// and a default, empty instance of <see cref="FirstOrderGreeks"/>
+        /// Returns current estimate of the underlying volatility
         /// </summary>
         /// <param name="security">The option security object</param>
         /// <param name="slice">The current data slice. This can be used to access other information
         /// available to the algorithm</param>
         /// <param name="contract">The option contract to evaluate</param>
-        /// <returns>An instance of <see cref="OptionPriceModelResult"/> containing the theoretical
-        /// price of the specified option contract</returns>
-        public OptionPriceModelResult Evaluate(Security security, Slice slice, OptionContract contract)
-        {
-            return new OptionPriceModelResult(security.Price, new Greeks());
-        }
+        /// <returns>The term structure estimate</returns>
+        BlackVolTermStructureHandle Estimate(Security security, Slice slice, OptionContract contract);
     }
 }

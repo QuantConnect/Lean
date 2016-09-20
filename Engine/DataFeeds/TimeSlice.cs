@@ -326,12 +326,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     BidSize = security.BidSize,
                     AskPrice = security.AskPrice,
                     AskSize = security.AskSize,
-                    UnderlyingLastPrice = chain.Underlying != null ? chain.Underlying.Price : 0m
+                    UnderlyingLastPrice = chain.Underlying.Price 
                 };
                 chain.Contracts[baseData.Symbol] = contract;
                 var option = security as Option;
                 if (option != null)
                 {
+
                     contract.SetOptionPriceModel(() => option.PriceModel.Evaluate(option, sliceFuture.Value, contract));
                 }
             }
