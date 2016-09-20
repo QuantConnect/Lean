@@ -275,6 +275,24 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new universe and adds it to the algorithm. This is for fine fundamental US Equity data and
+        /// will be executed on day changes in the NewYork time zone (<see cref="TimeZones.NewYork"/>
+        /// </summary>
+        /// <param name="universe">The universe to be filtered with fine fundamental selection</param>
+        /// <param name="fineSelector">Defines a more detailed selection with access to more data</param>
+        public void AddUniverse(Universe universe, Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> fineSelector)
+        {
+            // create a new universe for fine fundamental data
+            var fine = new FineFundamentalUniverse(UniverseSettings, SecurityInitializer, fineSelector);
+
+            // wire them up such that the results from universe will be piped into fine
+            var chained = universe.ChainedTo(fine, configurationPerSymbol: true);
+
+            // finally add the chained universe
+            AddUniverse(chained);
+        }
+
+        /// <summary>
         /// Creates a new universe and adds it to the algorithm. This can be used to return a list of string
         /// symbols retrieved from anywhere and will loads those symbols under the US Equity market.
         /// </summary>
