@@ -245,6 +245,14 @@ namespace QuantConnect.Tests.API
         public void Download_AndSave_DataCorrectly()
         {
             var api = CreateApiAccessor();
+            var minutePath = Path.Combine(_dataFolder, "forex/oanda/minute/eurusd/20131011_quote.zip");
+            var dailyPath  = Path.Combine(_dataFolder, "forex/oanda/daily/eurusd.zip");
+
+            if (File.Exists(dailyPath))
+                File.Delete(dailyPath);
+
+            if (File.Exists(minutePath))
+                File.Delete(minutePath);
 
             var downloadedMinuteData = api.DownloadData(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
                 Resolution.Minute, new DateTime(2013, 10, 11));
@@ -254,8 +262,8 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(downloadedMinuteData);
             Assert.IsTrue(downloadedDailyData);
             
-            Assert.IsTrue(File.Exists(_dataFolder + "forex/oanda/daily/eurusd.zip"));
-            Assert.IsTrue(File.Exists(_dataFolder + "forex/oanda/minute/eurusd/20131011_quote.zip"));
+            Assert.IsTrue(File.Exists(dailyPath));
+            Assert.IsTrue(File.Exists(minutePath));
         }
 
         /// <summary>
