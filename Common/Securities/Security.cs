@@ -326,7 +326,7 @@ namespace QuantConnect.Securities
                 Securities.VolatilityModel.Null,
                 new SecurityMarginModel(1m),
                 new SecurityDataFilter(),
-                new AdjustedPriceVariationModel())
+                new SecurityPriceVariationModel())
         {
         }
 
@@ -347,7 +347,7 @@ namespace QuantConnect.Securities
                 Securities.VolatilityModel.Null,
                 new SecurityMarginModel(1m),
                 new SecurityDataFilter(),
-                new AdjustedPriceVariationModel()
+                new SecurityPriceVariationModel()
                 )
         {
         }
