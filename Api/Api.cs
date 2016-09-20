@@ -24,7 +24,7 @@ using QuantConnect.Orders;
 using QuantConnect.Securities;
 using RestSharp;
 using RestSharp.Extensions;
-using System.Linq;
+using QuantConnect.Util;
 
 namespace QuantConnect.Api
 {
@@ -286,8 +286,8 @@ namespace QuantConnect.Api
         /// <returns>List of strings that represent the logs of the algorithm</returns>
         public LiveLog ReadLiveLogs(int projectId, string algorithmId, DateTime? startTime = null, DateTime? endTime = null)
         {
-            var epochStartTime = startTime == null ? 0 : DateTimeToUnixTimestamp(startTime.Value);
-            var epochEndTime   = endTime   == null ? DateTimeToUnixTimestamp(DateTime.UtcNow) : DateTimeToUnixTimestamp(endTime.Value);
+            var epochStartTime = startTime == null ? 0 : Time.DateTimeToUnixTimeStamp(startTime.Value);
+            var epochEndTime   = endTime   == null ? Time.DateTimeToUnixTimeStamp(DateTime.UtcNow) : Time.DateTimeToUnixTimeStamp(endTime.Value);
 
             var request = new RestRequest("live/read/log", Method.GET);
 
@@ -342,7 +342,7 @@ namespace QuantConnect.Api
                 return false;
 
             // Save csv in same folder heirarchy as Lean
-            var path = CreatePathForDownloadedData(symbol, resolution, date);
+            var path = Path.Combine(_dataFolder, LeanData.GenerateRelativeZipFilePath(symbol.Value, symbol.ID.SecurityType, symbol.ID.Market, date, resolution));
 
             // Make sure the directory exist before writing
             (new FileInfo(path)).Directory.Create();
@@ -440,39 +440,6 @@ namespace QuantConnect.Api
                 yield return segment;
             }
         }
-
-        /// <summary>
-        /// Creates the path for the downloaded data to be saved in the same folder heirarchy as Lean
-        /// </summary>
-        /// <param name="symbol">Symbol of security of which data will be requested.</param>
-        /// <param name="resolution">Resolution of data requested.</param>
-        /// <param name="date">Date of the data requested.</param>
-        /// <returns>Path that specifies where data will be downloaded</returns>
-        private string CreatePathForDownloadedData(Symbol symbol, Resolution resolution, DateTime date)
-        {
-            string path;
-
-            if (resolution == Resolution.Daily || resolution == Resolution.Hour)
-                path = _dataFolder + symbol.ID.SecurityType.ToLower() + "/" + symbol.ID.Market.ToLower() +
-                       "/" + resolution.ToLower() + "/" + symbol.Value.ToLower() + ".zip";
-            else
-                path = _dataFolder + symbol.ID.SecurityType.ToLower() + "/" + symbol.ID.Market.ToLower() +
-                       "/" + resolution.ToLower() + "/" + symbol.Value.ToLower() + "/" + date.ToString("yyyyMMdd") +
-                       "_quote.zip";
-
-            return path;
-        }
-
-        /// <summary>
-        /// Convert C# dateTime to Unix Epoch DateTime
-        /// </summary>
-        /// <param name="dateTime">DateTime to be converted</param>
-        /// <returns>The total number of seconds since Jan 1, 1970</returns>
-        private static long DateTimeToUnixTimestamp(DateTime dateTime)
-        {
-            return (long) (dateTime - new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc)).TotalSeconds;
-        }
-
 
         /// <summary>
         /// Store logs with these authentication type
