@@ -281,15 +281,22 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Project Id of the live running algorithm</param>
         /// <param name="algorithmId">Algorithm Id of the live running algorithm</param>
+        /// <param name="startTime">No logs will be returned before this time</param>
+        /// <param name="endTime">No logs will be returned after this time</param>
         /// <returns>List of strings that represent the logs of the algorithm</returns>
-        public LiveLog ReadLiveLogs(int projectId, string algorithmId)
+        public LiveLog ReadLiveLogs(int projectId, string algorithmId, DateTime? startTime = null, DateTime? endTime = null)
         {
+            var epochStartTime = startTime == null ? 0 : DateTimeToUnixTimestamp(startTime.Value);
+            var epochEndTime   = endTime   == null ? DateTimeToUnixTimestamp(DateTime.UtcNow) : DateTimeToUnixTimestamp(endTime.Value);
+
             var request = new RestRequest("live/read/log", Method.GET);
 
             request.AddParameter("format", "json");
             request.AddParameter("projectId", projectId);
             request.AddParameter("algorithmId", algorithmId);
-            
+            request.AddParameter("start", epochStartTime);
+            request.AddParameter("end", epochEndTime);
+
             LiveLog result;
             _connection.TryRequest(request, out result);
             return result;
@@ -455,6 +462,17 @@ namespace QuantConnect.Api
 
             return path;
         }
+
+        /// <summary>
+        /// Convert C# dateTime to Unix Epoch DateTime
+        /// </summary>
+        /// <param name="dateTime">DateTime to be converted</param>
+        /// <returns>The total number of seconds since Jan 1, 1970</returns>
+        private static long DateTimeToUnixTimestamp(DateTime dateTime)
+        {
+            return (long) (dateTime - new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc)).TotalSeconds;
+        }
+
 
         /// <summary>
         /// Store logs with these authentication type

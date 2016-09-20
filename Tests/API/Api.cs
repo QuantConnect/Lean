@@ -183,30 +183,27 @@ namespace QuantConnect.Tests.API
         /// <summary>
         /// Live algorithm tests 
         ///   - Get a list of live algorithms
-        ///   - Test getting the logs for a live algorithm
+        ///   - Get logs for the first algorithm returned
         /// </summary>
         [Test]
-        public void ListAccountLiveAlgorithms()
+        public void LiveAlgorithms_AndLiveLogs_CanBeRead()
         {
             var api = CreateApiAccessor();
 
-            // List all previously deployed algorithms
+            // Read all previously deployed algorithms
             var liveAlgorithms = api.LiveList();
-            
-            // Get the first live algorithm
-            var firstLiveAlgo = liveAlgorithms.Algorithms[0];
-
-            // Get the logs for the first algorithm
-            var liveLogs = api.ReadLiveLogs(firstLiveAlgo.ProjectId.ToInt32(), firstLiveAlgo.DeployId);
-
 
             Assert.IsTrue(liveAlgorithms.Success);
             Assert.IsTrue(liveAlgorithms.Algorithms.Any());
 
+            // Read the logs of the first live algorithm
+            var firstLiveAlgo = liveAlgorithms.Algorithms[0];
+            var liveLogs = api.ReadLiveLogs(firstLiveAlgo.ProjectId.ToInt32(), firstLiveAlgo.DeployId);
+
             Assert.IsTrue(liveLogs.Success);
             Assert.IsTrue(liveLogs.Logs.Any());
         }
-
+        
         /// <summary>
         /// Test getting links to forex data for FXCM
         /// </summary>

@@ -138,8 +138,10 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="projectId">Project Id of the live running algorithm</param>
         /// <param name="algorithmId">Algorithm Id of the live running algorithm</param>
+        /// <param name="startTime">No logs will be returned before this time. Should be in UTC</param>
+        /// <param name="endTime">No logs will be returned after this time. Should be in UTC</param>
         /// <returns>List of strings that represent the logs of the algorithm</returns>
-        LiveLog ReadLiveLogs(int projectId, string algorithmId);
+        LiveLog ReadLiveLogs(int projectId, string algorithmId, DateTime? startTime = null, DateTime? endTime = null);
 
         /// <summary>
         /// Gets the link to the downloadable data.
