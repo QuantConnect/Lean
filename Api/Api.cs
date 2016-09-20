@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Newtonsoft.Json;
 using QuantConnect.API;
 using QuantConnect.Configuration;
@@ -22,6 +23,8 @@ using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using RestSharp;
+using RestSharp.Extensions;
+using QuantConnect.Util;
 
 namespace QuantConnect.Api
 {
@@ -32,14 +35,16 @@ namespace QuantConnect.Api
     {
         private ApiConnection _connection;
         private static MarketHoursDatabase _marketHoursDatabase;
+        private string _dataFolder;
 
         /// <summary>
         /// Initialize the API using the config.json file.
         /// </summary>
-        public virtual void Initialize(int userId, string token)
+        public virtual void Initialize(int userId, string token, string dataFolder)
         {
             _connection = new ApiConnection(userId, token);
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+            _dataFolder = dataFolder;
 
             //Allow proper decoding of orders from the API.
             JsonConvert.DefaultSettings = () => new JsonSerializerSettings
@@ -271,6 +276,85 @@ namespace QuantConnect.Api
             return result;
         }
 
+        /// <summary>
+        /// Gets the logs of a specific live algorithm 
+        /// </summary>
+        /// <param name="projectId">Project Id of the live running algorithm</param>
+        /// <param name="algorithmId">Algorithm Id of the live running algorithm</param>
+        /// <param name="startTime">No logs will be returned before this time</param>
+        /// <param name="endTime">No logs will be returned after this time</param>
+        /// <returns>List of strings that represent the logs of the algorithm</returns>
+        public LiveLog ReadLiveLogs(int projectId, string algorithmId, DateTime? startTime = null, DateTime? endTime = null)
+        {
+            var epochStartTime = startTime == null ? 0 : Time.DateTimeToUnixTimeStamp(startTime.Value);
+            var epochEndTime   = endTime   == null ? Time.DateTimeToUnixTimeStamp(DateTime.UtcNow) : Time.DateTimeToUnixTimeStamp(endTime.Value);
+
+            var request = new RestRequest("live/read/log", Method.GET);
+
+            request.AddParameter("format", "json");
+            request.AddParameter("projectId", projectId);
+            request.AddParameter("algorithmId", algorithmId);
+            request.AddParameter("start", epochStartTime);
+            request.AddParameter("end", epochEndTime);
+
+            LiveLog result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
+        /// Gets the link to the downloadable data.
+        /// </summary>
+        /// <param name="symbol">Symbol of security of which data will be requested.</param>
+        /// <param name="resolution">Resolution of data requested.</param>
+        /// <param name="date">Date of the data requested.</param>
+        /// <returns>Link to the downloadable data.</returns>
+        public Link ReadDataLink(Symbol symbol, Resolution resolution, DateTime date)
+        {
+            var request = new RestRequest("data/read", Method.GET);
+
+            request.AddParameter("format", "link");
+            request.AddParameter("ticker", symbol.Value.ToLower());
+            request.AddParameter("type", symbol.ID.SecurityType.ToLower());
+            request.AddParameter("market", symbol.ID.Market);
+            request.AddParameter("resolution", resolution);
+            request.AddParameter("date", date.ToString("yyyyMMdd"));
+
+            Link result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
+        /// Method to download and save the data purchased through QuantConnect
+        /// </summary>
+        /// <param name="symbol">Symbol of security of which data will be requested.</param>
+        /// <param name="resolution">Resolution of data requested.</param>
+        /// <param name="date">Date of the data requested.</param>
+        /// <returns>A bool indicating whether the data was successfully downloaded or not.</returns>
+        public bool DownloadData(Symbol symbol, Resolution resolution, DateTime date)
+        {
+            // Get a link to the data
+            var link = ReadDataLink(symbol, resolution, date);
+
+            // Make sure the link was successfully retrieved
+            if (!link.Success)
+                return false;
+
+            // Save csv in same folder heirarchy as Lean
+            var path = Path.Combine(_dataFolder, LeanData.GenerateRelativeZipFilePath(symbol.Value, symbol.ID.SecurityType, symbol.ID.Market, date, resolution));
+
+            // Make sure the directory exist before writing
+            (new FileInfo(path)).Directory.Create();
+
+            // Download and save the data
+            var uri     = new Uri(link.DataLink);
+            var client  = new RestClient(uri.Scheme + "://" + uri.Host);
+            var request = new RestRequest(uri.PathAndQuery, Method.GET);
+            client.DownloadData(request).SaveAs(path);
+
+            return true;
+        }
 
         /// <summary>
         /// Calculate the remaining bytes of user log allowed based on the user's cap and daily cumulative usage.

@@ -30,6 +30,7 @@ namespace QuantConnect.Tests.API
         //Test Authentication Credentials
         private int _testAccount = 1;
         private string _testToken = "ec87b337ac970da4cbea648f24f1c851";
+        private string _dataFolder = Config.Get("data-folder");
 
         /// <summary>
         /// Test successfully authenticates with the API using valid credentials.
@@ -180,17 +181,103 @@ namespace QuantConnect.Tests.API
 
 
         /// <summary>
-        /// Live algorithm tests
+        /// Live algorithm tests 
+        ///   - Get a list of live algorithms
+        ///   - Get logs for the first algorithm returned
         /// </summary>
         [Test]
-        public void ListAccountLiveAlgorithms()
+        public void LiveAlgorithms_AndLiveLogs_CanBeRead()
         {
             var api = CreateApiAccessor();
 
-            // List all previously deployed algorithms
+            // Read all previously deployed algorithms
             var liveAlgorithms = api.LiveList();
+
             Assert.IsTrue(liveAlgorithms.Success);
             Assert.IsTrue(liveAlgorithms.Algorithms.Any());
+
+            // Read the logs of the first live algorithm
+            var firstLiveAlgo = liveAlgorithms.Algorithms[0];
+            var liveLogs = api.ReadLiveLogs(firstLiveAlgo.ProjectId.ToInt32(), firstLiveAlgo.DeployId);
+
+            Assert.IsTrue(liveLogs.Success);
+            Assert.IsTrue(liveLogs.Logs.Any());
+        }
+        
+        /// <summary>
+        /// Test getting links to forex data for FXCM
+        /// </summary>
+        [Test]
+        public void GetLinks_ToDownloadData_ForFXCM()
+        {
+            var api = CreateApiAccessor();
+
+            var minuteDataLink = api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD"),
+                Resolution.Minute, new DateTime(2013, 10, 07));
+            var dailyDataLink = api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD"),
+                Resolution.Daily, new DateTime(2013, 10, 07));
+
+            Assert.IsTrue(minuteDataLink.Success);
+            Assert.IsTrue(dailyDataLink.Success);
+        }
+
+        /// <summary>
+        /// Test getting links to forex data for Oanda
+        /// </summary>
+        [Test]
+        public void GetLinks_ToDownloadData_ForOanda()
+        {
+            var api = CreateApiAccessor();
+
+            var minuteDataLink = api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
+                Resolution.Minute, new DateTime(2013, 10, 07));
+            var dailyDataLink = api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
+                Resolution.Daily, new DateTime(2013, 10, 07));
+
+            Assert.IsTrue(minuteDataLink.Success);
+            Assert.IsTrue(dailyDataLink.Success);
+        }
+
+        /// <summary>
+        /// Test downloading data that does not come with the repo (Oanda)
+        /// </summary>
+        [Test]
+        public void Download_AndSave_DataCorrectly()
+        {
+            var api = CreateApiAccessor();
+            var minutePath = Path.Combine(_dataFolder, "forex/oanda/minute/eurusd/20131011_quote.zip");
+            var dailyPath  = Path.Combine(_dataFolder, "forex/oanda/daily/eurusd.zip");
+
+            if (File.Exists(dailyPath))
+                File.Delete(dailyPath);
+
+            if (File.Exists(minutePath))
+                File.Delete(minutePath);
+
+            var downloadedMinuteData = api.DownloadData(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
+                Resolution.Minute, new DateTime(2013, 10, 11));
+            var downloadedDailyData = api.DownloadData(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
+                Resolution.Daily, new DateTime(2013, 10, 07));
+
+            Assert.IsTrue(downloadedMinuteData);
+            Assert.IsTrue(downloadedDailyData);
+            
+            Assert.IsTrue(File.Exists(dailyPath));
+            Assert.IsTrue(File.Exists(minutePath));
+        }
+
+        /// <summary>
+        /// Test downloading non existent data
+        /// </summary>
+        [Test]
+        public void TryDownload_NonExistent_Data()
+        {
+            var api = CreateApiAccessor();
+
+            var nonExistentData = api.DownloadData(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
+               Resolution.Minute, new DateTime(1989, 10, 11));
+
+            Assert.IsFalse(nonExistentData);
         }
 
 
@@ -200,7 +287,7 @@ namespace QuantConnect.Tests.API
         /// <returns></returns>
         private IApi CreateApiAccessor()
         {
-            return CreateApiAccessor(_testAccount, _testToken);
+            return CreateApiAccessor(_testAccount, _testToken, _dataFolder);
         }
 
         /// <summary>
@@ -208,11 +295,12 @@ namespace QuantConnect.Tests.API
         /// </summary>
         /// <param name="uid">User id</param>
         /// <param name="token">Token string</param>
+        /// <param name="dataFolder">Folder to save the downloaded data to</param>
         /// <returns>API class for placing calls</returns>
-        private IApi CreateApiAccessor(int uid, string token)
+        private IApi CreateApiAccessor(int uid, string token, string dataFolder)
         {
             var api = new Api.Api();
-            api.Initialize(uid, token);
+            api.Initialize(uid, token, dataFolder);
             return api;
         }
 

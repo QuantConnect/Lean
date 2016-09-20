@@ -121,7 +121,9 @@
     <Compile Include="API\Backtest.cs" />
     <Compile Include="API\Compile.cs" />
     <Compile Include="API\CompileState.cs" />
+    <Compile Include="API\Link.cs" />
     <Compile Include="API\Live.cs" />
+    <Compile Include="API\LiveLog.cs" />
     <Compile Include="API\Project.cs" />
     <Compile Include="API\ProjectFile.cs" />
     <Compile Include="API\RestResponse.cs" />
