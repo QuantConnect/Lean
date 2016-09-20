@@ -47,7 +47,8 @@ namespace QuantConnect.Securities.Cfd
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
                 new SecurityMarginModel(50m),
-                new CfdDataFilter()
+                new CfdDataFilter(),
+                new SecurityPriceVariationModel()
                 )
         {
             Holdings = new CfdHolding(this);
@@ -73,7 +74,8 @@ namespace QuantConnect.Securities.Cfd
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
                 new SecurityMarginModel(50m),
-                new CfdDataFilter()
+                new CfdDataFilter(),
+                new SecurityPriceVariationModel()
                 )
         {
             Holdings = new CfdHolding(this);

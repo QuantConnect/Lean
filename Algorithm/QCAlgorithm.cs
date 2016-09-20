@@ -472,7 +472,7 @@ namespace QuantConnect.Algorithm
 
                         resolution = hasNonAddSecurityUniverses ? UniverseSettings.Resolution : Resolution.Daily;
                     }
-                    security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer, _benchmarkSymbol, resolution, true, 1m, false, true, false);
+                    security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer, _benchmarkSymbol, resolution, true, 1m, false, true, false, LiveMode);
                     AddToUserDefinedUniverse(security);
                 }
 
@@ -1234,7 +1234,7 @@ namespace QuantConnect.Algorithm
                 }
 
                 var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer,
-                    symbolObject, resolution, fillDataForward, leverage, extendedMarketHours, false, false);
+                    symbolObject, resolution, fillDataForward, leverage, extendedMarketHours, false, false, LiveMode);
 
                 AddToUserDefinedUniverse(security);
                 return security;
@@ -1291,7 +1291,7 @@ namespace QuantConnect.Algorithm
             var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(market, underlying, SecurityType.Option, CashBook.AccountCurrency);
             var canonicalSecurity = (Option) SecurityManager.CreateSecurity(typeof (ZipEntryName), Portfolio, SubscriptionManager,
                 marketHoursEntry.ExchangeHours, marketHoursEntry.DataTimeZone, symbolProperties, SecurityInitializer, canonicalSymbol, resolution,
-                fillDataForward, leverage, false, false, false, true, false);
+                fillDataForward, leverage, false, false, false, LiveMode, true, false);
             canonicalSecurity.IsTradable = false;
             Securities.Add(canonicalSecurity);
 
@@ -1418,7 +1418,7 @@ namespace QuantConnect.Algorithm
 
             //Add this new generic data as a tradeable security: 
             var security = SecurityManager.CreateSecurity(typeof(T), Portfolio, SubscriptionManager, marketHoursDbEntry.ExchangeHours, marketHoursDbEntry.DataTimeZone, 
-                symbolProperties, SecurityInitializer, symbolObject, resolution, fillDataForward, leverage, true, false, true);
+                symbolProperties, SecurityInitializer, symbolObject, resolution, fillDataForward, leverage, true, false, true, LiveMode);
 
             AddToUserDefinedUniverse(security);
         }
@@ -1532,7 +1532,7 @@ namespace QuantConnect.Algorithm
             }
 
             var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer,
-                symbol, resolution, fillDataForward, leverage, extendedMarketHours, false, false);
+                symbol, resolution, fillDataForward, leverage, extendedMarketHours, false, false, LiveMode);
             AddToUserDefinedUniverse(security);
             return (T)security;
         }

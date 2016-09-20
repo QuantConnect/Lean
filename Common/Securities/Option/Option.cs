@@ -58,7 +58,8 @@ namespace QuantConnect.Securities.Option
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
                 new SecurityMarginModel(2m),
-                new OptionDataFilter()
+                new OptionDataFilter(),
+                new AdjustedPriceVariationModel()
                 )
         {
             PriceModel = new CurrentPriceOptionPriceModel();

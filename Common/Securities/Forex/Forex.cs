@@ -47,7 +47,8 @@ namespace QuantConnect.Securities.Forex
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
                 new SecurityMarginModel(50m),
-                new ForexDataFilter()
+                new ForexDataFilter(),
+                new SecurityPriceVariationModel()
                 )
         {
             Holdings = new ForexHolding(this);
@@ -78,7 +79,8 @@ namespace QuantConnect.Securities.Forex
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
                 new SecurityMarginModel(50m),
-                new ForexDataFilter()
+                new ForexDataFilter(),
+                new SecurityPriceVariationModel()
                 )
         {
             Holdings = new ForexHolding(this);
