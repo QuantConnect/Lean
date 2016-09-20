@@ -305,8 +305,12 @@
     <Compile Include="Securities\CompositeSecurityInitializer.cs" />
     <Compile Include="Securities\ConstantFeeTransactionModel.cs" />
     <Compile Include="Securities\DelayedSettlementModel.cs" />
+    <Compile Include="Securities\AdjustedPriceVariationModel.cs" />
+    <Compile Include="Securities\SecurityPriceVariationModel.cs" />
     <Compile Include="Securities\FuncSecurityDerivativeFilter.cs" />
     <Compile Include="Securities\FuncSecurityInitializer.cs" />
+    <Compile Include="Securities\EquityPriceVariationModel.cs" />
+    <Compile Include="Securities\IPriceVariationModel.cs" />
     <Compile Include="Securities\IDerivativeSecurityFilter.cs" />
     <Compile Include="Securities\IndicatorVolatilityModel.cs" />
     <Compile Include="Securities\ISecurityInitializer.cs" />

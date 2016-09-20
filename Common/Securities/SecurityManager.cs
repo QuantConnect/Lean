@@ -320,6 +320,7 @@ namespace QuantConnect.Securities
             bool extendedMarketHours,
             bool isInternalFeed,
             bool isCustomData,
+            bool isLiveMode,
             bool addToSymbolCache = true,
             bool isFilteredSubscription = true)
         {
@@ -401,6 +402,12 @@ namespace QuantConnect.Securities
                 security.SetLeverage(leverage);
             }
 
+            // In live mode, equity assumes specific price variation model
+            if (isLiveMode && security.Type == SecurityType.Equity)
+            {
+                security.PriceVariationModel = new EquityPriceVariationModel();
+            }
+
             return security;
         }
 
@@ -421,7 +428,9 @@ namespace QuantConnect.Securities
             bool extendedMarketHours,
             bool isInternalFeed,
             bool isCustomData,
-            bool addToSymbolCache = true)
+            bool isLiveMode,
+            bool addToSymbolCache = true
+            )
         {
             var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType);
             var exchangeHours = marketHoursDbEntry.ExchangeHours;
@@ -436,7 +445,7 @@ namespace QuantConnect.Securities
                 type = typeof(QuoteBar);
             }
             return CreateSecurity(type, securityPortfolioManager, subscriptionManager, exchangeHours, marketHoursDbEntry.DataTimeZone, symbolProperties, securityInitializer, symbol, resolution,
-                fillDataForward, leverage, extendedMarketHours, isInternalFeed, isCustomData, addToSymbolCache);
+                fillDataForward, leverage, extendedMarketHours, isInternalFeed, isCustomData, isLiveMode, addToSymbolCache);
         }
     }
 }
