@@ -57,7 +57,7 @@ namespace QuantConnect.Securities.Option
                 new SpreadSlippageModel(),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
-                new SecurityMarginModel(2m),
+                new OptionMarginModel(),
                 new OptionDataFilter()
                 )
         {
