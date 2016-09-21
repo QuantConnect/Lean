@@ -169,7 +169,7 @@ namespace QuantConnect.Data.Market
             UnderlyingSymbol = underlyingSymbol;
         }
 
-        /// <summary>option.cs
+        /// <summary>
         /// Sets the option price model evaluator function to be used for this contract
         /// </summary>
         /// <param name="optionPriceModelEvaluator">Function delegate used to evaluate the option price model</param>
