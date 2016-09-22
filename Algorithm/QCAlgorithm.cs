@@ -1251,12 +1251,12 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="ticker">The equity ticker symbol</param>
         /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
-        /// <param name="market">The equity's market, <seealso cref="Market"/>. Default is <see cref="Market.USA"/></param>
+        /// <param name="market">The equity's market, <seealso cref="Market"/>. Default value is null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
         /// <param name="extendedMarketHours">True to send data during pre and post market sessions. Default is <value>false</value></param>
         /// <returns>The new <see cref="Equity"/> security</returns>
-        public Equity AddEquity(string ticker, Resolution resolution = Resolution.Minute, string market = Market.USA, bool fillDataForward = true, decimal leverage = 0m, bool extendedMarketHours = false)
+        public Equity AddEquity(string ticker, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m, bool extendedMarketHours = false)
         {
             return AddSecurity<Equity>(SecurityType.Equity, ticker, resolution, market, fillDataForward, leverage, extendedMarketHours);
         }
@@ -1266,11 +1266,11 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="underlying">The underlying equity symbol</param>
         /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
-        /// <param name="market">The equity's market, <seealso cref="Market"/>. Default is <see cref="Market.USA"/></param>
+        /// <param name="market">The equity's market, <seealso cref="Market"/>. Default is value null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
         /// <returns>The new <see cref="Option"/> security</returns>
-        public Option AddOption(string underlying, Resolution resolution = Resolution.Minute, string market = Market.USA, bool fillDataForward = true, decimal leverage = 0m)
+        public Option AddOption(string underlying, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m)
         {
             if (market == null)
             {
@@ -1312,11 +1312,11 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="ticker">The currency pair</param>
         /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
-        /// <param name="market">The foreign exchange trading market, <seealso cref="Market"/>. Default is <see cref="Market.FXCM"/></param>
+        /// <param name="market">The foreign exchange trading market, <seealso cref="Market"/>. Default value is null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
         /// <returns>The new <see cref="Forex"/> security</returns>
-        public Forex AddForex(string ticker, Resolution resolution = Resolution.Minute, string market = Market.FXCM, bool fillDataForward = true, decimal leverage = 0m)
+        public Forex AddForex(string ticker, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m)
         {
             return AddSecurity<Forex>(SecurityType.Forex, ticker, resolution, market, fillDataForward, leverage, false);
         }
@@ -1326,11 +1326,11 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="ticker">The currency pair</param>
         /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
-        /// <param name="market">The cfd trading market, <seealso cref="Market"/>. Default is <see cref="Market.FXCM"/></param>
+        /// <param name="market">The cfd trading market, <seealso cref="Market"/>. Default value is null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
         /// <returns>The new <see cref="Cfd"/> security</returns>
-        public Cfd AddCfd(string ticker, Resolution resolution = Resolution.Minute, string market = Market.FXCM, bool fillDataForward = true, decimal leverage = 0m)
+        public Cfd AddCfd(string ticker, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m)
         {
             return AddSecurity<Cfd>(SecurityType.Cfd, ticker, resolution, market, fillDataForward, leverage, false);
         }
