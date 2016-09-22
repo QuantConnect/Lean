@@ -5,7 +5,9 @@ using QuantConnect.Algorithm;
 namespace QuantConnect.Tests.Algorithm
 {
     /// <summary>
-    /// Test class for setting brokerage model on securities and QCAlgorithm
+    /// Test class for 
+    ///  - SetBrokerageModel() in QCAlgorithm
+    ///  - Default market for new securities
     /// </summary>
     [TestFixture]
     public class AlgorithmSetBrokerageTests
