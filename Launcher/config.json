@@ -42,9 +42,9 @@
   "force-exchange-always-open": false,
 
   // interactive brokers configuration
-  "ib-account": "DU218118",
-  "ib-user-name": "qu4n1p4pr",
-  "ib-password": "Pdh6bPKd",
+  "ib-account": "",
+  "ib-user-name": "",
+  "ib-password": "",
   "ib-host": "127.0.0.1",
   "ib-port": "4001",
   "ib-agent-description": "I",

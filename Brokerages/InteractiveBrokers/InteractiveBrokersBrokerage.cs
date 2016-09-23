@@ -174,14 +174,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
-        /// Provides public access to the underlying IBClient instance
-        /// </summary>
-        public EClientSocket Client
-        {
-            get { return _ibClient; }
-        }
-
-        /// <summary>
         /// Places a new order and assigns a new broker ID to the order
         /// </summary>
         /// <param name="order">The order to be placed</param>
@@ -237,7 +229,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // this could be better
                 foreach (var id in order.BrokerId)
                 {
-                    Client.cancelOrder(int.Parse(id));
+                    _ibClient.cancelOrder(int.Parse(id));
                 }
             }
             catch (Exception err)
@@ -258,7 +250,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             _openOrderManualResetEvent = new ManualResetEvent(false);
             
-            Client.reqAllOpenOrders();
+            _ibClient.reqAllOpenOrders();
 
             // wait for our end signal
             if (!_openOrderManualResetEvent.WaitOne(15000))
@@ -337,7 +329,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             client.eConnect(_host, _port, IncrementClientID());
             _ibExecutionDetailsResetEvent = new ManualResetEvent(false);
             _ibExecutionDetailsRequestId = GetNextRequestID();
-            Client.reqExecutions(_ibExecutionDetailsRequestId, filter);
+            _ibClient.reqExecutions(_ibExecutionDetailsRequestId, filter);
 
             if (!_ibExecutionDetailsResetEvent.WaitOne(5000))
             {
@@ -442,7 +434,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             if (_ibClient != null)
             {
                 _ibClient.eDisconnect();
-                GC.SuppressFinalize(this);
             }
         }
 
@@ -489,9 +480,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 throw new ArgumentException("Expected order with populated BrokerId for updating orders.");
             }
-
             var ibOrder = ConvertOrder(order, contract, ibOrderID);
-            Client.placeOrder(ibOrder.OrderId, contract, ibOrder);
+            _ibClient.placeOrder(ibOrder.OrderId, contract, ibOrder);
         }
 
         private string GetPrimaryExchange(Contract contract)
@@ -539,7 +529,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _ibGetContractDetailsResetEvent = new ManualResetEvent(false);
 
             // make the request for data
-            Client.reqContractDetails(_ibRequestId, contract);
+            _ibClient.reqContractDetails(_ibRequestId, contract);
 
             // we'll wait a second, but it may not exist so just pass through
             _ibGetContractDetailsResetEvent.WaitOne(1000);
@@ -593,7 +583,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // request some historical data, IB's api takes into account weekends/market opening hours
             var requestSpan = "100 S";
 
-            Client.reqHistoricalData(_historicalTickerId, contract, DateTime.Now.ToString("yyyyMMdd HH:mm:ss"), requestSpan, "1 secs", "ASK", 1,1,null);  //"20130701 23:59:59 GMT"
+            _ibClient.reqHistoricalData(_historicalTickerId, contract, DateTime.Now.ToString("yyyyMMdd HH:mm:ss"), requestSpan, "1 secs", "ASK", 1,1,null);  //"20130701 23:59:59 GMT"
 
             //Wait for 2 secs for the historical data to arrive
             Thread.Sleep(2000);
@@ -604,7 +594,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             _isClientOnTickPriceSet = true;
 
-            Client.reqMktData(_ibMarketDataTicker, contract, null, true, null);
+            _ibClient.reqMktData(_ibMarketDataTicker, contract, null, true, null);
 
             _ibClientOnTickPriceResetEvent.WaitOne(2500);
             _isClientOnTickPriceSet = false;
@@ -1109,7 +1099,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 var id = GetNextRequestID();
                 var contract = CreateContract(symbol);
-                Client.reqMktData(id, contract, null, false, null);
+                _ibClient.reqMktData(id, contract, null, false, null);
 
                 _subscribedSymbols[symbol] = id;
                 _subscribedTickets[id] = symbol;
@@ -1129,7 +1119,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 if (_subscribedSymbols.TryRemove(symbol, out res))
                 {
-                    Client.cancelMktData(res);
+                    _ibClient.cancelMktData(res);
                     var secRes = default(Symbol);
                     _subscribedTickets.TryRemove(res, out secRes);
                 }
