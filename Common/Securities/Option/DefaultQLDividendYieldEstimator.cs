@@ -20,15 +20,15 @@ using System.Text;
 using System.Threading.Tasks;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantLib;
+using QLNet;
 using QuantConnect.Util;
 
 namespace QuantConnect.Securities.Option
 {
     /// <summary>
-    /// Class implements default flat dividend yield curve estimator, implementing <see cref="IDividendYieldEstimator"/>.  
+    /// Class implements default flat dividend yield curve estimator, implementing <see cref="IQLDividendYieldEstimator"/>.  
     /// </summary>
-    class DefaultQLDividendYieldEstimator : IDividendYieldEstimator
+    class DefaultQLDividendYieldEstimator : IQLDividendYieldEstimator
     {
         private readonly decimal _dividendYield;
         /// <summary>
@@ -48,12 +48,12 @@ namespace QuantConnect.Securities.Option
         /// available to the algorithm</param>
         /// <param name="contract">The option contract to evaluate</param>
         /// <returns>The estimate</returns>
-        public YieldTermStructureHandle Estimate(Security security, Slice slice, OptionContract contract)
+        public Handle<YieldTermStructure> Estimate(Security security, Slice slice, OptionContract contract)
         {
             var dayCounter = new Actual365Fixed();
-            var settlementDate = contract.Time.Date.AddDays(Option.DefaultSettlementDays).ToQLDate();
+            var settlementDate = contract.Time.Date.AddDays(Option.DefaultSettlementDays);
 
-            return new YieldTermStructureHandle(
+            return new Handle<YieldTermStructure>(
                         new FlatForward(settlementDate, (double)_dividendYield, dayCounter));
         }
     }

@@ -21,15 +21,15 @@ using System.Threading.Tasks;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Util;
-using QuantLib;
+using QLNet;
 
 namespace QuantConnect.Securities.Option
 {
     /// <summary>
-    /// Class implements default underlying constant volatility estimator (<see cref="IUnderlyingVolatilityEstimator"/>.), that projects the underlying own volatility 
+    /// Class implements default underlying constant volatility estimator (<see cref="IQLUnderlyingVolatilityEstimator"/>.), that projects the underlying own volatility 
     /// model into corresponding option pricing model.
     /// </summary>
-    class DefaultQLUnderlyingVolatilityEstimator : IUnderlyingVolatilityEstimator
+    class DefaultQLUnderlyingVolatilityEstimator : IQLUnderlyingVolatilityEstimator
     {
         /// <summary>
         /// Returns current estimate of the underlying volatility
@@ -39,7 +39,7 @@ namespace QuantConnect.Securities.Option
         /// available to the algorithm</param>
         /// <param name="contract">The option contract to evaluate</param>
         /// <returns>The estimate</returns>
-        public BlackVolTermStructureHandle Estimate(Security security, Slice slice, OptionContract contract)
+        public Handle<BlackVolTermStructure> Estimate(Security security, Slice slice, OptionContract contract)
         {
             var option = security as Option;
 
@@ -50,10 +50,10 @@ namespace QuantConnect.Securities.Option
             {
                 var calendar = new UnitedStates();
                 var dayCounter = new Actual365Fixed();
-                var settlementDate = contract.Time.Date.AddDays(Option.DefaultSettlementDays).ToQLDate();
+                var settlementDate = contract.Time.Date.AddDays(Option.DefaultSettlementDays);
 
                 return 
-                    new BlackVolTermStructureHandle(
+                    new Handle<BlackVolTermStructure>(
                                 new BlackConstantVol(settlementDate, calendar,
                                                      (double)option.Underlying.VolatilityModel.Volatility, dayCounter));
             }

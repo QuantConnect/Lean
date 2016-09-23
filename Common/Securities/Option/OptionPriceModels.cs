@@ -18,79 +18,77 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using QuantLib;
+using QLNet;
 
 namespace QuantConnect.Securities.Option
 {
-    using PricingEngineFuncEx = Func<Symbol, GeneralizedBlackScholesProcess, PricingEngine>;
+    using PricingEngineFuncEx = Func<Symbol, GeneralizedBlackScholesProcess, IPricingEngine>;
 
     /// <summary>
     /// Static class contains definitions of major option pricing models that can be used in LEAN
     /// </summary>
+    /// <remarks>
+    /// To introduce particular model into algorithm add the following line to the algorithm's Initialize() method: 
+    ///     
+    ///     option.PriceModel = OptionPriceModels.BjerksundStensland(); // Option pricing model of choice
+    /// 
+    /// </remarks>
     public static class OptionPriceModels
     {
+        private static IQLUnderlyingVolatilityEstimator _underlyingVolEstimator = new DefaultQLUnderlyingVolatilityEstimator();
+        private static IQLRiskFreeRateEstimator _riskFreeRateEstimator = new DefaultQLRiskFreeRateEstimator();
+        private static IQLDividendYieldEstimator _dividendYieldEstimator = new DefaultQLDividendYieldEstimator();
+
         /// <summary>
         /// Pricing engine for European vanilla options using analytical formulae. 
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_analytic_european_engine.html
         /// </summary>
-        /// <param name="underlyingVolEstimator">The estimator of underlying volatility (or null for default)</param>
-        /// <param name="riskFreeRateEstimator">The estimator of risk free rate (or null for default)</param>
-        /// <param name="dividendYieldEstimator">The estimator of stock dividend yield (or null for default)</param>
         /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel BlackScholes(IUnderlyingVolatilityEstimator underlyingVolEstimator = null, IRiskFreeRateEstimator riskFreeRateEstimator = null, IDividendYieldEstimator dividendYieldEstimator = null)
+        public static IOptionPriceModel BlackScholes()
         {
             return new QLOptionPriceModel(process => new AnalyticEuropeanEngine(process),
-                                           underlyingVolEstimator,
-                                           riskFreeRateEstimator,
-                                           dividendYieldEstimator);
+                                           _underlyingVolEstimator,
+                                           _riskFreeRateEstimator,
+                                           _dividendYieldEstimator);
         }
 
         /// <summary>
         /// Barone-Adesi and Whaley pricing engine for American options (1987)
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_barone_adesi_whaley_approximation_engine.html
         /// </summary>
-        /// <param name="underlyingVolEstimator">The estimator of underlying volatility (or null for default)</param>
-        /// <param name="riskFreeRateEstimator">The estimator of risk free rate (or null for default)</param>
-        /// <param name="dividendYieldEstimator">The estimator of stock dividend yield (or null for default)</param>
         /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel BaroneAdesiWhaley(IUnderlyingVolatilityEstimator underlyingVolEstimator = null, IRiskFreeRateEstimator riskFreeRateEstimator = null, IDividendYieldEstimator dividendYieldEstimator = null)
+        public static IOptionPriceModel BaroneAdesiWhaley()
         {
-            return new QLOptionPriceModel(process => new BaroneAdesiWhaleyEngine(process),
-                                           underlyingVolEstimator,
-                                           riskFreeRateEstimator,
-                                           dividendYieldEstimator);
+            return new QLOptionPriceModel(process => new BaroneAdesiWhaleyApproximationEngine(process),
+                                           _underlyingVolEstimator,
+                                           _riskFreeRateEstimator,
+                                           _dividendYieldEstimator);
         }
 
         /// <summary>
         /// Bjerksund and Stensland pricing engine for American options (1993) 
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_bjerksund_stensland_approximation_engine.html
         /// </summary>
-        /// <param name="underlyingVolEstimator">The estimator of underlying volatility (or null for default)</param>
-        /// <param name="riskFreeRateEstimator">The estimator of risk free rate (or null for default)</param>
-        /// <param name="dividendYieldEstimator">The estimator of stock dividend yield (or null for default)</param>
         /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel BjerksundStensland(IUnderlyingVolatilityEstimator underlyingVolEstimator = null, IRiskFreeRateEstimator riskFreeRateEstimator = null, IDividendYieldEstimator dividendYieldEstimator = null)
+        public static IOptionPriceModel BjerksundStensland()
         {
-            return new QLOptionPriceModel(process => new BjerksundStenslandEngine(process),
-                                           underlyingVolEstimator,
-                                           riskFreeRateEstimator,
-                                           dividendYieldEstimator);
+            return new QLOptionPriceModel(process => new BjerksundStenslandApproximationEngine(process),
+                                           _underlyingVolEstimator,
+                                           _riskFreeRateEstimator,
+                                           _dividendYieldEstimator);
         }
 
         /// <summary>
         /// Pricing engine for European vanilla options using integral approach. 
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_integral_engine.html
         /// </summary>
-        /// <param name="underlyingVolEstimator">The estimator of underlying volatility (or null for default)</param>
-        /// <param name="riskFreeRateEstimator">The estimator of risk free rate (or null for default)</param>
-        /// <param name="dividendYieldEstimator">The estimator of stock dividend yield (or null for default)</param>
         /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel Integral(IUnderlyingVolatilityEstimator underlyingVolEstimator = null, IRiskFreeRateEstimator riskFreeRateEstimator = null, IDividendYieldEstimator dividendYieldEstimator = null)
+        public static IOptionPriceModel Integral()
         {
             return new QLOptionPriceModel(process => new IntegralEngine(process),
-                                           underlyingVolEstimator,
-                                           riskFreeRateEstimator,
-                                           dividendYieldEstimator);
+                                           _underlyingVolEstimator,
+                                           _riskFreeRateEstimator,
+                                           _dividendYieldEstimator);
         }
 
         /// <summary>
@@ -98,21 +96,18 @@ namespace QuantConnect.Securities.Option
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
         /// </summary>
         /// <param name="timeSteps">Number of steps in binomial tree</param>
-        /// <param name="underlyingVolEstimator">The estimator of underlying volatility (or null for default)</param>
-        /// <param name="riskFreeRateEstimator">The estimator of risk free rate (or null for default)</param>
-        /// <param name="dividendYieldEstimator">The estimator of stock dividend yield (or null for default)</param>
         /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel CrankNicolsonFD(int timeSteps = 201, IUnderlyingVolatilityEstimator underlyingVolEstimator = null, IRiskFreeRateEstimator riskFreeRateEstimator = null, IDividendYieldEstimator dividendYieldEstimator = null)
+        public static IOptionPriceModel CrankNicolsonFD(int timeSteps = 201)
         {
             PricingEngineFuncEx pricingEngineFunc = (symbol, process) =>
                             symbol.ID.OptionStyle == OptionStyle.American ?
-                            new FDAmericanEngine(process, (uint)timeSteps, (uint)timeSteps - 1) as PricingEngine:
-                            new FDEuropeanEngine(process, (uint)timeSteps, (uint)timeSteps - 1) as PricingEngine;
+                            new FDAmericanEngine(process, timeSteps, timeSteps - 1) as IPricingEngine:
+                            new FDEuropeanEngine(process, timeSteps, timeSteps - 1) as IPricingEngine;
 
             return new QLOptionPriceModel(pricingEngineFunc,
-                                           underlyingVolEstimator,
-                                           riskFreeRateEstimator,
-                                           dividendYieldEstimator);
+                                           _underlyingVolEstimator,
+                                           _riskFreeRateEstimator,
+                                           _dividendYieldEstimator);
         }
 
         /// <summary>
@@ -120,16 +115,13 @@ namespace QuantConnect.Securities.Option
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
         /// </summary>
         /// <param name="timeSteps">Number of steps in binomial tree</param>
-        /// <param name="underlyingVolEstimator">The estimator of underlying volatility (or null for default)</param>
-        /// <param name="riskFreeRateEstimator">The estimator of risk free rate (or null for default)</param>
-        /// <param name="dividendYieldEstimator">The estimator of stock dividend yield (or null for default)</param>
         /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel BinomialJarrowRudd(int timeSteps = 201, IUnderlyingVolatilityEstimator underlyingVolEstimator = null, IRiskFreeRateEstimator riskFreeRateEstimator = null, IDividendYieldEstimator dividendYieldEstimator = null)
+        public static IOptionPriceModel BinomialJarrowRudd(int timeSteps = 201)
         {
-            return new QLOptionPriceModel(process => new BinomialVanillaEngine(process, "jarrowrudd", (uint)timeSteps),
-                                          underlyingVolEstimator,
-                                          riskFreeRateEstimator,
-                                          dividendYieldEstimator);
+            return new QLOptionPriceModel(process => new BinomialVanillaEngine<JarrowRudd>(process, timeSteps),
+                                          _underlyingVolEstimator,
+                                          _riskFreeRateEstimator,
+                                          _dividendYieldEstimator);
         }
 
 
@@ -138,16 +130,13 @@ namespace QuantConnect.Securities.Option
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
         /// </summary>
         /// <param name="timeSteps">Number of steps in binomial tree</param>
-        /// <param name="underlyingVolEstimator">The estimator of underlying volatility (or null for default)</param>
-        /// <param name="riskFreeRateEstimator">The estimator of risk free rate (or null for default)</param>
-        /// <param name="dividendYieldEstimator">The estimator of stock dividend yield (or null for default)</param>
         /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel BinomialCoxRossRubinstein(int timeSteps = 201, IUnderlyingVolatilityEstimator underlyingVolEstimator = null, IRiskFreeRateEstimator riskFreeRateEstimator = null, IDividendYieldEstimator dividendYieldEstimator = null)
+        public static IOptionPriceModel BinomialCoxRossRubinstein(int timeSteps = 201)
         {
-            return new QLOptionPriceModel(process => new BinomialVanillaEngine(process, "coxrossrubinstein", (uint)timeSteps),
-                                          underlyingVolEstimator,
-                                          riskFreeRateEstimator,
-                                          dividendYieldEstimator);
+            return new QLOptionPriceModel(process => new BinomialVanillaEngine<CoxRossRubinstein>(process, timeSteps),
+                                          _underlyingVolEstimator,
+                                          _riskFreeRateEstimator,
+                                          _dividendYieldEstimator);
         }
 
         /// <summary>
@@ -155,16 +144,13 @@ namespace QuantConnect.Securities.Option
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
         /// </summary>
         /// <param name="timeSteps">Number of steps in binomial tree</param>
-        /// <param name="underlyingVolEstimator">The estimator of underlying volatility (or null for default)</param>
-        /// <param name="riskFreeRateEstimator">The estimator of risk free rate (or null for default)</param>
-        /// <param name="dividendYieldEstimator">The estimator of stock dividend yield (or null for default)</param>
         /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel AdditiveEquiprobabilities(int timeSteps = 201, IUnderlyingVolatilityEstimator underlyingVolEstimator = null, IRiskFreeRateEstimator riskFreeRateEstimator = null, IDividendYieldEstimator dividendYieldEstimator = null)
+        public static IOptionPriceModel AdditiveEquiprobabilities(int timeSteps = 201)
         {
-            return new QLOptionPriceModel(process => new BinomialVanillaEngine(process, "eqp", (uint)timeSteps),
-                                          underlyingVolEstimator,
-                                          riskFreeRateEstimator,
-                                          dividendYieldEstimator);
+            return new QLOptionPriceModel(process => new BinomialVanillaEngine<AdditiveEQPBinomialTree>(process, timeSteps),
+                                          _underlyingVolEstimator,
+                                          _riskFreeRateEstimator,
+                                          _dividendYieldEstimator);
         }
 
         /// <summary>
@@ -172,16 +158,13 @@ namespace QuantConnect.Securities.Option
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
         /// </summary>
         /// <param name="timeSteps">Number of steps in binomial tree</param>
-        /// <param name="underlyingVolEstimator">The estimator of underlying volatility (or null for default)</param>
-        /// <param name="riskFreeRateEstimator">The estimator of risk free rate (or null for default)</param>
-        /// <param name="dividendYieldEstimator">The estimator of stock dividend yield (or null for default)</param>
         /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel BinomialTrigeorgis(int timeSteps = 201, IUnderlyingVolatilityEstimator underlyingVolEstimator = null, IRiskFreeRateEstimator riskFreeRateEstimator = null, IDividendYieldEstimator dividendYieldEstimator = null)
+        public static IOptionPriceModel BinomialTrigeorgis(int timeSteps = 201)
         {
-            return new QLOptionPriceModel(process => new BinomialVanillaEngine(process, "trigeorgis", (uint)timeSteps),
-                                          underlyingVolEstimator,
-                                          riskFreeRateEstimator,
-                                          dividendYieldEstimator);
+            return new QLOptionPriceModel(process => new BinomialVanillaEngine<Trigeorgis>(process, timeSteps),
+                                          _underlyingVolEstimator,
+                                          _riskFreeRateEstimator,
+                                          _dividendYieldEstimator);
         }
 
         /// <summary>
@@ -189,16 +172,13 @@ namespace QuantConnect.Securities.Option
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
         /// </summary>
         /// <param name="timeSteps">Number of steps in binomial tree</param>
-        /// <param name="underlyingVolEstimator">The estimator of underlying volatility (or null for default)</param>
-        /// <param name="riskFreeRateEstimator">The estimator of risk free rate (or null for default)</param>
-        /// <param name="dividendYieldEstimator">The estimator of stock dividend yield (or null for default)</param>
         /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel BinomialTian(int timeSteps = 201, IUnderlyingVolatilityEstimator underlyingVolEstimator = null, IRiskFreeRateEstimator riskFreeRateEstimator = null, IDividendYieldEstimator dividendYieldEstimator = null)
+        public static IOptionPriceModel BinomialTian(int timeSteps = 201)
         {
-            return new QLOptionPriceModel(process => new BinomialVanillaEngine(process, "tian", (uint)timeSteps),
-                                          underlyingVolEstimator,
-                                          riskFreeRateEstimator,
-                                          dividendYieldEstimator);
+            return new QLOptionPriceModel(process => new BinomialVanillaEngine<Tian>(process, timeSteps),
+                                          _underlyingVolEstimator,
+                                          _riskFreeRateEstimator,
+                                          _dividendYieldEstimator);
         }
 
         /// <summary>
@@ -206,16 +186,13 @@ namespace QuantConnect.Securities.Option
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
         /// </summary>
         /// <param name="timeSteps">Number of steps in binomial tree</param>
-        /// <param name="underlyingVolEstimator">The estimator of underlying volatility (or null for default)</param>
-        /// <param name="riskFreeRateEstimator">The estimator of risk free rate (or null for default)</param>
-        /// <param name="dividendYieldEstimator">The estimator of stock dividend yield (or null for default)</param>
         /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel BinomialLeisenReimer(int timeSteps = 201, IUnderlyingVolatilityEstimator underlyingVolEstimator = null, IRiskFreeRateEstimator riskFreeRateEstimator = null, IDividendYieldEstimator dividendYieldEstimator = null)
+        public static IOptionPriceModel BinomialLeisenReimer(int timeSteps = 201)
         {
-            return new QLOptionPriceModel(process => new BinomialVanillaEngine(process, "leisenreimer", (uint)timeSteps),
-                                          underlyingVolEstimator,
-                                          riskFreeRateEstimator,
-                                          dividendYieldEstimator);
+            return new QLOptionPriceModel(process => new BinomialVanillaEngine<LeisenReimer>(process, timeSteps),
+                                          _underlyingVolEstimator,
+                                          _riskFreeRateEstimator,
+                                          _dividendYieldEstimator);
         }
 
         /// <summary>
@@ -223,16 +200,13 @@ namespace QuantConnect.Securities.Option
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
         /// </summary>
         /// <param name="timeSteps">Number of steps in binomial tree</param>
-        /// <param name="underlyingVolEstimator">The estimator of underlying volatility (or null for default)</param>
-        /// <param name="riskFreeRateEstimator">The estimator of risk free rate (or null for default)</param>
-        /// <param name="dividendYieldEstimator">The estimator of stock dividend yield (or null for default)</param>
         /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel BinomialJoshi(int timeSteps = 201, IUnderlyingVolatilityEstimator underlyingVolEstimator = null, IRiskFreeRateEstimator riskFreeRateEstimator = null, IDividendYieldEstimator dividendYieldEstimator = null)
+        public static IOptionPriceModel BinomialJoshi(int timeSteps = 201)
         {
-            return new QLOptionPriceModel(process => new BinomialVanillaEngine(process, "joshi4", (uint)timeSteps),
-                                          underlyingVolEstimator,
-                                          riskFreeRateEstimator,
-                                          dividendYieldEstimator);
+            return new QLOptionPriceModel(process => new BinomialVanillaEngine<Joshi4>(process, timeSteps),
+                                          _underlyingVolEstimator,
+                                          _riskFreeRateEstimator,
+                                          _dividendYieldEstimator);
         }
 
     }

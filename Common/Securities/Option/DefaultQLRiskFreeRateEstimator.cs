@@ -21,14 +21,14 @@ using System.Threading.Tasks;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Util;
-using QuantLib;
+using QLNet;
 
 namespace QuantConnect.Securities.Option
 {
     /// <summary>
-    /// Class implements default flat risk free curve, implementing <see cref="IRiskFreeRateEstimator"/>.
+    /// Class implements default flat risk free curve, implementing <see cref="IQLRiskFreeRateEstimator"/>.
     /// </summary>
-    public class DefaultQLRiskFreeRateEstimator : IRiskFreeRateEstimator
+    public class DefaultQLRiskFreeRateEstimator : IQLRiskFreeRateEstimator
     {
         private readonly decimal _riskFreeRate;
         /// <summary>
@@ -48,12 +48,12 @@ namespace QuantConnect.Securities.Option
         /// available to the algorithm</param>
         /// <param name="contract">The option contract to evaluate</param>
         /// <returns>The estimate</returns>
-        public YieldTermStructureHandle Estimate(Security security, Slice slice, OptionContract contract)
+        public Handle<YieldTermStructure> Estimate(Security security, Slice slice, OptionContract contract)
         {
             var dayCounter = new Actual365Fixed();
-            var settlementDate = contract.Time.Date.AddDays(Option.DefaultSettlementDays).ToQLDate();
+            var settlementDate = contract.Time.Date.AddDays(Option.DefaultSettlementDays);
 
-            return new YieldTermStructureHandle(
+            return new Handle<YieldTermStructure>(
                         new FlatForward(settlementDate, (double)_riskFreeRate, dayCounter));
         }
     }
