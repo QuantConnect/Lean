@@ -90,7 +90,7 @@ namespace QuantConnect.Brokerages.Fxcm
             { "USDOLLAR", "DXYUSD" },
             { "USD/CAD", "USDCAD" },
             { "USD/CHF", "USDCHF" },
-            { "USD/CNH", "USDCNY" },
+            { "USD/CNH", "USDCNH" },
             { "USD/HKD", "USDHKD" },
             { "USD/JPY", "USDJPY" },
             { "USD/NOK", "USDNOK" },
