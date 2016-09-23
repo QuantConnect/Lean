@@ -21,22 +21,22 @@ using System.Text;
 using System.Threading.Tasks;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantLib;
+using QLNet;
 using QuantConnect.Util;
 
 namespace QuantConnect.Securities.Option
 {
-    using PricingEngineFunc = Func<GeneralizedBlackScholesProcess, PricingEngine>;
-    using PricingEngineFuncEx = Func<Symbol, GeneralizedBlackScholesProcess, PricingEngine>;
+    using PricingEngineFunc = Func<GeneralizedBlackScholesProcess, IPricingEngine>;
+    using PricingEngineFuncEx = Func<Symbol, GeneralizedBlackScholesProcess, IPricingEngine>;
 
     /// <summary>
     /// Provides QuantLib(QL) implementation of <see cref="IOptionPriceModel"/> to support major option pricing models, available in QL. 
     /// </summary>
-    public class QLOptionPriceModel : IOptionPriceModel
+    class QLOptionPriceModel : IOptionPriceModel
     {
-        private readonly IUnderlyingVolatilityEstimator _underlyingVolEstimator;
-        private readonly IRiskFreeRateEstimator _riskFreeRateEstimator;
-        private readonly IDividendYieldEstimator _dividendYieldEstimator;
+        private readonly IQLUnderlyingVolatilityEstimator _underlyingVolEstimator;
+        private readonly IQLRiskFreeRateEstimator _riskFreeRateEstimator;
+        private readonly IQLDividendYieldEstimator _dividendYieldEstimator;
         private readonly PricingEngineFuncEx _pricingEngineFunc;
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace QuantConnect.Securities.Option
         /// <param name="underlyingVolEstimator">The underlying volatility estimator</param>
         /// <param name="riskFreeRateEstimator">The risk free rate estimator</param>
         /// <param name="dividendYieldEstimator">The underlying dividend yield estimator</param>
-        public QLOptionPriceModel(PricingEngineFunc pricingEngineFunc, IUnderlyingVolatilityEstimator underlyingVolEstimator, IRiskFreeRateEstimator riskFreeRateEstimator, IDividendYieldEstimator dividendYieldEstimator)
+        public QLOptionPriceModel(PricingEngineFunc pricingEngineFunc, IQLUnderlyingVolatilityEstimator underlyingVolEstimator, IQLRiskFreeRateEstimator riskFreeRateEstimator, IQLDividendYieldEstimator dividendYieldEstimator)
         {
             _pricingEngineFunc = (option, process) => pricingEngineFunc(process);
             _underlyingVolEstimator = underlyingVolEstimator ?? new DefaultQLUnderlyingVolatilityEstimator();
@@ -60,7 +60,7 @@ namespace QuantConnect.Securities.Option
         /// <param name="underlyingVolEstimator">The underlying volatility estimator</param>
         /// <param name="riskFreeRateEstimator">The risk free rate estimator</param>
         /// <param name="dividendYieldEstimator">The underlying dividend yield estimator</param>
-        public QLOptionPriceModel(PricingEngineFuncEx pricingEngineFunc, IUnderlyingVolatilityEstimator underlyingVolEstimator, IRiskFreeRateEstimator riskFreeRateEstimator, IDividendYieldEstimator dividendYieldEstimator)
+        public QLOptionPriceModel(PricingEngineFuncEx pricingEngineFunc, IQLUnderlyingVolatilityEstimator underlyingVolEstimator, IQLRiskFreeRateEstimator riskFreeRateEstimator, IQLDividendYieldEstimator dividendYieldEstimator)
         {
             _pricingEngineFunc = pricingEngineFunc;
             _underlyingVolEstimator = underlyingVolEstimator ?? new DefaultQLUnderlyingVolatilityEstimator();
@@ -81,9 +81,9 @@ namespace QuantConnect.Securities.Option
         {
             // setting up option pricing parameters
             var optionSecurity = (Option)security;
-            var settlementDate = contract.Time.Date.AddDays(Option.DefaultSettlementDays).ToQLDate();
-            var maturityDate = contract.Expiry.Date.AddDays(Option.DefaultSettlementDays).ToQLDate();
-            var underlyingQuote = new QuoteHandle(new SimpleQuote((double)optionSecurity.Underlying.Close));
+            var settlementDate = contract.Time.Date.AddDays(Option.DefaultSettlementDays);
+            var maturityDate = contract.Expiry.Date.AddDays(Option.DefaultSettlementDays);
+            var underlyingQuote = new Handle<Quote>(new SimpleQuote((double)optionSecurity.Underlying.Close));
             var dividendYield = _dividendYieldEstimator.Estimate(security, slice, contract);
             var riskFreeRate = _riskFreeRateEstimator.Estimate(security, slice, contract);
             var underlyingVol = _underlyingVolEstimator.Estimate(security, slice, contract);
@@ -97,12 +97,14 @@ namespace QuantConnect.Securities.Option
 
             // preparing stochastic process and payoff functions
             var stochasticProcess = new BlackScholesMertonProcess(underlyingQuote, dividendYield, riskFreeRate, underlyingVol);
-            var payoff = new PlainVanillaPayoff(contract.Right == OptionRight.Call? QuantLib.Option.Type.Call : QuantLib.Option.Type.Put, (double)contract.Strike);
+            var payoff = new PlainVanillaPayoff(contract.Right == OptionRight.Call? QLNet.Option.Type.Call : QLNet.Option.Type.Put, (double)contract.Strike);
 
             // creating option QL object
             var option = contract.Symbol.ID.OptionStyle == OptionStyle.American? 
-                        new VanillaOption (payoff, new AmericanExercise(settlementDate, maturityDate)):
+                        new VanillaOption(payoff, new AmericanExercise(settlementDate, maturityDate)):
                         new VanillaOption(payoff, new EuropeanExercise(maturityDate));
+
+            Settings.setEvaluationDate(settlementDate);
 
             // preparing pricing engine QL object
             option.setPricingEngine(_pricingEngineFunc(contract.Symbol, stochasticProcess));
@@ -126,7 +128,7 @@ namespace QuantConnect.Securities.Option
             // producing output with lazy calculations of IV and greeks
 
             return new OptionPriceModelResult((decimal)theoreticalPrice,
-                        () => (decimal)option.impliedVolatility(theoreticalPrice, stochasticProcess),
+                        () => (decimal)option.impliedVolatility((double)optionSecurity.Close, stochasticProcess),
                         () => new Greeks(tryGetGreek(() => option.delta()),
                                         tryGetGreek(() => option.gamma()),
                                         tryGetGreek(() => option.vega()),

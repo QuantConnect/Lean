@@ -103,6 +103,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\NodaTime.1.3.1\lib\net35-Client\NodaTime.dll</HintPath>
     </Reference>
+    <Reference Include="QLNet, Version=1.8.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\QLNet.1.8.0\lib\net40\QLNet.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.configuration" />
@@ -321,10 +325,10 @@
     <Compile Include="Securities\Option\DefaultQLDividendYieldEstimator.cs" />
     <Compile Include="Securities\Option\DefaultQLRiskFreeRateEstimator.cs" />
     <Compile Include="Securities\Option\DefaultQLUnderlyingVolatilityEstimator.cs" />
-    <Compile Include="Securities\Option\IDividendYieldEstimator.cs" />
+    <Compile Include="Securities\Option\IQLDividendYieldEstimator.cs" />
     <Compile Include="Securities\Option\IOptionPriceModel.cs" />
-    <Compile Include="Securities\Option\IRiskFreeRateEstimator.cs" />
-    <Compile Include="Securities\Option\IUnderlyingVolatilityEstimator.cs" />
+    <Compile Include="Securities\Option\IQLRiskFreeRateEstimator.cs" />
+    <Compile Include="Securities\Option\IQLUnderlyingVolatilityEstimator.cs" />
     <Compile Include="Securities\Option\Option.cs" />
     <Compile Include="Securities\Option\OptionCache.cs" />
     <Compile Include="Securities\Option\OptionDataFilter.cs" />
@@ -452,7 +456,6 @@
     <Compile Include="Util\ParallelRunner.cs" />
     <Compile Include="Util\ParallelRunnerWorker.cs" />
     <Compile Include="Util\ColorJsonConverter.cs" />
-    <Compile Include="Util\QuantLibUtils.cs" />
     <Compile Include="Util\SecurityExtensions.cs" />
     <Compile Include="Util\SecurityIdentifierJsonConverter.cs" />
     <Compile Include="Util\TypeChangeJsonConverter.cs" />
@@ -478,36 +481,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup Condition="$(Platform) == 'x64'">
-    <Reference Include="NQuantLib, Version=0.0.0.0, Culture=neutral, processorArchitecture=x64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>Lib\x64\NQuantLib.dll</HintPath>
-    </Reference>
-    <Content Include="Lib\x64\NQuantLibc.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <Link>NQuantLibc.dll</Link>
-    </Content>
-  </ItemGroup>
-  <ItemGroup Condition="$(Platform) == 'x86'">
-    <Reference Include="NQuantLib, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>Lib\x86\NQuantLib.dll</HintPath>
-    </Reference>
-    <Content Include="Lib\x86\NQuantLibc.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <Link>NQuantLibc.dll</Link>
-    </Content>
-  </ItemGroup>
-  <ItemGroup Condition="$(Platform) == 'AnyCPU'">
-    <Reference Include="NQuantLib, Version=0.0.0.0, Culture=neutral, processorArchitecture=AnyCPU">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>Lib\x86\NQuantLib.dll</HintPath>
-    </Reference>
-    <Content Include="Lib\x86\NQuantLibc.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <Link>NQuantLibc.dll</Link>
-    </Content>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
