@@ -252,3 +252,6 @@ Charts/
 # NCrunch files
 *.ncrunchsolution
 *.ncrunchproject
+/Algorithm.CSharp/NT
+/Algorithm.CSharp/TrainingDataGenerator
+/Tests/TrainingDataGenerator

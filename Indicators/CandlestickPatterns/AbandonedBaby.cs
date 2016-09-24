@@ -69,8 +69,16 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// Initializes a new instance of the <see cref="AbandonedBaby"/> class.
         /// </summary>
         /// <param name="penetration">Percentage of penetration of a candle within another candle</param>
-        public AbandonedBaby(decimal penetration = 0.3m)
+        public AbandonedBaby(decimal penetration)
             : this("ABANDONEDBABY", penetration)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AbandonedBaby"/> class.
+        /// </summary>
+        public AbandonedBaby()
+            : this("ABANDONEDBABY")
         {
         }
 
