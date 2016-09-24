@@ -564,9 +564,9 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The resolution.</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar.</param>
         /// <returns>log return indicator for the requested symbol.</returns>
-        public LogReturn LOGR(Symbol symbol, int period, Resolution? resolution = null)
+        public LogReturn LOGR(Symbol symbol, int period, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
         {
-            string name = CreateIndicatorName(symbol, "LOGR", resolution, Func < BaseData, decimal > selector = null);
+            string name = CreateIndicatorName(symbol, "LOGR", resolution);
             var logr = new LogReturn(name, period);
             RegisterIndicator(symbol, logr, resolution, selector);
             return logr;
