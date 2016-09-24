@@ -46,7 +46,7 @@ namespace QuantConnect.Brokerages.Tradier
     /// </summary>
     public class TradierBrokerage : Brokerage
     {
-        private readonly long _accountID;
+        private readonly string _accountID;
 
         // we're reusing the equity exchange here to grab typical exchange hours
         private static readonly EquityExchange Exchange =
@@ -124,7 +124,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Create a new Tradier Object:
         /// </summary>
-        public TradierBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, long accountID)
+        public TradierBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string accountID)
             : base("Tradier Brokerage")
         {
             _orderProvider = orderProvider;
@@ -400,7 +400,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// Returns null if the request was unsucessful
         /// </remarks>
         /// <returns>Balance</returns>
-        public TradierBalanceDetails GetBalanceDetails(long accountId)
+        public TradierBalanceDetails GetBalanceDetails(string accountId)
         {
             var request = new RestRequest("accounts/{accountId}/balances", Method.GET);
             request.AddParameter("accountId", accountId, ParameterType.UrlSegment);
@@ -514,7 +514,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// Place Order through API.
         /// accounts/{account-id}/orders
         /// </summary>
-        public TradierOrderResponse PlaceOrder(long accountId,
+        public TradierOrderResponse PlaceOrder(string accountId,
             TradierOrderClass classification,
             TradierOrderDirection direction,
             string symbol,
@@ -551,7 +551,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Update an exiting Tradier Order:
         /// </summary>
-        public TradierOrderResponse ChangeOrder(long accountId,
+        public TradierOrderResponse ChangeOrder(string accountId,
             long orderId,
             TradierOrderType type = TradierOrderType.Market,
             TradierOrderDuration duration = TradierOrderDuration.GTC,
@@ -577,7 +577,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Cancel the order with this account and id number
         /// </summary>
-        public TradierOrderResponse CancelOrder(long accountId, long orderId)
+        public TradierOrderResponse CancelOrder(string accountId, long orderId)
         {
             //Compose Request:
             var request = new RestRequest("accounts/{accountId}/orders/{orderId}");
@@ -964,32 +964,7 @@ namespace QuantConnect.Brokerages.Tradier
                     CancelOrder(qcOrder);
                 }
             }
-
-
-            // tradier supports market on open by allowing placement of market orders after hours
-            // however, tradier does not support market on close orders, so we need to simulate it
-            // we'll place the market order at 3:59:45 PM, this allows 15 seconds for process and fill
-            if (order.Type == OrderType.MarketOnClose && DateTime.Now < DateTime.Today.Add(new TimeSpan(12+3, 59, 40))) // stop this behavior at 3:59:40
-            {
-                // just recall this PlaceOrder function so it can go through the normal path
-                Timer t = null;
-                t = new Timer(state =>
-                {
-                    PlaceOrder(order);
-                    // be sure to dispose of this
-                    t.Dispose();
-                });
-
-                // Figure how much time until 3:59:45
-                var now = DateTime.Now;
-                var placeOrderTime = now.Date.Add(new TimeSpan(12+3, 59, 45));
-
-                // set timer for delta between now and when we want it to execute
-                int milliseconds = (int)((placeOrderTime - now).TotalMilliseconds);
-                t.Change(milliseconds, Timeout.Infinite);
-                // even though 't' goes out of scope here, the internal scheduler (TimerQueue) maintains a reference
-            }
-
+            
             var holdingQuantity = _securityProvider.GetHoldingsQuantity(order.Symbol);
 
             var orderRequest = new TradierPlaceOrderRequest(order, TradierOrderClass.Equity,  holdingQuantity);
@@ -1670,8 +1645,6 @@ namespace QuantConnect.Brokerages.Tradier
             switch (type)
             {
                 case OrderType.Market:
-                case OrderType.MarketOnOpen:
-                case OrderType.MarketOnClose:
                     return TradierOrderType.Market;
 
                 case OrderType.Limit:
@@ -1920,7 +1893,7 @@ namespace QuantConnect.Brokerages.Tradier
                 case OrderType.StopLimit:
                     return TradierOrderType.StopLimit;
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException("type", order.Type, order.Type + " not supported");
             }
         }
 

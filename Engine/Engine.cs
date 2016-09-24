@@ -110,7 +110,8 @@ namespace QuantConnect.Lean.Engine
                     algorithm = _algorithmHandlers.Setup.CreateAlgorithmInstance(assemblyPath, job.Language);
 
                     // Initialize the brokerage
-                    brokerage = _algorithmHandlers.Setup.CreateBrokerage(job, algorithm);
+                    IBrokerageFactory factory;
+                    brokerage = _algorithmHandlers.Setup.CreateBrokerage(job, algorithm, out factory);
 
                     // Initialize the data feed before we initialize so he can intercept added securities/universes via events
                     _algorithmHandlers.DataFeed.Initialize(algorithm, job, _algorithmHandlers.Results, _algorithmHandlers.MapFileProvider, _algorithmHandlers.FactorFileProvider);
@@ -131,8 +132,8 @@ namespace QuantConnect.Lean.Engine
                     algorithm.HistoryProvider = _algorithmHandlers.HistoryProvider;
 
                     // initialize the default brokerage message handler
-                    algorithm.BrokerageMessageHandler = new DefaultBrokerageMessageHandler(algorithm, job, _algorithmHandlers.Results, _systemHandlers.Api);
-
+                    algorithm.BrokerageMessageHandler = factory.CreateBrokerageMessageHandler(algorithm, job, _systemHandlers.Api);
+                    
                     //Initialize the internal state of algorithm and job: executes the algorithm.Initialize() method.
                     initializeComplete = _algorithmHandlers.Setup.Setup(algorithm, brokerage, job, _algorithmHandlers.Results, _algorithmHandlers.Transactions, _algorithmHandlers.RealTime);
 
@@ -293,6 +294,18 @@ namespace QuantConnect.Lean.Engine
 
                                 statisticsResults = StatisticsBuilder.Generate(trades, profitLoss, equity, performance, benchmark,
                                     _algorithmHandlers.Setup.StartingPortfolioValue, algorithm.Portfolio.TotalFees, totalTransactions);
+
+                                //Some users have $0 in their brokerage account / starting cash of $0. Prevent divide by zero errors
+                                var netReturn = _algorithmHandlers.Setup.StartingPortfolioValue > 0 ?
+                                                (algorithm.Portfolio.TotalPortfolioValue - _algorithmHandlers.Setup.StartingPortfolioValue) / _algorithmHandlers.Setup.StartingPortfolioValue
+                                                : 0;
+
+                                //Add other fixed parameters.
+                                banner.Add("Unrealized", "$" + algorithm.Portfolio.TotalUnrealizedProfit.ToString("N2"));
+                                banner.Add("Fees", "-$" + algorithm.Portfolio.TotalFees.ToString("N2"));
+                                banner.Add("Net Profit", "$" + algorithm.Portfolio.TotalProfit.ToString("N2"));
+                                banner.Add("Return", netReturn.ToString("P"));
+                                banner.Add("Equity", "$" + algorithm.Portfolio.TotalPortfolioValue.ToString("N2"));
                             }
                         }
                         catch (Exception err)

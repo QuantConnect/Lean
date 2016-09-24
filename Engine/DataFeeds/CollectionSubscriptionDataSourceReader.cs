@@ -25,7 +25,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// Collection Subscription Factory takes a BaseDataCollection from BaseData factories
     /// and yields it one point at a time to the algorithm
     /// </summary>
-    public class CollectionSubscriptionFactory : ISubscriptionFactory
+    public class CollectionSubscriptionDataSourceReader : ISubscriptionDataSourceReader
     {
         
         private readonly DateTime _date;
@@ -34,12 +34,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly SubscriptionDataConfig _config;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CollectionSubscriptionFactory"/> class
+        /// Initializes a new instance of the <see cref="CollectionSubscriptionDataSourceReader"/> class
         /// </summary>
         /// <param name="config">The subscription's configuration</param>
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
-        public CollectionSubscriptionFactory(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public CollectionSubscriptionDataSourceReader(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             _date = date;
             _config = config;

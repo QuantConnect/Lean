@@ -22,9 +22,9 @@ using QuantConnect.Data;
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// Provides an implementation of <see cref="ISubscriptionFactory"/> that reads zip entry names
+    /// Provides an implementation of <see cref="ISubscriptionDataSourceReader"/> that reads zip entry names
     /// </summary>
-    public class ZipEntryNameSubscriptionFactory : ISubscriptionFactory
+    public class ZipEntryNameSubscriptionDataSourceReader : ISubscriptionDataSourceReader
     {
         private readonly SubscriptionDataConfig _config;
         private readonly DateTime _dateTime;
@@ -38,12 +38,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public event EventHandler<InvalidSourceEventArgs> InvalidSource;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ZipEntryNameSubscriptionFactory"/> class
+        /// Initializes a new instance of the <see cref="ZipEntryNameSubscriptionDataSourceReader"/> class
         /// </summary>
         /// <param name="config">The subscription's configuration</param>
         /// <param name="dateTime">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
-        public ZipEntryNameSubscriptionFactory(SubscriptionDataConfig config, DateTime dateTime, bool isLiveMode)
+        public ZipEntryNameSubscriptionDataSourceReader(SubscriptionDataConfig config, DateTime dateTime, bool isLiveMode)
         {
             _config = config;
             _dateTime = dateTime;

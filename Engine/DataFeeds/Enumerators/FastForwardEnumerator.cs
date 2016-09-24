@@ -83,7 +83,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             }
 
             // we've exhausted the underlying enumerator, iterator completed
-            return false;
+            _current = _enumerator.Current;
+            return true;
         }
 
         /// <summary>

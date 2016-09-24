@@ -141,7 +141,7 @@ namespace QuantConnect.Lean.Engine
             var settlementScanFrequency = TimeSpan.FromMinutes(30);
             var nextSettlementScanTime = DateTime.MinValue;
 
-            var delistingTickets = new List<OrderTicket>();
+            var delistings = new List<Delisting>();
 
             //Initialize Properties:
             _algorithmId = job.AlgorithmId;
@@ -331,19 +331,32 @@ namespace QuantConnect.Lean.Engine
                 // process fill models on the updated data before entering algorithm, applies to all non-market orders
                 transactions.ProcessSynchronousEvents();
 
-                if (delistingTickets.Count != 0)
+                if (delistings.Count != 0)
                 {
-                    for (int i = 0; i < delistingTickets.Count; i++)
+                    for (int i = 0; i < delistings.Count; i++)
                     {
-                        var ticket = delistingTickets[i];
-                        if (ticket.Status == OrderStatus.Filled)
+                        var symbol = delistings[i].Symbol;
+                        var ticket = delistings[i].Ticket;
+                        var security = algorithm.Securities[symbol];
+
+                        if (ticket != null && ticket.Status == OrderStatus.Filled)
                         {
-                            algorithm.Securities.Remove(ticket.Symbol);
-                            delistingTickets.RemoveAt(i--);
-                            Log.Trace("AlgorithmManager.Run(): Delisted Security removed: " + ticket.Symbol.ToString());
+                            // If invested after market on close order is filled, liquidate
+                            if (security.Invested) algorithm.Liquidate(symbol);
+                            delistings.RemoveAt(i--);
+                        }
+
+                        // Submit an order to liquidate on market close when invested after the delisting warning
+                        if (ticket == null && security.Invested)
+                        {
+                            var submitOrderRequest = new SubmitOrderRequest(OrderType.MarketOnClose, security.Type, security.Symbol,
+                                -security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Liquidate from delisting");
+                            ticket = algorithm.Transactions.ProcessRequest(submitOrderRequest);
+                            delistings[i].SetOrderTicket(ticket);
                         }
                     }
                 }
+
 
                 //Check if the user's signalled Quit: loop over data until day changes.
                 if (algorithm.Status == AlgorithmStatus.Stopped)
@@ -540,7 +553,7 @@ namespace QuantConnect.Lean.Engine
                 }
 
                 // run the delisting logic after firing delisting events
-                HandleDelistedSymbols(algorithm, timeSlice.Slice.Delistings, delistingTickets);
+                HandleDelistedSymbols(algorithm, timeSlice.Slice.Delistings, delistings);
 
                 //After we've fired all other events in this second, fire the pricing events:
                 try
@@ -848,30 +861,33 @@ namespace QuantConnect.Lean.Engine
         /// <summary>
         /// Performs delisting logic for the securities specified in <paramref name="newDelistings"/> that are marked as <see cref="DelistingType.Delisted"/>. 
         /// This includes liquidating the position and removing the security from the algorithm's collection.
-        /// If we're unable to liquidate the position (maybe daily data or EOD already) then we'll add it to the <paramref name="delistingTickets"/>
+        /// If we're unable to liquidate the position (maybe daily data or EOD already) then we'll add it to the <paramref name="delistings"/>
         /// for the algo manager time loop to check later
         /// </summary>
-        private static void HandleDelistedSymbols(IAlgorithm algorithm, Delistings newDelistings, ICollection<OrderTicket> delistingTickets)
+        private static void HandleDelistedSymbols(IAlgorithm algorithm, Delistings newDelistings, ICollection<Delisting> delistings)
         {
             foreach (var delisting in newDelistings.Values)
             {
                 // submit an order to liquidate on market close
                 if (delisting.Type == DelistingType.Warning)
                 {
-                    Log.Trace("AlgorithmManager.Run(): Security delisting warning: " + delisting.Symbol.ToString());
+                    delistings.Add(delisting);
+                    Log.Trace("AlgorithmManager.Run(): Security delisting warning: " + delisting.Symbol.ID);
                     var security = algorithm.Securities[delisting.Symbol];
                     if (security.Holdings.Quantity == 0) continue;
                     var submitOrderRequest = new SubmitOrderRequest(OrderType.MarketOnClose, security.Type, security.Symbol,
                         -security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Liquidate from delisting");
                     var ticket = algorithm.Transactions.ProcessRequest(submitOrderRequest);
                     delisting.SetOrderTicket(ticket);
-                    delistingTickets.Add(ticket);
                 }
                 else
                 {
-                    Log.Trace("AlgorithmManager.Run(): Security delisted: " + delisting.Symbol.ToString());
-                    algorithm.Securities.Remove(delisting.Symbol);
-                    Log.Trace("AlgorithmManager.Run(): Security removed: " + delisting.Symbol.ToString());
+                    Log.Trace("AlgorithmManager.Run(): Security delisted: " + delisting.Symbol.ID);
+                    var cancelledOrders = algorithm.Transactions.CancelOpenOrders(delisting.Symbol);
+                    foreach (var cancelledOrder in cancelledOrders)
+                    {
+                        Log.Trace("AlgorithmManager.Run(): " + cancelledOrder);
+                    }
                 }
             }
         }

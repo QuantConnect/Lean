@@ -121,6 +121,17 @@ namespace QuantConnect.Messaging
         }
 
         /// <summary>
+        /// Send any message with a base type of Packet that has been enqueued.
+        /// </summary>
+        public void SendEnqueuedPackets()
+        {
+            while (_queue.Count > 0 && _loaded)
+            {
+                ProcessPacket(_queue.Dequeue());
+            }
+        }
+
+        /// <summary>
         /// Packet processing implementation
         /// </summary>
         private void ProcessPacket(Packet packet)

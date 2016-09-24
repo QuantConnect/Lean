@@ -15,25 +15,345 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
+using Newtonsoft.Json;
+using QuantConnect.API;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
+using RestSharp;
+using RestSharp.Extensions;
+using QuantConnect.Util;
 
 namespace QuantConnect.Api
 {
     /// <summary>
-    /// Cloud algorithm activity controls
+    /// QuantConnect.com Interaction Via API.
     /// </summary>
     public class Api : IApi
     {
-        private static readonly MarketHoursDatabase MarketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+        private ApiConnection _connection;
+        private static MarketHoursDatabase _marketHoursDatabase;
+        private string _dataFolder;
 
         /// <summary>
-        /// Initialize the API.
+        /// Initialize the API using the config.json file.
         /// </summary>
-        public virtual void Initialize()
+        public virtual void Initialize(int userId, string token, string dataFolder)
         {
-            //Nothing to initialize in the local copy of the engine.
+            _connection = new ApiConnection(userId, token);
+            _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+            _dataFolder = dataFolder;
+
+            //Allow proper decoding of orders from the API.
+            JsonConvert.DefaultSettings = () => new JsonSerializerSettings
+            {
+                Converters = { new OrderJsonConverter() }
+            };
+        }
+
+        /// <summary>
+        /// Create a project with the specified name and language via QuantConnect.com API
+        /// </summary>
+        /// <param name="name">Project name</param>
+        /// <param name="language">Programming language to use</param>
+        /// <returns>Project object from the API.</returns>
+        public Project CreateProject(string name, Language language)
+        {
+            var request = new RestRequest("projects/create", Method.POST);
+            request.RequestFormat = DataFormat.Json;
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                name = name,
+                language = language
+            }), ParameterType.RequestBody);
+
+            Project result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
+        /// Read in a project from the QuantConnect.com API.
+        /// </summary>
+        /// <param name="projectId">Project id you own</param>
+        /// <returns></returns>
+        public Project ReadProject(int projectId)
+        {
+            var request = new RestRequest("projects/read", Method.GET);
+            request.RequestFormat = DataFormat.Json;
+            request.AddParameter("projectId", projectId);
+            Project result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
+        /// Read back a list of all projects on the account for a user.
+        /// </summary>
+        /// <returns>Container for list of projects</returns>
+        public ProjectList ProjectList()
+        {
+            var request = new RestRequest("projects/read", Method.GET);
+            request.RequestFormat = DataFormat.Json;
+            ProjectList result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
+        /// Update a specific project with a list of files. All other files will be deleted.
+        /// </summary>
+        /// <param name="projectId">Project id for project to be updated</param>
+        /// <param name="files">Files list to update</param>
+        /// <returns>RestResponse indicating success</returns>
+        public RestResponse UpdateProject(int projectId, List<ProjectFile> files)
+        {
+            var request = new RestRequest("projects/update", Method.POST);
+            request.RequestFormat = DataFormat.Json;
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                projectId = projectId,
+                files = files
+            }), ParameterType.RequestBody);
+            RestResponse result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
+        /// Delete a specific project owned by the user from QuantConnect.com
+        /// </summary>
+        /// <param name="projectId">Project id we own and wish to delete</param>
+        /// <returns>RestResponse indicating success</returns>
+        public RestResponse Delete(int projectId)
+        {
+            var request = new RestRequest("projects/delete", Method.POST);
+            request.RequestFormat = DataFormat.Json;
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                projectId = projectId
+            }), ParameterType.RequestBody);
+            RestResponse result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
+        /// Create a new compile job request for this project id.
+        /// </summary>
+        /// <param name="projectId">Project id we wish to compile.</param>
+        /// <returns>Compile object result</returns>
+        public Compile CreateCompile(int projectId)
+        {
+            var request = new RestRequest("compile/create", Method.POST);
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                projectId = projectId
+            }), ParameterType.RequestBody);
+            Compile result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
+        /// Read a compile packet job result.
+        /// </summary>
+        /// <param name="projectId">Project id we sent for compile</param>
+        /// <param name="compileId">Compile id return from the creation request</param>
+        /// <returns>Compile object result</returns>
+        public Compile ReadCompile(int projectId, string compileId)
+        {
+            var request = new RestRequest("compile/read", Method.GET);
+            request.RequestFormat = DataFormat.Json;
+            request.AddParameter("projectId", projectId);
+            request.AddParameter("compileId", compileId);
+            Compile result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+
+        /// <summary>
+        /// Create a new backtest request and get the id.
+        /// </summary>
+        /// <param name="projectId">Id for the project we'd like to backtest</param>
+        /// <param name="compileId">Successfuly compile id for the project</param>
+        /// <param name="backtestName">Name for the new backtest</param>
+        /// <returns>Backtest object</returns>
+        public Backtest CreateBacktest(int projectId, string compileId, string backtestName)
+        {
+            var request = new RestRequest("backtests/create", Method.POST);
+            request.AddParameter("projectId", projectId);
+            request.AddParameter("compileId", compileId);
+            request.AddParameter("backtestName", backtestName);
+            Backtest result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
+        /// Read out a backtest in the project id specified.
+        /// </summary>
+        /// <param name="projectId">Project id to read</param>
+        /// <param name="backtestId">Specific backtest id to read</param>
+        /// <returns>Backtest object with the results</returns>
+        public Backtest ReadBacktest(int projectId, string backtestId)
+        {
+            var request = new RestRequest("backtests/read", Method.GET);
+            request.AddParameter("backtestId", backtestId);
+            request.AddParameter("projectId", projectId);
+            Backtest result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
+        /// Update a backtest name
+        /// </summary>
+        /// <param name="projectId">Project for the backtest we want to update</param>
+        /// <param name="backtestId">Backtest id we want to update</param>
+        /// <param name="name">Name we'd like to assign to the backtest</param>
+        /// <param name="note">Note attached to the backtest</param>
+        /// <returns>Rest response class indicating success</returns>
+        public RestResponse UpdateBacktest(int projectId, string backtestId, string name = "", string note = "")
+        {
+            var request = new RestRequest("backtests/update", Method.POST);
+            request.RequestFormat = DataFormat.Json;
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                projectId = projectId,
+                backtestId = backtestId,
+                name = name,
+                note = note
+            }), ParameterType.RequestBody);
+            Backtest result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
+        /// List all the backtests in a prokect
+        /// </summary>
+        /// <param name="projectId">Project id we'd like to get a list of backtest for</param>
+        /// <returns>Backtest list container</returns>
+        public BacktestList BacktestList(int projectId)
+        {
+            var request = new RestRequest("backtests/read", Method.GET);
+            request.AddParameter("projectId", projectId);
+            BacktestList result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+        
+        /// <summary>
+        /// Delete a backtest from the specified project and backtestId.
+        /// </summary>
+        /// <param name="projectId">Project for the backtest we want to delete</param>
+        /// <param name="backtestId">Backtest id we want to delete</param>
+        /// <returns></returns>
+        public RestResponse DeleteBacktest(int projectId, string backtestId)
+        {
+            var request = new RestRequest("backtests/delete", Method.POST);
+            request.RequestFormat = DataFormat.Json;
+            request.AddParameter("backtestId", backtestId);
+            request.AddParameter("projectId", projectId);
+            RestResponse result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
+        /// Get a list of live running algorithms for a logged in user.
+        /// </summary>
+        /// <returns>List of live algorithm instances</returns>
+        public LiveList LiveList()
+        {
+            var request = new RestRequest("live/read", Method.GET);
+            LiveList result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
+        /// Gets the logs of a specific live algorithm 
+        /// </summary>
+        /// <param name="projectId">Project Id of the live running algorithm</param>
+        /// <param name="algorithmId">Algorithm Id of the live running algorithm</param>
+        /// <param name="startTime">No logs will be returned before this time</param>
+        /// <param name="endTime">No logs will be returned after this time</param>
+        /// <returns>List of strings that represent the logs of the algorithm</returns>
+        public LiveLog ReadLiveLogs(int projectId, string algorithmId, DateTime? startTime = null, DateTime? endTime = null)
+        {
+            var epochStartTime = startTime == null ? 0 : Time.DateTimeToUnixTimeStamp(startTime.Value);
+            var epochEndTime   = endTime   == null ? Time.DateTimeToUnixTimeStamp(DateTime.UtcNow) : Time.DateTimeToUnixTimeStamp(endTime.Value);
+
+            var request = new RestRequest("live/read/log", Method.GET);
+
+            request.AddParameter("format", "json");
+            request.AddParameter("projectId", projectId);
+            request.AddParameter("algorithmId", algorithmId);
+            request.AddParameter("start", epochStartTime);
+            request.AddParameter("end", epochEndTime);
+
+            LiveLog result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
+        /// Gets the link to the downloadable data.
+        /// </summary>
+        /// <param name="symbol">Symbol of security of which data will be requested.</param>
+        /// <param name="resolution">Resolution of data requested.</param>
+        /// <param name="date">Date of the data requested.</param>
+        /// <returns>Link to the downloadable data.</returns>
+        public Link ReadDataLink(Symbol symbol, Resolution resolution, DateTime date)
+        {
+            var request = new RestRequest("data/read", Method.GET);
+
+            request.AddParameter("format", "link");
+            request.AddParameter("ticker", symbol.Value.ToLower());
+            request.AddParameter("type", symbol.ID.SecurityType.ToLower());
+            request.AddParameter("market", symbol.ID.Market);
+            request.AddParameter("resolution", resolution);
+            request.AddParameter("date", date.ToString("yyyyMMdd"));
+
+            Link result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
+        /// Method to download and save the data purchased through QuantConnect
+        /// </summary>
+        /// <param name="symbol">Symbol of security of which data will be requested.</param>
+        /// <param name="resolution">Resolution of data requested.</param>
+        /// <param name="date">Date of the data requested.</param>
+        /// <returns>A bool indicating whether the data was successfully downloaded or not.</returns>
+        public bool DownloadData(Symbol symbol, Resolution resolution, DateTime date)
+        {
+            // Get a link to the data
+            var link = ReadDataLink(symbol, resolution, date);
+
+            // Make sure the link was successfully retrieved
+            if (!link.Success)
+                return false;
+
+            // Save csv in same folder heirarchy as Lean
+            var path = Path.Combine(_dataFolder, LeanData.GenerateRelativeZipFilePath(symbol.Value, symbol.ID.SecurityType, symbol.ID.Market, date, resolution));
+
+            // Make sure the directory exist before writing
+            (new FileInfo(path)).Directory.Create();
+
+            // Download and save the data
+            var uri     = new Uri(link.DataLink);
+            var client  = new RestClient(uri.Scheme + "://" + uri.Host);
+            var request = new RestRequest(uri.PathAndQuery, Method.GET);
+            client.DownloadData(request).SaveAs(path);
+
+            return true;
         }
 
         /// <summary>
@@ -114,7 +434,7 @@ namespace QuantConnect.Api
                 yield break;
             }
 
-            var hours = MarketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.ID.SecurityType);
+            var hours = _marketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.ID.SecurityType);
             foreach (var segment in hours.MarketHours[time.DayOfWeek].Segments)
             {
                 yield return segment;
@@ -148,5 +468,6 @@ namespace QuantConnect.Api
         {
             // NOP
         }
+        
     }
 }

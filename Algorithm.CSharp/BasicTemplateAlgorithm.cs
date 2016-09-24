@@ -22,6 +22,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class BasicTemplateAlgorithm : QCAlgorithm
     {
+        private Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+        
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -42,7 +44,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                SetHoldings("SPY", 1);
+                SetHoldings(_spy, 1);
                 Debug("Purchased Stock");
             }
         }

@@ -134,7 +134,19 @@ namespace QuantConnect.Brokerages.Fxcm
             var loginProperties = new FXCMLoginProperties(_userName, _password, _terminal, _server);
 
             // log in
-            _gateway.login(loginProperties);
+            try
+            {
+                _gateway.login(loginProperties);
+            }
+            catch (Exception err)
+            {
+                var message =
+                    err.Message.Contains("ORA-20101") ? "Incorrect login credentials" :
+                    err.Message.Contains("ORA-20003") ? "API connections are not available on Mini accounts. If you have a standard account contact api@fxcm.com to enable API access" :
+                    err.Message;
+
+                throw new BrokerageException(message, err.InnerException);
+            }
 
             // create new thread to manage disconnections and reconnections
             _connectionMonitorThread = new Thread(() =>
@@ -158,8 +170,10 @@ namespace QuantConnect.Brokerages.Fxcm
                             OnMessage(BrokerageMessageEvent.Disconnected("Connection with FXCM server lost. " +
                                                                          "This could be because of internet connectivity issues. "));
                         }
-                        else if (_connectionLost && elapsed <= TimeSpan.FromSeconds(5))
+                        else if (_connectionLost && elapsed <= TimeSpan.FromSeconds(5) && IsWithinTradingHours())
                         {
+                            Log.Trace("FxcmBrokerage.Connect(): Attempting reconnection...");
+
                             try
                             {
                                 _gateway.relogin();
@@ -173,8 +187,10 @@ namespace QuantConnect.Brokerages.Fxcm
                                 Log.Error(exception);
                             }
                         }
-                        else if (_connectionError)
+                        else if (_connectionError && IsWithinTradingHours())
                         {
+                            Log.Trace("FxcmBrokerage.Connect(): Attempting reconnection...");
+
                             try
                             {
                                 // log out
@@ -227,6 +243,23 @@ namespace QuantConnect.Brokerages.Fxcm
             LoadAccounts();
             LoadOpenOrders();
             LoadOpenPositions();
+        }
+
+        /// <summary>
+        /// Returns true if we are within FXCM trading hours
+        /// </summary>
+        /// <returns></returns>
+        private static bool IsWithinTradingHours()
+        {
+            var time = DateTime.UtcNow.ConvertFromUtc(TimeZones.EasternStandard);
+
+            // FXCM Trading Hours: http://help.fxcm.com/us/Trading-Basics/New-to-Forex/38757093/What-are-the-Trading-Hours.htm
+
+            return !(time.DayOfWeek == DayOfWeek.Friday && time.TimeOfDay > new TimeSpan(16, 55, 0) ||
+                     time.DayOfWeek == DayOfWeek.Saturday ||
+                     time.DayOfWeek == DayOfWeek.Sunday && time.TimeOfDay < new TimeSpan(17, 0, 0) ||
+                     time.Month == 12 && time.Day == 25 ||
+                     time.Month == 1 && time.Day == 1);
         }
 
         /// <summary>
@@ -304,11 +337,56 @@ namespace QuantConnect.Brokerages.Fxcm
         public override List<Cash> GetCashBalance()
         {
             Log.Trace("FxcmBrokerage.GetCashBalance()");
+            var cashBook = new List<Cash>();
 
-            return new List<Cash>
+            //Adds the account currency USD to the cashbook.
+            cashBook.Add(new Cash(_fxcmAccountCurrency,
+                        Convert.ToDecimal(_accounts[_accountId].getCashOutstanding()),
+                        GetUsdConversion(_fxcmAccountCurrency)));
+
+            foreach (var trade in _openPositions.Values)
             {
-                new Cash(_fxcmAccountCurrency, Convert.ToDecimal(_accounts[_accountId].getCashOutstanding()), GetUsdConversion(_fxcmAccountCurrency))
-            };
+                //settlement price for the trade
+                var settlementPrice = Convert.ToDecimal(trade.getSettlPrice());
+                //direction of trade
+                var direction = trade.getPositionQty().getLongQty() > 0 ? 1 : -1;
+                //quantity of the asset
+                var quantity = Convert.ToDecimal(trade.getPositionQty().getQty());
+                //quantity of base currency
+                var baseQuantity = direction * quantity;
+                //quantity of quote currency
+                var quoteQuantity = -direction * quantity * settlementPrice;
+                //base currency
+                var baseCurrency = trade.getCurrency();
+                //quote currency
+                var quoteCurrency = FxcmSymbolMapper.ConvertFxcmSymbolToLeanSymbol(trade.getInstrument().getSymbol());
+                quoteCurrency = quoteCurrency.Substring(quoteCurrency.Length - 3);
+
+                var baseCurrencyObject = (from cash in cashBook where cash.Symbol == baseCurrency select cash).FirstOrDefault();
+                //update the value of the base currency
+                if (baseCurrencyObject != null)
+                {
+                    baseCurrencyObject.AddAmount(baseQuantity);
+                }
+                else
+                {
+                    //add the base currency if not present
+                    cashBook.Add(new Cash(baseCurrency, baseQuantity, GetUsdConversion(baseCurrency)));
+                }
+
+                var quoteCurrencyObject = (from cash in cashBook where cash.Symbol == quoteCurrency select cash).FirstOrDefault();
+                //update the value of the quote currency
+                if (quoteCurrencyObject != null)
+                {
+                    quoteCurrencyObject.AddAmount(quoteQuantity);
+                }
+                else
+                {
+                    //add the quote currency if not present
+                    cashBook.Add(new Cash(quoteCurrency, quoteQuantity, GetUsdConversion(quoteCurrency)));
+                }
+            }
+            return cashBook;
         }
 
         /// <summary>
