@@ -16,6 +16,7 @@
 
 using System;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace QuantConnect
 {
@@ -92,14 +93,51 @@ namespace QuantConnect
         {
             var underlyingSid = SecurityIdentifier.GenerateEquity(underlying, market);
             var sid = SecurityIdentifier.GenerateOption(expiry, underlyingSid, market, strike, right, style);
-            var underlyingSumbol = new Symbol(underlyingSid, underlying);
+            var underlyingSymbol = new Symbol(underlyingSid, underlying);
 
             var sym = sid.Symbol;
             if (sym.Length > 5) sym += " ";
             // format spec: http://www.optionsclearing.com/components/docs/initiatives/symbology/symbology_initiative_v1_8.pdf
             alias = alias ?? string.Format("{0,-6}{1}{2}{3:00000000}", sym, sid.Date.ToString(DateFormat.SixCharacter), sid.OptionRight.ToString()[0], sid.StrikePrice * 1000m);
 
-            return new Symbol(sid, alias, underlyingSumbol); 
+            return new Symbol(sid, alias, underlyingSymbol); 
+        }
+
+        /// <summary>
+        /// Provides a convenience method for creating a futures Symbol.
+        /// </summary>
+        /// <param name="underlying">The underlying ticker</param>
+        /// <param name="market">The market the underlying resides in</param>
+        /// <param name="expiry">The option expiry date</param>
+        /// <param name="alias">An alias to be used for the symbol cache. Required when 
+        /// adding the same security from different markets</param>
+        /// <returns>A new Symbol object for the specified option contract</returns>
+        public static Symbol CreateFuture(string underlying, string market, DateTime expiry, string alias = null)
+        {
+            var expirationSymbology = new Dictionary<int, char>
+            {
+                { 1, 'F' },
+                { 2, 'G' },
+                { 3, 'H' },
+                { 4, 'J' },
+                { 5, 'K' },
+                { 6, 'M' },
+                { 7, 'N' },
+                { 8, 'Q' },
+                { 9, 'U' },
+                { 10, 'V' },
+                { 11, 'X' },
+                { 12, 'Z' }
+            };
+
+            var underlyingSid = SecurityIdentifier.GenerateBase(underlying, market);
+            var sid = SecurityIdentifier.GenerateFuture(expiry, underlyingSid, market);
+            var underlyingSymbol = new Symbol(underlyingSid, underlying);
+
+            var sym = sid.Symbol;
+            alias = alias ?? string.Format("{0}{1}{2}", sym, expirationSymbology[sid.Date.Month], sid.Date.Year % 10);
+
+            return new Symbol(sid, alias, underlyingSymbol);
         }
 
         #region Properties

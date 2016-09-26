@@ -38,6 +38,7 @@ using QuantConnect.Securities.Option;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
 using SecurityTypeMarket = System.Tuple<QuantConnect.SecurityType, string>;
+using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Algorithm
 {
@@ -1323,37 +1324,49 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        ///  This is a private method that adds single option contract
+        /// Creates and adds a new <see cref="Future"/> security to the algorithm
         /// </summary>
-        private Security AddSingleOption(string symbol, Resolution resolution, string market, bool fillDataForward, decimal leverage)
+        /// <param name="symbol">The futures contract symbol</param>
+        /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
+        /// <param name="market">The futures market, <seealso cref="Market"/>. Default is <see cref="Market.USA"/></param>
+        /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
+        /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
+        /// <returns>The new <see cref="Future"/> security</returns>
+        public Future AddFuture(string symbol, Resolution resolution = Resolution.Minute, string market = Market.USA, bool fillDataForward = true, decimal leverage = 0m)
         {
-            try
+            if (market == null)
             {
-                if (market == null)
+                if (!BrokerageModel.DefaultMarkets.TryGetValue(SecurityType.Future, out market))
                 {
-                    if (!BrokerageModel.DefaultMarkets.TryGetValue(SecurityType.Option, out market))
-                    {
-                        throw new Exception("No default market set for security type: " + SecurityType.Option);
-                    }
+                    throw new Exception("No default market set for security type: " + SecurityType.Future);
                 }
-
-                var sid = SecurityIdentifier.Parse(symbol);
-                var optionSymbol = QuantConnect.Symbol.CreateOption(sid.Underlying.Symbol, sid.Market, sid.OptionStyle, sid.OptionRight, sid.StrikePrice, sid.Date);
-
-                var marketHoursEntry = _marketHoursDatabase.GetEntry(market, optionSymbol.Underlying.Value, SecurityType.Option);
-                var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(market, optionSymbol.Underlying.Value, SecurityType.Option, CashBook.AccountCurrency);
-                var security = (Option)SecurityManager.CreateSecurity(typeof(ZipEntryName), Portfolio, SubscriptionManager,
-                    marketHoursEntry.ExchangeHours, marketHoursEntry.DataTimeZone, symbolProperties, SecurityInitializer, optionSymbol, resolution,
-                    fillDataForward, leverage, false, false, false, true, false);
-
-                Securities.Add(security);
-                return security;
             }
-            catch (Exception err)
+
+            Symbol canonicalSymbol;
+            var alias = "?" + symbol;
+            if (!SymbolCache.TryGetSymbol(alias, out canonicalSymbol))
             {
-                Error("Algorithm.AddSingleOption(): " + err);
-                return null;
+                canonicalSymbol = QuantConnect.Symbol.Create(symbol, SecurityType.Future, market, alias);
             }
+
+            var marketHoursEntry = _marketHoursDatabase.GetEntry(market, symbol, SecurityType.Future);
+            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(market, symbol, SecurityType.Future, CashBook.AccountCurrency);
+            var canonicalSecurity = (Future)SecurityManager.CreateSecurity(typeof(ZipEntryName), Portfolio, SubscriptionManager,
+                marketHoursEntry.ExchangeHours, marketHoursEntry.DataTimeZone, symbolProperties, SecurityInitializer, canonicalSymbol, resolution,
+                fillDataForward, leverage, false, false, false, true, false);
+            canonicalSecurity.IsTradable = false;
+            Securities.Add(canonicalSecurity);
+
+            // add this security to the user defined universe
+            Universe universe;
+            if (!UniverseManager.TryGetValue(canonicalSymbol, out universe))
+            {
+                var settings = new UniverseSettings(resolution, leverage, true, false, TimeSpan.Zero);
+                universe = new FuturesChainUniverse(canonicalSecurity, settings, SecurityInitializer);
+                UniverseManager.Add(canonicalSymbol, universe);
+            }
+
+            return canonicalSecurity;
         }
 
         /// <summary>

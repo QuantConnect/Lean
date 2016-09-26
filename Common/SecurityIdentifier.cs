@@ -310,6 +310,20 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Generates a new <see cref="SecurityIdentifier"/> for a future
+        /// </summary>
+        /// <param name="expiry">The date the option expires</param>
+        /// <param name="underlying">The underlying security's symbol</param>
+        /// <param name="market">The market</param>
+        /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified futures security</returns>
+        public static SecurityIdentifier GenerateFuture(DateTime expiry,
+            SecurityIdentifier underlying,
+            string market)
+        {
+            return Generate(expiry, underlying.Symbol, SecurityType.Option, market, 0, 0, 0, underlying);
+        }
+
+        /// <summary>
         /// Helper overload that will search the mapfiles to resolve the first date. This implementation
         /// uses the configured <see cref="IMapFileProvider"/> via the <see cref="Composer.Instance"/>
         /// </summary>

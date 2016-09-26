@@ -368,6 +368,10 @@ namespace QuantConnect.Securities
                     security = new Option.Option(exchangeHours, config, securityPortfolioManager.CashBook[CashBook.AccountCurrency], new Option.OptionSymbolProperties(symbolProperties));
                     break;
 
+                case SecurityType.Future:
+                    security = new Future.Future(exchangeHours, config, securityPortfolioManager.CashBook[CashBook.AccountCurrency], symbolProperties);
+                    break;
+
                 case SecurityType.Forex:
                     security = new Forex.Forex(symbol, exchangeHours, quoteCash, symbolProperties);
                     break;
