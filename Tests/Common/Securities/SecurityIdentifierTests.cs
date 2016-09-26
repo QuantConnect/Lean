@@ -28,9 +28,16 @@ namespace QuantConnect.Tests.Common.Securities
             get { return SecurityIdentifier.GenerateEquity(new DateTime(1998, 01, 02), "SPY", Market.USA); }
         }
 
+        private static SecurityIdentifier ED
+        {
+            get { return SecurityIdentifier.GenerateBase("ED", Market.USA); }
+        }
+
 
         // this is really not european style, but I'd prefer to test a value of 1 vs a value of 0
         private readonly SecurityIdentifier SPY_Put_19550 = SecurityIdentifier.GenerateOption(new DateTime(2015, 09, 18), SPY, Market.USA, 195.50m, OptionRight.Put, OptionStyle.European);
+        // this is euro-dollar futures contract (for tests)
+        private readonly SecurityIdentifier ED_Dec_2020 = SecurityIdentifier.GenerateFuture(new DateTime(2020, 12, 15), ED, Market.USA);
 
         [Test]
         public void GenerateEquityProperlyResolvesFirstDate()
@@ -93,6 +100,17 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual("EURUSD", eurusd.Symbol);
 
             Console.WriteLine(eurusd);
+        }
+        [Test]
+        public void FuturesSecurityIdReturnsProperties()
+        {
+            // verify various values
+            Assert.AreEqual(new DateTime(2020, 12, 15), ED_Dec_2020.Date);
+            Assert.AreEqual(Market.USA, ED_Dec_2020.Market);
+            Assert.AreEqual(SecurityType.Future, ED_Dec_2020.SecurityType);
+            Assert.AreEqual("ED", ED_Dec_2020.Symbol);
+
+            Console.WriteLine(ED_Dec_2020);
         }
 
         [Test]

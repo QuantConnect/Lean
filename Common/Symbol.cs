@@ -70,6 +70,11 @@ namespace QuantConnect
                     break;
                 case SecurityType.Commodity:
                 case SecurityType.Future:
+                    alias = alias ?? "?" + ticker.ToUpper();
+                    underlyingSid = SecurityIdentifier.GenerateBase(ticker, market);
+                    sid = SecurityIdentifier.GenerateFuture(SecurityIdentifier.DefaultDate, underlyingSid, market);
+                    underlyingSumbol = new Symbol(underlyingSid, ticker);
+                    break;
                 default:
                     throw new NotImplementedException("The security type has not been implemented yet: " + securityType);
             }
@@ -135,7 +140,7 @@ namespace QuantConnect
             var underlyingSymbol = new Symbol(underlyingSid, underlying);
 
             var sym = sid.Symbol;
-            alias = alias ?? string.Format("{0}{1}{2}", sym, expirationSymbology[sid.Date.Month], sid.Date.Year % 10);
+            alias = alias ?? string.Format("{0}{1}{2}", sym, expirationSymbology[sid.Date.Month], sid.Date.Year % 100);
 
             return new Symbol(sid, alias, underlyingSymbol);
         }

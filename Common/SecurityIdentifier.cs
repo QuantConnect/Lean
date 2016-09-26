@@ -320,7 +320,7 @@ namespace QuantConnect
             SecurityIdentifier underlying,
             string market)
         {
-            return Generate(expiry, underlying.Symbol, SecurityType.Option, market, 0, 0, 0, underlying);
+            return Generate(expiry, underlying.Symbol, SecurityType.Future, market, 0, 0, 0, underlying);
         }
 
         /// <summary>

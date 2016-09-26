@@ -34,12 +34,15 @@ namespace QuantConnect.ToolBox.IQFeed
     public class IQFeedDataQueueUniverseProvider : IDataQueueUniverseProvider, ISymbolMapper
     {
         private List<SymbolData> _symbolUniverse;
+
+        // tickets and symbols are isomorphic
         private Dictionary<Symbol, string> _symbols;
         private Dictionary<string, Symbol> _tickers;
 
         public IQFeedDataQueueUniverseProvider()
         {
             _symbolUniverse = LoadSymbols();
+
             _symbols = _symbolUniverse.ToDictionary(kv => kv.Symbol, kv => kv.Ticker);
             _tickers = _symbolUniverse.ToDictionary(kv => kv.Ticker, kv => kv.Symbol);
         }
@@ -161,7 +164,7 @@ namespace QuantConnect.ToolBox.IQFeed
 
                     case "IEOPTION":
 
-                        // This table describes IQFeed option symbology at 
+                        // This table describes IQFeed option symbology  
                         var symbology = new Dictionary<string, Tuple<int, OptionRight>>
                         {
                             { "A", Tuple.Create(1, OptionRight.Call) }, { "M", Tuple.Create(1, OptionRight.Put) },
@@ -257,7 +260,64 @@ namespace QuantConnect.ToolBox.IQFeed
 
                     case "FUTURE":
 
-                        // Currently we ignore futures
+                        var futuresExpirationSymbology = new Dictionary<string, int>
+                        {
+                            { "F", 1 },
+                            { "G", 2 },
+                            { "H", 3 },
+                            { "J", 4 },
+                            { "K", 5 },
+                            { "M", 6 },
+                            { "N", 7 },
+                            { "Q", 8 },
+                            { "U", 9 },
+                            { "V", 10 },
+                            { "X", 11 },
+                            { "Z", 12 }
+                        };
+
+                        // we are not interested in designated front month contracts as they come twice in the file (marked with #, and using standard symbology)
+                        if (columns[columnSymbol].EndsWith("#"))
+                            continue;
+
+                        var futuresTicker = columns[columnSymbol];
+                        var expirationYearString = futuresTicker.Substring(futuresTicker.Length - 2, 2);
+                        var expirationMonthString = futuresTicker.Substring(futuresTicker.Length - 3, 1);
+                        var underlyingString = futuresTicker.Substring(0, futuresTicker.Length - 3);
+
+                        // parsing expiration date
+
+                        int expirationYear;
+
+                        if (!int.TryParse(expirationYearString, out expirationYear))
+                        {
+                            Log.Trace("Discrepancy found while parsing IQFeed future contract expiration year in symbol universe file. Year {0}. Line: {1}", expirationYearString, line);
+                            continue;
+                        }
+
+                        if (!futuresExpirationSymbology.ContainsKey(expirationMonthString))
+                        {
+                            Log.Trace("Discrepancy found while parsing IQFeed future contract expiration month in symbol universe file. Month {0}. Line: {1}", expirationMonthString, line);
+                            continue;
+                        }
+
+                        var expirationMonth = futuresExpirationSymbology[expirationMonthString];
+
+                        // Futures contracts have different idiosyncratic expiration dates
+                        // We specify year and month of expiration here, and put 1st day of the month as an expiration date
+                        // Later this information will be amended with the expiration data from futures expiration calendar
+
+                        var expirationYearMonth = new DateTime(2000 + expirationYear, expirationMonth, 1);
+
+                        symbols.Add(new SymbolData
+                        {
+                            Symbol = Symbol.CreateFuture(underlyingString,
+                                                        Market.USA,
+                                                        expirationYearMonth),
+                            SecurityCurrency = "USD",
+                            SecurityExchange = Market.USA,
+                            Ticker = columns[columnSymbol]
+                        });
                         continue;
 
                     default:

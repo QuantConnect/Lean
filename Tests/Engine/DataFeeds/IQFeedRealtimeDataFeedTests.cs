@@ -21,7 +21,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     {
 
         [Test]
-        public void SanityCheckIfDataIsLoaded ()
+        public void IQFeedSanityCheckIfDataIsLoaded ()
         {
             var symbolUniverse = new IQFeedDataQueueUniverseProvider();
 

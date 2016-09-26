@@ -49,6 +49,14 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(expected, symbol.Value);
         }
 
+        [Test]
+        public void FuturesSymbolAliasMatchesSymbology()
+        {
+            const string expected = @"EDX20";
+            var symbol = Symbol.CreateFuture("ED", Market.USA, new DateTime(2020, 11, 11));
+            Assert.AreEqual(expected, symbol.Value);
+        }
+
         [Theory]
         [TestCaseSource("GetSymbolCreateTestCaseData")]
         public void SymbolCreate(string ticker, SecurityType securityType, string market, Symbol expected)
