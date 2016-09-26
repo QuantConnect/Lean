@@ -31,32 +31,45 @@ namespace QuantConnect.Tests.Common
     [TestFixture]
     public class OptionPriceModelTests
     {
+
         [Test]
-        public void BaroneAdesiWhaleyCallTest()
+        public void PutCallParityTest()
         {
-            const decimal price = 20.00m;
             const decimal underlyingPrice = 200m;
             const decimal underlyingVol = 0.15m;
+            const decimal riskFreeRate = 0.01m;
             var tz = TimeZones.NewYork;
             var evaluationDate = new DateTime(2015, 2, 19);
+            var SPY_C_192_Feb19_2016E = Symbol.CreateOption("SPY", Market.USA, OptionStyle.European, OptionRight.Call, 192m, new DateTime(2016, 02, 19));
+            var SPY_P_192_Feb19_2016E = Symbol.CreateOption("SPY", Market.USA, OptionStyle.European, OptionRight.Put, 192m, new DateTime(2016, 02, 19));
 
+            // setting up underlying
             var equity = new Equity(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
             equity.SetMarketPrice(new Tick { Value = underlyingPrice });
             equity.VolatilityModel = new DummyVolatilityModel(underlyingVol);
 
-            var contract = new OptionContract(Symbols.SPY_C_192_Feb19_2016, Symbols.SPY) { Time = evaluationDate };
-            var optionCall = new Option(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY_C_192_Feb19_2016, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)));
-            optionCall.SetMarketPrice(new Tick { Value = price });
+            // setting up European style call option
+            var contractCall = new OptionContract(SPY_C_192_Feb19_2016E, Symbols.SPY) { Time = evaluationDate };
+            var optionCall = new Option(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), SPY_C_192_Feb19_2016E, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)));
             optionCall.Underlying = equity;
 
-            var priceModel = OptionPriceModels.BaroneAdesiWhaley();
-            var results = priceModel.Evaluate(optionCall, null, contract);
+            // setting up European style put option
+            var contractPut = new OptionContract(SPY_P_192_Feb19_2016E, Symbols.SPY) { Time = evaluationDate };
+            var optionPut = new Option(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), SPY_P_192_Feb19_2016E, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)));
+            optionPut.Underlying = equity;
 
-            var theoreticalPrice = results.TheoreticalPrice;
-            var impliedVolatility = results.ImpliedVolatility;
+            // running evaluation
+            var priceModel = OptionPriceModels.BlackScholes();
+            var resultsCall = priceModel.Evaluate(optionCall, null, contractCall);
+            var resultsPut = priceModel.Evaluate(optionPut, null, contractPut);
+            var callPrice = resultsCall.TheoreticalPrice;
+            var putPrice = resultsPut.TheoreticalPrice;
 
-            Assert.Greater(price, theoreticalPrice);
-            Assert.Greater(impliedVolatility, underlyingVol);
+            // Put-call parity equation
+            var rightPart = putPrice + underlyingPrice; // no yield
+            var leftPart = callPrice + contractCall.Strike * (decimal)Math.Exp((double)-riskFreeRate);
+
+            Assert.AreEqual((double)leftPart, (double)rightPart, 0.0001);
         }
 
         [Test]
@@ -84,14 +97,50 @@ namespace QuantConnect.Tests.Common
             // running evaluation
             var priceModel = OptionPriceModels.BlackScholes();
             var results = priceModel.Evaluate(optionCall, null, contract);
-            var theoreticalPrice = results.TheoreticalPrice;
+            var callPrice = results.TheoreticalPrice;
             var greeks = results.Greeks;
 
             // BS equation
             var rightPart = greeks.Theta + riskFreeRate * underlyingPrice * greeks.Delta + 0.5m * underlyingVol * underlyingVol * underlyingPrice * underlyingPrice * greeks.Gamma;
-            var leftPart = riskFreeRate * theoreticalPrice;
+            var leftPart = riskFreeRate * callPrice;
 
             Assert.AreEqual((double)leftPart, (double)rightPart, 0.0001);
+        }
+
+        [Test]
+        public void BaroneAdesiWhaleyPortfolioTest()
+        {
+            const decimal price = 30.00m;
+            const decimal underlyingPrice = 200m;
+            const decimal underlyingVol = 0.25m;
+            const decimal riskFreeRate = 0.01m;
+            var tz = TimeZones.NewYork;
+            var evaluationDate = new DateTime(2015, 2, 19);
+
+            var equity = new Equity(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            equity.SetMarketPrice(new Tick { Value = underlyingPrice });
+            equity.VolatilityModel = new DummyVolatilityModel(underlyingVol);
+
+            var contract = new OptionContract(Symbols.SPY_C_192_Feb19_2016, Symbols.SPY) { Time = evaluationDate };
+            var optionCall = new Option(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY_C_192_Feb19_2016, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)));
+            optionCall.SetMarketPrice(new Tick { Value = price });
+            optionCall.Underlying = equity;
+
+            var priceModel = OptionPriceModels.BaroneAdesiWhaley();
+            var results = priceModel.Evaluate(optionCall, null, contract);
+
+            var callPrice = results.TheoreticalPrice;
+            var impliedVolatility = results.ImpliedVolatility;
+            var greeks = results.Greeks;
+
+            Assert.Greater(price, callPrice);
+            Assert.Greater(impliedVolatility, underlyingVol);
+
+            // BS equation (inequality)
+            var rightPart = greeks.Theta + riskFreeRate * underlyingPrice * greeks.Delta + 0.5m * underlyingVol * underlyingVol * underlyingPrice * underlyingPrice * greeks.Gamma;
+            var leftPart = riskFreeRate * callPrice;
+
+            Assert.GreaterOrEqual(Math.Round(leftPart, 4), Math.Round(rightPart,4));
         }
 
         /// <summary>
