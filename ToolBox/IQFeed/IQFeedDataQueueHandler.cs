@@ -381,6 +381,11 @@ namespace QuantConnect.ToolBox.IQFeed
                 _timer.Enabled = true;
             }
 
+            private Symbol GetLeanSymbol(string ticker)
+            {
+                return _symbolUniverse.GetLeanSymbol(ticker, SecurityType.Base, null);
+            }
+
             private void OnLevel1FundamentalEvent(object sender, Level1FundamentalEventArgs e)
             {
                 // handle split data, they're only valid today, they'll show up around 4:45am EST
@@ -392,7 +397,7 @@ namespace QuantConnect.ToolBox.IQFeed
                     double referencePrice;
                     _prices.TryGetValue(e.Symbol, out referencePrice);
 
-                    var symbol = _symbolUniverse.GetLeanSymbol(e.Symbol, SecurityType.Forex, Market.FXCM);
+                    var symbol = GetLeanSymbol(e.Symbol);
                     var split = new Split(symbol, FeedTime, (decimal) referencePrice, (decimal) e.SplitFactor1);
                     _dataQueue.Add(split);
                 }
@@ -418,9 +423,21 @@ namespace QuantConnect.ToolBox.IQFeed
                 var symbol = Symbol.Create(e.Symbol, SecurityType.Equity, Market.USA);
                 var last = (decimal)(e.TypeOfUpdate == Level1SummaryUpdateEventArgs.UpdateType.ExtendedTrade ? e.ExtendedTradingLast : e.Last);
 
-                // the feed time is in NYC/EDT, convert it into EST
-                time = FeedTime.ConvertTo(TimeZones.NewYork, TimeZones.EasternStandard);
-                symbol = _symbolUniverse.GetLeanSymbol(e.Symbol, SecurityType.Forex, Market.FXCM);
+                symbol = GetLeanSymbol(e.Symbol);
+
+                // the IQFeed time is always EST for all asset classes
+                switch (symbol.ID.SecurityType)
+                {
+                    // we don't convert it for FX
+                    case SecurityType.Forex:
+                        time = FeedTime;
+                        break;
+
+                    // for all other asset classes we convert it to NY timezone
+                    default:
+                        time = FeedTime.ConvertTo(TimeZones.EasternStandard, TimeZones.NewYork);
+                        break;
+                }
 
                 var tick = new Tick(time, symbol, last, (decimal)e.Bid, (decimal)e.Ask)
                 {
