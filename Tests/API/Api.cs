@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,6 +19,8 @@ using System.Linq;
 using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Api;
+using QuantConnect.API;
+using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 
@@ -57,19 +59,15 @@ namespace QuantConnect.Tests.API
         ///  - Creates project,
         ///  - Adds files to project,
         ///  - Updates the files, makes sure they are still present,
-        ///  - Builds the project, 
+        ///  - Builds the project,
         /// </summary>
         [Test]
         public void CreatesProjectCompilesAndBacktestsProject()
         {
             // Initialize the test:
             var api = CreateApiAccessor();
-            var sources = new List<TestAlgorithm>()
-            {
-                new TestAlgorithm(Language.CSharp, "main.cs", File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")),
-                new TestAlgorithm(Language.FSharp, "main.fs", File.ReadAllText("../../../Algorithm.FSharp/BasicTemplateAlgorithm.fs")),
-                new TestAlgorithm(Language.Python, "main.py", File.ReadAllText("../../../Algorithm.Python/BasicTemplateAlgorithm.py"))
-            };
+
+            var sources = LanguageSourcesList(SecurityType.Equity);
 
             foreach (var source in sources)
             {
@@ -80,7 +78,7 @@ namespace QuantConnect.Tests.API
                 Assert.IsTrue(project.ProjectId > 0);
                 Console.WriteLine("API Test: {0} Project created successfully", source.Language);
 
-                // Gets the list of projects from the account. 
+                // Gets the list of projects from the account.
                 // Should at least be the one we created.
                 var projects = api.ProjectList();
                 Assert.IsTrue(projects.Success);
@@ -95,10 +93,7 @@ namespace QuantConnect.Tests.API
                 Console.WriteLine("API Test: {0} Project read successfully", source.Language);
 
                 // Test set a project file for the project
-                var files = new List<ProjectFile>
-                {
-                    new ProjectFile { Name = source.Name, Code = source.Code }
-                };
+                var files = NewProjectFile(source);
                 var updateProject = api.UpdateProject(project.ProjectId, files);
                 Assert.IsTrue(updateProject.Success);
                 Console.WriteLine("API Test: {0} Project updated successfully", source.Language);
@@ -130,7 +125,7 @@ namespace QuantConnect.Tests.API
                 Assert.IsTrue(compileError.State == CompileState.BuildError); //Resulting in build fail.
                 Console.WriteLine("API Test: {0} Project errored successfully", source.Language);
 
-                // Using our successful compile; launch a backtest! 
+                // Using our successful compile; launch a backtest!
                 var backtestName = DateTime.Now.ToString("u") + " API Backtest";
                 var backtest = api.CreateBacktest(project.ProjectId, compileSuccess.CompileId, backtestName);
                 Assert.IsTrue(backtest.Success);
@@ -179,9 +174,118 @@ namespace QuantConnect.Tests.API
             }
         }
 
+        /// <summary>
+        /// Live algorithm tests
+        /// </summary>
+        [Test]
+        public void AccountLiveAlgorithms()
+        {
+            var api = CreateApiAccessor();
+            var sources = LanguageSourcesList(SecurityType.Equity).Concat(LanguageSourcesList(SecurityType.Forex)).ToList();
+
+            foreach (var source in sources)
+            {
+                var project = api.CreateProject("NUnitTestProject - " + source.Language, source.Language);
+                var file = NewProjectFile(source);
+                api.UpdateProject(project.ProjectId, file);
+
+                var compile = api.CreateCompile(project.ProjectId);
+                var projectId = project.ProjectId.ToString();
+                Dictionary<string, string> algoSettings;
+                var createLiveAlgorithm = new Live();
+
+                foreach (var environment in new List<string>() { "live", "paper" })
+                {
+                    if (source.Type == SecurityType.Forex)
+                    {
+                        algoSettings = ConfigureBrokerSettings(BrokerageName.FxcmBrokerage, projectId, compile.CompileId, environment);
+                        // Create a live FXCM algorithm
+                        createLiveAlgorithm = api.CreateLive(BrokerageName.FxcmBrokerage, algoSettings);
+                        Assert.IsTrue(createLiveAlgorithm.Success);
+                        Console.WriteLine(string.Format("API Test: {0} Created FXCM successfully in {1} environment for equity type, {2}", source.Language, environment, source.Type));
+
+                        // Check for errors if any minimum arguments are null or missing
+                        algoSettings["user"] = null;
+                        Assert.That(api.CreateLive(BrokerageName.FxcmBrokerage, algoSettings), Throws.Exception);
+                        Console.WriteLine(string.Format("API Test: {0} Null value test: Errored successfully in {1} environment for equity type, {2}", source.Language, environment, source.Type));
+
+                        algoSettings["user"] = "";
+                        Assert.That(api.CreateLive(BrokerageName.FxcmBrokerage, algoSettings), Throws.Exception);
+                        Console.WriteLine(string.Format("API Test: {0} Empty string value: Errored successfully in {1} environment for equity type, {2}", source.Language, environment, source.Type));
+
+                        algoSettings.Remove("user");
+                        Assert.That(api.CreateLive(BrokerageName.FxcmBrokerage, algoSettings), Throws.Exception);
+                        Console.WriteLine(string.Format("API Test: {0} Missing key test: Errored successfully in {1} environment for equity type, {2}", source.Language, environment, source.Type));
+
+                        // Create a live Oanda algorithm
+                        createLiveAlgorithm = api.CreateLive(BrokerageName.OandaBrokerage, algoSettings);
+                        Assert.IsTrue(createLiveAlgorithm.Success);
+                        Console.WriteLine(string.Format("API Test: {0} Created Oanda algorithm successfully in {1} environment for equity type, {2}", source.Language, environment, source.Type));
+
+                        // Check for error if Oanda argument is missing
+                        algoSettings = ConfigureBrokerSettings(BrokerageName.OandaBrokerage, projectId, compile.CompileId, environment);
+                        algoSettings.Remove("accesstoken");
+                        Assert.That(api.CreateLive(BrokerageName.OandaBrokerage, algoSettings), Throws.Exception);
+                        Console.WriteLine(string.Format("API Test: {0} Oanda arguments missing: Errored successfully in {1} environment for equity type, {2}", source.Language, environment, source.Type));
+
+                        // Test list all previously deployed algorithms
+                        var listLive = api.ListLive();
+                        Assert.IsTrue(listLive.Success);
+                        Assert.IsTrue(listLive.Algorithms.Any());
+
+                        // Test read out deployed live algorithm
+                        var readAndStopAlgo = api.CreateLive(BrokerageName.FxcmBrokerage, algoSettings); ;
+                        var readLive = api.ReadLive(project.ProjectId, readAndStopAlgo.DeployId);
+                        Assert.IsTrue(readLive.Success);
+                        Console.WriteLine(string.Format("API Test: {0} Read live instance successfully in {1} environment for equity type, {2}", source.Language, environment, source.Type));
+
+                        // Test stop live algorithm
+                        var stopLive = api.StopLive(project.ProjectId, readAndStopAlgo.DeployId);
+                        Assert.IsTrue(stopLive.Success);
+                        Console.WriteLine(string.Format("API Test: {0} Stopped live instance successfully in {1} environment for equity type, {2}", source.Language, environment, source.Type));
+
+                        // Test liquidate live algorithm
+                        var liveToLiquidate = api.CreateLive(BrokerageName.FxcmBrokerage, algoSettings);
+                        Assert.IsTrue(liveToLiquidate.Success);
+                        var liquidateLive = api.LiquidateLive(project.ProjectId, liveToLiquidate.DeployId);
+                        Assert.IsTrue(liquidateLive.Success);//
+                    }
+
+                    // Create a live Quantconnect/Default algorithm
+                    algoSettings = ConfigureBrokerSettings(BrokerageName.Default, projectId, compile.CompileId, environment);
+                    createLiveAlgorithm = api.CreateLive(BrokerageName.Default, algoSettings);
+                    Assert.IsTrue(createLiveAlgorithm.Success);
+                    Console.WriteLine(string.Format("API Test: {0} Created Quantconnect/Default algorithm successfully in {1} environment for equity type, {2}", source.Language, environment, source.Type));
+
+                    // Tradier and Interactive Brokers are Live only
+                    if (environment == "live")
+                    {
+                        if (source.Type == SecurityType.Equity)
+                        {
+                            // Check for error if Tradier arguments are missing
+                            algoSettings = ConfigureBrokerSettings(BrokerageName.TradierBrokerage, projectId, compile.CompileId, environment);
+                            algoSettings.Remove("lifetime");
+                            Assert.That(api.CreateLive(BrokerageName.TradierBrokerage, algoSettings), Throws.Exception);
+                            Console.WriteLine(string.Format("API Test: {0} Tradier arguments missing: Errored successfully in {1} environment for equity type, {2}", source.Language, environment, source.Type));
+
+                            // Create a live Tradier algorithm
+                            createLiveAlgorithm = api.CreateLive(BrokerageName.OandaBrokerage, algoSettings);
+                            Assert.IsTrue(createLiveAlgorithm.Success);
+                            Console.WriteLine(string.Format("API Test: {0} Created live Tradier algorithm successfully in {1} environment for equity type, {2}", source.Language, environment, source.Type));
+                        }
+
+                        // Create a live Interactive Brokers algorithm
+                        createLiveAlgorithm = api.CreateLive(BrokerageName.InteractiveBrokersBrokerage, algoSettings);
+                        Assert.IsTrue(createLiveAlgorithm.Success);
+                        Console.WriteLine(string.Format("API Test: {0} Created live Interactive Brokers algorithm successfully in {1} environment for equity type, {2}", source.Language, environment, source.Type));
+                    }
+                }
+            }
+        }
+
 
         /// <summary>
-        /// Live algorithm tests 
+        /// Live algorithm tests
         ///   - Get a list of live algorithms
         ///   - Get logs for the first algorithm returned
         /// </summary>
@@ -191,7 +295,7 @@ namespace QuantConnect.Tests.API
             var api = CreateApiAccessor();
 
             // Read all previously deployed algorithms
-            var liveAlgorithms = api.LiveList();
+            var liveAlgorithms = api.ListLive();
 
             Assert.IsTrue(liveAlgorithms.Success);
             Assert.IsTrue(liveAlgorithms.Algorithms.Any());
@@ -203,7 +307,7 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(liveLogs.Success);
             Assert.IsTrue(liveLogs.Logs.Any());
         }
-        
+
         /// <summary>
         /// Test getting links to forex data for FXCM
         /// </summary>
@@ -261,7 +365,7 @@ namespace QuantConnect.Tests.API
 
             Assert.IsTrue(downloadedMinuteData);
             Assert.IsTrue(downloadedDailyData);
-            
+
             Assert.IsTrue(File.Exists(dailyPath));
             Assert.IsTrue(File.Exists(minutePath));
         }
@@ -350,15 +454,80 @@ namespace QuantConnect.Tests.API
             public Language Language;
             public string Code;
             public string Name;
+            public SecurityType Type;
 
-            public TestAlgorithm(Language language, string name, string code)
+            public TestAlgorithm(Language language, string name, string code, SecurityType type)
             {
                 Language = language;
                 Code = code;
                 Name = name;
+                Type = type;
             }
+        }
+
+        private Dictionary<string, string> ConfigureBrokerSettings(BrokerageName brokerageName, string projectId, string compileId, string environment)
+        {
+            // Basic arguments
+            var algoSettings = new Dictionary<string, string>() {
+                { "projectId", projectId },
+                { "serverType", "server512"},
+                { "brokerage", brokerageName.ToString()},
+                { "environment", environment },
+                { "compileId", compileId }
+            };
+            //algoSettings.Add("user", Config.Get("fxcmUser"));
+            // Add brokerage specific fields
+            if (brokerageName == BrokerageName.FxcmBrokerage)
+            {
+                algoSettings.Add("user", Config.Get("fxcm-user-name"));
+                algoSettings.Add("password", Config.Get("fxcm-password"));
+            }
+            if (brokerageName == BrokerageName.Default)
+            {
+                algoSettings.Add("user", Config.Get("default-username"));
+                algoSettings["password"] = Config.Get("default-password");
+            }
+            if (brokerageName == BrokerageName.InteractiveBrokersBrokerage)
+            {
+                algoSettings.Add("user", Config.Get("ib-user-name"));
+                algoSettings["password"] = Config.Get("ib-password");
+            }
+            if (brokerageName == BrokerageName.OandaBrokerage)
+            {
+                algoSettings.Add("user", Config.Get("oandaUser"));
+                algoSettings["password"] = Config.Get("oandaPassword");
+                algoSettings.Add("dateIssued", "oandaDate");
+            }
+            if (brokerageName == BrokerageName.TradierBrokerage)
+            {
+                algoSettings.Add("user", Config.Get("tradier-user"));
+                algoSettings["password"] = Config.Get("tradierPassword");
+                algoSettings["dateIssued"] = Config.Get("tradierDateIssued");
+                algoSettings["refreshToken"] = Config.Get("tradierRefreshToken");
+                algoSettings["lifetime"] = Config.Get("tradierLifetime");
+            }
+
+            return algoSettings;
+        }
+
+        private static List<ProjectFile> NewProjectFile(TestAlgorithm source)
+        {
+            return new List<ProjectFile>
+                {
+                    new ProjectFile { Name = source.Name, Code = source.Code }
+                };
+        }
+
+        private static List<TestAlgorithm> LanguageSourcesList(SecurityType type)
+        {
+            return new List<TestAlgorithm>()
+            {
+                new TestAlgorithm(Language.CSharp, "main.cs", File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs"), type),
+                new TestAlgorithm(Language.FSharp, "main.fs", File.ReadAllText("../../../Algorithm.FSharp/BasicTemplateAlgorithm.fs"), type),
+                new TestAlgorithm(Language.Python, "main.py", File.ReadAllText("../../../Algorithm.Python/BasicTemplateAlgorithm.py"), type)
+            };
         }
     }
 
-    
+
 }

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using QuantConnect.API;
+using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
@@ -246,7 +247,7 @@ namespace QuantConnect.Api
             _connection.TryRequest(request, out result);
             return result;
         }
-        
+
         /// <summary>
         /// Delete a backtest from the specified project and backtestId.
         /// </summary>
@@ -265,10 +266,61 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
+        /// Create a live algorithm.
+        /// </summary>
+        /// /// <param name="brokerageName">Brokerage to be used with algorithm</param>
+        /// <param name="projectId">Project id for the live algorithm to be run</param>
+        /// <param name="deploymentSettings">List containing arguments strings for algorithm settings</param>
+        /// /// <param name="serverType">Server type to run algorithm on</param>
+        /// /// <param name="brokerage">String name of brokerage to be utilised</param>
+        /// /// <param name="environment">Whether algorithm is live/paper trading</param>
+        /// /// <param name="compileId">Id of compile to be used</param>
+        /// /// <param name="user">User initiating live instance</param>
+        /// /// <param name="password">Initiating users password</param>
+        /// /// <param name="account">Account currency type</param>
+        /// /// <param name="accessToken">Access token for Oanda</param>
+        /// /// <param name="dateIssued">Date Tradier access token was issued</param>
+        /// /// <param name="refreshToken">Interval at which Tradier access token will be refreshed</param>
+        /// /// <param name="lifetime">Life time of Tradier access token</param>
+        /// <returns></returns>
+        public Live CreateLive(BrokerageName brokerageName, Dictionary<string, string> deploymentSettings)
+        {
+            var request = new RestRequest("live/create", Method.GET);
+
+            // Add parameters to list
+            deploymentSettings.Add("id", brokerageName.ToString());
+
+            // Add list to request
+            request.AddParameter("brokerage", deploymentSettings);
+
+            // Check basic values are present in deploymentSetting list
+            VerifyParameters(deploymentSettings, new List<string>() { "projectId", "compileId", "id", "environment", "user", "password" }, "all brokerages");
+
+            // Check for and add specific Oanda values if brokerage is Oanda
+            if (brokerageName == BrokerageName.OandaBrokerage)
+            {
+                VerifyParameters(deploymentSettings, new List<string>() { "accessToken" }, brokerageName.ToString());
+                request.AddParameter("accessToken", deploymentSettings["accessToken"]);
+            }
+
+            // Check for and add specific Tradier values if brokerage is Tradier
+            if (brokerageName == BrokerageName.TradierBrokerage)
+            {
+                request.AddParameter("dateIssued", deploymentSettings["dateIssued"]);
+                request.AddParameter("refreshToken", deploymentSettings["refreshToken"]);
+                request.AddParameter("lifetime", deploymentSettings["lifetime"]);
+            }
+
+            Live result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
         /// Get a list of live running algorithms for a logged in user.
         /// </summary>
         /// <returns>List of live algorithm instances</returns>
-        public LiveList LiveList()
+        public LiveList ListLive()
         {
             var request = new RestRequest("live/read", Method.GET);
             LiveList result;
@@ -277,7 +329,57 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
-        /// Gets the logs of a specific live algorithm 
+        /// Read out a live algorithm in the project id specified.
+        /// </summary>
+        /// <param name="projectId">Project id to read</param>
+        /// <param name="deployId">Specific instance id to read</param>
+        /// <returns>Live object with the results</returns>
+        public Live ReadLive(int projectId, string deployId)
+        {
+            var request = new RestRequest("live/read", Method.GET);
+            request.AddParameter("projectId", projectId);
+            request.AddParameter("deployId", deployId);
+            Live result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
+        /// Liquidate a live algorithm from the specified project and deployId.
+        /// </summary>
+        /// <param name="projectId">Project for the live instance we want to stop</param>
+        /// <param name="deployId">Deployed id for specific instance we want to stop</param>
+        /// <returns></returns>
+        public RestResponse LiquidateLive(int projectId, string deployId)
+        {
+            var request = new RestRequest("live/update/liquidate", Method.POST);
+            request.RequestFormat = DataFormat.Json;
+            request.AddParameter("projectId", projectId);
+            request.AddParameter("deployId", deployId);
+            RestResponse result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
+        /// Stop a live algorithm from the specified project and deployId.
+        /// </summary>
+        /// <param name="projectId">Project for the live instance we want to stop</param>
+        /// <param name="deployId">Deployed id for specific instance we want to stop</param>
+        /// <returns></returns>
+        public RestResponse StopLive(int projectId, string deployId)
+        {
+            var request = new RestRequest("live/update/stop", Method.POST);
+            request.RequestFormat = DataFormat.Json;
+            request.AddParameter("projectId", projectId);
+            request.AddParameter("deployId", deployId);
+            RestResponse result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
+        /// Gets the logs of a specific live algorithm
         /// </summary>
         /// <param name="projectId">Project Id of the live running algorithm</param>
         /// <param name="algorithmId">Algorithm Id of the live running algorithm</param>
@@ -362,7 +464,7 @@ namespace QuantConnect.Api
         /// <param name="userId">User ID</param>
         /// <param name="userToken">User API token</param>
         /// <returns>int[3] iUserBacktestLimit, iUserDailyLimit, remaining</returns>
-        public virtual int[] ReadLogAllowance(int userId, string userToken) 
+        public virtual int[] ReadLogAllowance(int userId, string userToken)
         {
             return new[] { int.MaxValue, int.MaxValue, int.MaxValue };
         }
@@ -420,7 +522,7 @@ namespace QuantConnect.Api
         /// <param name="sharpe">Sharpe ratio since inception</param>
         public virtual void SendStatistics(string algorithmId, decimal unrealized, decimal fees, decimal netProfit, decimal holdings, decimal equity, decimal netReturn, decimal volume, int trades, double sharpe)
         {
-            // 
+            //
         }
 
         /// <summary>
@@ -468,6 +570,19 @@ namespace QuantConnect.Api
         {
             // NOP
         }
-        
+
+        private void VerifyParameters(Dictionary<string, string> currentSettings, List<string> requiredSetting, string brokerage)
+        {
+            foreach (var key in requiredSetting)
+            {
+                if (key.IsNullOrEmpty())
+                    throw new Exception(string.Format("Key: {0} is null || empty for call to, {1}", key, brokerage));
+                if (currentSettings[key].IsNullOrEmpty())
+                    throw new Exception(string.Format("Value: {0} is missing for call to, {1}", key, brokerage));
+                if (!currentSettings.ContainsKey(key))
+                    throw new Exception(string.Format("Value: {0} is missing for call to, {1}", key, brokerage));
+            }
+        }
+
     }
 }

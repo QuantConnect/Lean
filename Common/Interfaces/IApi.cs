@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,12 +19,13 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Api;
 using QuantConnect.API;
+using QuantConnect.Brokerages;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Interfaces
 {
     /// <summary>
-    /// API for QuantConnect.com 
+    /// API for QuantConnect.com
     /// </summary>
     [InheritedExport(typeof(IApi))]
     public interface IApi : IDisposable
@@ -128,13 +129,7 @@ namespace QuantConnect.Interfaces
         BacktestList BacktestList(int projectId);
 
         /// <summary>
-        /// Get a list of live running algorithms for a logged in user.
-        /// </summary>
-        /// <returns>List of live algorithm instances</returns>
-        LiveList LiveList();
-
-        /// <summary>
-        /// Gets the logs of a specific live algorithm 
+        /// Gets the logs of a specific live algorithm
         /// </summary>
         /// <param name="projectId">Project Id of the live running algorithm</param>
         /// <param name="algorithmId">Algorithm Id of the live running algorithm</param>
@@ -160,6 +155,57 @@ namespace QuantConnect.Interfaces
         /// <param name="date">Date of the data requested.</param>
         /// <returns>A bool indicating whether the data was successfully downloaded or not.</returns>
         bool DownloadData(Symbol symbol, Resolution resolution, DateTime date);
+
+        /// <summary>
+        /// Create a new live algorithm for a logged in user.
+        /// </summary>
+        ////// /// <param name="brokerageName">Brokerage to be used with algorithm</param>
+        ///<param name="projectId">Project id for the live algorithm to be run</param>
+        ///<param name="deploymentSettings">List containing arguments strings for algorithm settings</param>
+        ///<param name="serverType">Server type to run algorithm on</param>
+        ///<param name="brokerage">String name of brokerage to be utilised</param>
+        ///<param name="environment">Whether algorithm is live/paper trading</param>
+        ///<param name="compileId">Id of compile to be used</param>
+        ///<param name="user">User initiating live instance</param>
+        ///<param name="password">Initiating users password</param>
+        ///<param name="account">Account currency type</param>
+        ///<param name="accessToken">Access token for Oanda</param>
+        ///<param name="dateIssued">Date Tradier access token was issued</param>
+        ///<param name="refreshToken">Interval at which Tradier access token will be refreshed</param>
+        ///<param name="lifetime">Life time of Tradier access token</param>
+        /// <returns></returns>
+        /// <returns>A live algorithm instances</returns>
+        Live CreateLive(BrokerageName brokerageName, Dictionary<string, string> deploymentSettings);
+
+        /// <summary>
+        /// Get a list of live running algorithms for a logged in user.
+        /// </summary>
+        /// <returns>List of live algorithm instances</returns>
+        LiveList ListLive();
+
+        /// <summary>
+        /// Read out a live algorithm in the project id specified.
+        /// </summary>
+        /// <param name="projectId">Project id to read</param>
+        /// <param name="deployId">Specific instance id to read</param>
+        /// <returns>Live object with the results</returns>
+        Live ReadLive(int projectId, string deployId);
+
+        /// <summary>
+        /// Liquidate a live algorithm from the specified project and deployId.
+        /// </summary>
+        /// <param name="projectId">Project for the live instance we want to stop</param>
+        /// <param name="deployId">Deployed id for specific instance we want to stop</param>
+        /// <returns></returns>
+        RestResponse LiquidateLive(int projectId, string deployId);
+
+        /// <summary>
+        /// Delete a live algorithm from the specified project and backtestId.
+        /// </summary>
+        /// <param name="projectId">Project for the live algo we want to delete</param>
+        /// <param name="deployId">Deployed id for specific instance we want to delete</param>
+        /// <returns></returns>
+        RestResponse StopLive(int projectId, string deployId);
 
 
 
