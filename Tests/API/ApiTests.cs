@@ -167,21 +167,21 @@ namespace QuantConnect.Tests.API
                     case BrokerageName.Default:
                         user     = Config.Get("default-username");
                         password = Config.Get("default-password");
-                        settings = new DefaultBaseLiveAlogrithmSettings(user, password, BrokerageName.Default, environment, account);
+                        settings = new DefaultLiveAlogrithmSettings(user, password, BrokerageName.Default, environment, account);
 
                         Assert.IsTrue(settings.Id == BrokerageName.Default.ToString());
                         break;
                     case BrokerageName.FxcmBrokerage:
                         user     = Config.Get("fxcm-user-name");
                         password = Config.Get("fxcm-password");
-                        settings = new FxcmBaseLiveAlogrithmSettings(user, password, BrokerageName.FxcmBrokerage, environment, account);
+                        settings = new FXCMLiveAlogrithmSettings(user, password, BrokerageName.FxcmBrokerage, environment, account);
 
                         Assert.IsTrue(settings.Id == BrokerageName.FxcmBrokerage.ToString());
                         break;
                     case BrokerageName.InteractiveBrokersBrokerage:
                         user     = Config.Get("ib-user-name");
                         password = Config.Get("ib-password");
-                        settings = new InteractiveBrokersBaseLiveAlogrithmSettings(user, password, BrokerageName.InteractiveBrokersBrokerage, environment, account);
+                        settings = new InteractiveBrokersLiveAlogrithmSettings(user, password, BrokerageName.InteractiveBrokersBrokerage, environment, account);
 
                         Assert.IsTrue(settings.Id == BrokerageName.InteractiveBrokersBrokerage.ToString());
                         break;
@@ -192,7 +192,7 @@ namespace QuantConnect.Tests.API
                         account     = Config.Get("oanda-account-id");
                         environment = Config.Get("oanda-environment");
 
-                        settings = new OandaBaseLiveAlogrithmSettings(accessToken, dateIssuedString, user, password, BrokerageName.OandaBrokerage, environment, account); 
+                        settings = new OandaLiveAlogrithmSettings(accessToken, dateIssuedString, user, password, BrokerageName.OandaBrokerage, environment, account); 
                         Assert.IsTrue(settings.Id == BrokerageName.OandaBrokerage.ToString());
                         break;
                     case BrokerageName.TradierBrokerage:
@@ -203,7 +203,7 @@ namespace QuantConnect.Tests.API
                         lifetime     = Config.Get("tradier-lifespan");
                         account      = Config.Get("tradier-account-id");
 
-                        settings = new TradierBaseLiveAlogrithmSettings(refreshToken, dateIssued, refreshToken, lifetime, user, password, BrokerageName.TradierBrokerage, environment, account);
+                        settings = new TradierLiveAlogrithmSettings(refreshToken, dateIssued, refreshToken, lifetime, user, password, BrokerageName.TradierBrokerage, environment, account);
 
                         break;
                     default:
@@ -219,7 +219,7 @@ namespace QuantConnect.Tests.API
                 // Oanda specific settings
                 if (brokerageName == BrokerageName.OandaBrokerage)
                 {
-                    var oandaSetting = settings as OandaBaseLiveAlogrithmSettings;
+                    var oandaSetting = settings as OandaLiveAlogrithmSettings;
 
                     Assert.IsTrue(oandaSetting.AccessToken == accessToken);
                     Assert.IsTrue(oandaSetting.DateIssued == dateIssuedString);
@@ -228,7 +228,7 @@ namespace QuantConnect.Tests.API
                 // Tradier specific settings
                 if (brokerageName == BrokerageName.TradierBrokerage)
                 {
-                    var tradierLiveAlogrithmSettings = settings as TradierBaseLiveAlogrithmSettings;
+                    var tradierLiveAlogrithmSettings = settings as TradierLiveAlogrithmSettings;
 
                     Assert.IsTrue(tradierLiveAlogrithmSettings.DateIssued == dateIssued);
                     Assert.IsTrue(tradierLiveAlogrithmSettings.RefreshToken == refreshToken);
@@ -288,7 +288,7 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(compile.Success);
 
             // Create default algorithm settings
-            var settings = new FxcmBaseLiveAlogrithmSettings(user,
+            var settings = new FXCMLiveAlogrithmSettings(user,
                                                              password,
                                                              BrokerageName.FxcmBrokerage,
                                                              "paper",
@@ -341,7 +341,7 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(compile.Success);
 
             // Create default algorithm settings
-            var settings = new InteractiveBrokersBaseLiveAlogrithmSettings(user,
+            var settings = new InteractiveBrokersLiveAlogrithmSettings(user,
                                                                            password, BrokerageName.InteractiveBrokersBrokerage,
                                                                            "paper",
                                                                            account);
@@ -398,7 +398,7 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(compile.Success);
 
             // Create default algorithm settings
-            var settings = new OandaBaseLiveAlogrithmSettings(token,
+            var settings = new OandaLiveAlogrithmSettings(token,
                                                               dateIssued,
                                                               user,
                                                               password,
@@ -462,7 +462,7 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(compile.Success);
 
             // Create default algorithm settings
-            var settings = new TradierBaseLiveAlogrithmSettings(accessToken,
+            var settings = new TradierLiveAlogrithmSettings(accessToken,
                                                                 dateIssued,
                                                                 refreshToken,
                                                                 lifespan,
