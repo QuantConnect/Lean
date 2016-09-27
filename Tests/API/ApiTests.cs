@@ -186,13 +186,11 @@ namespace QuantConnect.Tests.API
                         Assert.IsTrue(settings.Id == BrokerageName.InteractiveBrokersBrokerage.ToString());
                         break;
                     case BrokerageName.OandaBrokerage:
-                        user        = "";
-                        password    = "";
                         accessToken = Config.Get("oanda-access-token");
                         account     = Config.Get("oanda-account-id");
                         environment = Config.Get("oanda-environment");
 
-                        settings = new OandaLiveAlogrithmSettings(accessToken, dateIssuedString, user, password, BrokerageName.OandaBrokerage, environment, account); 
+                        settings = new OandaLiveAlogrithmSettings(accessToken, dateIssuedString, BrokerageName.OandaBrokerage, environment, account); 
                         Assert.IsTrue(settings.Id == BrokerageName.OandaBrokerage.ToString());
                         break;
                     case BrokerageName.TradierBrokerage:
@@ -203,7 +201,7 @@ namespace QuantConnect.Tests.API
                         lifetime     = Config.Get("tradier-lifespan");
                         account      = Config.Get("tradier-account-id");
 
-                        settings = new TradierLiveAlogrithmSettings(refreshToken, dateIssued, refreshToken, lifetime, user, password, BrokerageName.TradierBrokerage, environment, account);
+                        settings = new TradierLiveAlogrithmSettings(refreshToken, dateIssued, refreshToken, lifetime, BrokerageName.TradierBrokerage, environment, account);
 
                         break;
                     default:
@@ -399,12 +397,10 @@ namespace QuantConnect.Tests.API
 
             // Create default algorithm settings
             var settings = new OandaLiveAlogrithmSettings(token,
-                                                              dateIssued,
-                                                              user,
-                                                              password,
-                                                              BrokerageName.OandaBrokerage,
-                                                              environment,
-                                                              account);
+                                                          dateIssued,
+                                                          BrokerageName.OandaBrokerage,
+                                                          environment,
+                                                          account);
 
             // Wait for project to compile
             Thread.Sleep(10000);
@@ -466,8 +462,6 @@ namespace QuantConnect.Tests.API
                                                                 dateIssued,
                                                                 refreshToken,
                                                                 lifespan,
-                                                                user,
-                                                                password,
                                                                 BrokerageName.TradierBrokerage,
                                                                 "live",
                                                                 account);
