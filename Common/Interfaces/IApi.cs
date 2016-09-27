@@ -159,23 +159,12 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Create a new live algorithm for a logged in user.
         /// </summary>
-        ////// /// <param name="brokerageName">Brokerage to be used with algorithm</param>
-        ///<param name="projectId">Project id for the live algorithm to be run</param>
-        ///<param name="deploymentSettings">List containing arguments strings for algorithm settings</param>
-        ///<param name="serverType">Server type to run algorithm on</param>
-        ///<param name="brokerage">String name of brokerage to be utilised</param>
-        ///<param name="environment">Whether algorithm is live/paper trading</param>
-        ///<param name="compileId">Id of compile to be used</param>
-        ///<param name="user">User initiating live instance</param>
-        ///<param name="password">Initiating users password</param>
-        ///<param name="account">Account currency type</param>
-        ///<param name="accessToken">Access token for Oanda</param>
-        ///<param name="dateIssued">Date Tradier access token was issued</param>
-        ///<param name="refreshToken">Interval at which Tradier access token will be refreshed</param>
-        ///<param name="lifetime">Life time of Tradier access token</param>
-        /// <returns></returns>
-        /// <returns>A live algorithm instances</returns>
-        LiveAlgorithm CreateLive(BrokerageName brokerageName, Dictionary<string, string> deploymentSettings);
+        /// <param name="projectId">Id of the project on QuantConnect</param>
+        /// <param name="compileId">Id of the compilation on QuantConnect</param>
+        /// <param name="serverType">Type of server instance that will run the algorithm</param>
+        /// <param name="baseLiveAlgorithmSettings">Brokerage specific <see cref="BaseLiveAlgorithmSettings">BaseLiveAlgorithmSettings</see>.</param>
+        /// <returns>Information regarding the new algorithm <see cref="LiveAlgorithm"/></returns>
+        LiveAlgorithm CreateLive(int projectId, string compileId, string serverType, BaseLiveAlgorithmSettings baseLiveAlgorithmSettings);
 
         /// <summary>
         /// Get a list of live running algorithms for a logged in user.

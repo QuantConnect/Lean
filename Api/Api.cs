@@ -273,48 +273,18 @@ namespace QuantConnect.Api
         /// <summary>
         /// Create a live algorithm.
         /// </summary>
-        /// /// <param name="brokerageName">Brokerage to be used with algorithm</param>
-        /// <param name="projectId">Project id for the live algorithm to be run</param>
-        /// <param name="deploymentSettings">List containing arguments strings for algorithm settings</param>
-        /// /// <param name="serverType">Server type to run algorithm on</param>
-        /// /// <param name="brokerage">String name of brokerage to be utilised</param>
-        /// /// <param name="environment">Whether algorithm is live/paper trading</param>
-        /// /// <param name="compileId">Id of compile to be used</param>
-        /// /// <param name="user">User initiating live instance</param>
-        /// /// <param name="password">Initiating users password</param>
-        /// /// <param name="account">Account currency type</param>
-        /// /// <param name="accessToken">Access token for Oanda</param>
-        /// /// <param name="dateIssued">Date Tradier access token was issued</param>
-        /// /// <param name="refreshToken">Interval at which Tradier access token will be refreshed</param>
-        /// /// <param name="lifetime">Life time of Tradier access token</param>
-        /// <returns></returns>
-        public LiveAlgorithm CreateLive(BrokerageName brokerageName, Dictionary<string, string> deploymentSettings)
+        /// <param name="projectId">Id of the project on QuantConnect</param>
+        /// <param name="compileId">Id of the compilation on QuantConnect</param>
+        /// <param name="serverType">Type of server instance that will run the algorithm</param>
+        /// <param name="baseLiveAlgorithmSettings">Brokerage specific <see cref="BaseLiveAlgorithmSettings">BaseLiveAlgorithmSettings</see>.</param>
+        /// <returns>Information regarding the new algorithm <see cref="LiveAlgorithm"/></returns>
+        public LiveAlgorithm CreateLiveAlgorithm(int projectId, string compileId, string serverType, BaseLiveAlgorithmSettings baseLiveAlgorithmSettings)
         {
-            var request = new RestRequest("live/create", Method.GET);
-
-            // Add parameters to list
-            deploymentSettings.Add("id", brokerageName.ToString());
-
-            // Add list to request
-            request.AddParameter("brokerage", deploymentSettings);
-
-            // Check basic values are present in deploymentSetting list
-            VerifyParameters(deploymentSettings, new List<string>() { "projectId", "compileId", "id", "environment", "user", "password" }, "all brokerages");
-
-            // Check for and add specific Oanda values if brokerage is Oanda
-            if (brokerageName == BrokerageName.OandaBrokerage)
-            {
-                VerifyParameters(deploymentSettings, new List<string>() { "accessToken" }, brokerageName.ToString());
-                request.AddParameter("accessToken", deploymentSettings["accessToken"]);
-            }
-
-            // Check for and add specific Tradier values if brokerage is Tradier
-            if (brokerageName == BrokerageName.TradierBrokerage)
-            {
-                request.AddParameter("dateIssued", deploymentSettings["dateIssued"]);
-                request.AddParameter("refreshToken", deploymentSettings["refreshToken"]);
-                request.AddParameter("lifetime", deploymentSettings["lifetime"]);
-            }
+            var request = new RestRequest("live/create", Method.POST);
+            request.AddHeader("Accept", "application/json");
+            request.Parameters.Clear();
+            var body = JsonConvert.SerializeObject(new LiveAlgorithmApiSettingsWrapper(projectId, compileId, serverType, baseLiveAlgorithmSettings));
+            request.AddParameter("application/json", body, ParameterType.RequestBody);
 
             LiveAlgorithm result;
             _connection.TryRequest(request, out result);
@@ -575,19 +545,5 @@ namespace QuantConnect.Api
         {
             // NOP
         }
-
-        private void VerifyParameters(Dictionary<string, string> currentSettings, List<string> requiredSetting, string brokerage)
-        {
-            foreach (var key in requiredSetting)
-            {
-                if (key.IsNullOrEmpty())
-                    throw new Exception(string.Format("Key: {0} is null || empty for call to, {1}", key, brokerage));
-                if (currentSettings[key].IsNullOrEmpty())
-                    throw new Exception(string.Format("Value: {0} is missing for call to, {1}", key, brokerage));
-                if (!currentSettings.ContainsKey(key))
-                    throw new Exception(string.Format("Value: {0} is missing for call to, {1}", key, brokerage));
-            }
-        }
-
     }
 }
