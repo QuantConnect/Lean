@@ -253,7 +253,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns>The open orders returned from IB</returns>
         public override List<Order> GetOpenOrders()
         {
-//            _ibOpenOrders = new List<Order>();
             _ibOpenOrders.Clear();
             _openOrderManualResetEvent.Reset();
 
@@ -329,9 +328,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Time = timeSince.ToString("yyyymmdd hh:mm:ss") ?? DateTime.MinValue.ToString("yyyymmdd hh:mm:ss"),
                 Side = side ?? ""
             };
-
-//            _exectionDetailsList = new List<ExecutionDetails>();
-
+            
             var client = new EClientSocket(this);
             client.eConnect(_host, _port, IncrementClientID());
             _ibExecutionDetailsResetEvent.Reset();
@@ -582,8 +579,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             // we're going to request both history and active ticks, we'll use the ticks first
             // and if not present, we'll use the latest from the history request
-
-//            _historicalDataList = new List<HistoricalDataDetails>();
             
             _historicalTickerId = GetNextTickerID();
             _ibLastHistoricalData = DateTime.MaxValue;
@@ -598,7 +593,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             // define and add our tick handler for the ticks
             _ibMarketDataTicker = GetNextTickerID();
-//            var priceTick = new Collection<IB.GenericTickType>();
 
             _isClientOnTickPriceSet = true;
 

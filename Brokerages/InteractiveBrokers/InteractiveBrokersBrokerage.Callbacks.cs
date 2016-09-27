@@ -538,7 +538,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             if (reqId != _ibRequestId) return;
             _ibContractDetails = contractDetails;
             _contractDetails.TryAdd(_ibContract.Symbol, _ibContractDetails);
-            //_ibGetContractDetailsResetEvent.Set();
         }
 
         /// <summary>
