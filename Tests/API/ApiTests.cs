@@ -192,7 +192,7 @@ namespace QuantConnect.Tests.API
                 var compile = api.CreateCompile(project.ProjectId);
                 var projectId = project.ProjectId.ToString();
                 Dictionary<string, string> algoSettings;
-                var createLiveAlgorithm = new Live();
+                var createLiveAlgorithm = new LiveAlgorithm();
 
                 foreach (var environment in new List<string>() { "live", "paper" })
                 {

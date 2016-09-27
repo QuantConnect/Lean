@@ -283,7 +283,7 @@ namespace QuantConnect.Api
         /// /// <param name="refreshToken">Interval at which Tradier access token will be refreshed</param>
         /// /// <param name="lifetime">Life time of Tradier access token</param>
         /// <returns></returns>
-        public Live CreateLive(BrokerageName brokerageName, Dictionary<string, string> deploymentSettings)
+        public LiveAlgorithm CreateLive(BrokerageName brokerageName, Dictionary<string, string> deploymentSettings)
         {
             var request = new RestRequest("live/create", Method.GET);
 
@@ -311,7 +311,7 @@ namespace QuantConnect.Api
                 request.AddParameter("lifetime", deploymentSettings["lifetime"]);
             }
 
-            Live result;
+            LiveAlgorithm result;
             _connection.TryRequest(request, out result);
             return result;
         }
@@ -334,12 +334,12 @@ namespace QuantConnect.Api
         /// <param name="projectId">Project id to read</param>
         /// <param name="deployId">Specific instance id to read</param>
         /// <returns>Live object with the results</returns>
-        public Live ReadLive(int projectId, string deployId)
+        public LiveAlgorithm ReadLive(int projectId, string deployId)
         {
             var request = new RestRequest("live/read", Method.GET);
             request.AddParameter("projectId", projectId);
             request.AddParameter("deployId", deployId);
-            Live result;
+            LiveAlgorithm result;
             _connection.TryRequest(request, out result);
             return result;
         }

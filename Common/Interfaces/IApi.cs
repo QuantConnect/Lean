@@ -175,7 +175,7 @@ namespace QuantConnect.Interfaces
         ///<param name="lifetime">Life time of Tradier access token</param>
         /// <returns></returns>
         /// <returns>A live algorithm instances</returns>
-        Live CreateLive(BrokerageName brokerageName, Dictionary<string, string> deploymentSettings);
+        LiveAlgorithm CreateLive(BrokerageName brokerageName, Dictionary<string, string> deploymentSettings);
 
         /// <summary>
         /// Get a list of live running algorithms for a logged in user.
@@ -189,7 +189,7 @@ namespace QuantConnect.Interfaces
         /// <param name="projectId">Project id to read</param>
         /// <param name="deployId">Specific instance id to read</param>
         /// <returns>Live object with the results</returns>
-        Live ReadLive(int projectId, string deployId);
+        LiveAlgorithm ReadLive(int projectId, string deployId);
 
         /// <summary>
         /// Liquidate a live algorithm from the specified project and deployId.

@@ -22,7 +22,7 @@ namespace QuantConnect.API
     /// <summary>
     /// Live algorithm instance result from the QuantConnect Rest API.
     /// </summary>
-    public class Live : RestResponse
+    public class LiveAlgorithm : RestResponse
     {
         /// <summary>
         /// Project id for the live instance
@@ -85,6 +85,6 @@ namespace QuantConnect.API
         /// Algorithm list matching the requested status.
         /// </summary>
         [JsonProperty(PropertyName = "live")]
-        public List<Live> Algorithms;
+        public List<LiveAlgorithm> Algorithms;
     }
 }
