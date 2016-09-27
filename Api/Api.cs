@@ -109,7 +109,7 @@ namespace QuantConnect.Api
         /// <param name="projectId">Project id for project to be updated</param>
         /// <param name="files">Files list to update</param>
         /// <returns>RestResponse indicating success</returns>
-        public RestResponse UpdateProject(int projectId, List<ProjectFile> files)
+        public ProjectUpdateResponse UpdateProject(int projectId, List<ProjectFile> files)
         {
             var request = new RestRequest("projects/update", Method.POST);
 
@@ -123,7 +123,7 @@ namespace QuantConnect.Api
                 count++;
             }
 
-            RestResponse result;
+            ProjectUpdateResponse result;
             _connection.TryRequest(request, out result);
             return result;
         }

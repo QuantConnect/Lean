@@ -56,7 +56,7 @@ namespace QuantConnect.Interfaces
         /// <param name="projectId">Project id for project to be updated</param>
         /// <param name="files">Files list to update</param>
         /// <returns>RestResponse indicating success</returns>
-        RestResponse UpdateProject(int projectId, List<ProjectFile> files);
+        ProjectUpdateResponse UpdateProject(int projectId, List<ProjectFile> files);
 
         /// <summary>
         /// Delete a specific project owned by the user from QuantConnect.com

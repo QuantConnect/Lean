@@ -181,6 +181,41 @@ namespace QuantConnect.Tests.API
             }
         }
 
+        /// <summary>
+        /// Test updating the files associated with a project
+        /// </summary>
+        [Test]
+        public void Update_ProjectFiles_Successfully()
+        {
+            // Insert random file
+            var randomFile = new List<ProjectFile>
+                {
+                    new ProjectFile
+                    {
+                        Name = "Hello.cs",
+                        Code = HttpUtility.HtmlEncode("Hello, world!" )
+                    }
+                };
+
+            var randomeUpdate = _api.UpdateProject(_testProjectId, randomFile);
+            Assert.IsTrue(randomeUpdate.Success);
+            Assert.IsTrue(randomeUpdate.Files.First().Code == "Hello, world!");
+            Assert.IsTrue(randomeUpdate.Files.First().Name == "Hello.cs");
+
+            var files = new List<ProjectFile>
+                {
+                    new ProjectFile
+                    {
+                        Name = "main.cs",
+                        Code = HttpUtility.HtmlEncode(File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs" ))
+                    }
+                };
+
+            var updateProject = _api.UpdateProject(_testProjectId, files);
+
+            Assert.IsTrue(updateProject.Success);
+            Assert.IsTrue(updateProject.Files.First().Name == "main.cs");
+        }
 
 
         /// <summary>
