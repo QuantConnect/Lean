@@ -27,18 +27,19 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 {
     public partial class InteractiveBrokersBrokerage : EWrapper
     {
-
         /// <summary>
         /// Handles error messages from IB
         /// </summary>
+        /// <param name="e">Error Exception Message</param>
         public virtual void error(Exception e)
         {
             error(-1, -1, e.ToString());
         }
-        
+
         /// <summary>
         /// Handles error messages from IB
         /// </summary>
+        /// <param name="str">Error Message</param>
         public virtual void error(string str)
         {
             error(-1, -1, str);
@@ -47,6 +48,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Handles error messages from IB
         /// </summary>
+        /// <param name="id">Error id</param>
+        /// <param name="errorCode">Error Code</param>
+        /// <param name="errorMsg">Error Message</param>
         public virtual void error(int id, int errorCode, string errorMsg)
         {
             // https://www.interactivebrokers.com/en/software/api/apiguide/tables/api_message_codes.htm
@@ -95,6 +99,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             OnMessage(new BrokerageMessageEvent(brokerageMessageType, errorCode, errorMsg));
         }
 
+        /// <summary>
+        /// Gets the current brokerage time
+        /// </summary>
+        /// <param name="time">Time</param>
         public virtual void currentTime(long time)
         {
             // keep track of clock drift
@@ -102,6 +110,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _brokerTimeDiff = dateTime.Subtract(DateTime.UtcNow);
         }
 
+        /// <summary>
+        /// Gets the Tick price
+        /// </summary>
+        /// <param name="tickerId">Ticker id</param>
+        /// <param name="field">Tick Type</param>
+        /// <param name="price">Tick price</param>
+        /// <param name="canAutoExecute">Specifies whether price tick is available for automatic execution</param>
         public virtual void tickPrice(int tickerId, int field, double price, int canAutoExecute)
         {
             var symbol = default(Symbol);
@@ -171,6 +186,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
         }
 
+        /// <summary>
+        /// Returns the size of the tick
+        /// </summary>
+        /// <param name="tickerId">Ticker id</param>
+        /// <param name="field">Tick Type</param>
+        /// <param name="size">Tick size</param>
         public virtual void tickSize(int tickerId, int field, int size)
         {
             var symbol = default(Symbol);
@@ -267,6 +288,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             
         }
 
+        /// <summary>
+        /// Returns the next valid id
+        /// </summary>
+        /// <param name="orderId">Order id</param>
         public virtual void nextValidId(int orderId)
         {
             // only grab this id when we initialize, and we'll manually increment it here to avoid threading issues
@@ -278,11 +303,18 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             Log.Trace("InteractiveBrokersBrokerage.Callbacks.nextValidId(): " + orderId);
         }
 
+        /// <summary>
+        /// Returns the active account list
+        /// </summary>
+        /// <param name="accountsList">List of accounts</param>
         public virtual void managedAccounts(string accountsList)
         {
             Console.WriteLine("Account list: " + accountsList + "\n");
         }
 
+        /// <summary>
+        /// Acknowledges the closing of the connection
+        /// </summary>
         public virtual void connectionClosed()
         {
             Log.Debug("TWS Connection Closed.");
@@ -306,6 +338,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Stores all the account values
         /// </summary>
+        /// <param name="key">Type of account key</param>
+        /// <param name="value">Value associated with the key</param>
+        /// <param name="currency">Currency type</param>
+        /// <param name="accountName">Name of the account</param>
         public virtual void updateAccountValue(string key, string value, string currency, string accountName)
         {
             //https://www.interactivebrokers.com/en/software/api/apiguide/activex/updateaccountvalue.htm
@@ -334,6 +370,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Handle portfolio changed events from IB
         /// </summary>
+        /// <param name="contract">Contract</param>
+        /// <param name="position">Number of positions hekd</param>
+        /// <param name="marketPrice">Price of the instrument</param>
+        /// <param name="marketValue">Total market value of the instrument</param>
+        /// <param name="averageCost">Average cost per share</param>
+        /// <param name="unrealisedPNL">Difference between current market value and average cost</param>
+        /// <param name="realisedPNL">Porfits on closed positions</param>
+        /// <param name="accountName">Name of the account</param>
         public virtual void updatePortfolio(Contract contract, int position, double marketPrice, double marketValue, double averageCost,
             double unrealisedPNL, double realisedPNL, string accountName)
         {
@@ -347,6 +391,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             
         }
 
+        /// <summary>
+        /// Marks the end of Downloading of the Account
+        /// </summary>
+        /// <param name="account">Account id</param>
         public virtual void accountDownloadEnd(string account)
         {
             Log.Trace("InteractiveBrokersBrokerage.AccountDownloadEnd(): Finished account download for " + account);
@@ -356,6 +404,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Handle order events from IB
         /// </summary>
+        /// <param name="orderId">Order id</param>
+        /// <param name="status">Order Status</param>
+        /// <param name="filled">Number of shares executed</param>
+        /// <param name="remaining">Number of shares still outstanding</param>
+        /// <param name="avgFillPrice">Average price of the shares</param>
+        /// <param name="permId">TWS id used to identify the order</param>
+        /// <param name="parentId">Order id of the parent order</param>
+        /// <param name="lastFillPrice">Last price of the shares</param>
+        /// <param name="clientId">Client id</param>
+        /// <param name="whyHeld">Identidies the order held by TWS</param>
         public virtual void orderStatus(int orderId, string status, int filled, int remaining, double avgFillPrice, int permId, int parentId,
             double lastFillPrice, int clientId, string whyHeld)
         {
@@ -441,19 +499,39 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
         }
 
-        public virtual void openOrder(int orderId, Contract contract, Order order, OrderState orderState)
+        /// <summary>
+        /// Handles the current Open Orders
+        /// </summary>
+        /// <param name="orderId">Order id</param>
+        /// <param name="contract">Contract</param>
+        /// <param name="order">Order</param>
+        /// <param name="orderState">The state of the order</param>
+        public void openOrder(int orderId, Contract contract, Order order, OrderState orderState)
         {
 //            var orders = new List<Orders.Order>();
             // convert IB order objects returned from RequestOpenOrders\
-            _ibOpenOrders.Add(ConvertOrder(order, contract));
+            var convertedOrder = ConvertOrder(order, contract);
+            if (convertedOrder == null)
+            {
+                Console.WriteLine("Conversion failed. NULL!!");
+            }
+            _ibOpenOrders.Add(convertedOrder);
         }
 
+        /// <summary>
+        /// Marks the end of downloading open orders
+        /// </summary>
         public virtual void openOrderEnd()
         {
             // this signals the end of our RequestOpenOrders call
             _openOrderManualResetEvent.Set();
         }
 
+        /// <summary>
+        /// Handles the contract Details
+        /// </summary>
+        /// <param name="reqId">Request id</param>
+        /// <param name="contractDetails">Contract Details</param>
         public virtual void contractDetails(int reqId, ContractDetails contractDetails)
         {
             // ignore other requests
@@ -463,17 +541,31 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             //_ibGetContractDetailsResetEvent.Set();
         }
 
+        /// <summary>
+        /// Marks the end of downloading the contract details
+        /// </summary>
+        /// <param name="reqId">Request id</param>
         public virtual void contractDetailsEnd(int reqId)
         {
             _ibGetContractDetailsResetEvent.Set();
         }
 
+        /// <summary>
+        /// Handles the execution details
+        /// </summary>
+        /// <param name="reqId">Request id</param>
+        /// <param name="contract">Contract</param>
+        /// <param name="execution">Execution Details</param>
         public virtual void execDetails(int reqId, Contract contract, Execution execution)
         {
             var executionDetails = new ExecutionDetails(reqId, contract, execution);
             if (reqId == _ibExecutionDetailsRequestId) _exectionDetailsList.Add(executionDetails);
         }
 
+        /// <summary>
+        /// Marks the end of downloading the executions
+        /// </summary>
+        /// <param name="reqId">Request id</param>
         public virtual void execDetailsEnd(int reqId)
         {
             if (reqId == _ibExecutionDetailsRequestId) _ibExecutionDetailsResetEvent.Set();
@@ -489,6 +581,19 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             
         }
 
+        /// <summary>
+        /// Handles the historical data
+        /// </summary>
+        /// <param name="reqId">Request id for the data requested</param>
+        /// <param name="date">Date for the request</param>
+        /// <param name="open">Open price</param>
+        /// <param name="high">High price</param>
+        /// <param name="low">Low price</param>
+        /// <param name="close">Close price</param>
+        /// <param name="volume">Volume</param>
+        /// <param name="count">Number of trades</param>
+        /// <param name="WAP">Weighted average covered by the bar</param>
+        /// <param name="hasGaps">Whether or not there are gaps in the data</param>
         public virtual void historicalData(int reqId, string date, double open, double high, double low, double close, int volume, int count,
             double WAP, bool hasGaps)
         {
@@ -500,9 +605,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
         }
 
+        /// <summary>
+        /// Marks the end of downloading the historical data
+        /// </summary>
+        /// <param name="reqId">Request id for the data requested</param>
+        /// <param name="start">Start date</param>
+        /// <param name="end">End date</param>
         public virtual void historicalDataEnd(int reqId, string start, string end)
         {
-            
+            _ibHistorialDataResetEvent.Set();
         }
 
         public virtual void marketDataType(int reqId, int marketDataType)

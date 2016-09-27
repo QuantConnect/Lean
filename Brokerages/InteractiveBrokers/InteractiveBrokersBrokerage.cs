@@ -71,23 +71,22 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly EClientSocket _ibClient;
         private ContractDetails _ibContractDetails;
         private Contract _ibContract;
-        private List<ExecutionDetails> _exectionDetailsList;
-        private List<HistoricalDataDetails> _historicalDataList;
         
-
         private readonly ManualResetEvent _waitForNextValidId = new ManualResetEvent(false);
         private readonly ManualResetEvent _accountHoldingsResetEvent = new ManualResetEvent(false);
-        private ManualResetEvent _openOrderManualResetEvent;
-        private ManualResetEvent _ibFirstAccountUpdateReceived;
-        private ManualResetEvent _ibGetContractDetailsResetEvent;
-        private ManualResetEvent _ibClientOnTickPriceResetEvent;
-        private ManualResetEvent _ibExecutionDetailsResetEvent;
+        private ManualResetEvent _openOrderManualResetEvent = new ManualResetEvent(false);
+        private ManualResetEvent _ibFirstAccountUpdateReceived = new ManualResetEvent(false);
+        private ManualResetEvent _ibGetContractDetailsResetEvent = new ManualResetEvent(false);
+        private ManualResetEvent _ibClientOnTickPriceResetEvent = new ManualResetEvent(false);
+        private ManualResetEvent _ibExecutionDetailsResetEvent = new ManualResetEvent(false);
+        private ManualResetEvent _ibHistorialDataResetEvent = new ManualResetEvent(false);
 
         // IB likes to duplicate/triplicate some events, keep track of them and swallow the dupes
         // we're keeping track of the .ToString() of the order event here
         private readonly FixedSizeHashQueue<string> _recentOrderEvents = new FixedSizeHashQueue<string>(50);
-
-        private List<Order> _ibOpenOrders;
+        private List<ExecutionDetails> _exectionDetailsList = new List<ExecutionDetails>();
+        private List<HistoricalDataDetails> _historicalDataList = new List<HistoricalDataDetails>();
+        private readonly List<Order> _ibOpenOrders = new List<Order>();
         private readonly object _orderFillsLock = new object();
         private readonly ConcurrentDictionary<int, int> _orderFills = new ConcurrentDictionary<int, int>(); 
         private readonly ConcurrentDictionary<string, decimal> _cashBalances = new ConcurrentDictionary<string, decimal>(); 
@@ -174,6 +173,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
+        /// Provides public access to the underlying IBClient instance
+        /// </summary>
+        public EClientSocket Client
+        {
+            get { return _ibClient; }
+        }
+
+        /// <summary>
         /// Places a new order and assigns a new broker ID to the order
         /// </summary>
         /// <param name="order">The order to be placed</param>
@@ -229,7 +236,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // this could be better
                 foreach (var id in order.BrokerId)
                 {
-                    _ibClient.cancelOrder(int.Parse(id));
+                    Client.cancelOrder(int.Parse(id));
                 }
             }
             catch (Exception err)
@@ -246,11 +253,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns>The open orders returned from IB</returns>
         public override List<Order> GetOpenOrders()
         {
-            _ibOpenOrders = new List<Order>();
+//            _ibOpenOrders = new List<Order>();
+            _ibOpenOrders.Clear();
+            _openOrderManualResetEvent.Reset();
 
-            _openOrderManualResetEvent = new ManualResetEvent(false);
-            
-            _ibClient.reqAllOpenOrders();
+            Client.reqAllOpenOrders();
 
             // wait for our end signal
             if (!_openOrderManualResetEvent.WaitOne(15000))
@@ -323,13 +330,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Side = side ?? ""
             };
 
-            _exectionDetailsList = new List<ExecutionDetails>();
+//            _exectionDetailsList = new List<ExecutionDetails>();
 
             var client = new EClientSocket(this);
             client.eConnect(_host, _port, IncrementClientID());
-            _ibExecutionDetailsResetEvent = new ManualResetEvent(false);
+            _ibExecutionDetailsResetEvent.Reset();
             _ibExecutionDetailsRequestId = GetNextRequestID();
-            _ibClient.reqExecutions(_ibExecutionDetailsRequestId, filter);
+            Client.reqExecutions(_ibExecutionDetailsRequestId, filter);
 
             if (!_ibExecutionDetailsResetEvent.WaitOne(5000))
             {
@@ -358,9 +365,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     Log.Trace("InteractiveBrokersBrokerage.Connect(): Attempting to connect ({0}/{1}) ...", attempt, maxAttempts);
 
                     // we're going to try and connect several times, if successful break
-                    _ibClient.eConnect(_host, _port, _clientID, false);
+                    Client.eConnect(_host, _port, _clientID, false);
                     
-                    if (!_ibClient.IsConnected()) throw new Exception("InteractiveBrokersBrokerage.Connect(): Connection returned but was not in connected state.");
+                    if (!Client.IsConnected()) throw new Exception("InteractiveBrokersBrokerage.Connect(): Connection returned but was not in connected state.");
                     break;
                 }
                 catch (Exception err)
@@ -396,12 +403,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             // we'll wait to get our first account update, we need to be absolutely sure we 
             // have downloaded the entire account before leaving this function
-            _ibFirstAccountUpdateReceived = new ManualResetEvent(false);
+            _ibFirstAccountUpdateReceived.Reset();
             
             _isAccountUpdateSet = true;
             // first we won't subscribe, wait for this to finish, below we'll subscribe for continuous updates
 
-            _ibClient.reqAccountUpdates(true, _account);
+            Client.reqAccountUpdates(true, _account);
             // wait to see the first account value update
 
             _ibFirstAccountUpdateReceived.WaitOne(2500);
@@ -423,7 +430,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         public override void Disconnect()
         {
             if (!IsConnected) return;
-            _ibClient.eDisconnect();
+            Client.eDisconnect();
         }
 
         /// <summary>
@@ -431,9 +438,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         public void Dispose()
         {
-            if (_ibClient != null)
+            if (Client != null)
             {
-                _ibClient.eDisconnect();
+                Client.eDisconnect();
             }
         }
 
@@ -481,7 +488,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 throw new ArgumentException("Expected order with populated BrokerId for updating orders.");
             }
             var ibOrder = ConvertOrder(order, contract, ibOrderID);
-            _ibClient.placeOrder(ibOrder.OrderId, contract, ibOrder);
+            Client.placeOrder(ibOrder.OrderId, contract, ibOrder);
         }
 
         private string GetPrimaryExchange(Contract contract)
@@ -526,10 +533,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _ibRequestId = GetNextRequestID();
             _ibContract = contract;
 
-            _ibGetContractDetailsResetEvent = new ManualResetEvent(false);
+            _ibGetContractDetailsResetEvent.Reset();
 
             // make the request for data
-            _ibClient.reqContractDetails(_ibRequestId, contract);
+            Client.reqContractDetails(_ibRequestId, contract);
 
             // we'll wait a second, but it may not exist so just pass through
             _ibGetContractDetailsResetEvent.WaitOne(1000);
@@ -570,12 +577,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             // if this stays zero then we haven't received the conversion rate
             _ibConversionRate = 0m; 
-            _ibClientOnTickPriceResetEvent = new ManualResetEvent(false);
+            _ibClientOnTickPriceResetEvent.Reset();
+            _ibHistorialDataResetEvent.Reset();
 
             // we're going to request both history and active ticks, we'll use the ticks first
             // and if not present, we'll use the latest from the history request
 
-            _historicalDataList = new List<HistoricalDataDetails>();
+//            _historicalDataList = new List<HistoricalDataDetails>();
             
             _historicalTickerId = GetNextTickerID();
             _ibLastHistoricalData = DateTime.MaxValue;
@@ -583,10 +591,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // request some historical data, IB's api takes into account weekends/market opening hours
             var requestSpan = "100 S";
 
-            _ibClient.reqHistoricalData(_historicalTickerId, contract, DateTime.Now.ToString("yyyyMMdd HH:mm:ss"), requestSpan, "1 secs", "ASK", 1,1,null);  //"20130701 23:59:59 GMT"
+            Client.reqHistoricalData(_historicalTickerId, contract, DateTime.Now.ToString("yyyyMMdd HH:mm:ss"), requestSpan, "1 secs", "ASK", 1,1,null);  //"20130701 23:59:59 GMT"
 
-            //Wait for 2 secs for the historical data to arrive
-            Thread.Sleep(2000);
+            //Wait for unitl historical data to arrives successfully
+            _ibHistorialDataResetEvent.WaitOne(15000);
 
             // define and add our tick handler for the ticks
             _ibMarketDataTicker = GetNextTickerID();
@@ -594,9 +602,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             _isClientOnTickPriceSet = true;
 
-            _ibClient.reqMktData(_ibMarketDataTicker, contract, null, true, null);
+            Client.reqMktData(_ibMarketDataTicker, contract, null, true, null);
 
             _ibClientOnTickPriceResetEvent.WaitOne(2500);
+
             _isClientOnTickPriceSet = false;
 
             // check to see if ticks returned something
@@ -648,9 +657,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Converts a QC order to an IB order
         /// </summary>
-        private global::IBApi.Order ConvertOrder(Order order, Contract contract, int ibOrderID)
+        private IBApi.Order ConvertOrder(Order order, Contract contract, int ibOrderID)
         {
-            var ibOrder = new global::IBApi.Order()
+            var ibOrder = new IBApi.Order()
             {
                 ClientId = _clientID,
                 OrderId = ibOrderID,
@@ -693,7 +702,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return ibOrder;
         }
 
-        private Order ConvertOrder(global::IBApi.Order ibOrder, Contract contract)
+        private Order ConvertOrder(IBApi.Order ibOrder, Contract contract)
         {
             // this function is called by GetOpenOrders which is mainly used by the setup handler to
             // initialize algorithm state.  So the only time we'll be executing this code is when the account
@@ -871,7 +880,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 case "ApiCancelled":
                 case "PendingCancel":
-                case "Canceled": 
+                case "Cancelled": 
                     return OrderStatus.Canceled;
 
                 case "Submitted": 
@@ -1099,7 +1108,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 var id = GetNextRequestID();
                 var contract = CreateContract(symbol);
-                _ibClient.reqMktData(id, contract, null, false, null);
+                Client.reqMktData(id, contract, null, false, null);
 
                 _subscribedSymbols[symbol] = id;
                 _subscribedTickets[id] = symbol;
@@ -1119,7 +1128,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 if (_subscribedSymbols.TryRemove(symbol, out res))
                 {
-                    _ibClient.cancelMktData(res);
+                    Client.cancelMktData(res);
                     var secRes = default(Symbol);
                     _subscribedTickets.TryRemove(res, out secRes);
                 }
