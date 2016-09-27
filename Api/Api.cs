@@ -112,12 +112,17 @@ namespace QuantConnect.Api
         public RestResponse UpdateProject(int projectId, List<ProjectFile> files)
         {
             var request = new RestRequest("projects/update", Method.POST);
-            request.RequestFormat = DataFormat.Json;
-            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+
+            request.AddParameter("projectId", projectId);
+
+            var count = 0;
+            foreach (var projectFile in files)
             {
-                projectId = projectId,
-                files = files
-            }), ParameterType.RequestBody);
+                request.AddParameter("files[" + count + "][name]", projectFile.Name);
+                request.AddParameter("files[" + count + "][code]", projectFile.Code);
+                count++;
+            }
+
             RestResponse result;
             _connection.TryRequest(request, out result);
             return result;
