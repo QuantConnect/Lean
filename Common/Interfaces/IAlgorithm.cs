@@ -25,6 +25,7 @@ using QuantConnect.Orders;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using QuantConnect.Statistics;
+using System.Collections.Concurrent;
 
 namespace QuantConnect.Interfaces
 {
@@ -216,7 +217,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Debug messages from the strategy:
         /// </summary>
-        List<string> DebugMessages
+        ConcurrentQueue<string> DebugMessages
         {
             get;
         }
@@ -224,7 +225,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Error messages from the strategy:
         /// </summary>
-        List<string> ErrorMessages
+        ConcurrentQueue<string> ErrorMessages
         {
             get;
         }
@@ -232,7 +233,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Log messages from the strategy:
         /// </summary>
-        List<string> LogMessages
+        ConcurrentQueue<string> LogMessages
         {
             get;
         }

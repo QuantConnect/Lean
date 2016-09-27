@@ -1064,28 +1064,34 @@ namespace QuantConnect.Lean.Engine.Results
                 _api.SetAlgorithmStatus(_job.AlgorithmId, AlgorithmStatus.Running);
             }
 
-            //Send out the debug messages:
-            var debugMessage = _algorithm.DebugMessages.ToList();
-            _algorithm.DebugMessages.Clear();
-            foreach (var source in debugMessage)
+            //Send out the debug messages:            
+            while (_algorithm.DebugMessages.Count > 0)
             {
-                DebugMessage(source);
+                string message;
+                if (_algorithm.DebugMessages.TryDequeue(out message))
+                {
+                    DebugMessage(message);
+                }
             }
 
             //Send out the error messages:
-            var errorMessage = _algorithm.ErrorMessages.ToList();
-            _algorithm.ErrorMessages.Clear();
-            foreach (var source in errorMessage)
+            while (_algorithm.ErrorMessages.Count > 0)
             {
-                ErrorMessage(source);
+                string message;
+                if (_algorithm.ErrorMessages.TryDequeue(out message))
+                {
+                    ErrorMessage(message);
+                }
             }
 
             //Send out the log messages:
-            var logMessage = _algorithm.LogMessages.ToList();
-            _algorithm.LogMessages.Clear();
-            foreach (var source in logMessage)
+            while (_algorithm.LogMessages.Count > 0)
             {
-                LogMessage(source);
+                string message;
+                if (_algorithm.LogMessages.TryDequeue(out message))
+                {
+                    LogMessage(message);
+                }
             }
 
             //Set the running statistics:
