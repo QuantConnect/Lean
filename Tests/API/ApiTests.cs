@@ -190,12 +190,10 @@ namespace QuantConnect.Tests.API
                         account     = Config.Get("oanda-account-id");
                         environment = Config.Get("oanda-environment");
 
-                        settings = new OandaLiveAlogrithmSettings(accessToken, dateIssuedString, BrokerageName.OandaBrokerage, environment, account); 
+                        settings = new OandaLiveAlogrithmSettings(accessToken, BrokerageName.OandaBrokerage, environment, account); 
                         Assert.IsTrue(settings.Id == BrokerageName.OandaBrokerage.ToString());
                         break;
                     case BrokerageName.TradierBrokerage:
-                        user         = "";
-                        password     = "";
                         dateIssued   = Config.Get("tradier-issued-at");
                         refreshToken = Config.Get("tradier-refresh-token");
                         lifetime     = Config.Get("tradier-lifespan");
@@ -370,14 +368,9 @@ namespace QuantConnect.Tests.API
         [Test]
         public void LiveAlgorithms_CanBeUsedWithOanda_Successfully()
         {
-            var user        = "";
-            var password    = "";
-
             var token       = Config.Get("oanda-access-token");
             var account     = Config.Get("oanda-account-id");
             var environment = Config.Get("oanda-environment");
-
-            var dateIssued  = "20160923";
 
             var file = new List<ProjectFile>
                 {
@@ -397,7 +390,6 @@ namespace QuantConnect.Tests.API
 
             // Create default algorithm settings
             var settings = new OandaLiveAlogrithmSettings(token,
-                                                          dateIssued,
                                                           BrokerageName.OandaBrokerage,
                                                           environment,
                                                           account);

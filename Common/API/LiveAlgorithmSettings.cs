@@ -213,19 +213,19 @@ namespace QuantConnect.API
         /// Contructor for live trading with Oanda.
         /// </summary>
         /// <param name="accessToken">Access Token (specific for Oanda Brokerage)</param>
-        /// <param name="dateIssued">Date access token was issued</param>
         /// <param name="brokerage">Name of the brokerage</param>
         /// <param name="environment">'live'/'paper'</param>
         /// <param name="account">Account id for brokerage</param>
         public OandaLiveAlogrithmSettings(string accessToken,
-                                          string dateIssued,
                                           BrokerageName brokerage,
                                           string environment,
                                           string account)
             : base(brokerage, environment, account)
         {
             AccessToken = accessToken;
-            DateIssued = dateIssued;
+            // The DateIssued parameter is required by the Api, but not required to trade.
+            // This should be fixed on the Api side.
+            DateIssued = "1";
         }
 
         /// <summary>
