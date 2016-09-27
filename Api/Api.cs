@@ -323,14 +323,12 @@ namespace QuantConnect.Api
         /// Liquidate a live algorithm from the specified project and deployId.
         /// </summary>
         /// <param name="projectId">Project for the live instance we want to stop</param>
-        /// <param name="deployId">Deployed id for specific instance we want to stop</param>
         /// <returns></returns>
-        public RestResponse LiquidateLive(int projectId, string deployId)
+        public RestResponse LiquidateLiveAlgorithm(int projectId)
         {
             var request = new RestRequest("live/update/liquidate", Method.POST);
             request.RequestFormat = DataFormat.Json;
             request.AddParameter("projectId", projectId);
-            request.AddParameter("deployId", deployId);
             RestResponse result;
             _connection.TryRequest(request, out result);
             return result;
@@ -340,14 +338,12 @@ namespace QuantConnect.Api
         /// Stop a live algorithm from the specified project and deployId.
         /// </summary>
         /// <param name="projectId">Project for the live instance we want to stop</param>
-        /// <param name="deployId">Deployed id for specific instance we want to stop</param>
         /// <returns></returns>
-        public RestResponse StopLive(int projectId, string deployId)
+        public RestResponse StopLiveAlgorithm(int projectId)
         {
             var request = new RestRequest("live/update/stop", Method.POST);
             request.RequestFormat = DataFormat.Json;
             request.AddParameter("projectId", projectId);
-            request.AddParameter("deployId", deployId);
             RestResponse result;
             _connection.TryRequest(request, out result);
             return result;

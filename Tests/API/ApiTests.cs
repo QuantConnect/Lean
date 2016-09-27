@@ -23,6 +23,7 @@ using QuantConnect.API;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
+using RestSharp.Extensions.MonoHttp;
 
 namespace QuantConnect.Tests.API
 {
@@ -33,12 +34,21 @@ namespace QuantConnect.Tests.API
         private int _testAccount = 1;
         private string _testToken = "ec87b337ac970da4cbea648f24f1c851";
         private string _dataFolder = Config.Get("data-folder");
+        private int _testProjectId = 339925;
+        private Api.Api _api;
+
+        [SetUp]
+        public void Setup()
+        {
+            _api = new Api.Api();
+            _api.Initialize(_testAccount, _testToken, _dataFolder);
+        }
 
         /// <summary>
         /// Test successfully authenticates with the API using valid credentials.
         /// </summary>
         [Test]
-        public void AuthenticatesSuccessfully()
+        public void ApiWithValidCredentials_WillAuthenticate_Successfully()
         {
             var connection = new ApiConnection(_testAccount, _testToken);
             Assert.IsTrue(connection.Connected);
@@ -48,7 +58,7 @@ namespace QuantConnect.Tests.API
         /// Rejects invalid credentials
         /// </summary>
         [Test]
-        public void RejectsInvalidCredentials()
+        public void ApiWithInvalidValidCredentials_WillAuthenticate_Unsuccessfully()
         {
             var connection = new ApiConnection(_testAccount, "");
             Assert.IsFalse(connection.Connected);
@@ -64,29 +74,26 @@ namespace QuantConnect.Tests.API
         [Test]
         public void CreatesProjectCompilesAndBacktestsProject()
         {
-            // Initialize the test:
-            var api = CreateApiAccessor();
-
             var sources = LanguageSourcesList(SecurityType.Equity);
 
             foreach (var source in sources)
             {
                 // Test create a new project successfully
                 var name = DateTime.UtcNow.ToString("u") + " Test " + _testAccount + " Lang " + source.Language;
-                var project = api.CreateProject(name, source.Language);
+                var project = _api.CreateProject(name, source.Language);
                 Assert.IsTrue(project.Success);
                 Assert.IsTrue(project.ProjectId > 0);
                 Console.WriteLine("API Test: {0} Project created successfully", source.Language);
 
                 // Gets the list of projects from the account.
                 // Should at least be the one we created.
-                var projects = api.ProjectList();
+                var projects = _api.ProjectList();
                 Assert.IsTrue(projects.Success);
                 Assert.IsTrue(projects.Projects.Count >= 1);
                 Console.WriteLine("API Test: All Projects listed successfully");
 
                 // Test read back the project we just created
-                var readProject = api.ReadProject(project.ProjectId);
+                var readProject = _api.ReadProject(project.ProjectId);
                 Assert.IsTrue(readProject.Success);
                 Assert.IsTrue(readProject.Files.Count == 0);
                 Assert.IsTrue(readProject.Name == name);
@@ -94,45 +101,45 @@ namespace QuantConnect.Tests.API
 
                 // Test set a project file for the project
                 var files = NewProjectFile(source);
-                var updateProject = api.UpdateProject(project.ProjectId, files);
+                var updateProject = _api.UpdateProject(project.ProjectId, files);
                 Assert.IsTrue(updateProject.Success);
                 Console.WriteLine("API Test: {0} Project updated successfully", source.Language);
 
                 // Download the project again to validate its got the new file
-                var verifyRead = api.ReadProject(project.ProjectId);
+                var verifyRead = _api.ReadProject(project.ProjectId);
                 Assert.IsTrue(verifyRead.Files.Count == 1);
                 Assert.IsTrue(verifyRead.Files.First().Name == source.Name);
                 Console.WriteLine("API Test: {0} Project read back successfully", source.Language);
 
                 // Test successfully compile the project we've created
-                var compileCreate = api.CreateCompile(project.ProjectId);
+                var compileCreate = _api.CreateCompile(project.ProjectId);
                 Assert.IsTrue(compileCreate.Success);
                 Assert.IsTrue(compileCreate.State == CompileState.InQueue);
                 Console.WriteLine("API Test: {0} Compile created successfully", source.Language);
 
                 //Read out the compile; wait for it to be completed for 10 seconds
-                var compileSuccess = WaitForCompilerResponse(api, project.ProjectId, compileCreate.CompileId);
+                var compileSuccess = WaitForCompilerResponse(_api, project.ProjectId, compileCreate.CompileId);
                 Assert.IsTrue(compileSuccess.Success);
                 Assert.IsTrue(compileSuccess.State == CompileState.BuildSuccess);
                 Console.WriteLine("API Test: {0} Project built successfully", source.Language);
 
                 // Update the file, create a build error, test we get build error
                 files[0].Code += "[Jibberish at end of the file to cause a build error]";
-                api.UpdateProject(project.ProjectId, files);
-                var compileError = api.CreateCompile(project.ProjectId);
-                compileError = WaitForCompilerResponse(api, project.ProjectId, compileError.CompileId);
+                _api.UpdateProject(project.ProjectId, files);
+                var compileError = _api.CreateCompile(project.ProjectId);
+                compileError = WaitForCompilerResponse(_api, project.ProjectId, compileError.CompileId);
                 Assert.IsTrue(compileError.Success); // Successfully processed rest request.
                 Assert.IsTrue(compileError.State == CompileState.BuildError); //Resulting in build fail.
                 Console.WriteLine("API Test: {0} Project errored successfully", source.Language);
 
                 // Using our successful compile; launch a backtest!
                 var backtestName = DateTime.Now.ToString("u") + " API Backtest";
-                var backtest = api.CreateBacktest(project.ProjectId, compileSuccess.CompileId, backtestName);
+                var backtest = _api.CreateBacktest(project.ProjectId, compileSuccess.CompileId, backtestName);
                 Assert.IsTrue(backtest.Success);
                 Console.WriteLine("API Test: {0} Backtest created successfully", source.Language);
 
                 // Now read the backtest and wait for it to complete
-                var backtestRead = WaitForBacktestCompletion(api, project.ProjectId, backtest.BacktestId);
+                var backtestRead = WaitForBacktestCompletion(_api, project.ProjectId, backtest.BacktestId);
                 Assert.IsTrue(backtestRead.Success);
                 Assert.IsTrue(backtestRead.Progress == 1);
                 Assert.IsTrue(backtestRead.Name == backtestName);
@@ -140,7 +147,7 @@ namespace QuantConnect.Tests.API
                 Console.WriteLine("API Test: {0} Backtest completed successfully", source.Language);
 
                 // Verify we have the backtest in our project
-                var listBacktests = api.BacktestList(project.ProjectId);
+                var listBacktests = _api.BacktestList(project.ProjectId);
                 Assert.IsTrue(listBacktests.Success);
                 Assert.IsTrue(listBacktests.Backtests.Count >= 1);
                 Assert.IsTrue(listBacktests.Backtests[0].Name == backtestName);
@@ -148,29 +155,125 @@ namespace QuantConnect.Tests.API
 
                 // Update the backtest name and test its been updated
                 backtestName += "-Amendment";
-                var renameBacktest = api.UpdateBacktest(project.ProjectId, backtest.BacktestId, backtestName);
+                var renameBacktest = _api.UpdateBacktest(project.ProjectId, backtest.BacktestId, backtestName);
                 Assert.IsTrue(renameBacktest.Success);
-                backtestRead = api.ReadBacktest(project.ProjectId, backtest.BacktestId);
+                backtestRead = _api.ReadBacktest(project.ProjectId, backtest.BacktestId);
                 Assert.IsTrue(backtestRead.Name == backtestName);
                 Console.WriteLine("API Test: {0} Backtest renamed successfully", source.Language);
 
                 //Update the note and make sure its been updated:
                 var newNote = DateTime.Now.ToString("u");
-                var noteBacktest = api.UpdateBacktest(project.ProjectId, backtest.BacktestId, backtestNote: newNote);
+                var noteBacktest = _api.UpdateBacktest(project.ProjectId, backtest.BacktestId, note: newNote);
                 Assert.IsTrue(noteBacktest.Success);
-                backtestRead = api.ReadBacktest(project.ProjectId, backtest.BacktestId);
+                backtestRead = _api.ReadBacktest(project.ProjectId, backtest.BacktestId);
                 Assert.IsTrue(backtestRead.Note == newNote);
                 Console.WriteLine("API Test: {0} Backtest note added successfully", source.Language);
 
                 // Delete the backtest we just created
-                var deleteBacktest = api.DeleteBacktest(project.ProjectId, backtest.BacktestId);
+                var deleteBacktest = _api.DeleteBacktest(project.ProjectId, backtest.BacktestId);
                 Assert.IsTrue(deleteBacktest.Success);
                 Console.WriteLine("API Test: {0} Backtest deleted successfully", source.Language);
 
                 // Test delete the project we just created
-                var deleteProject = api.Delete(project.ProjectId);
+                var deleteProject = _api.Delete(project.ProjectId);
                 Assert.IsTrue(deleteProject.Success);
                 Console.WriteLine("API Test: {0} Project deleted successfully", source.Language);
+            }
+        }
+
+
+
+        /// <summary>
+        /// Test creating the settings object that provide the necessary parameters for each broker
+        /// </summary>
+        [Test]
+        public void LiveAlgorithmSettings_CanBeCreated_Successfully()
+        {
+            string user = "";
+            string password = "";
+            string environment = "Live";
+            string account = "1";
+
+            // Oanda Custom Variables 
+            string accessToken = "";
+            var dateIssuedString = "20160920";
+
+            // Tradier Custom Variables
+            string dateIssued = "";
+            string refreshToken = "";
+            string lifetime = "";
+
+            // Create and test settings for each brokerage
+            foreach (BrokerageName brokerageName in Enum.GetValues(typeof(BrokerageName)))
+            {
+                BaseLiveAlgorithmSettings settings = null;
+
+                switch (brokerageName)
+                {
+                    case BrokerageName.Default:
+                        user = Config.Get("default-username");
+                        password = Config.Get("default-password");
+                        settings = new DefaultBaseLiveAlogrithmSettings(user, password, BrokerageName.Default, environment, account);
+
+                        Assert.IsTrue(settings.Id == BrokerageName.Default.ToString());
+                        break;
+                    case BrokerageName.FxcmBrokerage:
+                        user = Config.Get("fxcm-user-name");
+                        password = Config.Get("fxcm-password");
+                        settings = new FxcmBaseLiveAlogrithmSettings(user, password, BrokerageName.FxcmBrokerage, environment, account);
+
+                        Assert.IsTrue(settings.Id == BrokerageName.FxcmBrokerage.ToString());
+                        break;
+                    case BrokerageName.InteractiveBrokersBrokerage:
+                        user = Config.Get("ib-user-name");
+                        password = Config.Get("ib-password");
+                        settings = new InteractiveBrokersBaseLiveAlogrithmSettings(user, password, BrokerageName.InteractiveBrokersBrokerage, environment, account);
+
+                        Assert.IsTrue(settings.Id == BrokerageName.InteractiveBrokersBrokerage.ToString());
+                        break;
+                    case BrokerageName.OandaBrokerage:
+                        user = Config.Get("oandaUser");
+                        password = Config.Get("oandaPassword");
+                        accessToken = Config.Get("oandaDate");
+                        settings = new OandaBaseLiveAlogrithmSettings(accessToken, dateIssuedString, user, password, BrokerageName.OandaBrokerage, environment, account);
+
+                        Assert.IsTrue(settings.Id == BrokerageName.OandaBrokerage.ToString());
+                        break;
+                    case BrokerageName.TradierBrokerage:
+                        user = Config.Get("tradierUser");
+                        password = Config.Get("tradierPassword");
+                        dateIssued = Config.Get("tradierDateIssued");
+                        refreshToken = Config.Get("tradierRefreshToken");
+                        lifetime = Config.Get("tradierLifetime");
+                        settings = new TradierBaseLiveAlogrithmSettings(refreshToken, dateIssued, refreshToken, lifetime, user, password, BrokerageName.TradierBrokerage, environment, account);
+
+                        break;
+                    default:
+                        throw new Exception("Settings have not been implemented for this brokerage: " + brokerageName.ToString());
+                }
+
+
+                Assert.IsTrue(settings != null);
+                Assert.IsTrue(settings.Password == password);
+                Assert.IsTrue(settings.User == user);
+                Assert.IsTrue(settings.Environment == environment);
+
+                // Oanda specific settings
+                if (brokerageName == BrokerageName.OandaBrokerage)
+                {
+                    var oandaSetting = settings as OandaBaseLiveAlogrithmSettings;
+                    Assert.IsTrue(oandaSetting.AccessToken == accessToken);
+                    Assert.IsTrue(oandaSetting.DateIssued == dateIssuedString);
+                }
+
+                // Tradier specific settings
+                if (brokerageName == BrokerageName.TradierBrokerage)
+                {
+                    var tradierLiveAlogrithmSettings = settings as TradierBaseLiveAlogrithmSettings;
+                    Assert.IsTrue(tradierLiveAlogrithmSettings.DateIssued == dateIssued);
+                    Assert.IsTrue(tradierLiveAlogrithmSettings.RefreshToken == refreshToken);
+                    Assert.IsTrue(tradierLiveAlogrithmSettings.Lifetime == lifetime);
+                }
             }
         }
 
@@ -183,20 +286,267 @@ namespace QuantConnect.Tests.API
         [Test]
         public void LiveAlgorithms_AndLiveLogs_CanBeRead()
         {
-            var api = CreateApiAccessor();
-
             // Read all previously deployed algorithms
-            var liveAlgorithms = api.ListLive();
+            var liveAlgorithms = _api.ListLive();
 
             Assert.IsTrue(liveAlgorithms.Success);
             Assert.IsTrue(liveAlgorithms.Algorithms.Any());
 
             // Read the logs of the first live algorithm
             var firstLiveAlgo = liveAlgorithms.Algorithms[0];
-            var liveLogs = api.ReadLiveLogs(firstLiveAlgo.ProjectId.ToInt32(), firstLiveAlgo.DeployId);
+            var liveLogs = _api.ReadLiveLogs(firstLiveAlgo.ProjectId.ToInt32(), firstLiveAlgo.DeployId);
 
             Assert.IsTrue(liveLogs.Success);
             Assert.IsTrue(liveLogs.Logs.Any());
+        }
+
+        /// <summary>
+        /// Paper trading FXCM
+        /// </summary>
+        [Test]
+        public void FXCMLiveAlgorithm_EntireLifeCycle_Test()
+        {
+            var user = "1";
+            var password = "2";
+            var account = "3";
+
+            // Create project
+            var project = _api.CreateProject("Live Test: " + DateTime.Now, Language.CSharp);
+            var file = new List<ProjectFile>
+                {
+                    new ProjectFile { Name = "main.cs", Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs") }
+                };
+
+            // Update Project
+            var update = _api.UpdateProject(project.ProjectId, file);
+            Assert.IsTrue(update.Success);
+
+            // Create compile
+            var compile = _api.CreateCompile(project.ProjectId);
+            Assert.IsTrue(compile.Success);
+
+            // Create default algorithm settings
+            var settings = new FxcmBaseLiveAlogrithmSettings(user,
+                                                             password,
+                                                             BrokerageName.FxcmBrokerage,
+                                                             "paper",
+                                                             account);
+
+            // Wait for project to compile
+            Thread.Sleep(10000);
+
+            // Create live default algorithm
+            var createLiveAlgorithm = _api.CreateLiveAlgorithm(project.ProjectId, compile.CompileId, "server512", settings);
+            Assert.IsTrue(createLiveAlgorithm.Success);
+
+            // Liquidate live algorithm
+            var liquidateLive = _api.LiquidateLiveAlgorithm(project.ProjectId);
+            Assert.IsTrue(liquidateLive.Success);
+
+            // Stop live algorithm
+            var stopLive = _api.StopLiveAlgorithm(project.ProjectId);
+            Assert.IsTrue(stopLive.Success);
+
+            // Delete project
+            var deleteProject = _api.Delete(project.ProjectId);
+            Assert.IsTrue(deleteProject.Success);
+        }
+
+        /// <summary>
+        /// Live paper trading via IB.
+        /// </summary>
+        [Test]
+        public void InteractiveBroker_EntireLifeCycle_Live_Test()
+        {
+            var user = "1";
+            var password = "2";
+            var account = "3";
+
+            // Create project
+            var project = _api.CreateProject("Live Test: " + DateTime.Now, Language.CSharp);
+            var file = new List<ProjectFile>
+                {
+                    new ProjectFile { Name = "main.cs", Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs" )}
+                };
+
+            // Update Project
+            var update = _api.UpdateProject(project.ProjectId, file);
+            Assert.IsTrue(update.Success);
+
+            // Create compile
+            var compile = _api.CreateCompile(project.ProjectId);
+            Assert.IsTrue(compile.Success);
+
+            // Create default algorithm settings
+            var settings = new InteractiveBrokersBaseLiveAlogrithmSettings(user,
+                                                                           password, BrokerageName.InteractiveBrokersBrokerage,
+                                                                           "paper",
+                                                                           account);
+
+            // Wait for project to compile
+            Thread.Sleep(10000);
+
+            // Create live default algorithm
+            var createLiveAlgorithm = _api.CreateLiveAlgorithm(project.ProjectId, compile.CompileId, "server512", settings);
+            Assert.IsTrue(createLiveAlgorithm.Success);
+
+            // Liquidate live algorithm
+            var liquidateLive = _api.LiquidateLiveAlgorithm(project.ProjectId);
+            Assert.IsTrue(liquidateLive.Success);
+
+            // Stop live algorithm
+            var stopLive = _api.StopLiveAlgorithm(project.ProjectId);
+            Assert.IsTrue(stopLive.Success);
+
+            // Delete project
+            var deleteProject = _api.Delete(project.ProjectId);
+            Assert.IsTrue(deleteProject.Success);
+        }
+
+        /// <summary>
+        /// Live paper trading via Oanda
+        /// </summary>
+        [Test]
+        public void OandaLiveAlgorithm_EntireLifeCycle_Test()
+        {
+            var user = "1";
+            var dateIssued = "20160923";
+            var password = "2";
+            var token = "3";
+            var account = "4";
+
+            // Create project
+            var project = _api.CreateProject("Live Test: " + DateTime.Now, Language.CSharp);
+            var file = new List<ProjectFile>
+                {
+                    new ProjectFile { Name = "main.cs", Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs" ) }
+                };
+
+            // Update Project
+            var update = _api.UpdateProject(project.ProjectId, file);
+            Assert.IsTrue(update.Success);
+
+            // Create compile
+            var compile = _api.CreateCompile(project.ProjectId);
+            Assert.IsTrue(compile.Success);
+
+            // Create default algorithm settings
+            var settings = new OandaBaseLiveAlogrithmSettings(token,
+                                                              dateIssued,
+                                                              user,
+                                                              password,
+                                                              BrokerageName.OandaBrokerage,
+                                                              "paper",
+                                                              account);
+
+            // Wait for project to compile
+            Thread.Sleep(10000);
+
+            // Create live default algorithm
+            var createLiveAlgorithm = _api.CreateLiveAlgorithm(project.ProjectId, compile.CompileId, "server512", settings);
+            Assert.IsTrue(createLiveAlgorithm.Success);
+
+            // Liquidate live algorithm
+            var liquidateLive = _api.LiquidateLiveAlgorithm(project.ProjectId);
+            Assert.IsTrue(liquidateLive.Success);
+
+            // Stop live algorithm
+            var stopLive = _api.StopLiveAlgorithm(project.ProjectId);
+            Assert.IsTrue(stopLive.Success);
+
+            // Delete project
+            var deleteProject = _api.Delete(project.ProjectId);
+            Assert.IsTrue(deleteProject.Success);
+        }
+
+        /// <summary>
+        /// Live paper trading via Tradier
+        /// </summary>
+        [Test]
+        public void TradierLiveAlgorithm_EntireLifeCycle_Test()
+        {
+            var user = "";
+            var password = "";
+
+            string refreshToken = "0";
+            string lifetime = "1";
+            var account = "2";
+            var accessToken = "3";
+
+            var dateIssued = DateTime.Parse("9/23/2016");
+
+            // Create project
+            var project = _api.CreateProject("Live Test: " + DateTime.Now, Language.CSharp);
+            var file = new List<ProjectFile>
+                {
+                    new ProjectFile { Name = "main.cs", Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs" )}
+                };
+
+            // Update Project
+            var update = _api.UpdateProject(project.ProjectId, file);
+            Assert.IsTrue(update.Success);
+
+            var readProject = _api.ReadProject(project.ProjectId);
+            Assert.IsTrue(readProject.Success);
+            Assert.IsTrue(readProject.Files.Count == 1);
+
+            // Create compile
+            var compile = _api.CreateCompile(project.ProjectId);
+            Assert.IsTrue(compile.Success);
+
+            // Create default algorithm settings
+            var settings = new TradierBaseLiveAlogrithmSettings(accessToken,
+                                                                dateIssued.ToString("yyyyMMdd"),
+                                                                refreshToken,
+                                                                lifetime,
+                                                                user,
+                                                                password,
+                                                                BrokerageName.TradierBrokerage,
+                                                                "live",
+                                                                account);
+
+
+
+            // Wait for project to compile
+            Thread.Sleep(10000);
+
+            // Create live default algorithm
+            var createLiveAlgorithm = _api.CreateLiveAlgorithm(project.ProjectId, compile.CompileId, "server512", settings);
+            Assert.IsTrue(createLiveAlgorithm.Success);
+
+            // Liquidate live algorithm
+            var liquidateLive = _api.LiquidateLiveAlgorithm(project.ProjectId);
+            Assert.IsTrue(liquidateLive.Success);
+
+            // Stop live algorithm
+            var stopLive = _api.StopLiveAlgorithm(project.ProjectId);
+            Assert.IsTrue(stopLive.Success);
+
+            // Delete project
+            var deleteProject = _api.Delete(project.ProjectId);
+            Assert.IsTrue(deleteProject.Success);
+        }
+
+        /// <summary>
+        /// Test stopping an algorithm deployed live
+        /// </summary>
+        [Test]
+        public void Test_Stopping_LiveAlgo()
+        {
+            // Stop live algorithm
+            var stopLive = _api.StopLiveAlgorithm(_testProjectId);
+            Assert.IsTrue(stopLive.Success);
+        }
+
+        /// <summary>
+        /// Test liquidating a live algorithm
+        /// </summary>
+        [Test]
+        public void Test_Liquidating_LiveAlgo()
+        {
+            // Stop live algorithm
+            var liquidateLive = _api.LiquidateLiveAlgorithm(_testProjectId);
+            Assert.IsTrue(liquidateLive.Success);
         }
 
         /// <summary>
@@ -205,11 +555,9 @@ namespace QuantConnect.Tests.API
         [Test]
         public void GetLinks_ToDownloadData_ForFXCM()
         {
-            var api = CreateApiAccessor();
-
-            var minuteDataLink = api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD"),
+            var minuteDataLink = _api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD"),
                 Resolution.Minute, new DateTime(2013, 10, 07));
-            var dailyDataLink = api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD"),
+            var dailyDataLink = _api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD"),
                 Resolution.Daily, new DateTime(2013, 10, 07));
 
             Assert.IsTrue(minuteDataLink.Success);
@@ -222,11 +570,9 @@ namespace QuantConnect.Tests.API
         [Test]
         public void GetLinks_ToDownloadData_ForOanda()
         {
-            var api = CreateApiAccessor();
-
-            var minuteDataLink = api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
+            var minuteDataLink = _api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
                 Resolution.Minute, new DateTime(2013, 10, 07));
-            var dailyDataLink = api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
+            var dailyDataLink = _api.ReadDataLink(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
                 Resolution.Daily, new DateTime(2013, 10, 07));
 
             Assert.IsTrue(minuteDataLink.Success);
@@ -239,7 +585,6 @@ namespace QuantConnect.Tests.API
         [Test]
         public void Download_AndSave_DataCorrectly()
         {
-            var api = CreateApiAccessor();
             var minutePath = Path.Combine(_dataFolder, "forex/oanda/minute/eurusd/20131011_quote.zip");
             var dailyPath  = Path.Combine(_dataFolder, "forex/oanda/daily/eurusd.zip");
 
@@ -249,9 +594,9 @@ namespace QuantConnect.Tests.API
             if (File.Exists(minutePath))
                 File.Delete(minutePath);
 
-            var downloadedMinuteData = api.DownloadData(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
+            var downloadedMinuteData = _api.DownloadData(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
                 Resolution.Minute, new DateTime(2013, 10, 11));
-            var downloadedDailyData = api.DownloadData(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
+            var downloadedDailyData = _api.DownloadData(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
                 Resolution.Daily, new DateTime(2013, 10, 07));
 
             Assert.IsTrue(downloadedMinuteData);
@@ -267,52 +612,26 @@ namespace QuantConnect.Tests.API
         [Test]
         public void TryDownload_NonExistent_Data()
         {
-            var api = CreateApiAccessor();
-
-            var nonExistentData = api.DownloadData(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
+            var nonExistentData = _api.DownloadData(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.Oanda), "EURUSD"),
                Resolution.Minute, new DateTime(1989, 10, 11));
 
             Assert.IsFalse(nonExistentData);
         }
 
-
-        /// <summary>
-        /// Create an authenticated API accessor object.
-        /// </summary>
-        /// <returns></returns>
-        private IApi CreateApiAccessor()
-        {
-            return CreateApiAccessor(_testAccount, _testToken, _dataFolder);
-        }
-
-        /// <summary>
-        /// Create an API Class with the specified credentials
-        /// </summary>
-        /// <param name="uid">User id</param>
-        /// <param name="token">Token string</param>
-        /// <param name="dataFolder">Folder to save the downloaded data to</param>
-        /// <returns>API class for placing calls</returns>
-        private IApi CreateApiAccessor(int uid, string token, string dataFolder)
-        {
-            var api = new Api.Api();
-            api.Initialize(uid, token, dataFolder);
-            return api;
-        }
-
         /// <summary>
         /// Wait for the compiler to respond to a specified compile request
         /// </summary>
-        /// <param name="api">API Method</param>
+        /// <param name="_api">API Method</param>
         /// <param name="projectId"></param>
         /// <param name="compileId"></param>
         /// <returns></returns>
-        private Compile WaitForCompilerResponse(IApi api, int projectId, string compileId)
+        private Compile WaitForCompilerResponse(IApi _api, int projectId, string compileId)
         {
             var compile = new Compile();
             var finish = DateTime.Now.AddSeconds(30);
             while (DateTime.Now < finish)
             {
-                compile = api.ReadCompile(projectId, compileId);
+                compile = _api.ReadCompile(projectId, compileId);
                 if (compile.State != CompileState.InQueue) break;
                 Thread.Sleep(500);
             }
@@ -322,17 +641,17 @@ namespace QuantConnect.Tests.API
         /// <summary>
         /// Wait for the backtest to complete
         /// </summary>
-        /// <param name="api">IApi Object to make requests</param>
+        /// <param name="_api">IApi Object to make requests</param>
         /// <param name="projectId">Project id to scan</param>
         /// <param name="backtestId">Backtest id previously started</param>
         /// <returns>Completed backtest object</returns>
-        private Backtest WaitForBacktestCompletion(IApi api, int projectId, string backtestId)
+        private Backtest WaitForBacktestCompletion(IApi _api, int projectId, string backtestId)
         {
             var result = new Backtest();
             var finish = DateTime.Now.AddSeconds(60);
             while (DateTime.Now < finish)
             {
-                result = api.ReadBacktest(projectId, backtestId);
+                result = _api.ReadBacktest(projectId, backtestId);
                 if (result.Progress == 1) break;
                 if (!result.Success) break;
                 Thread.Sleep(500);

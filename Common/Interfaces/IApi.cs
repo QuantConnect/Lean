@@ -184,17 +184,15 @@ namespace QuantConnect.Interfaces
         /// Liquidate a live algorithm from the specified project and deployId.
         /// </summary>
         /// <param name="projectId">Project for the live instance we want to stop</param>
-        /// <param name="deployId">Deployed id for specific instance we want to stop</param>
         /// <returns></returns>
-        RestResponse LiquidateLive(int projectId, string deployId);
+        RestResponse LiquidateLiveAlgorithm(int projectId);
 
         /// <summary>
         /// Delete a live algorithm from the specified project and backtestId.
         /// </summary>
         /// <param name="projectId">Project for the live algo we want to delete</param>
-        /// <param name="deployId">Deployed id for specific instance we want to delete</param>
         /// <returns></returns>
-        RestResponse StopLive(int projectId, string deployId);
+        RestResponse StopLiveAlgorithm(int projectId);
 
 
 
