@@ -1063,6 +1063,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 contract.Symbol = ibSymbol;
             }
 
+            if (symbol.ID.SecurityType == SecurityType.Future)
+            {
+                // for now we lock all future symbols to CME Globex 
+                contract.Expiry = symbol.ID.Date.ToString(DateFormat.YearMonth);
+                contract.Symbol = ibSymbol;
+                contract.Exchange = "GLOBEX";
+            }
+
             // some contracts require this, such as MSFT
             contract.PrimaryExchange = GetPrimaryExchange(contract);
 
@@ -1267,7 +1275,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var ibSymbol = securityType == SecurityType.Forex ? contract.Symbol + contract.Currency : contract.Symbol;
             var market = securityType == SecurityType.Forex ? Market.FXCM : Market.USA;
 
-            if (securityType == SecurityType.Option)
+            if (securityType == SecurityType.Future)
+            {
+                var parsedDate = DateTime.ParseExact(contract.Expiry, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+                var contractDate = new DateTime(parsedDate.Year, parsedDate.Month, DateTime.DaysInMonth(parsedDate.Year, parsedDate.Month));
+
+                return _symbolMapper.GetLeanSymbol(ibSymbol, securityType, market, contractDate);
+            }
+            else if (securityType == SecurityType.Option)
             {
                 var expiryDate = DateTime.ParseExact(contract.Expiry, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
                 var right = contract.Right == IB.RightType.Call ? OptionRight.Call : OptionRight.Put;
@@ -1275,10 +1290,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 return _symbolMapper.GetLeanSymbol(ibSymbol, securityType, market, expiryDate, strike, right);
             }
-            else
-            {
-                return _symbolMapper.GetLeanSymbol(ibSymbol, securityType, market);
-            }
+
+            return _symbolMapper.GetLeanSymbol(ibSymbol, securityType, market);
         }
 
         private decimal RoundPrice(decimal input, decimal minTick)

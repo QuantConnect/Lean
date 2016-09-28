@@ -28,13 +28,18 @@ namespace QuantConnect.Orders.Fees
         private readonly decimal _forexCommissionRate;
         private readonly decimal _forexMinimumOrderFee;
 
+        // option commission function takes number of contracts and the size of the option premium and returns total commission 
+        private readonly Func<decimal, decimal, decimal>  _optionsCommissionFunc;
+   
         /// <summary>
         /// Initializes a new instance of the <see cref="ImmediateFillModel"/>
         /// </summary>
-        /// <param name="monthlyForexTradeAmountInUSDollars">Monthly dollar volume traded</param>
-        public InteractiveBrokersFeeModel(decimal monthlyForexTradeAmountInUSDollars = 0)
+        /// <param name="monthlyForexTradeAmountInUSDollars">Monthly FX dollar volume traded</param>
+        /// <param name="monthlyOptionsTradeAmountInContracts">Monthly options contracts traded</param>
+        public InteractiveBrokersFeeModel(decimal monthlyForexTradeAmountInUSDollars = 0, decimal monthlyOptionsTradeAmountInContracts = 0)
         {
             ProcessForexRateSchedule(monthlyForexTradeAmountInUSDollars, out _forexCommissionRate, out _forexMinimumOrderFee);
+            ProcessOptionsRateSchedule(monthlyOptionsTradeAmountInContracts, out _optionsCommissionFunc);
         }
 
         /// <summary>
@@ -65,6 +70,14 @@ namespace QuantConnect.Orders.Fees
                     var totalOrderValue = order.GetValue(security);
                     var fee = Math.Abs(_forexCommissionRate*totalOrderValue);
                     return Math.Max(_forexMinimumOrderFee, fee);
+
+                case SecurityType.Option:
+                    // applying commission function to the order
+                    return _optionsCommissionFunc(order.AbsoluteQuantity, order.Price);
+
+                case SecurityType.Future:
+                    // currently we treat all futures as USD denominated generic US futures
+                    return order.AbsoluteQuantity * (0.85m + 1.0m);
 
                 case SecurityType.Equity:
                     var tradeValue = Math.Abs(order.GetValue(security));
@@ -117,6 +130,48 @@ namespace QuantConnect.Orders.Fees
             {
                 commissionRate = 0.08m * bp;
                 minimumOrderFee = 1.00m;
+            }
+        }
+
+        /// <summary>
+        /// Determines which tier an account falls into based on the monthly trading volume
+        /// </summary>
+        private static void ProcessOptionsRateSchedule(decimal monthlyOptionsTradeAmountInContracts, out Func<decimal, decimal, decimal> optionsCommissionFunc)
+        {
+            const decimal bp = 0.0001m;
+            if (monthlyOptionsTradeAmountInContracts <= 10000)      
+            {
+                optionsCommissionFunc = (orderSize, premium) =>
+                {
+                    var commissionRate = premium >= 0.1m ? 
+                                            0.7m : 
+                                            (0.05m <= premium && premium < 0.1m ? 0.5m : 0.25m);
+                    return Math.Min(orderSize * commissionRate, 1.0m);                                                        
+                };
+            }
+            else if (monthlyOptionsTradeAmountInContracts <= 50000) 
+            {
+                optionsCommissionFunc = (orderSize, premium) =>
+                {
+                    var commissionRate = premium >= 0.05m ? 0.5m : 0.25m;
+                    return Math.Min(orderSize * commissionRate, 1.0m);
+                };
+            }
+            else if (monthlyOptionsTradeAmountInContracts <= 100000)
+            {
+                optionsCommissionFunc = (orderSize, premium) =>
+                {
+                    var commissionRate = 0.25m;
+                    return Math.Min(orderSize * commissionRate, 1.0m);
+                };
+            }
+            else
+            {
+                optionsCommissionFunc = (orderSize, premium) =>
+                {
+                    var commissionRate = 0.15m;
+                    return Math.Min(orderSize * commissionRate, 1.0m);
+                };
             }
         }
     }

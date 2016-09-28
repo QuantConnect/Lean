@@ -560,6 +560,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, tzOffsetProvider);
             }
+            else if (request.Universe is FuturesChainUniverse)
+            {
+                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating futures chain universe: " + config.Symbol.ToString());
+
+                var symbolUniverse = _dataQueueHandler as IDataQueueUniverseProvider;
+
+                var enumeratorFactory = new FuturesChainUniverseSubscriptionEnumeratorFactory(symbolUniverse, _timeProvider);
+                enumerator = enumeratorFactory.CreateEnumerator(request);
+
+                enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, tzOffsetProvider);
+            }
             else
             {
                 Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating custom universe: " + config.Symbol.ToString());

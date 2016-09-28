@@ -284,7 +284,8 @@ namespace QuantConnect.ToolBox.IQFeed
             return
                 (securityType == SecurityType.Equity && market == Market.USA) ||
                 (securityType == SecurityType.Forex && market == Market.FXCM) ||
-                (securityType == SecurityType.Option && market == Market.USA);
+                (securityType == SecurityType.Option && market == Market.USA) ||
+                (securityType == SecurityType.Future && market == Market.USA);
         }
 
         /// <summary>
@@ -383,6 +384,7 @@ namespace QuantConnect.ToolBox.IQFeed
 
             private void OnLevel1FundamentalEvent(object sender, Level1FundamentalEventArgs e)
             {
+                
                 // handle split data, they're only valid today, they'll show up around 4:45am EST
                 if (e.SplitDate1.Date == DateTime.Today && DateTime.Now.TimeOfDay.TotalHours <= 8) // they will always be sent premarket
                 {
@@ -534,7 +536,8 @@ namespace QuantConnect.ToolBox.IQFeed
                 return
                     (securityType == SecurityType.Equity && market == Market.USA) ||
                     (securityType == SecurityType.Forex && market == Market.FXCM) ||
-                    (securityType == SecurityType.Option && market == Market.USA);
+                    (securityType == SecurityType.Option && market == Market.USA) ||
+                    (securityType == SecurityType.Future && market == Market.USA);
             }
 
             /// <summary>

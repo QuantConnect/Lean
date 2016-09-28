@@ -377,6 +377,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     return new OptionChainUniverseSubscriptionEnumeratorFactory((req, e) => ConfigureEnumerator(req, true, e));
                 }
+                if (request.Universe is FuturesChainUniverse)
+                {
+                    return new FuturesChainUniverseSubscriptionEnumeratorFactory((req, e) => ConfigureEnumerator(req, true, e));
+                }
             }
 
             var mapFileResolver = request.Configuration.SecurityType == SecurityType.Equity

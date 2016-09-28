@@ -84,8 +84,9 @@ namespace QuantConnect.ToolBox.IQFeed
         {
             Func<Symbol, string> lookupFunc;
 
-            // for option contract we search the underlying
-            if (securityType == SecurityType.Option)
+            // for option, futures contract we search the underlying
+            if (securityType == SecurityType.Option ||
+                securityType == SecurityType.Future)
             {
                 lookupFunc = symbol => symbol.HasUnderlying ? symbol.Underlying.Value : string.Empty;
             }
@@ -280,16 +281,20 @@ namespace QuantConnect.ToolBox.IQFeed
                         if (columns[columnSymbol].EndsWith("#"))
                             continue;
 
-                        var futuresTicker = columns[columnSymbol];
+                        // we are interested in electronically traded symbols only
+                        if (!columns[columnSymbol].StartsWith("@"))
+                            continue;
+
+                        var futuresTicker = columns[columnSymbol].TrimStart(new [] { '@' });
                         var expirationYearString = futuresTicker.Substring(futuresTicker.Length - 2, 2);
                         var expirationMonthString = futuresTicker.Substring(futuresTicker.Length - 3, 1);
                         var underlyingString = futuresTicker.Substring(0, futuresTicker.Length - 3);
 
                         // parsing expiration date
 
-                        int expirationYear;
+                        int expirationYearShort;
 
-                        if (!int.TryParse(expirationYearString, out expirationYear))
+                        if (!int.TryParse(expirationYearString, out expirationYearShort))
                         {
                             Log.Trace("Discrepancy found while parsing IQFeed future contract expiration year in symbol universe file. Year {0}. Line: {1}", expirationYearString, line);
                             continue;
@@ -302,12 +307,13 @@ namespace QuantConnect.ToolBox.IQFeed
                         }
 
                         var expirationMonth = futuresExpirationSymbology[expirationMonthString];
+                        var exprirationYear = 2000 + expirationYearShort;
 
                         // Futures contracts have different idiosyncratic expiration dates
-                        // We specify year and month of expiration here, and put 1st day of the month as an expiration date
+                        // We specify year and month of expiration here, and put last day of the month as an expiration date
                         // Later this information will be amended with the expiration data from futures expiration calendar
 
-                        var expirationYearMonth = new DateTime(2000 + expirationYear, expirationMonth, 1);
+                        var expirationYearMonth = new DateTime(exprirationYear, expirationMonth, DateTime.DaysInMonth(exprirationYear, expirationMonth));
 
                         symbols.Add(new SymbolData
                         {
@@ -318,7 +324,7 @@ namespace QuantConnect.ToolBox.IQFeed
                             SecurityExchange = Market.USA,
                             Ticker = columns[columnSymbol]
                         });
-                        continue;
+                        break;
 
                     default:
 

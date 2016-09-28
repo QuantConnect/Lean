@@ -81,6 +81,7 @@ oanda,XPDUSD,cfd,Palladium,USD,1,0.01,1
 oanda,XPTUSD,cfd,Platinum,USD,1,0.01,1
 
 usa,[*],option,,USD,100,0.01,1
+usa,[*],future,,USD,1,0.01,1
 
 fxcm,AUDCAD,forex,,CAD,1,0.0001,1000
 fxcm,AUDCHF,forex,,CHF,1,0.0001,1000

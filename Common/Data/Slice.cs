@@ -31,6 +31,7 @@ namespace QuantConnect.Data
         private readonly TradeBars _bars;
         private readonly QuoteBars _quoteBars;
         private readonly OptionChains _optionChains;
+        private readonly FuturesChains _futuresChains;
 
         // aux data
         private readonly Splits _splits;
@@ -90,6 +91,14 @@ namespace QuantConnect.Data
         public OptionChains OptionChains
         {
             get { return _optionChains; }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="FuturesChains"/> for this slice of data
+        /// </summary>
+        public FuturesChains FuturesChains
+        {
+            get { return _futuresChains; }
         }
 
         /// <summary>
@@ -156,7 +165,7 @@ namespace QuantConnect.Data
         /// <param name="time">The timestamp for this slice of data</param>
         /// <param name="data">The raw data in this slice</param>
         public Slice(DateTime time, IEnumerable<BaseData> data)
-            : this(time, data, null, null, null, null, null, null, null, null)
+            : this(time, data, null, null, null, null, null, null, null, null, null)
         {
         }
 
@@ -169,12 +178,13 @@ namespace QuantConnect.Data
         /// <param name="quoteBars">The quote bars for this slice</param>
         /// <param name="ticks">This ticks for this slice</param>
         /// <param name="optionChains">The option chains for this slice</param>
+        /// <param name="futuresChains">The futures chains for this slice</param>
         /// <param name="splits">The splits for this slice</param>
         /// <param name="dividends">The dividends for this slice</param>
         /// <param name="delistings">The delistings for this slice</param>
         /// <param name="symbolChanges">The symbol changed events for this slice</param>
         /// <param name="hasData">true if this slice contains data</param>
-        public Slice(DateTime time, IEnumerable<BaseData> data, TradeBars tradeBars, QuoteBars quoteBars, Ticks ticks, OptionChains optionChains, Splits splits, Dividends dividends, Delistings delistings, SymbolChangedEvents symbolChanges, bool? hasData = null)
+        public Slice(DateTime time, IEnumerable<BaseData> data, TradeBars tradeBars, QuoteBars quoteBars, Ticks ticks, OptionChains optionChains, FuturesChains futuresChains, Splits splits, Dividends dividends, Delistings delistings, SymbolChangedEvents symbolChanges, bool? hasData = null)
         {
             Time = time;
 
@@ -189,6 +199,7 @@ namespace QuantConnect.Data
             _bars = CreateCollection<TradeBars, TradeBar>(tradeBars);
             _quoteBars = CreateCollection<QuoteBars, QuoteBar>(quoteBars);
             _optionChains = CreateCollection<OptionChains, OptionChain>(optionChains);
+            _futuresChains = CreateCollection<FuturesChains, FuturesChain>(futuresChains);
 
             // auxiliary data
             _splits = CreateCollection<Splits, Split>(splits);

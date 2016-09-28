@@ -1227,10 +1227,15 @@ namespace QuantConnect.Algorithm
         /// <param name="extendedMarketHours">ExtendedMarketHours send in data from 4am - 8pm, not used for FOREX</param>
         public Security AddSecurity(SecurityType securityType, string symbol, Resolution resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours)
         {
-            // if AddSecurity method is called to add an option, we delegate a call to AddOption methods
+            // if AddSecurity method is called to add an option or a future, we delegate a call to respective methods
             if (securityType == SecurityType.Option)
             {
                 return AddOption(symbol, resolution, market, fillDataForward, leverage);
+            }
+
+            if (securityType == SecurityType.Future)
+            {
+                return AddFuture(symbol, resolution, market, fillDataForward, leverage);
             }
 
             try

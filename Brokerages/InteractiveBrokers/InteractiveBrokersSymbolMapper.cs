@@ -34,13 +34,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             if (symbol.ID.SecurityType != SecurityType.Forex &&
                 symbol.ID.SecurityType != SecurityType.Equity &&
-                symbol.ID.SecurityType != SecurityType.Option)
+                symbol.ID.SecurityType != SecurityType.Option &&
+                symbol.ID.SecurityType != SecurityType.Future)
                 throw new ArgumentException("Invalid security type: " + symbol.ID.SecurityType);
 
             if (symbol.ID.SecurityType == SecurityType.Forex && symbol.Value.Length != 6)
                 throw new ArgumentException("Forex symbol length must be equal to 6: " + symbol.Value);
 
-            if (symbol.ID.SecurityType == SecurityType.Option)
+            if (symbol.ID.SecurityType == SecurityType.Option ||
+                symbol.ID.SecurityType == SecurityType.Future)
             {
                 return symbol.Underlying.Value;
             }
@@ -65,17 +67,20 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             if (securityType != SecurityType.Forex && 
                 securityType != SecurityType.Equity &&
-                securityType != SecurityType.Option)
+                securityType != SecurityType.Option &&
+                securityType != SecurityType.Future)
                 throw new ArgumentException("Invalid security type: " + securityType);
 
-            if (securityType == SecurityType.Option)
+            if (securityType == SecurityType.Future)
+            {
+                return Symbol.CreateFuture(brokerageSymbol, market, expirationDate);
+            }
+            else if (securityType == SecurityType.Option)
             {
                 return Symbol.CreateOption(brokerageSymbol, market, OptionStyle.American, optionRight, strike, expirationDate);
             }
-            else
-            {
-                return Symbol.Create(brokerageSymbol, securityType, market);
-            }
+
+            return Symbol.Create(brokerageSymbol, securityType, market);
         }
     }
 }

@@ -288,7 +288,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 {
                     // populate the algorithm with the account's current holdings
                     var holdings = brokerage.GetAccountHoldings();
-                    var supportedSecurityTypes = new HashSet<SecurityType> { SecurityType.Equity, SecurityType.Forex, SecurityType.Cfd, SecurityType.Option };
+                    var supportedSecurityTypes = new HashSet<SecurityType> { SecurityType.Equity, SecurityType.Forex, SecurityType.Cfd, SecurityType.Option, SecurityType.Future };
                     var minResolution = new Lazy<Resolution>(() => algorithm.Securities.Select(x => x.Value.Resolution).DefaultIfEmpty(Resolution.Second).Min());
                     foreach (var holding in holdings)
                     {
@@ -309,13 +309,14 @@ namespace QuantConnect.Lean.Engine.Setup
                         {
                             Log.Trace("BrokerageSetupHandler.Setup(): Adding unrequested security: " + holding.Symbol.ToString());
 
+                            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+                            var symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
+
                             // if we adding option, we have to add the option universe, so we take underlying symbol
                             // Implemented solution is temporary. We will remove this code once it is the idea on how to refactor IAlgorithm is matured. 
                             if (holding.Type == SecurityType.Option)
                             {
                                 var underlying = holding.Symbol.Underlying.Value;
-                                var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
-                                var symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
 
                                 // adding entire option universe to the system
                                 var canonicalOption = algorithm.AddSecurity(holding.Type, underlying, minResolution.Value, null, true, 1.0m, false);
@@ -324,6 +325,18 @@ namespace QuantConnect.Lean.Engine.Setup
                                 // adding current option contract to the system
                                 var option = universe.CreateSecurity(holding.Symbol, algorithm, marketHoursDatabase, symbolPropertiesDatabase);
                                 algorithm.Securities.Add(holding.Symbol, option);
+                            }
+                            else if (holding.Type == SecurityType.Future)
+                            {
+                                var underlying = holding.Symbol.Underlying.Value;
+
+                                // adding entire future universe to the system
+                                var canonicalFuture = algorithm.AddSecurity(holding.Type, underlying, minResolution.Value, null, true, 1.0m, false);
+                                var universe = algorithm.UniverseManager.Where(x => x.Key == canonicalFuture.Symbol).First().Value;
+
+                                // adding current future contract to the system
+                                var future = universe.CreateSecurity(holding.Symbol, algorithm, marketHoursDatabase, symbolPropertiesDatabase);
+                                algorithm.Securities.Add(holding.Symbol, future);
                             }
                             else
                             {
