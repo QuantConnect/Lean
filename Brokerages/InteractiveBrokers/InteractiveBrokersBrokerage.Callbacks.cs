@@ -462,7 +462,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 Log.Error("InteractiveBrokersBrokerage.openOrder(): Order Conversion Failed.");
             }
-            _ibOpenOrders.Add(ConvertOrder(order, contract));
+            _ibOpenOrders.Add(convertedOrder);
         }
 
         /// <summary>
