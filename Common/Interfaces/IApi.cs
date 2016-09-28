@@ -170,7 +170,7 @@ namespace QuantConnect.Interfaces
         /// Get a list of live running algorithms for a logged in user.
         /// </summary>
         /// <returns>List of live algorithm instances</returns>
-        LiveList ListLiveAlgorithms();
+        LiveList ListLiveAlgorithms(ApiAlgorithmStatus status = ApiAlgorithmStatus.All, DateTime ? startTime = null, DateTime? endTime = null);
 
         /// <summary>
         /// Read out a live algorithm in the project id specified.

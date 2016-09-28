@@ -296,9 +296,19 @@ namespace QuantConnect.Api
         /// Get a list of live running algorithms for a logged in user.
         /// </summary>
         /// <returns>List of live algorithm instances</returns>
-        public LiveList ListLiveAlgorithms()
+        public LiveList ListLiveAlgorithms(ApiAlgorithmStatus status = ApiAlgorithmStatus.All, DateTime? startTime = null, DateTime? endTime = null)
         {
             var request = new RestRequest("live/read", Method.GET);
+
+            if (status != ApiAlgorithmStatus.All)
+                request.AddParameter("status", status.ToString());
+
+            var epochStartTime = startTime == null ? 0 : Time.DateTimeToUnixTimeStamp(startTime.Value);
+            var epochEndTime = endTime == null ? Time.DateTimeToUnixTimeStamp(DateTime.UtcNow) : Time.DateTimeToUnixTimeStamp(endTime.Value);
+
+            request.AddParameter("start", epochStartTime);
+            request.AddParameter("end", epochEndTime);
+
             LiveList result;
             _connection.TryRequest(request, out result);
             return result;
