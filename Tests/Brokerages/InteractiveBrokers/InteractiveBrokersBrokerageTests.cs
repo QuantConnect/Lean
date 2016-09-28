@@ -18,11 +18,16 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using IBApi;
+using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
+using Order = QuantConnect.Orders.Order;
 
 namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 {
@@ -147,6 +152,8 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             var manualResetEvent = new ManualResetEvent(false);
             var ib = _interactiveBrokersBrokerage;
 
+            decimal price = 100m;
+            decimal delta = 85.0m; // if we can't get a price then make the delta huge
             ib.OrderStatusChanged += (sender, orderEvent) =>
             {
                 if (orderEvent.Status == OrderStatus.Filled)
@@ -154,13 +161,21 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                     orderFilled = true;
                     manualResetEvent.Set();
                 }
+                price = orderEvent.FillPrice;
+                delta = 0.02m;
             };
 
-            var order = new MarketOrder(Symbols.USDJPY, buyQuantity, DateTime.UtcNow) {Id = 1};
+            // get the current market price, couldn't get RequestMarketData to fire tick events
+            int id = 0;
+            Order order = new MarketOrder(Symbols.USDJPY, buyQuantity, DateTime.UtcNow) { Id = ++id };
             _orders.Add(order);
             ib.PlaceOrder(order);
 
-            manualResetEvent.WaitOne(2500);
+            manualResetEvent.WaitOne(2000);
+//            manualResetEvent.Reset();
+
+            manualResetEvent.WaitOne(1000);
+
             var orderFromIB = AssertOrderOpened(orderFilled, ib, order);
             Assert.AreEqual(OrderType.Market, orderFromIB.Type);
         }
@@ -507,7 +522,9 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             manualResetEvent.WaitOneAssertFail(1500, "Didn't receive account changed event");
 
-            decimal balanceAfterTrade = ib.GetCashBalance().Single(x => x.Symbol == "USD").Amount;
+            var balanceAfterTrade = ib.GetCashBalance().Single(x => x.Symbol == "USD").Amount;
+
+            Console.WriteLine("old bal = " + balance + " and new bal = " + balanceAfterTrade);
 
             Assert.AreNotEqual(balance, balanceAfterTrade);
         }
@@ -527,13 +544,14 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             };
 
             var order = new MarketOrder(Symbols.USDJPY, -buyQuantity, new DateTime());
+            var contract = new Contract();
             _orders.Add(order);
             ib.PlaceOrder(order);
             orderEventFired.WaitOne(1500);
 
             var executions = ib.GetExecutions(null, null, null, DateTime.UtcNow.AddDays(-1), null);
 
-            Assert.IsTrue(executions.Any(x => order.BrokerId.Any(id => executions.Any(e => e.OrderId == int.Parse(id)))));
+            Assert.IsTrue(executions.Any(x => order.BrokerId.Any(id => executions.Any(e => e.Value.Execution.OrderId == int.Parse(id)))));
         }
 
         [Test]

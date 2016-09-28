@@ -47,7 +47,7 @@
   "ib-password": "",
   "ib-host": "127.0.0.1",
   "ib-port": "4001",
-  "ib-agent-description": "Individual",
+  "ib-agent-description": "I",
   "ib-use-tws": false,
   "ib-tws-dir": "C:\\Jts",
   "ib-controller-dir": "C:\\IBController",
