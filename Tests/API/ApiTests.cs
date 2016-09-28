@@ -33,6 +33,7 @@ namespace QuantConnect.Tests.API
         private string _testToken = "ec87b337ac970da4cbea648f24f1c851";
         private string _dataFolder = Config.Get("data-folder");
         private Api.Api _api;
+        private const bool stopLiveAlgos = true;
 
         /// <summary>
         /// Run before every test
@@ -261,14 +262,14 @@ namespace QuantConnect.Tests.API
         /// Paper trading FXCM
         /// </summary>
         [Test]
-        public void LiveAlgorithms_CanBeUsedWithFXCM_Successfully()
+        public void LiveForexAlgorithms_CanBeUsedWithFXCM_Successfully()
         {
             var user     = Config.Get("fxcm-user-name");
             var password = Config.Get("fxcm-password");
             var account  = Config.Get("fxcm-account-id");
             var file = new List<ProjectFile>
                 {
-                    new ProjectFile { Name = "main.cs", Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs") }
+                    new ProjectFile { Name = "main.cs", Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateForexAlgorithm.cs") }
                 };
 
             // Create a new project
@@ -285,10 +286,10 @@ namespace QuantConnect.Tests.API
 
             // Create default algorithm settings
             var settings = new FXCMLiveAlogrithmSettings(user,
-                                                             password,
-                                                             BrokerageName.FxcmBrokerage,
-                                                             "paper",
-                                                             account);
+                                                         password,
+                                                         BrokerageName.FxcmBrokerage,
+                                                         "paper",
+                                                         account);
 
             // Wait for project to compile
             Thread.Sleep(10000);
@@ -297,24 +298,27 @@ namespace QuantConnect.Tests.API
             var createLiveAlgorithm = _api.CreateLiveAlgorithm(project.ProjectId, compile.CompileId, "server512", settings);
             Assert.IsTrue(createLiveAlgorithm.Success);
 
-            // Liquidate live algorithm
-            var liquidateLive = _api.LiquidateLiveAlgorithm(project.ProjectId);
-            Assert.IsTrue(liquidateLive.Success);
+            if (stopLiveAlgos)
+            {
+                // Liquidate live algorithm
+                var liquidateLive = _api.LiquidateLiveAlgorithm(project.ProjectId);
+                Assert.IsTrue(liquidateLive.Success);
 
-            // Stop live algorithm
-            var stopLive = _api.StopLiveAlgorithm(project.ProjectId);
-            Assert.IsTrue(stopLive.Success);
+                // Stop live algorithm
+                var stopLive = _api.StopLiveAlgorithm(project.ProjectId);
+                Assert.IsTrue(stopLive.Success);
 
-            // Delete the project
-            var deleteProject = _api.Delete(project.ProjectId);
-            Assert.IsTrue(deleteProject.Success);
+                // Delete the project
+                var deleteProject = _api.Delete(project.ProjectId);
+                Assert.IsTrue(deleteProject.Success);
+            }
         }
 
         /// <summary>
         /// Live paper trading via IB.
         /// </summary>
         [Test]
-        public void LiveAlgorithms_CanBeUsedWithInteractiveBrokers_Successfully()
+        public void LiveEquityAlgorithms_CanBeUsedWithInteractiveBrokers_Successfully()
         {
             var user     = Config.Get("ib-user-name");
             var password = Config.Get("ib-password");
@@ -338,9 +342,9 @@ namespace QuantConnect.Tests.API
 
             // Create default algorithm settings
             var settings = new InteractiveBrokersLiveAlogrithmSettings(user,
-                                                                           password, BrokerageName.InteractiveBrokersBrokerage,
-                                                                           "paper",
-                                                                           account);
+                                                                       password, BrokerageName.InteractiveBrokersBrokerage,
+                                                                       "paper",
+                                                                       account);
 
             // Wait for project to compile
             Thread.Sleep(10000);
@@ -349,24 +353,27 @@ namespace QuantConnect.Tests.API
             var createLiveAlgorithm = _api.CreateLiveAlgorithm(project.ProjectId, compile.CompileId, "server512", settings);
             Assert.IsTrue(createLiveAlgorithm.Success);
 
-            // Liquidate live algorithm
-            var liquidateLive = _api.LiquidateLiveAlgorithm(project.ProjectId);
-            Assert.IsTrue(liquidateLive.Success);
+            if (stopLiveAlgos)
+            {
+                // Liquidate live algorithm
+                var liquidateLive = _api.LiquidateLiveAlgorithm(project.ProjectId);
+                Assert.IsTrue(liquidateLive.Success);
 
-            // Stop live algorithm
-            var stopLive = _api.StopLiveAlgorithm(project.ProjectId);
-            Assert.IsTrue(stopLive.Success);
+                // Stop live algorithm
+                var stopLive = _api.StopLiveAlgorithm(project.ProjectId);
+                Assert.IsTrue(stopLive.Success);
 
-            // Delete the project
-            var deleteProject = _api.Delete(project.ProjectId);
-            Assert.IsTrue(deleteProject.Success);
+                // Delete the project
+                var deleteProject = _api.Delete(project.ProjectId);
+                Assert.IsTrue(deleteProject.Success);
+            }
         }
 
         /// <summary>
         /// Live paper trading via Oanda
         /// </summary>
         [Test]
-        public void LiveAlgorithms_CanBeUsedWithOanda_Successfully()
+        public void LiveForexAlgorithms_CanBeUsedWithOanda_Successfully()
         {
             var token       = Config.Get("oanda-access-token");
             var account     = Config.Get("oanda-account-id");
@@ -374,7 +381,7 @@ namespace QuantConnect.Tests.API
 
             var file = new List<ProjectFile>
                 {
-                    new ProjectFile { Name = "main.cs", Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs" ) }
+                    new ProjectFile { Name = "main.cs", Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateForexAlgorithm.cs" ) }
                 };
 
             // Create a new project
@@ -401,28 +408,28 @@ namespace QuantConnect.Tests.API
             var createLiveAlgorithm = _api.CreateLiveAlgorithm(project.ProjectId, compile.CompileId, "server512", settings);
             Assert.IsTrue(createLiveAlgorithm.Success);
 
-            // Liquidate live algorithm
-            var liquidateLive = _api.LiquidateLiveAlgorithm(project.ProjectId);
-            Assert.IsTrue(liquidateLive.Success);
+            if (stopLiveAlgos)
+            {
+                // Liquidate live algorithm
+                var liquidateLive = _api.LiquidateLiveAlgorithm(project.ProjectId);
+                Assert.IsTrue(liquidateLive.Success);
 
-            // Stop live algorithm
-            var stopLive = _api.StopLiveAlgorithm(project.ProjectId);
-            Assert.IsTrue(stopLive.Success);
+                // Stop live algorithm
+                var stopLive = _api.StopLiveAlgorithm(project.ProjectId);
+                Assert.IsTrue(stopLive.Success);
 
-            // Delete the project
-            var deleteProject = _api.Delete(project.ProjectId);
-            Assert.IsTrue(deleteProject.Success);
+                // Delete the project
+                var deleteProject = _api.Delete(project.ProjectId);
+                Assert.IsTrue(deleteProject.Success);
+            }
         }
 
         /// <summary>
         /// Live paper trading via Tradier
         /// </summary>
         [Test]
-        public void LiveAlgorithms_CanBeUsedWithTradier_Successfully()
+        public void LiveEquityAlgorithms_CanBeUsedWithTradier_Successfully()
         {
-            var user     = "";
-            var password = "";
-
             string refreshToken = Config.Get("tradier-refresh-token");
             string lifespan     = Config.Get("tradier-lifespan");
             var account         = Config.Get("tradier-account-id");
@@ -451,12 +458,12 @@ namespace QuantConnect.Tests.API
 
             // Create default algorithm settings
             var settings = new TradierLiveAlogrithmSettings(accessToken,
-                                                                dateIssued,
-                                                                refreshToken,
-                                                                lifespan,
-                                                                BrokerageName.TradierBrokerage,
-                                                                "live",
-                                                                account);
+                                                            dateIssued,
+                                                            refreshToken,
+                                                            lifespan,
+                                                            BrokerageName.TradierBrokerage,
+                                                            "live",
+                                                            account);
 
             // Wait for project to compile
             Thread.Sleep(10000);
@@ -465,17 +472,20 @@ namespace QuantConnect.Tests.API
             var createLiveAlgorithm = _api.CreateLiveAlgorithm(project.ProjectId, compile.CompileId, "server512", settings);
             Assert.IsTrue(createLiveAlgorithm.Success);
 
-            // Liquidate live algorithm
-            var liquidateLive = _api.LiquidateLiveAlgorithm(project.ProjectId);
-            Assert.IsTrue(liquidateLive.Success);
+            if (stopLiveAlgos)
+            {
+                // Liquidate live algorithm
+                var liquidateLive = _api.LiquidateLiveAlgorithm(project.ProjectId);
+                Assert.IsTrue(liquidateLive.Success);
 
-            // Stop live algorithm
-            var stopLive = _api.StopLiveAlgorithm(project.ProjectId);
-            Assert.IsTrue(stopLive.Success);
+                // Stop live algorithm
+                var stopLive = _api.StopLiveAlgorithm(project.ProjectId);
+                Assert.IsTrue(stopLive.Success);
 
-            // Delete the project
-            var deleteProject = _api.Delete(project.ProjectId);
-            Assert.IsTrue(deleteProject.Success);
+                // Delete the project
+                var deleteProject = _api.Delete(project.ProjectId);
+                Assert.IsTrue(deleteProject.Success);
+            }
         }
 
         /// <summary>
