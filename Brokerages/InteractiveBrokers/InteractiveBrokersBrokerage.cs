@@ -78,7 +78,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private ManualResetEvent _ibFirstAccountUpdateReceived = new ManualResetEvent(false);
         private ManualResetEvent _ibGetContractDetailsResetEvent = new ManualResetEvent(false);
         private ManualResetEvent _ibClientOnTickPriceResetEvent = new ManualResetEvent(false);
-        private ManualResetEvent _ibExecutionDetailsResetEvent = new ManualResetEvent(false);
         private ManualResetEvent _ibHistorialDataResetEvent = new ManualResetEvent(false);
 
         // IB likes to duplicate/triplicate some events, keep track of them and swallow the dupes
@@ -329,14 +328,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Time = timeSince.ToString("yyyymmdd hh:mm:ss") ?? DateTime.MinValue.ToString("yyyymmdd hh:mm:ss"),
                 Side = side ?? ""
             };
-            
             var client = new EClientSocket(this);
             client.eConnect(_host, _port, IncrementClientID());
-            _ibExecutionDetailsResetEvent.Reset();
             _ibExecutionDetailsRequestId = GetNextRequestID();
             Client.reqExecutions(_ibExecutionDetailsRequestId, filter);
-
-            if (!_ibExecutionDetailsResetEvent.WaitOne(5000))
+            
+            if (!_executionDetails[_ibExecutionDetailsRequestId].ExecutionDetailsResetEvent.WaitOne(5000))
             {
                 throw new TimeoutException("InteractiveBrokersBrokerage.GetExecutions(): Operation took longer than 1 second.");
             }

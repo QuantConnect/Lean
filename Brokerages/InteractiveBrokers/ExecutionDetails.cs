@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System.Threading;
 using IBApi;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
@@ -24,8 +25,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             this.RequestId = requestId;
             this.Contract = contract;
             this.Execution = execution;
+            this.ExecutionDetailsResetEvent = new ManualResetEvent(false);
         }
 
+        /// <summary>
+        /// Empty Constructor for the Executions
+        /// </summary>
         public ExecutionDetails() { }
         
         /// <summary>
@@ -44,6 +49,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         /// <seealso cref="Execution"/>
         public Execution Execution { get; set; }
+
+        /// <summary>
+        /// Reset Event for each Execution for a specific request id
+        /// </summary>
+        public ManualResetEvent ExecutionDetailsResetEvent { get; set; }
     }
     
 }

@@ -514,7 +514,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="reqId">Request id</param>
         public virtual void execDetailsEnd(int reqId)
         {
-            if (reqId == _ibExecutionDetailsRequestId) _ibExecutionDetailsResetEvent.Set();
+            if (reqId == _ibExecutionDetailsRequestId) _executionDetails[reqId].ExecutionDetailsResetEvent.Set();
         }
         
         /// <summary>
