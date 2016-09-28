@@ -1037,12 +1037,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     ((StopMarketOrder)order).StopPrice = stopRound;
                     break;
                 case OrderType.StopLimit:
-                    limitPrice = ((LimitOrder)order).LimitPrice;
+                    limitPrice = ((StopLimitOrder)order).LimitPrice;
                     limitRound = Math.Round(limitPrice / increment) * increment;
-                    ((LimitOrder)order).LimitPrice = limitRound;
-                    stopPrice = ((StopMarketOrder)order).StopPrice;
-                    stopRound = Math.Round(stopPrice * increment) / increment;
-                    ((StopMarketOrder)order).StopPrice = stopRound;
+                    ((StopLimitOrder)order).LimitPrice = limitRound;
+                    stopPrice = ((StopLimitOrder)order).StopPrice;
+                    stopRound = Math.Round(stopPrice / increment) * increment;
+                    ((StopLimitOrder)order).StopPrice = stopRound;
                     break;
                 default:
                     break;
