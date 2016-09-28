@@ -13,88 +13,48 @@
  * limitations under the License.
 */
 
-using System.IO;
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using QuantConnect.Logging;
+using System.Diagnostics;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
 {
     public class Program
     {
-        private const string LogFilePath = "AlgoSeekOptionsConverter.txt";
-
-        static void Main()
+      public static void Main()
         {
-            var directory = "F:/Downloads/AlgoSeek/smaller";
-            directory = "F:/AlgoSeek/20151224";
-            var dataDirectory = "./Data";
+			Environment.SetEnvironmentVariable("MONO_MANAGED_WATCHER", "disabled");
 
+			var sourceDirectory = "/Users/jona8276/Projects/QuantConnect/TestData/RawGoog/20151224";
+			var destinationDirectory = "/Users/jona8276/Projects/QuantConnect/TestData";
+
+//            var sourceDirectory = Config.Get("sourceDirectory");
+//            var destinationDirectory = Config.Get("destinationDirectory");
+
+//            var logFilePath = Config.Get("logFilePath");
+            var logFilePath = "AlgoSeekOptionsConverter";
             Log.LogHandler = new CompositeLogHandler(new ILogHandler[]
             {
                 new ConsoleLogHandler(),
-                new FileLogHandler(LogFilePath)
+                new FileLogHandler(logFilePath)
             });
 
-            // first process tick/second/minute -- we'll do hour/daily at the end on a per symbol basis
-            var parallelism = 4;
-            var options = new ParallelOptions {MaxDegreeOfParallelism = parallelism};
-            var resolutions = new[] {Resolution.Tick, Resolution.Minute, Resolution.Second, Resolution.Hour, Resolution.Daily};
-            
-            // for testing only process the smallest 2 files
-            var files = Directory.EnumerateFiles(directory).OrderByDescending(x => new FileInfo(x).Length);
-            Parallel.ForEach(files, options, file =>
-            {
-                Log.Trace("Begin tick/second/minute/hour/daily: " + file);
+//			var flushInterval = long.Parse(Config.Get("flushInterval"));
+            var flushInterval = 1000000L;
+            var converter = new AlgoSeekOptionsConverter();
 
-                var quotes = DataProcessor.Zip(dataDirectory, resolutions, TickType.Quote, true);
-                var trades = DataProcessor.Zip(dataDirectory, resolutions, TickType.Trade, true);
+			var conversionTimer = Stopwatch.StartNew();
+			converter.ConvertToFineResolution(sourceDirectory, destinationDirectory, flushInterval);
+			conversionTimer.Stop();
 
-                var streamProvider = StreamProvider.ForExtension(Path.GetExtension(file));
-                if (!RawFileProcessor.Run(file, new[] {file}, streamProvider, new AlgoSeekOptionsParser(), quotes, trades))
-                { 
-                    return;
-                }
+			Log.Trace(string.Format("Conversion finished in time: {0}", conversionTimer.Elapsed));
 
-                Log.Trace("Completed tick/second/minute/hour/daily: " + file);
-            });
-            
-            Log.Trace("Begin compressing csv files");
-
-            var root = Path.Combine(dataDirectory, "option", "usa");
-            var fine =
-                from res in new[] {Resolution.Tick, Resolution.Second, Resolution.Minute}
-                let path = Path.Combine(root, res.ToLower())
-                from sym in Directory.EnumerateDirectories(path)
-                from dir in Directory.EnumerateDirectories(sym)
-                select new DirectoryInfo(dir).FullName;
-
-            var coarse =
-                from res in new[] {Resolution.Hour, Resolution.Daily}
-                let path = Path.Combine(root, res.ToLower())
-                from dir in Directory.EnumerateDirectories(path)
-                select new DirectoryInfo(dir).FullName;
-
-            var all = fine.Union(coarse);
-
-            Parallel.ForEach(all, dir =>
-            {
-                try
-                {
-                    // zip the contents of the directory and then delete the directory
-                    Compression.ZipDirectory(dir, dir + ".zip", false);
-                    Directory.Delete(dir, true);
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err, "Zipping " + dir);
-                }
-            });
-            
-            Log.Trace("Finished processing directory: " + directory);
+//            var compressionTimer = Stopwatch.StartNew();
+//            converter.Compress(destinationDirectory, 1);
+//            compressionTimer.Stop();
+//
+//            Log.Trace(string.Format("Compression finished in time: {0}", compressionTimer.Elapsed));
         }
     }
 }
