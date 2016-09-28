@@ -26,6 +26,7 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Statistics;
+using System.Diagnostics;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -456,8 +457,9 @@ namespace QuantConnect.Lean.Engine.Results
                 }
             }
 
-            //Send out the debug messages:            
-            while (_algorithm.DebugMessages.Count > 0)
+            //Send out the debug messages:
+            var debugStopWatch = Stopwatch.StartNew();
+            while (_algorithm.DebugMessages.Count > 0 && debugStopWatch.ElapsedMilliseconds < 250)
             {
                 string message;
                 if (_algorithm.DebugMessages.TryDequeue(out message))
@@ -467,7 +469,8 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             //Send out the error messages:
-            while (_algorithm.ErrorMessages.Count > 0)
+            var errorStopWatch = Stopwatch.StartNew();
+            while (_algorithm.ErrorMessages.Count > 0 && errorStopWatch.ElapsedMilliseconds < 250)
             {
                 string message;
                 if (_algorithm.ErrorMessages.TryDequeue(out message))
@@ -477,7 +480,8 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             //Send out the log messages:
-            while (_algorithm.LogMessages.Count > 0)
+            var logStopWatch = Stopwatch.StartNew();
+            while (_algorithm.LogMessages.Count > 0 && logStopWatch.ElapsedMilliseconds < 250)
             {
                 string message;
                 if (_algorithm.LogMessages.TryDequeue(out message))
