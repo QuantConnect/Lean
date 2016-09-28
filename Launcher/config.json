@@ -6,7 +6,7 @@
   // two predefined environments, 'backtesting' and 'live', feel free
   // to add more!
 
-  "environment": "live-interactive",
+  "environment": "backtesting",
 
   // algorithm class selector
   "algorithm-type-name": "BasicTemplateAlgorithm",
@@ -42,15 +42,15 @@
   "force-exchange-always-open": false,
 
   // interactive brokers configuration
- "ib-account": "",
- "ib-user-name": "",
- "ib-password": "",
- "ib-host": "127.0.0.1",
- "ib-port": "7496",
- "ib-agent-description": "I",
- "ib-use-tws": false,
- "ib-tws-dir": "C:\\Jts",
- "ib-controller-dir": "C:\\IBController",
+  "ib-account": "DUxxxx",
+  "ib-user-name": "",
+  "ib-password": "",
+  "ib-host": "127.0.0.1",
+  "ib-port": "4001",
+  "ib-agent-description": "I",
+  "ib-use-tws": false,
+  "ib-tws-dir": "C:\\Jts",
+  "ib-controller-dir": "C:\\IBController",
 
   // tradier configuration
   "tradier-account-id": "",

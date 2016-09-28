@@ -256,38 +256,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 if (tick.IsValid()) _ticks.Add(tick);
         }
 
-        public virtual void tickString(int tickerId, int field, string value)
-        {
-            
-        }
-
-        public virtual void tickGeneric(int tickerId, int field, double value)
-        {
-            
-        }
-
-        public virtual void tickEFP(int tickerId, int tickType, double basisPoints, string formattedBasisPoints, double impliedFuture,
-            int holdDays, string futureLastTradeDate, double dividendImpact, double dividendsToLastTradeDate)
-        {
-            
-        }
-
-        public virtual void deltaNeutralValidation(int reqId, UnderComp underComp)
-        {
-            
-        }
-
-        public virtual void tickOptionComputation(int tickerId, int field, double impliedVolatility, double delta, double optPrice,
-            double pvDividend, double gamma, double vega, double theta, double undPrice)
-        {
-            
-        }
-
-        public virtual void tickSnapshotEnd(int tickerId)
-        {
-            
-        }
-
         /// <summary>
         /// Returns the next valid id
         /// </summary>
@@ -309,7 +277,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="accountsList">List of accounts</param>
         public virtual void managedAccounts(string accountsList)
         {
-            Console.WriteLine("Account list: " + accountsList + "\n");
+            Log.Trace("InteractiveBrokersBrokerage.Callbacks.managedAccounts(): Account list: " + accountsList + "\n");
         }
 
         /// <summary>
@@ -319,22 +287,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             Log.Debug("TWS Connection Closed.");
         }
-
-        public virtual void accountSummary(int reqId, string account, string tag, string value, string currency)
-        {
-            
-        }
-
-        public virtual void accountSummaryEnd(int reqId)
-        {
-           
-        }
-
-        public virtual void bondContractDetails(int reqId, ContractDetails contract)
-        {
-            
-        }
-
+        
         /// <summary>
         /// Stores all the account values
         /// </summary>
@@ -385,12 +338,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var holding = CreateHolding(contract, Convert.ToDecimal(position), Convert.ToDecimal(averageCost), Convert.ToDecimal(marketPrice));
             _accountHoldings[holding.Symbol.Value] = holding;
         }
-
-        public virtual void updateAccountTime(string timestamp)
-        {
-            
-        }
-
+        
         /// <summary>
         /// Marks the end of Downloading of the Account
         /// </summary>
@@ -508,14 +456,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="orderState">The state of the order</param>
         public void openOrder(int orderId, Contract contract, Order order, OrderState orderState)
         {
-//            var orders = new List<Orders.Order>();
             // convert IB order objects returned from RequestOpenOrders\
             var convertedOrder = ConvertOrder(order, contract);
             if (convertedOrder == null)
             {
-                Console.WriteLine("Conversion failed. NULL!!");
+                Log.Error("InteractiveBrokersBrokerage.openOrder(): Order Conversion Failed.");
             }
-            _ibOpenOrders.Add(convertedOrder);
+            _ibOpenOrders.Add(ConvertOrder(order, contract));
         }
 
         /// <summary>
@@ -558,7 +505,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         public virtual void execDetails(int reqId, Contract contract, Execution execution)
         {
             var executionDetails = new ExecutionDetails(reqId, contract, execution);
-            if (reqId == _ibExecutionDetailsRequestId) _exectionDetailsList.Add(executionDetails);
+            if (reqId == _ibExecutionDetailsRequestId) _executionDetails.TryAdd(reqId, executionDetails);
         }
 
         /// <summary>
@@ -569,17 +516,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             if (reqId == _ibExecutionDetailsRequestId) _ibExecutionDetailsResetEvent.Set();
         }
-
-        public virtual void commissionReport(CommissionReport commissionReport)
-        {
-            
-        }
-
-        public virtual void fundamentalData(int reqId, string data)
-        {
-            
-        }
-
+        
         /// <summary>
         /// Handles the historical data
         /// </summary>
@@ -600,7 +537,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 var _hisroticalData = new HistoricalDataDetails(reqId, DateTime.ParseExact(date, "yyyyMMdd  HH:mm:ss", null), Convert.ToDecimal(open), Convert.ToDecimal(high), Convert.ToDecimal(low), Convert.ToDecimal(close), volume, count, WAP, hasGaps);
                 _historicalDataList.Add(_hisroticalData);
-                _ibLastHistoricalData = DateTime.Now;
+                _ibLastHistoricalData = DateTime.UtcNow;
             }
         }
 
@@ -615,6 +552,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _ibHistorialDataResetEvent.Set();
         }
 
+#region Empty Interface methods
         public virtual void marketDataType(int reqId, int marketDataType)
         {
             
@@ -736,6 +674,69 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             
         }
-        
+
+        public virtual void tickString(int tickerId, int field, string value)
+        {
+
+        }
+
+        public virtual void tickGeneric(int tickerId, int field, double value)
+        {
+
+        }
+
+        public virtual void tickEFP(int tickerId, int tickType, double basisPoints, string formattedBasisPoints, double impliedFuture,
+            int holdDays, string futureLastTradeDate, double dividendImpact, double dividendsToLastTradeDate)
+        {
+
+        }
+
+        public virtual void deltaNeutralValidation(int reqId, UnderComp underComp)
+        {
+
+        }
+
+        public virtual void tickOptionComputation(int tickerId, int field, double impliedVolatility, double delta, double optPrice,
+            double pvDividend, double gamma, double vega, double theta, double undPrice)
+        {
+
+        }
+
+        public virtual void tickSnapshotEnd(int tickerId)
+        {
+
+        }
+
+        public virtual void commissionReport(CommissionReport commissionReport)
+        {
+
+        }
+
+        public virtual void fundamentalData(int reqId, string data)
+        {
+
+        }
+
+        public virtual void accountSummary(int reqId, string account, string tag, string value, string currency)
+        {
+
+        }
+
+        public virtual void accountSummaryEnd(int reqId)
+        {
+
+        }
+
+        public virtual void bondContractDetails(int reqId, ContractDetails contract)
+        {
+
+        }
+
+        public virtual void updateAccountTime(string timestamp)
+        {
+
+        }
+#endregion
+
     }
 }

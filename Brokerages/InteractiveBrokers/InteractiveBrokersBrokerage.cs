@@ -84,7 +84,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         // IB likes to duplicate/triplicate some events, keep track of them and swallow the dupes
         // we're keeping track of the .ToString() of the order event here
         private readonly FixedSizeHashQueue<string> _recentOrderEvents = new FixedSizeHashQueue<string>(50);
-        private List<ExecutionDetails> _exectionDetailsList = new List<ExecutionDetails>();
         private List<HistoricalDataDetails> _historicalDataList = new List<HistoricalDataDetails>();
         private readonly List<Order> _ibOpenOrders = new List<Order>();
         private readonly object _orderFillsLock = new object();
@@ -95,6 +94,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly ConcurrentDictionary<string, Holding> _accountHoldings = new ConcurrentDictionary<string, Holding>();
 
         private readonly ConcurrentDictionary<string, ContractDetails> _contractDetails = new ConcurrentDictionary<string, ContractDetails>();
+
+        private readonly ConcurrentDictionary<int, ExecutionDetails> _executionDetails = new ConcurrentDictionary<int, ExecutionDetails>();
 
         private readonly InteractiveBrokersSymbolMapper _symbolMapper = new InteractiveBrokersSymbolMapper();
 
@@ -315,7 +316,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// Gets the execution details matching the filter
         /// </summary>
         /// <returns>A list of executions matching the filter</returns>
-        public List<ExecutionDetails> GetExecutions(string symbol, string type, string exchange, DateTime timeSince, string side)
+        public ConcurrentDictionary<int, ExecutionDetails> GetExecutions(string symbol, string type, string exchange, DateTime timeSince, string side)
         {
             
             var filter = new ExecutionFilter()
@@ -339,7 +340,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 throw new TimeoutException("InteractiveBrokersBrokerage.GetExecutions(): Operation took longer than 1 second.");
             }
-            return _exectionDetailsList;
+            return _executionDetails;
         }
 
         /// <summary>
@@ -606,7 +607,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             if (_ibConversionRate == 0)
             {
                 // history doesn't have a completed event, so we'll just wait for it to not have been called for a second
-                while (DateTime.Now - _ibLastHistoricalData < Time.OneSecond) Thread.Sleep(20);
+                while (DateTime.UtcNow - _ibLastHistoricalData < Time.OneSecond) Thread.Sleep(20);
 
                 // check for history
                 var ordered = _historicalDataList.OrderByDescending(x => x.Date);

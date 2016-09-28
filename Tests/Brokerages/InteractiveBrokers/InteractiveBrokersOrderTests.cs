@@ -10,7 +10,7 @@ using QuantConnect.Securities;
 namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 {
     [TestFixture]
-   // [Ignore("These tests require the IBController and IB TraderWorkstation to be installed.")]
+    [Ignore("These tests require the IBController and IB TraderWorkstation to be installed.")]
     public class InteractiveBrokersForexOrderTests : BrokerageTests
     {
         // set to true to disable launch of gateway from tests

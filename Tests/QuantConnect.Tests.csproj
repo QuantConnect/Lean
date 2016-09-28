@@ -85,8 +85,7 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="TWSLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="TWSLib">
       <HintPath>..\Brokerages\InteractiveBrokers\TWSLib.dll</HintPath>
     </Reference>
   </ItemGroup>

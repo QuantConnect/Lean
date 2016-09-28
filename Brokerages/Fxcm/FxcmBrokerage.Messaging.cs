@@ -279,8 +279,6 @@ namespace QuantConnect.Brokerages.Fxcm
             }
         }
 
-
-       
         /// <summary>
         /// MarketDataSnapshot message handler
         /// </summary>

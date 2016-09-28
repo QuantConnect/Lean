@@ -23,7 +23,7 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 {
     [TestFixture]
-   // [Ignore("These tests require the IBController and IB TraderWorkstation to be installed.")]
+    [Ignore("These tests require the IBController and IB TraderWorkstation to be installed.")]
     public class InteractiveBrokersBrokerageDataQueueHandlerTest
     {
         [Test]
