@@ -63,13 +63,13 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="projectId">Project id we own and wish to delete</param>
         /// <returns>RestResponse indicating success</returns>
-        RestResponse Delete(int projectId);
+        RestResponse DeleteProject(int projectId);
 
         /// <summary>
         /// Read back a list of all projects on the account for a user.
         /// </summary>
         /// <returns>Container for list of projects</returns>
-        ProjectList ProjectList();
+        ProjectList ListProjects();
 
         /// <summary>
         /// Create a new compile job request for this project id.
@@ -126,7 +126,7 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="projectId">Project id to search</param>
         /// <returns>BacktestList container for list of backtests</returns>
-        BacktestList BacktestList(int projectId);
+        BacktestList ListBacktests(int projectId);
 
         /// <summary>
         /// Gets the logs of a specific live algorithm
@@ -170,7 +170,7 @@ namespace QuantConnect.Interfaces
         /// Get a list of live running algorithms for a logged in user.
         /// </summary>
         /// <returns>List of live algorithm instances</returns>
-        LiveList ListLive();
+        LiveList ListLiveAlgorithms();
 
         /// <summary>
         /// Read out a live algorithm in the project id specified.
@@ -178,17 +178,17 @@ namespace QuantConnect.Interfaces
         /// <param name="projectId">Project id to read</param>
         /// <param name="deployId">Specific instance id to read</param>
         /// <returns>Live object with the results</returns>
-        LiveAlgorithm ReadLive(int projectId, string deployId);
+        LiveAlgorithm ReadLiveAlgorithm(int projectId, string deployId);
 
         /// <summary>
-        /// Liquidate a live algorithm from the specified project and deployId.
+        /// Liquidate a live algorithm from the specified project.
         /// </summary>
         /// <param name="projectId">Project for the live instance we want to stop</param>
         /// <returns></returns>
         RestResponse LiquidateLiveAlgorithm(int projectId);
 
         /// <summary>
-        /// Delete a live algorithm from the specified project and backtestId.
+        /// Stop a live algorithm from the specified project.
         /// </summary>
         /// <param name="projectId">Project for the live algo we want to delete</param>
         /// <returns></returns>

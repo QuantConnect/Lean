@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using QuantConnect.API;
-using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
@@ -92,9 +91,11 @@ namespace QuantConnect.Api
 
         /// <summary>
         /// Read back a list of all projects on the account for a user.
+        /// This is a rate limited request.  
+        /// If you have more that 200 projects, you may not get them all back with this api call.
         /// </summary>
         /// <returns>Container for list of projects</returns>
-        public ProjectList ProjectList()
+        public ProjectList ListProjects()
         {
             var request = new RestRequest("projects/read", Method.GET);
             request.RequestFormat = DataFormat.Json;
@@ -133,7 +134,7 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Project id we own and wish to delete</param>
         /// <returns>RestResponse indicating success</returns>
-        public RestResponse Delete(int projectId)
+        public RestResponse DeleteProject(int projectId)
         {
             var request = new RestRequest("projects/delete", Method.POST);
             request.RequestFormat = DataFormat.Json;
@@ -244,7 +245,7 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Project id we'd like to get a list of backtest for</param>
         /// <returns>Backtest list container</returns>
-        public BacktestList BacktestList(int projectId)
+        public BacktestList ListBacktests(int projectId)
         {
             var request = new RestRequest("backtests/read", Method.GET);
             request.AddParameter("projectId", projectId);
@@ -295,7 +296,7 @@ namespace QuantConnect.Api
         /// Get a list of live running algorithms for a logged in user.
         /// </summary>
         /// <returns>List of live algorithm instances</returns>
-        public LiveList ListLive()
+        public LiveList ListLiveAlgorithms()
         {
             var request = new RestRequest("live/read", Method.GET);
             LiveList result;
@@ -309,7 +310,7 @@ namespace QuantConnect.Api
         /// <param name="projectId">Project id to read</param>
         /// <param name="deployId">Specific instance id to read</param>
         /// <returns>Live object with the results</returns>
-        public LiveAlgorithm ReadLive(int projectId, string deployId)
+        public LiveAlgorithm ReadLiveAlgorithm(int projectId, string deployId)
         {
             var request = new RestRequest("live/read", Method.GET);
             request.AddParameter("projectId", projectId);

@@ -61,11 +61,11 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(project.Files.Count == 0);
 
             // Delete the project
-            var deleteProject = _api.Delete(project.ProjectId);
+            var deleteProject = _api.DeleteProject(project.ProjectId);
             Assert.IsTrue(deleteProject.Success);
 
             // Make sure the project is really deleted
-            var projectList = _api.ProjectList();
+            var projectList = _api.ListProjects();
             Assert.IsFalse(projectList.Projects.Any(p => p.ProjectId == project.ProjectId));
         }
 
@@ -133,7 +133,7 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(updateProject.Files.Count == 1);
 
             // Delete the project
-            var deleteProject = _api.Delete(project.ProjectId);
+            var deleteProject = _api.DeleteProject(project.ProjectId);
             Assert.IsTrue(deleteProject.Success);
         }
 
@@ -245,7 +245,7 @@ namespace QuantConnect.Tests.API
         public void LiveAlgorithmsAndLiveLogs_CanBeRead_Successfully()
         {
             // Read all previously deployed algorithms
-            var liveAlgorithms = _api.ListLive();
+            var liveAlgorithms = _api.ListLiveAlgorithms();
 
             Assert.IsTrue(liveAlgorithms.Success);
             Assert.IsTrue(liveAlgorithms.Algorithms.Any());
@@ -309,7 +309,7 @@ namespace QuantConnect.Tests.API
                 Assert.IsTrue(stopLive.Success);
 
                 // Delete the project
-                var deleteProject = _api.Delete(project.ProjectId);
+                var deleteProject = _api.DeleteProject(project.ProjectId);
                 Assert.IsTrue(deleteProject.Success);
             }
         }
@@ -364,7 +364,7 @@ namespace QuantConnect.Tests.API
                 Assert.IsTrue(stopLive.Success);
 
                 // Delete the project
-                var deleteProject = _api.Delete(project.ProjectId);
+                var deleteProject = _api.DeleteProject(project.ProjectId);
                 Assert.IsTrue(deleteProject.Success);
             }
         }
@@ -419,7 +419,7 @@ namespace QuantConnect.Tests.API
                 Assert.IsTrue(stopLive.Success);
 
                 // Delete the project
-                var deleteProject = _api.Delete(project.ProjectId);
+                var deleteProject = _api.DeleteProject(project.ProjectId);
                 Assert.IsTrue(deleteProject.Success);
             }
         }
@@ -483,7 +483,7 @@ namespace QuantConnect.Tests.API
                 Assert.IsTrue(stopLive.Success);
 
                 // Delete the project
-                var deleteProject = _api.Delete(project.ProjectId);
+                var deleteProject = _api.DeleteProject(project.ProjectId);
                 Assert.IsTrue(deleteProject.Success);
             }
         }
@@ -609,7 +609,7 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(project.Name == projectName);
 
             // Make sure the project just created is now present
-            var projects = _api.ProjectList();
+            var projects = _api.ListProjects();
             Assert.IsTrue(projects.Success);
             Assert.IsTrue(projects.Projects.Any(p => p.ProjectId == project.ProjectId));
 
@@ -660,7 +660,7 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(backtestRead.Result.Statistics["Total Trades"] == "1");
 
             // Verify we have the backtest in our project
-            var listBacktests = _api.BacktestList(project.ProjectId);
+            var listBacktests = _api.ListBacktests(project.ProjectId);
             Assert.IsTrue(listBacktests.Success);
             Assert.IsTrue(listBacktests.Backtests.Count >= 1);
             Assert.IsTrue(listBacktests.Backtests[0].Name == backtestName);
@@ -684,7 +684,7 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(deleteBacktest.Success);
 
             // Test delete the project we just created
-            var deleteProject = _api.Delete(project.ProjectId);
+            var deleteProject = _api.DeleteProject(project.ProjectId);
             Assert.IsTrue(deleteProject.Success);
         }
 
