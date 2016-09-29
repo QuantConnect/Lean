@@ -178,7 +178,7 @@ namespace QuantConnect.Interfaces
         /// <param name="projectId">Project id to read</param>
         /// <param name="deployId">Specific instance id to read</param>
         /// <returns>Live object with the results</returns>
-        LiveAlgorithm ReadLiveAlgorithm(int projectId, string deployId);
+        LiveAlgorithmResults ReadLiveAlgorithm(int projectId, string deployId);
 
         /// <summary>
         /// Liquidate a live algorithm from the specified project.

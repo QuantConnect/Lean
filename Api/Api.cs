@@ -320,12 +320,12 @@ namespace QuantConnect.Api
         /// <param name="projectId">Project id to read</param>
         /// <param name="deployId">Specific instance id to read</param>
         /// <returns>Live object with the results</returns>
-        public LiveAlgorithm ReadLiveAlgorithm(int projectId, string deployId)
+        public LiveAlgorithmResults ReadLiveAlgorithm(int projectId, string deployId)
         {
             var request = new RestRequest("live/read", Method.GET);
             request.AddParameter("projectId", projectId);
             request.AddParameter("deployId", deployId);
-            LiveAlgorithm result;
+            LiveAlgorithmResults result;
             _connection.TryRequest(request, out result);
             return result;
         }

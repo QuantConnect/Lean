@@ -253,7 +253,7 @@ namespace QuantConnect.Tests.API
 
             // Read the logs of the first live algorithm
             var firstLiveAlgo = liveAlgorithms.Algorithms[0];
-            var liveLogs = _api.ReadLiveLogs(firstLiveAlgo.ProjectId.ToInt32(), firstLiveAlgo.DeployId);
+            var liveLogs = _api.ReadLiveLogs(firstLiveAlgo.ProjectId, firstLiveAlgo.DeployId);
 
             Assert.IsTrue(liveLogs.Success);
             Assert.IsTrue(liveLogs.Logs.Any());

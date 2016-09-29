@@ -28,7 +28,7 @@ namespace QuantConnect.API
         /// Project id for the live instance
         /// </summary>
         [JsonProperty(PropertyName = "projectId")]
-        public string ProjectId;
+        public int ProjectId;
 
         /// <summary>
         /// Unique live algorithm deployment identifier (similar to a backtest id).
