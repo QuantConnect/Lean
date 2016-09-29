@@ -19,6 +19,7 @@ using System.Linq;
 using System.Threading;
 using com.fxcm.external.api.transport;
 using com.fxcm.fix;
+using com.fxcm.fix.admin;
 using com.fxcm.fix.other;
 using com.fxcm.fix.posttrade;
 using com.fxcm.fix.pretrade;
@@ -53,6 +54,7 @@ namespace QuantConnect.Brokerages.Fxcm
         private readonly Dictionary<string, Order> _mapRequestsToOrders = new Dictionary<string, Order>();
         private readonly Dictionary<string, Order> _mapFxcmOrderIdsToOrders = new Dictionary<string, Order>();
         private readonly Dictionary<string, AutoResetEvent> _mapRequestsToAutoResetEvents = new Dictionary<string, AutoResetEvent>();
+        private readonly HashSet<string> _pendingHistoryRequests = new HashSet<string>();
 
         private string _fxcmAccountCurrency = "USD";
 
@@ -222,7 +224,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 else if (message is OrderCancelReject)
                     OnOrderCancelReject((OrderCancelReject)message);
 
-                else if (message is UserResponse || message is CollateralInquiryAck ||
+                else if (message is UserResponse || message is CollateralInquiryAck || message is Logout ||
                     message is MarketDataRequestReject || message is BusinessMessageReject || message is SecurityStatus)
                 {
                     // Unused messages, no handler needed
@@ -284,24 +286,50 @@ namespace QuantConnect.Brokerages.Fxcm
         /// </summary>
         private void OnMarketDataSnapshot(MarketDataSnapshot message)
         {
-            // update the current prices for the instrument
+            var time = FromJavaDate(message.getDate().toDate());
             var instrument = message.getInstrument();
-            _rates[instrument.getSymbol()] = message;
-
-            // if instrument is subscribed, add ticks to list
             var securityType = _symbolMapper.GetBrokerageSecurityType(instrument.getSymbol());
             var symbol = _symbolMapper.GetLeanSymbol(instrument.getSymbol(), securityType, Market.FXCM);
 
-            if (_subscribedSymbols.Contains(symbol))
+            var isHistoryResponse = _pendingHistoryRequests.Contains(message.getRequestID());
+            if (isHistoryResponse)
             {
-                var time = FromJavaDate(message.getDate().toDate());
-                var bidPrice = Convert.ToDecimal(message.getBidClose());
-                var askPrice = Convert.ToDecimal(message.getAskClose());
-                var tick = new Tick(time, symbol, bidPrice, askPrice);
-
-                lock (_ticks)
+                // append ticks/bars to history
+                if (message.getFXCMTimingInterval() == FXCMTimingIntervalFactory.TICK)
                 {
-                    _ticks.Add(tick);
+                    var bidPrice = Convert.ToDecimal(message.getBidClose());
+                    var askPrice = Convert.ToDecimal(message.getAskClose());
+                    var tick = new Tick(time, symbol, bidPrice, askPrice);
+
+                    _lastHistoryChunk.Add(tick);
+                }
+                else
+                {
+                    var open = Convert.ToDecimal((message.getBidOpen() + message.getAskOpen()) / 2);
+                    var high = Convert.ToDecimal((message.getBidHigh() + message.getAskHigh()) / 2);
+                    var low = Convert.ToDecimal((message.getBidLow() + message.getAskLow()) / 2);
+                    var close = Convert.ToDecimal((message.getBidClose() + message.getAskClose()) / 2);
+                    var bar = new TradeBar(time, symbol, open, high, low, close, 0);
+
+                    _lastHistoryChunk.Add(bar);
+                }
+            }
+            else
+            {
+                // update the current prices for the instrument
+                _rates[instrument.getSymbol()] = message;
+
+                // if instrument is subscribed, add ticks to list
+                if (_subscribedSymbols.Contains(symbol))
+                {
+                    var bidPrice = Convert.ToDecimal(message.getBidClose());
+                    var askPrice = Convert.ToDecimal(message.getAskClose());
+                    var tick = new Tick(time, symbol, bidPrice, askPrice);
+
+                    lock (_ticks)
+                    {
+                        _ticks.Add(tick);
+                    }
                 }
             }
 
@@ -311,6 +339,8 @@ namespace QuantConnect.Brokerages.Fxcm
                 {
                     _mapRequestsToAutoResetEvents[_currentRequest].Set();
                     _mapRequestsToAutoResetEvents.Remove(_currentRequest);
+
+                    if (isHistoryResponse) _pendingHistoryRequests.Remove(_currentRequest);
                 }
             }
         }
@@ -391,7 +421,7 @@ namespace QuantConnect.Brokerages.Fxcm
                         _isOrderSubmitRejected = true;
                     }
 
-                    AutoResetEvent autoResetEvent = null;
+                    AutoResetEvent autoResetEvent;
                     if (_mapRequestsToAutoResetEvents.TryGetValue(_currentRequest, out autoResetEvent))
                     {
                         autoResetEvent.Set();
@@ -435,7 +465,7 @@ namespace QuantConnect.Brokerages.Fxcm
 
             if (message.getRequestID() == _currentRequest)
             {
-                AutoResetEvent autoResetEvent = null;
+                AutoResetEvent autoResetEvent;
                 if (message.isLastRptRequested() && _mapRequestsToAutoResetEvents.TryGetValue(_currentRequest, out autoResetEvent))
                 {
                     autoResetEvent.Set();
