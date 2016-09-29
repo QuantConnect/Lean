@@ -174,6 +174,9 @@ namespace QuantConnect.Brokerages.Tradier
         
             brokerage.SetTokens(job.UserId, accessToken, refreshToken, issuedAt, lifeSpan);
 
+            //Add the brokerage to the composer to ensure its accessible to the live data feed.
+            Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
+
             return brokerage;
         }
 
