@@ -130,7 +130,7 @@ namespace QuantConnect.API
     /// <summary>
     /// Default live algorithm settings
     /// </summary>
-    public class DefaultLiveAlogrithmSettings : BaseLiveAlgorithmSettings
+    public class DefaultLiveAlgorithmSettings : BaseLiveAlgorithmSettings
     {
         /// <summary>
         /// Constructor for default algorithms
@@ -139,7 +139,7 @@ namespace QuantConnect.API
         /// <param name="password">Password associated with brokerage</param>
         /// <param name="environment">'live'/'paper'</param>
         /// <param name="account">Account id for brokerage</param>
-        public DefaultLiveAlogrithmSettings(string user,
+        public DefaultLiveAlgorithmSettings(string user,
                                                 string password,
                                                 string environment,
                                                 string account)
@@ -152,7 +152,7 @@ namespace QuantConnect.API
     /// <summary>
     /// Algorithm setting for trading with FXCM
     /// </summary>
-    public class FXCMLiveAlogrithmSettings : BaseLiveAlgorithmSettings
+    public class FXCMLiveAlgorithmSettings : BaseLiveAlgorithmSettings
     {
 
         /// <summary>
@@ -162,7 +162,7 @@ namespace QuantConnect.API
         /// <param name="password">Password associated with brokerage</param>
         /// <param name="environment">'live'/'paper'</param>
         /// <param name="account">Account id for brokerage</param>
-        public FXCMLiveAlogrithmSettings(string user,
+        public FXCMLiveAlgorithmSettings(string user,
                                          string password,
                                          string environment,
                                          string account)
@@ -176,7 +176,7 @@ namespace QuantConnect.API
     /// <summary>
     /// Live algorithm settings for trading with Interactive Brokers
     /// </summary>
-    public class InteractiveBrokersLiveAlogrithmSettings : BaseLiveAlgorithmSettings
+    public class InteractiveBrokersLiveAlgorithmSettings : BaseLiveAlgorithmSettings
     {
         /// <summary>
         /// Contructor for live trading with IB.
@@ -185,7 +185,7 @@ namespace QuantConnect.API
         /// <param name="password">Password of assciate brokerage</param>
         /// <param name="environment">'live'/'paper'</param>
         /// <param name="account">Account id for brokerage</param>
-        public InteractiveBrokersLiveAlogrithmSettings(string user,
+        public InteractiveBrokersLiveAlgorithmSettings(string user,
                                                        string password,
                                                        string environment,
                                                        string account)
@@ -198,7 +198,7 @@ namespace QuantConnect.API
     /// <summary>
     /// Live algorithm settings for trading with Oanda
     /// </summary>
-    public class OandaLiveAlogrithmSettings : BaseLiveAlgorithmSettings
+    public class OandaLiveAlgorithmSettings : BaseLiveAlgorithmSettings
     {
         /// <summary>
         /// Contructor for live trading with Oanda.
@@ -206,7 +206,7 @@ namespace QuantConnect.API
         /// <param name="accessToken">Access Token (specific for Oanda Brokerage)</param>
         /// <param name="environment">'live'/'paper'</param>
         /// <param name="account">Account id for brokerage</param>
-        public OandaLiveAlogrithmSettings(string accessToken,
+        public OandaLiveAlgorithmSettings(string accessToken,
                                           string environment,
                                           string account)
             : base(environment, account)
@@ -235,7 +235,7 @@ namespace QuantConnect.API
     /// <summary>
     /// Live algorithm settings for trading with Tradier
     /// </summary>
-    public class TradierLiveAlogrithmSettings : BaseLiveAlgorithmSettings
+    public class TradierLiveAlgorithmSettings : BaseLiveAlgorithmSettings
     {
         /// <summary>
         /// Contructor for live trading with Tradier.
@@ -245,7 +245,7 @@ namespace QuantConnect.API
         /// <param name="dateIssued">Specific for live trading with Tradier.  See Tradier account for more details.</param>
         /// <param name="refreshToken">Specific for live trading with Tradier.  See Tradier account for more details.</param>
         /// <param name="account">Account id for brokerage</param>
-        public TradierLiveAlogrithmSettings(string accessToken,
+        public TradierLiveAlgorithmSettings(string accessToken,
                                             string dateIssued,
                                             string refreshToken,
                                             string environment,
