@@ -66,7 +66,11 @@ namespace QuantConnect.Brokerages.Fxcm
             var request = new MarketDataRequest();
             foreach (var symbol in symbolsToSubscribe)
             {
-                request.addRelatedSymbol(_fxcmInstruments[_symbolMapper.GetBrokerageSymbol(symbol)]);
+                TradingSecurity fxcmSecurity;
+                if (_fxcmInstruments.TryGetValue(_symbolMapper.GetBrokerageSymbol(symbol), out fxcmSecurity))
+                {
+                    request.addRelatedSymbol(fxcmSecurity);
+                }
             }
             request.setSubscriptionRequestType(SubscriptionRequestTypeFactory.SUBSCRIBE);
             request.setMDEntryTypeSet(MarketDataRequest.MDENTRYTYPESET_ALL);
