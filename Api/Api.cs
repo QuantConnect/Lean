@@ -278,13 +278,24 @@ namespace QuantConnect.Api
         /// <param name="compileId">Id of the compilation on QuantConnect</param>
         /// <param name="serverType">Type of server instance that will run the algorithm</param>
         /// <param name="baseLiveAlgorithmSettings">Brokerage specific <see cref="BaseLiveAlgorithmSettings">BaseLiveAlgorithmSettings</see>.</param>
+        /// <param name="versionId">The version of the Lean used to run the algorithm.  
+        ///                         -1 is master, however, sometimes this can create problems with live deployements.
+        ///                         If you experience problems using, try specifying the version of Lean you would like to use.</param>
         /// <returns>Information regarding the new algorithm <see cref="LiveAlgorithm"/></returns>
-        public LiveAlgorithm CreateLiveAlgorithm(int projectId, string compileId, string serverType, BaseLiveAlgorithmSettings baseLiveAlgorithmSettings)
+        public LiveAlgorithm CreateLiveAlgorithm(int projectId, 
+                                                 string compileId, 
+                                                 string serverType, 
+                                                 BaseLiveAlgorithmSettings baseLiveAlgorithmSettings, 
+                                                 string versionId = "-1")
         {
             var request = new RestRequest("live/create", Method.POST);
             request.AddHeader("Accept", "application/json");
             request.Parameters.Clear();
-            var body = JsonConvert.SerializeObject(new LiveAlgorithmApiSettingsWrapper(projectId, compileId, serverType, baseLiveAlgorithmSettings));
+            var body = JsonConvert.SerializeObject(new LiveAlgorithmApiSettingsWrapper(projectId, 
+                                                                                       compileId, 
+                                                                                       serverType, 
+                                                                                       baseLiveAlgorithmSettings, 
+                                                                                       versionId));
             request.AddParameter("application/json", body, ParameterType.RequestBody);
 
             LiveAlgorithm result;
