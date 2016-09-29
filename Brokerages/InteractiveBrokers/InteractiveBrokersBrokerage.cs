@@ -1314,14 +1314,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             var symbol = MapSymbol(e.Contract);
-            var symbolProperties = _securityProvider.GetSecurity(symbol).SymbolProperties;
+            var security = _securityProvider.GetSecurity(symbol);
+            var contractMultiplier = security != null ? security.SymbolProperties.ContractMultiplier : 1.0m;
 
             return new Holding
             {
                 Symbol = symbol,
                 Type = ConvertSecurityType(e.Contract.SecurityType),
                 Quantity = e.Position,
-                AveragePrice = e.AverageCost / symbolProperties.ContractMultiplier,
+                AveragePrice = e.AverageCost / contractMultiplier,
                 MarketPrice = e.MarketPrice,
                 ConversionRate = 1m, // this will be overwritten when GetAccountHoldings is called to ensure fresh values
                 CurrencySymbol = currencySymbol

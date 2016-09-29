@@ -39,6 +39,54 @@ namespace QuantConnect.ToolBox.IQFeed
         private Dictionary<Symbol, string> _symbols;
         private Dictionary<string, Symbol> _tickers;
 
+        // IQFeed are using their own (feed) symbology 
+        // We map those tickers back to their original names using the map below
+
+        private readonly Dictionary<string, string> _iqfeedNameMap =
+            new Dictionary<string, string>
+            {
+                // IQFeed -> Original
+                { "C", "ZC" },
+                { "W", "ZW" },
+                { "S", "ZS" },
+                { "SM", "ZM" },
+                { "BO", "ZL" },
+                { "O", "ZO" },
+                { "KW", "KE" },
+                { "DX", "DX" },
+                { "BP", "GBP" },
+                { "CD", "CAD" },
+                { "JY", "JPY" },
+                { "SF", "CHF" },
+                { "EU", "EUR" },
+                { "AD", "AUD" },
+                { "NE", "NZD" },
+                { "QRB", "RB" },
+                { "QNG", "NG" },
+                { "AC", "AC" },
+                { "US", "ZB" },
+                { "TY", "ZN" },
+                { "FV", "ZF" },
+                { "TU", "ZT" },
+                { "ED", "GE" },
+                { "ES", "ES" },
+                { "NQ", "NQ" },
+                { "YM", "YM" },
+                { "LE", "LE" },
+                { "GF", "GF" },
+                { "HE", "HE" },
+                { "QGC", "GC" },
+                { "QSI", "SI" },
+                { "QPL", "PL" },
+                { "QPA", "PA" },
+                { "CT", "CT" },
+                { "OJ", "OJ" },
+                { "SB", "SB" },
+                { "CC", "CC" }
+            };
+
+
+
         public IQFeedDataQueueUniverseProvider()
         {
             _symbolUniverse = LoadSymbols();
@@ -289,6 +337,9 @@ namespace QuantConnect.ToolBox.IQFeed
                         var expirationYearString = futuresTicker.Substring(futuresTicker.Length - 2, 2);
                         var expirationMonthString = futuresTicker.Substring(futuresTicker.Length - 3, 1);
                         var underlyingString = futuresTicker.Substring(0, futuresTicker.Length - 3);
+
+                        if (_iqfeedNameMap.ContainsKey(underlyingString))
+                            underlyingString = _iqfeedNameMap[underlyingString];
 
                         // parsing expiration date
 

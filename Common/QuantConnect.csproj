@@ -323,6 +323,7 @@
     <Compile Include="Securities\Futures\FutureCache.cs" />
     <Compile Include="Securities\Futures\FutureExchange.cs" />
     <Compile Include="Securities\Futures\FutureHolding.cs" />
+    <Compile Include="Securities\Futures\Futures.cs" />
     <Compile Include="Securities\IDerivativeSecurityFilter.cs" />
     <Compile Include="Securities\IndicatorVolatilityModel.cs" />
     <Compile Include="Securities\ISecurityInitializer.cs" />
