@@ -13,9 +13,7 @@
  * limitations under the License.
 */
 
-using System;
 using QuantConnect.Data;
-using QuantConnect.Scheduling;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -36,22 +34,6 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);             //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
             AddEquity("SPY", Resolution.Second);
-
-            var add = true;
-            Schedule.On(DateRules.EveryDay(), TimeRules.Every(TimeSpan.FromMinutes(1)), () =>
-            {
-                if (add)
-                {
-                    AddEquity("AAPL", Resolution.Second, Market.USA); 
-                    Debug(Time.ToString("u") + " Added Apple");
-                }
-                else
-                {
-                    RemoveSecurity("AAPL");
-                    Debug(Time.ToString("u") + " Removed Apple");
-                }
-                add = !add;
-            });
         }
 
         /// <summary>
