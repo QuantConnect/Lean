@@ -29,7 +29,9 @@ using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using System.Timers;
 using RestSharp;
+using Timer = System.Timers.Timer;
 
 namespace QuantConnect.Brokerages.Tradier
 {
@@ -41,6 +43,7 @@ namespace QuantConnect.Brokerages.Tradier
         #region IDataQueueHandler implementation
         private bool _disconnect = false;
         private volatile bool _refresh = true;
+        private Timer _refreshDelay = new Timer();
         private ConcurrentDictionary<Symbol, string> _subscriptions = new ConcurrentDictionary<Symbol, string>();
         private Stream _tradierStream;
 
@@ -76,7 +79,6 @@ namespace QuantConnect.Brokerages.Tradier
                         var tick = CreateTick(tsd);
                         if (tick != null)
                         {
-                            Log.Trace("TradierBrokerage.DataQueueHandler(): Tick: " + tick, true);
                             yield return tick;
                         }
                     }
@@ -94,13 +96,14 @@ namespace QuantConnect.Brokerages.Tradier
         public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
             //Add the symbols to the list if they aren't there already.
-            foreach (var symbol in symbols.Where(x => !x.Value.Contains("UNIVERSE")))
+            foreach (var symbol in symbols.Where(x => !x.Value.Contains("-UNIVERSE-")))
             {
                 if (symbol.ID.SecurityType == SecurityType.Equity || symbol.ID.SecurityType == SecurityType.Option)
                 {
-                    _subscriptions.TryAdd(symbol, symbol.Value);
-                    _refresh = true;
-                    CloseStream();
+                    if (_subscriptions.TryAdd(symbol, symbol.Value))
+                    {
+                        Refresh();
+                    }
                 }
             }
         }
@@ -118,10 +121,26 @@ namespace QuantConnect.Brokerages.Tradier
                 string value;
                 if (_subscriptions.TryRemove(symbol, out value))
                 {
-                    _refresh = true;
-                    CloseStream();
+                    Refresh();
                 }
             }
+        }
+
+        /// <summary>
+        /// Refresh the subscriptions list.
+        /// </summary>
+        private void Refresh()
+        {
+            if (_refreshDelay.Enabled) _refreshDelay.Stop();
+            _refreshDelay = new Timer(5000);
+            _refreshDelay.Elapsed += (sender, args) =>
+            {
+                _refresh = true;
+                Log.Trace("TradierBrokerage.DataQueueHandler.Refresh(): Updating tickers..." + string.Join(",", _subscriptions.Values));
+                CloseStream();
+                _refreshDelay.Stop();
+            };
+            _refreshDelay.Start();
         }
 
         /// <summary>
