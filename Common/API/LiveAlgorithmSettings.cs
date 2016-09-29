@@ -70,12 +70,10 @@ namespace QuantConnect.API
         /// </summary>
         /// <param name="user">Username associated with brokerage</param>
         /// <param name="password">Password associated with brokerage</param>
-        /// <param name="brokerage">Name of the brokerage</param>
         /// <param name="environment">'live'/'paper'</param>
         /// <param name="account">Account id for brokerage</param>
         public BaseLiveAlgorithmSettings(string user,
                                          string password,
-                                         BrokerageName brokerage,
                                          string environment,
                                          string account)
         {
@@ -83,30 +81,26 @@ namespace QuantConnect.API
             Password = password;
             Environment = environment;
             Account = account;
-            Id = brokerage.ToString();
         }
 
         /// <summary>
         /// The constructor used by Tradier and Oanda
         /// </summary>
-        /// <param name="brokerage">Name of the brokerage</param>
         /// <param name="environment">'live'/'paper'</param>
         /// <param name="account">Account id for brokerage</param>
-        public BaseLiveAlgorithmSettings(BrokerageName brokerage,
-                                         string environment,
+        public BaseLiveAlgorithmSettings(string environment,
                                          string account)
         {
             User = "";
             Password = "";
             Environment = environment;
             Account = account;
-            Id = brokerage.ToString();
         }
         /// <summary>
         /// 'Interactive' / 'FXCM' / 'Oanda' / 'Tradier' /'PaperTrading'
         /// </summary>
         [JsonProperty(PropertyName = "id")]
-        public string Id { get; private set; }
+        public string Id { get; set; }
 
         /// <summary>
         /// Username associated with brokerage
@@ -143,16 +137,15 @@ namespace QuantConnect.API
         /// </summary>
         /// <param name="user">Username associated with brokerage</param>
         /// <param name="password">Password associated with brokerage</param>
-        /// <param name="brokerage">Name of the brokerage</param>
         /// <param name="environment">'live'/'paper'</param>
         /// <param name="account">Account id for brokerage</param>
         public DefaultLiveAlogrithmSettings(string user,
                                                 string password,
-                                                BrokerageName brokerage,
                                                 string environment,
                                                 string account)
-            : base(user, password, brokerage, environment, account)
+            : base(user, password, environment, account)
         {
+            Id = BrokerageName.Default.ToString();
         }
     }
 
@@ -167,16 +160,15 @@ namespace QuantConnect.API
         /// </summary>
         /// <param name="user">Username associated with brokerage</param>
         /// <param name="password">Password associated with brokerage</param>
-        /// <param name="brokerage">Name of the brokerage</param>
         /// <param name="environment">'live'/'paper'</param>
         /// <param name="account">Account id for brokerage</param>
         public FXCMLiveAlogrithmSettings(string user,
                                          string password,
-                                         BrokerageName brokerage,
                                          string environment,
                                          string account)
-            : base(user, password, brokerage, environment, account)
+            : base(user, password, environment, account)
         {
+            Id = BrokerageName.FxcmBrokerage.ToString();
         }
 
     }
@@ -191,16 +183,15 @@ namespace QuantConnect.API
         /// </summary>
         /// <param name="user">Username associated with brokerage</param>
         /// <param name="password">Password of assciate brokerage</param>
-        /// <param name="brokerage">Name of the brokerage</param>
         /// <param name="environment">'live'/'paper'</param>
         /// <param name="account">Account id for brokerage</param>
         public InteractiveBrokersLiveAlogrithmSettings(string user,
                                                        string password,
-                                                       BrokerageName brokerage,
                                                        string environment,
                                                        string account)
-            : base(user, password, brokerage, environment, account)
+            : base(user, password, environment, account)
         {
+            Id = BrokerageName.InteractiveBrokersBrokerage.ToString();
         }
     }
 
@@ -213,19 +204,18 @@ namespace QuantConnect.API
         /// Contructor for live trading with Oanda.
         /// </summary>
         /// <param name="accessToken">Access Token (specific for Oanda Brokerage)</param>
-        /// <param name="brokerage">Name of the brokerage</param>
         /// <param name="environment">'live'/'paper'</param>
         /// <param name="account">Account id for brokerage</param>
         public OandaLiveAlogrithmSettings(string accessToken,
-                                          BrokerageName brokerage,
                                           string environment,
                                           string account)
-            : base(brokerage, environment, account)
+            : base(environment, account)
         {
             AccessToken = accessToken;
             // The DateIssued parameter is required by the Api, but not required to trade.
             // This should be fixed on the Api side.
             DateIssued = "1";
+            Id = BrokerageName.OandaBrokerage.ToString();
         }
 
         /// <summary>
@@ -251,8 +241,6 @@ namespace QuantConnect.API
         /// Contructor for live trading with Tradier.
         /// </summary>
         /// <param name="accessToken"></param>
-        /// <param name="lifetime">Specific for live trading with Tradier.  See Tradier account for more details.</param>
-        /// <param name="brokerage">Name of the brokerage</param>
         /// <param name="environment">'live'/'paper'</param>
         /// <param name="dateIssued">Specific for live trading with Tradier.  See Tradier account for more details.</param>
         /// <param name="refreshToken">Specific for live trading with Tradier.  See Tradier account for more details.</param>
@@ -260,16 +248,15 @@ namespace QuantConnect.API
         public TradierLiveAlogrithmSettings(string accessToken,
                                             string dateIssued,
                                             string refreshToken,
-                                            string lifetime,
-                                            BrokerageName brokerage,
                                             string environment,
                                             string account)
-            : base(brokerage, environment, account)
+            : base(environment, account)
         {
             AccessToken = accessToken;
             DateIssued = dateIssued;
             RefreshToken = refreshToken;
-            Lifetime = lifetime;
+            Lifetime = "86399";
+            Id = BrokerageName.TradierBrokerage.ToString();
         }
 
         /// <summary>
