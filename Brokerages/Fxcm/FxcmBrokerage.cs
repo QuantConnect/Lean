@@ -34,7 +34,7 @@ namespace QuantConnect.Brokerages.Fxcm
     /// <summary>
     /// FXCM brokerage - implementation of IBrokerage interface
     /// </summary>
-    public partial class FxcmBrokerage : Brokerage, IDataQueueHandler, IGenericMessageListener, IStatusMessageListener
+    public partial class FxcmBrokerage : Brokerage, IDataQueueHandler, IHistoryProvider, IGenericMessageListener, IStatusMessageListener
     {
         private readonly IOrderProvider _orderProvider;
         private readonly ISecurityProvider _securityProvider;
