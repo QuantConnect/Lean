@@ -67,8 +67,16 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// Initializes a new instance of the <see cref="EveningDojiStar"/> class.
         /// </summary>
         /// <param name="penetration">Percentage of penetration of a candle within another candle</param>
-        public EveningDojiStar(decimal penetration = 0.3m)
+        public EveningDojiStar(decimal penetration)
             : this("EVENINGDOJISTAR", penetration)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EveningDojiStar"/> class.
+        /// </summary>
+        public EveningDojiStar()
+            : this("EVENINGDOJISTAR")
         {
         }
 
