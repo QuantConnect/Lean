@@ -53,7 +53,7 @@ namespace QuantConnect.API
         /// <summary>
         /// Information about the current portfolio holdings
         /// </summary>
-        public object Holdings { get; set; }
+        public Holding Holdings { get; set; }
 
         /// <summary>
         /// Orders that have been made
