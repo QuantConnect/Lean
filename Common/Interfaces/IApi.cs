@@ -164,7 +164,7 @@ namespace QuantConnect.Interfaces
         /// <param name="serverType">Type of server instance that will run the algorithm</param>
         /// <param name="baseLiveAlgorithmSettings">Brokerage specific <see cref="BaseLiveAlgorithmSettings">BaseLiveAlgorithmSettings</see>.</param>
         /// <returns>Information regarding the new algorithm <see cref="LiveAlgorithm"/></returns>
-        LiveAlgorithm CreateLiveAlgorithm(int projectId, string compileId, string serverType, BaseLiveAlgorithmSettings baseLiveAlgorithmSettings);
+        LiveAlgorithm CreateLiveAlgorithm(int projectId, string compileId, string serverType, BaseLiveAlgorithmSettings baseLiveAlgorithmSettings, string versionId = "-1");
 
         /// <summary>
         /// Get a list of live running algorithms for a logged in user.
