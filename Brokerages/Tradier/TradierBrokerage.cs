@@ -325,7 +325,6 @@ namespace QuantConnect.Brokerages.Tradier
         /// </summary>
         public bool RefreshSession()
         {
-            return true;
             //Send: 
             //Get: {"sAccessToken":"123123","iExpiresIn":86399,"dtIssuedAt":"2014-10-15T16:59:52-04:00","sRefreshToken":"123123","sScope":"read write market trade stream","sStatus":"approved","success":true}
             // Or: {"success":false}
