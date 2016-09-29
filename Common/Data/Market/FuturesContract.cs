@@ -18,17 +18,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Option;
+using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Data.Market
 {
     /// <summary>
-    /// Defines a single option contract at a specific expiration and strike price
+    /// Defines a single futures contract at a specific expiration 
     /// </summary>
     public class FuturesContract
     {
         /// <summary>
-        /// Gets the option contract's symbol
+        /// Gets the futures contract's symbol
         /// </summary>
         public Symbol Symbol
         {
@@ -111,7 +111,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Initializes a new instance of the <see cref="FuturesContract"/> class
         /// </summary>
-        /// <param name="symbol">The option contract symbol</param>
+        /// <param name="symbol">The futures contract symbol</param>
         /// <param name="underlyingSymbol">The symbol of the underlying security</param>
         public FuturesContract(Symbol symbol, Symbol underlyingSymbol)
         {
@@ -127,8 +127,7 @@ namespace QuantConnect.Data.Market
         /// </returns>
         public override string ToString()
         {
-            return null; // for now
-            //return string.Format("{0}{1}{2}{3:00000000}", Symbol.ID.Symbol, Expiry.ToString(DateFormat.EightCharacter), Right.ToString()[0], Strike*1000m);
+            return Symbol.Value;
         }
     }
 }

@@ -48,7 +48,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="OptionChainUniverseSubscriptionEnumeratorFactory"/> class
+        /// Initializes a new instance of the <see cref="FuturesChainUniverseSubscriptionEnumeratorFactory"/> class
         /// </summary>
         /// <param name="symbolUniverse">Symbol universe provider of the data queue</param>
         public FuturesChainUniverseSubscriptionEnumeratorFactory(IDataQueueUniverseProvider symbolUniverse, ITimeProvider timeProvider)
@@ -70,7 +70,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             {
                 var localTime = request.StartTimeUtc.ConvertFromUtc(request.Configuration.ExchangeTimeZone);
                 
-                // loading the list of option contract and converting them into zip entries
+                // loading the list of futures contracts and converting them into zip entries
                 var symbols = _symbolUniverse.LookupSymbols(request.Security.Symbol.Underlying.Value, request.Security.Type);
                 var zipEntries = symbols.Select(x => new ZipEntryName { Time = localTime, Symbol = x } as BaseData).ToList();
 

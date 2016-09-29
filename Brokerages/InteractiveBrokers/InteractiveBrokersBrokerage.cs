@@ -76,6 +76,17 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         private readonly InteractiveBrokersSymbolMapper _symbolMapper = new InteractiveBrokersSymbolMapper();
 
+        // Prioritized list of exchanges used to find right futures contract 
+        private readonly string[] _futuresExchanges = 
+        {
+            "GLOBEX",
+            "NYMEX",
+            "ECBOT", //CBOT
+            "NYBOT",
+            "CFE"   // CBOE
+        };
+
+
         /// <summary>
         /// Returns true if we're currently connected to the broker
         /// </summary>
@@ -623,6 +634,53 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return details;
         }
 
+        private string GetFuturesContractExchange(IB.Contract contract)
+        {
+            // our symbol class doesn't contain exchange routing specification, 
+            // so we search for the right exchange using exchange priority list 
+
+            // searching for available contracts on different exchanges
+            var contractDetails = FindContracts(contract);
+
+            // sorting list of available contracts by exchange priority
+            var exchanges = _futuresExchanges.Reverse().ToArray();
+
+            return contractDetails
+                    .Select(details => details.Summary.Exchange)
+                    .OrderByDescending(e => Array.IndexOf(exchanges, e))
+                    .FirstOrDefault();
+        }
+
+
+        private IEnumerable<IB.ContractDetails> FindContracts(IB.Contract contract)
+        {
+            var requestID = GetNextRequestID();
+            var manualResetEvent = new ManualResetEvent(false);
+            var contractDetails = new List<IB.ContractDetails>();
+
+            // define our event handlers
+            EventHandler<IB.ContractDetailsEventArgs> clientOnContractDetails = 
+                (sender, args) => contractDetails.Add(args.ContractDetails);
+            
+            EventHandler<IB.ContractDetailsEndEventArgs> clientOnContractDetailsEnd = 
+                (sender, args) => manualResetEvent.Set();
+
+            _client.ContractDetails += clientOnContractDetails;
+            _client.ContractDetailsEnd += clientOnContractDetailsEnd;
+
+            // make the request for data
+            _client.RequestContractDetails(requestID, contract);
+
+            // we'll wait a second, but it may not exist so just pass through
+            manualResetEvent.WaitOne(1000);
+
+            // be sure to remove our event handlers
+            _client.ContractDetailsEnd -= clientOnContractDetailsEnd;
+            _client.ContractDetails -= clientOnContractDetails;
+
+            return contractDetails;
+        }
+
         /// <summary>
         /// Gets the current conversion rate into USD
         /// </summary>
@@ -1053,6 +1111,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 contract.Exchange = "IDEALPRO";
                 contract.Symbol = ibSymbol.Substring(0, 3);
                 contract.Currency = ibSymbol.Substring(3);
+
             }
 
             if (symbol.ID.SecurityType == SecurityType.Option)
@@ -1065,10 +1124,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             if (symbol.ID.SecurityType == SecurityType.Future)
             {
-                // for now we lock all future symbols to CME Globex 
+                contract.Exchange = "";
                 contract.Expiry = symbol.ID.Date.ToString(DateFormat.YearMonth);
                 contract.Symbol = ibSymbol;
-                contract.Exchange = "GLOBEX";
+                contract.Exchange = GetFuturesContractExchange(contract);
             }
 
             // some contracts require this, such as MSFT
@@ -1254,15 +1313,18 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 currencySymbol = "$";
             }
 
+            var symbol = MapSymbol(e.Contract);
+            var symbolProperties = _securityProvider.GetSecurity(symbol).SymbolProperties;
+
             return new Holding
             {
-                Symbol = MapSymbol(e.Contract),
+                Symbol = symbol,
                 Type = ConvertSecurityType(e.Contract.SecurityType),
                 Quantity = e.Position,
-                AveragePrice = e.AverageCost,
+                AveragePrice = e.AverageCost / symbolProperties.ContractMultiplier,
                 MarketPrice = e.MarketPrice,
                 ConversionRate = 1m, // this will be overwritten when GetAccountHoldings is called to ensure fresh values
-                CurrencySymbol =  currencySymbol
+                CurrencySymbol = currencySymbol
             };
         }
 

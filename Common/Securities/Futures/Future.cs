@@ -23,13 +23,13 @@ using QuantConnect.Orders.Slippage;
 namespace QuantConnect.Securities.Future
 {
     /// <summary>
-    /// Futures Security Object Implementation for Option Assets
+    /// Futures Security Object Implementation for Futures Assets
     /// </summary>
     /// <seealso cref="Security"/>
     public class Future : Security
     {
         /// <summary>
-        /// The default number of days required to settle an equity sale
+        /// The default number of days required to settle a futures sale
         /// </summary>
         public const int DefaultSettlementDays = 1;
 
@@ -39,7 +39,7 @@ namespace QuantConnect.Securities.Future
         public static readonly TimeSpan DefaultSettlementTime = new TimeSpan(8, 0, 0);
 
         /// <summary>
-        /// Constructor for the option security
+        /// Constructor for the Future security
         /// </summary>
         /// <param name="exchangeHours">Defines the hours this exchange is open</param>
         /// <param name="quoteCurrency">The cash object that represent the quote currency</param>

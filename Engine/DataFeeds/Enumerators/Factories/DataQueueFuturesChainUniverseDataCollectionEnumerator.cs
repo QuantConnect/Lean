@@ -55,7 +55,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         }
 
         /// <summary>
-        /// Returns current option chain enumerator position 
+        /// Returns current futures chain enumerator position 
         /// </summary>
         public FuturesChainUniverseDataCollection Current
         {
@@ -83,7 +83,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         }
 
         /// <summary>
-        /// Returns current option chain enumerator position 
+        /// Returns current futures chain enumerator position 
         /// </summary>
         object IEnumerator.Current
         {
