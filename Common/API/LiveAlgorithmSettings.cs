@@ -20,9 +20,9 @@ namespace QuantConnect.API
         /// <param name="compileId">Id of compilation of project from QuantConnect</param>
         /// <param name="serverType">Server type to run live Algorithm</param>
         /// <param name="settings"><see cref="BaseLiveAlgorithmSettings ">Live Algorithm Settings</see> for a specific brokerage</param>
-        public LiveAlgorithmApiSettingsWrapper(int projectId, string compileId, string serverType, BaseLiveAlgorithmSettings settings)
+        public LiveAlgorithmApiSettingsWrapper(int projectId, string compileId, string serverType, BaseLiveAlgorithmSettings settings, string version = "-1")
         {
-            VersionId = "-1";
+            VersionId = version;
             ProjectId = projectId;
             CompileId = compileId;
             ServerType = serverType;
