@@ -20,9 +20,10 @@
 using System.Reflection;
 using System.Text;
 
-namespace QuantConnect.ToolBox.OandaDownloader.OandaRestLibrary
+namespace QuantConnect.Brokerages.Oanda.DataType.Communications.Requests
 {
-	public interface ISmartProperty
+#pragma warning disable 1591
+    public interface ISmartProperty
 	{
 		bool HasValue { get; set; }
 		void SetValue(object obj);
@@ -105,6 +106,6 @@ namespace QuantConnect.ToolBox.OandaDownloader.OandaRestLibrary
 			return result.ToString();
 		}
 
-		public abstract EServer GetServer();
 	}
+#pragma warning restore 1591
 }
