@@ -207,17 +207,6 @@ namespace QuantConnect.ToolBox.GoogleDownloader
             return epoch.AddSeconds(unixTime);
         }
 
-        private static string ConvertTicker(Symbol symbol)
-        {
-            // FIXME: this is a hack to make sure google finds our index:
-            if (symbol.Value == "SPY")
-            {
-                return "NYSEARCA:SPY";
-            }
-
-            return symbol.Value;
-        }
-
         /// <summary>
         /// Get historical data enumerable for a single symbol, type and resolution given this start and end time (in UTC).
         /// </summary>
