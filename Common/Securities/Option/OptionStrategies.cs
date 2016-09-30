@@ -32,7 +32,7 @@ namespace QuantConnect.Securities.Option
         /// <param name="leg2Strike">The strike price of the long call</param>
         /// <param name="expiration">Option expiration date</param>
         /// <returns>Option strategy specification</returns>
-        public static OptionStrategy BearCallSpread (Symbol canonicalOption, int leg1Strike, int leg2Strike, DateTime expiration)
+        public static OptionStrategy BearCallSpread (Symbol canonicalOption, decimal leg1Strike, decimal leg2Strike, DateTime expiration)
         {
             if (!canonicalOption.HasUnderlying ||
                 canonicalOption.ID.StrikePrice != 0.0m)
@@ -66,7 +66,7 @@ namespace QuantConnect.Securities.Option
         /// <param name="leg2Strike">The strike price of the short put</param>
         /// <param name="expiration">Option expiration date</param>
         /// <returns>Option strategy specification</returns>
-        public static OptionStrategy BearPutSpread(Symbol canonicalOption, int leg1Strike, int leg2Strike, DateTime expiration)
+        public static OptionStrategy BearPutSpread(Symbol canonicalOption, decimal leg1Strike, decimal leg2Strike, DateTime expiration)
         {
             if (!canonicalOption.HasUnderlying ||
                 canonicalOption.ID.StrikePrice != 0.0m)
@@ -100,7 +100,7 @@ namespace QuantConnect.Securities.Option
         /// <param name="leg2Strike">The strike price of the short call</param>
         /// <param name="expiration">Option expiration date</param>
         /// <returns>Option strategy specification</returns>
-        public static OptionStrategy BullCallSpread(Symbol canonicalOption, int leg1Strike, int leg2Strike, DateTime expiration)
+        public static OptionStrategy BullCallSpread(Symbol canonicalOption, decimal leg1Strike, decimal leg2Strike, DateTime expiration)
         {
             if (!canonicalOption.HasUnderlying ||
                 canonicalOption.ID.StrikePrice != 0.0m)
@@ -134,7 +134,7 @@ namespace QuantConnect.Securities.Option
         /// <param name="leg2Strike">The strike price of the long put</param>
         /// <param name="expiration">Option expiration date</param>
         /// <returns>Option strategy specification</returns>
-        public static OptionStrategy BullPutSpread(Symbol canonicalOption, int leg1Strike, int leg2Strike, DateTime expiration)
+        public static OptionStrategy BullPutSpread(Symbol canonicalOption, decimal leg1Strike, decimal leg2Strike, DateTime expiration)
         {
             if (!canonicalOption.HasUnderlying ||
                 canonicalOption.ID.StrikePrice != 0.0m)
@@ -166,7 +166,7 @@ namespace QuantConnect.Securities.Option
         /// <param name="strike">The strike price of the both legs</param>
         /// <param name="expiration">Option expiration date</param>
         /// <returns>Option strategy specification</returns>
-        public static OptionStrategy Straddle(Symbol canonicalOption, int strike, DateTime expiration)
+        public static OptionStrategy Straddle(Symbol canonicalOption, decimal strike, DateTime expiration)
         {
             if (!canonicalOption.HasUnderlying ||
                 canonicalOption.ID.StrikePrice != 0.0m)
@@ -197,7 +197,7 @@ namespace QuantConnect.Securities.Option
         /// <param name="leg2Strike">The strike price of the long put</param>
         /// <param name="expiration">Option expiration date</param>
         /// <returns>Option strategy specification</returns>
-        public static OptionStrategy Strangle(Symbol canonicalOption, int leg1Strike, int leg2Strike, DateTime expiration)
+        public static OptionStrategy Strangle(Symbol canonicalOption, decimal leg1Strike, decimal leg2Strike, DateTime expiration)
         {
             if (!canonicalOption.HasUnderlying ||
                 canonicalOption.ID.StrikePrice != 0.0m)
@@ -236,7 +236,7 @@ namespace QuantConnect.Securities.Option
         /// <param name="leg3Strike">The lower strike price of the long call</param>
         /// <param name="expiration">Option expiration date</param>
         /// <returns>Option strategy specification</returns>
-        public static OptionStrategy CallButterfly(Symbol canonicalOption, int leg1Strike, int leg2Strike, int leg3Strike, DateTime expiration)
+        public static OptionStrategy CallButterfly(Symbol canonicalOption, decimal leg1Strike, decimal leg2Strike, decimal leg3Strike, DateTime expiration)
         {
             if (!canonicalOption.HasUnderlying ||
                 canonicalOption.ID.StrikePrice != 0.0m)
@@ -274,7 +274,7 @@ namespace QuantConnect.Securities.Option
         /// <param name="leg3Strike">The lower strike price of the long put</param>
         /// <param name="expiration">Option expiration date</param>
         /// <returns>Option strategy specification</returns>
-        public static OptionStrategy PutButterfly(Symbol canonicalOption, int leg1Strike, int leg2Strike, int leg3Strike, DateTime expiration)
+        public static OptionStrategy PutButterfly(Symbol canonicalOption, decimal leg1Strike, decimal leg2Strike, decimal leg3Strike, DateTime expiration)
         {
             if (!canonicalOption.HasUnderlying ||
                 canonicalOption.ID.StrikePrice != 0.0m)
@@ -311,7 +311,7 @@ namespace QuantConnect.Securities.Option
         /// <param name="expiration1">Option expiration near date</param>
         /// <param name="expiration2">Option expiration far date</param>
         /// <returns>Option strategy specification</returns>
-        public static OptionStrategy CallCalendarSpread(Symbol canonicalOption, int strike, DateTime expiration1, DateTime expiration2)
+        public static OptionStrategy CallCalendarSpread(Symbol canonicalOption, decimal strike, DateTime expiration1, DateTime expiration2)
         {
             if (!canonicalOption.HasUnderlying ||
                 canonicalOption.ID.StrikePrice != 0.0m)
@@ -346,7 +346,7 @@ namespace QuantConnect.Securities.Option
         /// <param name="expiration1">Option expiration near date</param>
         /// <param name="expiration2">Option expiration far date</param>
         /// <returns>Option strategy specification</returns>
-        public static OptionStrategy PutCalendarSpread(Symbol canonicalOption, int strike, DateTime expiration1, DateTime expiration2)
+        public static OptionStrategy PutCalendarSpread(Symbol canonicalOption, decimal strike, DateTime expiration1, DateTime expiration2)
         {
             if (!canonicalOption.HasUnderlying ||
                 canonicalOption.ID.StrikePrice != 0.0m)
