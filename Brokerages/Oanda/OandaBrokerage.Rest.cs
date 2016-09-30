@@ -20,9 +20,9 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
-using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Xml;
+using Newtonsoft.Json;
 using QuantConnect.Brokerages.Oanda.DataType;
 using QuantConnect.Brokerages.Oanda.DataType.Communications;
 using QuantConnect.Brokerages.Oanda.DataType.Communications.Requests;
@@ -264,10 +264,12 @@ namespace QuantConnect.Brokerages.Oanda
             }
             catch (WebException ex)
             {
-                var response = (HttpWebResponse)ex.Response;
-                var stream = new StreamReader(response.GetResponseStream());
-                var result = stream.ReadToEnd();
-                throw new Exception(result);
+                var stream = GetResponseStream(ex.Response);
+                using (var reader = new StreamReader(stream))
+                {
+                    var result = reader.ReadToEnd();
+                    throw new Exception(result);
+                }
             }
         }
         
@@ -297,10 +299,12 @@ namespace QuantConnect.Brokerages.Oanda
             }
             catch (WebException ex)
             {
-                var response = (HttpWebResponse)ex.Response;
-                var stream = new StreamReader(response.GetResponseStream());
-                var result = stream.ReadToEnd();
-                throw new Exception(result);
+                var stream = GetResponseStream(ex.Response);
+                using (var reader = new StreamReader(stream))
+                {
+                    var result = reader.ReadToEnd();
+                    throw new Exception(result);
+                }
             }
         }
 
@@ -328,17 +332,22 @@ namespace QuantConnect.Brokerages.Oanda
             {
                 using (var response = request.GetResponse())
                 {
-                    var serializer = new DataContractJsonSerializer(typeof(T));
                     var stream = GetResponseStream(response);
-                    return (T)serializer.ReadObject(stream);
+                    using (var reader = new StreamReader(stream))
+                    {
+                        var json = reader.ReadToEnd();
+                        return JsonConvert.DeserializeObject<T>(json);
+                    }
                 }
             }
             catch (WebException ex)
             {
                 var stream = GetResponseStream(ex.Response);
-                var reader = new StreamReader(stream);
-                var result = reader.ReadToEnd();
-                throw new Exception(result);
+                using (var reader = new StreamReader(stream))
+                {
+                    var result = reader.ReadToEnd();
+                    throw new Exception(result);
+                }
             }
         }
 
@@ -370,16 +379,22 @@ namespace QuantConnect.Brokerages.Oanda
             {
                 using (var response = request.GetResponse())
                 {
-                    var serializer = new DataContractJsonSerializer(typeof(T));
-                    return (T)serializer.ReadObject(response.GetResponseStream());
+                    var stream = GetResponseStream(response);
+                    using (var reader = new StreamReader(stream))
+                    {
+                        var json = reader.ReadToEnd();
+                        return JsonConvert.DeserializeObject<T>(json);
+                    }
                 }
             }
             catch (WebException ex)
             {
-                var response = (HttpWebResponse)ex.Response;
-                var stream = new StreamReader(response.GetResponseStream());
-                var result = stream.ReadToEnd();
-                throw new Exception(result);
+                var stream = GetResponseStream(ex.Response);
+                using (var reader = new StreamReader(stream))
+                {
+                    var result = reader.ReadToEnd();
+                    throw new Exception(result);
+                }
             }
         }
 
