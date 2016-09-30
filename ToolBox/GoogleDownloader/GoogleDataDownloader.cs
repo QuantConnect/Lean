@@ -29,36 +29,6 @@ namespace QuantConnect.ToolBox.GoogleDownloader
     /// </summary>
     public class GoogleDataDownloader : IDataDownloader
     {
-        /// <summary>
-        /// Get historical data enumerable for a single symbol, type and resolution given this start and end time (in UTC).
-        /// </summary>
-        /// <param name="symbol">Symbol for the data we're looking for.</param>
-        /// <param name="resolution">Resolution of the data request</param>
-        /// <param name="startUtc">Start time of the data in UTC</param>
-        /// <param name="endUtc">End time of the data in UTC</param>
-        /// <returns>Enumerable of base data for this symbol</returns>
-        public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
-        {
-            if (symbol.ID.SecurityType != SecurityType.Equity)
-                throw new NotSupportedException("SecurityType not available: " + symbol.ID.SecurityType);
-
-            if (endUtc < startUtc)
-                throw new ArgumentException("The end date must be greater or equal than the start date.");
-
-            switch (resolution)
-            {
-                case Resolution.Minute:
-                case Resolution.Hour:
-                    return GetMinuteOrHour(symbol, resolution, startUtc, endUtc);
-
-                case Resolution.Daily:
-                    return GetDaily(symbol, resolution, startUtc, endUtc);
-
-                default:
-                    throw new NotSupportedException("Resolution not available: " + resolution);
-            }
-        }
-
         // q = SYMBOL
         // startdate = Mon+D%2C+YYYY, e.g. Jan+1%2C+2005
         // enddate = Mon+D%2C+YYYY, e.g. Sep+29%2C+2016
@@ -89,7 +59,7 @@ namespace QuantConnect.ToolBox.GoogleDownloader
                 + @"%2C+" + endUtc.Year.ToString();
 
             // Create the Google formatted URL.
-            var url = string.Format(UrlPrototypeDaily, ConvertTicker(symbol), startdate, enddate);
+            var url = string.Format(UrlPrototypeDaily, symbol.Value, startdate, enddate);
 
             // Download the data from Google.
             string[] lines;
@@ -239,6 +209,36 @@ namespace QuantConnect.ToolBox.GoogleDownloader
             }
 
             return symbol.Value;
+        }
+
+        /// <summary>
+        /// Get historical data enumerable for a single symbol, type and resolution given this start and end time (in UTC).
+        /// </summary>
+        /// <param name="symbol">Symbol for the data we're looking for.</param>
+        /// <param name="resolution">Resolution of the data request</param>
+        /// <param name="startUtc">Start time of the data in UTC</param>
+        /// <param name="endUtc">End time of the data in UTC</param>
+        /// <returns>Enumerable of base data for this symbol</returns>
+        public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
+        {
+            if (symbol.ID.SecurityType != SecurityType.Equity)
+                throw new NotSupportedException("SecurityType not available: " + symbol.ID.SecurityType);
+
+            if (endUtc < startUtc)
+                throw new ArgumentException("The end date must be greater or equal than the start date.");
+
+            switch (resolution)
+            {
+                case Resolution.Minute:
+                case Resolution.Hour:
+                    return GetMinuteOrHour(symbol, resolution, startUtc, endUtc);
+
+                case Resolution.Daily:
+                    return GetDaily(symbol, resolution, startUtc, endUtc);
+
+                default:
+                    throw new NotSupportedException("Resolution not available: " + resolution);
+            }
         }
     }
 }
