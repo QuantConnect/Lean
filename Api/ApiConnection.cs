@@ -17,6 +17,7 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 using Newtonsoft.Json;
+using QuantConnect.API;
 using QuantConnect.Logging;
 using RestSharp;
 using RestSharp.Authenticators;
@@ -88,6 +89,12 @@ namespace QuantConnect.Api
                 
                 // Execute the authenticated REST API Call
                 var restsharpResponse = Client.Execute(request);
+
+                // Use custom converter for deserializing live results data
+                JsonConvert.DefaultSettings = () => new JsonSerializerSettings
+                {
+                    Converters = { new LiveAlgorithmResultsJsonConverter() }
+                };
 
                 //Verify success
                 result = JsonConvert.DeserializeObject<T>(restsharpResponse.Content);
