@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -33,7 +32,6 @@ namespace QuantConnect.ToolBox.OandaDownloader
     {
         private readonly OandaBrokerage _brokerage;
         private readonly OandaSymbolMapper _symbolMapper = new OandaSymbolMapper();
-        private const int BarsPerRequest = 5000;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OandaDataDownloader"/> class
@@ -100,7 +98,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
 
                 // request blocks of 5-second bars with a starting date/time
                 var oandaSymbol = _symbolMapper.GetBrokerageSymbol(symbol);
-                var bars = _brokerage.DownloadBars(oandaSymbol, start, BarsPerRequest, EGranularity.S5);
+                var bars = _brokerage.DownloadBars(oandaSymbol, start, OandaBrokerage.MaxBarsPerRequest, EGranularity.S5);
                 if (bars.Count == 0)
                     break;
 
@@ -146,7 +144,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
                 }
 
                 // calculate the next request datetime (next 5-sec bar time)
-                startDateTime = GetDateTimeFromString(bars[bars.Count - 1].time).AddSeconds(5);
+                startDateTime = OandaBrokerage.GetDateTimeFromString(bars[bars.Count - 1].time).AddSeconds(5);
             }
 
             if (barsToSave.Count > 0)
@@ -179,7 +177,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
         {
             return
                 (from b in bars
-                 group b by GetDateTimeFromString(b.time).RoundDown(resolution)
+                 group b by OandaBrokerage.GetDateTimeFromString(b.time).RoundDown(resolution)
                      into g
                      select new TradeBar
                      {
@@ -203,7 +201,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
 
             foreach (var bar in bars)
             {
-                var date = GetDateTimeFromString(bar.time).Date;
+                var date = OandaBrokerage.GetDateTimeFromString(bar.time).Date;
 
                 if (!groupedBars.ContainsKey(date))
                     groupedBars[date] = new List<Candle>();
@@ -212,15 +210,6 @@ namespace QuantConnect.ToolBox.OandaDownloader
             }
 
             return groupedBars;
-        }
-
-        /// <summary>
-        /// Returns a DateTime from an RFC3339 string (with microsecond resolution)
-        /// </summary>
-        /// <param name="time"></param>
-        private static DateTime GetDateTimeFromString(string time)
-        {
-            return DateTime.ParseExact(time, "yyyy-MM-dd'T'HH:mm:ss.000000'Z'", CultureInfo.InvariantCulture);
         }
     }
 }
