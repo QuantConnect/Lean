@@ -50,11 +50,9 @@ namespace QuantConnect.ToolBox.GoogleDownloader
                 case Resolution.Minute:
                 case Resolution.Hour:
                     return GetMinuteOrHour(symbol, resolution, startUtc, endUtc);
-                    break;
 
                 case Resolution.Daily:
                     return GetDaily(symbol, resolution, startUtc, endUtc);
-                    break;
 
                 default:
                     throw new NotSupportedException("Resolution not available: " + resolution);
@@ -240,7 +238,7 @@ namespace QuantConnect.ToolBox.GoogleDownloader
                 return "NYSEARCA:SPY";
             }
 
-            return symbol;
+            return symbol.Value;
         }
     }
 }
