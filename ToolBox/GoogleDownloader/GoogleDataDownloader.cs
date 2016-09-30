@@ -95,12 +95,19 @@ namespace QuantConnect.ToolBox.GoogleDownloader
                     columns[4] != "-" ? (Decimal?)columns[4].ToDecimal() : null
                 };
 
-                // let's try hard to fix any issues as good as we can
-                // this code assumes that there is at least 1 good value
-                if (ohlc[1] == null) ohlc[1] = ohlc.Where(val => val != null).Max();
-                if (ohlc[2] == null) ohlc[2] = ohlc.Where(val => val != null).Min();
-                if (ohlc[0] == null) ohlc[0] = ohlc.Where(val => val != null).Average();
-                if (ohlc[3] == null) ohlc[3] = ohlc.Where(val => val != null).Average();
+                if (ohlc.Where(val => val == null).Count() > 0)
+                {
+                    // let's try hard to fix any issues as good as we can
+                    // this code assumes that there is at least 1 good value
+                    if (ohlc[1] == null) ohlc[1] = ohlc.Where(val => val != null).Max();
+                    if (ohlc[2] == null) ohlc[2] = ohlc.Where(val => val != null).Min();
+                    if (ohlc[0] == null) ohlc[0] = ohlc.Where(val => val != null).Average();
+                    if (ohlc[3] == null) ohlc[3] = ohlc.Where(val => val != null).Average();
+
+                    Log.Error(string.Format("Corrupt bar on {0}: {1},{2},{3},{4}. Saved as {5},{6},{7},{8}.",
+                        columns[0], columns[1], columns[2], columns[3], columns[4],
+                        ohlc[0], ohlc[1], ohlc[2], ohlc[3]));
+                }
 
                 long volume = columns[5].ToInt64();
 
