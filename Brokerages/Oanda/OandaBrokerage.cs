@@ -31,7 +31,7 @@ namespace QuantConnect.Brokerages.Oanda
     /// <summary>
     /// Oanda Brokerage - implementation of IBrokerage interface
     /// </summary>
-    public partial class OandaBrokerage : Brokerage, IDataQueueHandler
+    public partial class OandaBrokerage : Brokerage, IDataQueueHandler, IHistoryProvider
     {
         private readonly IOrderProvider _orderProvider;
         private readonly ISecurityProvider _securityProvider;

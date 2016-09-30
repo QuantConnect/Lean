@@ -199,7 +199,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// Returns a DateTime from an RFC3339 string (with microsecond resolution)
         /// </summary>
         /// <param name="time">The time string</param>
-        private static DateTime GetDateTimeFromString(string time)
+        public static DateTime GetDateTimeFromString(string time)
         {
             return DateTime.ParseExact(time, "yyyy-MM-dd'T'HH:mm:ss.ffffff'Z'", CultureInfo.InvariantCulture);
         }

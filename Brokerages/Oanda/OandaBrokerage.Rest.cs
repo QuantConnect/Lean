@@ -20,11 +20,12 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
-using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Xml;
+using Newtonsoft.Json;
 using QuantConnect.Brokerages.Oanda.DataType;
 using QuantConnect.Brokerages.Oanda.DataType.Communications;
+using QuantConnect.Brokerages.Oanda.DataType.Communications.Requests;
 using QuantConnect.Brokerages.Oanda.Framework;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
@@ -232,7 +233,8 @@ namespace QuantConnect.Brokerages.Oanda
         {
             var stream = response.GetResponseStream();
             if (response.Headers["Content-Encoding"] == "gzip")
-            {	// if we received a gzipped response, handle that
+            {	
+                // if we received a gzipped response, handle that
                 if (stream != null) stream = new GZipStream(stream, CompressionMode.Decompress);
             }
             return stream;
@@ -262,10 +264,12 @@ namespace QuantConnect.Brokerages.Oanda
             }
             catch (WebException ex)
             {
-                var response = (HttpWebResponse)ex.Response;
-                var stream = new StreamReader(response.GetResponseStream());
-                var result = stream.ReadToEnd();
-                throw new Exception(result);
+                var stream = GetResponseStream(ex.Response);
+                using (var reader = new StreamReader(stream))
+                {
+                    var result = reader.ReadToEnd();
+                    throw new Exception(result);
+                }
             }
         }
         
@@ -295,10 +299,12 @@ namespace QuantConnect.Brokerages.Oanda
             }
             catch (WebException ex)
             {
-                var response = (HttpWebResponse)ex.Response;
-                var stream = new StreamReader(response.GetResponseStream());
-                var result = stream.ReadToEnd();
-                throw new Exception(result);
+                var stream = GetResponseStream(ex.Response);
+                using (var reader = new StreamReader(stream))
+                {
+                    var result = reader.ReadToEnd();
+                    throw new Exception(result);
+                }
             }
         }
 
@@ -310,7 +316,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="method">method for the request (defaults to GET)</param>
         /// <param name="requestParams">optional parameters (note that if provided, it's assumed the requestString doesn't contain any)</param>
         /// <returns>response via type T</returns>
-        private T MakeRequest<T>(string requestString, string method = "GET", Dictionary<string, string> requestParams = null)
+        public T MakeRequest<T>(string requestString, string method = "GET", Dictionary<string, string> requestParams = null)
         {
             if (requestParams != null && requestParams.Count > 0)
             {
@@ -326,17 +332,22 @@ namespace QuantConnect.Brokerages.Oanda
             {
                 using (var response = request.GetResponse())
                 {
-                    var serializer = new DataContractJsonSerializer(typeof(T));
                     var stream = GetResponseStream(response);
-                    return (T)serializer.ReadObject(stream);
+                    using (var reader = new StreamReader(stream))
+                    {
+                        var json = reader.ReadToEnd();
+                        return JsonConvert.DeserializeObject<T>(json);
+                    }
                 }
             }
             catch (WebException ex)
             {
                 var stream = GetResponseStream(ex.Response);
-                var reader = new StreamReader(stream);
-                var result = reader.ReadToEnd();
-                throw new Exception(result);
+                using (var reader = new StreamReader(stream))
+                {
+                    var result = reader.ReadToEnd();
+                    throw new Exception(result);
+                }
             }
         }
 
@@ -368,16 +379,22 @@ namespace QuantConnect.Brokerages.Oanda
             {
                 using (var response = request.GetResponse())
                 {
-                    var serializer = new DataContractJsonSerializer(typeof(T));
-                    return (T)serializer.ReadObject(response.GetResponseStream());
+                    var stream = GetResponseStream(response);
+                    using (var reader = new StreamReader(stream))
+                    {
+                        var json = reader.ReadToEnd();
+                        return JsonConvert.DeserializeObject<T>(json);
+                    }
                 }
             }
             catch (WebException ex)
             {
-                var response = (HttpWebResponse)ex.Response;
-                var stream = new StreamReader(response.GetResponseStream());
-                var result = stream.ReadToEnd();
-                throw new Exception(result);
+                var stream = GetResponseStream(ex.Response);
+                using (var reader = new StreamReader(stream))
+                {
+                    var result = reader.ReadToEnd();
+                    throw new Exception(result);
+                }
             }
         }
 
@@ -528,6 +545,48 @@ namespace QuantConnect.Brokerages.Oanda
             var rate = (decimal)(quote.bid + quote.ask) / 2;
 
             return isInverted ? 1 / rate : rate;
+        }
+
+        /// <summary>
+        /// Downloads a list of bars at the requested resolution from a starting datetime
+        /// </summary>
+        /// <param name="oandaSymbol">The Oanda symbol</param>
+        /// <param name="startUtc">The starting time (UTC)</param>
+        /// <param name="barsPerRequest">The number of bars requested (max=5000)</param>
+        /// <param name="granularity">The granularity (Oanda resolution)</param>
+        /// <returns>The list of candles/bars</returns>
+        public List<Candle> DownloadBars(string oandaSymbol, string startUtc, int barsPerRequest, EGranularity granularity)
+        {
+            var request = new CandlesRequest
+            {
+                instrument = oandaSymbol,
+                granularity = granularity,
+                candleFormat = ECandleFormat.midpoint,
+                count = barsPerRequest,
+                start = Uri.EscapeDataString(startUtc)
+            };
+
+            return GetCandles(request);
+        }
+
+        /// <summary>
+        /// More detailed request to retrieve candles
+        /// </summary>
+        /// <param name="request">the request data to use when retrieving the candles</param>
+        /// <returns>List of Candles received (or empty list)</returns>
+        public List<Candle> GetCandles(CandlesRequest request)
+        {
+            var requestString = EndpointResolver.ResolveEndpoint(_environment, Server.Rates) + request.GetRequestString();
+
+            var candlesResponse = MakeRequest<CandlesResponse>(requestString);
+
+            var candles = new List<Candle>();
+            if (candlesResponse != null)
+            {
+                candles.AddRange(candlesResponse.candles);
+            }
+
+            return candles;
         }
 
     }
