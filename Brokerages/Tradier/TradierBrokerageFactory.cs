@@ -205,7 +205,7 @@ namespace QuantConnect.Brokerages.Tradier
             {
                 AccessToken = Config.Get("tradier-access-token"),
                 RefreshToken = Config.Get("tradier-refresh-token"),
-                IssuedAt = Config.GetValue<DateTime>("tradier-tokens-issued-at"),
+                IssuedAt = Config.GetValue<DateTime>("tradier-issued-at"),
                 ExpiresIn = Config.GetInt("tradier-lifespan")
             };
         }
