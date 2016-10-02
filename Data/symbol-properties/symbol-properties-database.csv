@@ -102,10 +102,9 @@ usa,HO,future,,USD,42000,0.01,1
 usa,RB,future,,USD,42000,0.01,1
 usa,NG,future,,USD,10000,0.01,1
 usa,AC,future,,USD,29000,0.01,1
-# must be mlt = 1000
-usa,ZB,future,,USD,1,0.01,1 
-usa,ZN,future,,USD,1,0.01,1
-usa,ZF,future,,USD,1,0.01,1
+usa,ZB,future,,USD,1000,0.01,1 
+usa,ZN,future,,USD,1000,0.01,1
+usa,ZF,future,,USD,1000,0.01,1
 usa,GE,future,,USD,2500,0.01,1
 usa,ES,future,,USD,50,0.01,1
 usa,NQ,future,,USD,20,0.01,1

@@ -71,7 +71,7 @@ namespace QuantConnect.Securities.Option
             /// <summary>
             /// Strike price of the leg
             /// </summary>
-            public int Strike { get; set; }
+            public decimal Strike { get; set; }
 
             /// <summary>
             /// Type of order that is to be sent to the market on strategy execution

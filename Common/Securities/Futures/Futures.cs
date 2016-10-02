@@ -199,12 +199,17 @@ namespace QuantConnect.Securities
             /// <returns>The symbol</returns>
             public const string NASDAQ100EMini = "NQ";
 
-
             /// <summary>
             /// E-mini Dow Indu 30 Futures  
             /// </summary>
             /// <returns>The symbol</returns>
             public const string Dow30EMini = "YM";
+
+            /// <summary>
+            /// CBOE Volatility Index Futures  
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string VIX = "VX";
         }
 
         /// <summary>
