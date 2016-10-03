@@ -96,7 +96,7 @@ namespace QuantConnect.API
         }
 
         /// <summary>
-        /// The constructor used by Tradier and Oanda
+        /// The constructor used by Oanda
         /// </summary>
         /// <param name="environment">'live'/'paper'</param>
         /// <param name="account">Account id for brokerage</param>
@@ -108,6 +108,18 @@ namespace QuantConnect.API
             Environment = environment;
             Account = account;
         }
+
+        /// <summary>
+        /// The constructor used by Tradier
+        /// </summary>
+        /// <param name="account">Account id for brokerage</param>
+        public BaseLiveAlgorithmSettings(string account)
+        {
+            User = "";
+            Password = "";
+            Account = account;
+        }
+
         /// <summary>
         /// 'Interactive' / 'FXCM' / 'Oanda' / 'Tradier' /'PaperTrading'
         /// </summary>
@@ -253,17 +265,16 @@ namespace QuantConnect.API
         /// Contructor for live trading with Tradier.
         /// </summary>
         /// <param name="accessToken"></param>
-        /// <param name="environment">'live'/'paper'</param>
         /// <param name="dateIssued">Specific for live trading with Tradier.  See Tradier account for more details.</param>
         /// <param name="refreshToken">Specific for live trading with Tradier.  See Tradier account for more details.</param>
         /// <param name="account">Account id for brokerage</param>
         public TradierLiveAlgorithmSettings(string accessToken,
                                             string dateIssued,
                                             string refreshToken,
-                                            BrokerageEnvironment environment,
                                             string account)
-            : base(environment, account)
+            : base(account)
         {
+            Environment = BrokerageEnvironment.Live;
             AccessToken = accessToken;
             DateIssued = dateIssued;
             RefreshToken = refreshToken;

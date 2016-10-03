@@ -198,7 +198,7 @@ namespace QuantConnect.Tests.API
                         refreshToken = Config.Get("tradier-refresh-token");
                         account      = Config.Get("tradier-account-id");
 
-                        settings = new TradierLiveAlgorithmSettings(refreshToken, dateIssued, refreshToken, environment, account);
+                        settings = new TradierLiveAlgorithmSettings(refreshToken, dateIssued, refreshToken, account);
 
                         break;
                     default:
@@ -454,7 +454,6 @@ namespace QuantConnect.Tests.API
             var settings = new TradierLiveAlgorithmSettings(accessToken,
                                                             dateIssued,
                                                             refreshToken,
-                                                            BrokerageEnvironment.Live, 
                                                             account);
 
             // Wait for project to compile
