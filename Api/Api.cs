@@ -307,17 +307,16 @@ namespace QuantConnect.Api
         /// Get a list of live running algorithms for a logged in user.
         /// </summary>
         /// <param name="status">Filter the statuses of the algorithms returned from the api</param>
-        /// <param name="filterBy">If no filtering should occer by status, the parameter should be set to false</param>
         /// <param name="startTime">Earliest launched time of the algorithms returned by the Api</param>
         /// <param name="endTime">Latest launched time of the algorithms returned by the Api</param>
         /// <returns>List of live algorithm instances</returns>
-        public LiveList ListLiveAlgorithms(AlgorithmStatus status, 
-                                           bool filterBy = true, 
+        public LiveList ListLiveAlgorithms(AlgorithmStatus? status = null,
                                            DateTime? startTime = null,
                                            DateTime? endTime = null)
         {
             // Only the following statuses are supported by the Api
-            if (status != AlgorithmStatus.Running      &&
+            if (status != null                         &&
+                status != AlgorithmStatus.Running      &&
                 status != AlgorithmStatus.RuntimeError &&
                 status != AlgorithmStatus.Stopped      &&
                 status != AlgorithmStatus.Liquidated)
@@ -328,7 +327,7 @@ namespace QuantConnect.Api
 
             var request = new RestRequest("live/read", Method.GET);
 
-            if (filterBy)
+            if (status != null)
             {
                 request.AddParameter("status", status.ToString());
             }
