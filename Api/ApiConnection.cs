@@ -19,6 +19,7 @@ using System.Text;
 using Newtonsoft.Json;
 using QuantConnect.API;
 using QuantConnect.Logging;
+using QuantConnect.Orders;
 using RestSharp;
 using RestSharp.Authenticators;
 
@@ -93,7 +94,7 @@ namespace QuantConnect.Api
                 // Use custom converter for deserializing live results data
                 JsonConvert.DefaultSettings = () => new JsonSerializerSettings
                 {
-                    Converters = { new LiveAlgorithmResultsJsonConverter() }
+                    Converters = { new LiveAlgorithmResultsJsonConverter(), new OrderJsonConverter() }
                 };
 
                 //Verify success
