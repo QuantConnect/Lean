@@ -213,8 +213,8 @@ namespace QuantConnect.API
                                                        string account)
             : base(user, password)
         {
-            Account = account.ToLower();
-            Environment = Account.Substring(0, 2) == "du" ? BrokerageEnvironment.Paper : BrokerageEnvironment.Live;
+            Account = account;
+            Environment = Account.Substring(0, 2) == "DU" ? BrokerageEnvironment.Paper : BrokerageEnvironment.Live;
             Id = BrokerageName.InteractiveBrokersBrokerage.ToString();
         }
     }
