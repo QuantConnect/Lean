@@ -151,6 +151,24 @@ namespace QuantConnect
         Parallel
     }
 
+    /// <summary>
+    /// Represents the types of environments supported by brokerages for trading
+    /// </summary>
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum BrokerageEnvironment
+    {
+        /// <summary>
+        /// Live trading
+        /// </summary>
+        [EnumMember(Value = "live")]
+        Live,
+
+        /// <summary>
+        /// Paper trading
+        /// </summary>
+        [EnumMember(Value = "paper")]
+        Paper
+    }
 
     /// <summary>
     /// Multilanguage support enum: which language is this project for the interop bridge converter.
