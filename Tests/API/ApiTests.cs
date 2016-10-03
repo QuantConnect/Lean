@@ -26,7 +26,7 @@ using RestSharp.Extensions.MonoHttp;
 
 namespace QuantConnect.Tests.API
 {
-    [TestFixture, Category("TravisExclude")]
+    [TestFixture, Ignore("These tests require configured and active accounts to Tradier, FXCM and Oanda")]
     class RestApiTests
     {
         private int _testAccount = 1;
