@@ -101,7 +101,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             : this(
                 orderProvider,
                 securityProvider,
-                Config.Get("ib-account"),
+                Config.Get("ib-account").ToLower(),
                 Config.Get("ib-host", "LOCALHOST"),
                 Config.GetInt("ib-port", 4001),
                 Config.GetValue("ib-agent-description", IB.AgentDescription.Individual)

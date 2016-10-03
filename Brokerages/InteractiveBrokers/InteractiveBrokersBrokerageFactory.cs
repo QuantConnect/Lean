@@ -49,7 +49,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             get
             {
                 var data = new Dictionary<string, string>();
-                data.Add("ib-account", Config.Get("ib-account"));
+                data.Add("ib-account", Config.Get("ib-account").ToLower());
                 data.Add("ib-user-name", Config.Get("ib-user-name"));
                 data.Add("ib-password", Config.Get("ib-password"));
                 data.Add("ib-agent-description", Config.Get("ib-agent-description"));
