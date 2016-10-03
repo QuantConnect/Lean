@@ -102,6 +102,14 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
+        /// Gets the <see cref="FuturesChains"/> for this slice of data
+        /// </summary>
+        public FuturesChains FutureChains
+        {
+            get { return _futuresChains; }
+        }
+
+        /// <summary>
         /// Gets the <see cref="Splits"/> for this slice of data
         /// </summary>
         public Splits Splits
