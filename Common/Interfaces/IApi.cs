@@ -169,8 +169,12 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Get a list of live running algorithms for a logged in user.
         /// </summary>
+        /// <param name="status">Filter the statuses of the algorithms returned from the api</param>
+        /// <param name="filterBy">If no filtering should occcer, the parameter should be set to false</param>
+        /// <param name="startTime">Earliest launched time of the algorithms returned by the Api</param>
+        /// <param name="endTime">Latest launched time of the algorithms returned by the Api</param>
         /// <returns>List of live algorithm instances</returns>
-        LiveList ListLiveAlgorithms(ApiAlgorithmStatus status = ApiAlgorithmStatus.All, DateTime ? startTime = null, DateTime? endTime = null);
+        LiveList ListLiveAlgorithms(AlgorithmStatus status, bool filterBy = true, DateTime? startTime = null, DateTime? endTime = null);
 
         /// <summary>
         /// Read out a live algorithm in the project id specified.

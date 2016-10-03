@@ -306,16 +306,35 @@ namespace QuantConnect.Api
         /// <summary>
         /// Get a list of live running algorithms for a logged in user.
         /// </summary>
+        /// <param name="status">Filter the statuses of the algorithms returned from the api</param>
+        /// <param name="filterBy">If no filtering should occer by status, the parameter should be set to false</param>
+        /// <param name="startTime">Earliest launched time of the algorithms returned by the Api</param>
+        /// <param name="endTime">Latest launched time of the algorithms returned by the Api</param>
         /// <returns>List of live algorithm instances</returns>
-        public LiveList ListLiveAlgorithms(ApiAlgorithmStatus status = ApiAlgorithmStatus.All, DateTime? startTime = null, DateTime? endTime = null)
+        public LiveList ListLiveAlgorithms(AlgorithmStatus status, 
+                                           bool filterBy = true, 
+                                           DateTime? startTime = null,
+                                           DateTime? endTime = null)
         {
+            // Only the following statuses are supported by the Api
+            if (status != AlgorithmStatus.Running      &&
+                status != AlgorithmStatus.RuntimeError &&
+                status != AlgorithmStatus.Stopped      &&
+                status != AlgorithmStatus.Liquidated)
+            {
+                throw new ArgumentException(
+                    "The Api only supports Algorithm Statuses of Running, Stopped, RuntimeError and Liquidated");
+            }
+
             var request = new RestRequest("live/read", Method.GET);
 
-            if (status != ApiAlgorithmStatus.All)
+            if (filterBy)
+            {
                 request.AddParameter("status", status.ToString());
+            }
 
             var epochStartTime = startTime == null ? 0 : Time.DateTimeToUnixTimeStamp(startTime.Value);
-            var epochEndTime = endTime == null ? Time.DateTimeToUnixTimeStamp(DateTime.UtcNow) : Time.DateTimeToUnixTimeStamp(endTime.Value);
+            var epochEndTime   = endTime   == null ? Time.DateTimeToUnixTimeStamp(DateTime.UtcNow) : Time.DateTimeToUnixTimeStamp(endTime.Value);
 
             request.AddParameter("start", epochStartTime);
             request.AddParameter("end", epochEndTime);

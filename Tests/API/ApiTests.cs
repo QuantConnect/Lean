@@ -244,7 +244,7 @@ namespace QuantConnect.Tests.API
         public void LiveAlgorithmsAndLiveLogs_CanBeRead_Successfully()
         {
             // Read all currently running algorithms
-            var liveAlgorithms = _api.ListLiveAlgorithms();
+            var liveAlgorithms = _api.ListLiveAlgorithms(AlgorithmStatus.RuntimeError);
 
             Assert.IsTrue(liveAlgorithms.Success);
             // There has to be at least one running algorithm
