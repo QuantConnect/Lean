@@ -49,7 +49,7 @@ namespace QuantConnect.Brokerages.Backtesting
         // last update time
         private DateTime _lastUpdate = DateTime.MinValue;
         private Queue<DateTime> _assignmentScans;
-        private static Random _rand = new Random((int)12345); 
+        private static Random _rand = new Random((int)12345);
 
         /// <summary>
         /// We generate a list of time points when we would like to run our simulation. we then return true if the time is in the list. 
