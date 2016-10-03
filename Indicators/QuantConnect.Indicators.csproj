@@ -120,6 +120,7 @@
     <Compile Include="DonchianChannel.cs" />
     <Compile Include="DoubleExponentialMovingAverage.cs" />
     <Compile Include="FractalAdaptiveMovingAverage.cs" />
+    <Compile Include="RegressionChannel.cs" />
     <Compile Include="SwissArmyKnife.cs" />
     <Compile Include="VolumeWeightedAveragePriceIndicator.cs" />
     <Compile Include="FisherTransform.cs" />
