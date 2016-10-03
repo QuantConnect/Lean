@@ -218,6 +218,7 @@
     <Compile Include="Paper\PaperBrokerage.cs" />
     <Compile Include="Paper\PaperBrokerageFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tradier\TradierBrokerage.HistoryProvider.cs" />
     <Compile Include="Tradier\TradierBrokerage.DataQueueHandler.cs" />
     <Compile Include="Tradier\TradierBrokerage.cs" />
     <Compile Include="Tradier\Balances.cs" />

@@ -26,10 +26,8 @@ using Newtonsoft.Json;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
-using System.Timers;
 using RestSharp;
 using Timer = System.Timers.Timer;
 
@@ -38,13 +36,14 @@ namespace QuantConnect.Brokerages.Tradier
     /// <summary>
     /// Tradier Class: IDataQueueHandler implementation
     /// </summary>
-    public partial class TradierBrokerage : Brokerage, IDataQueueHandler
+    public partial class TradierBrokerage
     {
         #region IDataQueueHandler implementation
-        private bool _disconnect = false;
+
+        private bool _disconnect;
         private volatile bool _refresh = true;
         private Timer _refreshDelay = new Timer();
-        private ConcurrentDictionary<Symbol, string> _subscriptions = new ConcurrentDictionary<Symbol, string>();
+        private readonly ConcurrentDictionary<Symbol, string> _subscriptions = new ConcurrentDictionary<Symbol, string>();
         private Stream _tradierStream;
 
         /// <summary>

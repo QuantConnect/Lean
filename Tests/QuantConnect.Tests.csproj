@@ -120,6 +120,7 @@
     <Compile Include="Brokerages\OrderTestParameters.cs" />
     <Compile Include="Brokerages\StopLimitOrderTestParameters.cs" />
     <Compile Include="Brokerages\StopMarketOrderTestParameters.cs" />
+    <Compile Include="Brokerages\Tradier\TradierBrokerageHistoryProviderTests.cs" />
     <Compile Include="Brokerages\Tradier\TradierBrokerageSerializationTests.cs" />
     <Compile Include="Brokerages\Tradier\TradierBrokerageTests.cs" />
     <Compile Include="Common\CurrenciesTests.cs" />

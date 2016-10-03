@@ -18,20 +18,15 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Net;
 using System.Runtime.Serialization;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
-using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
-using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Util;
@@ -47,7 +42,7 @@ namespace QuantConnect.Brokerages.Tradier
     ///  - Placing orders.
     ///  - Getting user data.
     /// </summary>
-    public partial class TradierBrokerage : Brokerage, IDataQueueHandler
+    public partial class TradierBrokerage : Brokerage, IDataQueueHandler, IHistoryProvider
     {
         private readonly string _accountID;
 
@@ -272,11 +267,16 @@ namespace QuantConnect.Brokerages.Tradier
                                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "OrderAlreadyFilled",
                                     "Unable to cancel the order because it has already been filled. TradierOrderId: " + orderId
                                     ));
-
-                                
                             }
                             return new T();
                         }
+
+                        // this happens when a request for historical data should return an empty response
+                        if (type == TradierApiRequestType.Data && rootName == "series")
+                        {
+                            return new T();
+                        }
+
                         // Text Errors:
                         Log.Trace(method + "(2): Parameters: " + string.Join(",", parameters));
                         Log.Error(method + "(2): Response: " + raw.Content);
@@ -325,6 +325,10 @@ namespace QuantConnect.Brokerages.Tradier
         /// </summary>
         public bool RefreshSession()
         {
+            // if session refreshing disabled, do nothing
+            if (!Config.GetBool("tradier-refresh-session", true))
+                return true;
+
             //Send: 
             //Get: {"sAccessToken":"123123","iExpiresIn":86399,"dtIssuedAt":"2014-10-15T16:59:52-04:00","sRefreshToken":"123123","sScope":"read write market trade stream","sStatus":"approved","success":true}
             // Or: {"success":false}
