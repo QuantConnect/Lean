@@ -182,7 +182,7 @@ namespace QuantConnect.Tests.API
                     case BrokerageName.InteractiveBrokersBrokerage:
                         user     = Config.Get("ib-user-name");
                         password = Config.Get("ib-password");
-                        settings = new InteractiveBrokersLiveAlgorithmSettings(user, password, environment, account);
+                        settings = new InteractiveBrokersLiveAlgorithmSettings(user, password, account);
 
                         Assert.IsTrue(settings.Id == BrokerageName.InteractiveBrokersBrokerage.ToString());
                         break;
@@ -341,7 +341,6 @@ namespace QuantConnect.Tests.API
             // Create default algorithm settings
             var settings = new InteractiveBrokersLiveAlgorithmSettings(user,
                                                                        password,
-                                                                       BrokerageEnvironment.Paper, 
                                                                        account);
 
             // Wait for project to compile

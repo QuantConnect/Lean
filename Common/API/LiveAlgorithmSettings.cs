@@ -66,7 +66,7 @@ namespace QuantConnect.API
     public class BaseLiveAlgorithmSettings
     {
         /// <summary>
-        /// Constructor used by Interactive Brokers and FXCM
+        /// Constructor used by FXCM
         /// </summary>
         /// <param name="user">Username associated with brokerage</param>
         /// <param name="password">Password associated with brokerage</param>
@@ -80,6 +80,19 @@ namespace QuantConnect.API
             User = user;
             Password = password;
             Environment = environment;
+            Account = account;
+        }
+
+        /// <summary>
+        /// Constructor used by Interactive Brokers
+        /// </summary>
+        /// <param name="user">Username associated with brokerage</param>
+        /// <param name="password">Password associated with brokerage</param>
+        /// <param name="account">Account id for brokerage</param>
+        public BaseLiveAlgorithmSettings(string password,
+                                         string account)
+        {
+            Password = password;
             Account = account;
         }
 
@@ -106,7 +119,7 @@ namespace QuantConnect.API
         /// Username associated with brokerage
         /// </summary>
         [JsonProperty(PropertyName = "user")]
-        public string User { get; private set; }
+        public string User { get; set; }
 
         /// <summary>
         /// Password associated with brokerage
@@ -118,7 +131,7 @@ namespace QuantConnect.API
         /// 'live'/'paper'
         /// </summary>
         [JsonProperty(PropertyName = "environment")]
-        public BrokerageEnvironment Environment { get; private set; }
+        public BrokerageEnvironment Environment { get; set; }
 
         /// <summary>
         /// Account of the associated brokerage
@@ -183,14 +196,14 @@ namespace QuantConnect.API
         /// </summary>
         /// <param name="user">Username associated with brokerage</param>
         /// <param name="password">Password of assciate brokerage</param>
-        /// <param name="environment">'live'/'paper'</param>
         /// <param name="account">Account id for brokerage</param>
         public InteractiveBrokersLiveAlgorithmSettings(string user,
                                                        string password,
-                                                       BrokerageEnvironment environment,
                                                        string account)
-            : base(user, password, environment, account)
+            : base(password, account)
         {
+            User = user.ToLower();
+            Environment = User.Substring(0, 2) == "du" ? BrokerageEnvironment.Paper : BrokerageEnvironment.Live;
             Id = BrokerageName.InteractiveBrokersBrokerage.ToString();
         }
     }
