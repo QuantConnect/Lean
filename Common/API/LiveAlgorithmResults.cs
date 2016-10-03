@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using QuantConnect.Api;
 using QuantConnect.Orders;
@@ -33,8 +34,8 @@ namespace QuantConnect.API
         /// <summary>
         /// Temporal resolution of the results returned from the Api
         /// </summary>
-        [JsonProperty(PropertyName = "resolution")]
-        public string Resolution { get; set; }
+        [JsonProperty(PropertyName = "resolution"), JsonConverter(typeof(StringEnumConverter))]
+        public Resolution Resolution { get; set; }
 
         /// <summary>
         /// Class to represent the data groups results return from the Api

@@ -85,7 +85,7 @@ namespace QuantConnect.API
             liveAlgoResults.Success = true;
             liveAlgoResults.LiveResults = new LiveResultsData
             {
-                Resolution = jObject["LiveResults"]["resolution"].Value<string>(),
+                Resolution = (Resolution)Enum.Parse(typeof(Resolution), jObject["LiveResults"]["resolution"].Value<string>(), true),
                 Version    = jObject["LiveResults"]["version"].Value<int>()
             };
 
