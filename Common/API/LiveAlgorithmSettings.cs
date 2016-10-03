@@ -88,12 +88,11 @@ namespace QuantConnect.API
         /// </summary>
         /// <param name="user">Username associated with brokerage</param>
         /// <param name="password">Password associated with brokerage</param>
-        /// <param name="account">Account id for brokerage</param>
-        public BaseLiveAlgorithmSettings(string password,
-                                         string account)
+        public BaseLiveAlgorithmSettings(string user,
+                                         string password)
         {
             Password = password;
-            Account = account;
+            User = user;
         }
 
         /// <summary>
@@ -119,7 +118,7 @@ namespace QuantConnect.API
         /// Username associated with brokerage
         /// </summary>
         [JsonProperty(PropertyName = "user")]
-        public string User { get; set; }
+        public string User { get; private set; }
 
         /// <summary>
         /// Password associated with brokerage
@@ -137,7 +136,7 @@ namespace QuantConnect.API
         /// Account of the associated brokerage
         /// </summary>
         [JsonProperty(PropertyName = "account")]
-        public string Account { get; private set; }
+        public string Account { get; set; }
     }
 
     /// <summary>
@@ -200,10 +199,10 @@ namespace QuantConnect.API
         public InteractiveBrokersLiveAlgorithmSettings(string user,
                                                        string password,
                                                        string account)
-            : base(password, account)
+            : base(user, password)
         {
-            User = user.ToLower();
-            Environment = User.Substring(0, 2) == "du" ? BrokerageEnvironment.Paper : BrokerageEnvironment.Live;
+            Account = account.ToLower();
+            Environment = Account.Substring(0, 2) == "du" ? BrokerageEnvironment.Paper : BrokerageEnvironment.Live;
             Id = BrokerageName.InteractiveBrokersBrokerage.ToString();
         }
     }
