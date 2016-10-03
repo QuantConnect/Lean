@@ -83,7 +83,7 @@ namespace QuantConnect.Tests.API
         /// Test that the Api will reject invalid credentials
         /// </summary>
         [Test]
-        public void ApiWillAuthenticate_InvalidValidCredentials_Unsuccessfully()
+        public void ApiWillAuthenticate_InvalidCredentials_Unsuccessfully()
         {
             var connection = new ApiConnection(_testAccount, "");
             Assert.IsFalse(connection.Connected);
