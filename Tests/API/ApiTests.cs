@@ -146,7 +146,7 @@ namespace QuantConnect.Tests.API
         {
             string user = "";
             string password = "";
-            BrokerageEnvironment environment = BrokerageEnvironment.Live;
+            BrokerageEnvironment environment = BrokerageEnvironment.Paper;
             string account = "";
 
             // Oanda Custom Variables 
@@ -182,6 +182,7 @@ namespace QuantConnect.Tests.API
                     case BrokerageName.InteractiveBrokersBrokerage:
                         user     = Config.Get("ib-user-name");
                         password = Config.Get("ib-password");
+                        account = Config.Get("ib-account");
                         settings = new InteractiveBrokersLiveAlgorithmSettings(user, password, account);
 
                         Assert.IsTrue(settings.Id == BrokerageName.InteractiveBrokersBrokerage.ToString());
@@ -209,7 +210,10 @@ namespace QuantConnect.Tests.API
                 Assert.IsTrue(settings != null);
                 Assert.IsTrue(settings.Password == password);
                 Assert.IsTrue(settings.User == user);
-                Assert.IsTrue(settings.Environment == environment);
+
+                // tradier brokerage is always live, the rest are variable
+                if (brokerageName != BrokerageName.TradierBrokerage)
+                    Assert.IsTrue(settings.Environment == environment);
 
                 // Oanda specific settings
                 if (brokerageName == BrokerageName.OandaBrokerage)
@@ -217,7 +221,6 @@ namespace QuantConnect.Tests.API
                     var oandaSetting = settings as OandaLiveAlgorithmSettings;
 
                     Assert.IsTrue(oandaSetting.AccessToken == accessToken);
-                    Assert.IsTrue(oandaSetting.DateIssued == dateIssuedString);
                 }
 
                 // Tradier specific settings
@@ -227,8 +230,14 @@ namespace QuantConnect.Tests.API
 
                     Assert.IsTrue(tradierLiveAlogrithmSettings.DateIssued == dateIssued);
                     Assert.IsTrue(tradierLiveAlogrithmSettings.RefreshToken == refreshToken);
-                    Assert.IsTrue(tradierLiveAlogrithmSettings.Lifetime == lifetime);
+                    Assert.IsTrue(settings.Environment == BrokerageEnvironment.Live);
                 }
+
+                // reset variables
+                user = "";
+                password = "";
+                environment = BrokerageEnvironment.Paper;
+                account = "";
             }
         }
 
