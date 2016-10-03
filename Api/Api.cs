@@ -315,7 +315,7 @@ namespace QuantConnect.Api
                                            DateTime? endTime = null)
         {
             // Only the following statuses are supported by the Api
-            if (status != null                         &&
+            if (status.HasValue                        &&
                 status != AlgorithmStatus.Running      &&
                 status != AlgorithmStatus.RuntimeError &&
                 status != AlgorithmStatus.Stopped      &&
@@ -327,7 +327,7 @@ namespace QuantConnect.Api
 
             var request = new RestRequest("live/read", Method.GET);
 
-            if (status != null)
+            if (status.HasValue)
             {
                 request.AddParameter("status", status.ToString());
             }
