@@ -74,7 +74,7 @@ namespace QuantConnect.API
         /// <param name="account">Account id for brokerage</param>
         public BaseLiveAlgorithmSettings(string user,
                                          string password,
-                                         string environment,
+                                         BrokerageEnvironment environment,
                                          string account)
         {
             User = user;
@@ -88,7 +88,7 @@ namespace QuantConnect.API
         /// </summary>
         /// <param name="environment">'live'/'paper'</param>
         /// <param name="account">Account id for brokerage</param>
-        public BaseLiveAlgorithmSettings(string environment,
+        public BaseLiveAlgorithmSettings(BrokerageEnvironment environment,
                                          string account)
         {
             User = "";
@@ -118,7 +118,7 @@ namespace QuantConnect.API
         /// 'live'/'paper'
         /// </summary>
         [JsonProperty(PropertyName = "environment")]
-        public string Environment { get; private set; }
+        public BrokerageEnvironment Environment { get; private set; }
 
         /// <summary>
         /// Account of the associated brokerage
@@ -141,7 +141,7 @@ namespace QuantConnect.API
         /// <param name="account">Account id for brokerage</param>
         public DefaultLiveAlgorithmSettings(string user,
                                                 string password,
-                                                string environment,
+                                                BrokerageEnvironment environment,
                                                 string account)
             : base(user, password, environment, account)
         {
@@ -164,7 +164,7 @@ namespace QuantConnect.API
         /// <param name="account">Account id for brokerage</param>
         public FXCMLiveAlgorithmSettings(string user,
                                          string password,
-                                         string environment,
+                                         BrokerageEnvironment environment,
                                          string account)
             : base(user, password, environment, account)
         {
@@ -187,7 +187,7 @@ namespace QuantConnect.API
         /// <param name="account">Account id for brokerage</param>
         public InteractiveBrokersLiveAlgorithmSettings(string user,
                                                        string password,
-                                                       string environment,
+                                                       BrokerageEnvironment environment,
                                                        string account)
             : base(user, password, environment, account)
         {
@@ -207,7 +207,7 @@ namespace QuantConnect.API
         /// <param name="environment">'live'/'paper'</param>
         /// <param name="account">Account id for brokerage</param>
         public OandaLiveAlgorithmSettings(string accessToken,
-                                          string environment,
+                                          BrokerageEnvironment environment,
                                           string account)
             : base(environment, account)
         {
@@ -248,7 +248,7 @@ namespace QuantConnect.API
         public TradierLiveAlgorithmSettings(string accessToken,
                                             string dateIssued,
                                             string refreshToken,
-                                            string environment,
+                                            BrokerageEnvironment environment,
                                             string account)
             : base(environment, account)
         {

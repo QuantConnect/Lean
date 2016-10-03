@@ -146,7 +146,7 @@ namespace QuantConnect.Tests.API
         {
             string user = "";
             string password = "";
-            string environment = "Live";
+            BrokerageEnvironment environment = BrokerageEnvironment.Live;
             string account = "";
 
             // Oanda Custom Variables 
@@ -189,7 +189,6 @@ namespace QuantConnect.Tests.API
                     case BrokerageName.OandaBrokerage:
                         accessToken = Config.Get("oanda-access-token");
                         account     = Config.Get("oanda-account-id");
-                        environment = Config.Get("oanda-environment");
 
                         settings = new OandaLiveAlgorithmSettings(accessToken, environment, account); 
                         Assert.IsTrue(settings.Id == BrokerageName.OandaBrokerage.ToString());
@@ -287,7 +286,7 @@ namespace QuantConnect.Tests.API
             // Create default algorithm settings
             var settings = new FXCMLiveAlgorithmSettings(user,
                                                          password,
-                                                         "paper",
+                                                         BrokerageEnvironment.Paper,
                                                          account);
 
             // Wait for project to compile
@@ -342,7 +341,7 @@ namespace QuantConnect.Tests.API
             // Create default algorithm settings
             var settings = new InteractiveBrokersLiveAlgorithmSettings(user,
                                                                        password,
-                                                                       "paper",
+                                                                       BrokerageEnvironment.Paper, 
                                                                        account);
 
             // Wait for project to compile
@@ -376,7 +375,6 @@ namespace QuantConnect.Tests.API
         {
             var token       = Config.Get("oanda-access-token");
             var account     = Config.Get("oanda-account-id");
-            var environment = Config.Get("oanda-environment");
 
             var file = new List<ProjectFile>
                 {
@@ -396,7 +394,7 @@ namespace QuantConnect.Tests.API
 
             // Create default algorithm settings
             var settings = new OandaLiveAlgorithmSettings(token,
-                                                          environment,
+                                                          BrokerageEnvironment.Paper,
                                                           account);
 
             // Wait for project to compile
@@ -457,7 +455,7 @@ namespace QuantConnect.Tests.API
             var settings = new TradierLiveAlgorithmSettings(accessToken,
                                                             dateIssued,
                                                             refreshToken,
-                                                            "live",
+                                                            BrokerageEnvironment.Live, 
                                                             account);
 
             // Wait for project to compile
