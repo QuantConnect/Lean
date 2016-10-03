@@ -292,10 +292,23 @@ namespace QuantConnect.Tests.Common.Securities
             // this would not cause a margin call due to leverage = 1
             bool issueMarginCallWarning;
             var marginCallOrders = portfolio.ScanForMarginCall(out issueMarginCallWarning);
+            Assert.IsFalse(issueMarginCallWarning);
             Assert.AreEqual(0, marginCallOrders.Count);
 
-            // now change the leverage and buy more and we'll get a margin call
+            // now change the leverage to test margin call warning and margin call logic
             security.SetLeverage(leverage * 2);
+
+            // Stock price increase by minimum variation
+            const decimal newPrice = lowPrice + 0.01m;
+            security.SetMarketPrice(new TradeBar(time, Symbols.AAPL, newPrice, newPrice, newPrice, newPrice, 1));
+
+            // this would not cause a margin call, only a margin call warning
+            marginCallOrders = portfolio.ScanForMarginCall(out issueMarginCallWarning);
+            Assert.IsTrue(issueMarginCallWarning);
+            Assert.AreEqual(0, marginCallOrders.Count);
+
+            // Price drops again to previous low, margin call orders will be issued 
+            security.SetMarketPrice(new TradeBar(time, Symbols.AAPL, lowPrice, lowPrice, lowPrice, lowPrice, 1));
 
             order = new MarketOrder(Symbols.AAPL, quantity, time) { Price = buyPrice };
             fill = new OrderEvent(order, DateTime.UtcNow, 0) { FillPrice = buyPrice, FillQuantity = quantity };
@@ -305,6 +318,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(0, portfolio.TotalPortfolioValue);
 
             marginCallOrders = portfolio.ScanForMarginCall(out issueMarginCallWarning);
+            Assert.IsTrue(issueMarginCallWarning);
             Assert.AreNotEqual(0, marginCallOrders.Count);
             Assert.AreEqual(-security.Holdings.Quantity, marginCallOrders[0].Quantity); // we bought twice
             Assert.GreaterOrEqual(-portfolio.MarginRemaining, security.Price * marginCallOrders[0].Quantity);
