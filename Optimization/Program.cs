@@ -2,13 +2,7 @@
 using System.Threading;
 using System.Reflection;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using QuantConnect.Algorithm;
-using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.Results;
-using QuantConnect.Algorithm.CSharp;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Optimization
 {
@@ -23,28 +17,27 @@ namespace QuantConnect.Optimization
         {
             _ads = SetupAppDomain();
 
-            QCAlgorithm algo = new ParameterizedAlgorithm();
-
-
             string algoName = "ParameterizedAlgorithm";
             
-            string[] results = RunAlgorithm(algoName);
-
-            var ratio = results[0];
+            IDictionary<string,string> backtestStatistics = RunAlgorithm(algoName);
             
-            Console.WriteLine("Ratio: " + ratio);
-            Console.ReadLine();
+            Log.Trace("Optimization(): ===================================================");
+            Log.Trace("Optimization(): Backtest Result: ");
+            foreach (var stat in backtestStatistics.Keys)
+            {
+                Log.Trace("Optimization(): "+ stat + ": " + backtestStatistics[stat]);
+            }
+
+            Console.ReadKey();
         }
 
         static AppDomainSetup SetupAppDomain()
         {
             _callingDomainName = Thread.GetDomain().FriendlyName;
-            //Console.WriteLine(callingDomainName);
-
+           
             // Get and display the full name of the EXE assembly.
             _exeAssembly = Assembly.GetEntryAssembly().FullName;
-            //Console.WriteLine(exeAssembly);
-
+           
             // Construct and initialize settings for a second AppDomain.
             AppDomainSetup ads = new AppDomainSetup();
             ads.ApplicationBase = AppDomain.CurrentDomain.BaseDirectory;
@@ -74,28 +67,28 @@ namespace QuantConnect.Optimization
 
             return rc;
         }
-        private static string[] RunAlgorithm(string algoName)
+        private static IDictionary<string, string> RunAlgorithm(string algoName)
         {
-            string[] results = null;
+            IDictionary<string, string>  backTestStatistics = null;
 
             try
             {
                 AppDomain ad = null;
                 RunClass rc = CreateRunClassInAppDomain(ref ad);
                 
-                results = rc.Run(algoName);
+                backTestStatistics = rc.Run(algoName);
 
                 AppDomain.Unload(ad);
 
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Exception: " + ex.Message);
-                Console.WriteLine("InnerException: " + ex.InnerException);
-                Console.WriteLine("StackTrace: " + ex.StackTrace);
-                Console.ReadLine();
+
+                Log.Error("Optimization(): Exception: " + ex.Message);
+                Log.Error("Optimization(): InnerException: " + ex.InnerException);
+                Log.Error("Optimization(): StackTrace: " + ex.StackTrace);
             }
-            return results;
+            return backTestStatistics;
         }
 
     }

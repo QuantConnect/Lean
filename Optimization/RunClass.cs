@@ -8,8 +8,6 @@ using QuantConnect.Configuration;
 using QuantConnect.Util;
 using QuantConnect.Interfaces;
 using QuantConnect.Queues;
-using QuantConnect.Messaging;
-using QuantConnect.Api;
 using QuantConnect.Logging;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.Setup;
@@ -38,28 +36,15 @@ namespace QuantConnect.Optimization
         {
 
         }
-        public string[] Run(string algorithmName)
+        public IDictionary<string, string> Run(string algorithmName)
         {
             LaunchLean(algorithmName);
             BacktestingResultHandler resultshandler = (BacktestingResultHandler)_resultshandler;
 
-            var ratio = resultshandler.FinalStatistics["Sharpe Ratio"];
-
-            string[] results = new[] {ratio};
-
-            return results;
+            return  resultshandler.FinalStatistics;
         }
         private void LaunchLean(string algorithmName)
         {
-            Config.Set("environment", "backtesting");
-            Config.Set("job-user-id", "12594");
-            Config.Set("environment", "backtesting");
-            Config.Set("api-access-token", "72fc81e35e4d33eb6a0e46355409769a");
-            Config.Set("data - folder", "../../../Data/");
-            
-            Config.Set("algorithm-type-name", algorithmName);
-            Config.Set("algorithm-language", "CSharp");
-
             _jobQueue = new JobQueue();
             _notify = new Messaging.Messaging();
             _api = new Api.Api();
@@ -72,7 +57,6 @@ namespace QuantConnect.Optimization
             var systemHandlers = new LeanEngineSystemHandlers(_jobQueue, _api, _notify);
             systemHandlers.Initialize();
 
-            //			var algorithmHandlers = new LeanEngineAlgorithmHandlers (_resultshandler, _setup, _dataFeed, _transactions, _realTime, _historyProvider);
             Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
 
             LeanEngineAlgorithmHandlers leanEngineAlgorithmHandlers;
