@@ -15,7 +15,7 @@ using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Lean.Engine.HistoricalData;
 
-namespace QuantConnect.Optimization
+namespace QuantConnect.Optimizer
 {
     public class RunClass : MarshalByRefObject
     {

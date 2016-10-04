@@ -7,8 +7,8 @@
     <ProjectGuid>{9CDF7A8F-E344-4EA2-9555-AEA39C9BCB73}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>QuantConnect.Optimization</RootNamespace>
-    <AssemblyName>QuantConnect.Optimization</AssemblyName>
+    <RootNamespace>QuantConnect.Optimizer</RootNamespace>
+    <AssemblyName>QuantConnect.Optimizer</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -32,6 +32,9 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>QuantConnect.Optimizer.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />

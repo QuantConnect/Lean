@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Collections.Generic;
 using QuantConnect.Logging;
 
-namespace QuantConnect.Optimization
+namespace QuantConnect.Optimizer
 {
     //An executable project taking an IAlgorithm object and launching backtests.
     class Program
