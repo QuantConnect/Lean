@@ -117,7 +117,7 @@ namespace QuantConnect.Brokerages.Fxcm
 
                 foreach (var data in history)
                 {
-                    yield return new Slice(data.Time, new[] { data });
+                    yield return new Slice(data.EndTime, new[] { data });
                 }
             }
         }
