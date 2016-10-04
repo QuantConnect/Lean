@@ -101,7 +101,7 @@ namespace QuantConnect.Brokerages.Oanda
 
                         DataPointCount++;
 
-                        yield return new Slice(tradeBar.Time, new[] { tradeBar });
+                        yield return new Slice(tradeBar.EndTime, new[] { tradeBar });
                     }
 
                     // calculate the next request datetime
