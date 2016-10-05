@@ -4,17 +4,13 @@ using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using com.sun.corba.se.spi.orb;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
-using QuantConnect.ToolBox.YahooDownloader;
 
 namespace QuantConnect.ToolBox
 {
     /// <summary>
     /// Generates a factor file from a list of splits and dividends for a specified equity
-    /// Currently only works with Yahoo split and dividend data.
-    /// <see cref="QuantConnect.ToolBox.YahooDownloader"/> can be used to get dividends and splits
     /// </summary>
     public class FactorFileGenerator
     {
@@ -44,9 +40,9 @@ namespace QuantConnect.ToolBox
         /// <summary>
         /// Create FactorFile object
         /// </summary>
-        /// <param name="yahooMarketEvent">Dividends and Splits according to Yahoo</param>
+        /// <param name="EquityEvent">Dividends and Splits according</param>
         /// <returns>A factor file object</returns>
-        public FactorFile CreateFactorFileFromYahooData(Queue<YahooMarketEvent> yahooMarketEvent)
+        public FactorFile CreateFactorFileFromData(Queue<EquityEvent> EquityEvent)
         {
             var factorFileRows = new List<FactorFileRow>()
             {
@@ -58,25 +54,25 @@ namespace QuantConnect.ToolBox
                                   1) // Split Factor
             };
 
-            return RecursivlyGenerateFactorFile(yahooMarketEvent, factorFileRows);
+            return RecursivlyGenerateFactorFile(EquityEvent, factorFileRows);
         }
 
         /// <summary>
         /// Recursively generate the factor file
         /// </summary>
-        /// <param name="yahooMarketEvents">Queue of dividends and splits as reported by yahoo</param>
+        /// <param name="EquityEvents">Queue of dividends and splits as reported</param>
         /// <param name="factorFileRows">The list of factor file rows</param>
         /// <returns>FactorFile object</returns>
-        private FactorFile RecursivlyGenerateFactorFile(Queue<YahooMarketEvent> yahooMarketEvents, List<FactorFileRow> factorFileRows)
+        private FactorFile RecursivlyGenerateFactorFile(Queue<EquityEvent> EquityEvents, List<FactorFileRow> factorFileRows)
         {
             // If there is no more data return
-            if (!yahooMarketEvents.Any())
+            if (!EquityEvents.Any())
             {
                 factorFileRows.Add(CreateLastFactorFileRow(factorFileRows));
                 return new FactorFile(Symbol.ID.Symbol, factorFileRows);
             }
                 
-            var nextEvent = yahooMarketEvents.Dequeue();
+            var nextEvent = EquityEvents.Dequeue();
 
             // If there is no more daily equity data to use return
             if (_lastDateFromEquityData > nextEvent.Date)
@@ -90,7 +86,7 @@ namespace QuantConnect.ToolBox
             if (nextFactorFileRow != null)
                 factorFileRows.Add(nextFactorFileRow);
 
-            return RecursivlyGenerateFactorFile(yahooMarketEvents, factorFileRows);
+            return RecursivlyGenerateFactorFile(EquityEvents, factorFileRows);
         }
 
         /// <summary>
@@ -112,10 +108,10 @@ namespace QuantConnect.ToolBox
         /// <param name="factorFileRows">The current list of factorFileRows</param>
         /// <param name="nextMarketEvent">The next dividend or split</param>
         /// <returns>A single factor file row</returns>
-        private FactorFileRow CalculateNextFactorFileRow(List<FactorFileRow> factorFileRows, YahooMarketEvent nextMarketEvent)
+        private FactorFileRow CalculateNextFactorFileRow(List<FactorFileRow> factorFileRows, EquityEvent nextMarketEvent)
         {
             FactorFileRow nextFactorFileRow;
-            if (nextMarketEvent.EventType == YahooEventType.Split)
+            if (nextMarketEvent.EventType == EquityEventType.Split)
                 nextFactorFileRow = CalculateNextSplitFactor(nextMarketEvent, factorFileRows.Last());
             else
                 nextFactorFileRow = CalculateNextDividendFactor(nextMarketEvent, factorFileRows.Last());
@@ -128,7 +124,7 @@ namespace QuantConnect.ToolBox
         /// <param name="nextEvent">The next dividend event</param>
         /// <param name="lastFactorFileRow">The current last item in the factor file</param>
         /// <returns></returns>
-        private FactorFileRow CalculateNextDividendFactor(YahooMarketEvent nextEvent, FactorFileRow lastFactorFileRow)
+        private FactorFileRow CalculateNextDividendFactor(EquityEvent nextEvent, FactorFileRow lastFactorFileRow)
         {
             var evenDayData = DailyDataForEquity.FirstOrDefault(x => x.Time.Date == nextEvent.Date);
 
@@ -149,7 +145,7 @@ namespace QuantConnect.ToolBox
         /// <param name="nextMarketEvent">The market split or dividend currently being calculated</param>
         /// <param name="lastFactorFileRow">The last factor file row processed</param>
         /// <returns>The next Factor file row</returns>
-        private FactorFileRow CalculateNextSplitFactor(YahooMarketEvent nextMarketEvent, FactorFileRow lastFactorFileRow)
+        private FactorFileRow CalculateNextSplitFactor(EquityEvent nextMarketEvent, FactorFileRow lastFactorFileRow)
         {
             return new FactorFileRow(
                     nextMarketEvent.Date,

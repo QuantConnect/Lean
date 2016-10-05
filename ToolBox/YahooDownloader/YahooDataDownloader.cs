@@ -18,30 +18,11 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.ToolBox.YahooDownloader
 {
-
-    /// <summary>
-    /// Class that represents split or dividend from yahoo
-    /// </summary>
-    public class YahooMarketEvent
-    {
-        public YahooEventType EventType { get; set; }
-        public DateTime Date { get; set; }
-        public decimal Amount { get; set; }
-    }
-
-    /// <summary>
-    /// Represents a split or dividend from Yahoo
-    /// </summary>
-    public enum YahooEventType
-    {
-        Dividend,
-        Split
-    }
-
     /// <summary>
     /// Yahoo Data Downloader class 
     /// </summary>
@@ -104,7 +85,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
         /// <param name="startUtc">Get data after this time</param>
         /// <param name="endUtc">Get data before this time</param>
         /// <returns></returns>
-        public Queue<YahooMarketEvent> DownloadSplitAndDividendData(Symbol symbol, DateTime startUtc, DateTime endUtc)
+        public Queue<EquityEvent> DownloadSplitAndDividendData(Symbol symbol, DateTime startUtc, DateTime endUtc)
         {
             var url = string.Format( _urlEventsPrototype, symbol.ID.Symbol.ToLower(), startUtc.Month, startUtc.Day, startUtc.Year, endUtc.Month, endUtc.Day, endUtc.Year, "v");
             using (var cl = new WebClient())
@@ -120,11 +101,11 @@ namespace QuantConnect.ToolBox.YahooDownloader
         /// </summary>
         /// <param name="data">string downloaded from yahoo</param>
         /// <returns>Queue of dividends and splits</returns>
-        private Queue<YahooMarketEvent> GetSplitsAndDividendsFromYahoo(string data)
+        private Queue<EquityEvent> GetSplitsAndDividendsFromYahoo(string data)
         {
             var lines = data.Split('\n');
 
-            var yahooSplits = new List<YahooMarketEvent>();
+            var yahooSplits = new List<EquityEvent>();
 
             foreach (var line in lines)
             {
@@ -136,7 +117,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
                 }
             }
 
-            return new Queue<YahooMarketEvent>(yahooSplits.OrderByDescending(x => x.Date));
+            return new Queue<EquityEvent>(yahooSplits.OrderByDescending(x => x.Date));
         }
 
         /// <summary>
@@ -144,11 +125,11 @@ namespace QuantConnect.ToolBox.YahooDownloader
         /// </summary>
         /// <param name="values">Represents single line from yahoo data</param>
         /// <returns>A single yahoo event</returns>
-        private YahooMarketEvent ParseYahooEvent(string[] values)
+        private EquityEvent ParseYahooEvent(string[] values)
         {
-            return new YahooMarketEvent()
+            return new EquityEvent()
             {
-                EventType = values[0] == splitString ? YahooEventType.Split : YahooEventType.Dividend,
+                EventType = values[0] == splitString ? EquityEventType.Split : EquityEventType.Dividend,
                 Date = DateTime.ParseExact(values[1].Replace(" ", String.Empty), DateFormat.EightCharacter, CultureInfo.InvariantCulture),
                 Amount = values[0] == splitString ? ParseAmount(values[2]) : Decimal.Parse(values[2])
             };

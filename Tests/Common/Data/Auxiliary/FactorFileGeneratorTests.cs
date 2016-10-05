@@ -39,13 +39,13 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         }
 
         [Test]
-        public void FactorFile_CanBeCreated_Successfully()
+        public void FactorFile_CanBeCreatedFromYahooData_Successfully()
         {
             var factorFileGenerator = new FactorFileGenerator(symbol, dataPath);
             var yahooDataDownloader = new YahooDataDownloader();
 
             var yahooEvents = yahooDataDownloader.DownloadSplitAndDividendData(symbol, DateTime.Parse("01/01/1980"), DateTime.MaxValue);
-            var factorFile  = factorFileGenerator.CreateFactorFileFromYahooData(yahooEvents);
+            var factorFile  = factorFileGenerator.CreateFactorFileFromData(yahooEvents);
 
             Assert.IsTrue(factorFile.Permtick == symbol.ID.Symbol);
         }
