@@ -14,8 +14,11 @@
 */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Net;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.ToolBox.YahooDownloader
@@ -27,7 +30,8 @@ namespace QuantConnect.ToolBox.YahooDownloader
     {
         //Initialize
         private string _urlPrototype = @"http://ichart.finance.yahoo.com/table.csv?s={0}&a={1}&b={2}&c={3}&d={4}&e={5}&f={6}&g={7}&ignore=.csv";
-
+        private string _urlEventsPrototype = @"http://ichart.finance.yahoo.com/x?s={0}&a={1}&b={2}&c={3}&d={4}&e={5}&f={6}&g={7}&y=0&z=30000";
+        private const string splitString = "SPLIT";
         /// <summary>
         /// Get historical data enumerable for a single symbol, type and resolution given this start and end time (in UTC).
         /// </summary>
@@ -71,6 +75,75 @@ namespace QuantConnect.ToolBox.YahooDownloader
                     yield return new TradeBar(new DateTime(year, month, day), symbol, open, high, low, close, volume, TimeSpan.FromDays(1));
                 }
             }
+        }
+
+
+        /// <summary>
+        /// Download Dividend and Split data from Yahoo
+        /// </summary>
+        /// <param name="symbol">Symbol of the data to download</param>
+        /// <param name="startUtc">Get data after this time</param>
+        /// <param name="endUtc">Get data before this time</param>
+        /// <returns></returns>
+        public Queue<EquityEvent> DownloadSplitAndDividendData(Symbol symbol, DateTime startUtc, DateTime endUtc)
+        {
+            var url = string.Format( _urlEventsPrototype, symbol.ID.Symbol.ToLower(), startUtc.Month, startUtc.Day, startUtc.Year, endUtc.Month, endUtc.Day, endUtc.Year, "v");
+            using (var cl = new WebClient())
+            {
+                var data = cl.DownloadString(url);
+
+                return GetSplitsAndDividendsFromYahoo(data);
+            }
+        }
+
+        /// <summary>
+        /// Parse the data returned from Yahoo
+        /// </summary>
+        /// <param name="data">string downloaded from yahoo</param>
+        /// <returns>Queue of dividends and splits</returns>
+        private Queue<EquityEvent> GetSplitsAndDividendsFromYahoo(string data)
+        {
+            var lines = data.Split('\n');
+
+            var yahooSplits = new List<EquityEvent>();
+
+            foreach (var line in lines)
+            {
+                var values = line.Split(',');
+
+                if (values.Length == 3)
+                {
+                    yahooSplits.Add(ParseYahooEvent(values));
+                }
+            }
+
+            return new Queue<EquityEvent>(yahooSplits.OrderByDescending(x => x.Date));
+        }
+
+        /// <summary>
+        /// Create yahoo event that represents dividend or split
+        /// </summary>
+        /// <param name="values">Represents single line from yahoo data</param>
+        /// <returns>A single yahoo event</returns>
+        private EquityEvent ParseYahooEvent(string[] values)
+        {
+            return new EquityEvent()
+            {
+                EventType = values[0] == splitString ? EquityEventType.Split : EquityEventType.Dividend,
+                Date = DateTime.ParseExact(values[1].Replace(" ", String.Empty), DateFormat.EightCharacter, CultureInfo.InvariantCulture),
+                Amount = values[0] == splitString ? ParseAmount(values[2]) : Decimal.Parse(values[2])
+            };
+        }
+
+        /// <summary>
+        /// Put the split ratio into a decimal format
+        /// </summary>
+        /// <param name="splitFactor">Split ratio</param>
+        /// <returns>Decimal representing the split ratio</returns>
+        private decimal ParseAmount(string splitFactor)
+        {
+            var factors = splitFactor.Split(':');
+            return Decimal.Parse(factors[1]) / Decimal.Parse(factors[0]);
         }
     }
 }
