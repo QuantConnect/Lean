@@ -2,15 +2,16 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using NUnit.Framework;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.ToolBox;
 using QuantConnect.ToolBox.YahooDownloader;
 using QuantConnect.Util;
 
-namespace QuantConnect.Tests.Common.Data.Auxiliary
+namespace QuantConnect.Tests.Common.Util
 {
     [TestFixture]
     public class FactorFileGeneratorTests
@@ -29,7 +30,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             Assert.IsTrue(yahooEvents.Any());
         }
 
-       
+
         [Test]
         public void DailyEquityData_CanBeRead_Successfully()
         {
@@ -45,9 +46,29 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             var yahooDataDownloader = new YahooDataDownloader();
 
             var yahooEvents = yahooDataDownloader.DownloadSplitAndDividendData(symbol, DateTime.Parse("01/01/1980"), DateTime.MaxValue);
-            var factorFile  = factorFileGenerator.CreateFactorFileFromData(yahooEvents);
+            var factorFile = factorFileGenerator.CreateFactorFileFromData(yahooEvents);
 
             Assert.IsTrue(factorFile.Permtick == symbol.ID.Symbol);
+        }
+
+        [Test]
+        public void SameDaySplitsAndDividends_AreRearranged_Successfully()
+        {
+            var factorFileGenerator = new FactorFileGenerator(symbol, dataPath);
+            var date = DateTime.Parse("1/11/2010");
+            var marketEventsList = new List<BaseData>()
+            {
+                new Split(symbol, date, 1.0M, 1.0M),
+                new Dividend(symbol, date, 3.0M),
+            };
+
+            var marketEventsQueue = new Queue<BaseData>(marketEventsList);
+
+            var factorFile = factorFileGenerator.CreateFactorFileFromData(marketEventsQueue);
+
+            // There should be 4, the first one in the future, the two added and one for the last date of the data
+            Assert.IsTrue(factorFile.SortedFactorFileData.Count == 4);
+            //Assert.IsTrue(factorFile.SortedFactorFileData. == typeof(Split));
         }
     }
 }
