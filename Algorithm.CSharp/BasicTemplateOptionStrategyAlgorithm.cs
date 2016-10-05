@@ -19,34 +19,35 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
-using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This example demonstrates how to add futures for a given underlying.
-    /// It also shows how you can prefilter contracts easily based on expirations.
-    /// It also shows how you can inspect the futures chain to pick a specific contract to trade.
+    /// This example demonstrates how to add options for a given underlying equity security.
+    /// It also shows how you can prefilter contracts easily based on strikes and expirations.
+    /// It also shows how you can inspect the option chain to pick a specific option contract to trade.
     /// </summary>
-    public class BasicTemplateFuturesAlgorithm : QCAlgorithm
+    public class BasicTemplateOptionsAlgorithm : QCAlgorithm
     {
-        // Oats futures
-        private const string UnderlyingTicker = Futures.Indices.SP500EMini;
-        public Symbol FuturesSymbol = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Future, Market.USA);
+        private const string UnderlyingTicker = "GOOG";
+        public readonly Symbol Underlying = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Equity, Market.USA);
+        public readonly Symbol OptionSymbol = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
 
         public override void Initialize()
         {
             SetStartDate(2015, 12, 24);
             SetEndDate(2015, 12, 24);
-            SetCash(10000);
+            SetCash(1000000);
 
-            var future = AddFuture(UnderlyingTicker);
+            var equity = AddEquity(UnderlyingTicker);
+            var option = AddOption(UnderlyingTicker);
 
-            // set our expiry filter for this futures chain
-            future.SetFilter(TimeSpan.Zero, TimeSpan.FromDays(365));
+            // set our strike/expiry filter for this option chain
+            option.SetFilter(-2, +2, TimeSpan.Zero, TimeSpan.FromDays(10));
 
-            var benchmark = AddEquity("SPY");
-            SetBenchmark(benchmark.Symbol);
+            // use the underlying equity as the benchmark
+            SetBenchmark(equity.Symbol);
         }
 
         /// <summary>
@@ -57,20 +58,17 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                FuturesChain chain;
-                if (slice.FuturesChains.TryGetValue(FuturesSymbol, out chain))
+                OptionChain chain;
+                if (slice.OptionChains.TryGetValue(OptionSymbol, out chain))
                 {
-                    // find the front contract expiring no earlier than in 10 days
-                    var contract = (
-                        from futuresContract in chain.OrderBy(x => x.Expiry)
-                        where futuresContract.Expiry > Time.Date.AddDays(10)
-                        select futuresContract
-                        ).FirstOrDefault();
+                    var atmStraddle = chain
+                        .OrderByDescending(x => Math.Abs(chain.Underlying.Price - x.Strike))
+                        .ThenByDescending(x => x.Expiry)
+                        .FirstOrDefault();
 
-                    // if found, trade it
-                    if (contract != null)
+                    if (atmStraddle != null)
                     {
-                        MarketOrder(contract.Symbol, 1);
+                        Sell(OptionStrategies.Straddle(OptionSymbol, atmStraddle.Strike, atmStraddle.Expiry), 2);
                     }
                 }
             }
@@ -79,9 +77,9 @@ namespace QuantConnect.Algorithm.CSharp
                 Liquidate();
             }
 
-            foreach (var kpv in slice.Bars)
+            foreach(var kpv in slice.Bars)
             {
-                Console.WriteLine("---> OnData: {0}, {1}, {2}", Time, kpv.Key.Value, kpv.Value.Close.ToString("0.0000"));
+                Console.WriteLine("---> OnData: {0}, {1}, {2}", Time, kpv.Key.Value, kpv.Value.Close.ToString("0.00"));
             }
         }
 
