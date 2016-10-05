@@ -24,11 +24,11 @@ using QuantConnect.Securities.Option;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This example demonstrates how to add options for a given underlying equity security.
+    /// This example demonstrates how to add option strategies for a given underlying equity security.
     /// It also shows how you can prefilter contracts easily based on strikes and expirations.
     /// It also shows how you can inspect the option chain to pick a specific option contract to trade.
     /// </summary>
-    public class BasicTemplateOptionsAlgorithm : QCAlgorithm
+    public class BasicTemplateOptionStrategyAlgorithm : QCAlgorithm
     {
         private const string UnderlyingTicker = "GOOG";
         public readonly Symbol Underlying = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Equity, Market.USA);
@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if (slice.OptionChains.TryGetValue(OptionSymbol, out chain))
                 {
                     var atmStraddle = chain
-                        .OrderByDescending(x => Math.Abs(chain.Underlying.Price - x.Strike))
+                        .OrderBy(x => Math.Abs(chain.Underlying.Price - x.Strike))
                         .ThenByDescending(x => x.Expiry)
                         .FirstOrDefault();
 
