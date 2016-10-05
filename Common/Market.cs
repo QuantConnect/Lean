@@ -36,7 +36,13 @@ namespace QuantConnect
             Tuple.Create(FXCM, 2),
             Tuple.Create(Oanda, 3),
             Tuple.Create(Dukascopy, 4),
-            Tuple.Create(Bitfinex, 5)
+            Tuple.Create(Bitfinex, 5),
+
+            Tuple.Create(Globex, 6),
+            Tuple.Create(NYMEX, 7),
+            Tuple.Create(CBOT, 8),
+            Tuple.Create(NYBOT, 9),
+            Tuple.Create(CBOE, 10)
         };
 
         static Market()
@@ -73,6 +79,33 @@ namespace QuantConnect
         /// Bitfinex market
         /// </summary>
         public const string Bitfinex = "bitfinex";
+
+        // Futures exchanges
+
+        /// <summary>
+        /// CME Globex
+        /// </summary>
+        public const string Globex = "CMEGlobex";
+
+        /// <summary>
+        /// NYMEX
+        /// </summary>
+        public const string NYMEX = "NYMEX";
+
+        /// <summary>
+        /// CBOT
+        /// </summary>
+        public const string CBOT = "CBOT";
+
+        /// <summary>
+        /// NYBOT
+        /// </summary>
+        public const string NYBOT = "NYBOT";
+
+        /// <summary>
+        /// NYBOT
+        /// </summary>
+        public const string CBOE = "CBOE";
 
         /// <summary>
         /// Adds the specified market to the map of available markets with the specified identifier.

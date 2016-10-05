@@ -55,6 +55,7 @@
   <ItemGroup>
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.cs" />
     <Compile Include="BasicTemplateFuturesAlgorithm.cs" />
+    <Compile Include="BasicTemplateOptionStrategyAlgorithm.cs" />
     <Compile Include="CoarseFineFundamentalRegressionAlgorithm.cs" />
     <Compile Include="CoarseFineFundamentalComboAlgorithm.cs" />
     <Compile Include="PortfolioOptimizationNumericsAlgorithm.cs" />

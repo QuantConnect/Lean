@@ -66,8 +66,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly FixedSizeHashQueue<string> _recentOrderEvents = new FixedSizeHashQueue<string>(50);
 
         private readonly object _orderFillsLock = new object();
-        private readonly ConcurrentDictionary<int, int> _orderFills = new ConcurrentDictionary<int, int>(); 
-        private readonly ConcurrentDictionary<string, decimal> _cashBalances = new ConcurrentDictionary<string, decimal>(); 
+        private readonly ConcurrentDictionary<int, int> _orderFills = new ConcurrentDictionary<int, int>();
+        private readonly ConcurrentDictionary<string, decimal> _cashBalances = new ConcurrentDictionary<string, decimal>();
         private readonly ConcurrentDictionary<string, string> _accountProperties = new ConcurrentDictionary<string, string>();
         // number of shares per symbol
         private readonly ConcurrentDictionary<string, Holding> _accountHoldings = new ConcurrentDictionary<string, Holding>();
@@ -77,13 +77,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly InteractiveBrokersSymbolMapper _symbolMapper = new InteractiveBrokersSymbolMapper();
 
         // Prioritized list of exchanges used to find right futures contract 
-        private readonly string[] _futuresExchanges = 
+        private readonly Dictionary<string, string> _futuresExchanges = new Dictionary< string, string>
         {
-            "GLOBEX",
-            "NYMEX",
-            "ECBOT", //CBOT
-            "NYBOT",
-            "CFE"   // CBOE
+            { Market.Globex, "GLOBEX" },
+            { Market.NYMEX, "NYMEX" },
+            { Market.CBOT, "ECBOT" },
+            { Market.NYBOT, "NYBOT" },
+            { Market.CBOE, "CFE" }
         };
 
 
@@ -636,15 +636,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         private string GetFuturesContractExchange(IB.Contract contract)
         {
-            // our symbol class doesn't contain exchange routing specification, 
-            // so we search for the right exchange using exchange priority list 
-
             // searching for available contracts on different exchanges
             var contractDetails = FindContracts(contract);
 
-            // sorting list of available contracts by exchange priority
-            var exchanges = _futuresExchanges.Reverse().ToArray();
+            var exchanges = _futuresExchanges.Values.Reverse().ToArray();
 
+            // sorting list of available contracts by exchange priority, taking the top 1
             return contractDetails
                     .Select(details => details.Summary.Exchange)
                     .OrderByDescending(e => Array.IndexOf(exchanges, e))
@@ -1127,7 +1124,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 contract.Exchange = "";
                 contract.Expiry = symbol.ID.Date.ToString(DateFormat.YearMonth);
                 contract.Symbol = ibSymbol;
-                contract.Exchange = GetFuturesContractExchange(contract);
+
+                // if Market.USA is specified we automatically find exchange from the prioritized list
+                // Otherwise we convert Market.* markets into IB exchanges if we have them in our map
+                contract.Exchange = symbol.ID.Market == Market.USA ? 
+                                        GetFuturesContractExchange(contract) : 
+                                        (_futuresExchanges.ContainsKey(symbol.ID.Market) ?
+                                            _futuresExchanges[symbol.ID.Market] :
+                                            symbol.ID.Market);
             }
 
             // some contracts require this, such as MSFT
