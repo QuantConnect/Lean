@@ -85,7 +85,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
         /// <param name="startUtc">Get data after this time</param>
         /// <param name="endUtc">Get data before this time</param>
         /// <returns></returns>
-        public Queue<EquityEvent> DownloadSplitAndDividendData(Symbol symbol, DateTime startUtc, DateTime endUtc)
+        public Queue<BaseData> DownloadSplitAndDividendData(Symbol symbol, DateTime startUtc, DateTime endUtc)
         {
             var url = string.Format( _urlEventsPrototype, symbol.ID.Symbol.ToLower(), startUtc.Month, startUtc.Day, startUtc.Year, endUtc.Month, endUtc.Day, endUtc.Year, "v");
             using (var cl = new WebClient())
@@ -101,11 +101,11 @@ namespace QuantConnect.ToolBox.YahooDownloader
         /// </summary>
         /// <param name="data">string downloaded from yahoo</param>
         /// <returns>Queue of dividends and splits</returns>
-        private Queue<EquityEvent> GetSplitsAndDividendsFromYahoo(string data)
+        private Queue<BaseData> GetSplitsAndDividendsFromYahoo(string data)
         {
             var lines = data.Split('\n');
 
-            var yahooSplits = new List<EquityEvent>();
+            var yahooSplits = new List<BaseData>();
 
             foreach (var line in lines)
             {
@@ -117,7 +117,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
                 }
             }
 
-            return new Queue<EquityEvent>(yahooSplits.OrderByDescending(x => x.Date));
+            return new Queue<BaseData>(yahooSplits.OrderByDescending(x => x.Time));
         }
 
         /// <summary>
@@ -125,14 +125,26 @@ namespace QuantConnect.ToolBox.YahooDownloader
         /// </summary>
         /// <param name="values">Represents single line from yahoo data</param>
         /// <returns>A single yahoo event</returns>
-        private EquityEvent ParseYahooEvent(string[] values)
+        private BaseData ParseYahooEvent(string[] values)
         {
-            return new EquityEvent()
+
+            if (values[0] == splitString)
             {
-                EventType = values[0] == splitString ? EquityEventType.Split : EquityEventType.Dividend,
-                Date = DateTime.ParseExact(values[1].Replace(" ", String.Empty), DateFormat.EightCharacter, CultureInfo.InvariantCulture),
-                Amount = values[0] == splitString ? ParseAmount(values[2]) : Decimal.Parse(values[2])
-            };
+                return new Split()
+                {
+                    Time = DateTime.ParseExact(values[1].Replace(" ", String.Empty), DateFormat.EightCharacter, CultureInfo.InvariantCulture),
+                    Value = values[0] == splitString ? ParseAmount(values[2]) : Decimal.Parse(values[2])
+                };
+            }
+            else
+            {
+                return new Dividend()
+                {
+                    Time = DateTime.ParseExact(values[1].Replace(" ", String.Empty), DateFormat.EightCharacter, CultureInfo.InvariantCulture),
+                    Value = values[0] == splitString ? ParseAmount(values[2]) : Decimal.Parse(values[2])
+                };
+            }
+            
         }
 
         /// <summary>

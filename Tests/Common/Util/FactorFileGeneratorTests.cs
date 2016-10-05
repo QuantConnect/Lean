@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using NUnit.Framework;
 using QuantConnect.Configuration;
@@ -10,7 +8,7 @@ using QuantConnect.ToolBox;
 using QuantConnect.ToolBox.YahooDownloader;
 using QuantConnect.Util;
 
-namespace QuantConnect.Tests.Common.Data.Auxiliary
+namespace QuantConnect.Tests.Common.Util
 {
     [TestFixture]
     public class FactorFileGeneratorTests
