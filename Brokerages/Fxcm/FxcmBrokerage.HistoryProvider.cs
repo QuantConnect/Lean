@@ -15,13 +15,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using com.fxcm.fix;
 using com.fxcm.fix.pretrade;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Packets;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
@@ -96,16 +96,18 @@ namespace QuantConnect.Brokerages.Fxcm
                     if (!autoResetEvent.WaitOne(ResponseTimeout))
                     {
                         // no response, exit
+                        Log.Trace("FxcmBrokerage.GetHistory(): history request timed out");
                         break;
                     }
 
                     // Add data
-                    history.InsertRange(0, _lastHistoryChunk.Where(x => x.Time.Date >= request.StartTimeUtc.Date));
+                    history.InsertRange(0, _lastHistoryChunk);
 
-                    if (end != _lastHistoryChunk[0].Time)
+                    var firstDateUtc = _lastHistoryChunk[0].Time.ConvertToUtc(_configTimeZone);
+                    if (end != firstDateUtc)
                     {
                         // new end date = first datapoint date.
-                        end = _lastHistoryChunk[0].Time;
+                        end = request.Resolution == Resolution.Tick ? firstDateUtc.AddMilliseconds(-1) : firstDateUtc.AddSeconds(-1);
                     }
                     else
                     {
