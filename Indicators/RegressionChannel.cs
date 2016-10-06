@@ -71,9 +71,9 @@ namespace QuantConnect.Indicators
             : base(name)
         {
             _standardDeviation = new StandardDeviation(period);
-            LinearRegression = new LeastSquaresMovingAverage(name + "_LinearRegressionLine", period);
-            LowerChannel = LinearRegression.Minus(_standardDeviation.Times(k), name + "_LowerChannelLine");
-            UpperChannel = LinearRegression.Plus(_standardDeviation.Times(k), name + "_UpperChannelLine");
+            LinearRegression = new LeastSquaresMovingAverage(name + "_LinearRegression", period);
+            LowerChannel = LinearRegression.Minus(_standardDeviation.Times(k), name + "_LowerChannel");
+            UpperChannel = LinearRegression.Plus(_standardDeviation.Times(k), name + "_UpperChannel");
         }
 
         /// <summary>

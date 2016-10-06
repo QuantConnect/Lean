@@ -30,6 +30,7 @@ namespace QuantConnect.Tests.Indicators
         {
             var period = 20;
             var indicator = new RegressionChannel(period, 2);
+            var stdDev = new StandardDeviation(period);
             var time = DateTime.Now;
 
             var prices = LeastSquaresMovingAverageTest.prices;
@@ -40,10 +41,16 @@ namespace QuantConnect.Tests.Indicators
             for (int i = 0; i < prices.Length; i++)
             {
                 indicator.Update(time, prices[i]);
+                stdDev.Update(time, prices[i]);
                 actual[i] = Math.Round(indicator.Current.Value, 4);
                 time = time.AddMinutes(1);
             }
             Assert.AreEqual(expected, actual);
+
+            var expectedUpper = indicator.Current + stdDev.Current * 2;
+            Assert.AreEqual(expectedUpper, indicator.UpperChannel);
+            var expectedLower = indicator.Current - stdDev.Current * 2;
+            Assert.AreEqual(expectedLower, indicator.LowerChannel);
         }
 
         [Test]
