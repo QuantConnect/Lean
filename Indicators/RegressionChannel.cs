@@ -18,7 +18,8 @@ namespace QuantConnect.Indicators
     /// <summary>
     /// The Regression Channel indicator extends the <see cref="LeastSquaresMovingAverage"/>
     /// with the inclusion of two (upper and lower) channel lines that are distanced from
-    /// the linear regression line by a user defined number of standard deviations. 
+    /// the linear regression line by a user defined number of standard deviations.
+    /// Reference: http://www.onlinetradingconcepts.com/TechnicalAnalysis/LinRegChannel.html
     /// </summary>
     public class RegressionChannel : Indicator
     {
@@ -28,36 +29,36 @@ namespace QuantConnect.Indicators
         private IndicatorBase<IndicatorDataPoint> _standardDeviation;
 
         /// <summary>
-        /// Gets the linear regression line
+        /// Gets the linear regression
         /// </summary>
-        public LeastSquaresMovingAverage LinearRegressionLine { get; private set; }
+        public LeastSquaresMovingAverage LinearRegression { get; private set; }
         
         /// <summary>
-        /// Gets the upper channel line (linear regression line + k * stdDev)
+        /// Gets the upper channel (linear regression + k * stdDev)
         /// </summary>
-        public IndicatorBase<IndicatorDataPoint> UpperChannelLine { get; private set; }
+        public IndicatorBase<IndicatorDataPoint> UpperChannel { get; private set; }
         
         /// <summary>
-        /// Gets the lower channel line (linear regression line - k * stdDev)
+        /// Gets the lower channel (linear regression - k * stdDev)
         /// </summary>
-        public IndicatorBase<IndicatorDataPoint> LowerChannelLine { get; private set; }
+        public IndicatorBase<IndicatorDataPoint> LowerChannel { get; private set; }
 
         /// <summary>
         /// The point where the regression line crosses the y-axis (price-axis)
         /// </summary>
-        public WindowIndicator<IndicatorDataPoint> Intercept { get { return LinearRegressionLine.Intercept; } }
+        public WindowIndicator<IndicatorDataPoint> Intercept { get { return LinearRegression.Intercept; } }
 
         /// <summary>
         /// The regression line slope
         /// </summary>
-        public WindowIndicator<IndicatorDataPoint> Slope { get { return LinearRegressionLine.Slope; } }
+        public WindowIndicator<IndicatorDataPoint> Slope { get { return LinearRegression.Slope; } }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
         public override bool IsReady
         {
-            get { return _standardDeviation.IsReady && LinearRegressionLine.IsReady && UpperChannelLine.IsReady && LowerChannelLine.IsReady; }
+            get { return _standardDeviation.IsReady && LinearRegression.IsReady && UpperChannel.IsReady && LowerChannel.IsReady; }
         }
 
         /// <summary>
@@ -70,9 +71,9 @@ namespace QuantConnect.Indicators
             : base(name)
         {
             _standardDeviation = new StandardDeviation(period);
-            LinearRegressionLine = new LeastSquaresMovingAverage(name + "_LinearRegressionLine", period);
-            LowerChannelLine = LinearRegressionLine.Minus(_standardDeviation.Times(k), name + "_LowerChannelLine");
-            UpperChannelLine = LinearRegressionLine.Plus(_standardDeviation.Times(k), name + "_UpperChannelLine");
+            LinearRegression = new LeastSquaresMovingAverage(name + "_LinearRegressionLine", period);
+            LowerChannel = LinearRegression.Minus(_standardDeviation.Times(k), name + "_LowerChannelLine");
+            UpperChannel = LinearRegression.Plus(_standardDeviation.Times(k), name + "_UpperChannelLine");
         }
 
         /// <summary>
@@ -95,11 +96,11 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
             _standardDeviation.Update(input);
-            LinearRegressionLine.Update(input);
-            LowerChannelLine.Update(input);
-            UpperChannelLine.Update(input);
+            LinearRegression.Update(input);
+            LowerChannel.Update(input);
+            UpperChannel.Update(input);
 
-            return LinearRegressionLine.Current;
+            return LinearRegression.Current;
         }
 
         /// <summary>
@@ -108,9 +109,9 @@ namespace QuantConnect.Indicators
         public override void Reset()
         {
             _standardDeviation.Reset();
-            LinearRegressionLine.Reset();
-            LowerChannelLine.Reset();
-            UpperChannelLine.Reset();
+            LinearRegression.Reset();
+            LowerChannel.Reset();
+            UpperChannel.Reset();
             base.Reset();
         }
     }
