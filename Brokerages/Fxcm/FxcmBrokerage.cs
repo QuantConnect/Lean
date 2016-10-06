@@ -267,21 +267,23 @@ namespace QuantConnect.Brokerages.Fxcm
         /// </summary>
         public override void Disconnect()
         {
-            if (!IsConnected) return;
-
             Log.Trace("FxcmBrokerage.Disconnect()");
 
-            // log out
-            _gateway.logout();
+            if (_gateway != null)
+            {
+                // log out
+                if (_gateway.isConnected())
+                    _gateway.logout();
 
-            // remove the message listeners
-            _gateway.removeGenericMessageListener(this);
-            _gateway.removeStatusMessageListener(this);
+                // remove the message listeners
+                _gateway.removeGenericMessageListener(this);
+                _gateway.removeStatusMessageListener(this);
+            }
 
             // request and wait for thread to stop
-            _cancellationTokenSource.Cancel();
-            _orderEventThread.Join();
-            _connectionMonitorThread.Join();
+            if (_cancellationTokenSource != null) _cancellationTokenSource.Cancel();
+            if (_orderEventThread != null) _orderEventThread.Join();
+            if (_connectionMonitorThread != null) _connectionMonitorThread.Join();
         }
 
         /// <summary>
