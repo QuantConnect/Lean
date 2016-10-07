@@ -89,7 +89,7 @@ namespace QuantConnect.Indicators
             Slope.Update(input.Time, (decimal)ols.Item2);
 
             // Calculate the fitted value corresponding to the input
-            return Intercept.Plus(Slope.Times(Period));
+            return Intercept + Slope * Period;
         }
 
         /// <summary>
