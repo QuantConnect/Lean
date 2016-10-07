@@ -436,6 +436,7 @@
     <Compile Include="Util\BusyBlockingCollection.cs" />
     <Compile Include="Util\CircularQueue.cs" />
     <Compile Include="Util\Composer.cs" />
+    <Compile Include="Util\DisposableExtensions.cs" />
     <Compile Include="Util\ExpressionBuilder.cs" />
     <Compile Include="Util\FixedSizeQueue.cs" />
     <Compile Include="Util\FixedSizeHashQueue.cs" />
