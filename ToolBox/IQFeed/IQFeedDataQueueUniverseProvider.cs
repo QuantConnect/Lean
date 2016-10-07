@@ -24,7 +24,10 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+
 
 namespace QuantConnect.ToolBox.IQFeed
 {
@@ -33,63 +36,37 @@ namespace QuantConnect.ToolBox.IQFeed
     /// </summary>
     public class IQFeedDataQueueUniverseProvider : IDataQueueUniverseProvider, ISymbolMapper
     {
+        // we define in-memory database for all symbols, but futures
         private List<SymbolData> _symbolUniverse;
+
+        // futures definitions are not complete. We miss expiration dates. 
+        // we store those incomplete symbols in a separate collection
+        private List<SymbolData> _incompleteFutures;
 
         // tickets and symbols are isomorphic
         private Dictionary<Symbol, string> _symbols;
         private Dictionary<string, Symbol> _tickers;
 
-        // IQFeed are using their own (feed) symbology 
-        // We map those tickers back to their original names using the map below
+        // map of IQFeed exchange names to QC markets
+        private readonly Dictionary<string, string> _futuresExchanges = new Dictionary<string, string>
+        {
+            { "CME", Market.Globex },
+            { "NYMEX", Market.NYMEX },
+            { "ICEFU", Market.ICE },
+            { "CBOT", Market.CBOT },
+            { "CFE", Market.CBOE  }
+        };
 
-        private readonly Dictionary<string, string> _iqfeedNameMap =
-            new Dictionary<string, string>
-            {
-                // IQFeed -> Original
-                { "C", "ZC" },
-                { "W", "ZW" },
-                { "S", "ZS" },
-                { "SM", "ZM" },
-                { "BO", "ZL" },
-                { "O", "ZO" },
-                { "KW", "KE" },
-                { "DX", "DX" },
-                { "BP", "GBP" },
-                { "CD", "CAD" },
-                { "JY", "JPY" },
-                { "SF", "CHF" },
-                { "EU", "EUR" },
-                { "AD", "AUD" },
-                { "NE", "NZD" },
-                { "QRB", "RB" },
-                { "QNG", "NG" },
-                { "AC", "AC" },
-                { "US", "ZB" },
-                { "TY", "ZN" },
-                { "FV", "ZF" },
-                { "TU", "ZT" },
-                { "ED", "GE" },
-                { "ES", "ES" },
-                { "NQ", "NQ" },
-                { "YM", "YM" },
-                { "LE", "LE" },
-                { "GF", "GF" },
-                { "HE", "HE" },
-                { "QGC", "GC" },
-                { "QSI", "SI" },
-                { "QPL", "PL" },
-                { "QPA", "PA" },
-                { "CT", "CT" },
-                { "OJ", "OJ" },
-                { "SB", "SB" },
-                { "CC", "CC" }
-            };
-
-
+        // futures fundamental data resolver
+        private readonly SymbolFundamentalData _symbolFundamentalData;
 
         public IQFeedDataQueueUniverseProvider()
         {
-            _symbolUniverse = LoadSymbols();
+            _symbolFundamentalData = new SymbolFundamentalData();
+            _symbolFundamentalData.Connect();
+            _symbolFundamentalData.SetClientName("SymbolFundamentalData");
+
+            LoadSymbols();
 
             _symbols = _symbolUniverse.ToDictionary(kv => kv.Symbol, kv => kv.Ticker);
             _tickers = _symbolUniverse.ToDictionary(kv => kv.Ticker, kv => kv.Symbol);
@@ -143,14 +120,44 @@ namespace QuantConnect.ToolBox.IQFeed
                 lookupFunc = symbol => symbol.Value;
             }
 
-            return _symbolUniverse.Where(x => lookupFunc(x.Symbol) == lookupName &&
+            var result = _symbolUniverse.Where(x => lookupFunc(x.Symbol) == lookupName &&
                                             x.Symbol.ID.SecurityType == securityType && 
                                             (securityCurrency == null || x.SecurityCurrency == securityCurrency) && 
+                                            (securityExchange == null || x.SecurityExchange == securityExchange));
+
+            if (result.Count() == 0 && securityType == SecurityType.Future)
+            {
+                result = _incompleteFutures.Where(x => lookupFunc(x.Symbol) == lookupName &&
+                                            x.Symbol.ID.SecurityType == securityType &&
+                                            (securityCurrency == null || x.SecurityCurrency == securityCurrency) &&
                                             (securityExchange == null || x.SecurityExchange == securityExchange))
-                                  .Select(x => x.Symbol);
+                                            .ToList();
+
+                // now we update expiration dates for the futures, if any
+                foreach (var item in result)
+                {
+                    var expirationDate = _symbolFundamentalData.Request(item.Ticker).Item1;
+
+                    // if correct expiration date is found, we update our collections with new symbol object and from now on
+                    // we use it in the system (we move the symbol from _incompleteFutures to _symbolUniverse)
+                    if (expirationDate != DateTime.MinValue)
+                    {
+                        _symbols.Remove(item.Symbol);
+                        _incompleteFutures.Remove(item);
+
+                        item.Symbol = Symbol.CreateFuture(item.Symbol.Underlying.Value, item.Symbol.ID.Market, expirationDate);
+
+                        _tickers[item.Ticker] = item.Symbol;
+                        _symbols[item.Symbol] = item.Ticker;
+                        _symbolUniverse.Add(item);
+                    }
+                }
+            }
+
+            return result.Select(x => x.Symbol);
         }
 
-        private List<SymbolData> LoadSymbols()
+        private void LoadSymbols()
         {
             // default URI
             const string uri = "http://www.dtniq.com/product/mktsymbols_v2.zip";
@@ -166,27 +173,49 @@ namespace QuantConnect.ToolBox.IQFeed
             const int columnNAICS = 7;
             const int totalColumns = 8;
 
-            var symbols = new List<SymbolData>();
-
-            Log.Trace("Loading IQFeed symbol universe file ({0})...", uri);
-
             if (!Directory.Exists(Globals.Cache)) Directory.CreateDirectory(Globals.Cache);
 
             // we try to check if we already downloaded the file and it is in cache. If yes, we use it. Otherwise, download new file. 
             IStreamReader reader;
-            var todayFileName = "IQFeed-symbol-universe-" + DateTime.Today.ToString("yyyy-MM-dd") + ".zip";
+
+            // we update the files every week
+            var dayOfWeek = DateTimeFormatInfo.CurrentInfo.Calendar.GetWeekOfYear(DateTime.Today, CalendarWeekRule.FirstDay, DayOfWeek.Monday);
+            var thisYearWeek = DateTime.Today.ToString("yyyy") + "-" + dayOfWeek.ToString();
+
+            var todayFileName = "IQFeed-symbol-universe-" + thisYearWeek + ".zip";
             var todayFullName = Path.Combine(Globals.Cache, todayFileName);
+
+            var iqfeedNameMapFileName = "IQFeed-symbol-map-" + thisYearWeek + ".json";
+            var iqfeedNameMapFullName = Path.Combine(Globals.Cache, iqfeedNameMapFileName);
+
+            // we have a special treatment of futures, because IQFeed renamed exchange tickers and doesn't include 
+            // futures expiration dates in the symbol universe file. We fix this.
+
+            // We map those tickers back to their original names using the map below
+            var iqfeedNameMap = new Dictionary<string, string>();
+
+            var mapExists = File.Exists(iqfeedNameMapFullName);
+
+            if (mapExists)
+            {
+                Log.Trace("Loading IQFeed futures symbol map file...");
+                iqfeedNameMap = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(iqfeedNameMapFullName));
+            }
 
             if (!File.Exists(todayFullName))
             {
+                Log.Trace("Loading IQFeed symbol universe file ({0})...", uri);
                 reader = new RemoteFileSubscriptionStreamReader(uri, Globals.Cache, todayFileName);
             }
             else
             {
-                Log.Trace("Found up-to-date file in local cache. Loading it...");
+                Log.Trace("Found up-to-date IQFeed symbol universe file in local cache. Loading it...");
                 reader = new LocalFileSubscriptionStreamReader(todayFullName);
             }
-            
+
+            _symbolUniverse = new List<SymbolData>();
+            _incompleteFutures = new List<SymbolData>();
+
             while (!reader.EndOfStream)
             {
                 var line = reader.ReadLine();
@@ -202,7 +231,7 @@ namespace QuantConnect.ToolBox.IQFeed
                 {
                     case "EQUITY":
 
-                        symbols.Add(new SymbolData
+                        _symbolUniverse.Add(new SymbolData
                         {
                             Symbol = Symbol.Create(columns[columnSymbol], SecurityType.Equity, Market.USA),
                             SecurityCurrency = "USD",
@@ -275,7 +304,7 @@ namespace QuantConnect.ToolBox.IQFeed
 
                         var expirationDate = new DateTime(2000 + year, month, day);
 
-                        symbols.Add(new SymbolData
+                        _symbolUniverse.Add(new SymbolData
                         {
                             Symbol = Symbol.CreateOption(underlying,
                                                         Market.USA,
@@ -297,7 +326,7 @@ namespace QuantConnect.ToolBox.IQFeed
                         {
                             var symbol = columns[columnSymbol].Replace(".FXCM", string.Empty);
 
-                            symbols.Add(new SymbolData
+                            _symbolUniverse.Add(new SymbolData
                             {
                                 Symbol = Symbol.Create(columns[columnSymbol], SecurityType.Forex, Market.FXCM),
                                 SecurityCurrency = "USD",
@@ -329,17 +358,10 @@ namespace QuantConnect.ToolBox.IQFeed
                         if (columns[columnSymbol].EndsWith("#"))
                             continue;
 
-                        // we are interested in electronically traded symbols only
-                        if (!columns[columnSymbol].StartsWith("@"))
-                            continue;
-
                         var futuresTicker = columns[columnSymbol].TrimStart(new [] { '@' });
                         var expirationYearString = futuresTicker.Substring(futuresTicker.Length - 2, 2);
                         var expirationMonthString = futuresTicker.Substring(futuresTicker.Length - 3, 1);
                         var underlyingString = futuresTicker.Substring(0, futuresTicker.Length - 3);
-
-                        if (_iqfeedNameMap.ContainsKey(underlyingString))
-                            underlyingString = _iqfeedNameMap[underlyingString];
 
                         // parsing expiration date
 
@@ -366,13 +388,43 @@ namespace QuantConnect.ToolBox.IQFeed
 
                         var expirationYearMonth = new DateTime(exprirationYear, expirationMonth, DateTime.DaysInMonth(exprirationYear, expirationMonth));
 
-                        symbols.Add(new SymbolData
+                        if (expirationYearMonth < DateTime.Now.Date.AddDays(-1.0))
+                        {
+                            continue;
+                        }
+
+                        if (iqfeedNameMap.ContainsKey(underlyingString))
+                            underlyingString = iqfeedNameMap[underlyingString];
+                        else
+                        {
+                            if (!mapExists)
+                            {
+                                if (!iqfeedNameMap.ContainsKey(underlyingString))
+                                {
+                                    // if map is not created yet, we request this information from IQFeed
+                                    var exchangeSymbol = _symbolFundamentalData.Request(columns[columnSymbol]).Item2;
+                                    if (!string.IsNullOrEmpty(exchangeSymbol))
+                                    {
+                                        iqfeedNameMap[underlyingString] = exchangeSymbol;
+                                        underlyingString = exchangeSymbol;
+                                    }
+                                    else
+                                    {
+                                        Log.Trace("IQFeed futures ticker {0} had no exchange root symbol assigned in IQFeed system.", underlyingString);
+                                    }
+                                }
+                            }
+                        }
+
+                        var market = Market.USA;
+
+                        _incompleteFutures.Add(new SymbolData
                         {
                             Symbol = Symbol.CreateFuture(underlyingString,
-                                                        Market.USA,
+                                                        market,
                                                         expirationYearMonth),
                             SecurityCurrency = "USD",
-                            SecurityExchange = Market.USA,
+                            SecurityExchange = market,
                             Ticker = columns[columnSymbol]
                         });
                         break;
@@ -383,11 +435,14 @@ namespace QuantConnect.ToolBox.IQFeed
                 }
             }
 
+            if (!mapExists)
+            {
+                Log.Trace("Saving IQFeed futures symbol map file...");
+                File.WriteAllText(iqfeedNameMapFullName, JsonConvert.SerializeObject(iqfeedNameMap));
+            }
+
             Log.Trace("Finished loading IQFeed symbol universe file.");
-
-            return symbols;
         }
-
 
         // this is a private POCO type for storing symbol universe
         class SymbolData
@@ -429,5 +484,60 @@ namespace QuantConnect.ToolBox.IQFeed
             }
         }
 
+        /// <summary>
+        /// Private class that helps requesting IQFeed fundamental data 
+        /// </summary>
+        public class SymbolFundamentalData : IQLevel1Client
+        {
+            public SymbolFundamentalData(): base(80)
+            {
+            }
+
+            /// <summary>
+            /// Method returns two fields of the fundamental data that we need: expiration date (tuple field 1),
+            /// and exchange root symbol (tuple field 2)
+            /// </summary>
+            public Tuple<DateTime, string> Request(string ticker)
+            {
+                const int timeout = 180; // sec
+                var manualResetEvent = new ManualResetEvent(false);
+
+                var expiry = DateTime.MinValue;
+                var rootSymbol = string.Empty;
+
+                EventHandler<Level1FundamentalEventArgs> dataEventHandler = (sender, e) =>
+                {
+                    expiry = e.ExpirationDate;
+                    rootSymbol = e.ExchangeRoot;
+                    manualResetEvent.Set();
+                };
+                EventHandler<Level1SummaryUpdateEventArgs> noDataEventHandler = (sender, e) =>
+                {
+                    if (e.NotFound)
+                    {
+                        manualResetEvent.Set();
+                    }
+                };
+
+                Level1FundamentalEvent += dataEventHandler;
+                Level1SummaryUpdateEvent += noDataEventHandler;
+
+                Subscribe(ticker);
+
+                if (!manualResetEvent.WaitOne())
+                {
+                    Log.Error("SymbolFundamentalData.Request() failed to receive response from IQFeed within {0} seconds", timeout);
+                }
+
+                Unsubscribe(ticker);
+
+                Level1SummaryUpdateEvent -= noDataEventHandler;
+
+                Level1FundamentalEvent -= dataEventHandler;
+
+                return Tuple.Create(expiry, rootSymbol);
+            }
+        }
+        
     }
 }

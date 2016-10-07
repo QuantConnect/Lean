@@ -427,7 +427,8 @@ namespace QuantConnect.Securities
             bool isCustomData,
             bool addToSymbolCache = true)
         {
-            var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType);
+            var symbolValue = symbol.ID.SecurityType == SecurityType.Future ? symbol.Underlying.Value : symbol.Value;
+            var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbolValue, symbol.ID.SecurityType);
             var exchangeHours = marketHoursDbEntry.ExchangeHours;
 
             var defaultQuoteCurrency = CashBook.AccountCurrency;

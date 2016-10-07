@@ -42,7 +42,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 throw new ArgumentException("Forex symbol length must be equal to 6: " + symbol.Value);
 
             if (symbol.ID.SecurityType == SecurityType.Option ||
-                symbol.ID.SecurityType == SecurityType.Future)
+               symbol.ID.SecurityType == SecurityType.Future)
             {
                 return symbol.Underlying.Value;
             }

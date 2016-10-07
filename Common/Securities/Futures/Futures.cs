@@ -53,12 +53,6 @@ namespace QuantConnect.Securities
             /// <returns>The symbol</returns>
             public const string Oats = "ZO";
 
-            /// <summary>
-            /// Hard Red Wheat Futures  
-            /// </summary>
-            /// <returns>The symbol</returns>
-            public const string HardRedWheat = "KE";
-
         }
 
         /// <summary>
