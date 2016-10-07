@@ -36,12 +36,12 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// The point where the regression line crosses the y-axis (price-axis)
         /// </summary>
-        public WindowIndicator<IndicatorDataPoint> Intercept { get; private set; }
+        public IndicatorBase<IndicatorDataPoint> Intercept { get; private set; }
         
         /// <summary>
         /// The regression line slope
         /// </summary>
-        public WindowIndicator<IndicatorDataPoint> Slope { get; private set; }
+        public IndicatorBase<IndicatorDataPoint> Slope { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LeastSquaresMovingAverage"/> class.
@@ -52,8 +52,8 @@ namespace QuantConnect.Indicators
             : base(name, period)
         {
             t = Vector<double>.Build.Dense(period, i => i + 1).ToArray();
-            Intercept = new WindowIdentity(name + "_Intercept", period);
-            Slope = new WindowIdentity(name + "_Slope", period);
+            Intercept = new Identity(name + "_Intercept");
+            Slope = new Identity(name + "_Slope");
         }
 
         /// <summary>
@@ -88,8 +88,8 @@ namespace QuantConnect.Indicators
             Intercept.Update(input.Time, (decimal)ols.Item1);
             Slope.Update(input.Time, (decimal)ols.Item2);
 
-            // Make the projection.
-            return Intercept + Slope * Period;
+            // Calculate the fitted value corresponding to the input
+            return Intercept.Plus(Slope.Times(Period));
         }
 
         /// <summary>

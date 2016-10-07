@@ -46,12 +46,12 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// The point where the regression line crosses the y-axis (price-axis)
         /// </summary>
-        public WindowIndicator<IndicatorDataPoint> Intercept { get { return LinearRegression.Intercept; } }
+        public IndicatorBase<IndicatorDataPoint> Intercept { get { return LinearRegression.Intercept; } }
 
         /// <summary>
         /// The regression line slope
         /// </summary>
-        public WindowIndicator<IndicatorDataPoint> Slope { get { return LinearRegression.Slope; } }
+        public IndicatorBase<IndicatorDataPoint> Slope { get { return LinearRegression.Slope; } }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
