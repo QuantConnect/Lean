@@ -95,7 +95,11 @@ namespace QuantConnect.Securities
         /// <returns>The exchange hours for the specified security</returns>
         public SecurityExchangeHours GetExchangeHours(string market, Symbol symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
         {
-            var stringSymbol = symbol == null ? string.Empty : symbol.Value;
+            var stringSymbol = symbol == null ? 
+                                    string.Empty :
+                                    (symbol.ID.SecurityType == SecurityType.Future? 
+                                        symbol.Underlying.Value : 
+                                        symbol.Value);
             return GetEntry(market, stringSymbol, securityType, overrideTimeZone).ExchangeHours;
         }
 

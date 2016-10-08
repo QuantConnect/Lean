@@ -41,7 +41,7 @@ namespace QuantConnect
             Tuple.Create(Globex, 6),
             Tuple.Create(NYMEX, 7),
             Tuple.Create(CBOT, 8),
-            Tuple.Create(NYBOT, 9),
+            Tuple.Create(ICE, 9),
             Tuple.Create(CBOE, 10)
         };
 
@@ -85,27 +85,27 @@ namespace QuantConnect
         /// <summary>
         /// CME Globex
         /// </summary>
-        public const string Globex = "CMEGlobex";
+        public const string Globex = "cmeglobex";
 
         /// <summary>
         /// NYMEX
         /// </summary>
-        public const string NYMEX = "NYMEX";
+        public const string NYMEX = "nymex";
 
         /// <summary>
         /// CBOT
         /// </summary>
-        public const string CBOT = "CBOT";
+        public const string CBOT = "cbot";
 
         /// <summary>
-        /// NYBOT
+        /// ICE
         /// </summary>
-        public const string NYBOT = "NYBOT";
+        public const string ICE = "ice";
 
         /// <summary>
-        /// NYBOT
+        /// CBOE
         /// </summary>
-        public const string CBOE = "CBOE";
+        public const string CBOE = "cboe";
 
         /// <summary>
         /// Adds the specified market to the map of available markets with the specified identifier.

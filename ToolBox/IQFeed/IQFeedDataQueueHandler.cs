@@ -45,7 +45,7 @@ namespace QuantConnect.ToolBox.IQFeed
         private readonly HashSet<Symbol> _symbols;
         private readonly Dictionary<Symbol, Symbol> _underlyings;
         private readonly object _sync = new object();
-        private readonly IQFeedDataQueueUniverseProvider _symbolUniverse;
+        private IQFeedDataQueueUniverseProvider _symbolUniverse;
 
         //Socket connections:
         private AdminPort _adminPort;
@@ -69,7 +69,6 @@ namespace QuantConnect.ToolBox.IQFeed
             _symbols = new HashSet<Symbol>();
             _underlyings = new Dictionary<Symbol, Symbol>();
             _outputCollection = new BlockingCollection<BaseData>();
-            _symbolUniverse = new IQFeedDataQueueUniverseProvider();
 
             if (!IsConnected) Connect();
         }
@@ -238,6 +237,8 @@ namespace QuantConnect.ToolBox.IQFeed
                 _adminPort.DisconnectedEvent += AdminPortOnDisconnectedEvent;
                 _adminPort.ConnectedEvent += AdminPortOnConnectedEvent;
 
+                _symbolUniverse = new IQFeedDataQueueUniverseProvider();
+
                 Log.Trace("IQFeed.Connect(): Connecting to L1 data...");
                 _level1Port = new Level1Port(_outputCollection, _symbolUniverse);
                 _level1Port.Connect();
@@ -285,7 +286,7 @@ namespace QuantConnect.ToolBox.IQFeed
                 (securityType == SecurityType.Equity && market == Market.USA) ||
                 (securityType == SecurityType.Forex && market == Market.FXCM) ||
                 (securityType == SecurityType.Option && market == Market.USA) ||
-                (securityType == SecurityType.Future && market == Market.USA);
+                (securityType == SecurityType.Future);
         }
 
         /// <summary>
@@ -365,7 +366,7 @@ namespace QuantConnect.ToolBox.IQFeed
                 _timer.AutoReset = true;
                 _timer.Elapsed += (sender, args) =>
                 {
-                    var ticksPerSecond = count/(DateTime.Now - start).TotalSeconds;
+                    var ticksPerSecond = count / (DateTime.Now - start).TotalSeconds;
                     if (ticksPerSecond > 1000 || _dataQueue.Count > 31)
                     {
                         Log.Trace(string.Format("IQFeed.OnSecond(): Ticks/sec: {0} Engine.Ticks.Count: {1} CPU%: {2}",
@@ -389,7 +390,7 @@ namespace QuantConnect.ToolBox.IQFeed
 
             private void OnLevel1FundamentalEvent(object sender, Level1FundamentalEventArgs e)
             {
-                
+
                 // handle split data, they're only valid today, they'll show up around 4:45am EST
                 if (e.SplitDate1.Date == DateTime.Today && DateTime.Now.TimeOfDay.TotalHours <= 8) // they will always be sent premarket
                 {
@@ -400,7 +401,7 @@ namespace QuantConnect.ToolBox.IQFeed
                     _prices.TryGetValue(e.Symbol, out referencePrice);
 
                     var symbol = GetLeanSymbol(e.Symbol);
-                    var split = new Split(symbol, FeedTime, (decimal) referencePrice, (decimal) e.SplitFactor1);
+                    var split = new Split(symbol, FeedTime, (decimal)referencePrice, (decimal)e.SplitFactor1);
                     _dataQueue.Add(split);
                 }
             }
@@ -554,14 +555,14 @@ namespace QuantConnect.ToolBox.IQFeed
                     (securityType == SecurityType.Equity && market == Market.USA) ||
                     (securityType == SecurityType.Forex && market == Market.FXCM) ||
                     (securityType == SecurityType.Option && market == Market.USA) ||
-                    (securityType == SecurityType.Future && market == Market.USA);
+                    (securityType == SecurityType.Future);
             }
 
             /// <summary>
             /// Populate request data
             /// </summary>
             public IEnumerable<Slice> ProcessHistoryRequests(HistoryRequest request)
-            {                
+            {
                 if (!CanHandle(request.Symbol))
                 {
                     yield break;
@@ -697,21 +698,21 @@ namespace QuantConnect.ToolBox.IQFeed
                     switch (e.Type)
                     {
                         case LookupType.REQ_HST_TCK:
-                            var t = (LookupTickEventArgs) e;
+                            var t = (LookupTickEventArgs)e;
                             var time = isEquity ? t.DateTimeStamp : t.DateTimeStamp.ConvertTo(TimeZones.NewYork, TimeZones.EasternStandard);
-                            return new Tick(time, requestData.Symbol, (decimal) t.Last*scale, (decimal) t.Bid*scale, (decimal) t.Ask*scale);
+                            return new Tick(time, requestData.Symbol, (decimal)t.Last * scale, (decimal)t.Bid * scale, (decimal)t.Ask * scale);
                         case LookupType.REQ_HST_INT:
-                            var i = (LookupIntervalEventArgs) e;
+                            var i = (LookupIntervalEventArgs)e;
                             if (i.DateTimeStamp == DateTime.MinValue) return null;
                             var istartTime = i.DateTimeStamp - requestData.Resolution.ToTimeSpan();
                             if (!isEquity) istartTime = istartTime.ConvertTo(TimeZones.NewYork, TimeZones.EasternStandard);
-                            return new TradeBar(istartTime, requestData.Symbol, (decimal) i.Open*scale, (decimal) i.High*scale, (decimal) i.Low*scale, (decimal) i.Close*scale, i.PeriodVolume);
+                            return new TradeBar(istartTime, requestData.Symbol, (decimal)i.Open * scale, (decimal)i.High * scale, (decimal)i.Low * scale, (decimal)i.Close * scale, i.PeriodVolume);
                         case LookupType.REQ_HST_DWM:
-                            var d = (LookupDayWeekMonthEventArgs) e;
+                            var d = (LookupDayWeekMonthEventArgs)e;
                             if (d.DateTimeStamp == DateTime.MinValue) return null;
                             var dstartTime = d.DateTimeStamp - requestData.Resolution.ToTimeSpan();
                             if (!isEquity) dstartTime = dstartTime.ConvertTo(TimeZones.NewYork, TimeZones.EasternStandard);
-                            return new TradeBar(dstartTime, requestData.Symbol, (decimal) d.Open*scale, (decimal) d.High*scale, (decimal) d.Low*scale, (decimal) d.Close*scale, d.PeriodVolume);
+                            return new TradeBar(dstartTime, requestData.Symbol, (decimal)d.Open * scale, (decimal)d.High * scale, (decimal)d.Low * scale, (decimal)d.Close * scale, d.PeriodVolume);
 
                         // we don't need to handle these other types
                         case LookupType.REQ_SYM_SYM:

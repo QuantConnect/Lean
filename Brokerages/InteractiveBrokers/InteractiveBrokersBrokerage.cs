@@ -82,7 +82,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             { Market.Globex, "GLOBEX" },
             { Market.NYMEX, "NYMEX" },
             { Market.CBOT, "ECBOT" },
-            { Market.NYBOT, "NYBOT" },
+            { Market.ICE, "NYBOT" },
             { Market.CBOE, "CFE" }
         };
 
@@ -1121,17 +1121,23 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             if (symbol.ID.SecurityType == SecurityType.Future)
             {
-                contract.Exchange = "";
-                contract.Expiry = symbol.ID.Date.ToString(DateFormat.YearMonth);
-                contract.Symbol = ibSymbol;
-
                 // if Market.USA is specified we automatically find exchange from the prioritized list
                 // Otherwise we convert Market.* markets into IB exchanges if we have them in our map
-                contract.Exchange = symbol.ID.Market == Market.USA ? 
-                                        GetFuturesContractExchange(contract) : 
-                                        (_futuresExchanges.ContainsKey(symbol.ID.Market) ?
+
+                contract.Symbol = ibSymbol;
+                contract.Expiry = symbol.ID.Date.ToString(DateFormat.YearMonth);
+
+                if (symbol.ID.Market == Market.USA)
+                {
+                    contract.Exchange = "";
+                    contract.Exchange = GetFuturesContractExchange(contract);
+                }
+                else
+                {
+                    contract.Exchange = _futuresExchanges.ContainsKey(symbol.ID.Market) ?
                                             _futuresExchanges[symbol.ID.Market] :
-                                            symbol.ID.Market);
+                                            symbol.ID.Market;
+                }
             }
 
             // some contracts require this, such as MSFT
@@ -1344,8 +1350,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             if (securityType == SecurityType.Future)
             {
-                var parsedDate = DateTime.ParseExact(contract.Expiry, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
-                var contractDate = new DateTime(parsedDate.Year, parsedDate.Month, DateTime.DaysInMonth(parsedDate.Year, parsedDate.Month));
+                var contractDate = DateTime.ParseExact(contract.Expiry, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
 
                 return _symbolMapper.GetLeanSymbol(ibSymbol, securityType, market, contractDate);
             }

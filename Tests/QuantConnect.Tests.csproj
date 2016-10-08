@@ -155,6 +155,7 @@
     <Compile Include="Common\Securities\SubscriptionDataConfigTests.cs" />
     <Compile Include="Common\Securities\StrikeExpiryOptionFilterTests.cs" />
     <Compile Include="Common\Securities\SymbolPropertiesDatabaseTests.cs" />
+    <Compile Include="Common\Securities\TradingCalendarTests.cs" />
     <Compile Include="Common\Securities\UniverseManagerTests.cs" />
     <Compile Include="Common\SeriesTests.cs" />
     <Compile Include="Common\SymbolCacheTests.cs" />

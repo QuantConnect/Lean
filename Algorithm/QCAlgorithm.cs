@@ -143,6 +143,9 @@ namespace QuantConnect.Algorithm
             SecurityInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(AccountType.Margin));
 
             CandlestickPatterns = new CandlestickPatterns(this);
+
+            // initialize trading calendar 
+            TradingCalendar = new TradingCalendar(Securities, _marketHoursDatabase);
         }
 
         /// <summary>
@@ -262,6 +265,15 @@ namespace QuantConnect.Algorithm
         public TimeRules TimeRules
         {
             get { return Schedule.TimeRules; }
+        }
+
+        /// <summary>
+        /// Gets trading calendar populated with trading events
+        /// </summary>
+        public TradingCalendar TradingCalendar
+        {
+            get;
+            private set;
         }
 
         /// <summary>
