@@ -76,6 +76,9 @@ namespace QuantConnect.Brokerages.Fxcm
             _userName = userName;
             _password = password;
             _accountId = accountId;
+
+            HistoryResponseTimeout = 5000;
+            MaximumHistoryRetryAttempts = 1;
         }
 
         #region IBrokerage implementation
@@ -209,9 +212,12 @@ namespace QuantConnect.Brokerages.Fxcm
 
                                 // load instruments, accounts, orders, positions
                                 LoadInstruments();
-                                LoadAccounts();
-                                LoadOpenOrders();
-                                LoadOpenPositions();
+                                if (!EnableOnlyHistoryRequests)
+                                {
+                                    LoadAccounts();
+                                    LoadOpenOrders();
+                                    LoadOpenPositions();
+                                }
 
                                 _connectionError = false;
                                 _connectionLost = false;
@@ -240,9 +246,12 @@ namespace QuantConnect.Brokerages.Fxcm
 
             // load instruments, accounts, orders, positions
             LoadInstruments();
-            LoadAccounts();
-            LoadOpenOrders();
-            LoadOpenPositions();
+            if (!EnableOnlyHistoryRequests)
+            {
+                LoadAccounts();
+                LoadOpenOrders();
+                LoadOpenPositions();
+            }
         }
 
         /// <summary>

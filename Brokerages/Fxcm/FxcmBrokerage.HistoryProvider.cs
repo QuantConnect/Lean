@@ -34,6 +34,22 @@ namespace QuantConnect.Brokerages.Fxcm
     {
         private readonly IList<BaseData> _lastHistoryChunk = new List<BaseData>();
 
+        /// <summary>
+        /// Gets/sets a timeout for history requests (in milliseconds)
+        /// </summary>
+        public int HistoryResponseTimeout { get; set; }
+
+        /// <summary>
+        /// Gets/sets the maximum number of retries for a history request
+        /// </summary>
+        public int MaximumHistoryRetryAttempts { get; set; }
+
+        /// <summary>
+        /// Gets/sets a value to enable only history requests to this brokerage
+        /// Set to true in parallel downloaders to avoid loading accounts, orders, positions etc. at connect time
+        /// </summary>
+        public bool EnableOnlyHistoryRequests { get; set; }
+
         #region IHistoryProvider implementation
 
         /// <summary>
@@ -69,6 +85,7 @@ namespace QuantConnect.Brokerages.Fxcm
 
                 var end = request.EndTimeUtc;
 
+                var attempt = 1;
                 while (end > request.StartTimeUtc)
                 {
                     _lastHistoryChunk.Clear();
@@ -93,21 +110,30 @@ namespace QuantConnect.Brokerages.Fxcm
                         _mapRequestsToAutoResetEvents[_currentRequest] = autoResetEvent;
                         _pendingHistoryRequests.Add(_currentRequest);
                     }
-                    if (!autoResetEvent.WaitOne(ResponseTimeout))
+                    if (!autoResetEvent.WaitOne(HistoryResponseTimeout))
                     {
-                        // no response, exit
-                        Log.Trace("FxcmBrokerage.GetHistory(): history request timed out");
-                        break;
+                        // no response
+                        if (++attempt > MaximumHistoryRetryAttempts)
+                        {
+                            break;
+                        }
+                        continue;
                     }
 
                     // Add data
-                    history.InsertRange(0, _lastHistoryChunk);
+                    lock (_locker)
+                    {
+                        history.InsertRange(0, _lastHistoryChunk);
+                    }
 
                     var firstDateUtc = _lastHistoryChunk[0].Time.ConvertToUtc(_configTimeZone);
                     if (end != firstDateUtc)
                     {
                         // new end date = first datapoint date.
                         end = request.Resolution == Resolution.Tick ? firstDateUtc.AddMilliseconds(-1) : firstDateUtc.AddSeconds(-1);
+
+                        if (request.StartTimeUtc.AddSeconds(1) >= end)
+                            break;
                     }
                     else
                     {
