@@ -148,6 +148,8 @@ namespace QuantConnect.Brokerages.Fxcm
                     err.Message.Contains("ORA-20003") ? "API connections are not available on Mini accounts. If you have a standard account contact api@fxcm.com to enable API access" :
                     err.Message;
 
+                _cancellationTokenSource.Cancel();
+
                 throw new BrokerageException(message, err.InnerException);
             }
 
