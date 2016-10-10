@@ -69,6 +69,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
         private IResultHandler _resultHandler;
 
+        private OrderResponse _lastResponse;
+
         /// <summary>
         /// Gets the permanent storage for all orders
         /// </summary>
@@ -617,6 +619,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             // mark request as processed
             request.SetResponse(response, OrderRequestStatus.Processed);
+
+            _lastResponse = response;
         }
 
         /// <summary>
@@ -678,7 +682,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 order.Status = OrderStatus.Invalid;
                 var response = OrderResponse.Error(request, OrderResponseErrorCode.InsufficientBuyingPower, string.Format("Order Error: id: {0}, Insufficient buying power to complete order (Value:{1}).", order.Id, order.GetValue(security).SmartRounding()));
-                _algorithm.Error(response.ErrorMessage);
+
+                // Prevents error message flooding 
+                if (_lastResponse == null || response.ErrorCode != _lastResponse.ErrorCode)
+                {
+                    _algorithm.Error(response.ErrorMessage);
+                }
+                
                 HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m, "Insufficient buying power to complete order"));
                 return response;
             }
