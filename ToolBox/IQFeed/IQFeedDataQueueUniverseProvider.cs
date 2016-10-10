@@ -524,7 +524,7 @@ namespace QuantConnect.ToolBox.IQFeed
 
                 Subscribe(ticker);
 
-                if (!manualResetEvent.WaitOne())
+                if (!manualResetEvent.WaitOne(timeout * 1000))
                 {
                     Log.Error("SymbolFundamentalData.Request() failed to receive response from IQFeed within {0} seconds", timeout);
                 }
