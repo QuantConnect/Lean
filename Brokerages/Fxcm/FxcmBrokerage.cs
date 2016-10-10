@@ -76,6 +76,9 @@ namespace QuantConnect.Brokerages.Fxcm
             _userName = userName;
             _password = password;
             _accountId = accountId;
+
+            HistoryResponseTimeout = 5000;
+            MaximumHistoryRetryAttempts = 1;
         }
 
         #region IBrokerage implementation
@@ -145,6 +148,8 @@ namespace QuantConnect.Brokerages.Fxcm
                     err.Message.Contains("ORA-20003") ? "API connections are not available on Mini accounts. If you have a standard account contact api@fxcm.com to enable API access" :
                     err.Message;
 
+                _cancellationTokenSource.Cancel();
+
                 throw new BrokerageException(message, err.InnerException);
             }
 
@@ -209,9 +214,12 @@ namespace QuantConnect.Brokerages.Fxcm
 
                                 // load instruments, accounts, orders, positions
                                 LoadInstruments();
-                                LoadAccounts();
-                                LoadOpenOrders();
-                                LoadOpenPositions();
+                                if (!EnableOnlyHistoryRequests)
+                                {
+                                    LoadAccounts();
+                                    LoadOpenOrders();
+                                    LoadOpenPositions();
+                                }
 
                                 _connectionError = false;
                                 _connectionLost = false;
@@ -240,9 +248,12 @@ namespace QuantConnect.Brokerages.Fxcm
 
             // load instruments, accounts, orders, positions
             LoadInstruments();
-            LoadAccounts();
-            LoadOpenOrders();
-            LoadOpenPositions();
+            if (!EnableOnlyHistoryRequests)
+            {
+                LoadAccounts();
+                LoadOpenOrders();
+                LoadOpenPositions();
+            }
         }
 
         /// <summary>
@@ -267,21 +278,23 @@ namespace QuantConnect.Brokerages.Fxcm
         /// </summary>
         public override void Disconnect()
         {
-            if (!IsConnected) return;
-
             Log.Trace("FxcmBrokerage.Disconnect()");
 
-            // log out
-            _gateway.logout();
+            if (_gateway != null)
+            {
+                // log out
+                if (_gateway.isConnected())
+                    _gateway.logout();
 
-            // remove the message listeners
-            _gateway.removeGenericMessageListener(this);
-            _gateway.removeStatusMessageListener(this);
+                // remove the message listeners
+                _gateway.removeGenericMessageListener(this);
+                _gateway.removeStatusMessageListener(this);
+            }
 
             // request and wait for thread to stop
-            _cancellationTokenSource.Cancel();
-            _orderEventThread.Join();
-            _connectionMonitorThread.Join();
+            if (_cancellationTokenSource != null) _cancellationTokenSource.Cancel();
+            if (_orderEventThread != null) _orderEventThread.Join();
+            if (_connectionMonitorThread != null) _connectionMonitorThread.Join();
         }
 
         /// <summary>
