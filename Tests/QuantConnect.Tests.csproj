@@ -233,6 +233,7 @@
     <Compile Include="Indicators\HeikinAshiTests.cs" />
     <Compile Include="Indicators\IchimokuKinkoHyoTests.cs" />
     <Compile Include="Indicators\KeltnerChannelsTests.cs" />
+    <Compile Include="Indicators\RegressionChannelTest.cs" />
     <Compile Include="Indicators\LeastSquaresMovingAverageTest.cs" />
     <Compile Include="Indicators\LogReturnTests.cs" />
     <Compile Include="Indicators\MidPriceTests.cs" />
