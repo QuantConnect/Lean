@@ -18,27 +18,27 @@ using System;
 namespace QuantConnect.Brokerages.InteractiveBrokers.Client
 {
     /// <summary>
-    /// Base event arguments class for Tick events
+    /// Event arguments class for the <see cref="InteractiveBrokersClient.ReceiveFa"/> event
     /// </summary>
-    public abstract class TickEventArgs : EventArgs
+    public class ReceiveFaEventArgs : EventArgs
     {
         /// <summary>
-        /// The request's unique identifier.
+        /// Specifies the type of Financial Advisor configuration data being received from TWS.
         /// </summary>
-        public int TickerId { get; private set; }
+        public int FaDataType { get; private set; }
 
         /// <summary>
-        /// Specifies the type of data being received.
+        /// The XML string containing the previously requested FA configuration information.
         /// </summary>
-        public int Field { get; private set; }
+        public string FaXmlData { get; private set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TickEventArgs"/> class
+        /// Initializes a new instance of the <see cref="ReceiveFaEventArgs"/> class
         /// </summary>
-        protected TickEventArgs(int tickerId, int field)
+        public ReceiveFaEventArgs(int faDataType, string faXmlData)
         {
-            TickerId = tickerId;
-            Field = field;
+            FaDataType = faDataType;
+            FaXmlData = faXmlData;
         }
     }
 }

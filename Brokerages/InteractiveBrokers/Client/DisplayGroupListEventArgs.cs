@@ -18,27 +18,29 @@ using System;
 namespace QuantConnect.Brokerages.InteractiveBrokers.Client
 {
     /// <summary>
-    /// Base event arguments class for Tick events
+    /// Event arguments class for the <see cref="InteractiveBrokersClient.DisplayGroupList"/> event
     /// </summary>
-    public abstract class TickEventArgs : EventArgs
+    public sealed class DisplayGroupListEventArgs : EventArgs
     {
         /// <summary>
-        /// The request's unique identifier.
+        /// The requestId specified in queryDisplayGroups().
         /// </summary>
-        public int TickerId { get; private set; }
+        public int RequestId { get; private set; }
 
         /// <summary>
-        /// Specifies the type of data being received.
+        /// A list of integers representing visible group ID separated by the “|” character, and sorted by most used group first. 
+        /// This list will not change during TWS session (in other words, user cannot add a new group; sorting can change though). 
+        /// Example: "3|1|2"
         /// </summary>
-        public int Field { get; private set; }
+        public string Groups { get; private set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TickEventArgs"/> class
+        /// Initializes a new instance of the <see cref="DisplayGroupListEventArgs"/> class
         /// </summary>
-        protected TickEventArgs(int tickerId, int field)
+        public DisplayGroupListEventArgs(int reqId, string groups)
         {
-            TickerId = tickerId;
-            Field = field;
+            RequestId = reqId;
+            Groups = groups;
         }
     }
 }

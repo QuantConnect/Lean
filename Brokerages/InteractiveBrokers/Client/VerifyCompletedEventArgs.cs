@@ -18,27 +18,27 @@ using System;
 namespace QuantConnect.Brokerages.InteractiveBrokers.Client
 {
     /// <summary>
-    /// Base event arguments class for Tick events
+    /// Event arguments class for the <see cref="InteractiveBrokersClient.VerifyCompleted"/> event
     /// </summary>
-    public abstract class TickEventArgs : EventArgs
+    public class VerifyCompletedEventArgs : EventArgs
     {
         /// <summary>
-        /// The request's unique identifier.
+        /// 
         /// </summary>
-        public int TickerId { get; private set; }
+        public bool IsSuccessful { get; private set; }
 
         /// <summary>
-        /// Specifies the type of data being received.
+        /// 
         /// </summary>
-        public int Field { get; private set; }
+        public string ErrorText { get; private set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TickEventArgs"/> class
+        /// Initializes a new instance of the <see cref="VerifyCompletedEventArgs"/> class
         /// </summary>
-        protected TickEventArgs(int tickerId, int field)
+        public VerifyCompletedEventArgs(bool isSuccessful, string errorText)
         {
-            TickerId = tickerId;
-            Field = field;
+            IsSuccessful = isSuccessful;
+            ErrorText = errorText;
         }
     }
 }

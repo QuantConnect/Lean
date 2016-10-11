@@ -19,39 +19,27 @@ using IBApi;
 namespace QuantConnect.Brokerages.InteractiveBrokers.Client
 {
     /// <summary>
-    /// Event arguments class for the <see cref="InteractiveBrokersClient.Position"/> event
+    /// Event arguments class for the <see cref="InteractiveBrokersClient.SoftDollarTiers"/> event
     /// </summary>
-    public sealed class PositionEventArgs : EventArgs
+    public class SoftDollarTiersEventArgs : EventArgs
     {
         /// <summary>
-        /// The account holding the positions.
+        /// The id of the request.
         /// </summary>
-        public string Account { get; private set; }
+        public int RequestId { get; private set; }
 
         /// <summary>
-        /// This structure contains a full description of the position's contract.
+        /// 
         /// </summary>
-        public Contract Contract { get; private set; }
+        public SoftDollarTier[] Tiers { get; private set; }
 
         /// <summary>
-        /// The number of positions held.
+        /// Initializes a new instance of the <see cref="SoftDollarTiersEventArgs"/> class
         /// </summary>
-        public int Position { get; private set; }
-
-        /// <summary>
-        /// The average cost of the position.
-        /// </summary>
-        public double AverageCost { get; private set; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PositionEventArgs"/> class
-        /// </summary>
-        public PositionEventArgs(string account, Contract contract, int position, double averageCost)
+        public SoftDollarTiersEventArgs(int reqId, SoftDollarTier[] tiers)
         {
-            Account = account;
-            Contract = contract;
-            Position = position;
-            AverageCost = averageCost;
+            RequestId = reqId;
+            Tiers = tiers;
         }
     }
 }

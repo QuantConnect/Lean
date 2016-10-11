@@ -14,44 +14,55 @@
 */
 
 using System;
-using IBApi;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers.Client
 {
     /// <summary>
-    /// Event arguments class for the <see cref="InteractiveBrokersClient.Position"/> event
+    /// Event arguments class for the <see cref="InteractiveBrokersClient.AccountUpdateMulti"/> event
     /// </summary>
-    public sealed class PositionEventArgs : EventArgs
+    public sealed class AccountUpdateMultiEventArgs : EventArgs
     {
         /// <summary>
-        /// The account holding the positions.
+        /// The request's unique identifier.
+        /// </summary>
+        public int RequestId { get; private set; }
+
+        /// <summary>
+        /// The account ID.
         /// </summary>
         public string Account { get; private set; }
 
         /// <summary>
-        /// This structure contains a full description of the position's contract.
+        /// the model code with updates
         /// </summary>
-        public Contract Contract { get; private set; }
+        public string ModelCode { get; private set; }
 
         /// <summary>
-        /// The number of positions held.
+        /// the name of parameter
         /// </summary>
-        public int Position { get; private set; }
+        public string Key { get; private set; }
 
         /// <summary>
-        /// The average cost of the position.
+        /// the value of parameter
         /// </summary>
-        public double AverageCost { get; private set; }
+        public string Value { get; private set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PositionEventArgs"/> class
+        /// the currency of parameter
         /// </summary>
-        public PositionEventArgs(string account, Contract contract, int position, double averageCost)
+        public string Currency { get; private set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AccountUpdateMultiEventArgs"/> class
+        /// </summary>
+        public AccountUpdateMultiEventArgs(int requestId, string account, string modelCode, string key, string value, string currency)
         {
+            RequestId = requestId;
             Account = account;
-            Contract = contract;
-            Position = position;
-            AverageCost = averageCost;
+            ModelCode = modelCode;
+            Key = key;
+            Value = value;
+            Currency = currency;
         }
     }
 }

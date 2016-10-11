@@ -19,24 +19,34 @@ using IBApi;
 namespace QuantConnect.Brokerages.InteractiveBrokers.Client
 {
     /// <summary>
-    /// Event arguments class for the <see cref="InteractiveBrokersClient.Position"/> event
+    /// Event arguments class for the <see cref="InteractiveBrokersClient.PositionMulti"/> event
     /// </summary>
-    public sealed class PositionEventArgs : EventArgs
+    public class PositionMultiEventArgs : EventArgs
     {
         /// <summary>
-        /// The account holding the positions.
+        /// The id of the request.
+        /// </summary>
+        public int RequestId { get; private set; }
+
+        /// <summary>
+        /// The account holding the position.
         /// </summary>
         public string Account { get; private set; }
 
         /// <summary>
-        /// This structure contains a full description of the position's contract.
+        /// The model code holding the position.
+        /// </summary>
+        public string ModelCode { get; private set; }
+
+        /// <summary>
+        /// The position's Contract.
         /// </summary>
         public Contract Contract { get; private set; }
 
         /// <summary>
         /// The number of positions held.
         /// </summary>
-        public int Position { get; private set; }
+        public double Position { get; private set; }
 
         /// <summary>
         /// The average cost of the position.
@@ -44,14 +54,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         public double AverageCost { get; private set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PositionEventArgs"/> class
+        /// Initializes a new instance of the <see cref="PositionMultiEventArgs"/> class
         /// </summary>
-        public PositionEventArgs(string account, Contract contract, int position, double averageCost)
+        public PositionMultiEventArgs(int requestId, string account, string modelCode, Contract contract, double pos, double avgCost)
         {
+            RequestId = requestId;
             Account = account;
+            ModelCode = modelCode;
             Contract = contract;
-            Position = position;
-            AverageCost = averageCost;
+            Position = pos;
+            AverageCost = avgCost;
         }
     }
 }

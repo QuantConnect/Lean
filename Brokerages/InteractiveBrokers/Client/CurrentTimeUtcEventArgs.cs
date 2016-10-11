@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -18,27 +18,21 @@ using System;
 namespace QuantConnect.Brokerages.InteractiveBrokers.Client
 {
     /// <summary>
-    /// Base event arguments class for Tick events
+    /// Event arguments class for the <see cref="InteractiveBrokersClient.CurrentTimeUtc"/> event
     /// </summary>
-    public abstract class TickEventArgs : EventArgs
+    public sealed class CurrentTimeUtcEventArgs : EventArgs
     {
         /// <summary>
-        /// The request's unique identifier.
+        /// The current system time on the IB server.
         /// </summary>
-        public int TickerId { get; private set; }
+        public DateTime CurrentTimeUtc { get; private set; }
 
         /// <summary>
-        /// Specifies the type of data being received.
+        /// Initializes a new instance of the <see cref="CurrentTimeUtcEventArgs"/> class
         /// </summary>
-        public int Field { get; private set; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="TickEventArgs"/> class
-        /// </summary>
-        protected TickEventArgs(int tickerId, int field)
+        public CurrentTimeUtcEventArgs(DateTime currentTimeUtc)
         {
-            TickerId = tickerId;
-            Field = field;
+            CurrentTimeUtc = currentTimeUtc;
         }
     }
 }
