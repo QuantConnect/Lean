@@ -42,24 +42,24 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
     public sealed class InteractiveBrokersBrokerage : Brokerage, IDataQueueHandler
     {
         // next valid order id for this client
-        private int _nextValidID;
+        private int _nextValidId;
         // next valid client id for the gateway/tws
-        private static int _nextClientID = 0;
+        private static int _nextClientId;
         // next valid request id for queries
-        private int _nextRequestID = 0;
-        private int _nextTickerID = 0;
-        private volatile bool _disconnected1100Fired = false;
+        private int _nextRequestId;
+        private int _nextTickerId;
+        private volatile bool _disconnected1100Fired;
 
         private readonly int _port;
         private readonly string _account;
         private readonly string _host;
-        private readonly int _clientID;
+        private readonly int _clientId;
         private readonly IOrderProvider _orderProvider;
-        private ISecurityProvider _securityProvider;
+        private readonly ISecurityProvider _securityProvider;
         private readonly IB.InteractiveBrokersClient _client;
         private readonly string _agentDescription;
 
-        private readonly ManualResetEvent _waitForNextValidID = new ManualResetEvent(false);
+        private readonly ManualResetEvent _waitForNextValidId = new ManualResetEvent(false);
         private readonly ManualResetEvent _accountHoldingsResetEvent = new ManualResetEvent(false);
 
         // IB likes to duplicate/triplicate some events, keep track of them and swallow the dupes
@@ -73,7 +73,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         // number of shares per symbol
         private readonly ConcurrentDictionary<string, Holding> _accountHoldings = new ConcurrentDictionary<string, Holding>();
 
-        private readonly ConcurrentDictionary<string, ContractDetails> _contractDetails = new ConcurrentDictionary<string, IBApi.ContractDetails>();
+        private readonly ConcurrentDictionary<string, ContractDetails> _contractDetails = new ConcurrentDictionary<string, ContractDetails>();
 
         private readonly InteractiveBrokersSymbolMapper _symbolMapper = new InteractiveBrokersSymbolMapper();
 
@@ -143,7 +143,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _account = account;
             _host = host;
             _port = port;
-            _clientID = IncrementClientID();
+            _clientId = IncrementClientId();
             _agentDescription = agentDescription;
             _client = new IB.InteractiveBrokersClient();
 
@@ -160,10 +160,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.NextValidId += (sender, e) =>
             {
                 // only grab this id when we initialize, and we'll manually increment it here to avoid threading issues
-                if (_nextValidID == 0)
+                if (_nextValidId == 0)
                 {
-                    _nextValidID = e.OrderId;
-                    _waitForNextValidID.Set();
+                    _nextValidId = e.OrderId;
+                    _waitForNextValidId.Set();
                 }
                 Log.Trace("InteractiveBrokersBrokerage.HandleNextValidID(): " + e.OrderId);
             };
@@ -292,7 +292,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns>The current holdings from the account</returns>
         public override List<Holding> GetAccountHoldings()
         {
-            var holdings = _accountHoldings.Select(x => (Holding) ObjectActivator.Clone(x.Value)).Where(x => x.Quantity != 0).ToList();
+            var holdings = _accountHoldings.Select(x => ObjectActivator.Clone(x.Value)).Where(x => x.Quantity != 0).ToList();
 
             // fire up tasks to resolve the conversion rates so we can do them in parallel
             var tasks = holdings.Select(local =>
@@ -305,7 +305,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     return null;
                 }
                 // if quote currency is in USD don't bother making the request
-                string currency = local.Symbol.Value.Substring(3);
+                var currency = local.Symbol.Value.Substring(3);
                 if (currency == "USD")
                 {
                     local.ConversionRate = 1m;
@@ -339,7 +339,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var filter = new ExecutionFilter
             {
                 AcctCode = _account,
-                ClientId = _clientID,
+                ClientId = _clientId,
                 Exchange = exchange,
                 SecType = type ?? IB.SecurityType.Undefined,
                 Symbol = symbol,
@@ -350,27 +350,27 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var details = new List<IB.ExecutionDetailsEventArgs>();
             using (var client = new IB.InteractiveBrokersClient())
             {
-                client.ClientSocket.eConnect(_host, _port, IncrementClientID());
+                client.ClientSocket.eConnect(_host, _port, IncrementClientId());
 
                 var manualResetEvent = new ManualResetEvent(false);
 
-                int requestID = GetNextRequestID();
+                var requestId = GetNextRequestId();
 
                 // define our event handlers
                 EventHandler<IB.RequestEndEventArgs> clientOnExecutionDataEnd = (sender, args) =>
                 {
-                    if (args.RequestId == requestID) manualResetEvent.Set();
+                    if (args.RequestId == requestId) manualResetEvent.Set();
                 };
                 EventHandler<IB.ExecutionDetailsEventArgs> clientOnExecDetails = (sender, args) =>
                 {
-                    if (args.RequestId == requestID) details.Add(args);
+                    if (args.RequestId == requestId) details.Add(args);
                 };
 
                 client.ExecutionDetails += clientOnExecDetails;
                 client.ExecutionDetailsEnd += clientOnExecutionDataEnd;
 
                 // no need to be fancy with request id since that's all this client does is 1 request
-                client.ClientSocket.reqExecutions(requestID, filter);
+                client.ClientSocket.reqExecutions(requestId, filter);
 
                 if (!manualResetEvent.WaitOne(5000))
                 {
@@ -396,7 +396,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _accountHoldings.Clear();
             _accountProperties.Clear();
 
-            int attempt = 1;
+            var attempt = 1;
             const int maxAttempts = 65;
             while (true)
             {
@@ -405,7 +405,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     Log.Trace("InteractiveBrokersBrokerage.Connect(): Attempting to connect ({0}/{1}) ...", attempt, maxAttempts);
 
                     // we're going to try and connect several times, if successful break
-                    _client.ClientSocket.eConnect(_host, _port, _clientID);
+                    _client.ClientSocket.eConnect(_host, _port, _clientId);
 
                     if (!_client.Connected) throw new Exception("InteractiveBrokersBrokerage.Connect(): Connection returned but was not in connected state.");
                     break;
@@ -436,7 +436,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             // pause for a moment to receive next valid ID message from gateway
-            if (!_waitForNextValidID.WaitOne(15000))
+            if (!_waitForNextValidId.WaitOne(15000))
             {
                 throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): Operation took longer than 15 seconds.");
             }
@@ -513,9 +513,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// Places the order with InteractiveBrokers
         /// </summary>
         /// <param name="order">The order to be placed</param>
-        /// <param name="needsNewID">Set to true to generate a new order ID, false to leave it alone</param>
+        /// <param name="needsNewId">Set to true to generate a new order ID, false to leave it alone</param>
         /// <param name="exchange">The exchange to send the order to, defaults to "Smart" to use IB's smart routing</param>
-        private void IBPlaceOrder(Order order, bool needsNewID, string exchange = null)
+        private void IBPlaceOrder(Order order, bool needsNewId, string exchange = null)
         {
             // connect will throw if it fails
             Connect();
@@ -527,25 +527,25 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             var contract = CreateContract(order.Symbol, exchange);
 
-            int ibOrderID = 0;
-            if (needsNewID)
+            int ibOrderId;
+            if (needsNewId)
             {
                 // the order ids are generated for us by the SecurityTransactionManaer
-                int id = GetNextBrokerageOrderID();
+                var id = GetNextBrokerageOrderId();
                 order.BrokerId.Add(id.ToString());
-                ibOrderID = id;
+                ibOrderId = id;
             }
             else if (order.BrokerId.Any())
             {
                 // this is *not* perfect code
-                ibOrderID = int.Parse(order.BrokerId[0]);
+                ibOrderId = int.Parse(order.BrokerId[0]);
             }
             else
             {
                 throw new ArgumentException("Expected order with populated BrokerId for updating orders.");
             }
 
-            var ibOrder = ConvertOrder(order, contract, ibOrderID);
+            var ibOrder = ConvertOrder(order, contract, ibOrderId);
             _client.ClientSocket.placeOrder(ibOrder.OrderId, contract, ibOrder);
         }
 
@@ -588,7 +588,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private ContractDetails GetContractDetails(Contract contract)
         {
             ContractDetails details = null;
-            var requestID = GetNextRequestID();
+            var requestId = GetNextRequestId();
 
             var manualResetEvent = new ManualResetEvent(false);
 
@@ -596,7 +596,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             EventHandler<IB.ContractDetailsEventArgs> clientOnContractDetails = (sender, args) =>
             {
                 // ignore other requests
-                if (args.RequestId != requestID) return;
+                if (args.RequestId != requestId) return;
                 details = args.ContractDetails;
                 _contractDetails.TryAdd(contract.Symbol, details);
                 manualResetEvent.Set();
@@ -605,7 +605,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.ContractDetails += clientOnContractDetails;
 
             // make the request for data
-            _client.ClientSocket.reqContractDetails(requestID, contract);
+            _client.ClientSocket.reqContractDetails(requestId, contract);
 
             // we'll wait a second, but it may not exist so just pass through
             manualResetEvent.WaitOne(1000);
@@ -628,8 +628,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             // determine the correct symbol to choose
-            string invertedSymbol = "USD" + currency;
-            string normalSymbol = currency + "USD";
+            var invertedSymbol = "USD" + currency;
+            var normalSymbol = currency + "USD";
             var currencyPair = Currencies.CurrencyPairs.FirstOrDefault(x => x == invertedSymbol || x == normalSymbol);
             if (currencyPair == null)
             {
@@ -655,7 +655,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // and if not present, we'll use the latest from the history request
 
             var data = new List<IB.HistoricalDataEventArgs>();
-            int historicalTicker = GetNextTickerID();
+            int historicalTicker = GetNextTickerId();
             var lastHistoricalData = DateTime.MaxValue;
             EventHandler<IB.HistoricalDataEventArgs> clientOnHistoricalData = (sender, args) =>
             {
@@ -673,7 +673,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.ClientSocket.reqHistoricalData(historicalTicker, contract, DateTime.UtcNow.ToString("yyyyMMdd HH:mm:ss"), requestSpan, IB.BarSize.OneSecond, HistoricalDataType.Ask, 0, 1, new List<TagValue>());
 
             // define and add our tick handler for the ticks
-            var marketDataTicker = GetNextTickerID();
+            var marketDataTicker = GetNextTickerId();
             EventHandler<IB.TickPriceEventArgs> clientOnTickPrice = (sender, args) =>
             {
                 if (args.TickerId == marketDataTicker && args.Field == IBApi.TickType.ASK)
@@ -765,7 +765,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // invalidate the order
                 var order = _orderProvider.GetOrderByBrokerageId(tickerId);
                 const int orderFee = 0;
-                var orderEvent = new OrderEvent(order, DateTime.UtcNow, orderFee) { Status = Orders.OrderStatus.Invalid };
+                var orderEvent = new OrderEvent(order, DateTime.UtcNow, orderFee) { Status = OrderStatus.Invalid };
                 OnOrderEvent(orderEvent);
             }
 
@@ -920,12 +920,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Converts a QC order to an IB order
         /// </summary>
-        private IBApi.Order ConvertOrder(Order order, Contract contract, int ibOrderID)
+        private IBApi.Order ConvertOrder(Order order, Contract contract, int ibOrderId)
         {
             var ibOrder = new IBApi.Order
             {
-                ClientId = _clientID,
-                OrderId = ibOrderID,
+                ClientId = _clientId,
+                OrderId = ibOrderId,
                 Account = _account,
                 Action = ConvertOrderDirection(order.Direction),
                 TotalQuantity = Math.Abs(order.Quantity),
@@ -1024,7 +1024,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     break;
 
                 default:
-                    throw new InvalidEnumArgumentException("orderType", (int) orderType, typeof (Orders.OrderType));
+                    throw new InvalidEnumArgumentException("orderType", (int) orderType, typeof (OrderType));
             }
 
             order.BrokerId.Add(ibOrder.OrderId.ToString());
@@ -1272,7 +1272,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return _symbolMapper.GetLeanSymbol(ibSymbol, securityType, market);
         }
 
-        private decimal RoundPrice(decimal input, decimal minTick)
+        private static decimal RoundPrice(decimal input, decimal minTick)
         {
             if (minTick == 0) return minTick;
             return Math.Round(input/minTick)*minTick;
@@ -1282,31 +1282,31 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// Handles the threading issues of creating an IB order ID
         /// </summary>
         /// <returns>The new IB ID</returns>
-        private int GetNextBrokerageOrderID()
+        private int GetNextBrokerageOrderId()
         {
             // spin until we get a next valid id, this should only execute if we create a new instance
             // and immediately try to place an order
-            while (_nextValidID == 0) { Thread.Yield(); }
+            while (_nextValidId == 0) { Thread.Yield(); }
 
-            return Interlocked.Increment(ref _nextValidID);
+            return Interlocked.Increment(ref _nextValidId);
         }
 
-        private int GetNextRequestID()
+        private int GetNextRequestId()
         {
-            return Interlocked.Increment(ref _nextRequestID);
+            return Interlocked.Increment(ref _nextRequestId);
         }
 
-        private int GetNextTickerID()
+        private int GetNextTickerId()
         {
-            return Interlocked.Increment(ref _nextTickerID);
+            return Interlocked.Increment(ref _nextTickerId);
         }
 
         /// <summary>
         /// Increments the client ID for communication with the gateway
         /// </summary>
-        private static int IncrementClientID()
+        private static int IncrementClientId()
         {
-            return Interlocked.Increment(ref _nextClientID);
+            return Interlocked.Increment(ref _nextClientId);
         }
 
         /// <summary>
@@ -1374,7 +1374,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             foreach (var symbol in symbols.Where(CanSubscribe))
             {
-                var id = GetNextRequestID();
+                var id = GetNextRequestId();
                 var contract = CreateContract(symbol);
                 Client.ClientSocket.reqMktData(id, contract, string.Empty, false, new List<TagValue>());
 
@@ -1392,13 +1392,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             foreach (var symbol in symbols)
             {
-                var res = default(int);
+                int res;
 
                 if (_subscribedSymbols.TryRemove(symbol, out res))
                 {
                     Client.ClientSocket.cancelMktData(res);
 
-                    var secRes = default(Symbol);
+                    Symbol secRes;
                     _subscribedTickets.TryRemove(res, out secRes);
                 }
             }
@@ -1420,7 +1420,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         private void HandleTickPrice(object sender, IB.TickPriceEventArgs e)
         {
-            var symbol = default(Symbol);
+            Symbol symbol;
 
             if (!_subscribedTickets.TryGetValue(e.TickerId, out symbol)) return;
 
@@ -1469,10 +1469,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     _lastPrices[symbol] = price;
                     break;
 
-                case IBApi.TickType.HIGH:
-                case IBApi.TickType.LOW:
-                case IBApi.TickType.CLOSE:
-                case IBApi.TickType.OPEN:
                 default:
                     return;
             }
@@ -1498,7 +1494,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         private void HandleTickSize(object sender, IB.TickSizeEventArgs e)
         {
-            var symbol = default(Symbol);
+            Symbol symbol;
 
             if (!_subscribedTickets.TryGetValue(e.TickerId, out symbol)) return;
 
@@ -1561,22 +1557,22 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         }
 
-        private ConcurrentDictionary<Symbol, int> _subscribedSymbols = new ConcurrentDictionary<Symbol, int>();
-        private ConcurrentDictionary<int, Symbol> _subscribedTickets = new ConcurrentDictionary<int, Symbol>();
-        private ConcurrentDictionary<Symbol, decimal> _lastPrices = new ConcurrentDictionary<Symbol, decimal>();
-        private ConcurrentDictionary<Symbol, int> _lastVolumes = new ConcurrentDictionary<Symbol, int>();
-        private ConcurrentDictionary<Symbol, decimal> _lastBidPrices = new ConcurrentDictionary<Symbol, decimal>();
-        private ConcurrentDictionary<Symbol, int> _lastBidSizes = new ConcurrentDictionary<Symbol, int>();
-        private ConcurrentDictionary<Symbol, decimal> _lastAskPrices = new ConcurrentDictionary<Symbol, decimal>();
-        private ConcurrentDictionary<Symbol, int> _lastAskSizes = new ConcurrentDictionary<Symbol, int>();
-        private List<Tick> _ticks = new List<Tick>();
+        private readonly ConcurrentDictionary<Symbol, int> _subscribedSymbols = new ConcurrentDictionary<Symbol, int>();
+        private readonly ConcurrentDictionary<int, Symbol> _subscribedTickets = new ConcurrentDictionary<int, Symbol>();
+        private readonly ConcurrentDictionary<Symbol, decimal> _lastPrices = new ConcurrentDictionary<Symbol, decimal>();
+        private readonly ConcurrentDictionary<Symbol, int> _lastVolumes = new ConcurrentDictionary<Symbol, int>();
+        private readonly ConcurrentDictionary<Symbol, decimal> _lastBidPrices = new ConcurrentDictionary<Symbol, decimal>();
+        private readonly ConcurrentDictionary<Symbol, int> _lastBidSizes = new ConcurrentDictionary<Symbol, int>();
+        private readonly ConcurrentDictionary<Symbol, decimal> _lastAskPrices = new ConcurrentDictionary<Symbol, decimal>();
+        private readonly ConcurrentDictionary<Symbol, int> _lastAskSizes = new ConcurrentDictionary<Symbol, int>();
+        private readonly List<Tick> _ticks = new List<Tick>();
 
 
         private static class AccountValueKeys
         {
             public const string CashBalance = "CashBalance";
-            public const string AccruedCash = "AccruedCash";
-            public const string NetLiquidationByCurrency = "NetLiquidationByCurrency";
+            // public const string AccruedCash = "AccruedCash";
+            // public const string NetLiquidationByCurrency = "NetLiquidationByCurrency";
         }
 
         // these are fatal errors from IB
