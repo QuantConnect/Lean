@@ -473,9 +473,10 @@ namespace QuantConnect.Api
         /// Calculate the remaining bytes of user log allowed based on the user's cap and daily cumulative usage.
         /// </summary>
         /// <param name="userId">User ID</param>
+        /// <param name="projectId">Project ID</param>
         /// <param name="userToken">User API token</param>
         /// <returns>int[3] iUserBacktestLimit, iUserDailyLimit, remaining</returns>
-        public virtual int[] ReadLogAllowance(int userId, string userToken)
+        public virtual int[] ReadLogAllowance(int userId, int projectId, string userToken)
         {
             return new[] { int.MaxValue, int.MaxValue, int.MaxValue };
         }
