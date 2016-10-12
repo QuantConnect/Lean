@@ -185,8 +185,8 @@ namespace QuantConnect.ToolBox.IQFeed
             var todayFileName = "IQFeed-symbol-universe-" + thisYearWeek + ".zip";
             var todayFullName = Path.Combine(Globals.Cache, todayFileName);
 
-            var iqfeedNameMapFileName = "IQFeed-symbol-map-" + thisYearWeek + ".json";
-            var iqfeedNameMapFullName = Path.Combine(Globals.Cache, iqfeedNameMapFileName);
+            var iqfeedNameMapFileName = "IQFeed-symbol-map.json";
+            var iqfeedNameMapFullName = Path.Combine("IQFeed", iqfeedNameMapFileName);
 
             // we have a special treatment of futures, because IQFeed renamed exchange tickers and doesn't include 
             // futures expiration dates in the symbol universe file. We fix this.

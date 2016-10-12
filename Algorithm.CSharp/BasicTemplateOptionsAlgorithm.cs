@@ -61,21 +61,25 @@ namespace QuantConnect.Algorithm.CSharp
                 if (slice.OptionChains.TryGetValue(OptionSymbol, out chain))
                 {
                     // find the second call strike under market price expiring today
-                    var contract = (
-                        from optionContract in chain.OrderByDescending(x => x.Strike)
-                        where optionContract.Right == OptionRight.Call
-                        where optionContract.Expiry == Time.Date
-                        where optionContract.Strike < chain.Underlying.Price
-                        select optionContract
-                        ).Skip(2).FirstOrDefault();
+                    var contract = chain
+                        .OrderBy(x => Math.Abs(chain.Underlying.Price - x.Strike))
+                        .ThenByDescending(x => x.Expiry)
+                        .FirstOrDefault();
 
                     if (contract != null)
                     {
-                        var quantity = CalculateOrderQuantity(contract.Symbol, -1m);
-                        MarketOrder(contract.Symbol, quantity);
-                        MarketOnCloseOrder(contract.Symbol, -quantity);
+                        MarketOrder(contract.Symbol, 1);
                     }
                 }
+            }
+            else
+            {
+                Liquidate();
+            }
+
+            foreach (var kpv in slice.Bars)
+            {
+                Console.WriteLine("---> OnData: {0}, {1}, {2}", Time, kpv.Key.Value, kpv.Value.Close.ToString("0.00"));
             }
         }
 
