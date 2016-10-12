@@ -533,7 +533,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             var executions = ib.GetExecutions(null, null, null, DateTime.UtcNow.AddDays(-1), null);
 
-            Assert.IsTrue(executions.Any(x => order.BrokerId.Any(id => executions.Any(e => e.OrderId == int.Parse(id)))));
+            Assert.IsTrue(executions.Any(x => order.BrokerId.Any(id => executions.Any(e => e.Execution.OrderId == int.Parse(id)))));
         }
 
         [Test]

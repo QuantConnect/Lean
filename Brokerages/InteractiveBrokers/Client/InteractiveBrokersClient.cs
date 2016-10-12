@@ -24,8 +24,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
     /// </summary>
     public class InteractiveBrokersClient : EWrapper, IDisposable
     {
-        private readonly EClientSocket _clientSocket;
-
         #region Event Declarations
 
         /// <summary>
@@ -311,11 +309,27 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         #endregion
 
         /// <summary>
+        /// Returns true if we're currently connected to the broker
+        /// </summary>
+        public bool Connected
+        {
+            get { return ClientSocket.IsConnected(); }
+        }
+
+        /// <summary>
+        /// Gets the instance of <see cref="EClientSocket"/> to access IB API methods
+        /// </summary>
+        public EClientSocket ClientSocket
+        {
+            get; private set;
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="InteractiveBrokersClient"/> class
         /// </summary>
         public InteractiveBrokersClient()
         {
-            _clientSocket = new EClientSocket(this, new EReaderMonitorSignal());
+            ClientSocket = new EClientSocket(this, new EReaderMonitorSignal());
         }
 
         /// <summary>
@@ -324,7 +338,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         public void Dispose()
         {
             // disconnect on dispose
-            _clientSocket.eDisconnect();
+            ClientSocket.eDisconnect();
         }
 
         #region EWrapper Implementation

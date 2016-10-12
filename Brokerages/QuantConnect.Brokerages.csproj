@@ -131,9 +131,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\IKVM-WithExes.7.3.4830.1\tools\IKVM.Runtime.JNI.dll</HintPath>
     </Reference>
-    <Reference Include="Krs.Ats.IBNet">
-      <HintPath>..\packages\Krs.Ats.IBNet.9.66.0.31\lib\net20\Krs.Ats.IBNet.dll</HintPath>
-    </Reference>
     <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -178,6 +175,13 @@
     <Compile Include="Fxcm\FxcmSymbolMapper.cs" />
     <Compile Include="InteractiveBrokers\Client\AccountDownloadEndEventArgs.cs" />
     <Compile Include="InteractiveBrokers\Client\AccountSummaryEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\ActionSide.cs" />
+    <Compile Include="InteractiveBrokers\Client\AgentDescription.cs" />
+    <Compile Include="InteractiveBrokers\Client\BarSize.cs" />
+    <Compile Include="InteractiveBrokers\Client\OrderStatus.cs" />
+    <Compile Include="InteractiveBrokers\Client\OrderType.cs" />
+    <Compile Include="InteractiveBrokers\Client\RightType.cs" />
+    <Compile Include="InteractiveBrokers\Client\SecurityType.cs" />
     <Compile Include="InteractiveBrokers\Client\SoftDollarTiersEventArgs.cs" />
     <Compile Include="InteractiveBrokers\Client\SecurityDefinitionOptionParameterEventArgs.cs" />
     <Compile Include="InteractiveBrokers\Client\CommissionReportEventArgs.cs" />
@@ -200,6 +204,7 @@
     <Compile Include="InteractiveBrokers\Client\RealtimeBarEventArgs.cs" />
     <Compile Include="InteractiveBrokers\Client\DisplayGroupListEventArgs.cs" />
     <Compile Include="InteractiveBrokers\Client\PositionMultiEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\TimeInForce.cs" />
     <Compile Include="InteractiveBrokers\Client\VerifyAndAuthCompletedEventArgs.cs" />
     <Compile Include="InteractiveBrokers\Client\VerifyCompletedEventArgs.cs" />
     <Compile Include="InteractiveBrokers\Client\VerifyAndAuthMessageApiEventArgs.cs" />
@@ -222,6 +227,7 @@
     <Compile Include="InteractiveBrokers\Client\ScannerParametersEventArgs.cs" />
     <Compile Include="InteractiveBrokers\Client\ScannerDataEventArgs.cs" />
     <Compile Include="InteractiveBrokers\Client\UpdatePortfolioEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\HistoricalDataType.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerage.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerageFactory.cs" />
     <Compile Include="InteractiveBrokers\Client\InteractiveBrokersClient.cs" />
@@ -291,7 +297,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Oanda\LICENSE.md" />
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\QuantConnect.csproj">
