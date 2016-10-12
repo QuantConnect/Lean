@@ -435,6 +435,20 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 }
             }
 
+            // create the message processing thread
+            var signal = new EReaderMonitorSignal();
+            var reader = new EReader(_client.ClientSocket, signal);
+            reader.Start();
+
+            new Thread(() =>
+            {
+                while (_client.ClientSocket.IsConnected())
+                {
+                    signal.waitForSignal();
+                    reader.processMsgs();
+                }
+            }) { IsBackground = true }.Start();
+
             // pause for a moment to receive next valid ID message from gateway
             if (!_waitForNextValidId.WaitOne(15000))
             {
@@ -460,7 +474,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.UpdateAccountValue += clientOnUpdateAccountValue;
 
             // first we won't subscribe, wait for this to finish, below we'll subscribe for continuous updates
-            _client.ClientSocket.reqAccountUpdates(true, _account);
+            _client.ClientSocket.reqAccountUpdates(true, _account); 
 
             // wait to see the first account value update
             firstAccountUpdateReceived.WaitOne(2500);
