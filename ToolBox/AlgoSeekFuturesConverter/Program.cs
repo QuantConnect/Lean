@@ -20,7 +20,7 @@ using System.Globalization;
 using QuantConnect.Configuration;
 using QuantConnect.Util;
 
-namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
+namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 {
     /// <summary>
     /// AlgoSeek Options Converter: Convert raw OPRA channel files into QuantConnect Options Data Format.
@@ -31,28 +31,29 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         {
             var date = args[0];
             // There are practical file limits we need to override for this to work. 
-            // By default programs are only allowed 1024 files open; for options parsing we need 100k
+            // By default programs are only allowed 1024 files open; for futures parsing we need 100k
             Environment.SetEnvironmentVariable("MONO_MANAGED_WATCHER", "disabled");
             Log.LogHandler = new CompositeLogHandler(new ILogHandler[] { new ConsoleLogHandler(), new FileLogHandler("log.txt") });
 
             // Directory for the data, output and processed cache:
             var dataDirectory = Config.Get("data-directory");
-            var cacheDirectory = Config.Get("options-cache-directory");
-            var sourceDirectory = Config.Get("options-source-directory").Replace("{0}", date);
-            
+            var cacheDirectory = Config.Get("futures-cache-directory");
+            var sourceDirectory = Config.Get("futures-source-directory").Replace("{0}", date);
+
             // Date for the option bz files.
             var referenceDate = DateTime.ParseExact(date, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+            //var referenceDate = DateTime.ParseExact(Config.Get("futures-reference-date"), DateFormat.EightCharacter, CultureInfo.InvariantCulture);
 
             // Convert the date:
             var timer = Stopwatch.StartNew();
-            var converter = new AlgoSeekOptionsConverter(Resolution.Minute, referenceDate, sourceDirectory, dataDirectory, cacheDirectory);
+            var converter = new AlgoSeekFuturesConverter(Resolution.Minute, referenceDate, sourceDirectory, dataDirectory, cacheDirectory);
             converter.Convert();
-            Log.Trace(string.Format("AlgoSeekOptionConverter.Main(): {0} Conversion finished in time: {1}", referenceDate, timer.Elapsed));
+            Log.Trace(string.Format("AlgoSeekFuturesConverter.Main(): {0} Conversion finished in time: {1}", referenceDate, timer.Elapsed));
 
             // Compress the memory cache to zips.
             timer.Restart();
             converter.Package(referenceDate);
-            Log.Trace(string.Format("AlgoSeekOptionConverter.Main(): {0} Compression finished in time: {1}", referenceDate, timer.Elapsed));
+            Log.Trace(string.Format("AlgoSeekFuturesConverter.Main(): {0} Compression finished in time: {1}", referenceDate, timer.Elapsed));
         }
     }
 }

@@ -33,7 +33,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>QuantConnect.ToolBox.CryptoiqDownloader.Program</StartupObject>
+    <StartupObject>QuantConnect.ToolBox.AlgoSeekOptionsConverter.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="IKVM.AWT.WinForms">
@@ -125,6 +125,14 @@
       <HintPath>..\packages\NodaTime.1.3.1\lib\net35-Client\NodaTime.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="MsgPack, Version=0.8.0.0, Culture=neutral, PublicKeyToken=a2625990d5dc0167, processorArchitecture=MSIL">
+      <HintPath>..\packages\MsgPack.Cli.0.8.0\lib\net45\MsgPack.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="protobuf-net, Version=2.1.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
+      <HintPath>..\packages\protobuf-net.2.1.0\lib\net45\protobuf-net.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="QuantConnect.Fxcm">
       <HintPath>..\Brokerages\Fxcm\QuantConnect.Fxcm.dll</HintPath>
     </Reference>
@@ -140,9 +148,23 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="NodaTime, Version=1.3.0.0, Culture=neutral, PublicKeyToken=4226afe0d9b296d1, processorArchitecture=MSIL">
+      <HintPath>..\packages\NodaTime.1.3.1\lib\net35-Client\NodaTime.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsParser.cs" />
+    <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesConverter.cs" />
+    <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesProcessor.cs" />
+    <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesReader.cs" />
+    <Compile Include="AlgoSeekFuturesConverter\Program.cs" />
+    <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsConverter.cs" />
+    <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsProcessor.cs" />
+    <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsReader.cs" />
     <Compile Include="AlgoSeekOptionsConverter\Program.cs" />
     <Compile Include="Bz2StreamProvider.cs" />
     <Compile Include="CoarseUniverseGenerator\Program.cs" />
