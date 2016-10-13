@@ -126,7 +126,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 var underlying = current != null ? current.Underlying : null;
                                 collection = new OptionChainUniverseDataCollection(frontier, subscription.Configuration.Symbol, packetData, underlying);
                             }
-                            if (packetBaseDataCollection is FuturesChainUniverseDataCollection)
+                            else if (packetBaseDataCollection is FuturesChainUniverseDataCollection)
                             {
                                 var current = subscription.Current as FuturesChainUniverseDataCollection;
                                 collection = new FuturesChainUniverseDataCollection(frontier, subscription.Configuration.Symbol, packetData);
