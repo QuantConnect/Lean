@@ -84,7 +84,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             get
             {
-                return _client != null && _client.Connected;
+                return _client != null && _client.Connected && !_disconnected1100Fired;
             }
         }
 
@@ -348,39 +348,35 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             };
 
             var details = new List<IB.ExecutionDetailsEventArgs>();
-            using (var client = new IB.InteractiveBrokersClient())
+
+            var manualResetEvent = new ManualResetEvent(false);
+
+            var requestId = GetNextRequestId();
+
+            // define our event handlers
+            EventHandler<IB.RequestEndEventArgs> clientOnExecutionDataEnd = (sender, args) =>
             {
-                client.ClientSocket.eConnect(_host, _port, IncrementClientId());
+                if (args.RequestId == requestId) manualResetEvent.Set();
+            };
+            EventHandler<IB.ExecutionDetailsEventArgs> clientOnExecDetails = (sender, args) =>
+            {
+                if (args.RequestId == requestId) details.Add(args);
+            };
 
-                var manualResetEvent = new ManualResetEvent(false);
+            _client.ExecutionDetails += clientOnExecDetails;
+            _client.ExecutionDetailsEnd += clientOnExecutionDataEnd;
 
-                var requestId = GetNextRequestId();
+            // no need to be fancy with request id since that's all this client does is 1 request
+            _client.ClientSocket.reqExecutions(requestId, filter);
 
-                // define our event handlers
-                EventHandler<IB.RequestEndEventArgs> clientOnExecutionDataEnd = (sender, args) =>
-                {
-                    if (args.RequestId == requestId) manualResetEvent.Set();
-                };
-                EventHandler<IB.ExecutionDetailsEventArgs> clientOnExecDetails = (sender, args) =>
-                {
-                    if (args.RequestId == requestId) details.Add(args);
-                };
-
-                client.ExecutionDetails += clientOnExecDetails;
-                client.ExecutionDetailsEnd += clientOnExecutionDataEnd;
-
-                // no need to be fancy with request id since that's all this client does is 1 request
-                client.ClientSocket.reqExecutions(requestId, filter);
-
-                if (!manualResetEvent.WaitOne(5000))
-                {
-                    throw new TimeoutException("InteractiveBrokersBrokerage.GetExecutions(): Operation took longer than 1 second.");
-                }
-
-                // remove our event handlers
-                client.ExecutionDetails -= clientOnExecDetails;
-                client.ExecutionDetailsEnd -= clientOnExecutionDataEnd;
+            if (!manualResetEvent.WaitOne(5000))
+            {
+                throw new TimeoutException("InteractiveBrokersBrokerage.GetExecutions(): Operation took longer than 5 seconds.");
             }
+
+            // remove our event handlers
+            _client.ExecutionDetails -= clientOnExecDetails;
+            _client.ExecutionDetailsEnd -= clientOnExecutionDataEnd;
 
             return details;
         }
@@ -1156,7 +1152,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 case IB.OrderStatus.ApiCancelled:
                 case IB.OrderStatus.PendingCancel:
-                case IB.OrderStatus.Canceled: 
+                case IB.OrderStatus.Cancelled: 
                     return OrderStatus.Canceled;
 
                 case IB.OrderStatus.Submitted: 

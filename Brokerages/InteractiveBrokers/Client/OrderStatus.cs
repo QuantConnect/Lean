@@ -54,7 +54,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// indicates that the balance of your order has been confirmed canceled by the IB system.
         /// This could occur unexpectedly when IB or the destination has rejected your order.
         /// </summary>
-        public const string Canceled = "Canceled";
+        public const string Cancelled = "Cancelled";
 
         /// <summary>
         /// The order has been completely filled.
