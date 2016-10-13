@@ -76,7 +76,7 @@ namespace QuantConnect.Util
                     break;
 
                 case SecurityType.Option:
-                    var putCall = data.Symbol.ID.OptionRight == OptionRight.Put ? "P" : "C";
+                case SecurityType.Future:
                     switch (resolution)
                     {
                         case Resolution.Tick:
@@ -95,7 +95,7 @@ namespace QuantConnect.Util
 
                         case Resolution.Second:
                         case Resolution.Minute:
-                            // option data can be quote or trade bars
+                            // option and future data can be quote or trade bars
                             var quoteBar = data as QuoteBar;
                             if (quoteBar != null)
                             {
@@ -113,7 +113,7 @@ namespace QuantConnect.Util
 
                         case Resolution.Hour:
                         case Resolution.Daily:
-                            // option data can be quote or trade bars
+                            // option and future data can be quote or trade bars
                             var bigQuoteBar = data as QuoteBar;
                             if (bigQuoteBar != null)
                             {
@@ -172,12 +172,12 @@ namespace QuantConnect.Util
                 case SecurityType.Cfd:
                     return !isHourOrDaily ? Path.Combine(directory, symbol.Value.ToLower()) : directory;
 
+                case SecurityType.Future:
                 case SecurityType.Option:
                     // options uses the underlying symbol for pathing
                     return !isHourOrDaily ? Path.Combine(directory, symbol.Underlying.Value.ToLower()) : directory;
 
                 case SecurityType.Commodity:
-                case SecurityType.Future:
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -257,8 +257,25 @@ namespace QuantConnect.Util
                         symbol.ID.Date.ToString(DateFormat.EightCharacter)
                         ) + ".csv";
 
-                case SecurityType.Commodity:
                 case SecurityType.Future:
+                    if (isHourOrDaily)
+                    {
+                        return string.Join("_",
+                            symbol.Underlying.Value.ToLower(), // underlying
+                            tickType.ToLower(),
+                            symbol.ID.Date.ToString(DateFormat.YearMonth)
+                            ) + ".csv";
+                    }
+
+                    return string.Join("_",
+                        formattedDate,
+                        symbol.Underlying.Value.ToLower(), // underlying
+                        resolution.ToLower(),
+                        tickType.ToLower(),
+                        symbol.ID.Date.ToString(DateFormat.YearMonth)
+                        ) + ".csv";
+
+                case SecurityType.Commodity:
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -333,8 +350,19 @@ namespace QuantConnect.Util
                         symbol.ID.OptionStyle.ToLower()
                         );
 
-                case SecurityType.Commodity:
                 case SecurityType.Future:
+                    if (isHourOrDaily)
+                    {
+                        return string.Format("{0}_{1}.zip",
+                            symbol.Underlying.Value.ToLower(), // underlying
+                            tickTypeString);
+                    }
+
+                    return string.Format("{0}_{1}.zip",
+                        formattedDate,
+                        tickTypeString);
+
+                case SecurityType.Commodity:
                 default:
                     throw new ArgumentOutOfRangeException();
             }
