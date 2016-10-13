@@ -36,9 +36,9 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void Initialize()
         {
-            SetStartDate(2015, 12, 24);
-            SetEndDate(2015, 12, 24);
-            SetCash(10000);
+            SetStartDate(2016, 08, 17);
+            SetEndDate(2016, 08, 20);
+            SetCash(1000000);
 
             var future = AddFuture(UnderlyingTicker);
 

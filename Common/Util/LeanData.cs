@@ -408,10 +408,10 @@ namespace QuantConnect.Util
         public static Symbol ReadSymbolFromZipEntry(SecurityType securityType, Resolution resolution, string zipEntryName)
         {
             var isHourlyOrDaily = resolution == Resolution.Hour || resolution == Resolution.Daily;
+            var parts = zipEntryName.Replace(".csv", string.Empty).Split('_');
             switch (securityType)
             {
                 case SecurityType.Option:
-                    var parts = zipEntryName.Replace(".csv", string.Empty).Split('_');
                     if (isHourlyOrDaily)
                     {
                         var style = (OptionStyle)Enum.Parse(typeof(OptionStyle), parts[2], true);
@@ -428,6 +428,13 @@ namespace QuantConnect.Util
                         var expiry = DateTime.ParseExact(parts[7], DateFormat.EightCharacter, null);
                         return Symbol.CreateOption(parts[1], Market.USA, style, right, strike, expiry);
                     }
+                    break;
+
+                case SecurityType.Future:
+                    var expiryYearMonth = DateTime.ParseExact(parts[4], DateFormat.YearMonth, null);
+                    expiryYearMonth = new DateTime(expiryYearMonth.Year, expiryYearMonth.Month, DateTime.DaysInMonth(expiryYearMonth.Year, expiryYearMonth.Month));
+                    return Symbol.CreateFuture(parts[1], Market.USA, expiryYearMonth);
+                    break;
 
                 default:
                     throw new NotImplementedException("ReadSymbolFromZipEntry is not implemented for " + securityType + " " + resolution);
