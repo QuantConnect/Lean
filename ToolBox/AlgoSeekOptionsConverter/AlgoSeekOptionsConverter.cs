@@ -111,11 +111,11 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             if (!files.Any()) throw new Exception("No csv files found");
 
             // symbol filters 
-            var symbolFilterNames = new string[] { "AAPL", "TWX", "NWSA", "FOXA", "AIG", "EGLE", "EGEC" };
-            var symbolFilter = symbolFilterNames.SelectMany(name => new[] { name, name + "1", name + ".1" }).ToHashSet();
+            //var symbolFilterNames = new string[] { "AAPL", "TWX", "NWSA", "FOXA", "AIG", "EGLE", "EGEC" };
+            //var symbolFilter = symbolFilterNames.SelectMany(name => new[] { name, name + "1", name + ".1" }).ToHashSet();
 
             // Create multithreaded readers; start them in threads and store the ticks in queues
-            var readers = files.Select(file => new AlgoSeekOptionsReader(file, _referenceDate, symbolFilter));
+            var readers = files.Select(file => new AlgoSeekOptionsReader(file, _referenceDate));
             var synchronizer = new SynchronizingEnumerator(readers);
 
             Log.Trace("AlgoSeekOptionsConverter.Convert(): Synchronizing and processing ticks...", files.Count(), _referenceDate);
