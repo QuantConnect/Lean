@@ -37,7 +37,6 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
 
             // Directory for the data, output and processed cache:
             var dataDirectory = Config.Get("data-directory");
-            var cacheDirectory = Config.Get("options-cache-directory");
             var sourceDirectory = Config.Get("options-source-directory").Replace("{0}", date);
             
             // Date for the option bz files.
@@ -45,7 +44,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
 
             // Convert the date:
             var timer = Stopwatch.StartNew();
-            var converter = new AlgoSeekOptionsConverter(Resolution.Minute, referenceDate, sourceDirectory, dataDirectory, cacheDirectory);
+            var converter = new AlgoSeekOptionsConverter(Resolution.Minute, referenceDate, sourceDirectory, dataDirectory);
             converter.Convert();
             Log.Trace(string.Format("AlgoSeekOptionConverter.Main(): {0} Conversion finished in time: {1}", referenceDate, timer.Elapsed));
 
