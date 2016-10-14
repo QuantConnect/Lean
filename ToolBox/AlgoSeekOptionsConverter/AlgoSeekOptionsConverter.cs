@@ -202,7 +202,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                             var tempFileName = Path.Combine(zip, processor.EntryPath);
 
                             Directory.CreateDirectory(zip);
-                            File.WriteAllText(tempFileName, FileBuilder(processor));
+                            File.AppendAllText(tempFileName, FileBuilder(processor));
                         }
                     });
                 }
