@@ -539,7 +539,7 @@ namespace QuantConnect.ToolBox.IQFeed
                         foreach (var tradeBar in tradeBars)
                         {
                             // Returns IEnumerable<Slice> object
-                            yield return new Slice(tradeBar.Time, new[] { tradeBar });
+                            yield return new Slice(tradeBar.EndTime, new[] { tradeBar });
                         }
                     }
                 }

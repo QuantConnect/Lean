@@ -19,9 +19,10 @@
 
 using System.ComponentModel;
 
-namespace QuantConnect.ToolBox.OandaDownloader.OandaRestLibrary
+namespace QuantConnect.Brokerages.Oanda.DataType.Communications.Requests
 {
-	public class CandlesRequest : Request
+#pragma warning disable 1591
+    public class CandlesRequest : Request
 	{
 		public CandlesRequest()
 		{
@@ -61,11 +62,6 @@ namespace QuantConnect.ToolBox.OandaDownloader.OandaRestLibrary
 		{
 			get { return "candles"; }
 		}
-
-		public override EServer GetServer()
-		{
-			return EServer.Rates;
-		}
 	}
 
 	
@@ -100,4 +96,5 @@ namespace QuantConnect.ToolBox.OandaDownloader.OandaRestLibrary
 		W,
 		M
 	}
+#pragma warning restore 1591
 }

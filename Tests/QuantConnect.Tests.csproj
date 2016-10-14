@@ -98,13 +98,15 @@
     <Compile Include="Algorithm\AlgorithmSetBrokerageTests.cs" />
     <Compile Include="Algorithm\AlgorithmSetHoldingsTests.cs" />
     <Compile Include="Algorithm\AlgorithmTradingTests.cs" />
-    <Compile Include="API\Api.cs" />
+    <Compile Include="API\ApiTests.cs" />
     <Compile Include="Brokerages\BrokerageTests.cs" />
+    <Compile Include="Brokerages\Fxcm\FxcmBrokerageHistoryProviderTests.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmBrokerageDataQueueHandlerTests.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmBrokerageTests.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmLimitOrderTestParameters.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmStopMarketOrderTestParameters.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmSymbolMapperTests.cs" />
+    <Compile Include="Brokerages\Oanda\OandaBrokerageHistoryProviderTests.cs" />
     <Compile Include="Brokerages\SecurityProvider.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageDataQueueHandlerTest.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersOrderTests.cs" />
@@ -118,6 +120,7 @@
     <Compile Include="Brokerages\OrderTestParameters.cs" />
     <Compile Include="Brokerages\StopLimitOrderTestParameters.cs" />
     <Compile Include="Brokerages\StopMarketOrderTestParameters.cs" />
+    <Compile Include="Brokerages\Tradier\TradierBrokerageHistoryProviderTests.cs" />
     <Compile Include="Brokerages\Tradier\TradierBrokerageSerializationTests.cs" />
     <Compile Include="Brokerages\Tradier\TradierBrokerageTests.cs" />
     <Compile Include="Common\CurrenciesTests.cs" />
@@ -156,6 +159,7 @@
     <Compile Include="Common\Securities\SecurityExchangeHoursTests.cs" />
     <Compile Include="Common\Securities\SecurityIdentifierTests.cs" />
     <Compile Include="Common\Securities\SecurityManagerTests.cs" />
+    <Compile Include="Common\Securities\NoMarginCallMarginModelTests.cs" />
     <Compile Include="Common\Securities\SecurityPortfolioModelTests.cs" />
     <Compile Include="Common\Securities\SecurityTests.cs" />
     <Compile Include="Common\Securities\SecurityTransactionModelTests.cs" />
@@ -174,6 +178,7 @@
     <Compile Include="Common\TimeZonesTest.cs" />
     <Compile Include="Common\Util\BusyBlockingCollectionTests.cs" />
     <Compile Include="Common\Util\ColorJsonConverterTests.cs" />
+    <Compile Include="Common\Util\DisposableExtensionsTests.cs" />
     <Compile Include="Common\Util\LeanDataTests.cs" />
     <Compile Include="Common\Util\LinqExtensionsTests.cs" />
     <Compile Include="Common\Util\MarketHoursDatabaseJsonConverterTests.cs" />
@@ -228,6 +233,7 @@
     <Compile Include="Indicators\HeikinAshiTests.cs" />
     <Compile Include="Indicators\IchimokuKinkoHyoTests.cs" />
     <Compile Include="Indicators\KeltnerChannelsTests.cs" />
+    <Compile Include="Indicators\RegressionChannelTest.cs" />
     <Compile Include="Indicators\LeastSquaresMovingAverageTest.cs" />
     <Compile Include="Indicators\LogReturnTests.cs" />
     <Compile Include="Indicators\MidPriceTests.cs" />

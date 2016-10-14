@@ -562,23 +562,22 @@ namespace QuantConnect.Securities
                 issueMarginCallWarning = true;
             }
 
-            // if we still have margin remaining then there's no need for a margin call
-            if (marginRemaining > 0)
-            {
-                return new List<SubmitOrderRequest>();
-            }
-
             // generate a listing of margin call orders
             var marginCallOrders = new List<SubmitOrderRequest>();
 
-            // skip securities that have no price data or no holdings, we can't liquidate nothingness
-            foreach (var security in Securities.Values.Where(x => x.Holdings.Quantity != 0 && x.Price != 0))
+            // if we still have margin remaining then there's no need for a margin call
+            if (marginRemaining <= 0)
             {
-                var marginCallOrder = security.MarginModel.GenerateMarginCallOrder(security, totalPortfolioValue, totalMarginUsed);
-                if (marginCallOrder != null && marginCallOrder.Quantity != 0)
+                // skip securities that have no price data or no holdings, we can't liquidate nothingness
+                foreach (var security in Securities.Values.Where(x => x.Holdings.Quantity != 0 && x.Price != 0))
                 {
-                    marginCallOrders.Add(marginCallOrder);
+                    var marginCallOrder = security.MarginModel.GenerateMarginCallOrder(security, totalPortfolioValue, totalMarginUsed);
+                    if (marginCallOrder != null && marginCallOrder.Quantity != 0)
+                    {
+                        marginCallOrders.Add(marginCallOrder);
+                    }
                 }
+                issueMarginCallWarning = marginCallOrders.Count > 0;
             }
 
             return marginCallOrders;

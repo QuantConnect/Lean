@@ -167,6 +167,7 @@
     <Compile Include="BrokerageException.cs" />
     <Compile Include="BrokerageFactory.cs" />
     <Compile Include="Fxcm\FxcmBrokerage.cs" />
+    <Compile Include="Fxcm\FxcmBrokerage.HistoryProvider.cs" />
     <Compile Include="Fxcm\FxcmBrokerage.DataQueueHandler.cs" />
     <Compile Include="Fxcm\FxcmBrokerage.Messaging.cs" />
     <Compile Include="Fxcm\FxcmBrokerage.Util.cs" />
@@ -178,13 +179,17 @@
     <Compile Include="InteractiveBrokers\InteractiveBrokersSymbolMapper.cs" />
     <Compile Include="ISymbolMapper.cs" />
     <Compile Include="Oanda\DataType\Account.cs" />
+    <Compile Include="Oanda\DataType\Candle.cs" />
     <Compile Include="Oanda\DataType\Communications\AccountResponse.cs" />
     <Compile Include="Oanda\DataType\Communications\AccountsResponse.cs" />
+    <Compile Include="Oanda\DataType\Communications\CandlesResponse.cs" />
     <Compile Include="Oanda\DataType\Communications\InstrumentsResponse.cs" />
     <Compile Include="Oanda\DataType\Communications\OrdersResponse.cs" />
     <Compile Include="Oanda\DataType\Communications\PositionsResponse.cs" />
     <Compile Include="Oanda\DataType\Communications\PostOrderResponse.cs" />
     <Compile Include="Oanda\DataType\Communications\PricesResponse.cs" />
+    <Compile Include="Oanda\DataType\Communications\Requests\CandlesRequest.cs" />
+    <Compile Include="Oanda\DataType\Communications\Requests\Request.cs" />
     <Compile Include="Oanda\DataType\Communications\Response.cs" />
     <Compile Include="Oanda\DataType\Communications\TradesResponse.cs" />
     <Compile Include="Oanda\DataType\Event.cs" />
@@ -202,6 +207,7 @@
     <Compile Include="Oanda\Framework\EndpointResolver.cs" />
     <Compile Include="Oanda\OandaBrokerage.cs" />
     <Compile Include="Oanda\OandaBrokerage.DataQueueHandler.cs" />
+    <Compile Include="Oanda\OandaBrokerage.HistoryProvider.cs" />
     <Compile Include="Oanda\OandaBrokerage.Rest.cs" />
     <Compile Include="Oanda\OandaBrokerageFactory.cs" />
     <Compile Include="Oanda\OandaSymbolMapper.cs" />
@@ -212,6 +218,8 @@
     <Compile Include="Paper\PaperBrokerage.cs" />
     <Compile Include="Paper\PaperBrokerageFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tradier\TradierBrokerage.HistoryProvider.cs" />
+    <Compile Include="Tradier\TradierBrokerage.DataQueueHandler.cs" />
     <Compile Include="Tradier\TradierBrokerage.cs" />
     <Compile Include="Tradier\Balances.cs" />
     <Compile Include="Tradier\Common.cs" />
@@ -254,6 +262,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

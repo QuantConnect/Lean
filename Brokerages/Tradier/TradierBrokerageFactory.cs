@@ -174,6 +174,9 @@ namespace QuantConnect.Brokerages.Tradier
         
             brokerage.SetTokens(job.UserId, accessToken, refreshToken, issuedAt, lifeSpan);
 
+            //Add the brokerage to the composer to ensure its accessible to the live data feed.
+            Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
+
             return brokerage;
         }
 
@@ -202,7 +205,7 @@ namespace QuantConnect.Brokerages.Tradier
             {
                 AccessToken = Config.Get("tradier-access-token"),
                 RefreshToken = Config.Get("tradier-refresh-token"),
-                IssuedAt = Config.GetValue<DateTime>("tradier-tokens-issued-at"),
+                IssuedAt = Config.GetValue<DateTime>("tradier-issued-at"),
                 ExpiresIn = Config.GetInt("tradier-lifespan")
             };
         }

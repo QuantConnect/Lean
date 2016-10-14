@@ -31,6 +31,7 @@ using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
+using System.Diagnostics;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -773,7 +774,7 @@ namespace QuantConnect.Lean.Engine.Results
                 if (!_log.Any()) return "";
 
                 //Get the max length allowed for the algorithm:
-                var allowance = _api.ReadLogAllowance(job.UserId, job.Channel);
+                var allowance = _api.ReadLogAllowance(job.UserId, job.ProjectId, job.Channel);
                 var logBacktestMax = allowance[0];
                 var logDailyMax = allowance[1];
                 var logRemaining = Math.Min(logBacktestMax, allowance[2]); //Minimum of maxium backtest or remaining allowance.
@@ -866,16 +867,37 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             //Send out the debug messages:
-            _algorithm.DebugMessages.ForEach(x => DebugMessage(x));
-            _algorithm.DebugMessages.Clear();
+            var debugStopWatch = Stopwatch.StartNew();
+            while (_algorithm.DebugMessages.Count > 0 && debugStopWatch.ElapsedMilliseconds < 250)
+            {
+                string message;
+                if (_algorithm.DebugMessages.TryDequeue(out message))
+                {
+                    DebugMessage(message);
+                }
+            }
 
             //Send out the error messages:
-            _algorithm.ErrorMessages.ForEach(x => ErrorMessage(x));
-            _algorithm.ErrorMessages.Clear();
+            var errorStopWatch = Stopwatch.StartNew();
+            while (_algorithm.ErrorMessages.Count > 0 && errorStopWatch.ElapsedMilliseconds < 250)
+            {
+                string message;
+                if (_algorithm.ErrorMessages.TryDequeue(out message))
+                {
+                    ErrorMessage(message);
+                }
+            }
 
             //Send out the log messages:
-            _algorithm.LogMessages.ForEach(x => LogMessage(x));
-            _algorithm.LogMessages.Clear();
+            var logStopWatch = Stopwatch.StartNew();
+            while (_algorithm.LogMessages.Count > 0 && logStopWatch.ElapsedMilliseconds < 250)
+            {
+                string message;
+                if (_algorithm.LogMessages.TryDequeue(out message))
+                {
+                    LogMessage(message);
+                }
+            }
 
             //Set the running statistics:
             foreach (var pair in _algorithm.RuntimeStatistics)

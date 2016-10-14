@@ -17,14 +17,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-using System.Collections.Generic;
-
-namespace QuantConnect.ToolBox.OandaDownloader.OandaRestLibrary
+namespace QuantConnect.Brokerages.Oanda.DataType
 {
-    public class CandlesResponse
+#pragma warning disable 1591
+    public struct Candle
     {
-	    public string instrument;
-	    public string granularity;
-        public List<Candle> candles;
+        public string time { get; set; }
+		public int volume { get; set; }
+		public bool complete { get; set; }
+
+		// Midpoint candles
+		public double openMid { get; set; }
+        public double highMid { get; set; }
+        public double lowMid { get; set; }
+        public double closeMid { get; set; }
+		
+		// Bid/Ask candles
+		public double openBid { get; set; }
+		public double highBid { get; set; }
+		public double lowBid { get; set; }
+		public double closeBid { get; set; }
+		public double openAsk { get; set; }
+		public double highAsk { get; set; }
+		public double lowAsk { get; set; }
+		public double closeAsk { get; set; }
+
+		
     }
+#pragma warning restore 1591
 }

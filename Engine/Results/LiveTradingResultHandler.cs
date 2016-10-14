@@ -1065,27 +1065,36 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             //Send out the debug messages:
-            var debugMessage = _algorithm.DebugMessages.ToList();
-            _algorithm.DebugMessages.Clear();
-            foreach (var source in debugMessage)
+            var debugStopWatch = Stopwatch.StartNew();
+            while (_algorithm.DebugMessages.Count > 0 && debugStopWatch.ElapsedMilliseconds < 250)
             {
-                DebugMessage(source);
+                string message;
+                if (_algorithm.DebugMessages.TryDequeue(out message))
+                {
+                    DebugMessage(message);
+                }
             }
 
             //Send out the error messages:
-            var errorMessage = _algorithm.ErrorMessages.ToList();
-            _algorithm.ErrorMessages.Clear();
-            foreach (var source in errorMessage)
+            var errorStopWatch = Stopwatch.StartNew();
+            while (_algorithm.ErrorMessages.Count > 0 && errorStopWatch.ElapsedMilliseconds < 250)
             {
-                ErrorMessage(source);
+                string message;
+                if (_algorithm.ErrorMessages.TryDequeue(out message))
+                {
+                    ErrorMessage(message);
+                }
             }
 
             //Send out the log messages:
-            var logMessage = _algorithm.LogMessages.ToList();
-            _algorithm.LogMessages.Clear();
-            foreach (var source in logMessage)
+            var logStopWatch = Stopwatch.StartNew();
+            while (_algorithm.LogMessages.Count > 0 && logStopWatch.ElapsedMilliseconds < 250)
             {
-                LogMessage(source);
+                string message;
+                if (_algorithm.LogMessages.TryDequeue(out message))
+                {
+                    LogMessage(message);
+                }
             }
 
             //Set the running statistics:

@@ -38,6 +38,7 @@ using QuantConnect.Securities.Option;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
 using SecurityTypeMarket = System.Tuple<QuantConnect.SecurityType, string>;
+using System.Collections.Concurrent;
 
 namespace QuantConnect.Algorithm
 {
@@ -57,9 +58,9 @@ namespace QuantConnect.Algorithm
         private bool _locked;
         private bool _liveMode;
         private string _algorithmId = "";
-        private List<string> _debugMessages = new List<string>();
-        private List<string> _logMessages = new List<string>();
-        private List<string> _errorMessages = new List<string>();
+        private ConcurrentQueue<string> _debugMessages = new ConcurrentQueue<string>();
+        private ConcurrentQueue<string> _logMessages = new ConcurrentQueue<string>();
+        private ConcurrentQueue<string> _errorMessages = new ConcurrentQueue<string>();
         
         //Error tracking to avoid message flooding:
         private string _previousDebugMessage = "";
@@ -371,7 +372,7 @@ namespace QuantConnect.Algorithm
         /// Storage for debugging messages before the event handler has passed control back to the Lean Engine.
         /// </summary>
         /// <seealso cref="Debug(string)"/>
-        public List<string> DebugMessages
+        public ConcurrentQueue<string> DebugMessages
         {
             get
             {
@@ -387,7 +388,7 @@ namespace QuantConnect.Algorithm
         /// Storage for log messages before the event handlers have passed control back to the Lean Engine.
         /// </summary>
         /// <seealso cref="Log(string)"/>
-        public List<string> LogMessages
+        public ConcurrentQueue<string> LogMessages
         {
             get
             {
@@ -409,7 +410,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <remarks>This method is best used within a try-catch bracket to handle any runtime errors from a user algorithm.</remarks>
         /// <see cref="Error(string)"/>
-        public List<string> ErrorMessages
+        public ConcurrentQueue<string> ErrorMessages
         {
             get
             {
@@ -1432,7 +1433,7 @@ namespace QuantConnect.Algorithm
         public void Debug(string message)
         {
             if (!_liveMode && (message == "" || _previousDebugMessage == message)) return;
-            _debugMessages.Add(message);
+            _debugMessages.Enqueue(message);
             _previousDebugMessage = message;
         }
 
@@ -1445,7 +1446,7 @@ namespace QuantConnect.Algorithm
         public void Log(string message) 
         {
             if (!_liveMode && message == "") return;
-            _logMessages.Add(message);
+            _logMessages.Enqueue(message);
         }
 
         /// <summary>
@@ -1457,7 +1458,7 @@ namespace QuantConnect.Algorithm
         public void Error(string message)
         {
             if (!_liveMode && (message == "" || _previousErrorMessage == message)) return;
-            _errorMessages.Add(message);
+            _errorMessages.Enqueue(message);
             _previousErrorMessage = message;
         }
 
@@ -1471,7 +1472,7 @@ namespace QuantConnect.Algorithm
         {
             var message = error.Message;
             if (!_liveMode && (message == "" || _previousErrorMessage == message)) return;
-            _errorMessages.Add(message);
+            _errorMessages.Enqueue(message);
             _previousErrorMessage = message;
         }
 

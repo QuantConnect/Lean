@@ -18,15 +18,13 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Net;
 using System.Runtime.Serialization;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
+using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
@@ -44,7 +42,7 @@ namespace QuantConnect.Brokerages.Tradier
     ///  - Placing orders.
     ///  - Getting user data.
     /// </summary>
-    public class TradierBrokerage : Brokerage
+    public partial class TradierBrokerage : Brokerage, IDataQueueHandler, IHistoryProvider
     {
         private readonly string _accountID;
 
@@ -269,11 +267,16 @@ namespace QuantConnect.Brokerages.Tradier
                                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "OrderAlreadyFilled",
                                     "Unable to cancel the order because it has already been filled. TradierOrderId: " + orderId
                                     ));
-
-                                
                             }
                             return new T();
                         }
+
+                        // this happens when a request for historical data should return an empty response
+                        if (type == TradierApiRequestType.Data && rootName == "series")
+                        {
+                            return new T();
+                        }
+
                         // Text Errors:
                         Log.Trace(method + "(2): Parameters: " + string.Join(",", parameters));
                         Log.Error(method + "(2): Response: " + raw.Content);
@@ -322,6 +325,10 @@ namespace QuantConnect.Brokerages.Tradier
         /// </summary>
         public bool RefreshSession()
         {
+            // if session refreshing disabled, do nothing
+            if (!Config.GetBool("tradier-refresh-session", true))
+                return true;
+
             //Send: 
             //Get: {"sAccessToken":"123123","iExpiresIn":86399,"dtIssuedAt":"2014-10-15T16:59:52-04:00","sRefreshToken":"123123","sScope":"read write market trade stream","sStatus":"approved","success":true}
             // Or: {"success":false}
@@ -686,128 +693,6 @@ namespace QuantConnect.Brokerages.Tradier
         }
 
         /// <summary>
-        /// Get the current market status
-        /// </summary>
-        public TradierStreamSession CreateStreamSession()
-        {
-            var request = new RestRequest("markets/events/session", Method.POST);
-            return Execute<TradierStreamSession>(request, TradierApiRequestType.Data, "stream");
-        }
-
-        /// <summary>
-        /// Connect to tradier API strea:
-        /// </summary>
-        /// <param name="symbols">symbol list</param>
-        /// <returns></returns>
-        public IEnumerable<TradierStreamData> Stream(List<string> symbols)
-        {
-            bool success;
-            var symbolJoined = String.Join(",", symbols);
-            var session = CreateStreamSession();
-
-            if (session == null || session.SessionId == null || session.Url == null)
-            {
-                Log.Error("Tradier.Stream(): Failed to Created Stream Session", true);
-                yield break;
-            }
-            Log.Trace("Tradier.Stream(): Created Stream Session Id: " + session.SessionId + " Url:" + session.Url, true);
-
-
-            HttpWebRequest request;
-            do
-            {
-                //Connect to URL:
-                success = true;
-                request = (HttpWebRequest) WebRequest.Create(session.Url);
-
-                //Authenticate a request:
-                request.Accept = "application/json";
-                request.Headers.Add("Authorization", "Bearer " + AccessToken);
-
-                //Add the desired data:
-                var postData = "symbols=" + symbolJoined + "&sessionid=" + session.SessionId;
-                
-                var encodedData = Encoding.ASCII.GetBytes(postData);
-
-                //Set post:
-                request.Method = "POST";
-                request.ContentType = "application/x-www-form-urlencoded";
-                request.ContentLength = encodedData.Length;
-
-                //Send request:
-                try
-                {
-                    using (var postStream = request.GetRequestStream())
-                    {
-                        postStream.Write(encodedData, 0, encodedData.Length);
-                    }
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err, "Failed to write session parameters to URL", true);
-                    success = false;
-                }
-            }
-            while (!success);
-
-            //Get response as a stream:
-            Log.Trace("Tradier.Stream(): Session Created, Reading Stream...", true);
-            var response = (HttpWebResponse) request.GetResponse();
-            var tradierStream = response.GetResponseStream();
-            if (tradierStream == null)
-            {
-                yield break;
-            }
-
-            using (var sr = new StreamReader(tradierStream))
-            using (var jsonReader = new JsonTextReader(sr))
-            {
-                var serializer = new JsonSerializer();
-                jsonReader.SupportMultipleContent = true;
-
-                // keep going until we fail to read more from the stream
-                while (true)
-                {
-                    bool successfulRead;
-                    try
-                    {
-                        //Read the jsonSocket in a safe manner: might close and so need handlers, but can't put handlers around a yield.
-                        successfulRead = jsonReader.Read();
-                    }
-                    catch (Exception err)
-                    {
-                        Log.Error(err);
-                        break;
-                    }
-
-                    if (!successfulRead)
-                    {
-                        // if we couldn't get a successful read just end the enumerable
-                        yield break;
-                    }
-
-                    //Have a Tradier JSON Object:
-                    TradierStreamData tsd = null;
-                    try
-                    {
-                        tsd = serializer.Deserialize<TradierStreamData>(jsonReader);
-                    }
-                    catch (Exception err)
-                    {
-                        // Do nothing for now. Can come back later to fix. Errors are from Tradier not properly json encoding values E.g. "NaN" string.
-                        Log.Error(err);
-                    }
-
-                    // don't yield garbage, just wait for the next one
-                    if (tsd != null)
-                    {
-                        yield return tsd;
-                    }
-                }
-            }
-        }
-
-        /// <summary>
         /// Convert the C# Enums back to the Tradier API Equivalent:
         /// </summary>
         private string GetEnumDescription(Enum value)
@@ -1148,6 +1033,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// </summary>
         public override void Connect()
         {
+            _disconnect = false;
             if (IsConnected) return;
             RefreshSession();
         }
@@ -1157,7 +1043,7 @@ namespace QuantConnect.Brokerages.Tradier
         /// </summary>
         public override void Disconnect()
         {
-            // NOP - token will eventually expire
+            _disconnect = true;
         }
 
         /// <summary>

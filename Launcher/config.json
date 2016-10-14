@@ -58,6 +58,7 @@
   "tradier-refresh-token": "",
   "tradier-issued-at": "",
   "tradier-lifespan": "",
+  "tradier-refresh-session": true,
 
   // oanda configuration
   "oanda-environment": "Practice",
@@ -125,11 +126,11 @@
 
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "TradierBrokerage",
+      "data-queue-handler": "TradierBrokerage",
 
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
-      "data-queue-handler": "QuantConnect.Lean.Engine.DataFeeds.Queues.LiveDataQueue",
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler"
     },
