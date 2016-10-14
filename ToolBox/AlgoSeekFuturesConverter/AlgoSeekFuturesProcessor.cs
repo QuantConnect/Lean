@@ -55,8 +55,8 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             {
                 if (_entryPath == null)
                 {
-                    _entryPath = LeanData.GenerateZipEntryName(_symbol, _referenceDate, _resolution, _tickType);
-                }   
+                    _entryPath = SafeName(LeanData.GenerateZipEntryName(_symbol, _referenceDate, _resolution, _tickType));
+                }
                 return _entryPath;
             }
             set { _entryPath = value; }
@@ -71,7 +71,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             {
                 if (_zipPath == null)
                 {
-                    _zipPath = Path.Combine(_dataDirectory, LeanData.GenerateRelativeZipFilePath(Safe(_symbol), _referenceDate, _resolution, _tickType).Replace(".zip", string.Empty)) + ".zip";
+                    _zipPath = Path.Combine(_dataDirectory, SafeName(LeanData.GenerateRelativeZipFilePath(Safe(_symbol), _referenceDate, _resolution, _tickType).Replace(".zip", string.Empty))) + ".zip";
                 }
                 return _zipPath;
             }
@@ -196,10 +196,18 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             {
                 if (_windowsRestrictedNames.Contains(symbol.Value.ToLower()))
                 {
-                    symbol = Symbol.CreateOption("_" + symbol.Underlying.Value, Market.USA, OptionStyle.American, symbol.ID.OptionRight, symbol.ID.StrikePrice, symbol.ID.Date);
+                    symbol = Symbol.CreateOption(SafeName(symbol.Underlying.Value), Market.USA, OptionStyle.American, symbol.ID.OptionRight, symbol.ID.StrikePrice, symbol.ID.Date);
                 }
             }
             return symbol;
+        }
+        private static string SafeName(string fileName)
+        {
+            foreach (var name in _windowsRestrictedNames)
+            {
+                fileName = fileName.Replace(name, "_" + name);
+            }
+            return fileName;
         }
     }
 }
