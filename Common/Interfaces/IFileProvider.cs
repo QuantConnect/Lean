@@ -1,12 +1,14 @@
 ﻿using System;
+using System.ComponentModel.Composition;
 
-namespace QuantConnect.Lean.Engine.DataFeeds
+namespace QuantConnect.Interfaces
 {
     /// <summary>
     /// Fetches a remote file for a security using a Symbol, Resolution and DateTime
     /// Used to get remote files when they are not found locally
     /// </summary>
-    public interface IRemoteFileProvider
+    [InheritedExport(typeof(IFileProvider))]
+    public interface IFileProvider
     {
         /// <summary>
         /// Gets and downloads the remote file

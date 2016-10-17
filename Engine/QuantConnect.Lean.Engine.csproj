@@ -192,7 +192,7 @@
     <Compile Include="DataFeeds\Enumerators\SubscriptionFilterEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\SynchronizingEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\TradeBarBuilderEnumerator.cs" />
-    <Compile Include="DataFeeds\IRemoteFileProvider.cs" />
+    <Compile Include="DataFeeds\DefaultFileProvider.cs" />
     <Compile Include="DataFeeds\ISubscriptionDataSourceReader.cs" />
     <Compile Include="DataFeeds\ITimeProvider.cs" />
     <Compile Include="DataFeeds\CollectionSubscriptionDataSourceReader.cs" />

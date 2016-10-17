@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using QuantConnect.Data;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Transport;
 using QuantConnect.Util;
 
@@ -34,6 +35,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly BaseData _factory;
         private readonly DateTime _date;
         private readonly SubscriptionDataConfig _config;
+        private readonly IFileProvider _fileProvider;
 
         /// <summary>
         /// Event fired when the specified source is considered invalid, this may
@@ -56,11 +58,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes a new instance of the <see cref="TextSubscriptionDataSourceReader"/> class
         /// </summary>
+        /// <param name="fileProvider">Attempts to fetch remote file provider</param>
         /// <param name="config">The subscription's configuration</param>
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
-        public TextSubscriptionDataSourceReader(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public TextSubscriptionDataSourceReader(IFileProvider fileProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
+            _fileProvider = fileProvider;
             _date = date;
             _config = config;
             _isLiveMode = isLiveMode;
@@ -181,7 +185,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 file = source.Source.Substring(0, hashIndex);
             }
 
-            if (!File.Exists(file))
+            if (!File.Exists(file) && !_fileProvider.Fetch(_config.Symbol, _config.Resolution, _date))
             {
                 OnInvalidSource(source, new FileNotFoundException("The specified file was not found", file));
                 return null;

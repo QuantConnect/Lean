@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 {
@@ -44,15 +45,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// Creates an enumerator to read the specified request
         /// </summary>
         /// <param name="request">The subscription request to be read</param>
+        /// <param name="fileProvider">Provider used to get data when it is not present on disk</param>
         /// <returns>An enumerator reading the subscription request</returns>
-        public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request)
+        public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IFileProvider fileProvider)
         {
             var sourceFactory = (BaseData)Activator.CreateInstance(request.Configuration.Type);
 
             return (
                 from date in _tradableDaysProvider(request)
                 let source = sourceFactory.GetSource(request.Configuration, date, false)
-                let factory = SubscriptionDataSourceReader.ForSource(source, request.Configuration, date, false)
+                let factory = SubscriptionDataSourceReader.ForSource(source, fileProvider, request.Configuration, date, false)
                 let entriesForDate = factory.Read(source)
                 from entry in entriesForDate
                 select entry

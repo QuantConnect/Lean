@@ -39,11 +39,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var resultHandler = new BacktestingResultHandler();
             var mapFileProvider = new LocalDiskMapFileProvider();
             var factorFileProvider = new LocalDiskFactorFileProvider(mapFileProvider);
+            var fileProvider = new DefaultFileProvider();
 
             var algorithm = new BenchmarkTest();
             var feed = new FileSystemDataFeed();
 
-            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, factorFileProvider);
+            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, factorFileProvider, fileProvider);
             algorithm.Initialize();
 
             var feedThreadStarted = new ManualResetEvent(false);

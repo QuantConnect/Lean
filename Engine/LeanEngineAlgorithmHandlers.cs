@@ -41,6 +41,7 @@ namespace QuantConnect.Lean.Engine
         private readonly ICommandQueueHandler _commandQueue;
         private readonly IMapFileProvider _mapFileProvider;
         private readonly IFactorFileProvider _factorFileProvider;
+        private readonly IFileProvider _fileProvider;
 
         /// <summary>
         /// Gets the result handler used to communicate results from the algorithm
@@ -115,6 +116,14 @@ namespace QuantConnect.Lean.Engine
         }
 
         /// <summary>
+        /// Gets the file provider used to retrieve security data if it is not on the file system
+        /// </summary>
+        public IFileProvider FileProvider
+        {
+            get { return _fileProvider; }
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="LeanEngineAlgorithmHandlers"/> class from the specified handlers
         /// </summary>
         /// <param name="results">The result handler for communicating results from the algorithm</param>
@@ -125,6 +134,8 @@ namespace QuantConnect.Lean.Engine
         /// <param name="historyProvider">The history provider used to process historical data requests</param>
         /// <param name="commandQueue">The command queue handler used to receive external commands for the algorithm</param>
         /// <param name="mapFileProvider">The map file provider used to retrieve map files for the data feed</param>
+        /// <param name="factorFileProvider">Map file provider used as a map file source for the data feed</param>
+        /// <param name="fileProvider">file provider used to retrieve security data if it is not on the file system</param>
         public LeanEngineAlgorithmHandlers(IResultHandler results,
             ISetupHandler setup,
             IDataFeed dataFeed,
@@ -133,7 +144,8 @@ namespace QuantConnect.Lean.Engine
             IHistoryProvider historyProvider,
             ICommandQueueHandler commandQueue,
             IMapFileProvider mapFileProvider,
-            IFactorFileProvider factorFileProvider
+            IFactorFileProvider factorFileProvider,
+            IFileProvider fileProvider
             )
         {
             if (results == null)
@@ -172,6 +184,10 @@ namespace QuantConnect.Lean.Engine
             {
                 throw new ArgumentNullException("factorFileProvider");
             }
+            if (fileProvider == null)
+            {
+                throw new ArgumentNullException("factorFileProvider");
+            }
             _results = results;
             _setup = setup;
             _dataFeed = dataFeed;
@@ -181,6 +197,7 @@ namespace QuantConnect.Lean.Engine
             _commandQueue = commandQueue;
             _mapFileProvider = mapFileProvider;
             _factorFileProvider = factorFileProvider;
+            _fileProvider = fileProvider;
         }
         
         /// <summary>
@@ -200,6 +217,7 @@ namespace QuantConnect.Lean.Engine
             var commandQueueHandlerTypeName = Config.Get("command-queue-handler", "EmptyCommandQueueHandler");
             var mapFileProviderTypeName = Config.Get("map-file-provider", "LocalDiskMapFileProvider");
             var factorFileProviderTypeName = Config.Get("factor-file-provider", "LocalDiskFactorFileProvider");
+            var fileProviderTypeName = Config.Get("file-provider", "DefaultFileProvider");
 
             return new LeanEngineAlgorithmHandlers(
                 composer.GetExportedValueByTypeName<IResultHandler>(resultHandlerTypeName),
@@ -210,7 +228,8 @@ namespace QuantConnect.Lean.Engine
                 composer.GetExportedValueByTypeName<IHistoryProvider>(historyProviderTypeName),
                 composer.GetExportedValueByTypeName<ICommandQueueHandler>(commandQueueHandlerTypeName),
                 composer.GetExportedValueByTypeName<IMapFileProvider>(mapFileProviderTypeName),
-                composer.GetExportedValueByTypeName<IFactorFileProvider>(factorFileProviderTypeName)
+                composer.GetExportedValueByTypeName<IFactorFileProvider>(factorFileProviderTypeName),
+                composer.GetExportedValueByTypeName<IFileProvider>(fileProviderTypeName)
                 );
         }
 

@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.IO;
 using Ionic.Zip;
 using QuantConnect.Data;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -30,6 +31,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly DateTime _dateTime;
         private readonly bool _isLiveMode;
         private readonly BaseData _factory;
+        private readonly IFileProvider _fileProvider;
 
         /// <summary>
         /// Event fired when the specified source is considered invalid, this may
@@ -40,11 +42,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes a new instance of the <see cref="ZipEntryNameSubscriptionDataSourceReader"/> class
         /// </summary>
+        /// <param name="fileProvider">Attempts to fetch remote file</param>
         /// <param name="config">The subscription's configuration</param>
         /// <param name="dateTime">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
-        public ZipEntryNameSubscriptionDataSourceReader(SubscriptionDataConfig config, DateTime dateTime, bool isLiveMode)
+        public ZipEntryNameSubscriptionDataSourceReader(IFileProvider fileProvider, SubscriptionDataConfig config, DateTime dateTime, bool isLiveMode)
         {
+            _fileProvider = fileProvider;
             _config = config;
             _dateTime = dateTime;
             _isLiveMode = isLiveMode;
@@ -58,9 +62,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>An <see cref="IEnumerable{BaseData}"/> that contains the data in the source</returns>
         public IEnumerable<BaseData> Read(SubscriptionDataSource source)
         {
-            if (!File.Exists(source.Source))
+            if (!File.Exists(source.Source) && !_fileProvider.Fetch(_config.Symbol, _config.Resolution, _dateTime))
             {
-                OnInvalidSource(source, new FileNotFoundException("The specified file was not found", source.Source));
+                OnInvalidSource(source, new FileNotFoundException("The specified file was not found", source.Source));             
             }
 
             ZipFile zip;
