@@ -327,6 +327,7 @@
     <Compile Include="Securities\Futures\FutureMarginModel.cs" />
     <Compile Include="Securities\IDerivativeSecurityFilter.cs" />
     <Compile Include="Securities\IndicatorVolatilityModel.cs" />
+    <Compile Include="Securities\Interfaces\IContinuousContractModel.cs" />
     <Compile Include="Securities\ISecurityInitializer.cs" />
     <Compile Include="Securities\ISettlementModel.cs" />
     <Compile Include="Securities\IVolatilityModel.cs" />
