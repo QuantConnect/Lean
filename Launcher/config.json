@@ -105,6 +105,11 @@
     "live-paper": {
       "live-mode": true,
 
+      // limits on number of symbols to allow
+      "symbol-minute-limit": 10000, 
+      "symbol-second-limit": 10000,
+      "symbol-tick-limit": 10000,
+
       // the paper brokerage requires the BacktestingTransactionHandler
       "live-mode-brokerage": "PaperBrokerage",
 
@@ -119,6 +124,11 @@
     // defines the 'live-tradier' environment
     "live-tradier": {
       "live-mode": true,
+
+      // limits on number of symbols to allow
+      "symbol-minute-limit": 10000, 
+      "symbol-second-limit": 10000,
+      "symbol-tick-limit": 10000,
 
       // this setting will save tradier access/refresh tokens to a tradier-tokens.txt file
       // that can be read in next time, this makes it easier to start/stop a tradier algorithm
@@ -139,6 +149,11 @@
     "live-interactive": {
       "live-mode": true,
 
+      // limits on number of symbols to allow
+      "symbol-minute-limit": 10000, 
+      "symbol-second-limit": 10000,
+      "symbol-tick-limit": 10000,
+
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "InteractiveBrokersBrokerage",
       "data-queue-handler": "InteractiveBrokersBrokerage",
@@ -152,6 +167,11 @@
     // defines the 'live-fxcm' environment
     "live-fxcm": {
       "live-mode": true,
+
+      // limits on number of symbols to allow
+      "symbol-minute-limit": 10000, 
+      "symbol-second-limit": 10000,
+      "symbol-tick-limit": 10000,
 
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "FxcmBrokerage",
@@ -202,6 +222,11 @@
     "live-desktop": {
       "live-mode": true,
       "send-via-api": true,
+
+      // limits on number of symbols to allow
+      "symbol-minute-limit": 10000, 
+      "symbol-second-limit": 10000,
+      "symbol-tick-limit": 10000,
 
       //Required for local charting.
       // To get your api access token go to quantconnect.com/account

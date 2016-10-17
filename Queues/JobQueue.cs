@@ -93,6 +93,12 @@ namespace QuantConnect.Queues
                     RamAllocation = int.MaxValue,
                     Parameters = parameters,
                     Language = Language,
+                    Controls = new Controls()
+                    {
+                        MinuteLimit = Config.GetInt("symbol-minute-limit", 10000),
+                        SecondLimit = Config.GetInt("symbol-second-limit", 10000),
+                        TickLimit = Config.GetInt("symbol-tick-limit", 10000)
+                    }
                 };
 
                 try
