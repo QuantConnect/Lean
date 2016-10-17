@@ -328,7 +328,7 @@ namespace QuantConnect.ToolBox.IQFeed
 
                             _symbolUniverse.Add(new SymbolData
                             {
-                                Symbol = Symbol.Create(columns[columnSymbol], SecurityType.Forex, Market.FXCM),
+                                Symbol = Symbol.Create(symbol, SecurityType.Forex, Market.FXCM),
                                 SecurityCurrency = "USD",
                                 SecurityExchange = Market.FXCM,
                                 Ticker = columns[columnSymbol]
