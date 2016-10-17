@@ -229,6 +229,7 @@ namespace QuantConnect.ToolBox.IQFeed
 
                 switch (columns[columnSecurityType])
                 {
+                    case "INDEX":
                     case "EQUITY":
 
                         _symbolUniverse.Add(new SymbolData

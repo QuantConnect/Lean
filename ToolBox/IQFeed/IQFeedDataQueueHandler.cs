@@ -116,16 +116,29 @@ namespace QuantConnect.ToolBox.IQFeed
                                 // processing canonical option symbol to subscribe to underlying prices
                                 var subscribeSymbol = symbol;
 
-                                if (symbol.ID.SecurityType == SecurityType.Option && symbol.ID.StrikePrice == 0.0m)
+                                if (symbol.ID.SecurityType == SecurityType.Option && symbol.ID.Date == SecurityIdentifier.DefaultDate)
                                 {
                                     subscribeSymbol = symbol.Underlying;
                                     _underlyings.Add(subscribeSymbol, symbol);
                                 }
 
-                                var ticker = _symbolUniverse.GetBrokerageSymbol(subscribeSymbol);
-                                _level1Port.Subscribe(ticker);
+                                if (symbol.ID.SecurityType == SecurityType.Future && symbol.ID.Date == SecurityIdentifier.DefaultDate)
+                                {
+                                    // do nothing for now. Later might add continuous contract symbol. 
+                                    return;
+                                }
 
-                                Log.Trace("IQFeed.Subscribe(): Subscribe Processed: " + symbol.ToString());
+                                var ticker = _symbolUniverse.GetBrokerageSymbol(subscribeSymbol);
+
+                                if (!string.IsNullOrEmpty(ticker))
+                                {
+                                    _level1Port.Subscribe(ticker);
+                                    Log.Trace("IQFeed.Subscribe(): Subscribe Processed: " + symbol.ToString());
+                                }
+                                else
+                                {
+                                    Log.Error("IQFeed.Subscribe(): Symbol {0} was not found in IQFeed symbol universe", symbol.ToString());
+                                }
                             }
                         }
                     }
@@ -282,6 +295,9 @@ namespace QuantConnect.ToolBox.IQFeed
         {
             var market = symbol.ID.Market;
             var securityType = symbol.ID.SecurityType;
+
+            if (symbol.Value.ToLower().IndexOf("universe") != -1) return false;
+
             return
                 (securityType == SecurityType.Equity && market == Market.USA) ||
                 (securityType == SecurityType.Forex && market == Market.FXCM) ||
