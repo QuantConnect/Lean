@@ -456,24 +456,7 @@ namespace QuantConnect.Algorithm
                 if (!Securities.TryGetValue(_benchmarkSymbol, out security))
                 {
                     // add the security as an internal feed so the algorithm doesn't receive the data
-                    Resolution resolution;
-                    if (_liveMode)
-                    {
-                        resolution = Resolution.Second;
-                    }
-                    else
-                    {
-                        // check to see if any universes arn't the ones added via AddSecurity
-                        var hasNonAddSecurityUniverses = (
-                            from kvp in UniverseManager
-                            let config = kvp.Value.Configuration
-                            let symbol = UserDefinedUniverse.CreateSymbol(config.SecurityType, config.Market)
-                            where config.Symbol != symbol
-                            select kvp).Any();
-
-                        resolution = hasNonAddSecurityUniverses ? UniverseSettings.Resolution : Resolution.Daily;
-                    }
-                    security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer, _benchmarkSymbol, resolution, true, 1m, false, true, false, LiveMode);
+                    security = CreateBenchmarkSecurity();
                     AddToUserDefinedUniverse(security);
                 }
 
@@ -1355,7 +1338,18 @@ namespace QuantConnect.Algorithm
                 var universe = UniverseManager.Values.OfType<UserDefinedUniverse>().FirstOrDefault(x => x.Members.ContainsKey(symbol));
                 if (universe != null)
                 {
-                    return universe.Remove(symbol);
+                    var ret = universe.Remove(symbol);
+
+                    // if we are removing the symbol which is also the benchmark, add it back as internal feed
+                    if (symbol == _benchmarkSymbol)
+                    {
+                        Securities.Remove(symbol);
+
+                        security = CreateBenchmarkSecurity();
+                        AddToUserDefinedUniverse(security);
+                    }
+
+                    return ret;
                 }
             }
             return false;
@@ -1536,6 +1530,32 @@ namespace QuantConnect.Algorithm
                 symbol, resolution, fillDataForward, leverage, extendedMarketHours, false, false, LiveMode);
             AddToUserDefinedUniverse(security);
             return (T)security;
+        }
+
+        /// <summary>
+        /// Creates and returns a <see cref="Security"/> object to be used as the benchmark
+        /// </summary>
+        private Security CreateBenchmarkSecurity()
+        {
+            // add the security as an internal feed so the algorithm doesn't receive the data
+            Resolution resolution;
+            if (_liveMode)
+            {
+                resolution = Resolution.Second;
+            }
+            else
+            {
+                // check to see if any universes arn't the ones added via AddSecurity
+                var hasNonAddSecurityUniverses = (
+                    from kvp in UniverseManager
+                    let config = kvp.Value.Configuration
+                    let symbol = UserDefinedUniverse.CreateSymbol(config.SecurityType, config.Market)
+                    where config.Symbol != symbol
+                    select kvp).Any();
+
+                resolution = hasNonAddSecurityUniverses ? UniverseSettings.Resolution : Resolution.Daily;
+            }
+            return SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer, _benchmarkSymbol, resolution, true, 1m, false, true, false, LiveMode);
         }
     }
 }
