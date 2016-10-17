@@ -80,8 +80,7 @@ namespace QuantConnect.Securities.Option
             var optionSecurity = (Option)_security;
             var id = _security.Symbol.ID;
 
-            var newId = SecurityIdentifier.GenerateOption(id.Date, id.Underlying, id.Market, optionSecurity.StrikePrice, id.OptionRight, id.OptionStyle);
-            var newSymbol = new Symbol(newId, _security.Symbol.Value, _security.Symbol.Underlying);
+            var newSymbol = Symbol.CreateOption(_security.Symbol.Underlying.Value, id.Market, id.OptionStyle, id.OptionRight, optionSecurity.StrikePrice, id.Date);
 
             optionSecurity.UpdateSymbol(newSymbol);
         }

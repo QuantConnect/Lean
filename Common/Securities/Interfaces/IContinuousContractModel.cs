@@ -9,12 +9,13 @@ namespace QuantConnect.Securities.Interfaces
 {
     /// <summary>
     /// Enum defines types of possible privce adjustments in continuous contract modeling. 
-    /// ForwardAdjusted - new quotes are adjusted as new data comes
-    /// BackAdjusted - old quotes are retrospectively adjusted as new data comes
     /// </summary>
     public enum AdjustmentType
     {
+        /// ForwardAdjusted - new quotes are adjusted as new data comes
         ForwardAdjusted,
+        
+        /// BackAdjusted - old quotes are retrospectively adjusted as new data comes
         BackAdjusted
     };
 
@@ -27,37 +28,35 @@ namespace QuantConnect.Securities.Interfaces
     public interface IContinuousContractModel
     {
         /// <summary>
-        /// Returns adjustment type, implemented by the model
+        /// Adjustment type, implemented by the model
         /// </summary>
-        AdjustmentType GetAdjustmentType();
+        AdjustmentType AdjustmentType { get; set; }
+
+        /// <summary>
+        /// List of current and historical data series for one root symbol. 
+        /// e.g. 6BH16, 6BM16, 6BU16, 6BZ16
+        /// </summary>
+        IEnumerator<BaseData> InputSeries { get; set; }
+
+        /// <summary>
+        /// Method returns continuous prices from the list of current and historical data series for one root symbol. 
+        /// It returns enumerator of stitched continuous quotes, produced by the model.
+        /// e.g. 6BH15, 6BM15, 6BU15, 6BZ15 will result in one 6B continuous historical series for 2015
+        /// </summary>
+        /// <returns>Continuous prices</returns>
+        IEnumerator<BaseData> GetContinuousData(DateFormat dateTime);
+
+        /// <summary>
+        /// Returns the list of roll dates for the contract. 
+        /// </summary>
+        /// <returns>The list of roll dates</returns>
+        IEnumerator<DateTime> GetRollDates();
 
         /// <summary>
         /// Returns current symbol name that corresponds to the current continuous model, 
         /// or null if none.
         /// </summary>
-        Symbol GetCurrentSymbol();
-
-
-        /// <summary>
-        /// Method initializes 
-        /// </summary>
-        /// <param name="initialSeries"></param>
-        IEnumerator<BaseData> GetHistory(Dictionary<Symbol, IEnumerator<BaseData>> initialSeries);
-
-
-        /// <summary>
-        /// Method initializes 
-        /// </summary>
-        /// <param name="initialSeries"></param>
-        IEnumerator<BaseData> ModelHistory(Dictionary<Symbol, IEnumerator<BaseData>> initialSeries);
-
-
-        /// <summary>
-        /// This method is a workhorse of the continuous contract model. It returns enumerator of stitched continuous quotes,
-        /// produced by the model.
-        /// </summary>
-        /// <returns>enumerator of stitched continuous quotes</returns>
-        IEnumerator<BaseData> GetContinuousData();
-
+        /// <returns>Current symbol name</returns>
+        Symbol GetCurrentSymbol(DateFormat dateTime);
     }
 }

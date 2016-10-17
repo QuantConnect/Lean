@@ -434,7 +434,6 @@ namespace QuantConnect.Util
                     var expiryYearMonth = DateTime.ParseExact(parts[4], DateFormat.YearMonth, null);
                     expiryYearMonth = new DateTime(expiryYearMonth.Year, expiryYearMonth.Month, DateTime.DaysInMonth(expiryYearMonth.Year, expiryYearMonth.Month));
                     return Symbol.CreateFuture(parts[1], Market.USA, expiryYearMonth);
-                    break;
 
                 default:
                     throw new NotImplementedException("ReadSymbolFromZipEntry is not implemented for " + securityType + " " + resolution);
