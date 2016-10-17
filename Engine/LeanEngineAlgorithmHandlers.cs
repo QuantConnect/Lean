@@ -186,7 +186,7 @@ namespace QuantConnect.Lean.Engine
             }
             if (fileProvider == null)
             {
-                throw new ArgumentNullException("factorFileProvider");
+                throw new ArgumentNullException("fileProvider");
             }
             _results = results;
             _setup = setup;
