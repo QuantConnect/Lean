@@ -403,6 +403,47 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     // we're going to try and connect several times, if successful break
                     _client.ClientSocket.eConnect(_host, _port, _clientId);
 
+                    // create the message processing thread
+                    var signal = new EReaderMonitorSignal();
+                    var reader = new EReader(_client.ClientSocket, signal);
+                    reader.Start();
+
+                    var messageProcessingThread = new Thread(() =>
+                    {
+                        Log.Trace("IB message processing thread started.");
+
+                        while (_client.ClientSocket.IsConnected())
+                        {
+                            signal.waitForSignal();
+                            reader.processMsgs();
+                        }
+
+                        Log.Trace("IB message processing thread ended.");
+                    }) { IsBackground = true };
+
+                    messageProcessingThread.Start();
+
+                    // pause for a moment to receive next valid ID message from gateway
+                    if (!_waitForNextValidId.WaitOne(15000))
+                    {
+                        Log.Trace("InteractiveBrokersBrokerage.Connect(): Operation took longer than 15 seconds.");
+
+                        // no response, disconnect and retry
+                        _client.ClientSocket.eDisconnect();
+                        messageProcessingThread.Join();
+
+                        // max out at 65 attempts to connect ~1 minute
+                        if (attempt++ < maxAttempts)
+                        {
+                            Thread.Sleep(1000);
+                            continue;
+                        }
+                        
+                        throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): Operation took longer than 15 seconds.");
+                    }
+
+                    Log.Trace("IB next valid id received.");
+
                     if (!_client.Connected) throw new Exception("InteractiveBrokersBrokerage.Connect(): Connection returned but was not in connected state.");
                     break;
                 }
@@ -429,26 +470,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                     throw;
                 }
-            }
-
-            // create the message processing thread
-            var signal = new EReaderMonitorSignal();
-            var reader = new EReader(_client.ClientSocket, signal);
-            reader.Start();
-
-            new Thread(() =>
-            {
-                while (_client.ClientSocket.IsConnected())
-                {
-                    signal.waitForSignal();
-                    reader.processMsgs();
-                }
-            }) { IsBackground = true }.Start();
-
-            // pause for a moment to receive next valid ID message from gateway
-            if (!_waitForNextValidId.WaitOne(15000))
-            {
-                throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): Operation took longer than 15 seconds.");
             }
 
             // define our event handler, this acts as stop to make sure when we leave Connect we have downloaded the full account
