@@ -25,19 +25,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class ApiFileProvider : IFileProvider
     {
+        private readonly int _uid = Config.GetInt("job-user-id", 0);
+        private readonly string _token = Config.Get("api-access-token", "1");
+        private readonly string _dataPath = Config.Get("data-folder", "../../../Data/");
         public bool Fetch(Symbol symbol, Resolution resolution, DateTime date)
         {
-            var uid      = Config.GetInt("job-user-id", 0);
-            var token    = Config.Get("api-access-token", "1");
-            var dataPath = Config.Get("data-folder", "../../../Data/");
-
             Log.Trace(
                 string.Format(
                     "Attempting to get data from QuantConnect.com's data library for symbol({0}), resolution({1}) and date({2}).",
                     symbol.ID, resolution, date.Date.ToShortDateString()));
 
             var api = new Api.Api();
-            api.Initialize(uid, token, dataPath);
+            api.Initialize(_uid, _token, _dataPath);
 
             var download = api.DownloadData(symbol, resolution, date);
 
