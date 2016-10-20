@@ -31,7 +31,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly DateTime _date;
         private readonly bool _isLiveMode;
         private readonly BaseData _factory;
-        private readonly IFileProvider _fileProvider;
+        private readonly IDataFileProvider _dataFileProvider;
 
         /// <summary>
         /// Event fired when the specified source is considered invalid, this may
@@ -42,13 +42,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes a new instance of the <see cref="ZipEntryNameSubscriptionDataSourceReader"/> class
         /// </summary>
-        /// <param name="fileProvider">Attempts to fetch remote file</param>
+        /// <param name="dataFileProvider">Attempts to fetch remote file</param>
         /// <param name="config">The subscription's configuration</param>
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
-        public ZipEntryNameSubscriptionDataSourceReader(IFileProvider fileProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public ZipEntryNameSubscriptionDataSourceReader(IDataFileProvider dataFileProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            _fileProvider = fileProvider;
+            _dataFileProvider = dataFileProvider;
             _config = config;
             _date = date;
             _isLiveMode = isLiveMode;
@@ -62,7 +62,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>An <see cref="IEnumerable{BaseData}"/> that contains the data in the source</returns>
         public IEnumerable<BaseData> Read(SubscriptionDataSource source)
         {
-            if (!File.Exists(source.Source) && !_fileProvider.Fetch(_config.Symbol, _config.Resolution, _date))
+            if (!File.Exists(source.Source) && !_dataFileProvider.Fetch(_config.Symbol, _config.Resolution, _date))
             {
                 OnInvalidSource(source, new FileNotFoundException("The specified file was not found", source.Source));             
             }

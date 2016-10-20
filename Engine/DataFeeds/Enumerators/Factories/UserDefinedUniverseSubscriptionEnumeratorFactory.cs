@@ -48,9 +48,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// Creates an enumerator to read the specified request
         /// </summary>
         /// <param name="request">The subscription request to be read</param>
-        /// <param name="fileProvider">Provider used to get data when it is not present on disk</param>
+        /// <param name="dataFileProvider">Provider used to get data when it is not present on disk</param>
         /// <returns>An enumerator reading the subscription request</returns>
-        public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IFileProvider fileProvider)
+        public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataFileProvider dataFileProvider)
         {
             return _universe.GetTriggerTimes(request.StartTimeUtc, request.EndTimeUtc, _marketHoursDatabase)
                 .Select(x => new Tick {Time = x, Symbol = request.Configuration.Symbol}).GetEnumerator();

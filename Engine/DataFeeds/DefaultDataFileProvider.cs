@@ -14,24 +14,25 @@
 */
 
 using System;
-using System.ComponentModel.Composition;
+using QuantConnect.Interfaces;
 
-namespace QuantConnect.Interfaces
+namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// Fetches a remote file for a security using a Symbol, Resolution and DateTime
-    /// Used to get remote files when they are not found locally
+    /// Default file provider functionality that does not attempt to retrieve any data
     /// </summary>
-    [InheritedExport(typeof(IFileProvider))]
-    public interface IFileProvider
+    public class DefaultDataFileProvider : IDataFileProvider
     {
         /// <summary>
-        /// Gets and downloads the remote file
+        /// Does not attempt to retrieve any data
         /// </summary>
         /// <param name="symbol">Symbol of the security</param>
         /// <param name="resolution">Resolution of the data requested</param>
         /// <param name="date">DateTime of the data requested</param>
-        /// <returns>Bool indicating whether the remote file was fetched correctly</returns>
-        bool Fetch(Symbol symbol, Resolution resolution, DateTime date);
+        /// <returns>False</returns>
+        public bool Fetch(Symbol symbol, Resolution resolution, DateTime date)
+        {
+            return false;
+        }
     }
 }

@@ -23,7 +23,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <summary>
     /// Attempts to download data from the api
     /// </summary>
-    public class ApiFileProvider : IFileProvider
+    public class ApiDataFileProvider : IDataFileProvider
     {
         private readonly int _uid = Config.GetInt("job-user-id", 0);
         private readonly string _token = Config.Get("api-access-token", "1");

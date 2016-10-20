@@ -36,7 +36,7 @@
   "command-json-file": "command.json",
   "map-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskMapFileProvider",
   "factor-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskFactorFileProvider",
-  "file-provider": "QuantConnect.Lean.Engine.DataFeeds.DefaultFileProvider",
+  "data-file-provider": "QuantConnect.Lean.Engine.DataFeeds.DefaultDataFileProvider",
 
   // if one uses true in following token, market hours will remain open all hours and all days.
   // if one uses false will make lean operate only during regular market hours.
