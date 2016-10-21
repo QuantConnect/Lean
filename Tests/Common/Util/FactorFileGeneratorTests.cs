@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class FactorFileGeneratorTests
     {
-        private const string PermTick = "ETN";
+        private const string PermTick = "AAPL";
         private const string Market = "usa";
         readonly Symbol _symbol = new Symbol(SecurityIdentifier.GenerateEquity(PermTick, Market), PermTick);
         private readonly string _dataPath = LeanData.GenerateZipFilePath(Config.Get("data-folder"),
@@ -56,16 +56,10 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         [Test]
-        public void DailyEquityData_CanBeRead_Successfully()
-        {
-            Assert.IsTrue(_factorFileGenerator.DailyDataForEquity.Any());
-        }
-
-        [Test]
         public void FactorFile_CanBeCreatedFromYahooData_Successfully()
         {
             var yahooEvents = _yahooDataDownloader.DownloadSplitAndDividendData(_symbol, DateTime.Parse("01/01/1980"), DateTime.MaxValue);
-            var factorFile = _factorFileGenerator.CreateFactorFile(yahooEvents);
+            var factorFile = _factorFileGenerator.CreateFactorFile(yahooEvents.ToList());
 
             Assert.IsTrue(factorFile.Permtick == _symbol.Value);
         }
@@ -85,7 +79,7 @@ namespace QuantConnect.Tests.Common.Util
             var originalFactorFileInstance = FactorFile.Read(PermTick, Market);
 
             // Act
-            var newFactorFileInstance = _factorFileGenerator.CreateFactorFile(yahooEvents);
+            var newFactorFileInstance = _factorFileGenerator.CreateFactorFile(yahooEvents.ToList());
 
             var earliestDate = originalFactorFileInstance.SortedFactorFileData.First().Key;
             var latestDate   = originalFactorFileInstance.SortedFactorFileData.Last().Key;
