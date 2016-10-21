@@ -62,9 +62,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>An <see cref="IEnumerable{BaseData}"/> that contains the data in the source</returns>
         public IEnumerable<BaseData> Read(SubscriptionDataSource source)
         {
-            if (!File.Exists(source.Source) && !_dataFileProvider.Fetch(_config.Symbol, _config.Resolution, _date))
+            if (!File.Exists(source.Source) && !_dataFileProvider.Fetch(_config.Symbol, _date, _config.Resolution, _config.TickType))
             {
-                OnInvalidSource(source, new FileNotFoundException("The specified file was not found", source.Source));             
+                OnInvalidSource(source, new FileNotFoundException("The specified file was not found", source.Source));
             }
 
             ZipFile zip;

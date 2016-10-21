@@ -21,14 +21,15 @@ using QuantConnect.Logging;
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// Attempts to download data from the api
+    /// Attempts to download data from the api and save it in the data folder specified in config.json.
+    /// This implementation will overwrite data if it already exists.
     /// </summary>
     public class ApiDataFileProvider : IDataFileProvider
     {
         private readonly int _uid = Config.GetInt("job-user-id", 0);
         private readonly string _token = Config.Get("api-access-token", "1");
         private readonly string _dataPath = Config.Get("data-folder", "../../../Data/");
-        public bool Fetch(Symbol symbol, Resolution resolution, DateTime date)
+        public bool Fetch(Symbol symbol, DateTime date, Resolution resolution, TickType tickType)
         {
             Log.Trace(
                 string.Format(

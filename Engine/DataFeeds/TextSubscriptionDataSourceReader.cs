@@ -185,7 +185,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 file = source.Source.Substring(0, hashIndex);
             }
 
-            if (!File.Exists(file) && !_dataFileProvider.Fetch(_config.Symbol, _config.Resolution, _date))
+            if (!File.Exists(file) && !_dataFileProvider.Fetch(_config.Symbol, _date, _config.Resolution, _config.TickType))
             {
                 OnInvalidSource(source, new FileNotFoundException("The specified file was not found", file));
                 return null;
