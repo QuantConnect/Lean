@@ -18,7 +18,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -157,6 +159,25 @@ namespace QuantConnect.Data.Auxiliary
                 }
             }
             return false;
+        }
+
+
+        public void WriteToCsv(Symbol symbol)
+        {
+            var filePath = LeanData.GenerateRelativeFactorFilePath(symbol);
+
+            var csv = new StringBuilder();
+
+            foreach (var kvp in SortedFactorFileData)
+            {
+                var newLine = string.Format("{0:yyyyMMdd},{1},{2}",
+                                             kvp.Key,
+                                             kvp.Value.PriceFactor,
+                                             kvp.Value.SplitFactor);
+                csv.AppendLine(newLine);
+            }
+
+            File.WriteAllText(filePath, csv.ToString());
         }
     }
 }
