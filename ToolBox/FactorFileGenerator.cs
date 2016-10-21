@@ -211,9 +211,7 @@ namespace QuantConnect.ToolBox
         /// <returns></returns>
         private FactorFileRow CalculateNextDividendFactor(BaseData nextEvent, FactorFileRow lastFactorFileRow)
         {
-            var eventDayData = DailyDataForEquity.FirstOrDefault(x => x.Time.Day == nextEvent.Time.Day
-                                                                      && x.Time.Month == nextEvent.Time.Month
-                                                                      && x.Time.Year == nextEvent.Time.Year);
+            var eventDayData = GetDailyDataForEventDate(nextEvent);
 
             // If you don't have the equity data nothing can be done
             if (eventDayData == null)
@@ -221,7 +219,7 @@ namespace QuantConnect.ToolBox
 
             TradeBar previousClosingPrice = FindPreviousClosingPrice(eventDayData.Time);
 
-            var priceFactor = lastFactorFileRow.PriceFactor - (nextEvent.Value / ((previousClosingPrice.Close / 10000) * lastFactorFileRow.SplitFactor));
+            var priceFactor = lastFactorFileRow.PriceFactor - (nextEvent.Value / ((previousClosingPrice.Close) * lastFactorFileRow.SplitFactor));
 
             return new FactorFileRow(previousClosingPrice.Time, priceFactor.RoundToSignificantDigits(7), lastFactorFileRow.SplitFactor);
         }
@@ -234,11 +232,26 @@ namespace QuantConnect.ToolBox
         /// <returns>The next Factor file row</returns>
         private FactorFileRow CalculateNextSplitFactor(BaseData nextMarketEvent, FactorFileRow lastFactorFileRow)
         {
+            var eventDayData = GetDailyDataForEventDate(nextMarketEvent);
+
+            // If you don't have the equity data nothing can be done
+            if (eventDayData == null)
+                return null;
+
+            TradeBar previousClosingPrice = FindPreviousClosingPrice(eventDayData.Time);
+
             return new FactorFileRow(
-                    nextMarketEvent.Time,
+                    previousClosingPrice.Time,
                     lastFactorFileRow.PriceFactor,
                     (lastFactorFileRow.SplitFactor * nextMarketEvent.Value).RoundToSignificantDigits(6)
                 );
+        }
+
+        private TradeBar GetDailyDataForEventDate(BaseData nextEvent)
+        {
+            return DailyDataForEquity.FirstOrDefault(x => x.Time.Day == nextEvent.Time.Day
+                                                          && x.Time.Month == nextEvent.Time.Month
+                                                          && x.Time.Year == nextEvent.Time.Year);
         }
 
         /// <summary>
