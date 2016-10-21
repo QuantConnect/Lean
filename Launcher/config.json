@@ -36,10 +36,15 @@
   "command-json-file": "command.json",
   "map-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskMapFileProvider",
   "factor-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskFactorFileProvider",
+  "data-file-provider": "QuantConnect.Lean.Engine.DataFeeds.DefaultDataFileProvider",
 
   // if one uses true in following token, market hours will remain open all hours and all days.
   // if one uses false will make lean operate only during regular market hours.
   "force-exchange-always-open": false,
+
+  // To get your api access token go to quantconnect.com/account
+  "job-user-id": "0",
+  "api-access-token": "",
 
   // interactive brokers configuration
   "ib-account": "DUxxxx",
@@ -182,11 +187,6 @@
       "live-mode": false,
       "send-via-api": true,
 
-      //Required for local charting.
-      // To get your api access token go to quantconnect.com/account
-      "job-user-id": "0",
-      "api-access-token": "",
-
       "setup-handler": "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.BacktestingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed",
@@ -202,11 +202,6 @@
     "live-desktop": {
       "live-mode": true,
       "send-via-api": true,
-
-      //Required for local charting.
-      // To get your api access token go to quantconnect.com/account
-      "job-user-id": "0",
-      "api-access-token": "",
 
       // Set your own brokerage and data queue handlers here.
       // Live desktop charting isn't as cool as on quantconnect.com but its pretty neat!

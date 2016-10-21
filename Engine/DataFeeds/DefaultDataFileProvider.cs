@@ -11,26 +11,24 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
 */
 
-using System.Collections.Generic;
-using QuantConnect.Data.UniverseSelection;
+using System;
 using QuantConnect.Interfaces;
 
-namespace QuantConnect.Data
+namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// Create an <see cref="IEnumerator{BaseData}"/> 
+    /// Default file provider functionality that does not attempt to retrieve any data
     /// </summary>
-    public interface ISubscriptionEnumeratorFactory
+    public class DefaultDataFileProvider : IDataFileProvider
     {
         /// <summary>
-        /// Creates an enumerator to read the specified request
+        /// Does not attempt to retrieve any data
         /// </summary>
-        /// <param name="request">The subscription request to be read</param>
-        /// <param name="dataFileProvider">Provider used to get data when it is not present on disk</param>
-        /// <returns>An enumerator reading the subscription request</returns>
-        IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataFileProvider dataFileProvider);
+        public bool Fetch(Symbol symbol, DateTime date, Resolution resolution, TickType tickType)
+        {
+            return false;
+        }
     }
 }
