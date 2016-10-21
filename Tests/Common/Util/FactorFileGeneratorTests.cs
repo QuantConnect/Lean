@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class FactorFileGeneratorTests
     {
-        private const string PermTick = "ETN";
+        private const string PermTick = "AAPL";
         private const string Market = "usa";
         readonly Symbol _symbol = new Symbol(SecurityIdentifier.GenerateEquity(PermTick, Market), PermTick);
         private readonly string _dataPath = LeanData.GenerateZipFilePath(Config.Get("data-folder"),
