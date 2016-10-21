@@ -23,8 +23,6 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
-using QuantConnect.Orders;
-using QuantConnect.Statistics;
 
 namespace QuantConnect.ToolBox
 {
@@ -50,32 +48,12 @@ namespace QuantConnect.ToolBox
             _lastDateFromEquityData = DailyDataForEquity.Last().Time;
         }
 
-        private List<TradeBar> ReadDailyEquityData(string pathForDailyEquityData)
-        {
-            using (var zipToOpen = new FileStream(pathForDailyEquityData, FileMode.Open))
-            {
-                using (var archive = new ZipArchive(zipToOpen, ZipArchiveMode.Read))
-                {
-                    foreach (var entry in archive.Entries)
-                    {
-                        var parser = new LeanParser();
-                        var stream = entry.Open();
-                        return parser.Parse(pathForDailyEquityData, stream)
-                                     .OrderByDescending(x => x.Time)
-                                     .Select(x => (TradeBar) x)
-                                     .ToList();
-                    }
-                }
-            }
-            return new List<TradeBar>();
-        }
-
         /// <summary>
-        /// Create FactorFile object
+        /// Create FactorFile instance
         /// </summary>
-        /// <param name="baseDataQueue">Queue of Dividend and Splits</param>
-        /// <returns>A factor file object</returns>
-        public FactorFile CreateFactorFileFromData(Queue<BaseData> baseDataQueue)
+        /// <param name="baseDataQueue">Queue of Dividends and Splits</param>
+        /// <returns><see cref="FactorFile"/></returns>
+        public FactorFile CreateFactorFile(Queue<BaseData> baseDataQueue)
         {
             baseDataQueue = ConsolidateIntraDayDividendSplits(baseDataQueue);
 
@@ -97,7 +75,7 @@ namespace QuantConnect.ToolBox
         /// </summary>
         private Queue<BaseData> ConsolidateIntraDayDividendSplits(Queue<BaseData> marketEventQueue)
         {
-            var marketEventList = new ObservableCollection<BaseData>(marketEventQueue.ToList());
+            var marketEventList = new Collection<BaseData>(marketEventQueue.ToList());
 
             var dateKeysLookup = marketEventList.GroupBy(x => x.Time)
                                                 .OrderByDescending(x => x.Key)
@@ -109,6 +87,7 @@ namespace QuantConnect.ToolBox
             {
                 if (kvpLookup.Count() > 1)
                 {
+                    // Intraday dividend split found
                     var dividend = kvpLookup.First(x => x.GetType() == typeof(Dividend)) as Dividend;
                     var split = kvpLookup.First(x => x.GetType() == typeof(Split)) as Split;
                     baseDataList.Add(new IntraDayDividendSplit(split, dividend));
@@ -122,24 +101,18 @@ namespace QuantConnect.ToolBox
             return new Queue<BaseData>(baseDataList);
         }
 
-        /// <summary>
-        /// Recursively generate the factor file
-        /// </summary>
-        /// <param name="baseDataDescendingQueue">Queue of dividends and splits as reported</param>
-        /// <param name="factorFileRows">The list of factor file rows</param>
-        /// <returns>FactorFile object</returns>
-        private FactorFile RecursivlyGenerateFactorFile(Queue<BaseData> baseDataDescendingQueue, List<FactorFileRow> factorFileRows)
+        private FactorFile RecursivlyGenerateFactorFile(Queue<BaseData> orderedDividendSplits, List<FactorFileRow> factorFileRows)
         {
-            // If there is no more data return
-            if (!baseDataDescendingQueue.Any())
+            // If there is no more dividends or splits, return
+            if (!orderedDividendSplits.Any())
             {
                 factorFileRows.Add(CreateLastFactorFileRow(factorFileRows));
                 return new FactorFile(Symbol.ID.Symbol, factorFileRows);
             }
 
-            var nextEvent = baseDataDescendingQueue.Dequeue();
+            var nextEvent = orderedDividendSplits.Dequeue();
 
-            // If there is no more daily equity data to use return
+            // If there is no more daily equity data to use, return
             if (_lastDateFromEquityData > nextEvent.Time)
             {
                 factorFileRows.Add(CreateLastFactorFileRow(factorFileRows));
@@ -151,15 +124,9 @@ namespace QuantConnect.ToolBox
             if (nextFactorFileRow != null)
                 factorFileRows.Add(nextFactorFileRow);
 
-            return RecursivlyGenerateFactorFile(baseDataDescendingQueue, factorFileRows);
+            return RecursivlyGenerateFactorFile(orderedDividendSplits, factorFileRows);
         }
 
-        /// <summary>
-        /// Creates the first row in the factor file. The is the last row generated
-        /// Represents the earliest date that the daily equity data contains.
-        /// </summary>
-        /// <param name="factorFileRows">The list of factor file rows</param>
-        /// <returns>FactorFileRow</returns>
         private FactorFileRow CreateLastFactorFileRow(List<FactorFileRow> factorFileRows)
         {
             return new FactorFileRow(DailyDataForEquity.Last().Time,
@@ -167,12 +134,6 @@ namespace QuantConnect.ToolBox
                                      factorFileRows.Last().SplitFactor);
         }
 
-        /// <summary>
-        /// Calculates the values for the next row in the factor file
-        /// </summary>
-        /// <param name="factorFileRows">The current list of factorFileRows</param>
-        /// <param name="nextMarketEvent">The next dividend, split or intradayDividendSplit</param>
-        /// <returns>A single factor file row</returns>
         private FactorFileRow CalculateNextFactorFileRow(List<FactorFileRow> factorFileRows, BaseData nextMarketEvent)
         {
             FactorFileRow nextFactorFileRow;
@@ -186,59 +147,46 @@ namespace QuantConnect.ToolBox
                 case "Split":
                     nextFactorFileRow = CalculateNextSplitFactor(nextMarketEvent, factorFileRows.Last());
                     break;
-                default:
+                case "IntraDayDividendSplit":
                     nextFactorFileRow = CalculateIntradayDividendSplit((IntraDayDividendSplit)nextMarketEvent, factorFileRows.Last());
                     break;
+                default:
+                    throw new ArgumentException("Unhandled BaseData type for FactorFileGenerator.");
             }
 
             return nextFactorFileRow;
         }
 
-        /// <summary>
-        /// Calculate a FactorFileRow that represents an intraday dividend split while applying the dividend first
-        /// </summary>
         private FactorFileRow CalculateIntradayDividendSplit(IntraDayDividendSplit intraDayDividendSplit, FactorFileRow last)
         {
             var row = CalculateNextDividendFactor(intraDayDividendSplit.Dividend, last);
             return CalculateNextSplitFactor(intraDayDividendSplit.Split, row);
         }
 
-        /// <summary>
-        /// Calculates next price factor after dividend occurs
-        /// </summary>
-        /// <param name="nextEvent">The next dividend event</param>
-        /// <param name="lastFactorFileRow">The current last item in the factor file</param>
-        /// <returns></returns>
         private FactorFileRow CalculateNextDividendFactor(BaseData nextEvent, FactorFileRow lastFactorFileRow)
         {
-            var eventDayData = GetDailyDataForEventDate(nextEvent);
+            var eventDayData = GetDailyDataForDate(nextEvent.Time);
 
-            // If you don't have the equity data nothing can be done
+            // If you don't have the equity data nothing can be calculated
             if (eventDayData == null)
                 return null;
 
-            TradeBar previousClosingPrice = FindPreviousClosingPrice(eventDayData.Time);
+            TradeBar previousClosingPrice = FindPreviousTradableDayClosingPrice(eventDayData.Time);
 
             var priceFactor = lastFactorFileRow.PriceFactor - (nextEvent.Value / ((previousClosingPrice.Close) * lastFactorFileRow.SplitFactor));
 
             return new FactorFileRow(previousClosingPrice.Time, priceFactor.RoundToSignificantDigits(7), lastFactorFileRow.SplitFactor);
         }
 
-        /// <summary>
-        /// Calculates the split factors
-        /// </summary>
-        /// <param name="nextMarketEvent">The market split or dividend currently being calculated</param>
-        /// <param name="lastFactorFileRow">The last factor file row processed</param>
-        /// <returns>The next Factor file row</returns>
         private FactorFileRow CalculateNextSplitFactor(BaseData nextMarketEvent, FactorFileRow lastFactorFileRow)
         {
-            var eventDayData = GetDailyDataForEventDate(nextMarketEvent);
+            var eventDayData = GetDailyDataForDate(nextMarketEvent.Time);
 
             // If you don't have the equity data nothing can be done
             if (eventDayData == null)
                 return null;
 
-            TradeBar previousClosingPrice = FindPreviousClosingPrice(eventDayData.Time);
+            TradeBar previousClosingPrice = FindPreviousTradableDayClosingPrice(eventDayData.Time);
 
             return new FactorFileRow(
                     previousClosingPrice.Time,
@@ -247,19 +195,14 @@ namespace QuantConnect.ToolBox
                 );
         }
 
-        private TradeBar GetDailyDataForEventDate(BaseData nextEvent)
+        private TradeBar GetDailyDataForDate(DateTime date)
         {
-            return DailyDataForEquity.FirstOrDefault(x => x.Time.Day == nextEvent.Time.Day
-                                                          && x.Time.Month == nextEvent.Time.Month
-                                                          && x.Time.Year == nextEvent.Time.Year);
+            return DailyDataForEquity.FirstOrDefault(x => x.Time.Day == date.Day
+                                                          && x.Time.Month == date.Month
+                                                          && x.Time.Year == date.Year);
         }
 
-        /// <summary>
-        /// Gets the previous trading days closing price
-        /// </summary>
-        /// <param name="date">Date that is currently being processed</param>
-        /// <returns>A tradebar representing that days data</returns>
-        private TradeBar FindPreviousClosingPrice(DateTime date)
+        private TradeBar FindPreviousTradableDayClosingPrice(DateTime date)
         {
             TradeBar previousDayData = null;
             var lastDateforData = DailyDataForEquity.Last();
@@ -273,5 +216,24 @@ namespace QuantConnect.ToolBox
             return previousDayData;
         }
 
+        private List<TradeBar> ReadDailyEquityData(string pathForDailyEquityData)
+        {
+            using (var zipToOpen = new FileStream(pathForDailyEquityData, FileMode.Open))
+            {
+                using (var archive = new ZipArchive(zipToOpen, ZipArchiveMode.Read))
+                {
+                    foreach (var entry in archive.Entries)
+                    {
+                        var parser = new LeanParser();
+                        var stream = entry.Open();
+                        return parser.Parse(pathForDailyEquityData, stream)
+                                     .OrderByDescending(x => x.Time)
+                                     .Select(x => (TradeBar)x)
+                                     .ToList();
+                    }
+                }
+            }
+            return new List<TradeBar>();
+        }
     }
 }
