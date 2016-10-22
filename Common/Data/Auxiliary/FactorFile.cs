@@ -161,7 +161,10 @@ namespace QuantConnect.Data.Auxiliary
             return false;
         }
 
-
+        /// <summary>
+        /// Write the factor file to the correct place in the default Data folder
+        /// </summary>
+        /// <param name="symbol">The symbol this factor file represents</param>
         public void WriteToCsv(Symbol symbol)
         {
             var filePath = LeanData.GenerateRelativeFactorFilePath(symbol);
