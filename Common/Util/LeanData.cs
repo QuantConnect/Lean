@@ -184,6 +184,17 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Generates relative factor file paths for equities
+        /// </summary>
+        public static string GenerateRelativeFactorFilePath(Symbol symbol)
+        {
+            return Path.Combine(Globals.DataFolder,
+                                        "equity",
+                                        symbol.ID.Market,
+                                        "factor_files",
+                                        symbol.Value.ToLower() + ".csv");
+        }
+        /// <summary>
         /// Generates the relative zip file path rooted in the /Data directory
         /// </summary>
         public static string GenerateRelativeZipFilePath(Symbol symbol, DateTime date, Resolution resolution, TickType tickType)

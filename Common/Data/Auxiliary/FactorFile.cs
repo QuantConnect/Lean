@@ -18,7 +18,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -27,7 +29,7 @@ namespace QuantConnect.Data.Auxiliary
     /// </summary>
     public class FactorFile
     {
-        private readonly SortedList<DateTime, FactorFileRow> _data;
+        public SortedList<DateTime, FactorFileRow> SortedFactorFileData { get; set; }
 
         /// <summary>
         /// Gets the symbol this factor file represents
@@ -40,7 +42,7 @@ namespace QuantConnect.Data.Auxiliary
         public FactorFile(string permtick, IEnumerable<FactorFileRow> data)
         {
             Permtick = permtick.ToUpper();
-            _data = new SortedList<DateTime, FactorFileRow>(data.ToDictionary(x => x.Date));
+            SortedFactorFileData = new SortedList<DateTime, FactorFileRow>(data.ToDictionary(x => x.Date));
         }
 
         /// <summary>
@@ -58,10 +60,10 @@ namespace QuantConnect.Data.Auxiliary
         {
             decimal factor = 1;
             //Iterate backwards to find the most recent factor:
-            foreach (var splitDate in _data.Keys.Reverse())
+            foreach (var splitDate in SortedFactorFileData.Keys.Reverse())
             {
                 if (splitDate.Date < searchDate.Date) break;
-                factor = _data[splitDate].PriceScaleFactor;
+                factor = SortedFactorFileData[splitDate].PriceScaleFactor;
             }
             return factor;
         }
@@ -73,10 +75,10 @@ namespace QuantConnect.Data.Auxiliary
         {
             decimal factor = 1;
             //Iterate backwards to find the most recent factor:
-            foreach (var splitDate in _data.Keys.Reverse())
+            foreach (var splitDate in SortedFactorFileData.Keys.Reverse())
             {
                 if (splitDate.Date < searchDate.Date) break;
-                factor = _data[splitDate].SplitFactor;
+                factor = SortedFactorFileData[splitDate].SplitFactor;
             }
             return factor;
         }
@@ -112,12 +114,12 @@ namespace QuantConnect.Data.Auxiliary
         public bool HasDividendEventOnNextTradingDay(DateTime date, out decimal priceFactorRatio)
         {
             priceFactorRatio = 0;
-            var index = _data.IndexOfKey(date);
-            if (index > -1 && index < _data.Count - 1)
+            var index = SortedFactorFileData.IndexOfKey(date);
+            if (index > -1 && index < SortedFactorFileData.Count - 1)
             {
                 // grab the next key to ensure it's a dividend event
-                var thisRow = _data.Values[index];
-                var nextRow = _data.Values[index + 1];
+                var thisRow = SortedFactorFileData.Values[index];
+                var nextRow = SortedFactorFileData.Values[index + 1];
 
                 // if the price factors have changed then it's a dividend event
                 if (thisRow.PriceFactor != nextRow.PriceFactor)
@@ -142,12 +144,12 @@ namespace QuantConnect.Data.Auxiliary
         public bool HasSplitEventOnNextTradingDay(DateTime date, out decimal splitFactor)
         {
             splitFactor = 1;
-            var index = _data.IndexOfKey(date);
-            if (index > -1 && index < _data.Count - 1)
+            var index = SortedFactorFileData.IndexOfKey(date);
+            if (index > -1 && index < SortedFactorFileData.Count - 1)
             {
                 // grab the next key to ensure it's a split event
-                var thisRow = _data.Values[index];
-                var nextRow = _data.Values[index + 1];
+                var thisRow = SortedFactorFileData.Values[index];
+                var nextRow = SortedFactorFileData.Values[index + 1];
 
                 // if the split factors have changed then it's a split event
                 if (thisRow.SplitFactor != nextRow.SplitFactor)
@@ -157,6 +159,28 @@ namespace QuantConnect.Data.Auxiliary
                 }
             }
             return false;
+        }
+
+        /// <summary>
+        /// Write the factor file to the correct place in the default Data folder
+        /// </summary>
+        /// <param name="symbol">The symbol this factor file represents</param>
+        public void WriteToCsv(Symbol symbol)
+        {
+            var filePath = LeanData.GenerateRelativeFactorFilePath(symbol);
+
+            var csv = new StringBuilder();
+
+            foreach (var kvp in SortedFactorFileData)
+            {
+                var newLine = string.Format("{0:yyyyMMdd},{1},{2}",
+                                             kvp.Key,
+                                             kvp.Value.PriceFactor,
+                                             kvp.Value.SplitFactor);
+                csv.AppendLine(newLine);
+            }
+
+            File.WriteAllText(filePath, csv.ToString());
         }
     }
 }
