@@ -17,14 +17,16 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Brokerages;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 using QuantConnect.Statistics;
 
 namespace QuantConnect.Lean.Engine 
@@ -273,6 +275,12 @@ namespace QuantConnect.Lean.Engine
                         var banner = new Dictionary<string, string>();
                         var statisticsResults = new StatisticsResults();
 
+                        var csvTransactionsFileName = Config.Get("transaction-log");
+                        if (!string.IsNullOrEmpty(csvTransactionsFileName))
+                        {
+                            SaveListOfTrades(_algorithmHandlers.Transactions, csvTransactionsFileName);
+                        }
+
                         try
                         {
                             //Generates error when things don't exist (no charting logged, runtime errors in main algo execution)
@@ -384,5 +392,26 @@ namespace QuantConnect.Lean.Engine
                 _algorithmHandlers.RealTime.Exit();
             }
         }
+
+        private static void SaveListOfTrades(IOrderProvider transactions, string csvFileName)
+        {
+            var orders = transactions.GetOrders(x => x.Status.IsFill());
+
+            using (var writer = new StreamWriter(csvFileName))
+            {
+                foreach (var order in orders)
+                {
+                    var line = string.Format("{0},{1},{2},{3},{4}",
+                        order.Time.ToString("yyyy-MM-dd HH:mm:ss"),
+                        order.Symbol.Value,
+                        order.Direction,
+                        order.Quantity,
+                        order.Price);
+                    writer.WriteLine(line);
+                }
+            }
+        }
+
+
     } // End Algorithm Node Core Thread
 } // End Namespace
