@@ -397,6 +397,10 @@ namespace QuantConnect.Lean.Engine
         {
             var orders = transactions.GetOrders(x => x.Status.IsFill());
 
+            var path = Path.GetDirectoryName(csvFileName);
+            if (path != null && !Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
             using (var writer = new StreamWriter(csvFileName))
             {
                 foreach (var order in orders)
