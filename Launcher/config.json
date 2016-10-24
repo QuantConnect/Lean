@@ -42,6 +42,9 @@
   // if one uses false will make lean operate only during regular market hours.
   "force-exchange-always-open": false,
 
+  // save list of transactions to the specified csv file
+  "transaction-log": "",
+
   // To get your api access token go to quantconnect.com/account
   "job-user-id": "0",
   "api-access-token": "",
