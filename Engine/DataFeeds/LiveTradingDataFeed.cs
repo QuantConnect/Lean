@@ -427,13 +427,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     // this enumerator allows the exchange to pump ticks into the 'back' of the enumerator,
                     // and the time sync loop can pull aggregated trade bars off the front
-                    var aggregator = new TradeBarBuilderEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider);
-                    _exchange.SetDataHandler(request.Configuration.Symbol, data =>
+                    switch (request.Configuration.TickType)
                     {
-                        aggregator.ProcessData((Tick) data);
-                        if (subscription != null) subscription.RealtimePrice = data.Value;
-                    });
-                    enumerator = aggregator;
+                        case TickType.Quote:
+                            var quoteBarAggregator = new QuoteBarBuilderEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider);
+                            _exchange.ChainDataHandler(request.Configuration.Symbol, data =>
+                            {
+                                quoteBarAggregator.ProcessData((Tick)data);
+                                if (subscription != null) subscription.RealtimePrice = data.Value;
+                            });
+                            enumerator = quoteBarAggregator;
+                            break;
+                        case TickType.Trade:
+                        default:
+                            var tradeBarAggregator = new TradeBarBuilderEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider);
+                            _exchange.ChainDataHandler(request.Configuration.Symbol, data =>
+                            {
+                                tradeBarAggregator.ProcessData((Tick)data);
+                                if (subscription != null) subscription.RealtimePrice = data.Value;
+                            });
+                            enumerator = tradeBarAggregator;
+                            break;
+                    }
                 }
                 else
                 {
