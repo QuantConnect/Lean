@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace QuantConnect.Securities.Interfaces
 {
     /// <summary>
-    /// Enum defines types of possible privce adjustments in continuous contract modeling. 
+    /// Enum defines types of possible price adjustments in continuous contract modeling. 
     /// </summary>
     public enum AdjustmentType
     {

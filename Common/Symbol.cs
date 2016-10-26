@@ -63,18 +63,12 @@ namespace QuantConnect
                     sid = SecurityIdentifier.GenerateCfd(ticker, market);
                     break;
                 case SecurityType.Option:
-                    alias = alias ?? "?" + ticker.ToUpper();
-                    var underlyingSid = SecurityIdentifier.GenerateEquity(ticker, market);
-                    sid = SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, underlyingSid, market, 0, default(OptionRight), default(OptionStyle));
-                    underlyingSumbol = new Symbol(underlyingSid, ticker);
-                    break;
+                    return CreateOption(ticker, market, default(OptionStyle), default(OptionRight), 0, SecurityIdentifier.DefaultDate);
+
                 case SecurityType.Commodity:
                 case SecurityType.Future:
-                    alias = alias ?? "?" + ticker.ToUpper();
-                    underlyingSid = SecurityIdentifier.GenerateBase(ticker, market);
-                    sid = SecurityIdentifier.GenerateFuture(SecurityIdentifier.DefaultDate, underlyingSid, market);
-                    underlyingSumbol = new Symbol(underlyingSid, ticker);
-                    break;
+                    return CreateFuture(ticker, market, SecurityIdentifier.DefaultDate);
+
                 default:
                     throw new NotImplementedException("The security type has not been implemented yet: " + securityType);
             }
@@ -97,15 +91,40 @@ namespace QuantConnect
         public static Symbol CreateOption(string underlying, string market, OptionStyle style, OptionRight right, decimal strike, DateTime expiry, string alias = null)
         {
             var underlyingSid = SecurityIdentifier.GenerateEquity(underlying, market);
-            var sid = SecurityIdentifier.GenerateOption(expiry, underlyingSid, market, strike, right, style);
             var underlyingSymbol = new Symbol(underlyingSid, underlying);
 
-            var sym = sid.Symbol;
-            if (sym.Length > 5) sym += " ";
-            // format spec: http://www.optionsclearing.com/components/docs/initiatives/symbology/symbology_initiative_v1_8.pdf
-            alias = alias ?? string.Format("{0,-6}{1}{2}{3:00000000}", sym, sid.Date.ToString(DateFormat.SixCharacter), sid.OptionRight.ToString()[0], sid.StrikePrice * 1000m);
+            return CreateOption(underlyingSymbol, market, style, right, strike, expiry, alias);
+        }
 
-            return new Symbol(sid, alias, underlyingSymbol); 
+        /// <summary>
+        /// Provides a convenience method for creating an option Symbol using SecurityIdentifier.
+        /// </summary>
+        /// <param name="underlyingSymbol">The underlying security symbol</param>
+        /// <param name="market">The market the underlying resides in</param>
+        /// <param name="style">The option style (American, European, ect..)</param>
+        /// <param name="right">The option right (Put/Call)</param>
+        /// <param name="strike">The option strike price</param>
+        /// <param name="expiry">The option expiry date</param>
+        /// <param name="alias">An alias to be used for the symbol cache. Required when 
+        /// adding the same security from diferent markets</param>
+        /// <returns>A new Symbol object for the specified option contract</returns>
+        public static Symbol CreateOption(Symbol underlyingSymbol, string market, OptionStyle style, OptionRight right, decimal strike, DateTime expiry, string alias = null)
+        {
+            var sid = SecurityIdentifier.GenerateOption(expiry, underlyingSymbol.ID, market, strike, right, style);
+    
+            if (expiry == SecurityIdentifier.DefaultDate)
+            {
+                alias = alias ?? "?" + underlyingSymbol.Value.ToUpper();
+            }
+            else
+            {
+                var sym = underlyingSymbol.Value;
+                if (sym.Length > 5) sym += " ";
+                // format spec: http://www.optionsclearing.com/components/docs/initiatives/symbology/symbology_initiative_v1_8.pdf
+                alias = alias ?? string.Format("{0,-6}{1}{2}{3:00000000}", sym, sid.Date.ToString(DateFormat.SixCharacter), sid.OptionRight.ToString()[0], sid.StrikePrice * 1000m);
+            }
+
+            return new Symbol(sid, alias, underlyingSymbol);
         }
 
         /// <summary>
@@ -139,8 +158,15 @@ namespace QuantConnect
             var sid = SecurityIdentifier.GenerateFuture(expiry, underlyingSid, market);
             var underlyingSymbol = new Symbol(underlyingSid, underlying);
 
-            var sym = sid.Symbol;
-            alias = alias ?? string.Format("{0}{1}{2}", sym, expirationSymbology[sid.Date.Month], sid.Date.Year % 100);
+            if (expiry == SecurityIdentifier.DefaultDate)
+            {
+                alias = alias ?? "?" + underlying.ToUpper();
+            }
+            else
+            {
+                var sym = sid.Symbol;
+                alias = alias ?? string.Format("{0}{1}{2}", sym, expirationSymbology[sid.Date.Month], sid.Date.Year % 100);
+            }
 
             return new Symbol(sid, alias, underlyingSymbol);
         }
@@ -191,7 +217,35 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Priviate constructor initializes a new instance of the <see cref="Symbol"/> class with underlying
+        /// Creates new symbol with updated mapped symbol. Symbol Mapping: When symbols change over time (e.g. CHASE-> JPM) need to update the symbol requested.
+        /// Method returns newly created symbol 
+        /// </summary>
+        public Symbol UpdateMappedSymbol(string mappedSymbol)
+        {
+            if (ID.SecurityType == SecurityType.Option)
+            {
+                var underlyingSymbol = new Symbol(Underlying.ID, mappedSymbol, null);
+
+                var alias = Value;
+
+                if (ID.Date != SecurityIdentifier.DefaultDate)
+                {
+                    var sym = mappedSymbol;
+                    if (sym.Length > 5) sym += " ";
+                    // format spec: http://www.optionsclearing.com/components/docs/initiatives/symbology/symbology_initiative_v1_8.pdf
+                    alias = string.Format("{0,-6}{1}{2}{3:00000000}", sym, ID.Date.ToString(DateFormat.SixCharacter), ID.OptionRight.ToString()[0], ID.StrikePrice * 1000m);
+                }
+
+                return new Symbol(ID, alias, underlyingSymbol);
+            }
+            else
+            {
+                return new Symbol(ID, mappedSymbol, Underlying);
+            }
+        }
+
+        /// <summary>
+        /// Private constructor initializes a new instance of the <see cref="Symbol"/> class with underlying
         /// </summary>
         /// <param name="sid">The security identifier for this symbol</param>
         /// <param name="value">The current ticker symbol value</param>

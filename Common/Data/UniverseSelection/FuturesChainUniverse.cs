@@ -102,7 +102,8 @@ namespace QuantConnect.Data.UniverseSelection
                     isInternalFeed: false,
                     isCustom: false,
                     tickType: tickType,
-                    isFilteredSubscription: true
+                    isFilteredSubscription: true,
+                    dataNormalizationMode: DataNormalizationMode.Raw
                     ))
                 .Select(config => new SubscriptionRequest(
                     isUniverseSubscription: false,

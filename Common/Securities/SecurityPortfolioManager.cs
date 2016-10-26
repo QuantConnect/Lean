@@ -685,7 +685,8 @@ namespace QuantConnect.Securities
         {
             // only apply to the option positions that have correct underlying symbol
             var optionSecurities = Securities
-                                   .Where(x => x.Value.Type == SecurityType.Option && split.Symbol == x.Key.Underlying);
+                                   .Where(x => x.Value.Type == SecurityType.Option && split.Symbol == x.Key.Underlying && x.Value.Holdings.Invested)
+                                   .ToList();
 
             foreach (var securityKV in optionSecurities)
             {
@@ -700,11 +701,68 @@ namespace QuantConnect.Securities
                 }
 
                 var splitFactor = split.SplitFactor;
-                var optionHoldings = (Option.OptionHolding)security.Holdings;
-                optionHoldings.SetUnderlyingSplit(splitFactor);
+                var newSymbol = GetSplitAdjustedSymbol(symbol, splitFactor);
+
+                if (newSymbol != null)
+                {
+                    Securities.Remove(symbol);
+                    var optionHoldings = new Option.OptionHolding(Securities[newSymbol], (Option.OptionHolding)security.Holdings);
+                    optionHoldings.SplitUnderlying(splitFactor);
+                    Securities[newSymbol].Holdings = optionHoldings;
+                }
+                else
+                {
+                    var optionHoldings = (Option.OptionHolding)security.Holdings;
+                    optionHoldings.SplitUnderlying(splitFactor);
+                }
             }
         }
 
+        private Symbol GetSplitAdjustedSymbol(Symbol symbol, decimal splitFactor)
+        {
+            var inverseFactor = 1.0m / splitFactor;
+
+            decimal newStrike = 0.0m;
+            string newRootSymbol = null;
+
+            Func<Symbol, bool> symbolIsFound = x => 
+            {
+                var rootSymbol = newRootSymbol ?? symbol.Underlying.Value;
+                var strike = newStrike != 0.0m ? newStrike : symbol.ID.StrikePrice;
+
+                return x.HasUnderlying == true &&
+                        x.Underlying.Value == rootSymbol &&
+                        x.ID.Date == symbol.ID.Date &&
+                        x.ID.OptionRight == symbol.ID.OptionRight &&
+                        x.ID.Market == symbol.ID.Market &&
+                        x.ID.OptionStyle == symbol.ID.OptionStyle &&
+                        x.ID.StrikePrice == strike;
+            };
+
+            // detect forward (even and odd) and reverse splits
+            if (splitFactor > 1.0m)
+            {
+                // reverse split
+                newRootSymbol = symbol.Underlying.Value + "1";
+            }
+            if ((int)Math.Round(inverseFactor, 5) == (int)inverseFactor)
+            {
+                // even split (e.g. 2 for 1)
+                newStrike = Math.Round(symbol.ID.StrikePrice / inverseFactor, 2);
+            }
+            else
+            {
+                // odd split (e.g. 3 for 2)
+                newStrike = Math.Round(symbol.ID.StrikePrice / inverseFactor, 2);
+                newRootSymbol = symbol.Underlying.Value + "1";
+            }
+
+            return Securities
+                    .Select(x => x.Key)
+                    .Where(symbolIsFound)
+                    .FirstOrDefault();
+        }
+        
         /// <summary>
         /// Record the transaction value and time in a list to later be processed for statistics creation.
         /// </summary>

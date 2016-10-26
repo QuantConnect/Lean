@@ -33,10 +33,27 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Sets new option holding parameters (strike price, multipler, unit of size) in accordance with underlying split event details
+        /// Option Holding Class constructor
+        /// </summary>
+        /// <param name="security">The option security being held</param>
+        /// <param name="holding">The option security holding</param>
+        public OptionHolding(Security security, OptionHolding holding)
+            : base(security)
+        {
+            _averagePrice = holding._averagePrice;
+            _quantity = holding._quantity;
+            _price = holding._price;
+            _totalSaleVolume = holding._totalSaleVolume;
+            _profit = holding._profit;
+            _lastTradeProfit = holding._lastTradeProfit;
+            _totalFees = holding._totalFees;
+        }
+
+        /// <summary>
+        /// Sets new option holding parameters (strike price, multiplier, unit of size) in accordance with underlying split event details
         /// </summary>
         /// <param name="splitFactor">Split ratio of the underlying split</param>
-        public void SetUnderlyingSplit(decimal splitFactor)
+        public void SplitUnderlying(decimal splitFactor)
         {
             var optionSecurity = (Option)_security;
             var inverseFactor = 1.0m / splitFactor;
@@ -46,43 +63,20 @@ namespace QuantConnect.Securities.Option
             {
                 // reverse split: we adjust units of trade for the security
                 optionSecurity.ContractUnitOfTrade /= (int)splitFactor;
-
-                // we have to update security symbol as it is changed after the split in this case
-                AdjustIdentifierOnSplit();
             }
 
             if ((int)Math.Round(inverseFactor, 5) == (int)inverseFactor)
             {
                 // even split (e.g. 2 for 1): we adjust position size and strike price
                 _quantity = (int)((decimal)_quantity * inverseFactor);
-                optionSecurity.StrikePrice = Math.Round(optionSecurity.StrikePrice / inverseFactor, 2);
-
-                // we have to update security symbol as it is changed after the split in this case
-                AdjustIdentifierOnSplit();
+                _averagePrice *= splitFactor;
             }
             else
             {
                 // odd split (e.g. 3 for 2): we adjust strike price, unit of trade, and multiplier
-                optionSecurity.StrikePrice = Math.Round(optionSecurity.StrikePrice / inverseFactor, 2);
                 optionSecurity.ContractUnitOfTrade *= (int)inverseFactor;
                 optionSecurity.ContractMultiplier *= (int)inverseFactor;
-
-                // we have to update security symbol as it is changed after the split in this case
-                AdjustIdentifierOnSplit();
             }
-        }
-
-        /// <summary>
-        /// Adjusts option ID on split if strike price has changed. Adjusts ID using rtike for now. Open question: need to change option name 
-        /// </summary>
-        private void AdjustIdentifierOnSplit()
-        {
-            var optionSecurity = (Option)_security;
-            var id = _security.Symbol.ID;
-
-            var newSymbol = Symbol.CreateOption(_security.Symbol.Underlying.Value, id.Market, id.OptionStyle, id.OptionRight, optionSecurity.StrikePrice, id.Date);
-
-            optionSecurity.UpdateSymbol(newSymbol);
         }
     }
 }

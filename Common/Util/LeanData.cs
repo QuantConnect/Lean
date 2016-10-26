@@ -18,6 +18,7 @@ using System.Globalization;
 using System.IO;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Util
 {
@@ -401,15 +402,15 @@ namespace QuantConnect.Util
         /// <summary>
         /// Creates a symbol from the specified zip entry name
         /// </summary>
-        /// <param name="securityType">The security type of the output symbol</param>
+        /// <param name="symbol">The root symbol of the output symbol</param>
         /// <param name="resolution">The resolution of the data source producing the zip entry name</param>
         /// <param name="zipEntryName">The zip entry name to be parsed</param>
         /// <returns>A new symbol representing the zip entry name</returns>
-        public static Symbol ReadSymbolFromZipEntry(SecurityType securityType, Resolution resolution, string zipEntryName)
+        public static Symbol ReadSymbolFromZipEntry(Symbol symbol, Resolution resolution, string zipEntryName)
         {
             var isHourlyOrDaily = resolution == Resolution.Hour || resolution == Resolution.Daily;
             var parts = zipEntryName.Replace(".csv", string.Empty).Split('_');
-            switch (securityType)
+            switch (symbol.ID.SecurityType)
             {
                 case SecurityType.Option:
                     if (isHourlyOrDaily)
@@ -418,7 +419,7 @@ namespace QuantConnect.Util
                         var right = (OptionRight)Enum.Parse(typeof(OptionRight), parts[3], true);
                         var strike = decimal.Parse(parts[4]) / 10000m;
                         var expiry = DateTime.ParseExact(parts[5], DateFormat.EightCharacter, null);
-                        return Symbol.CreateOption(parts[0], Market.USA, style, right, strike, expiry);
+                        return Symbol.CreateOption(symbol.Underlying, Market.USA, style, right, strike, expiry);
                     }
                     else
                     {
@@ -426,7 +427,7 @@ namespace QuantConnect.Util
                         var right = (OptionRight)Enum.Parse(typeof(OptionRight), parts[5], true);
                         var strike = decimal.Parse(parts[6]) / 10000m;
                         var expiry = DateTime.ParseExact(parts[7], DateFormat.EightCharacter, null);
-                        return Symbol.CreateOption(parts[1], Market.USA, style, right, strike, expiry);
+                        return Symbol.CreateOption(symbol.Underlying, Market.USA, style, right, strike, expiry);
                     }
                     break;
 
@@ -436,7 +437,7 @@ namespace QuantConnect.Util
                     return Symbol.CreateFuture(parts[1], Market.USA, expiryYearMonth);
 
                 default:
-                    throw new NotImplementedException("ReadSymbolFromZipEntry is not implemented for " + securityType + " " + resolution);
+                    throw new NotImplementedException("ReadSymbolFromZipEntry is not implemented for " + symbol.ID.SecurityType + " " + resolution);
             }
         }
 

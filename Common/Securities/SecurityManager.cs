@@ -365,10 +365,12 @@ namespace QuantConnect.Securities
                     break;
 
                 case SecurityType.Option:
+                    config.DataNormalizationMode = DataNormalizationMode.Raw;
                     security = new Option.Option(exchangeHours, config, securityPortfolioManager.CashBook[CashBook.AccountCurrency], new Option.OptionSymbolProperties(symbolProperties));
                     break;
 
                 case SecurityType.Future:
+                    config.DataNormalizationMode = DataNormalizationMode.Raw;
                     security = new Future.Future(exchangeHours, config, securityPortfolioManager.CashBook[CashBook.AccountCurrency], symbolProperties);
                     break;
 

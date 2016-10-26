@@ -255,14 +255,5 @@ namespace QuantConnect.Securities.Option
             ContractFilter = new StrikeExpiryOptionFilter(minStrike, maxStrike, minExpiry, maxExpiry);
         }
 
-        /// <summary>
-        /// Internal method updates option symbol in case of option contract adjustments
-        /// </summary>
-        /// <param name="newSymbol"></param>
-        internal void UpdateSymbol(Symbol newSymbol)
-        {
-            _symbol = newSymbol;
-        }
-
     }
 }

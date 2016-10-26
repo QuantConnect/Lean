@@ -230,18 +230,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>True if the subscription was successfully removed, false otherwise</returns>
         public bool RemoveSubscription(SubscriptionDataConfig configuration)
         {
-            // remove the subscription from our collection
+            // remove the subscription from our collection, if it exists
             Subscription subscription;
-            if (!_subscriptions.TryRemove(configuration, out subscription))
+
+            if (_subscriptions.TryGetValue(configuration, out subscription))
             {
-                Log.Error("FileSystemDataFeed.RemoveSubscription(): Unable to remove: " + configuration);
-                return false;
+                if (!_subscriptions.TryRemove(configuration, out subscription))
+                {
+                    Log.Error("FileSystemDataFeed.RemoveSubscription(): Unable to remove: " + configuration);
+                    return false;
+                }
+
+                subscription.Dispose();
+                Log.Debug("FileSystemDataFeed.RemoveSubscription(): Removed " + configuration);
+
+                UpdateFillForwardResolution();
             }
-
-            subscription.Dispose();
-            Log.Debug("FileSystemDataFeed.RemoveSubscription(): Removed " + configuration);
-
-            UpdateFillForwardResolution();
 
             return true;
         }
@@ -375,7 +379,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 if (request.Universe is OptionChainUniverse)
                 {
-                    return new OptionChainUniverseSubscriptionEnumeratorFactory((req, e) => ConfigureEnumerator(req, true, e));
+                    return new OptionChainUniverseSubscriptionEnumeratorFactory((req, e) => ConfigureEnumerator(req, true, e), 
+                        _mapFileProvider.Get(request.Security.Symbol.ID.Market), _factorFileProvider);
                 }
                 if (request.Universe is FuturesChainUniverse)
                 {
@@ -383,7 +388,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
-            var mapFileResolver = request.Configuration.SecurityType == SecurityType.Equity
+            var mapFileResolver = request.Configuration.SecurityType == SecurityType.Equity || request.Configuration.SecurityType == SecurityType.Option
                 ? _mapFileProvider.Get(request.Security.Symbol.ID.Market) 
                 : MapFileResolver.Empty;
 

@@ -58,6 +58,8 @@
     <Compile Include="BasicTemplateOptionStrategyAlgorithm.cs" />
     <Compile Include="CoarseFineFundamentalRegressionAlgorithm.cs" />
     <Compile Include="CoarseFineFundamentalComboAlgorithm.cs" />
+    <Compile Include="OptionRenameRegressionAlgorithm.cs" />
+    <Compile Include="OptionSplitRegressionAlgorithm.cs" />
     <Compile Include="PortfolioOptimizationNumericsAlgorithm.cs" />
     <Compile Include="DailyFxAlgorithm.cs" />
     <Compile Include="BasicTemplateForexAlgorithm.cs" />

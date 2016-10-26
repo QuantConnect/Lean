@@ -92,6 +92,31 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
+        /// Adds the specified security to this universe
+        /// </summary>
+        /// <param name="utcTime">The current utc date time</param>
+        /// <param name="security">The security to be added</param>
+        /// <returns>True if the security was successfully added,
+        /// false if the security was already in the universe</returns>
+        internal override bool AddMember(DateTime utcTime, Security security)
+        {
+            if (Securities.ContainsKey(security.Symbol))
+            {
+                return false;
+            }
+
+            // method take into account the case, when the option has experienced an adjustment 
+            // we update member reference in this case
+            if (Securities.Any(x => x.Value.Security == security))
+            {
+                Member member;
+                Securities.TryRemove(security.Symbol, out member);
+            }
+
+            return Securities.TryAdd(security.Symbol, new Member(utcTime, security));
+        }
+
+        /// <summary>
         /// Gets the subscription requests to be added for the specified security
         /// </summary>
         /// <param name="security">The security to get subscriptions for</param>
@@ -113,7 +138,8 @@ namespace QuantConnect.Data.UniverseSelection
                     isInternalFeed: false,
                     isCustom: false,
                     tickType: tickType,
-                    isFilteredSubscription: true
+                    isFilteredSubscription: true,
+                    dataNormalizationMode:  DataNormalizationMode.Raw
                     ))
                 .Select(config => new SubscriptionRequest(
                     isUniverseSubscription: false,
