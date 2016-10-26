@@ -42,6 +42,8 @@ namespace QuantConnect.Algorithm.CSharp
             var equity = AddEquity(UnderlyingTicker);
             var option = AddOption(UnderlyingTicker);
 
+            equity.SetDataNormalizationMode(DataNormalizationMode.Raw);
+
             // set our strike/expiry filter for this option chain
             option.SetFilter(-2, +2, TimeSpan.Zero, TimeSpan.FromDays(10));
 
