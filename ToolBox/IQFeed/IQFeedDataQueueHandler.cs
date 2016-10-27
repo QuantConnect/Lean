@@ -435,35 +435,43 @@ namespace QuantConnect.ToolBox.IQFeed
 
                 // only accept trade updates
                 if (e.TypeOfUpdate != Level1SummaryUpdateEventArgs.UpdateType.ExtendedTrade
-                 && e.TypeOfUpdate != Level1SummaryUpdateEventArgs.UpdateType.Trade) return;
+                 && e.TypeOfUpdate != Level1SummaryUpdateEventArgs.UpdateType.Trade
+                 && e.TypeOfUpdate != Level1SummaryUpdateEventArgs.UpdateType.Bid
+                 && e.TypeOfUpdate != Level1SummaryUpdateEventArgs.UpdateType.Ask) return;
 
                 count++;
                 var time = FeedTime;
-                var symbol = Symbol.Create(e.Symbol, SecurityType.Equity, Market.USA);
                 var last = (decimal)(e.TypeOfUpdate == Level1SummaryUpdateEventArgs.UpdateType.ExtendedTrade ? e.ExtendedTradingLast : e.Last);
 
-                symbol = GetLeanSymbol(e.Symbol);
+                var symbol = GetLeanSymbol(e.Symbol);
 
+                // This is temp solution - planning to update feed time completely
                 // the IQFeed time is always EST for all asset classes
                 switch (symbol.ID.SecurityType)
                 {
                     // we don't convert it for FX
                     case SecurityType.Forex:
-                        time = FeedTime;
+                        time = FeedTime.ConvertTo(DateTimeZoneProviders.Bcl.GetSystemDefault(), TimeZones.EasternStandard);
                         break;
 
                     // for all other asset classes we convert it to NY timezone
                     default:
-                        time = FeedTime.ConvertTo(TimeZones.EasternStandard, TimeZones.NewYork);
+                        time = FeedTime.ConvertTo(DateTimeZoneProviders.Bcl.GetSystemDefault(), TimeZones.NewYork);
                         break;
                 }
+
+                var tradeType = e.TypeOfUpdate == Level1SummaryUpdateEventArgs.UpdateType.Bid ||
+                                e.TypeOfUpdate == Level1SummaryUpdateEventArgs.UpdateType.Ask ?
+                                TickType.Quote :
+                                TickType.Trade;
 
                 var tick = new Tick(time, symbol, last, (decimal)e.Bid, (decimal)e.Ask)
                 {
                     AskSize = e.AskSize,
                     BidSize = e.BidSize,
-                    TickType = TickType.Trade,
-                    Quantity = e.IncrementalVolume
+                    Quantity = e.IncrementalVolume,
+                    TickType = tradeType,
+                    DataType = MarketDataType.Tick
                 };
 
                 _dataQueue.Add(tick);
