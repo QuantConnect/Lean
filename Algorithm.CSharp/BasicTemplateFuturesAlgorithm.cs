@@ -31,8 +31,8 @@ namespace QuantConnect.Algorithm.CSharp
     public class BasicTemplateFuturesAlgorithm : QCAlgorithm
     {
         // Oats futures
-        private const string UnderlyingTicker = Futures.Indices.SP500EMini;
-        public Symbol FuturesSymbol = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Future, Market.USA);
+        private const string RootSymbol = Futures.Indices.SP500EMini;
+        public Symbol FuturesSymbol = QuantConnect.Symbol.Create(RootSymbol, SecurityType.Future, Market.USA);
 
         public override void Initialize()
         {
@@ -40,7 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2016, 08, 20);
             SetCash(1000000);
 
-            var future = AddFuture(UnderlyingTicker);
+            var future = AddFuture(RootSymbol);
 
             // set our expiry filter for this futures chain
             future.SetFilter(TimeSpan.Zero, TimeSpan.FromDays(365));
@@ -58,12 +58,12 @@ namespace QuantConnect.Algorithm.CSharp
             if (!Portfolio.Invested)
             {
                 FuturesChain chain;
-                if (slice.FuturesChains.TryGetValue(FuturesSymbol, out chain))
+                if (slice.FutureChains.TryGetValue(FuturesSymbol, out chain))
                 {
                     // find the front contract expiring no earlier than in 10 days
                     var contract = (
                         from futuresContract in chain.OrderBy(x => x.Expiry)
-                        where futuresContract.Expiry > Time.Date.AddDays(10)
+                        where futuresContract.Expiry > Time.Date.AddDays(90)
                         select futuresContract
                         ).FirstOrDefault();
 
@@ -78,11 +78,11 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 Liquidate();
             }
-
-            foreach (var kpv in slice.Bars)
+            
+            /*foreach (var kpv in slice.QuoteBars)
             {
                 Console.WriteLine("---> OnData: {0}, {1}, {2}", Time, kpv.Key.Value, kpv.Value.Close.ToString("0.0000"));
-            }
+            }*/
         }
 
         /// <summary>
