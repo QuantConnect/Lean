@@ -431,7 +431,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         case TickType.Quote:
                             var quoteBarAggregator = new QuoteBarBuilderEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider);
-                            _exchange.ChainDataHandler(request.Configuration.Symbol, data =>
+                            _exchange.AddDataHandler(request.Configuration.Symbol, data =>
                             {
                                 quoteBarAggregator.ProcessData((Tick)data);
                                 if (subscription != null) subscription.RealtimePrice = data.Value;
@@ -441,7 +441,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         case TickType.Trade:
                         default:
                             var tradeBarAggregator = new TradeBarBuilderEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider);
-                            _exchange.ChainDataHandler(request.Configuration.Symbol, data =>
+                            _exchange.AddDataHandler(request.Configuration.Symbol, data =>
                             {
                                 tradeBarAggregator.ProcessData((Tick)data);
                                 if (subscription != null) subscription.RealtimePrice = data.Value;

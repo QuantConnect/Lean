@@ -137,26 +137,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Chains the specified hander function to handle data for the handler's symbol in CPS style
+        /// Adds the specified hander function to handle data for the handler's symbol 
         /// </summary>
         /// <param name="symbol">The symbol whose data is to be handled</param>
         /// <param name="handler">The handler to use when this symbol's data is encountered</param>
         /// <returns>An identifier that can be used to remove this handler</returns>
-        public void ChainDataHandler(Symbol symbol, Action<BaseData> handler)
+        public void AddDataHandler(Symbol symbol, Action<BaseData> handler)
         {
             if (_dataHandlers.ContainsKey(symbol))
             {
-                var prevHandler = _dataHandlers[symbol];
-                var newHandler = new DataHandler(symbol);
-                newHandler.DataEmitted += (sender, args) => 
-                {
-                    // we first call previous handler to process the data
-                    prevHandler.OnDataEmitted(args);
-
-                    // after that we call our handler
-                    handler(args);
-                };
-                SetDataHandler(newHandler);
+                _dataHandlers[symbol].DataEmitted += (sender, args) => handler(args); 
             }
             else
             {
