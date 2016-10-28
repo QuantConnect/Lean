@@ -496,7 +496,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // grab the relevant exchange hours
             var config = request.Universe.Configuration;
-
+            var localEndTime = request.EndTimeUtc.ConvertFromUtc(request.Security.Exchange.TimeZone);
             var tzOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
 
             IEnumerator<BaseData> enumerator;
@@ -564,8 +564,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             aggregator.ProcessData((Tick)data);
                         });
                     }
-                   
-                    return input;
+
+                    return new LiveFillForwardEnumerator(_frontierTimeProvider, input, request.Security.Exchange, _fillForwardResolution, request.Configuration.ExtendedMarketHours, localEndTime, request.Configuration.Increment);
                 };
 
                 var symbolUniverse = _dataQueueHandler as IDataQueueUniverseProvider;
