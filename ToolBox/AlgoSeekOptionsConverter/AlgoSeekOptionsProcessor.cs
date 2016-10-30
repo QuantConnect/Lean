@@ -21,8 +21,6 @@ using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Util;
 using System.Linq;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 
 namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
 {
@@ -89,19 +87,9 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         /// <summary>
         /// Output base data queue for processing in memory
         /// </summary>
-        [JsonIgnore]
         public Queue<BaseData> Queue
         {
             get { return _queue; }
-        }
-
-        /// <summary>
-        /// Serializable property for JSON serialization
-        /// </summary>
-        public List<BaseData> SerializedQueue
-        {
-            get { return _queue.ToList(); }
-            set { _queue = new Queue<BaseData>(value);}
         }
 
         /// <summary>
