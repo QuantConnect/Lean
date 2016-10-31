@@ -1998,15 +1998,10 @@
       "monday": [
         {
           "start": "00:00:00",
-          "end": "08:15:00",
-          "state": "market"
-        },
-		{
-          "start": "15:30:00",
           "end": "16:00:00",
           "state": "market"
         },
-		{
+	{
           "start": "17:00:00",
           "end": "1.00:00:00",
           "state": "market"
@@ -2015,15 +2010,10 @@
       "tuesday": [
         {
           "start": "00:00:00",
-          "end": "08:15:00",
-          "state": "market"
-        },
-		{
-          "start": "15:30:00",
           "end": "16:00:00",
           "state": "market"
         },
-		{
+	{
           "start": "17:00:00",
           "end": "1.00:00:00",
           "state": "market"
@@ -2032,15 +2022,10 @@
       "wednesday": [
         {
           "start": "00:00:00",
-          "end": "08:15:00",
-          "state": "market"
-        },
-		{
-          "start": "15:30:00",
           "end": "16:00:00",
           "state": "market"
         },
-		{
+	{
           "start": "17:00:00",
           "end": "1.00:00:00",
           "state": "market"
@@ -2049,15 +2034,10 @@
       "thursday": [
         {
           "start": "00:00:00",
-          "end": "08:15:00",
-          "state": "market"
-        },
-		{
-          "start": "15:30:00",
           "end": "16:00:00",
           "state": "market"
         },
-		{
+	{
           "start": "17:00:00",
           "end": "1.00:00:00",
           "state": "market"
@@ -2066,14 +2046,14 @@
       "friday": [
         {
           "start": "00:00:00",
-          "end": "08:15:00",
-          "state": "market"
-        },
-		{
-          "start": "15:30:00",
           "end": "16:00:00",
           "state": "market"
         },
+	{
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
       ],
       "saturday": [],
       "holidays": []
