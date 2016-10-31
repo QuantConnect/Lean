@@ -246,15 +246,16 @@ namespace QuantConnect
         /// <returns>The zipped file as a byte array</returns>
         public static byte[] ZipBytes(byte[] bytes, string zipEntryName)
         {
-            using (var memoryStream = new MemoryStream())
-            using (var stream = new ZipOutputStream(memoryStream))
+            var memoryStream = new MemoryStream();
+            using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
             {
-                var entry = new ZipEntry(zipEntryName);
-                stream.PutNextEntry(entry);
-                var buffer = new byte[16*1024];
-                StreamUtils.Copy(new MemoryStream(bytes), stream, buffer);
-                return memoryStream.GetBuffer();
+                var entry = archive.CreateEntry(zipEntryName);
+                using (var entryStream = entry.Open())
+                {
+                    entryStream.Write(bytes, 0, bytes.Length);
+                }
             }
+            return memoryStream.GetBuffer();
         }
 
         /// <summary>
