@@ -133,11 +133,11 @@ namespace QuantConnect.ToolBox.IQFeed
                                 if (!string.IsNullOrEmpty(ticker))
                                 {
                                     _level1Port.Subscribe(ticker);
-                                    Log.Trace("IQFeed.Subscribe(): Subscribe Processed: " + symbol.ToString());
+                                    Log.Trace("IQFeed.Subscribe(): Subscribe Processed: {0} ({1})", symbol.Value, ticker);
                                 }
                                 else
                                 {
-                                    Log.Error("IQFeed.Subscribe(): Symbol {0} was not found in IQFeed symbol universe", symbol.ToString());
+                                    Log.Error("IQFeed.Subscribe(): Symbol {0} was not found in IQFeed symbol universe", symbol.Value);
                                 }
                             }
                         }
@@ -445,18 +445,16 @@ namespace QuantConnect.ToolBox.IQFeed
 
                 var symbol = GetLeanSymbol(e.Symbol);
 
-                // This is temp solution - planning to update feed time completely
-                // the IQFeed time is always EST for all asset classes
                 switch (symbol.ID.SecurityType)
                 {
-                    // we don't convert it for FX
+                    // the feed time is in NYC/EDT, convert it into EST
                     case SecurityType.Forex:
-                        time = FeedTime.ConvertTo(DateTimeZoneProviders.Bcl.GetSystemDefault(), TimeZones.EasternStandard);
+                        time = FeedTime.ConvertTo(TimeZones.NewYork, TimeZones.EasternStandard);
                         break;
 
-                    // for all other asset classes we convert it to NY timezone
+                    // for all other asset classes we leave it as is (NYC/EDT)
                     default:
-                        time = FeedTime.ConvertTo(DateTimeZoneProviders.Bcl.GetSystemDefault(), TimeZones.NewYork);
+                        time = FeedTime;
                         break;
                 }
 
