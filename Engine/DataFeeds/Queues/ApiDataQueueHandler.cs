@@ -36,7 +36,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
     {
         private EventHandler _updateSubscriptions;
         private volatile bool _connectionOpen;
-        private readonly List<Tick> _ticks = new List<Tick>();
+        private readonly List<BaseData> _baseDataFromServer = new List<BaseData>();
         private readonly object _lockerSubscriptions = new object();
         private readonly HashSet<Symbol> _subscribedSymbols = new HashSet<Symbol>();
 
@@ -51,10 +51,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// <returns>Array of <see cref="Tick"/></returns>
         public virtual IEnumerable<BaseData> GetNextTicks()
         {
-            lock (_ticks)
+            lock (_baseDataFromServer)
             {
-                var copy = _ticks.ToArray();
-                _ticks.Clear();
+                var copy = _baseDataFromServer.ToArray();
+                _baseDataFromServer.Clear();
                 return copy;
             }
         }
@@ -81,11 +81,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
                 }
 
                 Log.Trace("ApiDataQueueHanlder subscribed to: {0}", string.Join(",", symbolsToSubscribe.Select(x => x.Value)));
-
-                TryOpenSocketConnection();
             }
 
-            OnUpdate();
+            if (!TryOpenSocketConnection())
+            {
+                // The websocket is already open
+                OnUpdate();
+            }
         }
 
         /// <summary>
@@ -110,19 +112,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
                 }
 
                 Log.Trace("ApiDataQueueHanlder unsubscribed from : {0}", string.Join(",", symbolsToUnsubscribe.Select(x => x.Value)));
-
-                TryOpenSocketConnection();
             }
 
-            OnUpdate();
+            if (!TryOpenSocketConnection())
+            {
+                // The websocket is already open
+                OnUpdate();
+            }
         }
 
         /// <summary>
         /// Attempt to build the websocket connection to the server
         /// </summary>
-        private void TryOpenSocketConnection()
+        private bool TryOpenSocketConnection()
         {
-            if (_connectionOpen) return;
+            if (_connectionOpen) return false;
 
             _connectionOpen = true;
 
@@ -141,11 +145,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
                         ws.OnMessage += (sender, e) =>
                         {
                             var baseDatas = DeserializeMessage(e.Data);
-                            lock (_ticks)
+                            lock (_baseDataFromServer)
                             {
                                 foreach (var baseData in baseDatas)
                                 {
-                                    _ticks.Add((Tick)baseData);
+                                    _baseDataFromServer.Add(baseData);
                                 }
                             }
                         };
@@ -187,13 +191,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
                             }
                         };
 
-                        ws.SetCredentials(_userId.ToString(), _token, true);
+                        //ws.SetCredentials(_userId.ToString(), _token, true);
                         ws.Connect();
 
                         webSocketSetupComplete = true;
                     }
                 }
             }, cts.Token);
+
+            // if we made it this far, the websocket connection has been attempted to be opened
+            return true;
         }
 
         /// <summary>
