@@ -167,6 +167,10 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Xml" />
+    <Reference Include="websocket-sharp, Version=1.0.2.59611, Culture=neutral, PublicKeyToken=5660b08a1845a91e, processorArchitecture=MSIL">
+      <HintPath>..\packages\WebSocketSharp.1.0.3-rc11\lib\websocket-sharp.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
@@ -196,6 +200,7 @@
     <Compile Include="DataFeeds\ITimeProvider.cs" />
     <Compile Include="DataFeeds\CollectionSubscriptionDataSourceReader.cs" />
     <Compile Include="DataFeeds\ManualTimeProvider.cs" />
+    <Compile Include="DataFeeds\Queues\ApiDataQueueHandler.cs" />
     <Compile Include="DataFeeds\RealTimeProvider.cs" />
     <Compile Include="DataFeeds\DataFeedPacket.cs" />
     <Compile Include="DataFeeds\SubscriptionCollection.cs" />
