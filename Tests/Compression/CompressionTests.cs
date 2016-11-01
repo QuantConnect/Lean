@@ -42,10 +42,12 @@ namespace QuantConnect.Tests.Compression
             var fileBytes = Encoding.ASCII.GetBytes(fileContents); // using asci because UnzipData uses 1byte=1char
             var zippedBytes = QuantConnect.Compression.ZipBytes(fileBytes, "entry");
             File.WriteAllBytes("entry.zip", zippedBytes);
-            var unzipped = QuantConnect.Compression.Unzip("entry.zip").ToList();
-            Assert.AreEqual(1, unzipped.Count);
-            Assert.AreEqual("entry", unzipped[0].Key);
-            Assert.AreEqual(fileContents, unzipped[0].Value.Single());
+
+            using (var streamReader = QuantConnect.Compression.UnzipStream(File.OpenRead("entry.zip")))
+            {
+                var contents = streamReader.ReadToEnd();
+                Assert.AreEqual(fileContents, contents);
+            }
         }
 
         [Test]

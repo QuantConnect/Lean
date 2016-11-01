@@ -774,7 +774,7 @@ namespace QuantConnect.Lean.Engine.Results
                 if (!_log.Any()) return "";
 
                 //Get the max length allowed for the algorithm:
-                var allowance = _api.ReadLogAllowance(job.UserId, job.Channel);
+                var allowance = _api.ReadLogAllowance(job.UserId, job.ProjectId, job.Channel);
                 var logBacktestMax = allowance[0];
                 var logDailyMax = allowance[1];
                 var logRemaining = Math.Min(logBacktestMax, allowance[2]); //Minimum of maxium backtest or remaining allowance.

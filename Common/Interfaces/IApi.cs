@@ -212,7 +212,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Read the maximum log allowance
         /// </summary>
-        int[] ReadLogAllowance(int userId, string userToken);
+        int[] ReadLogAllowance(int userId, int projectId, string userToken);
 
         /// <summary>
         /// Update running total of log usage

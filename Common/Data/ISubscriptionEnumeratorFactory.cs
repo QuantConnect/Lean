@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Data
 {
@@ -28,7 +29,8 @@ namespace QuantConnect.Data
         /// Creates an enumerator to read the specified request
         /// </summary>
         /// <param name="request">The subscription request to be read</param>
+        /// <param name="dataFileProvider">Provider used to get data when it is not present on disk</param>
         /// <returns>An enumerator reading the subscription request</returns>
-        IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request);
+        IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataFileProvider dataFileProvider);
     }
 }

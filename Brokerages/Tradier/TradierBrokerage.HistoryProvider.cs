@@ -44,8 +44,9 @@ namespace QuantConnect.Brokerages.Tradier
         /// <param name="job">The job</param>
         /// <param name="mapFileProvider">Provider used to get a map file resolver to handle equity mapping</param>
         /// <param name="factorFileProvider">Provider used to get factor files to handle equity price scaling</param>
+        /// <param name="dataFileProvider">Provider used to get data when it is not present on disk</param>
         /// <param name="statusUpdate">Function used to send status updates</param>
-        public void Initialize(AlgorithmNodePacket job, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, Action<int> statusUpdate)
+        public void Initialize(AlgorithmNodePacket job, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, IDataFileProvider dataFileProvider, Action<int> statusUpdate)
         {
         }
 
@@ -122,7 +123,7 @@ namespace QuantConnect.Brokerages.Tradier
                     TickType = TickType.Trade,
                     Quantity = Convert.ToInt32(tick.Volume)
                 })
-                .Select(tradeBar => new Slice(tradeBar.Time, new[] { tradeBar }));
+                .Select(tradeBar => new Slice(tradeBar.EndTime, new[] { tradeBar }));
         }
 
         private IEnumerable<Slice> GetHistorySecond(Symbol symbol, DateTime start, DateTime end)
@@ -152,7 +153,7 @@ namespace QuantConnect.Brokerages.Tradier
                     g.Last().LastPrice, 
                     g.Sum(t => t.Quantity),
                     Time.OneSecond))
-                .Select(tradeBar => new Slice(tradeBar.Time, new[] { tradeBar }))
+                .Select(tradeBar => new Slice(tradeBar.EndTime, new[] { tradeBar }))
                 .ToList();
 
             DataPointCount += result.Count;
@@ -171,7 +172,7 @@ namespace QuantConnect.Brokerages.Tradier
 
             return history
                 .Select(bar => new TradeBar(bar.Time, symbol, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume, Time.OneMinute))
-                .Select(tradeBar => new Slice(tradeBar.Time, new[] { tradeBar }));
+                .Select(tradeBar => new Slice(tradeBar.EndTime, new[] { tradeBar }));
         }
 
         private IEnumerable<Slice> GetHistoryHour(Symbol symbol, DateTime start, DateTime end)
@@ -194,7 +195,7 @@ namespace QuantConnect.Brokerages.Tradier
                     g.Last().Close,
                     g.Sum(t => t.Volume),
                     Time.OneHour))
-                .Select(tradeBar => new Slice(tradeBar.Time, new[] { tradeBar }))
+                .Select(tradeBar => new Slice(tradeBar.EndTime, new[] { tradeBar }))
                 .ToList();
 
             DataPointCount += result.Count;
@@ -210,7 +211,7 @@ namespace QuantConnect.Brokerages.Tradier
 
             return history
                 .Select(bar => new TradeBar(bar.Time, symbol, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume, Time.OneDay))
-                .Select(tradeBar => new Slice(tradeBar.Time, new[] { tradeBar }));
+                .Select(tradeBar => new Slice(tradeBar.EndTime, new[] { tradeBar }));
         }
 
         #endregion

@@ -18,6 +18,7 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
@@ -47,8 +48,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// Creates an enumerator to read the specified request
         /// </summary>
         /// <param name="request">The subscription request to be read</param>
+        /// <param name="dataFileProvider">Provider used to get data when it is not present on disk</param>
         /// <returns>An enumerator reading the subscription request</returns>
-        public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request)
+        public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataFileProvider dataFileProvider)
         {
             return _universe.GetTriggerTimes(request.StartTimeUtc, request.EndTimeUtc, _marketHoursDatabase)
                 .Select(x => new Tick {Time = x, Symbol = request.Configuration.Symbol}).GetEnumerator();

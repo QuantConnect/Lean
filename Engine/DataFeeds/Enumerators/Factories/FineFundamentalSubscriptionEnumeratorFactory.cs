@@ -22,6 +22,7 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 {
@@ -49,8 +50,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// Creates an enumerator to read the specified request
         /// </summary>
         /// <param name="request">The subscription request to be read</param>
+        /// <param name="dataFileProvider">Provider used to get data when it is not present on disk</param>
         /// <returns>An enumerator reading the subscription request</returns>
-        public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request)
+        public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataFileProvider dataFileProvider)
         {
             var tradableDays = _tradableDaysProvider(request);
 
@@ -61,7 +63,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 from date in tradableDays
 
                 let fineFundamentalSource = GetSource(fineFundamental, fineFundamentalConfiguration, date)
-                let fineFundamentalFactory = SubscriptionDataSourceReader.ForSource(fineFundamentalSource, fineFundamentalConfiguration, date, false)
+                let fineFundamentalFactory = SubscriptionDataSourceReader.ForSource(fineFundamentalSource, dataFileProvider, fineFundamentalConfiguration, date, false)
                 let fineFundamentalForDate = (FineFundamental)fineFundamentalFactory.Read(fineFundamentalSource).FirstOrDefault()
 
                 select new FineFundamental

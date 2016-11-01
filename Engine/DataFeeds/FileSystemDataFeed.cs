@@ -47,6 +47,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private Ref<TimeSpan> _fillForwardResolution;
         private IMapFileProvider _mapFileProvider;
         private IFactorFileProvider _factorFileProvider;
+        private IDataFileProvider _dataFileProvider;
         private SubscriptionCollection _subscriptions;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private UniverseSelection _universeSelection;
@@ -68,12 +69,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes the data feed for the specified job and algorithm
         /// </summary>
-        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider)
+        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, IDataFileProvider dataFileProvider)
         {
             _algorithm = algorithm;
             _resultHandler = resultHandler;
             _mapFileProvider = mapFileProvider;
             _factorFileProvider = factorFileProvider;
+            _dataFileProvider = dataFileProvider;
             _subscriptions = new SubscriptionCollection();
             _universeSelection = new UniverseSelection(this, algorithm, job.Controls);
             _cancellationTokenSource = new CancellationTokenSource();
@@ -136,7 +138,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // ReSharper disable once PossibleMultipleEnumeration
             var enumeratorFactory = GetEnumeratorFactory(request);
-            var enumerator = enumeratorFactory.CreateEnumerator(request);
+            var enumerator = enumeratorFactory.CreateEnumerator(request, _dataFileProvider);
             enumerator = ConfigureEnumerator(request, false, enumerator);
 
             var enqueueable = new EnqueueableEnumerator<BaseData>(true);
@@ -315,7 +317,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var config = request.Configuration;
 
             // define our data enumerator
-            var enumerator = GetEnumeratorFactory(request).CreateEnumerator(request);
+            var enumerator = GetEnumeratorFactory(request).CreateEnumerator(request, _dataFileProvider);
 
             var firstLoopCount = 5;
             var lowerThreshold = GetLowerThreshold(config.Resolution);
@@ -384,7 +386,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 : MapFileResolver.Empty;
 
             return new PostCreateConfigureSubscriptionEnumeratorFactory(
-                new SubscriptionDataReaderSubscriptionEnumeratorFactory(_resultHandler, mapFileResolver, _factorFileProvider, false, true),
+                new SubscriptionDataReaderSubscriptionEnumeratorFactory(_resultHandler, mapFileResolver, _factorFileProvider, _dataFileProvider, false, true),
                 enumerator => ConfigureEnumerator(request, false, enumerator)
                 );
         }

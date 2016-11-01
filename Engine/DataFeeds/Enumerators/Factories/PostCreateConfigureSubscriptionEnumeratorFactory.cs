@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 {
@@ -45,10 +46,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// Invokes the configuration following enumerator creation
         /// </summary>
         /// <param name="request">The subscription request to be read</param>
+        /// <param name="dataFileProvider">Provider used to get data when it is not present on disk</param>
         /// <returns>An enumerator reading the subscription request</returns>
-        public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request)
+        public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataFileProvider dataFileProvider)
         {
-            return _configurator(_factory.CreateEnumerator(request));
+            return _configurator(_factory.CreateEnumerator(request, dataFileProvider));
         }
     }
 }

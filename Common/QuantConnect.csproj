@@ -177,6 +177,7 @@
     <Compile Include="Data\Market\OptionContracts.cs" />
     <Compile Include="Data\Market\QuoteBars.cs" />
     <Compile Include="Data\Market\BarDirection.cs" />
+    <Compile Include="Data\Market\IntraDayDividendSplit.cs" />
     <Compile Include="Data\UniverseSelection\CoarseFundamentalUniverse.cs" />
     <Compile Include="Data\UniverseSelection\FineFundamentalUniverse.cs" />
     <Compile Include="Data\UniverseSelection\GetSubscriptionRequestsUniverseDecorator.cs" />
@@ -244,6 +245,7 @@
     <Compile Include="Interfaces\ICommandQueueHandler.cs" />
     <Compile Include="Interfaces\IDataQueueHandler.cs" />
     <Compile Include="Interfaces\IFactorFileProvider.cs" />
+    <Compile Include="Interfaces\IDataFileProvider.cs" />
     <Compile Include="Interfaces\IHistoryProvider.cs" />
     <Compile Include="Interfaces\IJobQueueHandler.cs" />
     <Compile Include="Interfaces\IMapFileProvider.cs" />
@@ -436,6 +438,7 @@
     <Compile Include="Util\BusyBlockingCollection.cs" />
     <Compile Include="Util\CircularQueue.cs" />
     <Compile Include="Util\Composer.cs" />
+    <Compile Include="Util\DisposableExtensions.cs" />
     <Compile Include="Util\ExpressionBuilder.cs" />
     <Compile Include="Util\FixedSizeQueue.cs" />
     <Compile Include="Util\FixedSizeHashQueue.cs" />

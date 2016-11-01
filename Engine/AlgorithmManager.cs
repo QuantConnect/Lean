@@ -650,7 +650,16 @@ namespace QuantConnect.Lean.Engine
             results.SampleRange(algorithm.GetChartUpdates());
             results.SampleEquity(_previousTime, Math.Round(algorithm.Portfolio.TotalPortfolioValue, 4));
             SampleBenchmark(algorithm, results, _previousTime);
-            results.SamplePerformance(_previousTime, Math.Round((algorithm.Portfolio.TotalPortfolioValue - portfolioValue)*100/portfolioValue, 10));
+            
+            //Check for divide by zero
+            if (portfolioValue == 0m)
+            {
+                results.SamplePerformance(_previousTime, 0m);
+            }
+            else
+            {
+                results.SamplePerformance(_previousTime, Math.Round((algorithm.Portfolio.TotalPortfolioValue - portfolioValue) * 100 / portfolioValue, 10));
+            }
         } // End of Run();
 
         /// <summary>

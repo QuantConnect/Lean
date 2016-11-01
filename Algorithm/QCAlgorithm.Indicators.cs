@@ -1051,6 +1051,23 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new RegressionChannel indicator which will compute the LinearRegression, UpperChannel and LowerChannel lines, the intercept and slope
+        /// </summary>
+        /// <param name="symbol">The symbol whose RegressionChannel we seek</param>
+        /// <param name="period">The period of the standard deviation and least square moving average (linear regression line)</param>
+        /// <param name="k">The number of standard deviations specifying the distance between the linear regression and upper or lower channel lines</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>A Regression Channel configured with the specied period and number of standard deviation</returns>
+        public RegressionChannel RC(Symbol symbol, int period, decimal k, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, string.Format("RC({0},{1})", period, k), resolution);
+            var rc = new RegressionChannel(name, period, k);
+            RegisterIndicator(symbol, rc, resolution, selector);
+            return rc;
+        }
+
+        /// <summary>
         /// Creates and registers a new consolidator to receive automatic updates at the specified resolution as well as configures
         /// the indicator to receive updates from the consolidator.
         /// </summary>

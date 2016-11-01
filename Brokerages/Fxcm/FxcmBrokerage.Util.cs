@@ -189,7 +189,7 @@ namespace QuantConnect.Brokerages.Fxcm
             }
 
             // Convert javaDate to UTC Instant (Epoch)
-            var instant = Instant.FromSecondsSinceUnixEpoch(javaDate.getTime() / 1000);
+            var instant = Instant.FromMillisecondsSinceUnixEpoch(javaDate.getTime());
 
             // Convert to configured TZ then to a .Net DateTime
             return instant.InZone(_configTimeZone).ToDateTimeUnspecified();
