@@ -325,6 +325,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (universeData.Underlying != null)
                 {
                     chain.Underlying = universeData.Underlying;
+
+                    foreach(var addedContract in chain.Contracts)
+                    {
+                        addedContract.Value.UnderlyingLastPrice = chain.Underlying.Price;
+                    }
                 }
                 foreach (var contractSymbol in universeData.FilteredContracts)
                 {
@@ -347,6 +352,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     AskSize = security.AskSize,
                     UnderlyingLastPrice = chain.Underlying.Price 
                 };
+
                 chain.Contracts[baseData.Symbol] = contract;
                 var option = security as Option;
                 if (option != null)
