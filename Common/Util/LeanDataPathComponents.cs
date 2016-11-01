@@ -23,17 +23,67 @@ namespace QuantConnect.Util
     /// </summary>
     public class LeanDataPathComponents
     {
-        public readonly DateTime Date;
-        public readonly SecurityType SecurityType;
-        public readonly string Market;
-        public readonly Resolution Resolution;
-        public readonly string Filename;
-        public readonly Symbol Symbol; // for options this is a 'canonical' symbol using info derived from the path
+        /// <summary>
+        /// Gets the date component from the file name
+        /// </summary>
+        public DateTime Date
+        {
+            get; private set;
+        }
+
+        /// <summary>
+        /// Gets the security type from the path
+        /// </summary>
+        public SecurityType SecurityType
+        {
+            get; private set;
+        }
+
+        /// <summary>
+        /// Gets the market from the path
+        /// </summary>
+        public string Market
+        {
+            get; private set;
+        }
+
+        /// <summary>
+        /// Gets the resolution from the path
+        /// </summary>
+        public Resolution Resolution
+        {
+            get; private set;
+        }
+
+        /// <summary>
+        /// Gets the file name, not inluding directory information
+        /// </summary>
+        public string Filename
+        {
+            get; private set;
+        }
+
+        /// <summary>
+        /// Gets the symbol object implied by the path. For options, or any
+        /// multi-entry zip file, this should be the canonical symbol
+        /// </summary>
+        public Symbol Symbol
+        {
+            get; private set;
+        }
+
+        /// <summary>
+        /// Gets the tick type from the file name
+        /// </summary>
+        public TickType TickType
+        {
+            get; private set;
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LeanDataPathComponents"/> class
         /// </summary>
-        public LeanDataPathComponents(SecurityType securityType, string market, Resolution resolution, Symbol symbol, string filename, DateTime date)
+        public LeanDataPathComponents(SecurityType securityType, string market, Resolution resolution, Symbol symbol, string filename, DateTime date, TickType tickType)
         {
             Date = date;
             SecurityType = securityType;
@@ -41,6 +91,7 @@ namespace QuantConnect.Util
             Resolution = resolution;
             Filename = filename;
             Symbol = symbol;
+            TickType = tickType;
         }
 
         /// <summary>
@@ -55,28 +106,54 @@ namespace QuantConnect.Util
             var fileinfo = new FileInfo(path);
             var filename = fileinfo.Name;
             var parts = path.Split('/', '\\');
-            if (parts.Length < 4)
+
+            // defines the offsets of the security relative to the end of the path
+            const int LowResSecurityTypeOffset = 4;
+            const int HighResSecurityTypeOffset = 5;
+
+            // defines other offsets relative to the beginning of the substring produce by the above offsets
+            const int MarketOffset = 1;
+            const int ResolutionOffset = 2;
+            const int TickerOffset = 3;
+
+
+            if (parts.Length < LowResSecurityTypeOffset)
             {
                 throw new FormatException("Unexpected path format: " + path);
             }
 
-            var offset = 4;
+            var securityTypeOffset = LowResSecurityTypeOffset;
             SecurityType securityType;
-            var rawValue = parts[parts.Length - offset];
+            var rawValue = parts[parts.Length - securityTypeOffset];
             if (!Enum.TryParse(rawValue, true, out securityType))
             {
-                offset++;
-                rawValue = parts[parts.Length - offset];
+                securityTypeOffset = HighResSecurityTypeOffset;
+                rawValue = parts[parts.Length - securityTypeOffset];
                 if (!Enum.TryParse(rawValue, true, out securityType))
                 {
                     throw new FormatException("Unexpected path format: " + path);
                 }
             }
 
-            var market = parts[parts.Length - offset + 1];
-            var resolution = (Resolution) Enum.Parse(typeof (Resolution), parts[parts.Length - offset + 2], true);
-            var ticker = offset == 4 ? Path.GetFileNameWithoutExtension(path) : parts[parts.Length - offset + 3];
-            var date = offset == 4 ? DateTime.MinValue : DateTime.ParseExact(filename.Substring(0, filename.IndexOf("_", StringComparison.Ordinal)), DateFormat.EightCharacter, null);
+            var market = parts[parts.Length - securityTypeOffset + MarketOffset];
+            var resolution = (Resolution) Enum.Parse(typeof (Resolution), parts[parts.Length - securityTypeOffset + ResolutionOffset], true);
+            string ticker;
+            if (securityTypeOffset == LowResSecurityTypeOffset)
+            {
+                ticker = Path.GetFileNameWithoutExtension(path);
+                if (securityType == SecurityType.Option)
+                {
+                    // ticker_trade_american
+                    var tickerWithoutStyle = ticker.Substring(0, ticker.LastIndexOf("_"));
+                    ticker = tickerWithoutStyle.Substring(0, tickerWithoutStyle.LastIndexOf("_"));
+                }
+            }
+            else
+            {
+                ticker = parts[parts.Length - securityTypeOffset + TickerOffset];
+            }
+
+            var date = securityTypeOffset == LowResSecurityTypeOffset ? DateTime.MinValue : DateTime.ParseExact(filename.Substring(0, filename.IndexOf("_", StringComparison.Ordinal)), DateFormat.EightCharacter, null);
 
             Symbol symbol;
             if (securityType == SecurityType.Option)
@@ -91,7 +168,8 @@ namespace QuantConnect.Util
                 symbol = Symbol.Create(ticker, securityType, market);
             }
 
-            return new LeanDataPathComponents(securityType, market, resolution, symbol, filename, date);
+            var tickType = filename.Contains("_quote") ? TickType.Quote : TickType.Trade;
+            return new LeanDataPathComponents(securityType, market, resolution, symbol, filename, date, tickType);
         }
     }
 }
