@@ -16,7 +16,7 @@
 using System;
 using System.IO;
 
-namespace QuantConnect.ToolBox
+namespace QuantConnect.Util
 {
     /// <summary>
     /// Type representing the various pieces of information emebedded into a lean data file path
