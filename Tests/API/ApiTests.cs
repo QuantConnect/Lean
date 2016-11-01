@@ -120,14 +120,14 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(project.Files.Count == 0);
 
             // Insert random file
-            var randomeUpdate = _api.UpdateProject(project.ProjectId, unrealFiles);
+            var randomeUpdate = _api.UpdateFilesForProject(project.ProjectId, unrealFiles);
             Assert.IsTrue(randomeUpdate.Success);
             Assert.IsTrue(randomeUpdate.Files.First().Code == "Hello, world!");
             Assert.IsTrue(randomeUpdate.Files.First().Name == "Hello.cs");
             Assert.IsTrue(randomeUpdate.Files.Count == 1);
 
             // Replace with real files
-            var updateProject = _api.UpdateProject(project.ProjectId, realFiles);
+            var updateProject = _api.UpdateFilesForProject(project.ProjectId, realFiles);
             Assert.IsTrue(updateProject.Success);
             Assert.IsTrue(updateProject.Files.First().Name == "main.cs");
             Assert.IsTrue(updateProject.Files.Count == 1);
@@ -285,7 +285,7 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(project.Success);
 
             // Update Project
-            var update = _api.UpdateProject(project.ProjectId, file);
+            var update = _api.UpdateFilesForProject(project.ProjectId, file);
             Assert.IsTrue(update.Success);
 
             // Create compile
@@ -340,7 +340,7 @@ namespace QuantConnect.Tests.API
             var project = _api.CreateProject("Test project - " + DateTime.Now, Language.CSharp);
 
             // Update Project
-            var update = _api.UpdateProject(project.ProjectId, file);
+            var update = _api.UpdateFilesForProject(project.ProjectId, file);
             Assert.IsTrue(update.Success);
 
             // Create compile
@@ -393,7 +393,7 @@ namespace QuantConnect.Tests.API
             var project = _api.CreateProject("Test project - " + DateTime.Now, Language.CSharp);
 
             // Update Project
-            var update = _api.UpdateProject(project.ProjectId, file);
+            var update = _api.UpdateFilesForProject(project.ProjectId, file);
             Assert.IsTrue(update.Success);
 
             // Create compile
@@ -448,7 +448,7 @@ namespace QuantConnect.Tests.API
             var project = _api.CreateProject("Test project - " + DateTime.Now, Language.CSharp);
 
             // Update Project
-            var update = _api.UpdateProject(project.ProjectId, file);
+            var update = _api.UpdateFilesForProject(project.ProjectId, file);
             Assert.IsTrue(update.Success);
 
             var readProject = _api.ReadProject(project.ProjectId);
@@ -621,7 +621,7 @@ namespace QuantConnect.Tests.API
 
             // Test set a project file for the project
             var files = new List<ProjectFile> { new ProjectFile { Name = algorithmName, Code = code } };
-            var updateProject = _api.UpdateProject(project.ProjectId, files);
+            var updateProject = _api.UpdateFilesForProject(project.ProjectId, files);
             Assert.IsTrue(updateProject.Success);
 
             // Download the project again to validate its got the new file
@@ -641,7 +641,7 @@ namespace QuantConnect.Tests.API
 
             // Update the file, create a build error, test we get build error
             files[0].Code += "[Jibberish at end of the file to cause a build error]";
-            _api.UpdateProject(project.ProjectId, files);
+            _api.UpdateFilesForProject(project.ProjectId, files);
             var compileError = _api.CreateCompile(project.ProjectId);
             compileError = WaitForCompilerResponse(project.ProjectId, compileError.CompileId);
             Assert.IsTrue(compileError.Success); // Successfully processed rest request.

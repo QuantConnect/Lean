@@ -89,6 +89,26 @@ namespace QuantConnect.Api
             return result;
         }
 
+        public ProjectUpdateResponse UpdateProjectFiles(int projectId, List<ProjectFile> files)
+        {
+            throw new NotImplementedException();
+        }
+
+        public RestResponse AddProjectFiles(int projectId, List<ProjectFile> files)
+        {
+            throw new NotImplementedException();
+        }
+
+        public RestResponse DeleteProjectFiles(int projectId, List<ProjectFile> files)
+        {
+            throw new NotImplementedException();
+        }
+
+        public RestResponse ReadProjectFiles(int projectId)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// Read back a list of all projects on the account for a user.
         /// This is a rate limited request.  
@@ -110,7 +130,7 @@ namespace QuantConnect.Api
         /// <param name="projectId">Project id for project to be updated</param>
         /// <param name="files">Files list to update</param>
         /// <returns>RestResponse indicating success</returns>
-        public ProjectUpdateResponse UpdateProject(int projectId, List<ProjectFile> files)
+        public ProjectUpdateResponse UpdateFilesForProject(int projectId, List<ProjectFile> files)
         {
             var request = new RestRequest("projects/update", Method.POST);
 
