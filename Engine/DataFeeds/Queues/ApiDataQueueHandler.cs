@@ -191,7 +191,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
                             }
                         };
 
-                        //ws.SetCredentials(_userId.ToString(), _token, true);
+                        ws.SetCredentials(_userId.ToString(), _token, true);
                         ws.Connect();
 
                         webSocketSetupComplete = true;
