@@ -261,6 +261,8 @@
     <Compile Include="Orders\Fees\IFeeModel.cs" />
     <Compile Include="Orders\Fills\ImmediateFillModel.cs" />
     <Compile Include="Orders\Fills\IFillModel.cs" />
+    <Compile Include="Orders\MarginInterest\ConstantMarginInterestModel.cs" />
+    <Compile Include="Orders\MarginInterest\IMarginInterestModel.cs" />
     <Compile Include="Orders\MarketOnCloseOrder.cs" />
     <Compile Include="Orders\MarketOnOpenOrder.cs" />
     <Compile Include="Orders\OrderField.cs" />

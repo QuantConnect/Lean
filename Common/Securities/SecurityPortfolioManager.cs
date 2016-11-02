@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
+using QuantConnect.Orders.MarginInterest;
 
 namespace QuantConnect.Securities 
 {
@@ -49,6 +50,11 @@ namespace QuantConnect.Securities
         public CashBook UnsettledCashBook { get; private set; }
 
         /// <summary>
+        /// Models the margin interest paid on leveraged assets
+        /// </summary>
+        public IMarginInterestModel MarginInterestModel { get; set; }
+
+        /// <summary>
         /// The list of pending funds waiting for settlement time
         /// </summary>
         private readonly List<UnsettledCashAmount> _unsettledCashAmounts;
@@ -71,6 +77,7 @@ namespace QuantConnect.Securities
 
             CashBook = new CashBook();
             UnsettledCashBook = new CashBook();
+            MarginInterestModel = new ConstantMarginInterestModel(0m);
             _unsettledCashAmounts = new List<UnsettledCashAmount>();
 
             _baseCurrencyCash = CashBook[CashBook.AccountCurrency];
@@ -385,6 +392,17 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Total interest paid during the algorithm operation across all securities in portfolio.
+        /// </summary>
+        public decimal TotalInterestPaid
+        {
+            get
+            {
+                return MarginInterestModel.TotalInterestPaid;
+            }
+        }
+
+        /// <summary>
         /// Sum of all gross profit across all securities in portfolio.
         /// </summary>
         public decimal TotalProfit 
@@ -392,7 +410,7 @@ namespace QuantConnect.Securities
             get 
             {
                 return (from position in Securities.Values
-                        select position.Holdings.Profit).Sum();
+                        select position.Holdings.Profit).Sum() - TotalInterestPaid;
             }
         }
 
@@ -581,6 +599,16 @@ namespace QuantConnect.Securities
             }
 
             return marginCallOrders;
+        }
+
+        /// <summary>
+        /// Pay interest on the borrowed funds (margin interest)
+        /// </summary>
+        /// <param name="time">Time margin interest is payed</param>
+        public void PayMarginInterest(DateTime time)
+        {
+            var marginInterestPayment = MarginInterestModel.PayMarginInterest(Securities, time, TotalMarginUsed);
+            _baseCurrencyCash.AddAmount(-marginInterestPayment);
         }
 
         /// <summary>

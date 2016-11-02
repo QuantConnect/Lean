@@ -140,6 +140,7 @@ namespace QuantConnect.Lean.Engine
             var nextMarginCallTime = DateTime.MinValue;
             var settlementScanFrequency = TimeSpan.FromMinutes(30);
             var nextSettlementScanTime = DateTime.MinValue;
+            var nextMidnight = DateTime.MinValue;
 
             var delistings = new List<Delisting>();
 
@@ -369,6 +370,13 @@ namespace QuantConnect.Lean.Engine
                     _algorithm.Status = AlgorithmStatus.RuntimeError;
                     Log.Trace(string.Format("AlgorithmManager.Run(): Algorithm encountered a runtime error at {0}. Error: {1}", timeSlice.Time, algorithm.RunTimeError));
                     break;
+                }
+
+                // perform overnight updates
+                if (time >= nextMidnight)
+                {
+                    algorithm.Portfolio.PayMarginInterest(time);
+                    nextMidnight = time.Date.AddDays(1);
                 }
 
                 // perform margin calls, in live mode we can also use realtime to emit these
