@@ -22,6 +22,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
@@ -417,8 +418,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 switch (args.Source.TransportMedium)
                 {
                     case SubscriptionTransportMedium.LocalFile:
-                        // the local uri doesn't exist, write an error and return null so we we don't try to get data for today
-                        Log.Trace(string.Format("SubscriptionDataReader.GetReader(): Could not find QC Data, skipped: {0}", source));
+                        // FineFundamental data can have many missing dates, so we ignore the error to avoid flooding the logs
+                        if (_config.Type != typeof (FineFundamental))
+                        {
+                            // the local uri doesn't exist, write an error and return null so we we don't try to get data for today
+                            Log.Trace(string.Format("SubscriptionDataReader.GetReader(): Could not find QC Data, skipped: {0}", source));
+                        }
+
                         _resultHandler.SamplePerformance(_tradeableDates.Current, 0);
                         break;
 
@@ -441,10 +447,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var textSubscriptionFactory = (TextSubscriptionDataSourceReader)dataSourceReader;
                 textSubscriptionFactory.CreateStreamReaderError += (sender, args) =>
                 {
-                    Log.Error(string.Format("Failed to get StreamReader for data source({0}), symbol({1}). Skipping date({2}). Reader is null.", args.Source.Source, _mappedSymbol, args.Date.ToShortDateString()));
-                    if (_config.IsCustomData)
+                    // FineFundamental data can have many missing dates, so we ignore the error to avoid flooding the logs
+                    if (_config.Type != typeof (FineFundamental))
                     {
-                        _resultHandler.ErrorMessage(string.Format("We could not fetch the requested data. This may not be valid data, or a failed download of custom data. Skipping source ({0}).", args.Source.Source));
+                        Log.Error(string.Format("Failed to get StreamReader for data source({0}), symbol({1}). Skipping date({2}). Reader is null.", args.Source.Source, _mappedSymbol, args.Date.ToShortDateString()));
+                        if (_config.IsCustomData)
+                        {
+                            _resultHandler.ErrorMessage(string.Format("We could not fetch the requested data. This may not be valid data, or a failed download of custom data. Skipping source ({0}).", args.Source.Source));
+                        }
                     }
                 };
 
