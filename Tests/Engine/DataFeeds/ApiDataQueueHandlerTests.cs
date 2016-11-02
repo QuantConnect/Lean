@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine.DataFeeds.Queues;
+using QuantConnect.Logging;
 using QuantConnect.Packets;
 using WebSocketSharp;
 using WebSocketSharp.Net;
@@ -17,8 +18,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     public class ApiDataQueueHandlerTests
     {
         private WebSocketServer _mockServer;
-        private readonly string _liveDataUrl = Config.Get("live-data-url", "ws://127.0.0.1");
-        private readonly int _liveDataPort = Config.GetInt("live-data-port", 8080);
+        private readonly string _liveDataUrl = Config.Get("live-data-url", "wss://www.quantconnect.com/api/v2/live/data");
+        private readonly int _liveDataPort = Config.GetInt("live-data-port", 443);
         private ApiDataQueueHandler _dataQueueHandler;
         private MockServerBehavior _mockServerBehavior;
         private List<Symbol> _symbols;
@@ -53,6 +54,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                            ? new NetworkCredential(_userId.ToString(), _token)
                            : null;
                 };
+                Log.Trace("ApiDataQueueHandlerTests.Setup(): Starting the mock server.");
                 _mockServer.Start();
 
                 while (true)

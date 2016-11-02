@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -36,19 +37,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
     {
         private EventHandler _updateSubscriptions;
         private volatile bool _connectionOpen;
-        private readonly List<BaseData> _baseDataFromServer = new List<BaseData>();
+        private readonly ConcurrentQueue<BaseData> _baseDataFromServer = new ConcurrentQueue<BaseData>();
         private readonly object _lockerSubscriptions = new object();
         private readonly HashSet<Symbol> _subscribedSymbols = new HashSet<Symbol>();
 
+        private const int MaxRetryAttempts = 10;
+
         private readonly int _userId = Config.GetInt("job-user-id");
         private readonly string _token = Config.Get("api-access-token");
-        private readonly string _liveDataUrl = Config.Get("live-data-url", "ws://127.0.0.1");
-        private readonly int _liveDataPort = Config.GetInt("live-data-port", 8080);
+        private readonly string _liveDataUrl = Config.Get("live-data-url", "https://www.quantconnect.com/api/v2/live/data");
+        private readonly int _liveDataPort = Config.GetInt("live-data-port", 443);
 
         /// <summary>
-        /// Get next ticks if they have arrived from the server
+        /// Get next ticks if they have arrived from the server.
         /// </summary>
-        /// <returns>Array of <see cref="Tick"/></returns>
+        /// <returns>Array of <see cref="BaseData"/></returns>
         public virtual IEnumerable<BaseData> GetNextTicks()
         {
             lock (_baseDataFromServer)
@@ -73,14 +76,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
                                           select symbol).ToList();
 
                 if (symbolsToSubscribe.Count == 0)
+                {
+                    Log.Trace("ApiDataQueueHandler.Subscribe(): Cannot subscribe to requested symbols. Either symbols are not supported or requested subscriptions already exist.");
                     return;
+                }
+
 
                 foreach (var symbol in symbolsToSubscribe)
                 {
                     _subscribedSymbols.Add(symbol);
                 }
 
-                Log.Trace("ApiDataQueueHanlder subscribed to: {0}", string.Join(",", symbolsToSubscribe.Select(x => x.Value)));
+                Log.Trace("ApiDataQueueHandler.Subscribe(): Subscribed to: {0}", string.Join(",", symbolsToSubscribe.Select(x => x.Value)));
             }
 
             if (!TryOpenSocketConnection())
@@ -104,14 +111,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
                                             select symbol).ToList();
 
                 if (symbolsToUnsubscribe.Count == 0)
+                {
+                    Log.Trace("ApiDataQueueHandler.Unsubscribe(): Cannot unsubscribe from requested symbols. No existing subscriptions found for: {0}", string.Join(",", symbols.Select(x => x.Value)));
                     return;
+                }
+
 
                 foreach (var symbol in symbolsToUnsubscribe)
                 {
                     _subscribedSymbols.Remove(symbol);
                 }
 
-                Log.Trace("ApiDataQueueHanlder unsubscribed from : {0}", string.Join(",", symbolsToUnsubscribe.Select(x => x.Value)));
+                Log.Trace("ApiDataQueueHandler.Unsubscribe(): Unsubscribed from : {0}", string.Join(",", symbolsToUnsubscribe.Select(x => x.Value)));
             }
 
             if (!TryOpenSocketConnection())
@@ -138,51 +149,98 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
                 var webSocketSetupComplete = false;
                 using (var ws = new WebSocket(builder.ToString()))
                 {
+                    var connectionRetryAttempts = 0;
+
                     while (true)
                     {
                         if (webSocketSetupComplete) continue;
 
+                        // Message received from server
                         ws.OnMessage += (sender, e) =>
                         {
-                            var baseDatas = DeserializeMessage(e.Data);
                             lock (_baseDataFromServer)
                             {
+                                var baseDatas = DeserializeMessage(e.Data);
                                 foreach (var baseData in baseDatas)
                                 {
-                                    _baseDataFromServer.Add(baseData);
+                                    _baseDataFromServer.Enqueue(baseData);
                                 }
                             }
                         };
 
+                        // Error has in web socket connection
                         ws.OnError += (sender, e) =>
                         {
-                            Log.Error(String.Format("Web socket connection error: {0}", e.Message));
-
+                            Log.Error("ApiDataQueueHandler.TryOpenSocketConnection(): Web socket connection error: {0}", e.Message);
                             _connectionOpen = false;
-                            _updateSubscriptions = null;
-                            cts.Cancel();
-                            cts.Dispose();
+                            if (connectionRetryAttempts < MaxRetryAttempts)
+                            {
+                                Log.Trace(
+                                    "ApiDataQueueHandler.TryOpenSocketConnection(): Attempting to reconnect {0}/{1}",
+                                    connectionRetryAttempts, MaxRetryAttempts);
+
+                                connectionRetryAttempts++;
+                                ws.Connect();
+                            }
+                            else
+                            {
+                                Log.Trace(
+                                    "ApiDataQueueHandler.TryOpenSocketConnection(): Could not reconnect to web socket server. " +
+                                    "Closing web socket.");
+
+                                _updateSubscriptions = null;
+                                cts.Cancel();
+                                cts.Dispose();
+                            }
                         };
 
+                        // Connection was closed
                         ws.OnClose += (sender, e) =>
                         {
-                            Log.Trace(String.Format("Web socket connection closed: {0}, {1}", e.Code, e.Reason));
+                            Log.Trace(
+                                "ApiDataQueueHandler.TryOpenSocketConnection(): Web socket connection closed: {0}, {1}", 
+                                e.Code, e.Reason);
 
                             _connectionOpen = false;
-                            _updateSubscriptions = null;
-                            cts.Cancel();
-                            cts.Dispose();
+
+                            if (e.Code == (ushort)CloseStatusCode.Abnormal && connectionRetryAttempts < MaxRetryAttempts)
+                            {
+                                Log.Trace(
+                                    "ApiDataQueueHandler.TryOpenSocketConnection(): Web socket was closed abnormally. " +
+                                    "Attempting to reconnect {0}/{1}", 
+                                    connectionRetryAttempts, MaxRetryAttempts);
+
+                                connectionRetryAttempts++;
+                                ws.Connect();
+                            }
+                            else
+                            {
+                                Log.Trace(
+                                    "ApiDataQueueHandler.TryOpenSocketConnection(): Could not reconnect to web socket server. " +
+                                    "Closing web socket.");
+
+                                _updateSubscriptions = null;
+                                cts.Cancel();
+                                cts.Dispose();
+                            }
                         };
 
+                        // Connection opened
                         ws.OnOpen += (sender, e) =>
                         {
                             lock (_lockerSubscriptions)
                             {
                                 ws.Send(JsonConvert.SerializeObject(_subscribedSymbols));
-                                Log.Trace(String.Format("Opened web socket connection to: {0}", builder));
+                                Log.Trace(
+                                    "ApiDataQueueHandler.TryOpenSocketConnection(): Opened web socket connection to: {0}", 
+                                    builder);
+
+                                // reset retry attempts
+                                connectionRetryAttempts = 0;
                             }
                         };
 
+                        // subscriptions have been updated
                         _updateSubscriptions += (sender, args) =>
                         {
                             lock (_lockerSubscriptions)
@@ -199,7 +257,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
                 }
             }, cts.Token);
 
-            // if we made it this far, the websocket connection has been attempted to be opened
+            // if we made it this far, we've attempted to open the websocket connection
             return true;
         }
 
@@ -226,6 +284,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
                 symbol.ID.SecurityType != SecurityType.Cfd &&
                 symbol.ID.SecurityType != SecurityType.Forex)
             {
+                Log.Trace("ApiDataQueueHandler.CanSubscribe(): Unsupported security type, {0}.", symbol.ID.SecurityType);
                 return false;
             }
 
@@ -234,11 +293,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
                 symbol.ID.Market != Market.FXCM &&
                 symbol.ID.Market != Market.USA)
             {
+                Log.Trace("ApiDataQueueHandler.CanSubscribe(): Unsupported market, {0}.", symbol.ID.Market);
                 return false;
             }
-            
+
             // ignore universe symbols
-            return !symbol.Value.Contains("-UNIVERSE-");
+            if (symbol.Value.Contains("-UNIVERSE-"))
+            {
+                Log.Trace("ApiDataQueueHandler.CanSubscribe(): Universe Symbols not supported.");
+                return false;
+            };
+
+            // If we made it this far, the symbol is supported
+            return true;
         }
 
         /// <summary>
@@ -266,7 +333,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
             }
             catch (Exception err)
             {
-                Log.Error(err);
+                Log.Error("ApiDataQueueHandler.DeserializeMessage(): {0}", err);
             }
 
             return Enumerable.Empty<BaseData>();
