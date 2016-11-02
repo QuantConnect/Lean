@@ -40,47 +40,65 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="name">Project name</param>
         /// <param name="language">Programming language to use</param>
-        /// <returns>Project object from the API.</returns>
-        Project CreateProject(string name, Language language);
+        /// <returns><see cref="ProjectResponse"/> that includes information about the newly created project</returns>
+        ProjectResponse CreateProject(string name, Language language);
 
         /// <summary>
         /// Read in a project from the QuantConnect.com API.
         /// </summary>
         /// <param name="projectId">Project id you own</param>
-        /// <returns></returns>
-        Project ReadProject(int projectId);
+        /// <returns><see cref="ProjectResponse"/> about a specific project</returns>
+        ProjectResponse ReadProject(int projectId);
 
         /// <summary>
-        /// Update a specific project with a list of files. All other files will be deleted.
+        /// Add a file to a project
         /// </summary>
-        /// <param name="projectId">Project id for project to be updated</param>
-        /// <param name="files">Files list to update</param>
-        /// <returns>RestResponse indicating success</returns>
-        ProjectUpdateResponse UpdateProjectFiles(int projectId, List<ProjectFile> files);
+        /// <param name="projectId">The project to which the file should be added</param>
+        /// <param name="name">The name of the new file</param>
+        /// <param name="content">The content of the new file</param>
+        /// <returns><see cref="ProjectFilesResponse"/> that includes information about the newly created file</returns>
+        ProjectFilesResponse AddProjectFile(int projectId, string name, string content);
 
         /// <summary>
-        /// Update a specific project with a list of files. All other files will be deleted.
+        /// Update the name of a file
         /// </summary>
-        /// <param name="projectId">Project id for project to be updated</param>
-        /// <param name="files">Files list to update</param>
-        /// <returns>RestResponse indicating success</returns>
-        RestResponse AddProjectFiles(int projectId, List<ProjectFile> files);
+        /// <param name="projectId">Project id to which the file belongs</param>
+        /// <param name="oldFileName">The current name of the file</param>
+        /// <param name="newFileName">The new name for the file</param>
+        /// <returns><see cref="RestResponse"/> indicating success</returns>
+        RestResponse UpdateProjectFileName(int projectId, string oldFileName, string newFileName);
 
         /// <summary>
-        /// Update a specific project with a list of files. All other files will be deleted.
+        /// Update the contents of a file
         /// </summary>
-        /// <param name="projectId">Project id for project to be updated</param>
-        /// <param name="files">Files list to update</param>
-        /// <returns>RestResponse indicating success</returns>
-        RestResponse DeleteProjectFiles(int projectId, List<ProjectFile> files);
+        /// <param name="projectId">Project id to which the file belongs</param>
+        /// <param name="fileName">The name of the file that should be updated</param>
+        /// <param name="newFileContents">The new contents of the file</param>
+        /// <returns><see cref="RestResponse"/> indicating success</returns>
+        RestResponse UpdateProjectFileContent(int projectId, string fileName, string newFileContents);
 
         /// <summary>
-        /// Update a specific project with a list of files. All other files will be deleted.
+        /// Read a file in a project
         /// </summary>
-        /// <param name="projectId">Project id for project to be updated</param>
-        /// <param name="files">Files list to update</param>
-        /// <returns>RestResponse indicating success</returns>
-        RestResponse ReadProjectFiles(int projectId);
+        /// <param name="projectId">Project id to which the file belongs</param>
+        /// <param name="fileName">The name of the file</param>
+        /// <returns><see cref="ProjectFilesResponse"/> that includes the file information</returns>
+        ProjectFilesResponse ReadProjectFile(int projectId, string fileName);
+
+        /// <summary>
+        /// Read all files in a project
+        /// </summary>
+        /// <param name="projectId">Project id to which the file belongs</param>
+        /// <returns><see cref="ProjectFilesResponse"/> that includes the information about all files in the project</returns>
+        ProjectFilesResponse ReadProjectFiles(int projectId);
+
+        /// <summary>
+        /// Delete a file in a project
+        /// </summary>
+        /// <param name="projectId">Project id to which the file belongs</param>
+        /// <param name="name">The name of the file that should be deleted</param>
+        /// <returns><see cref="ProjectFilesResponse"/> that includes the information about all files in the project</returns>
+        RestResponse DeleteProjectFile(int projectId, string name);
 
         /// <summary>
         /// Delete a specific project owned by the user from QuantConnect.com
@@ -93,7 +111,7 @@ namespace QuantConnect.Interfaces
         /// Read back a list of all projects on the account for a user.
         /// </summary>
         /// <returns>Container for list of projects</returns>
-        ProjectList ListProjects();
+        ProjectResponse ListProjects();
 
         /// <summary>
         /// Create a new compile job request for this project id.

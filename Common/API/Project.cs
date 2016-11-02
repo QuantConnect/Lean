@@ -46,18 +46,12 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "modified")]
         public DateTime Modified;
-
-        /// <summary>
-        /// Files for the project
-        /// </summary>
-        [JsonProperty(PropertyName = "files")]
-        public List<ProjectFile> Files;
     }
 
     /// <summary>
     /// Project list response
     /// </summary>
-    public class ProjectList : RestResponse
+    public class ProjectResponse : RestResponse
     {
         /// <summary>
         /// List of projects for the authenticated user

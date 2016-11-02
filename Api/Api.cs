@@ -59,9 +59,10 @@ namespace QuantConnect.Api
         /// <param name="name">Project name</param>
         /// <param name="language">Programming language to use</param>
         /// <returns>Project object from the API.</returns>
-        public Project CreateProject(string name, Language language)
+        public ProjectResponse CreateProject(string name, Language language)
         {
             var request = new RestRequest("projects/create", Method.POST);
+
             request.RequestFormat = DataFormat.Json;
             request.AddParameter("application/json", JsonConvert.SerializeObject(new
             {
@@ -69,7 +70,7 @@ namespace QuantConnect.Api
                 language = language
             }), ParameterType.RequestBody);
 
-            Project result;
+            ProjectResponse result;
             _connection.TryRequest(request, out result);
             return result;
         }
@@ -79,34 +80,16 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Project id you own</param>
         /// <returns></returns>
-        public Project ReadProject(int projectId)
+        public ProjectResponse ReadProject(int projectId)
         {
             var request = new RestRequest("projects/read", Method.GET);
+
             request.RequestFormat = DataFormat.Json;
             request.AddParameter("projectId", projectId);
-            Project result;
+
+            ProjectResponse result;
             _connection.TryRequest(request, out result);
             return result;
-        }
-
-        public ProjectUpdateResponse UpdateProjectFiles(int projectId, List<ProjectFile> files)
-        {
-            throw new NotImplementedException();
-        }
-
-        public RestResponse AddProjectFiles(int projectId, List<ProjectFile> files)
-        {
-            throw new NotImplementedException();
-        }
-
-        public RestResponse DeleteProjectFiles(int projectId, List<ProjectFile> files)
-        {
-            throw new NotImplementedException();
-        }
-
-        public RestResponse ReadProjectFiles(int projectId)
-        {
-            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -115,36 +98,128 @@ namespace QuantConnect.Api
         /// If you have more that 200 projects, you may not get them all back with this api call.
         /// </summary>
         /// <returns>Container for list of projects</returns>
-        public ProjectList ListProjects()
+        public ProjectResponse ListProjects()
         {
             var request = new RestRequest("projects/read", Method.GET);
             request.RequestFormat = DataFormat.Json;
-            ProjectList result;
+            ProjectResponse result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+
+        /// <summary>
+        /// Add a file to a project
+        /// </summary>
+        /// <param name="projectId">The project to which the file should be added</param>
+        /// <param name="name">The name of the new file</param>
+        /// <param name="content">The content of the new file</param>
+        /// <returns><see cref="ProjectFilesResponse"/> that includes information about the newly created file</returns>
+        public ProjectFilesResponse AddProjectFile(int projectId, string name, string content)
+        {
+            var request = new RestRequest("files/create", Method.POST);
+
+            request.AddParameter("projectId", projectId);
+            request.AddParameter("name", name);
+            request.AddParameter("content", content);
+
+            ProjectFilesResponse result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+
+        /// <summary>
+        /// Update the name of a file
+        /// </summary>
+        /// <param name="projectId">Project id to which the file belongs</param>
+        /// <param name="oldFileName">The current name of the file</param>
+        /// <param name="newFileName">The new name for the file</param>
+        /// <returns><see cref="RestResponse"/> indicating success</returns>
+        public RestResponse UpdateProjectFileName(int projectId, string oldFileName, string newFileName)
+        {
+            var request = new RestRequest("files/update", Method.POST);
+
+            request.AddParameter("projectId", projectId);
+            request.AddParameter("name", oldFileName);
+            request.AddParameter("newName", newFileName);
+
+            RestResponse result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+
+        /// <summary>
+        /// Update the contents of a file
+        /// </summary>
+        /// <param name="projectId">Project id to which the file belongs</param>
+        /// <param name="fileName">The name of the file that should be updated</param>
+        /// <param name="newFileContents">The new contents of the file</param>
+        /// <returns><see cref="RestResponse"/> indicating success</returns>
+        public RestResponse UpdateProjectFileContent(int projectId, string fileName, string newFileContents)
+        {
+            var request = new RestRequest("files/update", Method.POST);
+
+            request.AddParameter("projectId", projectId);
+            request.AddParameter("name", fileName);
+            request.AddParameter("content", newFileContents);
+
+            RestResponse result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+
+        /// <summary>
+        /// Read all files in a project
+        /// </summary>
+        /// <param name="projectId">Project id to which the file belongs</param>
+        /// <returns><see cref="ProjectFilesResponse"/> that includes the information about all files in the project</returns>
+        public ProjectFilesResponse ReadProjectFiles(int projectId)
+        {
+            var request = new RestRequest("files/read", Method.GET);
+
+            request.AddParameter("projectId", projectId);
+
+            ProjectFilesResponse result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+
+        /// <summary>
+        /// Read a file in a project
+        /// </summary>
+        /// <param name="projectId">Project id to which the file belongs</param>
+        /// <param name="fileName">The name of the file</param>
+        /// <returns><see cref="ProjectFilesResponse"/> that includes the file information</returns>
+        public ProjectFilesResponse ReadProjectFile(int projectId, string fileName)
+        {
+            var request = new RestRequest("files/read", Method.GET);
+
+            request.AddParameter("projectId", projectId);
+            request.AddParameter("name", fileName);
+
+            ProjectFilesResponse result;
             _connection.TryRequest(request, out result);
             return result;
         }
 
         /// <summary>
-        /// Update a specific project with a list of files. All other files will be deleted.
+        /// Delete a file in a project
         /// </summary>
-        /// <param name="projectId">Project id for project to be updated</param>
-        /// <param name="files">Files list to update</param>
-        /// <returns>RestResponse indicating success</returns>
-        public ProjectUpdateResponse UpdateFilesForProject(int projectId, List<ProjectFile> files)
+        /// <param name="projectId">Project id to which the file belongs</param>
+        /// <param name="name">The name of the file that should be deleted</param>
+        /// <returns><see cref="ProjectFilesResponse"/> that includes the information about all files in the project</returns>
+        public RestResponse DeleteProjectFile(int projectId, string name)
         {
-            var request = new RestRequest("projects/update", Method.POST);
+            var request = new RestRequest("files/delete", Method.POST);
 
             request.AddParameter("projectId", projectId);
+            request.AddParameter("name", name);
 
-            var count = 0;
-            foreach (var projectFile in files)
-            {
-                request.AddParameter("files[" + count + "][name]", projectFile.Name);
-                request.AddParameter("files[" + count + "][code]", projectFile.Code);
-                count++;
-            }
-
-            ProjectUpdateResponse result;
+            RestResponse result;
             _connection.TryRequest(request, out result);
             return result;
         }
