@@ -38,6 +38,11 @@
   "factor-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskFactorFileProvider",
   "data-file-provider": "QuantConnect.Lean.Engine.DataFeeds.DefaultDataFileProvider",
 
+  // limits on number of symbols to allow
+  "symbol-minute-limit": 10000, 
+  "symbol-second-limit": 10000,
+  "symbol-tick-limit": 10000,
+
   // if one uses true in following token, market hours will remain open all hours and all days.
   // if one uses false will make lean operate only during regular market hours.
   "force-exchange-always-open": false,

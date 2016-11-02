@@ -70,12 +70,20 @@ namespace QuantConnect.Queues
             Log.Trace("JobQueue.NextJob(): Selected " + location);
 
             // check for parameters in the config
-            var parameters = new Dictionary<string, string>();
+            var parameters = new Dictionary<string, string>();            
+
             var parametersConfigString = Config.Get("parameters");
             if (parametersConfigString != string.Empty)
             {
                 parameters = JsonConvert.DeserializeObject<Dictionary<string, string>>(parametersConfigString);
             }
+
+            var controls = new Controls()
+            {
+                MinuteLimit = Config.GetInt("symbol-minute-limit", 10000),
+                SecondLimit = Config.GetInt("symbol-second-limit", 10000),
+                TickLimit = Config.GetInt("symbol-tick-limit", 10000)
+            };
 
             //If this isn't a backtesting mode/request, attempt a live job.
             if (_liveMode)
@@ -93,6 +101,7 @@ namespace QuantConnect.Queues
                     RamAllocation = int.MaxValue,
                     Parameters = parameters,
                     Language = Language,
+                    Controls = controls
                 };
 
                 try
@@ -121,7 +130,8 @@ namespace QuantConnect.Queues
                 BacktestId = AlgorithmTypeName,
                 RamAllocation = int.MaxValue,
                 Language = Language,
-                Parameters = parameters
+                Parameters = parameters,
+                Controls = controls
             };
 
             return backtestJob;
