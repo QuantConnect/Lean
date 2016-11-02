@@ -65,7 +65,13 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            return JsonConvert.DeserializeObject<FineFundamental>(line);
+            var data = JsonConvert.DeserializeObject<FineFundamental>(line);
+
+            data.DataType = MarketDataType.Auxiliary;
+            data.Symbol = config.Symbol;
+            data.Time = date;
+
+            return data;
         }
     }
 }
