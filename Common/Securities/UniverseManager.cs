@@ -163,14 +163,6 @@ namespace QuantConnect.Securities
         {
             if (_universes.TryAdd(key, universe))
             {
-                var userDefinedUniverse = universe as UserDefinedUniverse;
-                if (userDefinedUniverse != null)
-                {
-                    // wire up user defined universes to trigger
-                    userDefinedUniverse.CollectionChanged += (sender, args) => 
-                        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, universe));
-                }
-
                 OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, universe));
             }
         }

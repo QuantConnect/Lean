@@ -221,7 +221,6 @@ namespace QuantConnect.Lean.Engine.Setup
                 brokerage.Message += brokerageOnMessage;
 
                 algorithm.Transactions.SetOrderProcessor(transactionHandler);
-                algorithm.PostInitialize();
 
                 Log.Trace("BrokerageSetupHandler.Setup(): Connecting to brokerage...");
                 try
@@ -330,6 +329,8 @@ namespace QuantConnect.Lean.Engine.Setup
                     AddInitializationError("Error getting account holdings from brokerage: " + err.Message);
                     return false;
                 }
+
+                algorithm.PostInitialize();
 
                 //Set the starting portfolio value for the strategy to calculate performance:
                 StartingPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;

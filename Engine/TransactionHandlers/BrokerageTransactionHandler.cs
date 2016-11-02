@@ -645,6 +645,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return OrderResponse.UnableToFindOrder(request);
             }
 
+            // rounds the order prices
+            RoundOrderPrices(order, security);
+
             // update the ticket's internal storage with this new order reference
             ticket.SetOrder(order);
 
@@ -682,7 +685,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             // verify that our current brokerage can actually take the order
             BrokerageMessageEvent message;
-            if (!_algorithm.LiveMode && !_algorithm.BrokerageModel.CanSubmitOrder(security, order, out message))
+            if (!_algorithm.BrokerageModel.CanSubmitOrder(security, order, out message))
             {
                 // if we couldn't actually process the order, mark it as invalid and bail
                 order.Status = OrderStatus.Invalid;
@@ -757,6 +760,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             // modify the values of the order object
             order.ApplyUpdateOrderRequest(request);
+
+            // rounds the order prices
+            RoundOrderPrices(order, security);
+
             ticket.SetOrder(order);
 
             bool orderUpdated;
@@ -990,6 +997,66 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             else
             {
                 return order.Quantity;
+            }
+        }
+
+        /// <summary>
+        /// Rounds the order prices to its security minimum price variation.
+        /// <remarks>
+        /// This procedure is needed to meet brokerage precision requirements.
+        /// </remarks>
+        /// </summary>
+        private void RoundOrderPrices(Order order, Security security)
+        {
+            // Do not need to round market orders
+            if (order.Type == OrderType.Market ||
+                order.Type == OrderType.MarketOnOpen ||
+                order.Type == OrderType.MarketOnClose)
+            {
+                return;
+            }
+
+            var increment = security.PriceVariationModel.GetMinimumPriceVariation(security);
+            if (increment == 0) return;
+
+            var limitPrice = 0m;
+            var limitRound = 0m;
+            var stopPrice = 0m;
+            var stopRound = 0m;
+
+            switch (order.Type)
+            {
+                case OrderType.Limit:
+                    limitPrice = ((LimitOrder)order).LimitPrice;
+                    limitRound = Math.Round(limitPrice / increment) * increment;
+                    ((LimitOrder)order).LimitPrice = limitRound;
+                    break;
+                case OrderType.StopMarket:
+                    stopPrice = ((StopMarketOrder)order).StopPrice;
+                    stopRound = Math.Round(stopPrice / increment) * increment;
+                    ((StopMarketOrder)order).StopPrice = stopRound;
+                    break;
+                case OrderType.StopLimit:
+                    limitPrice = ((StopLimitOrder)order).LimitPrice;
+                    limitRound = Math.Round(limitPrice / increment) * increment;
+                    ((StopLimitOrder)order).LimitPrice = limitRound;
+                    stopPrice = ((StopLimitOrder)order).StopPrice;
+                    stopRound = Math.Round(stopPrice / increment) * increment;
+                    ((StopLimitOrder)order).StopPrice = stopRound;
+                    break;
+                default:
+                    break;
+            }
+
+            var format = "Warning: To meet brokerage precision requirements, order {0}Price was rounded to {1} from {2}";
+
+            if (!limitPrice.Equals(limitRound))
+            {
+                _algorithm.Error(string.Format(format, "Limit", limitRound, limitPrice));
+            }
+            if (!stopPrice.Equals(stopRound))
+            {
+                _algorithm.Error(string.Format(format, "Stop", stopRound, stopPrice));
             }
         }
     }

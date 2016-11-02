@@ -15,11 +15,9 @@
 
 using System;
 using System.Collections.Generic;
-using Krs.Ats.IBNet;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
-using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
@@ -85,7 +83,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var account = Read<string>(job.BrokerageData, "ib-account", errors);
             var userID = Read<string>(job.BrokerageData, "ib-user-name", errors);
             var password = Read<string>(job.BrokerageData, "ib-password", errors);
-            var agentDescription = Read<AgentDescription>(job.BrokerageData, "ib-agent-description", errors);
+            var agentDescription = Read<string>(job.BrokerageData, "ib-agent-description", errors);
 
             if (errors.Count != 0)
             {

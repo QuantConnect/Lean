@@ -47,7 +47,8 @@ namespace QuantConnect.Securities.Cfd
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
                 new SecurityMarginModel(50m),
-                new CfdDataFilter()
+                new CfdDataFilter(),
+                new SecurityPriceVariationModel()
                 )
         {
             Holdings = new CfdHolding(this);
@@ -73,7 +74,8 @@ namespace QuantConnect.Securities.Cfd
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
                 new SecurityMarginModel(50m),
-                new CfdDataFilter()
+                new CfdDataFilter(),
+                new SecurityPriceVariationModel()
                 )
         {
             Holdings = new CfdHolding(this);
@@ -82,20 +84,17 @@ namespace QuantConnect.Securities.Cfd
         /// <summary>
         /// Gets the contract multiplier for this CFD security
         /// </summary>
-        /// <remarks>
-        /// PipValue := ContractMultiplier * PipSize
-        /// </remarks>
         public decimal ContractMultiplier
         {
             get { return SymbolProperties.ContractMultiplier; }
         }
 
         /// <summary>
-        /// Gets the pip size for this CFD security
+        /// Gets the minimum price variation for this CFD security
         /// </summary>
-        public decimal PipSize
+        public decimal MinimumPriceVariation
         {
-            get { return SymbolProperties.PipSize; }
+            get { return SymbolProperties.MinimumPriceVariation; }
         }
     }
 }

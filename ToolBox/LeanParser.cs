@@ -19,6 +19,7 @@ using System.IO;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.ToolBox.AlgoSeekOptionsConverter;
+using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox
 {

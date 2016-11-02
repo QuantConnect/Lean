@@ -54,7 +54,7 @@ namespace QuantConnect.Data.Fundamental
         {
             var source =
                 Path.Combine(Globals.DataFolder, "equity", config.Market, "fundamental", "fine", 
-                config.Symbol.Value, date.ToString("yyyyMMdd") + ".zip");
+                config.Symbol.Value.ToLower(), date.ToString("yyyyMMdd") + ".zip");
 
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
@@ -65,7 +65,13 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            return JsonConvert.DeserializeObject<FineFundamental>(line);
+            var data = JsonConvert.DeserializeObject<FineFundamental>(line);
+
+            data.DataType = MarketDataType.Auxiliary;
+            data.Symbol = config.Symbol;
+            data.Time = date;
+
+            return data;
         }
     }
 }

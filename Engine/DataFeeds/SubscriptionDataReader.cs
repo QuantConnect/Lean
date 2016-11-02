@@ -22,6 +22,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
@@ -90,6 +91,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         // used when emitting aux data from within while loop
         private bool _emittedAuxilliaryData;
         private BaseData _lastInstanceBeforeAuxilliaryData;
+        private readonly IDataFileProvider _dataFileProvider;
 
         /// <summary>
         /// Last read BaseData object from this type and source
@@ -117,6 +119,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="resultHandler">Result handler used to push error messages and perform sampling on skipped days</param>
         /// <param name="mapFileResolver">Used for resolving the correct map files</param>
         /// <param name="factorFileProvider">Used for getting factor files</param>
+        /// <param name="dataFileProvider">Used for getting files not present on disk</param>
         /// <param name="tradeableDates">Defines the dates for which we'll request data, in order, in the security's exchange time zone</param>
         /// <param name="isLiveMode">True if we're in live mode, false otherwise</param>
         /// <param name="includeAuxilliaryData">True if we want to emit aux data, false to only emit price data</param>
@@ -126,6 +129,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IResultHandler resultHandler,
             MapFileResolver mapFileResolver,
             IFactorFileProvider factorFileProvider,
+            IDataFileProvider dataFileProvider,
             IEnumerable<DateTime> tradeableDates,
             bool isLiveMode,
             bool includeAuxilliaryData = true)
@@ -138,6 +142,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             //Save Start and End Dates:
             _periodStart = periodStart;
             _periodFinish = periodFinish;
+            _dataFileProvider = dataFileProvider;
 
             //Save access to securities
             _isLiveMode = isLiveMode;
@@ -400,7 +405,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private ISubscriptionDataSourceReader CreateSubscriptionFactory(SubscriptionDataSource source)
         {
-            var factory = SubscriptionDataSourceReader.ForSource(source, _config, _tradeableDates.Current, _isLiveMode);
+            var factory = SubscriptionDataSourceReader.ForSource(source, _dataFileProvider, _config, _tradeableDates.Current, _isLiveMode);
             AttachEventHandlers(factory, source);
             return factory;
         }
@@ -413,8 +418,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 switch (args.Source.TransportMedium)
                 {
                     case SubscriptionTransportMedium.LocalFile:
-                        // the local uri doesn't exist, write an error and return null so we we don't try to get data for today
-                        Log.Trace(string.Format("SubscriptionDataReader.GetReader(): Could not find QC Data, skipped: {0}", source));
+                        // FineFundamental data can have many missing dates, so we ignore the error to avoid flooding the logs
+                        if (_config.Type != typeof (FineFundamental))
+                        {
+                            // the local uri doesn't exist, write an error and return null so we we don't try to get data for today
+                            Log.Trace(string.Format("SubscriptionDataReader.GetReader(): Could not find QC Data, skipped: {0}", source));
+                        }
+
                         _resultHandler.SamplePerformance(_tradeableDates.Current, 0);
                         break;
 
@@ -437,10 +447,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var textSubscriptionFactory = (TextSubscriptionDataSourceReader)dataSourceReader;
                 textSubscriptionFactory.CreateStreamReaderError += (sender, args) =>
                 {
-                    Log.Error(string.Format("Failed to get StreamReader for data source({0}), symbol({1}). Skipping date({2}). Reader is null.", args.Source.Source, _mappedSymbol, args.Date.ToShortDateString()));
-                    if (_config.IsCustomData)
+                    // FineFundamental data can have many missing dates, so we ignore the error to avoid flooding the logs
+                    if (_config.Type != typeof (FineFundamental))
                     {
-                        _resultHandler.ErrorMessage(string.Format("We could not fetch the requested data. This may not be valid data, or a failed download of custom data. Skipping source ({0}).", args.Source.Source));
+                        Log.Error(string.Format("Failed to get StreamReader for data source({0}), symbol({1}). Skipping date({2}). Reader is null.", args.Source.Source, _mappedSymbol, args.Date.ToShortDateString()));
+                        if (_config.IsCustomData)
+                        {
+                            _resultHandler.ErrorMessage(string.Format("We could not fetch the requested data. This may not be valid data, or a failed download of custom data. Skipping source ({0}).", args.Source.Source));
+                        }
                     }
                 };
 
@@ -471,6 +485,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 date = _tradeableDates.Current;
 
                 CheckForDelisting(date);
+                if (_delisted)
+                {
+                    return true;
+                }
 
                 if (!_mapFile.HasData(date))
                 {

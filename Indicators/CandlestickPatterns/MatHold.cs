@@ -64,11 +64,19 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// Initializes a new instance of the <see cref="MatHold"/> class.
         /// </summary>
         /// <param name="penetration">Percentage of penetration of a candle within another candle</param>
-        public MatHold(decimal penetration = 0.5m)
+        public MatHold(decimal penetration)
             : this("MATHOLD", penetration)
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MatHold"/> class.
+        /// </summary>
+        public MatHold()
+            : this("MATHOLD")
+        {
+        }
+        
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>

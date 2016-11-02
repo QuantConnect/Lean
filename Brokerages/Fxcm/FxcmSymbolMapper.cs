@@ -24,6 +24,23 @@ namespace QuantConnect.Brokerages.Fxcm
     public class FxcmSymbolMapper : ISymbolMapper
     {
         /// <summary>
+        /// List of all known symbols for FXCM
+        /// </summary>
+        public static List<Symbol> KnownSymbols
+        {
+            get
+            {
+                var symbols = new List<Symbol>();
+                var mapper = new FxcmSymbolMapper();
+                foreach (var tp in FxcmSymbolMappings)
+                {
+                    symbols.Add(mapper.GetLeanSymbol(tp.Item1, mapper.GetBrokerageSecurityType(tp.Item1), Market.FXCM));
+                }
+                return symbols;
+            }
+        }
+
+        /// <summary>
         /// Helper class to allow collection initializer on a List of tuples
         /// </summary>
         private class TupleList<T1, T2> : List<Tuple<T1, T2>>
@@ -90,7 +107,7 @@ namespace QuantConnect.Brokerages.Fxcm
             { "USDOLLAR", "DXYUSD" },
             { "USD/CAD", "USDCAD" },
             { "USD/CHF", "USDCHF" },
-            { "USD/CNH", "USDCNY" },
+            { "USD/CNH", "USDCNH" },
             { "USD/HKD", "USDHKD" },
             { "USD/JPY", "USDJPY" },
             { "USD/NOK", "USDNOK" },

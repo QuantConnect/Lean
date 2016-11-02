@@ -23,7 +23,7 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 {
@@ -127,6 +127,72 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.IsTrue(orderRequest.Response.IsProcessed);
             Assert.IsTrue(orderRequest.Response.IsError);
             Assert.IsTrue(orderTicket.Status == OrderStatus.Invalid);
+        }
+
+        [Test]
+        public void LimitOrderPriceIsRounded()
+        {
+            //Initializes the transaction handler
+            var transactionHandler = new BrokerageTransactionHandler();
+            transactionHandler.Initialize(_algorithm, new BacktestingBrokerage(_algorithm), new BacktestingResultHandler());
+
+            // Creates the order
+            var security = _algorithm.Securities[Ticker];
+            var price = 1.12129m;
+            security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, price, price, price));
+            var orderRequest = new SubmitOrderRequest(OrderType.Limit, security.Type, security.Symbol, 1600, 1.12121212m, 1.12121212m, DateTime.Now, "");
+
+            // Mock the the order processor
+            var orderProcessorMock = new Mock<IOrderProcessor>();
+            orderProcessorMock.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns(new OrderTicket(_algorithm.Transactions, orderRequest));
+            _algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
+
+            // Act
+            var orderTicket = transactionHandler.Process(orderRequest);
+            Assert.IsTrue(orderTicket.Status == OrderStatus.New);
+            transactionHandler.HandleOrderRequest(orderRequest);
+
+            // Assert
+            Assert.IsTrue(orderRequest.Response.IsProcessed);
+            Assert.IsTrue(orderRequest.Response.IsSuccess);
+            Assert.IsTrue(orderTicket.Status == OrderStatus.Submitted);
+            // 1600 after round off becomes 1000
+            Assert.AreEqual(1000, orderTicket.Quantity);
+            // 1.12121212 after round becomes 1.12121
+            Assert.AreEqual(1.12121m, orderTicket.Get(OrderField.LimitPrice));
+        }
+
+        [Test]
+        public void StopMarketOrderPriceIsRounded()
+        {
+            //Initializes the transaction handler
+            var transactionHandler = new BrokerageTransactionHandler();
+            transactionHandler.Initialize(_algorithm, new BacktestingBrokerage(_algorithm), new BacktestingResultHandler());
+
+            // Creates the order
+            var security = _algorithm.Securities[Ticker];
+            var price = 1.12129m;
+            security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, price, price, price));
+            var orderRequest = new SubmitOrderRequest(OrderType.StopMarket, security.Type, security.Symbol, 1600, 1.12131212m, 1.12131212m, DateTime.Now, "");
+
+            // Mock the the order processor
+            var orderProcessorMock = new Mock<IOrderProcessor>();
+            orderProcessorMock.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns(new OrderTicket(_algorithm.Transactions, orderRequest));
+            _algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
+
+            // Act
+            var orderTicket = transactionHandler.Process(orderRequest);
+            Assert.IsTrue(orderTicket.Status == OrderStatus.New);
+            transactionHandler.HandleOrderRequest(orderRequest);
+
+            // Assert
+            Assert.IsTrue(orderRequest.Response.IsProcessed);
+            Assert.IsTrue(orderRequest.Response.IsSuccess);
+            Assert.IsTrue(orderTicket.Status == OrderStatus.Submitted);
+            // 1600 after round off becomes 1000
+            Assert.AreEqual(1000, orderTicket.Quantity);
+            // 1.12131212 after round becomes 1.12131
+            Assert.AreEqual(1.12131m, orderTicket.Get(OrderField.StopPrice));
         }
     }
 }

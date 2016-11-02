@@ -34,7 +34,7 @@ namespace QuantConnect.Brokerages.Fxcm
     /// <summary>
     /// FXCM brokerage - implementation of IBrokerage interface
     /// </summary>
-    public partial class FxcmBrokerage : Brokerage, IDataQueueHandler, IGenericMessageListener, IStatusMessageListener
+    public partial class FxcmBrokerage : Brokerage, IDataQueueHandler, IHistoryProvider, IGenericMessageListener, IStatusMessageListener
     {
         private readonly IOrderProvider _orderProvider;
         private readonly ISecurityProvider _securityProvider;
@@ -76,6 +76,9 @@ namespace QuantConnect.Brokerages.Fxcm
             _userName = userName;
             _password = password;
             _accountId = accountId;
+
+            HistoryResponseTimeout = 5000;
+            MaximumHistoryRetryAttempts = 1;
         }
 
         #region IBrokerage implementation
@@ -134,7 +137,21 @@ namespace QuantConnect.Brokerages.Fxcm
             var loginProperties = new FXCMLoginProperties(_userName, _password, _terminal, _server);
 
             // log in
-            _gateway.login(loginProperties);
+            try
+            {
+                _gateway.login(loginProperties);
+            }
+            catch (Exception err)
+            {
+                var message =
+                    err.Message.Contains("ORA-20101") ? "Incorrect login credentials" :
+                    err.Message.Contains("ORA-20003") ? "API connections are not available on Mini accounts. If you have a standard account contact api@fxcm.com to enable API access" :
+                    err.Message;
+
+                _cancellationTokenSource.Cancel();
+
+                throw new BrokerageException(message, err.InnerException);
+            }
 
             // create new thread to manage disconnections and reconnections
             _connectionMonitorThread = new Thread(() =>
@@ -158,8 +175,10 @@ namespace QuantConnect.Brokerages.Fxcm
                             OnMessage(BrokerageMessageEvent.Disconnected("Connection with FXCM server lost. " +
                                                                          "This could be because of internet connectivity issues. "));
                         }
-                        else if (_connectionLost && elapsed <= TimeSpan.FromSeconds(5))
+                        else if (_connectionLost && elapsed <= TimeSpan.FromSeconds(5) && IsWithinTradingHours())
                         {
+                            Log.Trace("FxcmBrokerage.Connect(): Attempting reconnection...");
+
                             try
                             {
                                 _gateway.relogin();
@@ -173,8 +192,10 @@ namespace QuantConnect.Brokerages.Fxcm
                                 Log.Error(exception);
                             }
                         }
-                        else if (_connectionError)
+                        else if (_connectionError && IsWithinTradingHours())
                         {
+                            Log.Trace("FxcmBrokerage.Connect(): Attempting reconnection...");
+
                             try
                             {
                                 // log out
@@ -193,9 +214,12 @@ namespace QuantConnect.Brokerages.Fxcm
 
                                 // load instruments, accounts, orders, positions
                                 LoadInstruments();
-                                LoadAccounts();
-                                LoadOpenOrders();
-                                LoadOpenPositions();
+                                if (!EnableOnlyHistoryRequests)
+                                {
+                                    LoadAccounts();
+                                    LoadOpenOrders();
+                                    LoadOpenPositions();
+                                }
 
                                 _connectionError = false;
                                 _connectionLost = false;
@@ -224,9 +248,29 @@ namespace QuantConnect.Brokerages.Fxcm
 
             // load instruments, accounts, orders, positions
             LoadInstruments();
-            LoadAccounts();
-            LoadOpenOrders();
-            LoadOpenPositions();
+            if (!EnableOnlyHistoryRequests)
+            {
+                LoadAccounts();
+                LoadOpenOrders();
+                LoadOpenPositions();
+            }
+        }
+
+        /// <summary>
+        /// Returns true if we are within FXCM trading hours
+        /// </summary>
+        /// <returns></returns>
+        private static bool IsWithinTradingHours()
+        {
+            var time = DateTime.UtcNow.ConvertFromUtc(TimeZones.EasternStandard);
+
+            // FXCM Trading Hours: http://help.fxcm.com/us/Trading-Basics/New-to-Forex/38757093/What-are-the-Trading-Hours.htm
+
+            return !(time.DayOfWeek == DayOfWeek.Friday && time.TimeOfDay > new TimeSpan(16, 55, 0) ||
+                     time.DayOfWeek == DayOfWeek.Saturday ||
+                     time.DayOfWeek == DayOfWeek.Sunday && time.TimeOfDay < new TimeSpan(17, 0, 0) ||
+                     time.Month == 12 && time.Day == 25 ||
+                     time.Month == 1 && time.Day == 1);
         }
 
         /// <summary>
@@ -234,21 +278,23 @@ namespace QuantConnect.Brokerages.Fxcm
         /// </summary>
         public override void Disconnect()
         {
-            if (!IsConnected) return;
-
             Log.Trace("FxcmBrokerage.Disconnect()");
 
-            // log out
-            _gateway.logout();
+            if (_gateway != null)
+            {
+                // log out
+                if (_gateway.isConnected())
+                    _gateway.logout();
 
-            // remove the message listeners
-            _gateway.removeGenericMessageListener(this);
-            _gateway.removeStatusMessageListener(this);
+                // remove the message listeners
+                _gateway.removeGenericMessageListener(this);
+                _gateway.removeStatusMessageListener(this);
+            }
 
             // request and wait for thread to stop
-            _cancellationTokenSource.Cancel();
-            _orderEventThread.Join();
-            _connectionMonitorThread.Join();
+            if (_cancellationTokenSource != null) _cancellationTokenSource.Cancel();
+            if (_orderEventThread != null) _orderEventThread.Join();
+            if (_connectionMonitorThread != null) _connectionMonitorThread.Join();
         }
 
         /// <summary>

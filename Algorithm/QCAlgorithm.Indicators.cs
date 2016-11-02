@@ -562,12 +562,13 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">The symbol whose log return we seek</param>
         /// <param name="period">The period of the log return.</param>
         /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar.</param>
         /// <returns>log return indicator for the requested symbol.</returns>
-        public LogReturn LOGR(Symbol symbol, int period, Resolution? resolution = null)
+        public LogReturn LOGR(Symbol symbol, int period, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
         {
             string name = CreateIndicatorName(symbol, "LOGR", resolution);
             var logr = new LogReturn(name, period);
-            RegisterIndicator(symbol, logr, resolution);
+            RegisterIndicator(symbol, logr, resolution, selector);
             return logr;
         }
 
@@ -1047,6 +1048,23 @@ namespace QuantConnect.Algorithm
             var swiss = new SwissArmyKnife(name, period, delta, tool);
             RegisterIndicator(symbol, swiss, resolution, selector);
             return swiss;
+        }
+
+        /// <summary>
+        /// Creates a new RegressionChannel indicator which will compute the LinearRegression, UpperChannel and LowerChannel lines, the intercept and slope
+        /// </summary>
+        /// <param name="symbol">The symbol whose RegressionChannel we seek</param>
+        /// <param name="period">The period of the standard deviation and least square moving average (linear regression line)</param>
+        /// <param name="k">The number of standard deviations specifying the distance between the linear regression and upper or lower channel lines</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>A Regression Channel configured with the specied period and number of standard deviation</returns>
+        public RegressionChannel RC(Symbol symbol, int period, decimal k, Resolution? resolution = null, Func<BaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, string.Format("RC({0},{1})", period, k), resolution);
+            var rc = new RegressionChannel(name, period, k);
+            RegisterIndicator(symbol, rc, resolution, selector);
+            return rc;
         }
 
         /// <summary>

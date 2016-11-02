@@ -13,12 +13,9 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Parameters;
 
@@ -79,19 +76,19 @@ namespace QuantConnect.Tests.Common.Parameters
         class Instance
         {
             [Parameter]
-            public int PublicField;
+            public int PublicField = 0;
             [Parameter]
             public int PublicProperty { get; set; }
             [Parameter]
-            protected int ProtectedField;
+            protected int ProtectedField = 0;
             [Parameter]
             protected int ProtectedProperty { get; set; }
             [Parameter]
-            internal int InternalField;
+            internal int InternalField = 0;
             [Parameter]
             internal int InternalProperty { get; set; }
             [Parameter]
-            private int PrivateField;
+            private int PrivateField = 0;
             [Parameter]
             private int PrivateProperty { get; set; }
 

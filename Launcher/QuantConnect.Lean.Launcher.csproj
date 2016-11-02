@@ -24,6 +24,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -37,14 +38,6 @@
     <StartupObject>QuantConnect.Lean.Launcher.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Geckofx-Core, Version=45.0.6.0, Culture=neutral, PublicKeyToken=3209ac31600d1857, processorArchitecture=x86">
-      <HintPath>..\packages\GeckoFX.1.0.5\lib\Geckofx-Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Geckofx-Winforms, Version=45.0.6.0, Culture=neutral, PublicKeyToken=3209ac31600d1857, processorArchitecture=MSIL">
-      <HintPath>..\packages\GeckoFX.1.0.5\lib\Geckofx-Winforms.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="IronPython, Version=2.7.5.0, Culture=neutral, PublicKeyToken=7f709c5b713576e1, processorArchitecture=MSIL">
       <Private>True</Private>
       <HintPath>..\packages\IronPython.2.7.5\lib\Net45\IronPython.dll</HintPath>
@@ -147,10 +140,6 @@
     <ProjectReference Include="..\ToolBox\QuantConnect.ToolBox.csproj">
       <Project>{ac9a142c-b485-44d7-91ff-015c22c43d05}</Project>
       <Name>QuantConnect.ToolBox</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\UserInterface\QuantConnect.Views.csproj">
-      <Project>{c68beeed-b0c0-4002-94d4-1e871133d02a}</Project>
-      <Name>QuantConnect.Views</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

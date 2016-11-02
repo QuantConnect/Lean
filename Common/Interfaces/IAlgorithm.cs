@@ -25,6 +25,7 @@ using QuantConnect.Orders;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using QuantConnect.Statistics;
+using System.Collections.Concurrent;
 
 namespace QuantConnect.Interfaces
 {
@@ -216,7 +217,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Debug messages from the strategy:
         /// </summary>
-        List<string> DebugMessages
+        ConcurrentQueue<string> DebugMessages
         {
             get;
         }
@@ -224,7 +225,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Error messages from the strategy:
         /// </summary>
-        List<string> ErrorMessages
+        ConcurrentQueue<string> ErrorMessages
         {
             get;
         }
@@ -232,7 +233,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Log messages from the strategy:
         /// </summary>
-        List<string> LogMessages
+        ConcurrentQueue<string> LogMessages
         {
             get;
         }
@@ -448,6 +449,13 @@ namespace QuantConnect.Interfaces
         /// <param name="leverage">leverage for this security</param>
         /// <param name="extendedMarketHours">ExtendedMarketHours send in data from 4am - 8pm, not used for FOREX</param>
         Security AddSecurity(SecurityType securityType, string symbol, Resolution resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours);
+
+        /// <summary>
+        /// Removes the security with the specified symbol. This will cancel all
+        /// open orders and then liquidate any existing holdings
+        /// </summary>
+        /// <param name="symbol">The symbol of the security to be removed</param>
+        bool RemoveSecurity(Symbol symbol);
 
         /// <summary>
         /// Set the starting capital for the strategy

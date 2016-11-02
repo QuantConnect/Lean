@@ -952,7 +952,7 @@ namespace QuantConnect.Tests.Algorithm
             // Set Price to $26
             Update(eurusd, 26);
             // So 100000/26 = 3846, After Rounding off becomes 3000
-            var actual = algo.CalculateOrderQuantity("EURUSD", 1m);
+            var actual = algo.CalculateOrderQuantity(Symbols.EURUSD, 1m);
             Assert.AreEqual(3000m, actual);
 
         }
@@ -969,7 +969,7 @@ namespace QuantConnect.Tests.Algorithm
             // Set Price to $26
             Update(eurusd, 26);
             // So -100000/26 = -3846, After Rounding off becomes -3000
-            var actual = algo.CalculateOrderQuantity("EURUSD", -1m);
+            var actual = algo.CalculateOrderQuantity(Symbols.EURUSD, -1m);
             Assert.AreEqual(-3000m, actual);
         }
 
@@ -985,7 +985,7 @@ namespace QuantConnect.Tests.Algorithm
             // Set Price to $25
             Update(eurusd, 25);
             // So 10000/25 = 400, After Rounding off becomes 0
-            var actual = algo.CalculateOrderQuantity("EURUSD", 1m);
+            var actual = algo.CalculateOrderQuantity(Symbols.EURUSD, 1m);
             Assert.AreEqual(0m, actual);
         }
         

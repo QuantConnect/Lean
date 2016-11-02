@@ -53,7 +53,7 @@ namespace QuantConnect.Algorithm.Examples
             // this allows us to perform the renko logic on values other than Close, even computed values!
 
             // break SPY into (2*o + h + l + 3*c)/7
-            var renko7bar = new RenkoConsolidator<TradeBar>(2.5m, x => (2*x.Open + x.High + x.Low + 3*x.Close)/7m, x => x.Volume);
+            var renko7bar = new RenkoConsolidator<TradeBar>(2.5m, x => (2 * x.Open + x.High + x.Low + 3 * x.Close) / 7m, x => x.Volume);
             renko7bar.DataConsolidated += (sender, consolidated) =>
             {
                 HandleRenko7Bar(consolidated);

@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -22,6 +23,7 @@ using System.Text;
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
+using Ionic.Zip;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using ZipEntry = ICSharpCode.SharpZipLib.Zip.ZipEntry;
@@ -45,32 +47,21 @@ namespace QuantConnect
         /// <returns>True on successfully creating the zip file.</returns>
         public static bool ZipData(string zipPath, Dictionary<string, string> filenamesAndData)
         {
-            var success = true;
-            var buffer = new byte[4096];
-
             try
             {
                 //Create our output
                 using (var stream = new ZipOutputStream(File.Create(zipPath)))
                 {
+                    stream.SetLevel(0);
                     foreach (var filename in filenamesAndData.Keys)
                     {
                         //Create the space in the zip file:
                         var entry = new ZipEntry(filename);
-                        //Get a Byte[] of the file data:
-                        var file = Encoding.Default.GetBytes(filenamesAndData[filename]);
+                        var data = filenamesAndData[filename];
+                        var bytes = Encoding.Default.GetBytes(data);
                         stream.PutNextEntry(entry);
-
-                        using (var ms = new MemoryStream(file))
-                        {
-                            int sourceBytes;
-                            do
-                            {
-                                sourceBytes = ms.Read(buffer, 0, buffer.Length);
-                                stream.Write(buffer, 0, sourceBytes);
-                            }
-                            while (sourceBytes > 0);
-                        }
+                        stream.Write(bytes, 0, bytes.Length);
+                        stream.CloseEntry();
                     } // End For Each File.
 
                     //Close stream:
@@ -81,9 +72,9 @@ namespace QuantConnect
             catch (Exception err)
             {
                 Log.Error(err);
-                success = false;
+                return false;
             }
-            return success;
+            return true;
         }
 
         /// <summary>
@@ -165,6 +156,42 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Append the zip data to the file-entry specified.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="entry"></param>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public static bool ZipCreateAppendData(string path, string entry, string data)
+        {
+            try
+            {
+                if (File.Exists(path))
+                {
+                    using (var zip = ZipFile.Read(path))
+                    {
+                        zip.AddEntry(entry, data);
+                        zip.Save();
+                    }
+                }
+                else
+                {
+                    using (var zip = new ZipFile(path))
+                    {
+                        zip.AddEntry(entry, data);
+                        zip.Save();
+                    }
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
         /// Uncompress zip data byte array into a dictionary string array of filename-contents.
         /// </summary>
         /// <param name="zipData">Byte data array of zip compressed information</param>
@@ -219,15 +246,35 @@ namespace QuantConnect
         /// <returns>The zipped file as a byte array</returns>
         public static byte[] ZipBytes(byte[] bytes, string zipEntryName)
         {
-            using (var memoryStream = new MemoryStream())
-            using (var stream = new ZipOutputStream(memoryStream))
+            var memoryStream = new MemoryStream();
+            using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
             {
-                var entry = new ZipEntry(zipEntryName);
-                stream.PutNextEntry(entry);
-                var buffer = new byte[16*1024];
-                StreamUtils.Copy(new MemoryStream(bytes), stream, buffer);
-                return memoryStream.GetBuffer();
+                var entry = archive.CreateEntry(zipEntryName);
+                using (var entryStream = entry.Open())
+                {
+                    entryStream.Write(bytes, 0, bytes.Length);
+                }
             }
+            return memoryStream.GetBuffer();
+        }
+
+        /// <summary>
+        /// Extract .gz files to disk
+        /// </summary>
+        /// <param name="gzipFileName"></param>
+        /// <param name="targetDirectory"></param>
+        public static string UnGZip(string gzipFileName, string targetDirectory)
+        {
+            // Use a 4K buffer. Any larger is a waste.
+            var dataBuffer = new byte[4096];
+            var newFileOutput = Path.Combine(targetDirectory, Path.GetFileNameWithoutExtension(gzipFileName));
+            using (Stream fileStream = new FileStream(gzipFileName, FileMode.Open, FileAccess.Read))
+            using (var gzipStream = new GZipInputStream(fileStream))
+            using (var fileOutput = File.Create(newFileOutput))
+            {
+                StreamUtils.Copy(gzipStream, fileOutput, dataBuffer);
+            }
+            return newFileOutput;
         }
 
         /// <summary>
@@ -443,7 +490,7 @@ namespace QuantConnect
                         var entry = zip.FirstOrDefault(x => zipEntryName == null || string.Compare(x.FileName, zipEntryName, StringComparison.OrdinalIgnoreCase) == 0);
                         if (entry == null)
                         {
-                            Log.Error("Compression.Unzip(): Unable to locate zip entry with name: " + zipEntryName);
+                            Log.Error("Compression.Unzip(): Unable to locate zip entry with name: " + zipEntryName + " in file: " + filename);
                             return null;
                         }
 

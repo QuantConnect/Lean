@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Newtonsoft.Json;
 using QuantConnect.API;
 using QuantConnect.Configuration;
@@ -22,6 +23,8 @@ using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using RestSharp;
+using RestSharp.Extensions;
+using QuantConnect.Util;
 
 namespace QuantConnect.Api
 {
@@ -32,14 +35,16 @@ namespace QuantConnect.Api
     {
         private ApiConnection _connection;
         private static MarketHoursDatabase _marketHoursDatabase;
+        private string _dataFolder;
 
         /// <summary>
         /// Initialize the API using the config.json file.
         /// </summary>
-        public virtual void Initialize(int userId, string token)
+        public virtual void Initialize(int userId, string token, string dataFolder)
         {
             _connection = new ApiConnection(userId, token);
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+            _dataFolder = dataFolder;
 
             //Allow proper decoding of orders from the API.
             JsonConvert.DefaultSettings = () => new JsonSerializerSettings
@@ -86,9 +91,11 @@ namespace QuantConnect.Api
 
         /// <summary>
         /// Read back a list of all projects on the account for a user.
+        /// This is a rate limited request.  
+        /// If you have more that 200 projects, you may not get them all back with this api call.
         /// </summary>
         /// <returns>Container for list of projects</returns>
-        public ProjectList ProjectList()
+        public ProjectList ListProjects()
         {
             var request = new RestRequest("projects/read", Method.GET);
             request.RequestFormat = DataFormat.Json;
@@ -103,16 +110,21 @@ namespace QuantConnect.Api
         /// <param name="projectId">Project id for project to be updated</param>
         /// <param name="files">Files list to update</param>
         /// <returns>RestResponse indicating success</returns>
-        public RestResponse UpdateProject(int projectId, List<ProjectFile> files)
+        public ProjectUpdateResponse UpdateProject(int projectId, List<ProjectFile> files)
         {
             var request = new RestRequest("projects/update", Method.POST);
-            request.RequestFormat = DataFormat.Json;
-            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+
+            request.AddParameter("projectId", projectId);
+
+            var count = 0;
+            foreach (var projectFile in files)
             {
-                projectId = projectId,
-                files = files
-            }), ParameterType.RequestBody);
-            RestResponse result;
+                request.AddParameter("files[" + count + "][name]", projectFile.Name);
+                request.AddParameter("files[" + count + "][code]", projectFile.Code);
+                count++;
+            }
+
+            ProjectUpdateResponse result;
             _connection.TryRequest(request, out result);
             return result;
         }
@@ -122,7 +134,7 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Project id we own and wish to delete</param>
         /// <returns>RestResponse indicating success</returns>
-        public RestResponse Delete(int projectId)
+        public RestResponse DeleteProject(int projectId)
         {
             var request = new RestRequest("projects/delete", Method.POST);
             request.RequestFormat = DataFormat.Json;
@@ -233,7 +245,7 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Project id we'd like to get a list of backtest for</param>
         /// <returns>Backtest list container</returns>
-        public BacktestList BacktestList(int projectId)
+        public BacktestList ListBacktests(int projectId)
         {
             var request = new RestRequest("backtests/read", Method.GET);
             request.AddParameter("projectId", projectId);
@@ -241,7 +253,7 @@ namespace QuantConnect.Api
             _connection.TryRequest(request, out result);
             return result;
         }
-        
+
         /// <summary>
         /// Delete a backtest from the specified project and backtestId.
         /// </summary>
@@ -260,25 +272,211 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
+        /// Create a live algorithm.
+        /// </summary>
+        /// <param name="projectId">Id of the project on QuantConnect</param>
+        /// <param name="compileId">Id of the compilation on QuantConnect</param>
+        /// <param name="serverType">Type of server instance that will run the algorithm</param>
+        /// <param name="baseLiveAlgorithmSettings">Brokerage specific <see cref="BaseLiveAlgorithmSettings">BaseLiveAlgorithmSettings</see>.</param>
+        /// <param name="versionId">The version of the Lean used to run the algorithm.  
+        ///                         -1 is master, however, sometimes this can create problems with live deployements.
+        ///                         If you experience problems using, try specifying the version of Lean you would like to use.</param>
+        /// <returns>Information regarding the new algorithm <see cref="LiveAlgorithm"/></returns>
+        public LiveAlgorithm CreateLiveAlgorithm(int projectId, 
+                                                 string compileId, 
+                                                 string serverType, 
+                                                 BaseLiveAlgorithmSettings baseLiveAlgorithmSettings, 
+                                                 string versionId = "-1")
+        {
+            var request = new RestRequest("live/create", Method.POST);
+            request.AddHeader("Accept", "application/json");
+            request.Parameters.Clear();
+            var body = JsonConvert.SerializeObject(new LiveAlgorithmApiSettingsWrapper(projectId, 
+                                                                                       compileId, 
+                                                                                       serverType, 
+                                                                                       baseLiveAlgorithmSettings, 
+                                                                                       versionId));
+            request.AddParameter("application/json", body, ParameterType.RequestBody);
+
+            LiveAlgorithm result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
         /// Get a list of live running algorithms for a logged in user.
         /// </summary>
+        /// <param name="status">Filter the statuses of the algorithms returned from the api</param>
+        /// <param name="startTime">Earliest launched time of the algorithms returned by the Api</param>
+        /// <param name="endTime">Latest launched time of the algorithms returned by the Api</param>
         /// <returns>List of live algorithm instances</returns>
-        public LiveList LiveList()
+        public LiveList ListLiveAlgorithms(AlgorithmStatus? status = null,
+                                           DateTime? startTime = null,
+                                           DateTime? endTime = null)
         {
+            // Only the following statuses are supported by the Api
+            if (status.HasValue                        &&
+                status != AlgorithmStatus.Running      &&
+                status != AlgorithmStatus.RuntimeError &&
+                status != AlgorithmStatus.Stopped      &&
+                status != AlgorithmStatus.Liquidated)
+            {
+                throw new ArgumentException(
+                    "The Api only supports Algorithm Statuses of Running, Stopped, RuntimeError and Liquidated");
+            }
+
             var request = new RestRequest("live/read", Method.GET);
+
+            if (status.HasValue)
+            {
+                request.AddParameter("status", status.ToString());
+            }
+
+            var epochStartTime = startTime == null ? 0 : Time.DateTimeToUnixTimeStamp(startTime.Value);
+            var epochEndTime   = endTime   == null ? Time.DateTimeToUnixTimeStamp(DateTime.UtcNow) : Time.DateTimeToUnixTimeStamp(endTime.Value);
+
+            request.AddParameter("start", epochStartTime);
+            request.AddParameter("end", epochEndTime);
+
             LiveList result;
             _connection.TryRequest(request, out result);
             return result;
         }
 
+        /// <summary>
+        /// Read out a live algorithm in the project id specified.
+        /// </summary>
+        /// <param name="projectId">Project id to read</param>
+        /// <param name="deployId">Specific instance id to read</param>
+        /// <returns>Live object with the results</returns>
+        public LiveAlgorithmResults ReadLiveAlgorithm(int projectId, string deployId)
+        {
+            var request = new RestRequest("live/read", Method.GET);
+            request.AddParameter("projectId", projectId);
+            request.AddParameter("deployId", deployId);
+            LiveAlgorithmResults result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
+        /// Liquidate a live algorithm from the specified project and deployId.
+        /// </summary>
+        /// <param name="projectId">Project for the live instance we want to stop</param>
+        /// <returns></returns>
+        public RestResponse LiquidateLiveAlgorithm(int projectId)
+        {
+            var request = new RestRequest("live/update/liquidate", Method.POST);
+            request.RequestFormat = DataFormat.Json;
+            request.AddParameter("projectId", projectId);
+            RestResponse result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
+        /// Stop a live algorithm from the specified project and deployId.
+        /// </summary>
+        /// <param name="projectId">Project for the live instance we want to stop</param>
+        /// <returns></returns>
+        public RestResponse StopLiveAlgorithm(int projectId)
+        {
+            var request = new RestRequest("live/update/stop", Method.POST);
+            request.RequestFormat = DataFormat.Json;
+            request.AddParameter("projectId", projectId);
+            RestResponse result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
+        /// Gets the logs of a specific live algorithm
+        /// </summary>
+        /// <param name="projectId">Project Id of the live running algorithm</param>
+        /// <param name="algorithmId">Algorithm Id of the live running algorithm</param>
+        /// <param name="startTime">No logs will be returned before this time</param>
+        /// <param name="endTime">No logs will be returned after this time</param>
+        /// <returns>List of strings that represent the logs of the algorithm</returns>
+        public LiveLog ReadLiveLogs(int projectId, string algorithmId, DateTime? startTime = null, DateTime? endTime = null)
+        {
+            var epochStartTime = startTime == null ? 0 : Time.DateTimeToUnixTimeStamp(startTime.Value);
+            var epochEndTime   = endTime   == null ? Time.DateTimeToUnixTimeStamp(DateTime.UtcNow) : Time.DateTimeToUnixTimeStamp(endTime.Value);
+
+            var request = new RestRequest("live/read/log", Method.GET);
+
+            request.AddParameter("format", "json");
+            request.AddParameter("projectId", projectId);
+            request.AddParameter("algorithmId", algorithmId);
+            request.AddParameter("start", epochStartTime);
+            request.AddParameter("end", epochEndTime);
+
+            LiveLog result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
+        /// Gets the link to the downloadable data.
+        /// </summary>
+        /// <param name="symbol">Symbol of security of which data will be requested.</param>
+        /// <param name="resolution">Resolution of data requested.</param>
+        /// <param name="date">Date of the data requested.</param>
+        /// <returns>Link to the downloadable data.</returns>
+        public Link ReadDataLink(Symbol symbol, Resolution resolution, DateTime date)
+        {
+            var request = new RestRequest("data/read", Method.GET);
+
+            request.AddParameter("format", "link");
+            request.AddParameter("ticker", symbol.Value.ToLower());
+            request.AddParameter("type", symbol.ID.SecurityType.ToLower());
+            request.AddParameter("market", symbol.ID.Market);
+            request.AddParameter("resolution", resolution);
+            request.AddParameter("date", date.ToString("yyyyMMdd"));
+
+            Link result;
+            _connection.TryRequest(request, out result);
+            return result;
+        }
+
+        /// <summary>
+        /// Method to download and save the data purchased through QuantConnect
+        /// </summary>
+        /// <param name="symbol">Symbol of security of which data will be requested.</param>
+        /// <param name="resolution">Resolution of data requested.</param>
+        /// <param name="date">Date of the data requested.</param>
+        /// <returns>A bool indicating whether the data was successfully downloaded or not.</returns>
+        public bool DownloadData(Symbol symbol, Resolution resolution, DateTime date)
+        {
+            // Get a link to the data
+            var link = ReadDataLink(symbol, resolution, date);
+
+            // Make sure the link was successfully retrieved
+            if (!link.Success)
+                return false;
+
+            // Save csv in same folder heirarchy as Lean
+            var path = Path.Combine(_dataFolder, LeanData.GenerateRelativeZipFilePath(symbol.Value, symbol.ID.SecurityType, symbol.ID.Market, date, resolution));
+
+            // Make sure the directory exist before writing
+            (new FileInfo(path)).Directory.Create();
+
+            // Download and save the data
+            var uri     = new Uri(link.DataLink);
+            var client  = new RestClient(uri.Scheme + "://" + uri.Host);
+            var request = new RestRequest(uri.PathAndQuery, Method.GET);
+            client.DownloadData(request).SaveAs(path);
+
+            return true;
+        }
 
         /// <summary>
         /// Calculate the remaining bytes of user log allowed based on the user's cap and daily cumulative usage.
         /// </summary>
         /// <param name="userId">User ID</param>
+        /// <param name="projectId">Project ID</param>
         /// <param name="userToken">User API token</param>
         /// <returns>int[3] iUserBacktestLimit, iUserDailyLimit, remaining</returns>
-        public virtual int[] ReadLogAllowance(int userId, string userToken) 
+        public virtual int[] ReadLogAllowance(int userId, int projectId, string userToken)
         {
             return new[] { int.MaxValue, int.MaxValue, int.MaxValue };
         }
@@ -336,7 +534,7 @@ namespace QuantConnect.Api
         /// <param name="sharpe">Sharpe ratio since inception</param>
         public virtual void SendStatistics(string algorithmId, decimal unrealized, decimal fees, decimal netProfit, decimal holdings, decimal equity, decimal netReturn, decimal volume, int trades, double sharpe)
         {
-            // 
+            //
         }
 
         /// <summary>
@@ -384,6 +582,5 @@ namespace QuantConnect.Api
         {
             // NOP
         }
-        
     }
 }

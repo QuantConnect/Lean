@@ -49,10 +49,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         private class JsonSerialization
         {
-            public string symbol;
-            public double time;
-            public double alpha;
-            public double beta;
+            public string symbol = String.Empty;
+            public double time = 0;
+            public double alpha = 0;
+            public double beta = 0;
 
             public RestApiBaseData ToBaseData(DateTimeZone timeZone, TimeSpan period, Symbol sym)
             {

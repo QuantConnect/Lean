@@ -1020,7 +1020,7 @@ namespace QuantConnect.Lean.Engine.Results
                             var price = subscription.RealtimePrice;
 
                             var last = security.GetLastData();
-                            if (last != null)
+                            if (last != null && price > 0)
                             {
                                 // Prevents changes in previous bar
                                 last = last.Clone(last.IsFillForward);
@@ -1029,9 +1029,11 @@ namespace QuantConnect.Lean.Engine.Results
                                 security.SetRealTimePrice(last);
 
                                 // Update CashBook for Forex securities
-                                Cash cash;
-                                var forex = security as Forex;
-                                if (forex != null && _algorithm.Portfolio.CashBook.TryGetValue(forex.BaseCurrencySymbol, out cash))
+                                var cash = (from c in _algorithm.Portfolio.CashBook.Values
+                                    where c.SecuritySymbol == last.Symbol
+                                    select c).SingleOrDefault();
+
+                                if (cash != null)
                                 {
                                     cash.Update(last);
                                 }
@@ -1063,27 +1065,36 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             //Send out the debug messages:
-            var debugMessage = _algorithm.DebugMessages.ToList();
-            _algorithm.DebugMessages.Clear();
-            foreach (var source in debugMessage)
+            var debugStopWatch = Stopwatch.StartNew();
+            while (_algorithm.DebugMessages.Count > 0 && debugStopWatch.ElapsedMilliseconds < 250)
             {
-                DebugMessage(source);
+                string message;
+                if (_algorithm.DebugMessages.TryDequeue(out message))
+                {
+                    DebugMessage(message);
+                }
             }
 
             //Send out the error messages:
-            var errorMessage = _algorithm.ErrorMessages.ToList();
-            _algorithm.ErrorMessages.Clear();
-            foreach (var source in errorMessage)
+            var errorStopWatch = Stopwatch.StartNew();
+            while (_algorithm.ErrorMessages.Count > 0 && errorStopWatch.ElapsedMilliseconds < 250)
             {
-                ErrorMessage(source);
+                string message;
+                if (_algorithm.ErrorMessages.TryDequeue(out message))
+                {
+                    ErrorMessage(message);
+                }
             }
 
             //Send out the log messages:
-            var logMessage = _algorithm.LogMessages.ToList();
-            _algorithm.LogMessages.Clear();
-            foreach (var source in logMessage)
+            var logStopWatch = Stopwatch.StartNew();
+            while (_algorithm.LogMessages.Count > 0 && logStopWatch.ElapsedMilliseconds < 250)
             {
-                LogMessage(source);
+                string message;
+                if (_algorithm.LogMessages.TryDequeue(out message))
+                {
+                    LogMessage(message);
+                }
             }
 
             //Set the running statistics:

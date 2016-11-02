@@ -33,7 +33,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>QuantConnect.ToolBox.CryptoiqDownloader.Program</StartupObject>
+    <StartupObject>QuantConnect.ToolBox.OandaDownloader.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="IKVM.AWT.WinForms">
@@ -153,6 +153,7 @@
     <Compile Include="DukascopyDownloader\DukascopyDataDownloader.cs" />
     <Compile Include="DukascopyDownloader\DukascopySymbolMapper.cs" />
     <Compile Include="DukascopyDownloader\Program.cs" />
+    <Compile Include="FactorFileGenerator.cs" />
     <Compile Include="FileStreamProvider.cs" />
     <Compile Include="FilteredDataProcessor.cs" />
     <Compile Include="FxcmDownloader\FxcmDataDownloader.cs" />
@@ -172,17 +173,10 @@
     <Compile Include="IQFeed\IQ\SocketClient.cs" />
     <Compile Include="IStreamParser.cs" />
     <Compile Include="IStreamProvider.cs" />
-    <Compile Include="LeanDataPathComponents.cs" />
     <Compile Include="LeanDataWriter.cs" />
     <Compile Include="LeanInstrument.cs" />
     <Compile Include="LeanParser.cs" />
     <Compile Include="OandaDownloader\OandaDataDownloader.cs" />
-    <Compile Include="OandaDownloader\OandaRestLibrary\Credentials.cs" />
-    <Compile Include="OandaDownloader\OandaRestLibrary\Candle.cs" />
-    <Compile Include="OandaDownloader\OandaRestLibrary\CandlesResponse.cs" />
-    <Compile Include="OandaDownloader\OandaRestLibrary\CandlesRequest.cs" />
-    <Compile Include="OandaDownloader\OandaRestLibrary\Request.cs" />
-    <Compile Include="OandaDownloader\OandaRestLibrary\Instrument.cs" />
     <Compile Include="OandaDownloader\Program.cs" />
     <Compile Include="PipeDataProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -81,12 +81,13 @@ namespace QuantConnect
         /// Extension method to convert a byte array into a string.
         /// </summary>
         /// <param name="bytes">Byte array to convert.</param>
+        /// <param name="encoding">The encoding to use for the conversion. Defaults to Encoding.ASCII</param>
         /// <returns>String from bytes.</returns>
-        public static string GetString(this byte[] bytes) 
+        public static string GetString(this byte[] bytes, Encoding encoding = null)
         {
-            var chars = new char[bytes.Length / sizeof(char)];
-            Buffer.BlockCopy(bytes, 0, chars, 0, bytes.Length);
-            return new string(chars);
+            if (encoding == null) encoding = Encoding.ASCII;
+
+            return encoding.GetString(bytes);
         }
 
         /// <summary>

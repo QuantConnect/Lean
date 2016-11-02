@@ -92,39 +92,37 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
-        /// Gets the subscriptions to be added for the specified security
+        /// Gets the subscription requests to be added for the specified security
         /// </summary>
-        /// <remarks>
-        /// In most cases the default implementaon of returning the security's configuration is
-        /// sufficient. It's when we want multiple subscriptions (trade/quote data) that we'll need
-        /// to override this
-        /// </remarks>
         /// <param name="security">The security to get subscriptions for</param>
+        /// <param name="currentTimeUtc">The current time in utc. This is the frontier time of the algorithm</param>
+        /// <param name="maximumEndTimeUtc">The max end time</param>
         /// <returns>All subscriptions required by this security</returns>
-        public override IEnumerable<SubscriptionDataConfig> GetSubscriptions(Security security)
+        public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(Security security, DateTime currentTimeUtc, DateTime maximumEndTimeUtc)
         {
-            var config = security.SubscriptionDataConfig;
-
-            // canonical also needs underlying price data
-            if (security.Symbol == _option.Symbol)
-            {
-                var underlying = Symbol.Create(config.Symbol.ID.Symbol, SecurityType.Equity, config.Market);
-                var resolution = config.Resolution == Resolution.Tick ? Resolution.Second : config.Resolution;
-                return new[]
-                {
-                    // rewrite the primary to be non-tick and fill forward
-                    new SubscriptionDataConfig(config, resolution: resolution, fillForward: true), 
-                    // add underlying trade data
-                    new SubscriptionDataConfig(config, resolution: resolution, fillForward: true, symbol: underlying, objectType: typeof(TradeBar), tickType: TickType.Trade), 
-                };
-            }
-
             // we want to return both quote and trade subscriptions
-            return QuotesAndTrades.Select(x => new SubscriptionDataConfig(config,
-                tickType: x,
-                objectType: GetDataType(config.Resolution, x),
-                isFilteredSubscription: true
-                ));
+            return QuotesAndTrades
+                .Select(tickType => new SubscriptionDataConfig(
+                    objectType: GetDataType(UniverseSettings.Resolution, tickType),
+                    symbol: security.Symbol,
+                    resolution: UniverseSettings.Resolution,
+                    dataTimeZone: Configuration.DataTimeZone,
+                    exchangeTimeZone: security.Exchange.TimeZone,
+                    fillForward: UniverseSettings.FillForward,
+                    extendedHours: UniverseSettings.ExtendedMarketHours,
+                    isInternalFeed: false,
+                    isCustom: false,
+                    tickType: tickType,
+                    isFilteredSubscription: true
+                    ))
+                .Select(config => new SubscriptionRequest(
+                    isUniverseSubscription: false,
+                    universe: this,
+                    security: security,
+                    configuration: config,
+                    startTimeUtc: currentTimeUtc,
+                    endTimeUtc: maximumEndTimeUtc
+                    ));
         }
 
         /// <summary>

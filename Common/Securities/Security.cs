@@ -297,6 +297,19 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Customizable price variation model used to define the minimum price variation of this security.
+        /// By default minimum price variation is a constant find in the symbol-properties-database.
+        /// </summary>
+        /// <seealso cref="AdjustedPriceVariationModel"/>
+        /// <seealso cref="SecurityPriceVariationModel"/>
+        /// <seealso cref="EquityPriceVariationModel"/>
+        public IPriceVariationModel PriceVariationModel
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Construct a new security vehicle based on the user options.
         /// </summary>
         public Security(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, Cash quoteCurrency, SymbolProperties symbolProperties)
@@ -312,7 +325,8 @@ namespace QuantConnect.Securities
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
                 new SecurityMarginModel(1m),
-                new SecurityDataFilter())
+                new SecurityDataFilter(),
+                new SecurityPriceVariationModel())
         {
         }
 
@@ -332,7 +346,8 @@ namespace QuantConnect.Securities
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
                 new SecurityMarginModel(1m),
-                new SecurityDataFilter()
+                new SecurityDataFilter(),
+                new SecurityPriceVariationModel()
                 )
         {
         }
@@ -352,7 +367,8 @@ namespace QuantConnect.Securities
             ISettlementModel settlementModel,
             IVolatilityModel volatilityModel,
             ISecurityMarginModel marginModel,
-            ISecurityDataFilter dataFilter
+            ISecurityDataFilter dataFilter,
+            IPriceVariationModel priceVariationModel
             )
         {
 
@@ -374,6 +390,7 @@ namespace QuantConnect.Securities
             Cache = cache;
             Exchange = exchange;
             DataFilter = dataFilter;
+            PriceVariationModel = priceVariationModel;
             PortfolioModel = portfolioModel;
             MarginModel = marginModel;
             FillModel = fillModel;
@@ -400,7 +417,8 @@ namespace QuantConnect.Securities
             ISettlementModel settlementModel,
             IVolatilityModel volatilityModel,
             ISecurityMarginModel marginModel,
-            ISecurityDataFilter dataFilter
+            ISecurityDataFilter dataFilter,
+            IPriceVariationModel priceVariationModel
             )
             : this(config.Symbol,
                 quoteCurrency,
@@ -414,7 +432,8 @@ namespace QuantConnect.Securities
                 settlementModel,
                 volatilityModel,
                 marginModel,
-                dataFilter
+                dataFilter,
+                priceVariationModel
                 )
         {
             SubscriptionsBag.Add(config);
@@ -617,6 +636,18 @@ namespace QuantConnect.Securities
             foreach (var subscription in SubscriptionsBag)
             {
                 subscription.DataNormalizationMode = mode;
+            }
+
+            if (Type == SecurityType.Equity)
+            {
+                if (mode == DataNormalizationMode.Adjusted)
+                {
+                    PriceVariationModel = new AdjustedPriceVariationModel();
+                }
+                else
+                {
+                    PriceVariationModel = new EquityPriceVariationModel();
+                }
             }
         }
 
