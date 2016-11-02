@@ -33,30 +33,6 @@ namespace QuantConnect.Tests.Common
             TypeNameHandling = TypeNameHandling.All
         };
 
-        [Test]
-        public void OptionSymbolAliasMatchesOSI()
-        {
-            const string expected = @"MSFT  060318C00047500";
-            var symbol = Symbol.CreateOption("MSFT", Market.USA, OptionStyle.American, OptionRight.Call, 47.50m, new DateTime(2006, 03, 18));
-            Assert.AreEqual(expected, symbol.Value);
-        }
-
-        [Test]
-        public void OptionSymbolAliasAddsPaddingSpaceForSixOrMoreCharacterSymbols()
-        {
-            const string expected = @"ABCDEF 060318C00047500";
-            var symbol = Symbol.CreateOption("ABCDEF", Market.USA, OptionStyle.American, OptionRight.Call, 47.50m, new DateTime(2006, 03, 18));
-            Assert.AreEqual(expected, symbol.Value);
-        }
-
-        [Test]
-        public void FuturesSymbolAliasMatchesSymbology()
-        {
-            const string expected = @"EDX20";
-            var symbol = Symbol.CreateFuture("ED", Market.USA, new DateTime(2020, 11, 11));
-            Assert.AreEqual(expected, symbol.Value);
-        }
-
         [Theory]
         [TestCaseSource("GetSymbolCreateTestCaseData")]
         public void SymbolCreate(string ticker, SecurityType securityType, string market, Symbol expected)

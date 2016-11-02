@@ -159,6 +159,7 @@
     <Compile Include="Common\Securities\UniverseManagerTests.cs" />
     <Compile Include="Common\SeriesTests.cs" />
     <Compile Include="Common\SymbolCacheTests.cs" />
+    <Compile Include="Common\SymbolReprTests.cs" />
     <Compile Include="Common\SymbolTests.cs" />
     <Compile Include="Common\Statistics\TradeStatisticsTests.cs" />
     <Compile Include="Common\Statistics\TradeBuilderTests.cs" />

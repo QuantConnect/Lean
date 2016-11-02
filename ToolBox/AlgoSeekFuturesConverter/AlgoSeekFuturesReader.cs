@@ -195,42 +195,14 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 var timeString = csv[_columnTimestamp];
                 var time = DateTime.ParseExact(timeString, "yyyyMMddHHmmssFFF", CultureInfo.InvariantCulture);
 
-                var futuresExpirationSymbology = new Dictionary<string, int>
-                        {
-                            { "F", 1 },
-                            { "G", 2 },
-                            { "H", 3 },
-                            { "J", 4 },
-                            { "K", 5 },
-                            { "M", 6 },
-                            { "N", 7 },
-                            { "Q", 8 },
-                            { "U", 9 },
-                            { "V", 10 },
-                            { "X", 11 },
-                            { "Z", 12 }
-                        };
+                var parsed = SymbolRepresentation.ParseFutureTicker(ticker);
+                var underlying = parsed.Item1;
+                var expirationYearShort = parsed.Item2;
+                var expirationMonth = parsed.Item3;
 
-                var expirationYearString = ticker.Substring(ticker.Length - 1, 1);
-                var expirationMonthString = ticker.Substring(ticker.Length - 2, 1);
-                var underlyingString = ticker.Substring(0, ticker.Length - 2);
-
-                int expirationYearShort;
-
-                if (!int.TryParse(expirationYearString, out expirationYearShort))
-                {
-                    return null;
-                }
-
-                if (!futuresExpirationSymbology.ContainsKey(expirationMonthString))
-                {
-                    return null;
-                }
-
-                var expirationMonth = futuresExpirationSymbology[expirationMonthString];
-                var exprirationYear = 2010 + expirationYearShort;
-                var expirationYearMonth = new DateTime(exprirationYear, expirationMonth, DateTime.DaysInMonth(exprirationYear, expirationMonth));
-                var symbol = Symbol.CreateFuture(underlyingString, Market.USA, expirationYearMonth);
+                var expirationYear = 2010 + expirationYearShort;
+                var expirationYearMonth = new DateTime(expirationYear, expirationMonth, DateTime.DaysInMonth(expirationYear, expirationMonth));
+                var symbol = Symbol.CreateFuture(underlying, Market.USA, expirationYearMonth);
               
                 var price = csv[_columnPrice].ToDecimal() / 100000000m;
                 var quantity = csv[_columnQuantity].ToInt32();

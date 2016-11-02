@@ -243,76 +243,17 @@ namespace QuantConnect.ToolBox.IQFeed
 
                     case "IEOPTION":
 
-                        // This table describes IQFeed option symbology  
-                        var symbology = new Dictionary<string, Tuple<int, OptionRight>>
-                        {
-                            { "A", Tuple.Create(1, OptionRight.Call) }, { "M", Tuple.Create(1, OptionRight.Put) },
-                            { "B", Tuple.Create(2, OptionRight.Call) }, { "N", Tuple.Create(2, OptionRight.Put) },
-                            { "C", Tuple.Create(3, OptionRight.Call) }, { "O", Tuple.Create(3, OptionRight.Put) },
-                            { "D", Tuple.Create(4, OptionRight.Call) }, { "P", Tuple.Create(4, OptionRight.Put) },
-                            { "E", Tuple.Create(5, OptionRight.Call) }, { "Q", Tuple.Create(5, OptionRight.Put) },
-                            { "F", Tuple.Create(6, OptionRight.Call) }, { "R", Tuple.Create(6, OptionRight.Put) },
-                            { "G", Tuple.Create(7, OptionRight.Call) }, { "S", Tuple.Create(7, OptionRight.Put) },
-                            { "H", Tuple.Create(8, OptionRight.Call) }, { "T", Tuple.Create(8, OptionRight.Put) },
-                            { "I", Tuple.Create(9, OptionRight.Call) }, { "U", Tuple.Create(9, OptionRight.Put) },
-                            { "J", Tuple.Create(10, OptionRight.Call) }, { "V", Tuple.Create(10, OptionRight.Put) },
-                            { "K", Tuple.Create(11, OptionRight.Call) }, { "W", Tuple.Create(11, OptionRight.Put) },
-                            { "L", Tuple.Create(12, OptionRight.Call) }, { "X", Tuple.Create(12, OptionRight.Put) },
-
-                        };
-
-                        // Extracting option information from IQFeed symbol
-                        // Symbology details: http://www.iqfeed.net/symbolguide/index.cfm?symbolguide=guide&displayaction=support%C2%A7ion=guide&web=iqfeed&guide=options&web=IQFeed&type=stock
-
                         var ticker = columns[columnSymbol];
-                        var letterRange = symbology.Keys
-                                        .Select(x => x[0])
-                                        .ToArray();
-                        var optionTypeDelimiter = ticker.LastIndexOfAny(letterRange);
-                        var strikePriceString = ticker.Substring(optionTypeDelimiter+1, ticker.Length - optionTypeDelimiter - 1);
-
-                        var lookupResult = symbology[ticker[optionTypeDelimiter].ToString()];
-                        var month = lookupResult.Item1;
-                        var optionType = lookupResult.Item2;
-
-                        var dayString = ticker.Substring(optionTypeDelimiter - 2, 2);
-                        var yearString = ticker.Substring(optionTypeDelimiter - 4, 2);
-                        var underlying = ticker.Substring(0, optionTypeDelimiter - 4);
-
-                        // if we cannot parse strike price, we ignore this contract, but log the information. 
-                        decimal strikePrice;
-                        if (!Decimal.TryParse(strikePriceString, out strikePrice))
-                        {
-                            Log.Trace("Discrepancy found while parsing IQFeed option strike price in symbol universe file. Strike price {0}. Line: {1}", strikePriceString, line);
-                            continue;
-                        }
-
-                        int day;
-
-                        if(!int.TryParse(dayString, out day))
-                        {
-                            Log.Trace("Discrepancy found while parsing IQFeed option expiration day in symbol universe file. Day {0}. Line: {1}", dayString, line);
-                            continue;
-                        }
-
-                        int year;
-
-                        if (!int.TryParse(yearString, out year))
-                        {
-                            Log.Trace("Discrepancy found while parsing IQFeed option expiration year in symbol universe file. Year {0}. Line: {1}", yearString, line);
-                            continue;
-                        }
-
-                        var expirationDate = new DateTime(2000 + year, month, day);
+                        var result = SymbolRepresentation.ParseOptionTickerIQFeed(ticker);
 
                         _symbolUniverse.Add(new SymbolData
                         {
-                            Symbol = Symbol.CreateOption(underlying,
+                            Symbol = Symbol.CreateOption(result.Item1,
                                                         Market.USA,
                                                         OptionStyle.American,
-                                                        optionType,
-                                                        strikePrice,
-                                                        expirationDate),
+                                                        result.Item2,
+                                                        result.Item3,
+                                                        result.Item4),
                             SecurityCurrency = "USD",
                             SecurityExchange = Market.USA,
                             Ticker = columns[columnSymbol]
@@ -339,60 +280,29 @@ namespace QuantConnect.ToolBox.IQFeed
 
                     case "FUTURE":
 
-                        var futuresExpirationSymbology = new Dictionary<string, int>
-                        {
-                            { "F", 1 },
-                            { "G", 2 },
-                            { "H", 3 },
-                            { "J", 4 },
-                            { "K", 5 },
-                            { "M", 6 },
-                            { "N", 7 },
-                            { "Q", 8 },
-                            { "U", 9 },
-                            { "V", 10 },
-                            { "X", 11 },
-                            { "Z", 12 }
-                        };
-
-                        // we are not interested in designated front month contracts as they come twice in the file (marked with #, and using standard symbology)
+                        // we are not interested in designated continuous contracts 
                         if (columns[columnSymbol].EndsWith("#"))
                             continue;
 
                         var futuresTicker = columns[columnSymbol].TrimStart(new [] { '@' });
-                        var expirationYearString = futuresTicker.Substring(futuresTicker.Length - 2, 2);
-                        var expirationMonthString = futuresTicker.Substring(futuresTicker.Length - 3, 1);
-                        var underlyingString = futuresTicker.Substring(0, futuresTicker.Length - 3);
 
-                        // parsing expiration date
+                        var parsed = SymbolRepresentation.ParseFutureTicker(futuresTicker);
+                        var underlyingString = parsed.Item1;
+                        var expirationYearShort = parsed.Item2;
+                        var expirationMonth = parsed.Item3;
 
-                        int expirationYearShort;
-
-                        if (!int.TryParse(expirationYearString, out expirationYearShort))
-                        {
-                            Log.Trace("Discrepancy found while parsing IQFeed future contract expiration year in symbol universe file. Year {0}. Line: {1}", expirationYearString, line);
-                            continue;
-                        }
-
-                        if (!futuresExpirationSymbology.ContainsKey(expirationMonthString))
-                        {
-                            Log.Trace("Discrepancy found while parsing IQFeed future contract expiration month in symbol universe file. Month {0}. Line: {1}", expirationMonthString, line);
-                            continue;
-                        }
-
-                        var expirationMonth = futuresExpirationSymbology[expirationMonthString];
-                        var exprirationYear = 2000 + expirationYearShort;
+                        var expirationYear = 2000 + expirationYearShort;
 
                         // Futures contracts have different idiosyncratic expiration dates
                         // We specify year and month of expiration here, and put last day of the month as an expiration date
                         // Later this information will be amended with the expiration data from futures expiration calendar
 
-                        var expirationYearMonth = new DateTime(exprirationYear, expirationMonth, DateTime.DaysInMonth(exprirationYear, expirationMonth));
+                        var expirationYearMonth = new DateTime(expirationYear, expirationMonth, DateTime.DaysInMonth(expirationYear, expirationMonth));
 
-                        if (expirationYearMonth < DateTime.Now.Date.AddDays(-1.0))
+                        /*if (expirationYearMonth < DateTime.Now.Date.AddDays(-1.0))
                         {
                             continue;
-                        }
+                        }*/
 
                         if (iqfeedNameMap.ContainsKey(underlyingString))
                             underlyingString = iqfeedNameMap[underlyingString];
