@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -56,17 +55,16 @@ namespace QuantConnect.Tests.API
             //Test create a new project successfully
             var project = _api.CreateProject(name, Language.CSharp);
             Assert.IsTrue(project.Success);
-            Assert.IsTrue(project.ProjectId > 0);
-            Assert.IsTrue(project.Name == name);
-            Assert.IsTrue(project.Files.Count == 0);
+            Assert.IsTrue(project.Projects.First().ProjectId > 0);
+            Assert.IsTrue(project.Projects.First().Name == name);
 
             // Delete the project
-            var deleteProject = _api.DeleteProject(project.ProjectId);
+            var deleteProject = _api.DeleteProject(project.Projects.First().ProjectId);
             Assert.IsTrue(deleteProject.Success);
 
             // Make sure the project is really deleted
             var projectList = _api.ListProjects();
-            Assert.IsFalse(projectList.Projects.Any(p => p.ProjectId == project.ProjectId));
+            Assert.IsFalse(projectList.Projects.Any(p => p.ProjectId == project.Projects.First().ProjectId));
         }
 
         /// <summary>
@@ -93,47 +91,74 @@ namespace QuantConnect.Tests.API
         /// Test updating the files associated with a project
         /// </summary>
         [Test]
-        public void Update_ProjectFiles_Successfully()
+        public void CRUD_ProjectFiles_Successfully()
         {
-            var unrealFiles = new List<ProjectFile>
-                {
-                    new ProjectFile
-                    {
-                        Name = "Hello.cs",
-                        Code = HttpUtility.HtmlEncode("Hello, world!" )
-                    }
-                };
+            var fakeFile = new ProjectFile
+            {
+                Name = "Hello.cs",
+                Code = HttpUtility.HtmlEncode("Hello, world!")
+            };
 
-            var realFiles = new List<ProjectFile>
-                {
-                    new ProjectFile
-                    {
-                        Name = "main.cs",
-                        Code = HttpUtility.HtmlEncode(File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs" ))
-                    }
-                };
+            var realFile = new ProjectFile
+            {
+                Name = "main.cs",
+                Code = HttpUtility.HtmlEncode(File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs"))
+            };
+
+            var secondRealFile = new ProjectFile()
+            {
+                Name = "lol.cs",
+                Code = HttpUtility.HtmlEncode(File.ReadAllText("../../../Algorithm.CSharp/BubbleAlgorithm.cs"))
+            };
 
             // Create a new project and make sure there are no files
             var project = _api.CreateProject("Test project - " + DateTime.Now, Language.CSharp);
             Assert.IsTrue(project.Success);
-            Assert.IsTrue(project.ProjectId > 0);
-            Assert.IsTrue(project.Files.Count == 0);
+            Assert.IsTrue(project.Projects.First().ProjectId > 0);
 
-            // Insert random file
-            var randomeUpdate = _api.UpdateProject(project.ProjectId, unrealFiles);
-            Assert.IsTrue(randomeUpdate.Success);
-            Assert.IsTrue(randomeUpdate.Files.First().Code == "Hello, world!");
-            Assert.IsTrue(randomeUpdate.Files.First().Name == "Hello.cs");
-            Assert.IsTrue(randomeUpdate.Files.Count == 1);
+            // Add random file
+            var randomAdd = _api.AddProjectFile(project.Projects.First().ProjectId, fakeFile.Name, fakeFile.Code);
+            Assert.IsTrue(randomAdd.Success);
+            Assert.IsTrue(randomAdd.Files.First().Code == fakeFile.Code);
+            Assert.IsTrue(randomAdd.Files.First().Name == fakeFile.Name);
+            // Update names of file
+            var updatedName = _api.UpdateProjectFileName(project.Projects.First().ProjectId, randomAdd.Files.First().Name, realFile.Name);
+            Assert.IsTrue(updatedName.Success);
 
-            // Replace with real files
-            var updateProject = _api.UpdateProject(project.ProjectId, realFiles);
-            Assert.IsTrue(updateProject.Success);
-            Assert.IsTrue(updateProject.Files.First().Name == "main.cs");
-            Assert.IsTrue(updateProject.Files.Count == 1);
+            // Replace content of file
+            var updateContents = _api.UpdateProjectFileContent(project.Projects.First().ProjectId, realFile.Name, realFile.Code);
+            Assert.IsTrue(updateContents.Success);
+
+            // Read single file
+            var readFile = _api.ReadProjectFile(project.Projects.First().ProjectId, realFile.Name);
+            Assert.IsTrue(readFile.Success);
+            Assert.IsTrue(readFile.Files.First().Code == realFile.Code);
+            Assert.IsTrue(readFile.Files.First().Name == realFile.Name);
+
+            // Add a second file
+            var secondFile = _api.AddProjectFile(project.Projects.First().ProjectId, secondRealFile.Name, secondRealFile.Code);
+            Assert.IsTrue(secondFile.Success);
+            Assert.IsTrue(secondFile.Files.First().Code == secondRealFile.Code);
+            Assert.IsTrue(secondFile.Files.First().Name == secondRealFile.Name);
+
+            // Read multiple files
+            var readFiles = _api.ReadProjectFiles(project.Projects.First().ProjectId);
+            Assert.IsTrue(readFiles.Success);
+            Assert.IsTrue(readFiles.Files.Count == 2);
+
+            // Delete the second file
+            var deleteFile = _api.DeleteProjectFile(project.Projects.First().ProjectId, secondRealFile.Name);
+            Assert.IsTrue(deleteFile.Success);
+            
+            // Read files
+            var readFilesAgain = _api.ReadProjectFiles(project.Projects.First().ProjectId);
+            Assert.IsTrue(readFilesAgain.Success);
+            Assert.IsTrue(readFilesAgain.Files.Count == 1);
+            Assert.IsTrue(readFilesAgain.Files.First().Name == realFile.Name);
+
 
             // Delete the project
-            var deleteProject = _api.DeleteProject(project.ProjectId);
+            var deleteProject = _api.DeleteProject(project.Projects.First().ProjectId);
             Assert.IsTrue(deleteProject.Success);
         }
 
@@ -275,21 +300,22 @@ namespace QuantConnect.Tests.API
             var user     = Config.Get("fxcm-user-name");
             var password = Config.Get("fxcm-password");
             var account  = Config.Get("fxcm-account-id");
-            var file = new List<ProjectFile>
-                {
-                    new ProjectFile { Name = "main.cs", Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateForexAlgorithm.cs") }
-                };
+            var file = new ProjectFile
+            {
+                Name = "main.cs",
+                Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateForexAlgorithm.cs")
+            };
 
             // Create a new project
             var project = _api.CreateProject("Test project - " + DateTime.Now, Language.CSharp);
             Assert.IsTrue(project.Success);
 
-            // Update Project
-            var update = _api.UpdateProject(project.ProjectId, file);
-            Assert.IsTrue(update.Success);
+            // Add Project Files
+            var addProjectFile = _api.AddProjectFile(project.Projects.First().ProjectId, file.Name, file.Code);
+            Assert.IsTrue(addProjectFile.Success);
 
             // Create compile
-            var compile = _api.CreateCompile(project.ProjectId);
+            var compile = _api.CreateCompile(project.Projects.First().ProjectId);
             Assert.IsTrue(compile.Success);
 
             // Create default algorithm settings
@@ -302,21 +328,21 @@ namespace QuantConnect.Tests.API
             Thread.Sleep(10000);
 
             // Create live default algorithm
-            var createLiveAlgorithm = _api.CreateLiveAlgorithm(project.ProjectId, compile.CompileId, "server512", settings);
+            var createLiveAlgorithm = _api.CreateLiveAlgorithm(project.Projects.First().ProjectId, compile.CompileId, "server512", settings);
             Assert.IsTrue(createLiveAlgorithm.Success);
 
             if (stopLiveAlgos)
             {
                 // Liquidate live algorithm
-                var liquidateLive = _api.LiquidateLiveAlgorithm(project.ProjectId);
+                var liquidateLive = _api.LiquidateLiveAlgorithm(project.Projects.First().ProjectId);
                 Assert.IsTrue(liquidateLive.Success);
 
                 // Stop live algorithm
-                var stopLive = _api.StopLiveAlgorithm(project.ProjectId);
+                var stopLive = _api.StopLiveAlgorithm(project.Projects.First().ProjectId);
                 Assert.IsTrue(stopLive.Success);
 
                 // Delete the project
-                var deleteProject = _api.DeleteProject(project.ProjectId);
+                var deleteProject = _api.DeleteProject(project.Projects.First().ProjectId);
                 Assert.IsTrue(deleteProject.Success);
             }
         }
@@ -331,20 +357,22 @@ namespace QuantConnect.Tests.API
             var password = Config.Get("ib-password");
             var account  = Config.Get("ib-account");
 
-            var file = new List<ProjectFile>
-                {
-                    new ProjectFile { Name = "main.cs", Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs" )}
-                };
+            var file = new ProjectFile
+            {
+                Name = "main.cs",
+                Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
+            };
+             
 
             // Create a new project
             var project = _api.CreateProject("Test project - " + DateTime.Now, Language.CSharp);
 
-            // Update Project
-            var update = _api.UpdateProject(project.ProjectId, file);
-            Assert.IsTrue(update.Success);
+            // Add Project Files
+            var addProjectFile = _api.AddProjectFile(project.Projects.First().ProjectId, file.Name, file.Code);
+            Assert.IsTrue(addProjectFile.Success);
 
             // Create compile
-            var compile = _api.CreateCompile(project.ProjectId);
+            var compile = _api.CreateCompile(project.Projects.First().ProjectId);
             Assert.IsTrue(compile.Success);
 
             // Create default algorithm settings
@@ -356,21 +384,21 @@ namespace QuantConnect.Tests.API
             Thread.Sleep(10000);
 
             // Create live default algorithm
-            var createLiveAlgorithm = _api.CreateLiveAlgorithm(project.ProjectId, compile.CompileId, "server512", settings);
+            var createLiveAlgorithm = _api.CreateLiveAlgorithm(project.Projects.First().ProjectId, compile.CompileId, "server512", settings);
             Assert.IsTrue(createLiveAlgorithm.Success);
 
             if (stopLiveAlgos)
             {
                 // Liquidate live algorithm
-                var liquidateLive = _api.LiquidateLiveAlgorithm(project.ProjectId);
+                var liquidateLive = _api.LiquidateLiveAlgorithm(project.Projects.First().ProjectId);
                 Assert.IsTrue(liquidateLive.Success);
 
                 // Stop live algorithm
-                var stopLive = _api.StopLiveAlgorithm(project.ProjectId);
+                var stopLive = _api.StopLiveAlgorithm(project.Projects.First().ProjectId);
                 Assert.IsTrue(stopLive.Success);
 
                 // Delete the project
-                var deleteProject = _api.DeleteProject(project.ProjectId);
+                var deleteProject = _api.DeleteProject(project.Projects.First().ProjectId);
                 Assert.IsTrue(deleteProject.Success);
             }
         }
@@ -384,20 +412,21 @@ namespace QuantConnect.Tests.API
             var token       = Config.Get("oanda-access-token");
             var account     = Config.Get("oanda-account-id");
 
-            var file = new List<ProjectFile>
+            var file = new ProjectFile
                 {
-                    new ProjectFile { Name = "main.cs", Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateForexAlgorithm.cs" ) }
+                    Name = "main.cs",
+                    Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateForexAlgorithm.cs")
                 };
 
             // Create a new project
             var project = _api.CreateProject("Test project - " + DateTime.Now, Language.CSharp);
 
-            // Update Project
-            var update = _api.UpdateProject(project.ProjectId, file);
-            Assert.IsTrue(update.Success);
+            // Add Project Files
+            var addProjectFile = _api.AddProjectFile(project.Projects.First().ProjectId, file.Name, file.Code);
+            Assert.IsTrue(addProjectFile.Success);
 
             // Create compile
-            var compile = _api.CreateCompile(project.ProjectId);
+            var compile = _api.CreateCompile(project.Projects.First().ProjectId);
             Assert.IsTrue(compile.Success);
 
             // Create default algorithm settings
@@ -409,21 +438,21 @@ namespace QuantConnect.Tests.API
             Thread.Sleep(10000);
 
             // Create live default algorithm
-            var createLiveAlgorithm = _api.CreateLiveAlgorithm(project.ProjectId, compile.CompileId, "server512", settings);
+            var createLiveAlgorithm = _api.CreateLiveAlgorithm(project.Projects.First().ProjectId, compile.CompileId, "server512", settings);
             Assert.IsTrue(createLiveAlgorithm.Success);
 
             if (stopLiveAlgos)
             {
                 // Liquidate live algorithm
-                var liquidateLive = _api.LiquidateLiveAlgorithm(project.ProjectId);
+                var liquidateLive = _api.LiquidateLiveAlgorithm(project.Projects.First().ProjectId);
                 Assert.IsTrue(liquidateLive.Success);
 
                 // Stop live algorithm
-                var stopLive = _api.StopLiveAlgorithm(project.ProjectId);
+                var stopLive = _api.StopLiveAlgorithm(project.Projects.First().ProjectId);
                 Assert.IsTrue(stopLive.Success);
 
                 // Delete the project
-                var deleteProject = _api.DeleteProject(project.ProjectId);
+                var deleteProject = _api.DeleteProject(project.Projects.First().ProjectId);
                 Assert.IsTrue(deleteProject.Success);
             }
         }
@@ -439,24 +468,24 @@ namespace QuantConnect.Tests.API
             var accessToken     = Config.Get("tradier-access-token");
             var dateIssued      = Config.Get("tradier-issued-at");
 
-            var file = new List<ProjectFile>
-                {
-                    new ProjectFile { Name = "main.cs", Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs" )}
-                };
+            var file = new ProjectFile
+            {
+                Name = "main.cs",
+                Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
+            };
 
             // Create a new project
             var project = _api.CreateProject("Test project - " + DateTime.Now, Language.CSharp);
 
-            // Update Project
-            var update = _api.UpdateProject(project.ProjectId, file);
-            Assert.IsTrue(update.Success);
+            // Add Project Files
+            var addProjectFile = _api.AddProjectFile(project.Projects.First().ProjectId, file.Name, file.Code);
+            Assert.IsTrue(addProjectFile.Success);
 
-            var readProject = _api.ReadProject(project.ProjectId);
+            var readProject = _api.ReadProject(project.Projects.First().ProjectId);
             Assert.IsTrue(readProject.Success);
-            Assert.IsTrue(readProject.Files.Count == 1);
 
             // Create compile
-            var compile = _api.CreateCompile(project.ProjectId);
+            var compile = _api.CreateCompile(project.Projects.First().ProjectId);
             Assert.IsTrue(compile.Success);
 
             // Create default algorithm settings
@@ -469,21 +498,21 @@ namespace QuantConnect.Tests.API
             Thread.Sleep(10000);
 
             // Create live default algorithm
-            var createLiveAlgorithm = _api.CreateLiveAlgorithm(project.ProjectId, compile.CompileId, "server512", settings);
+            var createLiveAlgorithm = _api.CreateLiveAlgorithm(project.Projects.First().ProjectId, compile.CompileId, "server512", settings);
             Assert.IsTrue(createLiveAlgorithm.Success);
 
             if (stopLiveAlgos)
             {
                 // Liquidate live algorithm
-                var liquidateLive = _api.LiquidateLiveAlgorithm(project.ProjectId);
+                var liquidateLive = _api.LiquidateLiveAlgorithm(project.Projects.First().ProjectId);
                 Assert.IsTrue(liquidateLive.Success);
 
                 // Stop live algorithm
-                var stopLive = _api.StopLiveAlgorithm(project.ProjectId);
+                var stopLive = _api.StopLiveAlgorithm(project.Projects.First().ProjectId);
                 Assert.IsTrue(stopLive.Success);
 
                 // Delete the project
-                var deleteProject = _api.DeleteProject(project.ProjectId);
+                var deleteProject = _api.DeleteProject(project.Projects.First().ProjectId);
                 Assert.IsTrue(deleteProject.Success);
             }
         }
@@ -558,7 +587,7 @@ namespace QuantConnect.Tests.API
         }
 
         /// <summary>
-        /// Test creating, compiling and bactesting a C# project via the Api
+        /// Test creating, compiling and backtesting a C# project via the Api
         /// </summary>
         [Test]
         public void CSharpProject_CreatedCompiledAndBacktested_Successully()
@@ -572,7 +601,7 @@ namespace QuantConnect.Tests.API
         }
 
         /// <summary>
-        /// Test creating, compiling and bactesting a F# project via the Api
+        /// Test creating, compiling and backtesting a F# project via the Api
         /// </summary>
         [Test]
         public void FSharpProject_CreatedCompiledAndBacktested_Successully()
@@ -605,86 +634,84 @@ namespace QuantConnect.Tests.API
             //Test create a new project successfully
             var project = _api.CreateProject(projectName, language);
             Assert.IsTrue(project.Success);
-            Assert.IsTrue(project.ProjectId > 0);
-            Assert.IsTrue(project.Name == projectName);
+            Assert.IsTrue(project.Projects.First().ProjectId > 0);
+            Assert.IsTrue(project.Projects.First().Name == projectName);
 
             // Make sure the project just created is now present
             var projects = _api.ListProjects();
             Assert.IsTrue(projects.Success);
-            Assert.IsTrue(projects.Projects.Any(p => p.ProjectId == project.ProjectId));
+            Assert.IsTrue(projects.Projects.Any(p => p.ProjectId == project.Projects.First().ProjectId));
 
             // Test read back the project we just created
-            var readProject = _api.ReadProject(project.ProjectId);
+            var readProject = _api.ReadProject(project.Projects.First().ProjectId);
             Assert.IsTrue(readProject.Success);
-            Assert.IsTrue(readProject.Files.Count == 0);
-            Assert.IsTrue(readProject.Name == projectName);
+            Assert.IsTrue(readProject.Projects.First().Name == projectName);
 
             // Test set a project file for the project
-            var files = new List<ProjectFile> { new ProjectFile { Name = algorithmName, Code = code } };
-            var updateProject = _api.UpdateProject(project.ProjectId, files);
-            Assert.IsTrue(updateProject.Success);
+            var file = new ProjectFile { Name = algorithmName, Code = code };
+            var addProjectFile = _api.AddProjectFile(project.Projects.First().ProjectId, file.Name, file.Code);
+            Assert.IsTrue(addProjectFile.Success);
 
             // Download the project again to validate its got the new file
-            var verifyRead = _api.ReadProject(project.ProjectId);
-            Assert.IsTrue(verifyRead.Files.Count == 1);
-            Assert.IsTrue(verifyRead.Files.First().Name == algorithmName);
+            var verifyRead = _api.ReadProject(project.Projects.First().ProjectId);
+            Assert.IsTrue(verifyRead.Success);
 
             // Compile the project we've created
-            var compileCreate = _api.CreateCompile(project.ProjectId);
+            var compileCreate = _api.CreateCompile(project.Projects.First().ProjectId);
             Assert.IsTrue(compileCreate.Success);
             Assert.IsTrue(compileCreate.State == CompileState.InQueue);
 
             // Read out the compile
-            var compileSuccess = WaitForCompilerResponse(project.ProjectId, compileCreate.CompileId);
+            var compileSuccess = WaitForCompilerResponse(project.Projects.First().ProjectId, compileCreate.CompileId);
             Assert.IsTrue(compileSuccess.Success);
             Assert.IsTrue(compileSuccess.State == CompileState.BuildSuccess);
 
             // Update the file, create a build error, test we get build error
-            files[0].Code += "[Jibberish at end of the file to cause a build error]";
-            _api.UpdateProject(project.ProjectId, files);
-            var compileError = _api.CreateCompile(project.ProjectId);
-            compileError = WaitForCompilerResponse(project.ProjectId, compileError.CompileId);
+            file.Code += "[Jibberish at end of the file to cause a build error]";
+            _api.UpdateProjectFileContent(project.Projects.First().ProjectId, file.Name, file.Code);
+            var compileError = _api.CreateCompile(project.Projects.First().ProjectId);
+            compileError = WaitForCompilerResponse(project.Projects.First().ProjectId, compileError.CompileId);
             Assert.IsTrue(compileError.Success); // Successfully processed rest request.
             Assert.IsTrue(compileError.State == CompileState.BuildError); //Resulting in build fail.
 
             // Using our successful compile; launch a backtest!
             var backtestName = DateTime.Now.ToString("u") + " API Backtest";
-            var backtest = _api.CreateBacktest(project.ProjectId, compileSuccess.CompileId, backtestName);
+            var backtest = _api.CreateBacktest(project.Projects.First().ProjectId, compileSuccess.CompileId, backtestName);
             Assert.IsTrue(backtest.Success);
 
             // Now read the backtest and wait for it to complete
-            var backtestRead = WaitForBacktestCompletion(project.ProjectId, backtest.BacktestId);
+            var backtestRead = WaitForBacktestCompletion(project.Projects.First().ProjectId, backtest.BacktestId);
             Assert.IsTrue(backtestRead.Success);
             Assert.IsTrue(backtestRead.Progress == 1);
             Assert.IsTrue(backtestRead.Name == backtestName);
             Assert.IsTrue(backtestRead.Result.Statistics["Total Trades"] == "1");
 
             // Verify we have the backtest in our project
-            var listBacktests = _api.ListBacktests(project.ProjectId);
+            var listBacktests = _api.ListBacktests(project.Projects.First().ProjectId);
             Assert.IsTrue(listBacktests.Success);
             Assert.IsTrue(listBacktests.Backtests.Count >= 1);
             Assert.IsTrue(listBacktests.Backtests[0].Name == backtestName);
 
             // Update the backtest name and test its been updated
             backtestName += "-Amendment";
-            var renameBacktest = _api.UpdateBacktest(project.ProjectId, backtest.BacktestId, backtestName);
+            var renameBacktest = _api.UpdateBacktest(project.Projects.First().ProjectId, backtest.BacktestId, backtestName);
             Assert.IsTrue(renameBacktest.Success);
-            backtestRead = _api.ReadBacktest(project.ProjectId, backtest.BacktestId);
+            backtestRead = _api.ReadBacktest(project.Projects.First().ProjectId, backtest.BacktestId);
             Assert.IsTrue(backtestRead.Name == backtestName);
 
             //Update the note and make sure its been updated:
             var newNote = DateTime.Now.ToString("u");
-            var noteBacktest = _api.UpdateBacktest(project.ProjectId, backtest.BacktestId, note: newNote);
+            var noteBacktest = _api.UpdateBacktest(project.Projects.First().ProjectId, backtest.BacktestId, note: newNote);
             Assert.IsTrue(noteBacktest.Success);
-            backtestRead = _api.ReadBacktest(project.ProjectId, backtest.BacktestId);
+            backtestRead = _api.ReadBacktest(project.Projects.First().ProjectId, backtest.BacktestId);
             Assert.IsTrue(backtestRead.Note == newNote);
 
             // Delete the backtest we just created
-            var deleteBacktest = _api.DeleteBacktest(project.ProjectId, backtest.BacktestId);
+            var deleteBacktest = _api.DeleteBacktest(project.Projects.First().ProjectId, backtest.BacktestId);
             Assert.IsTrue(deleteBacktest.Success);
 
             // Test delete the project we just created
-            var deleteProject = _api.DeleteProject(project.ProjectId);
+            var deleteProject = _api.DeleteProject(project.Projects.First().ProjectId);
             Assert.IsTrue(deleteProject.Success);
         }
 
