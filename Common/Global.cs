@@ -889,14 +889,14 @@ namespace QuantConnect
             new DateTime(2013, 12, 25),
             new DateTime(2014, 12, 25),
             new DateTime(2015, 12, 25),
-            new DateTime(2016, 12, 25),
+            new DateTime(2016, 12, 26),
             new DateTime(2017, 12, 25),
             new DateTime(2018, 12, 25),
             new DateTime(2019, 12, 25),
             new DateTime(2020, 12, 25),
             new DateTime(2021, 12, 25),
             new DateTime(2022, 12, 26),
-            new DateTime(2023, 12, 26)
+            new DateTime(2023, 12, 25)
         };
     }
 }
