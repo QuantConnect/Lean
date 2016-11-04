@@ -649,6 +649,13 @@ namespace QuantConnect
             new DateTime(2014, 01, 01),
             new DateTime(2015, 01, 01),
             new DateTime(2016, 01, 01),
+            new DateTime(2017, 01, 02),
+            new DateTime(2018, 01, 01),
+            new DateTime(2019, 01, 01),
+            new DateTime(2020, 01, 01),
+            new DateTime(2021, 01, 01),
+            new DateTime(2022, 01, 01),
+            new DateTime(2023, 01, 02),
 
             /* Day of Mouring */
             new DateTime(2007, 01, 02),
@@ -686,6 +693,13 @@ namespace QuantConnect
             new DateTime(2014, 01, 20),
             new DateTime(2015, 01, 19),
             new DateTime(2016, 01, 18),
+            new DateTime(2017, 01, 16),
+            new DateTime(2018, 01, 15),
+            new DateTime(2019, 01, 21),
+            new DateTime(2020, 01, 20),
+            new DateTime(2021, 01, 18),
+            new DateTime(2022, 01, 17),
+            new DateTime(2023, 01, 16),
 
             /* Washington / Presidents Day */
             new DateTime(1998, 02, 16),
@@ -707,6 +721,13 @@ namespace QuantConnect
             new DateTime(2014, 02, 17),
             new DateTime(2015, 02, 16),
             new DateTime(2016, 02, 15),
+            new DateTime(2017, 02, 20),
+            new DateTime(2018, 02, 19),
+            new DateTime(2019, 02, 18),
+            new DateTime(2020, 02, 17),
+            new DateTime(2021, 02, 15),
+            new DateTime(2022, 02, 21),
+            new DateTime(2023, 02, 20),
 
             /* Good Friday */
             new DateTime(1998, 04, 10),
@@ -728,6 +749,13 @@ namespace QuantConnect
             new DateTime(2014, 04, 18),
             new DateTime(2015, 04, 03),
             new DateTime(2016, 03, 25),
+            new DateTime(2017, 04, 14),
+            new DateTime(2018, 03, 30),
+            new DateTime(2019, 04, 19),
+            new DateTime(2020, 04, 10),
+            new DateTime(2021, 04, 02),
+            new DateTime(2022, 04, 15),
+            new DateTime(2023, 04, 07),
 
             /* Memorial Day */
             new DateTime(1998, 05, 25),
@@ -749,6 +777,13 @@ namespace QuantConnect
             new DateTime(2014, 05, 26),
             new DateTime(2015, 05, 25),
             new DateTime(2016, 05, 30),
+            new DateTime(2017, 05, 29),
+            new DateTime(2018, 05, 28),
+            new DateTime(2019, 05, 27),
+            new DateTime(2020, 05, 25),
+            new DateTime(2021, 05, 31),
+            new DateTime(2022, 05, 30),
+            new DateTime(2023, 05, 29),
 
             /* Independence Day */
             new DateTime(1998, 07, 03),
@@ -771,6 +806,13 @@ namespace QuantConnect
             new DateTime(2014, 07, 04),
             new DateTime(2015, 07, 03),
             new DateTime(2016, 07, 04),
+            new DateTime(2017, 07, 04),
+            new DateTime(2018, 07, 04),
+            new DateTime(2019, 07, 04),
+            new DateTime(2020, 07, 04),
+            new DateTime(2021, 07, 05),
+            new DateTime(2022, 07, 04),
+            new DateTime(2023, 07, 04),
 
             /* Labor Day */
             new DateTime(1998, 09, 07),
@@ -792,6 +834,13 @@ namespace QuantConnect
             new DateTime(2014, 09, 01),
             new DateTime(2015, 09, 07),
             new DateTime(2016, 09, 05),
+            new DateTime(2017, 09, 04),
+            new DateTime(2018, 09, 03),
+            new DateTime(2019, 09, 02),
+            new DateTime(2020, 09, 07),
+            new DateTime(2021, 09, 06),
+            new DateTime(2022, 09, 05),
+            new DateTime(2023, 09, 04),
 
             /* Thanksgiving Day */
             new DateTime(1998, 11, 26),
@@ -813,6 +862,13 @@ namespace QuantConnect
             new DateTime(2014, 11, 27),
             new DateTime(2015, 11, 26),
             new DateTime(2016, 11, 24),
+            new DateTime(2017, 11, 23),
+            new DateTime(2018, 11, 22),
+            new DateTime(2019, 11, 28),
+            new DateTime(2020, 11, 26),
+            new DateTime(2021, 11, 25),
+            new DateTime(2022, 11, 24),
+            new DateTime(2023, 11, 23),
 
             /* Christmas */
             new DateTime(1998, 12, 25),
@@ -833,7 +889,14 @@ namespace QuantConnect
             new DateTime(2013, 12, 25),
             new DateTime(2014, 12, 25),
             new DateTime(2015, 12, 25),
-            new DateTime(2016, 12, 25)
+            new DateTime(2016, 12, 25),
+            new DateTime(2017, 12, 25),
+            new DateTime(2018, 12, 25),
+            new DateTime(2019, 12, 25),
+            new DateTime(2020, 12, 25),
+            new DateTime(2021, 12, 25),
+            new DateTime(2022, 12, 26),
+            new DateTime(2023, 12, 26)
         };
     }
 }
