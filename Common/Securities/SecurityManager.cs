@@ -366,7 +366,13 @@ namespace QuantConnect.Securities
                     break;
 
                 case SecurityType.Option:
-                    security = new Option.Option(exchangeHours, config, securityPortfolioManager.CashBook[CashBook.AccountCurrency], symbolProperties);
+                    config.DataNormalizationMode = DataNormalizationMode.Raw;
+                    security = new Option.Option(exchangeHours, config, securityPortfolioManager.CashBook[CashBook.AccountCurrency], new Option.OptionSymbolProperties(symbolProperties));
+                    break;
+
+                case SecurityType.Future:
+                    config.DataNormalizationMode = DataNormalizationMode.Raw;
+                    security = new Future.Future(exchangeHours, config, securityPortfolioManager.CashBook[CashBook.AccountCurrency], symbolProperties);
                     break;
 
                 case SecurityType.Forex:
@@ -432,7 +438,8 @@ namespace QuantConnect.Securities
             bool addToSymbolCache = true
             )
         {
-            var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType);
+            var symbolValue = symbol.ID.SecurityType == SecurityType.Future ? symbol.Underlying.Value : symbol.Value;
+            var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbolValue, symbol.ID.SecurityType);
             var exchangeHours = marketHoursDbEntry.ExchangeHours;
 
             var defaultQuoteCurrency = CashBook.AccountCurrency;

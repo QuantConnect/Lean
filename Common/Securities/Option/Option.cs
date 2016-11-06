@@ -19,6 +19,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
+using QuantConnect.Orders.OptionExercise;
 
 namespace QuantConnect.Securities.Option
 {
@@ -45,25 +46,149 @@ namespace QuantConnect.Securities.Option
         /// <param name="quoteCurrency">The cash object that represent the quote currency</param>
         /// <param name="config">The subscription configuration for this security</param>
         /// <param name="symbolProperties">The symbol properties for this security</param>
-        public Option(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, Cash quoteCurrency, SymbolProperties symbolProperties)
+        public Option(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, Cash quoteCurrency, OptionSymbolProperties symbolProperties)
             : base(config,
                 quoteCurrency,
                 symbolProperties,
                 new OptionExchange(exchangeHours),
                 new OptionCache(),
-                new SecurityPortfolioModel(),
+                new OptionPortfolioModel(),
                 new ImmediateFillModel(),
                 new InteractiveBrokersFeeModel(),
                 new SpreadSlippageModel(),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
-                new SecurityMarginModel(2m),
+                new OptionMarginModel(),
                 new OptionDataFilter(),
                 new AdjustedPriceVariationModel()
                 )
         {
+            StrikePrice = Symbol.ID.StrikePrice;
+            ExerciseSettlement = SettlementType.PhysicalDelivery;
+            OptionExerciseModel = new DefaultExerciseModel();
             PriceModel = new CurrentPriceOptionPriceModel();
             ContractFilter = new StrikeExpiryOptionFilter(-5, 5, TimeSpan.Zero, TimeSpan.FromDays(35));
+            Holdings = new OptionHolding(this);
+            _symbolProperties = symbolProperties;
+        }
+
+
+        // save off a strongly typed version of symbol properties
+        private readonly OptionSymbolProperties _symbolProperties;
+
+        /// <summary>
+        /// Gets the strike price
+        /// </summary>
+        public decimal StrikePrice
+        {
+            get; set; 
+        }
+
+        /// <summary>
+        /// Gets the expiration date
+        /// </summary>
+        public DateTime Expiry
+        {
+            get { return Symbol.ID.Date; }
+        }
+
+        /// <summary>
+        /// Gets the right being purchased (call [right to buy] or put [right to sell])
+        /// </summary>
+        public OptionRight Right
+        {
+            get { return Symbol.ID.OptionRight; }
+        }
+
+        /// <summary>
+        /// Gets the option style
+        /// </summary>
+        public OptionStyle Style
+        {
+            get { return Symbol.ID.OptionStyle;  }
+        }
+
+        /// <summary>
+        /// When the holder of an equity option exercises one contract, or when the writer of an equity option is assigned 
+        /// an exercise notice on one contract, this unit of trade, usually 100 shares of the underlying security, changes hands.
+        /// </summary>
+        public int ContractUnitOfTrade
+        {
+            get
+            {
+                return _symbolProperties.ContractUnitOfTrade;
+            }
+            set
+            {
+                _symbolProperties.SetContractUnitOfTrade(value);
+            }
+        }
+        
+        /// <summary>
+        /// The contract multiplier for the option security
+        /// </summary>
+        public int ContractMultiplier
+        {
+            get
+            {
+                return (int)_symbolProperties.ContractMultiplier;
+            }
+            set
+            {
+                _symbolProperties.SetContractMultiplier(value);
+            }
+        }
+
+        /// <summary>
+        /// Aggregate exercise amount or aggregate contract value. It is the total amount of cash one will pay (or receive) for the shares of the 
+        /// underlying stock if he/she decides to exercise (or is assigned an exercise notice). This amount is not the premium paid or received for an equity option.
+        /// </summary>
+        public decimal GetAggregateExerciseAmount()
+        {
+            return StrikePrice * ContractMultiplier;
+        }
+
+        /// <summary>
+        /// Returns the actual number of the underlying shares that are going to change hands on exercise. For instance, after reverse split 
+        /// we may have 1 option contract with multiplier of 100 with right to buy/sell only 50 shares of underlying stock. 
+        /// </summary>
+        /// <returns></returns>
+        public int GetExerciseQuantity(int quantity)
+        {
+            return (int)(quantity * ContractUnitOfTrade / ContractMultiplier);
+        }
+
+        /// <summary>
+        /// Checks if option is eligible for automatic exercise on expiration
+        /// </summary>
+        public bool IsAutoExercised(decimal underlyingPrice)
+        {
+            return GetIntrinsicValue(underlyingPrice) >= 0.01m; 
+        }
+
+        /// <summary>
+        /// Intrinsic value function of the option
+        /// </summary>
+        public decimal GetIntrinsicValue(decimal underlyingPrice)
+        {
+            return Math.Max(0.0m, GetPayOff(underlyingPrice)); 
+        } 
+        /// <summary>
+        /// Option payoff function at expiration time
+        /// </summary>
+        /// <param name="underlyingPrice">The price of the underlying</param>
+        /// <returns></returns>
+        public decimal GetPayOff(decimal underlyingPrice)
+        {
+            return Right == OptionRight.Call ? underlyingPrice - StrikePrice : StrikePrice - underlyingPrice;
+        }
+        
+        /// <summary>
+        /// Specifies if option contract has physical or cash settlement on exercise
+        /// </summary>
+        public SettlementType ExerciseSettlement
+        {
+            get; set; 
         }
 
         /// <summary>
@@ -82,6 +207,13 @@ namespace QuantConnect.Securities.Option
             get; set;
         }
 
+        /// <summary>
+        /// Fill model used to produce fill events for this security
+        /// </summary>
+        public IOptionExerciseModel OptionExerciseModel
+        {
+            get; set;
+        }
         /// <summary>
         /// Gets or sets the contract filter
         /// </summary>
@@ -124,5 +256,6 @@ namespace QuantConnect.Securities.Option
         {
             ContractFilter = new StrikeExpiryOptionFilter(minStrike, maxStrike, minExpiry, maxExpiry);
         }
+
     }
 }

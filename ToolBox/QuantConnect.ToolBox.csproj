@@ -125,6 +125,7 @@
       <HintPath>..\packages\NodaTime.1.3.1\lib\net35-Client\NodaTime.dll</HintPath>
       <Private>True</Private>
     </Reference>
+
     <Reference Include="QuantConnect.Fxcm">
       <HintPath>..\Brokerages\Fxcm\QuantConnect.Fxcm.dll</HintPath>
     </Reference>
@@ -140,9 +141,23 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="NodaTime, Version=1.3.0.0, Culture=neutral, PublicKeyToken=4226afe0d9b296d1, processorArchitecture=MSIL">
+      <HintPath>..\packages\NodaTime.1.3.1\lib\net35-Client\NodaTime.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsParser.cs" />
+    <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesConverter.cs" />
+    <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesProcessor.cs" />
+    <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesReader.cs" />
+    <Compile Include="AlgoSeekFuturesConverter\Program.cs" />
+    <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsConverter.cs" />
+    <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsProcessor.cs" />
+    <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsReader.cs" />
     <Compile Include="AlgoSeekOptionsConverter\Program.cs" />
     <Compile Include="Bz2StreamProvider.cs" />
     <Compile Include="CoarseUniverseGenerator\Program.cs" />
@@ -162,6 +177,7 @@
     <Compile Include="GoogleDownloader\Program.cs" />
     <Compile Include="IDataProcessor.cs" />
     <Compile Include="IQFeed\IQFeedDataQueueHandler.cs" />
+    <Compile Include="IQFeed\IQFeedDataQueueUniverseProvider.cs" />
     <Compile Include="IQFeed\IQ\DataStructures.cs" />
     <Compile Include="IQFeed\IQ\IQAdminSocketClient.cs" />
     <Compile Include="IQFeed\IQ\IQConnect.cs" />
@@ -194,6 +210,9 @@
     <None Include="CoarseUniverseGenerator\config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="IQFeed\IQFeed-symbol-map.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -217,6 +236,10 @@
     <ProjectReference Include="..\Configuration\QuantConnect.Configuration.csproj">
       <Project>{0aeb4ea3-28c8-476e-89fd-926f06590b4c}</Project>
       <Name>QuantConnect.Configuration</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Engine\QuantConnect.Lean.Engine.csproj">
+      <Project>{12156f46-d07e-4e3d-ad2b-7409e82ab62f}</Project>
+      <Name>QuantConnect.Lean.Engine</Name>
     </ProjectReference>
     <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj">
       <Project>{01911409-86be-4e7d-9947-df714138610d}</Project>

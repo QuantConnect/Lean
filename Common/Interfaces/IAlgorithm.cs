@@ -395,6 +395,13 @@ namespace QuantConnect.Interfaces
         void OnOrderEvent(OrderEvent newEvent);
 
         /// <summary>
+        /// Option assignment event handler. On an option assignment event for short legs the resulting information is passed to this method.
+        /// </summary>
+        /// <param name="assignmentEvent">Option exercise event details containing details of the assignment</param>
+        /// <remarks>This method can be called asynchronously and so should only be used by seasoned C# experts. Ensure you use proper locks on thread-unsafe objects</remarks>
+        void OnAssignmentOrderEvent(OrderEvent assignmentEvent);
+
+        /// <summary>
         /// Brokerage message event handler. This method is called for all types of brokerage messages.
         /// </summary>
         void OnBrokerageMessage(BrokerageMessageEvent messageEvent);

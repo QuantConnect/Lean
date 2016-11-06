@@ -490,7 +490,7 @@ namespace QuantConnect
                         var entry = zip.FirstOrDefault(x => zipEntryName == null || string.Compare(x.FileName, zipEntryName, StringComparison.OrdinalIgnoreCase) == 0);
                         if (entry == null)
                         {
-                            Log.Error("Compression.Unzip(): Unable to locate zip entry with name: " + zipEntryName + " in file: " + filename);
+                            // Unable to locate zip entry 
                             return null;
                         }
 

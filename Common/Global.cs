@@ -45,6 +45,8 @@ namespace QuantConnect
         public const string US = "M/d/yyyy h:mm:ss tt";
         /// Date format of QC forex data
         public const string Forex = "yyyyMMdd HH:mm:ss.ffff";
+        /// YYYYMM Year and Month Character Date Representation (used for futures)
+        public const string YearMonth = "yyyyMM";
     }
 
     /// <summary>
@@ -320,7 +322,9 @@ namespace QuantConnect
         /// QuoteBar market data type [Bid(OHLC), Ask(OHLC) and Mid(OHLC) summary bar]
         QuoteBar,
         /// Option chain data
-        OptionChain
+        OptionChain,
+        /// Futures chain data
+        FuturesChain
     }
 
     /// <summary>
@@ -426,6 +430,22 @@ namespace QuantConnect
         /// European style options are able to be exercised on the expiration date only.
         /// </summary>
         European
+    }
+
+    /// <summary>
+    /// Specifies the type of settlement in derivative deals 
+    /// </summary>
+    public enum SettlementType
+    {
+        /// <summary>
+        /// Physical delivery of the underlying security 
+        /// </summary>
+        PhysicalDelivery, 
+        
+        /// <summary>
+        /// Cash is paid/received on settlement
+        /// </summary>
+        Cash
     }
 
     /// <summary>

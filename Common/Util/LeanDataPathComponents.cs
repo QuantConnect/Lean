@@ -147,6 +147,11 @@ namespace QuantConnect.Util
                     var tickerWithoutStyle = ticker.Substring(0, ticker.LastIndexOf("_"));
                     ticker = tickerWithoutStyle.Substring(0, tickerWithoutStyle.LastIndexOf("_"));
                 }
+                if (securityType == SecurityType.Future)
+                {
+                    // ticker_trade
+                    ticker = ticker.Substring(0, ticker.LastIndexOf("_"));
+                }
             }
             else
             {
@@ -162,6 +167,10 @@ namespace QuantConnect.Util
                 rawValue = withoutExtension.Substring(withoutExtension.LastIndexOf("_", StringComparison.Ordinal) + 1);
                 var style = (OptionStyle) Enum.Parse(typeof (OptionStyle), rawValue, true);
                 symbol = Symbol.CreateOption(ticker, market, style, OptionRight.Call | OptionRight.Put, 0, SecurityIdentifier.DefaultDate);
+            }
+            else if (securityType == SecurityType.Future)
+            {
+                symbol = Symbol.CreateFuture(ticker, market, SecurityIdentifier.DefaultDate);
             }
             else
             {

@@ -43,7 +43,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         public void ReturnsNullForNotFound()
         {
             var provider = new LocalDiskFactorFileProvider();
-            var factorFile = provider.Get(Symbol.Create("not - a - ticker", SecurityType.Equity, QuantConnect.Market.USA));
+            var factorFile = provider.Get(Symbol.Create("not-a-ticker", SecurityType.Equity, QuantConnect.Market.USA));
             Assert.IsNull(factorFile);
         }
     }

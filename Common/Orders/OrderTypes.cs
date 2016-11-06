@@ -48,7 +48,12 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Market on close type - executed on exchange close
         /// </summary>
-        MarketOnClose
+        MarketOnClose,
+
+        /// <summary>
+        /// Option Exercise Order Type
+        /// </summary>
+        OptionExercise
     }
 
 

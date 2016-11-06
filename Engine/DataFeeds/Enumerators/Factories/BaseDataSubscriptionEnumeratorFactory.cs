@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
@@ -30,6 +31,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     public class BaseDataSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory
     {
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
+        private readonly MapFileResolver _mapFileResolver;
+        private readonly IFactorFileProvider _factorFileProvider;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BaseDataSubscriptionEnumeratorFactory"/> class
+        /// </summary>
+        /// <param name="tradableDaysProvider">Function used to provide the tradable dates to be enumerator.
+        /// Specify null to default to <see cref="SubscriptionRequest.TradableDays"/></param>
+        public BaseDataSubscriptionEnumeratorFactory(MapFileResolver mapFileResolver, IFactorFileProvider factorFileProvider, Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null)
+        {
+            _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
+            _mapFileResolver = mapFileResolver;
+            _factorFileProvider = factorFileProvider;
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseDataSubscriptionEnumeratorFactory"/> class
@@ -51,15 +66,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         {
             var sourceFactory = (BaseData)Activator.CreateInstance(request.Configuration.Type);
 
-            return (
-                from date in _tradableDaysProvider(request)
-                let source = sourceFactory.GetSource(request.Configuration, date, false)
-                let factory = SubscriptionDataSourceReader.ForSource(source, dataFileProvider, request.Configuration, date, false)
-                let entriesForDate = factory.Read(source)
-                from entry in entriesForDate
-                select entry
-                )
-                .GetEnumerator();
+            foreach (var date in _tradableDaysProvider(request))
+            {
+                var currentSymbol = request.Configuration.MappedSymbol;
+                request.Configuration.MappedSymbol = GetMappedSymbol(request, date);
+                var source = sourceFactory.GetSource(request.Configuration, date, false);
+                request.Configuration.MappedSymbol = currentSymbol;
+                var factory = SubscriptionDataSourceReader.ForSource(source, dataFileProvider, request.Configuration, date, false);
+                var entriesForDate = factory.Read(source);
+                foreach(var entry in entriesForDate)
+                {
+                    yield return entry;
+                }
+            }
+        }
+        private string GetMappedSymbol(SubscriptionRequest request, DateTime date)
+        {
+            var config = request.Configuration;
+            var mapFile = config.Symbol.HasUnderlying ?
+                    _mapFileResolver.ResolveMapFile(config.Symbol.Underlying.ID.Symbol, config.Symbol.Underlying.ID.Date) :
+                    _mapFileResolver.ResolveMapFile(config.Symbol.ID.Symbol, config.Symbol.ID.Date);
+
+            return mapFile.GetMappedSymbol(date);
         }
     }
 }

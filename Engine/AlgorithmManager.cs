@@ -34,6 +34,7 @@ using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Lean.Engine
 {
@@ -880,13 +881,31 @@ namespace QuantConnect.Lean.Engine
                 // submit an order to liquidate on market close
                 if (delisting.Type == DelistingType.Warning)
                 {
-                    delistings.Add(delisting);
+	                SubmitOrderRequest request;
+
+	                delistings.Add(delisting);
                     Log.Trace("AlgorithmManager.Run(): Security delisting warning: " + delisting.Symbol.ID);
                     var security = algorithm.Securities[delisting.Symbol];
                     if (security.Holdings.Quantity == 0) continue;
-                    var submitOrderRequest = new SubmitOrderRequest(OrderType.MarketOnClose, security.Type, security.Symbol,
-                        -security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Liquidate from delisting");
-                    var ticket = algorithm.Transactions.ProcessRequest(submitOrderRequest);
+
+                    if (security.Type == SecurityType.Option)
+                    {
+                        var underlying = algorithm.Securities[security.Symbol.Underlying];
+                        var option = (Option)security;
+
+                        if (option.IsAutoExercised(underlying.Close))
+                            request = new SubmitOrderRequest(OrderType.OptionExercise, security.Type, security.Symbol, 
+                                security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Automatic option exercise on expiration");
+                        else
+                            request = new SubmitOrderRequest(OrderType.MarketOnClose, security.Type, security.Symbol,
+                                -security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Automatic option lapse on expiration");
+                    }
+                    else
+                    {
+                        request = new SubmitOrderRequest(OrderType.MarketOnClose, security.Type, security.Symbol,
+                            -security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Liquidate from delisting");
+                    }
+                    var ticket = algorithm.Transactions.ProcessRequest(request);
                     delisting.SetOrderTicket(ticket);
                 }
                 else

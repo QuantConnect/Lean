@@ -57,15 +57,15 @@ namespace QuantConnect.Tests
             var basicTemplateOptionsStatistics = new Dictionary<string, string>
             {
                 {"Total Trades", "2"},
-                {"Average Win", "18.70%"},
-                {"Average Loss", "0%"},
-                {"Compounding Annual Return", "79228162514264337593543950335%"},
-                {"Drawdown", "40.500%"},
-                {"Expectancy", "0"},
-                {"Net Profit", "18.700%"},
+                {"Average Win", "0%"},
+                {"Average Loss", "-3.85%"},
+                {"Compounding Annual Return", "-100.000%"},
+                {"Drawdown", "3.800%"},
+                {"Expectancy", "-1"},
+                {"Net Profit", "-3.850%"},
                 {"Sharpe Ratio", "0"},
-                {"Loss Rate", "0%"},
-                {"Win Rate", "100%"},
+                {"Loss Rate", "100%"},
+                {"Win Rate", "0%"},
                 {"Profit-Loss Ratio", "0"},
                 {"Alpha", "0"},
                 {"Beta", "0"},
@@ -353,6 +353,52 @@ namespace QuantConnect.Tests
                 {"Total Fees", "$13.91"},
             };
 
+            var optionSplitRegressionAlgorithmStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "2"},
+                {"Average Win", "0.00%"},
+                {"Average Loss", "0%"},
+                {"Compounding Annual Return", "0.210%"},
+                {"Drawdown", "0.500%"},
+                {"Expectancy", "0"},
+                {"Net Profit", "0.002%"},
+                {"Sharpe Ratio", "0.644"},
+                {"Loss Rate", "0%"},
+                {"Win Rate", "100%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "-0.013"},
+                {"Beta", "0"},
+                {"Annual Standard Deviation", "0.002"},
+                {"Annual Variance", "0"},
+                {"Information Ratio", "7.935"},
+                {"Tracking Error", "6.787"},
+                {"Treynor Ratio", "-5.187"},
+                {"Total Fees", "$0.00"},
+            };
+
+            var optionRenameRegressionAlgorithmStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "4"},
+                {"Average Win", "0%"},
+                {"Average Loss", "-0.02%"},
+                {"Compounding Annual Return", "0.313%"},
+                {"Drawdown", "0.000%"},
+                {"Expectancy", "-1"},
+                {"Net Profit", "0.004%"},
+                {"Sharpe Ratio", "3.992"},
+                {"Loss Rate", "100%"},
+                {"Win Rate", "0%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "0.003"},
+                {"Beta", "0"},
+                {"Annual Standard Deviation", "0.001"},
+                {"Annual Variance", "0"},
+                {"Information Ratio", "8.598"},
+                {"Tracking Error", "0.767"},
+                {"Treynor Ratio", "27.491"},
+                {"Total Fees", "$2.00"},
+            };
+
             return new List<AlgorithmStatisticsTestParameters>
             {
                 // CSharp
@@ -370,6 +416,8 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("HistoryAlgorithm", historyAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("CoarseFundamentalTop5Algorithm", coarseFundamentalTop5AlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("CoarseFineFundamentalRegressionAlgorithm", coarseFineFundamentalRegressionAlgorithmStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("OptionSplitRegressionAlgorithm", optionSplitRegressionAlgorithmStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("OptionRenameRegressionAlgorithm", optionRenameRegressionAlgorithmStatistics, Language.CSharp),
 
                 // FSharp
                 // new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.FSharp),

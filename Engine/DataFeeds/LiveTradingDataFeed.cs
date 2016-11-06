@@ -433,13 +433,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     // this enumerator allows the exchange to pump ticks into the 'back' of the enumerator,
                     // and the time sync loop can pull aggregated trade bars off the front
-                    var aggregator = new TradeBarBuilderEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider);
-                    _exchange.SetDataHandler(request.Configuration.Symbol, data =>
+                    switch (request.Configuration.TickType)
                     {
-                        aggregator.ProcessData((Tick) data);
-                        if (subscription != null) subscription.RealtimePrice = data.Value;
-                    });
-                    enumerator = aggregator;
+                        case TickType.Quote:
+                            var quoteBarAggregator = new QuoteBarBuilderEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider);
+                            _exchange.AddDataHandler(request.Configuration.Symbol, data =>
+                            {
+                                quoteBarAggregator.ProcessData((Tick)data);
+                                if (subscription != null) subscription.RealtimePrice = data.Value;
+                            });
+                            enumerator = quoteBarAggregator;
+                            break;
+                        case TickType.Trade:
+                        default:
+                            var tradeBarAggregator = new TradeBarBuilderEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider);
+                            _exchange.AddDataHandler(request.Configuration.Symbol, data =>
+                            {
+                                tradeBarAggregator.ProcessData((Tick)data);
+                                if (subscription != null) subscription.RealtimePrice = data.Value;
+                            });
+                            enumerator = tradeBarAggregator;
+                            break;
+                    }
                 }
                 else
                 {
@@ -487,7 +502,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // grab the relevant exchange hours
             var config = request.Universe.Configuration;
-
+            var localEndTime = request.EndTimeUtc.ConvertFromUtc(request.Security.Exchange.TimeZone);
             var tzOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
 
             IEnumerator<BaseData> enumerator;
@@ -538,6 +553,44 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     enqueable.Enqueue(data);
                 });
                 enumerator = enqueable;
+            }
+            else if (request.Universe is OptionChainUniverse)
+            {
+                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating option chain universe: " + config.Symbol.ToString());
+
+                Func<SubscriptionRequest, IEnumerator<BaseData>, IEnumerator<BaseData>> configure = (subRequest, input) =>
+                {
+                    // we check if input enumerator is an underlying enumerator. If yes, we subscribe it to the data.
+                    var aggregator = input as TradeBarBuilderEnumerator;
+
+                    if (aggregator != null)
+                    {
+                        _exchange.SetDataHandler(request.Configuration.Symbol, data =>
+                        {
+                            aggregator.ProcessData((Tick)data);
+                        });
+                    }
+
+                    return new LiveFillForwardEnumerator(_frontierTimeProvider, input, request.Security.Exchange, _fillForwardResolution, request.Configuration.ExtendedMarketHours, localEndTime, request.Configuration.Increment);
+                };
+
+                var symbolUniverse = _dataQueueHandler as IDataQueueUniverseProvider;
+
+                var enumeratorFactory = new OptionChainUniverseSubscriptionEnumeratorFactory(configure, symbolUniverse, _timeProvider);
+                enumerator = enumeratorFactory.CreateEnumerator(request, _dataFileProvider);
+
+                enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, tzOffsetProvider);
+            }
+            else if (request.Universe is FuturesChainUniverse)
+            {
+                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating futures chain universe: " + config.Symbol.ToString());
+
+                var symbolUniverse = _dataQueueHandler as IDataQueueUniverseProvider;
+
+                var enumeratorFactory = new FuturesChainUniverseSubscriptionEnumeratorFactory(symbolUniverse, _timeProvider);
+                enumerator = enumeratorFactory.CreateEnumerator(request, _dataFileProvider);
+
+                enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, tzOffsetProvider);
             }
             else
             {

@@ -39,6 +39,7 @@ using QuantConnect.Statistics;
 using QuantConnect.Util;
 using SecurityTypeMarket = System.Tuple<QuantConnect.SecurityType, string>;
 using System.Collections.Concurrent;
+using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Algorithm
 {
@@ -143,6 +144,9 @@ namespace QuantConnect.Algorithm
             SecurityInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(AccountType.Margin));
 
             CandlestickPatterns = new CandlestickPatterns(this);
+
+            // initialize trading calendar 
+            TradingCalendar = new TradingCalendar(Securities, _marketHoursDatabase);
         }
 
         /// <summary>
@@ -262,6 +266,15 @@ namespace QuantConnect.Algorithm
         public TimeRules TimeRules
         {
             get { return Schedule.TimeRules; }
+        }
+
+        /// <summary>
+        /// Gets trading calendar populated with trading events
+        /// </summary>
+        public TradingCalendar TradingCalendar
+        {
+            get;
+            private set;
         }
 
         /// <summary>
@@ -467,8 +480,7 @@ namespace QuantConnect.Algorithm
             // add option underlying securities if not present
             foreach (var option in Securities.Select(x => x.Value).OfType<Option>())
             {
-                var sid = option.Symbol.ID;
-                var underlying = QuantConnect.Symbol.Create(sid.Symbol, SecurityType.Equity, sid.Market);
+                var underlying = option.Symbol.Underlying;
                 Security equity;
                 if (!Securities.TryGetValue(underlying, out equity))
                 {
@@ -726,6 +738,16 @@ namespace QuantConnect.Algorithm
         public virtual void OnOrderEvent(OrderEvent orderEvent)
         {
    
+        }
+
+        /// <summary>
+        /// Option assignment event handler. On an option assignment event for short legs the resulting information is passed to this method.
+        /// </summary>
+        /// <param name="assignmentEvent">Option exercise event details containing details of the assignment</param>
+        /// <remarks>This method can be called asynchronously and so should only be used by seasoned C# experts. Ensure you use proper locks on thread-unsafe objects</remarks>
+        public virtual void OnAssignmentOrderEvent(OrderEvent assignmentEvent)
+        {
+
         }
 
         /// <summary>
@@ -1201,6 +1223,17 @@ namespace QuantConnect.Algorithm
         /// <param name="extendedMarketHours">ExtendedMarketHours send in data from 4am - 8pm, not used for FOREX</param>
         public Security AddSecurity(SecurityType securityType, string symbol, Resolution resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours)
         {
+            // if AddSecurity method is called to add an option or a future, we delegate a call to respective methods
+            if (securityType == SecurityType.Option)
+            {
+                return AddOption(symbol, resolution, market, fillDataForward, leverage);
+            }
+
+            if (securityType == SecurityType.Future)
+            {
+                return AddFuture(symbol, resolution, market, fillDataForward, leverage);
+            }
+
             try
             {
                 if (market == null)
@@ -1283,8 +1316,54 @@ namespace QuantConnect.Algorithm
             Universe universe;
             if (!UniverseManager.TryGetValue(canonicalSymbol, out universe))
             {
-                var settings = new UniverseSettings(resolution, leverage, false, false, TimeSpan.Zero);
+                var settings = new UniverseSettings(resolution, leverage, true, false, TimeSpan.Zero);
                 universe = new OptionChainUniverse(canonicalSecurity, settings, SecurityInitializer);
+                UniverseManager.Add(canonicalSymbol, universe);
+            }
+
+            return canonicalSecurity;
+        }
+
+        /// <summary>
+        /// Creates and adds a new <see cref="Future"/> security to the algorithm
+        /// </summary>
+        /// <param name="symbol">The futures contract symbol</param>
+        /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
+        /// <param name="market">The futures market, <seealso cref="Market"/>. Default is value null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
+        /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
+        /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
+        /// <returns>The new <see cref="Future"/> security</returns>
+        public Future AddFuture(string symbol, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m)
+        {
+            if (market == null)
+            {
+                if (!BrokerageModel.DefaultMarkets.TryGetValue(SecurityType.Future, out market))
+                {
+                    throw new Exception("No default market set for security type: " + SecurityType.Future);
+                }
+            }
+
+            Symbol canonicalSymbol;
+            var alias = "?" + symbol;
+            if (!SymbolCache.TryGetSymbol(alias, out canonicalSymbol))
+            {
+                canonicalSymbol = QuantConnect.Symbol.Create(symbol, SecurityType.Future, market, alias);
+            }
+
+            var marketHoursEntry = _marketHoursDatabase.GetEntry(market, symbol, SecurityType.Future);
+            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(market, symbol, SecurityType.Future, CashBook.AccountCurrency);
+            var canonicalSecurity = (Future)SecurityManager.CreateSecurity(typeof(ZipEntryName), Portfolio, SubscriptionManager,
+                marketHoursEntry.ExchangeHours, marketHoursEntry.DataTimeZone, symbolProperties, SecurityInitializer, canonicalSymbol, resolution,
+                fillDataForward, leverage, false, false, false, LiveMode, true, false);
+            canonicalSecurity.IsTradable = false;
+            Securities.Add(canonicalSecurity);
+
+            // add this security to the user defined universe
+            Universe universe;
+            if (!UniverseManager.TryGetValue(canonicalSymbol, out universe))
+            {
+                var settings = new UniverseSettings(resolution, leverage, true, false, TimeSpan.Zero);
+                universe = new FuturesChainUniverse(canonicalSecurity, settings, SecurityInitializer);
                 UniverseManager.Add(canonicalSymbol, universe);
             }
 

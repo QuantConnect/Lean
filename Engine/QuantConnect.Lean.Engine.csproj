@@ -178,7 +178,10 @@
     <Compile Include="DataFeeds\Enumerators\EnqueueableEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\BaseDataCollectionSubscriptionEnumeratorFactory.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\BaseDataSubscriptionEnumeratorFactory.cs" />
+    <Compile Include="DataFeeds\Enumerators\Factories\DataQueueFuturesChainUniverseDataCollectionEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\Factories\DataQueueOptionChainUniverseDataCollectionEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\FineFundamentalSubscriptionEnumeratorFactory.cs" />
+    <Compile Include="DataFeeds\Enumerators\Factories\FuturesChainUniverseSubscriptionEnumeratorFactory.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\OptionChainUniverseSubscriptionEnumeratorFactory.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\PostCreateConfigureSubscriptionEnumeratorFactory.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\SubscriptionDataReaderSubscriptionEnumeratorFactory.cs" />
@@ -187,11 +190,13 @@
     <Compile Include="DataFeeds\Enumerators\FillForwardEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\FrontierAwareEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\LiveFillForwardEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\FuturesChainUniverseDataCollectionAggregatorEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\OptionChainUniverseDataCollectionAggregatorEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\RateLimitEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\RefreshEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\SubscriptionFilterEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\SynchronizingEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\QuoteBarBuilderEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\TradeBarBuilderEnumerator.cs" />
     <Compile Include="DataFeeds\DefaultDataFileProvider.cs" />
     <Compile Include="DataFeeds\ISubscriptionDataSourceReader.cs" />
