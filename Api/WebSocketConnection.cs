@@ -18,19 +18,20 @@ namespace QuantConnect.Api
     /// </summary>
     public class WebSocketConnection
     {
-        private EventHandler _updateSubscriptions;
         private readonly ConcurrentQueue<BaseData> _baseDataFromServer = new ConcurrentQueue<BaseData>();
         private readonly HashSet<Symbol> _subscribedSymbols = new HashSet<Symbol>();
+        private EventHandler _updateSubscriptions;
 
         private readonly object _locker = new object();
-
         private volatile bool _connectionOpen;
-        private readonly string _liveDataUrl = Config.Get("live-data-url", "https://www.quantconnect.com/api/v2/live/data");
-        private readonly int _liveDataPort = Config.GetInt("live-data-port", 443);
+
         private const int MaxRetryAttempts = 10;
 
         private readonly int _userId;
         private readonly string _token;
+
+        private readonly string _liveDataUrl = Config.Get("live-data-url", "https://www.quantconnect.com/api/v2/live/data");
+        private readonly int _liveDataPort   = Config.GetInt("live-data-port", 443);
 
         /// <summary>
         /// Initialize a new WebSocketConnection instance
@@ -76,7 +77,7 @@ namespace QuantConnect.Api
 
                 if (symbolsToSubscribe.Count == 0)
                 {
-                    Log.Trace("ApiDataQueueHandler.Subscribe(): Cannot subscribe to requested symbols. Either symbols are not supported or requested subscriptions already exist.");
+                    Log.Trace("WebSocketConnection.Subscribe(): Cannot subscribe to requested symbols. Either symbols are not supported or requested subscriptions already exist.");
                     return;
                 }
 
@@ -109,7 +110,7 @@ namespace QuantConnect.Api
 
                 if (symbolsToUnsubscribe.Count == 0)
                 {
-                    Log.Trace("ApiDataQueueHandler.Unsubscribe(): Cannot unsubscribe from requested symbols. No existing subscriptions found for: {0}", string.Join(",", symbols.Select(x => x.Value)));
+                    Log.Trace("WebSocketConnection.Unsubscribe(): Cannot unsubscribe from requested symbols. No existing subscriptions found for: {0}", string.Join(",", symbols.Select(x => x.Value)));
                     return;
                 }
 
@@ -150,7 +151,7 @@ namespace QuantConnect.Api
                 symbol.ID.SecurityType != SecurityType.Cfd &&
                 symbol.ID.SecurityType != SecurityType.Forex)
             {
-                Log.Trace("ApiDataQueueHandler.CanSubscribe(): Unsupported security type, {0}.", symbol.ID.SecurityType);
+                Log.Trace("WebSocketConnection.CanSubscribe(): Unsupported security type, {0}.", symbol.ID.SecurityType);
                 return false;
             }
 
@@ -159,14 +160,14 @@ namespace QuantConnect.Api
                 symbol.ID.Market != Market.FXCM &&
                 symbol.ID.Market != Market.USA)
             {
-                Log.Trace("ApiDataQueueHandler.CanSubscribe(): Unsupported market, {0}.", symbol.ID.Market);
+                Log.Trace("WebSocketConnection.CanSubscribe(): Unsupported market, {0}.", symbol.ID.Market);
                 return false;
             }
 
             // ignore universe symbols
             if (symbol.Value.Contains("-UNIVERSE-"))
             {
-                Log.Trace("ApiDataQueueHandler.CanSubscribe(): Universe Symbols not supported.");
+                Log.Trace("WebSocketConnection.CanSubscribe(): Universe Symbols not supported.");
                 return false;
             };
 
@@ -177,7 +178,7 @@ namespace QuantConnect.Api
         /// <summary>
         /// Attempt to build the websocket connection to the server
         /// </summary>
-        public bool TryOpenSocketConnection()
+        private bool TryOpenSocketConnection()
         {
             if (_connectionOpen) return false;
 
@@ -220,12 +221,12 @@ namespace QuantConnect.Api
                         // Error has in web socket connection
                         ws.OnError += (sender, e) =>
                         {
-                            Log.Error("ApiDataQueueHandler.TryOpenSocketConnection(): Web socket connection error: {0}", e.Message);
+                            Log.Error("WebSocketConnection.TryOpenSocketConnection(): Web socket connection error: {0}", e.Message);
                             _connectionOpen = false;
                             if (connectionRetryAttempts < MaxRetryAttempts)
                             {
                                 Log.Trace(
-                                    "ApiDataQueueHandler.TryOpenSocketConnection(): Attempting to reconnect {0}/{1}",
+                                    "WebSocketConnection.TryOpenSocketConnection(): Attempting to reconnect {0}/{1}",
                                     connectionRetryAttempts, MaxRetryAttempts);
 
                                 connectionRetryAttempts++;
@@ -234,7 +235,7 @@ namespace QuantConnect.Api
                             else
                             {
                                 Log.Trace(
-                                    "ApiDataQueueHandler.TryOpenSocketConnection(): Could not reconnect to web socket server. " +
+                                    "WebSocketConnection.TryOpenSocketConnection(): Could not reconnect to web socket server. " +
                                     "Closing web socket.");
 
                                 _updateSubscriptions = null;
@@ -247,7 +248,7 @@ namespace QuantConnect.Api
                         ws.OnClose += (sender, e) =>
                         {
                             Log.Trace(
-                                "ApiDataQueueHandler.TryOpenSocketConnection(): Web socket connection closed: {0}, {1}",
+                                "WebSocketConnection.TryOpenSocketConnection(): Web socket connection closed: {0}, {1}",
                                 e.Code, e.Reason);
 
                             _connectionOpen = false;
@@ -255,7 +256,7 @@ namespace QuantConnect.Api
                             if (e.Code == (ushort)CloseStatusCode.Abnormal && connectionRetryAttempts < MaxRetryAttempts)
                             {
                                 Log.Trace(
-                                    "ApiDataQueueHandler.TryOpenSocketConnection(): Web socket was closed abnormally. " +
+                                    "WebSocketConnection.TryOpenSocketConnection(): Web socket was closed abnormally. " +
                                     "Attempting to reconnect {0}/{1}",
                                     connectionRetryAttempts, MaxRetryAttempts);
 
@@ -265,7 +266,7 @@ namespace QuantConnect.Api
                             else
                             {
                                 Log.Trace(
-                                    "ApiDataQueueHandler.TryOpenSocketConnection(): Could not reconnect to web socket server. " +
+                                    "WebSocketConnection.TryOpenSocketConnection(): Could not reconnect to web socket server. " +
                                     "Closing web socket.");
 
                                 _updateSubscriptions = null;
@@ -281,7 +282,7 @@ namespace QuantConnect.Api
                             {
                                 ws.Send(JsonConvert.SerializeObject(_subscribedSymbols));
                                 Log.Trace(
-                                    "ApiDataQueueHandler.TryOpenSocketConnection(): Opened web socket connection to: {0}",
+                                    "WebSocketConnection.TryOpenSocketConnection(): Opened web socket connection to: {0}",
                                     builder);
 
                                 // reset retry attempts
@@ -334,7 +335,7 @@ namespace QuantConnect.Api
             }
             catch (Exception err)
             {
-                Log.Error("ApiDataQueueHandler.DeserializeMessage(): {0}", err);
+                Log.Error("WebSocketConnection.DeserializeMessage(): {0}", err);
             }
 
             return Enumerable.Empty<BaseData>();
