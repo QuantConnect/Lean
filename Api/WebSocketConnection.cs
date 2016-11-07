@@ -2,12 +2,18 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using QuantConnect.API;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Logging;
+using QuantConnect.Orders;
+using RestSharp;
+using RestSharp.Authenticators;
 using WebSocketSharp;
 using WebSocketSharp.Net;
 
@@ -32,6 +38,7 @@ namespace QuantConnect.Api
 
         private readonly string _liveDataUrl = Config.Get("live-data-url", "https://www.quantconnect.com/api/v2/live/data");
         private readonly int _liveDataPort   = Config.GetInt("live-data-port", 443);
+        private static string _apiEndpoint = "https://www.quantconnect.com/api/v2/";
 
         /// <summary>
         /// Initialize a new WebSocketConnection instance
@@ -198,10 +205,10 @@ namespace QuantConnect.Api
                     {
                         if (webSocketSetupComplete) continue;
 
-                        var timeStamp = DateTime.Now.ToString(DateFormat.TwelveCharacter);
-                        var hash = Convert.ToBase64String((_token + ":" + timeStamp).ToSHA256().GetBytes());
+                        var timeStamp = (int)Time.TimeStamp();
+                        var hash = CreateSecureHash(timeStamp);
 
-                        ws.SetCookie(new Cookie("timeStamp", timeStamp));
+                        ws.SetCookie(new Cookie("TimeStamp", timeStamp.ToString()));
                         ws.SetCookie(new Cookie("token", hash));
                         ws.SetCookie(new Cookie("uid", _userId.ToString()));
 
@@ -345,5 +352,75 @@ namespace QuantConnect.Api
         {
             TypeNameHandling = TypeNameHandling.All
         };
+
+        /// <summary>
+        /// Generate a secure hash for the authorization headers.
+        /// </summary>
+        /// <returns>Time based hash of user token and timestamp.</returns>
+        private string CreateSecureHash(int timestamp)
+        {
+            // Create a new hash using current UTC timestamp.
+            // Hash must be generated fresh each time.
+            var data = string.Format("{0}:{1}", _token, timestamp);
+            return SHA256(data);
+        }
+
+        /// <summary>
+        /// Encrypt the token:time data to make our API hash.
+        /// </summary>
+        /// <param name="data">Data to be hashed by SHA256</param>
+        /// <returns>Hashed string.</returns>
+        private string SHA256(string data)
+        {
+            var crypt = new SHA256Managed();
+            var hash = new StringBuilder();
+            var crypto = crypt.ComputeHash(Encoding.UTF8.GetBytes(data), 0, Encoding.UTF8.GetByteCount(data));
+            foreach (var theByte in crypto)
+            {
+                hash.Append(theByte.ToString("x2"));
+            }
+            return hash.ToString();
+        }
+
+
+        /// <summary>
+        /// Check a hash for a specified user and timeStamp
+        /// </summary>
+        /// <param name="tStamp">TimeStamp as int</param>
+        /// <param name="hash">Precomputed hash</param>
+        /// <param name="uid">User Id</param>
+        /// <returns></returns>
+        public static bool CheckCredentials(string uid, int tStamp, string hash)
+        {
+            var request = new RestRequest("authenticate", Method.GET);
+            var client = new RestClient(_apiEndpoint);
+            try
+            {
+                request.AddHeader("Timestamp", tStamp.ToString());
+                client.Authenticator = new HttpBasicAuthenticator(uid, hash);
+
+                // Execute the authenticated REST API Call
+                var restsharpResponse = client.Execute(request);
+
+                // Use custom converter for deserializing live results data
+                JsonConvert.DefaultSettings = () => new JsonSerializerSettings
+                {
+                    Converters = { new LiveAlgorithmResultsJsonConverter(), new OrderJsonConverter() }
+                };
+
+                //Verify success
+                var result = JsonConvert.DeserializeObject<RestResponse>(restsharpResponse.Content);
+                if (!result.Success)
+                {
+                    return false;
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err, "Api.CheckCredentials(): Failed to make REST request.");
+                return false;
+            }
+            return true;
+        }
     }
 }
