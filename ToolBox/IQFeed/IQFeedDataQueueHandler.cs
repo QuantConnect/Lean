@@ -92,7 +92,7 @@ namespace QuantConnect.ToolBox.IQFeed
                     {
                         lock (_sync)
                         {
-                            Log.Trace("IQFeed.Subscribe(): LiveSubscribe Request: " + symbol.ToString());
+                            Log.Trace("IQFeed.Subscribe(): Subscribe Request: " + symbol.ToString());
 
                             var type = symbol.ID.SecurityType;
                             if (_symbols.Add(symbol))
@@ -101,7 +101,7 @@ namespace QuantConnect.ToolBox.IQFeed
                                 if (type == SecurityType.Forex) ticker += ".FXCM";
                                 _level1Port.Subscribe(ticker);
 
-                                Log.Trace("IQFeed.Subscribe(): LiveSubscribe Processed: " + symbol.ToString());
+                                Log.Trace("IQFeed.Subscribe(): Subscribe Processed: " + symbol.ToString());
                             }
                         }
                     }
