@@ -16,6 +16,7 @@
 using System;
 using System.Globalization;
 using System.IO;
+using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
@@ -26,6 +27,19 @@ namespace QuantConnect.Util
     /// </summary>
     public static class LeanData
     {
+        /// <summary>
+        /// Converts the specified base data instance into a lean data file csv line.
+        /// This method takes into account the fake that base data instances typically
+        /// are time stamped in the exchange time zone, but need to be written to disk
+        /// in the data time zone.
+        /// </summary>
+        public static string GenerateLine(IBaseData data, Resolution resolution, DateTimeZone exchangeTimeZone, DateTimeZone dataTimeZone)
+        {
+            var clone = data.Clone();
+            clone.Time = data.Time.ConvertTo(exchangeTimeZone, dataTimeZone);
+            return GenerateLine(clone, clone.Symbol.ID.SecurityType, resolution);
+        }
+
         /// <summary>
         /// Converts the specified base data instance into a lean data file csv line
         /// </summary>
