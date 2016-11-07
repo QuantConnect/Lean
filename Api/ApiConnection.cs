@@ -20,6 +20,7 @@ using Newtonsoft.Json;
 using QuantConnect.API;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Util;
 using RestSharp;
 using RestSharp.Authenticators;
 
@@ -84,7 +85,7 @@ namespace QuantConnect.Api
                 // Add the UTC timestamp to the request header.
                 // Timestamps older than 1800 seconds will not work.
                 var timestamp = (int)Time.TimeStamp();
-                var hash = CreateSecureHash(timestamp);
+                var hash = ApiExtensions.CreateSecureHash(timestamp, _token);
                 request.AddHeader("Timestamp", timestamp.ToString());
                 Client.Authenticator = new HttpBasicAuthenticator(_userId, hash);
                 
@@ -112,35 +113,6 @@ namespace QuantConnect.Api
                 return false;
             }
             return true;
-        }
-
-        /// <summary>
-        /// Generate a secure hash for the authorization headers.
-        /// </summary>
-        /// <returns>Time based hash of user token and timestamp.</returns>
-        private string CreateSecureHash(int timestamp)
-        {
-            // Create a new hash using current UTC timestamp.
-            // Hash must be generated fresh each time.
-            var data = string.Format("{0}:{1}", _token, timestamp);
-            return SHA256(data);
-        }
-
-        /// <summary>
-        /// Encrypt the token:time data to make our API hash.
-        /// </summary>
-        /// <param name="data">Data to be hashed by SHA256</param>
-        /// <returns>Hashed string.</returns>
-        private string SHA256(string data)
-        {
-            var crypt = new SHA256Managed();
-            var hash = new StringBuilder();
-            var crypto = crypt.ComputeHash(Encoding.UTF8.GetBytes(data), 0, Encoding.UTF8.GetByteCount(data));
-            foreach (var theByte in crypto)
-            {
-                hash.Append(theByte.ToString("x2"));
-            }
-            return hash.ToString();
         }
     }
 }

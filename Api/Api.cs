@@ -36,7 +36,7 @@ namespace QuantConnect.Api
     public class Api : IApi
     {
         private ApiConnection _connection;
-        private WebSocketConnection _socketConnection;
+        private ApiWebSocketConnection _socketConnection;
         private static MarketHoursDatabase _marketHoursDatabase;
         private string _dataFolder;
 
@@ -46,7 +46,7 @@ namespace QuantConnect.Api
         public virtual void Initialize(int userId, string token, string dataFolder)
         {
             _connection = new ApiConnection(userId, token);
-            _socketConnection = new WebSocketConnection(userId, token);
+            _socketConnection = new ApiWebSocketConnection(userId, token);
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             _dataFolder = dataFolder;
 

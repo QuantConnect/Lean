@@ -21,10 +21,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private readonly string _liveDataUrl = Config.Get("live-data-url", "wss://www.quantconnect.com/api/v2/live/data");
         private readonly int _liveDataPort = Config.GetInt("live-data-port", 443);
         private ApiDataQueueHandler _dataQueueHandler;
-        private MockServerBehavior _mockServerBehavior;
         private List<Symbol> _symbols;
-        private readonly int _userId = Config.GetInt("job-user-id");
-        private readonly string _token = Config.Get("api-access-token");
+        private MockServerBehavior _mockServerBehavior;
 
         [TestFixtureSetUp]
         public void Setup()
@@ -45,15 +43,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 _mockServer = new WebSocketServer(uriBuilder.ToString());
                 _mockServer.AddWebSocketService("/", () => _mockServerBehavior);
-                _mockServer.AuthenticationSchemes = AuthenticationSchemes.Basic;
-                _mockServer.UserCredentialsFinder = id => {
-                    var name = id.Name;
-
-                    // Return user name, password
-                    return name == _userId.ToString()
-                           ? new NetworkCredential(_userId.ToString(), _token)
-                           : null;
-                };
+                
                 Log.Trace("ApiDataQueueHandlerTests.Setup(): Starting the mock server.");
                 _mockServer.Start();
 
