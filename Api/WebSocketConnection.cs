@@ -2,26 +2,27 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using WebSocketSharp;
 using WebSocketSharp.Net;
 
 namespace QuantConnect.Api
 {
+    /// <summary>
+    /// Manages the web socket connection for live data
+    /// </summary>
     public class WebSocketConnection
     {
         private EventHandler _updateSubscriptions;
         private readonly ConcurrentQueue<BaseData> _baseDataFromServer = new ConcurrentQueue<BaseData>();
-        private readonly object _lockerSubscriptions = new object();
         private readonly HashSet<Symbol> _subscribedSymbols = new HashSet<Symbol>();
+
+        private readonly object _locker = new object();
 
         private volatile bool _connectionOpen;
         private readonly string _liveDataUrl = Config.Get("live-data-url", "https://www.quantconnect.com/api/v2/live/data");
@@ -48,7 +49,7 @@ namespace QuantConnect.Api
         /// <returns></returns>
         public IEnumerable<BaseData> GetLiveData()
         {
-            lock (_baseDataFromServer)
+            lock (_locker)
             {
                 List<BaseData> baseData = new List<BaseData>();
                 while (!_baseDataFromServer.IsEmpty)
@@ -67,7 +68,7 @@ namespace QuantConnect.Api
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
         public void Subscribe(IEnumerable<Symbol> symbols)
         {
-            lock (_lockerSubscriptions)
+            lock (_locker)
             {
                 var symbolsToSubscribe = (from symbol in symbols
                                           where !_subscribedSymbols.Contains(symbol) && CanSubscribe(symbol)
@@ -100,7 +101,7 @@ namespace QuantConnect.Api
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
         public void Unsubscribe(IEnumerable<Symbol> symbols)
         {
-            lock (_lockerSubscriptions)
+            lock (_locker)
             {
                 var symbolsToUnsubscribe = (from symbol in symbols
                                             where _subscribedSymbols.Contains(symbol)
@@ -196,21 +197,17 @@ namespace QuantConnect.Api
                     {
                         if (webSocketSetupComplete) continue;
 
-                        SHA1 sha = new SHA1CryptoServiceProvider();
-                        var timeStamp = DateTime.Now.ToString(DateFormat.EightCharacter);
-                        var hash = Convert.ToBase64String(
-                                        sha.ComputeHash(
-                                                Encoding.UTF8.GetBytes(
-                                                    Convert.ToBase64String(
-                                                        Encoding.UTF8.GetBytes("password" + ":" + timeStamp)))));
+                        var timeStamp = DateTime.Now.ToString(DateFormat.TwelveCharacter);
+                        var hash = Convert.ToBase64String((_token + ":" + timeStamp).ToSHA256().GetBytes());
 
                         ws.SetCookie(new Cookie("timeStamp", timeStamp));
                         ws.SetCookie(new Cookie("token", hash));
+                        ws.SetCookie(new Cookie("uid", _userId.ToString()));
 
                         // Message received from server
                         ws.OnMessage += (sender, e) =>
                         {
-                            lock (_baseDataFromServer)
+                            lock (_locker)
                             {
                                 var baseDatas = DeserializeMessage(e.Data);
                                 foreach (var baseData in baseDatas)
@@ -280,7 +277,7 @@ namespace QuantConnect.Api
                         // Connection opened
                         ws.OnOpen += (sender, e) =>
                         {
-                            lock (_lockerSubscriptions)
+                            lock (_locker)
                             {
                                 ws.Send(JsonConvert.SerializeObject(_subscribedSymbols));
                                 Log.Trace(
@@ -295,13 +292,12 @@ namespace QuantConnect.Api
                         // subscriptions have been updated
                         _updateSubscriptions += (sender, args) =>
                         {
-                            lock (_lockerSubscriptions)
+                            lock (_locker)
                             {
                                 if (ws != null) ws.Send(JsonConvert.SerializeObject(_subscribedSymbols));
                             }
                         };
 
-                        ws.SetCredentials(_userId.ToString(), _token, true);
                         ws.Connect();
 
                         webSocketSetupComplete = true;

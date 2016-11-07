@@ -18,7 +18,6 @@ using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
-using SocketApi = QuantConnect.Api.Api;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Queues
 {
@@ -27,19 +26,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
     /// </summary>
     public class ApiDataQueueHandler : IDataQueueHandler
     {
-        private readonly int _userId = Config.GetInt("job-user-id");
-        private readonly string _token = Config.Get("api-access-token");
-        private readonly string _dataFolder = Config.Get("data-folder");
-
-        private SocketApi _api;
+        private readonly Api.Api _api;
 
         /// <summary>
         /// Constructor that initializes Api Connection
         /// </summary>
         public ApiDataQueueHandler()
         {
-            _api = new SocketApi();
-            _api.Initialize(_userId, _token, _dataFolder);
+            _api = new Api.Api();
+            _api.Initialize(Config.GetInt("job-user-id", 0), Config.Get("api-access-token", ""), Config.Get("data-folder"));
         }
 
         /// <summary>

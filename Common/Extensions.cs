@@ -107,6 +107,22 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Extension method to convert a string to a SHA1 hash.
+        /// </summary>
+        /// <param name="str">String we want to SHA1 encode.</param>
+        /// <returns>SHA1 hash of a string</returns>
+        public static string ToSHA256(this string str)
+        {
+            var builder = new StringBuilder();
+            using (var sha = SHA256.Create())
+            {
+                var data = sha.ComputeHash(Encoding.UTF8.GetBytes(str));
+                foreach (var t in data) builder.Append(t.ToString("x2"));
+            }
+            return builder.ToString();
+        }
+
+        /// <summary>
         /// Extension method to automatically set the update value to same as "add" value for TryAddUpdate. 
         /// This makes the API similar for traditional and concurrent dictionaries.
         /// </summary>
