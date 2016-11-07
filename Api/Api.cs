@@ -582,7 +582,7 @@ namespace QuantConnect.Api
         /// Adds the specified symbols to the subscription
         /// </summary>
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        public void Subscribe(IEnumerable<Symbol> symbols)
+        public void LiveSubscribe(IEnumerable<Symbol> symbols)
         {
             _socketConnection.Subscribe(symbols);
         }
@@ -591,7 +591,7 @@ namespace QuantConnect.Api
         /// Removes the specified symbols to the subscription
         /// </summary>
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        public void Unsubscribe(IEnumerable<Symbol> symbols)
+        public void LiveUnsubscribe(IEnumerable<Symbol> symbols)
         {
             _socketConnection.Unsubscribe(symbols);
         }

@@ -53,7 +53,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
         public virtual void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
-            _api.Subscribe(symbols);
+            _api.LiveSubscribe(symbols);
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
         public virtual void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
-            _api.Unsubscribe(symbols);
+            _api.LiveUnsubscribe(symbols);
         }
     }
 }

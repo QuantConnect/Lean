@@ -277,12 +277,12 @@ namespace QuantConnect.Interfaces
         /// Adds the specified symbols to the subscription
         /// </summary>
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        void Subscribe(IEnumerable<Symbol> symbols);
+        void LiveSubscribe(IEnumerable<Symbol> symbols);
         /// <summary>
         /// Removes the specified symbols to the subscription
         /// </summary>
         /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        void Unsubscribe(IEnumerable<Symbol> symbols);
+        void LiveUnsubscribe(IEnumerable<Symbol> symbols);
         /// <summary>
         /// Get next ticks if they have arrived from the server.
         /// </summary>
