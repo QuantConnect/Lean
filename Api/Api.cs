@@ -19,6 +19,8 @@ using System.IO;
 using Newtonsoft.Json;
 using QuantConnect.API;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
@@ -34,6 +36,7 @@ namespace QuantConnect.Api
     public class Api : IApi
     {
         private ApiConnection _connection;
+        private WebSocketConnection _socketConnection;
         private static MarketHoursDatabase _marketHoursDatabase;
         private string _dataFolder;
 
@@ -43,6 +46,7 @@ namespace QuantConnect.Api
         public virtual void Initialize(int userId, string token, string dataFolder)
         {
             _connection = new ApiConnection(userId, token);
+            _socketConnection = new WebSocketConnection(userId, token);
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             _dataFolder = dataFolder;
 
@@ -572,6 +576,33 @@ namespace QuantConnect.Api
         public virtual void SendUserEmail(string algorithmId, string subject, string body)
         {
             //
+        }
+
+        /// <summary>
+        /// Adds the specified symbols to the subscription
+        /// </summary>
+        /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
+        public void Subscribe(IEnumerable<Symbol> symbols)
+        {
+            _socketConnection.Subscribe(symbols);
+        }
+
+        /// <summary>
+        /// Removes the specified symbols to the subscription
+        /// </summary>
+        /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
+        public void Unsubscribe(IEnumerable<Symbol> symbols)
+        {
+            _socketConnection.Unsubscribe(symbols);
+        }
+
+        /// <summary>
+        /// Get next ticks if they have arrived from the server.
+        /// </summary>
+        /// <returns>Array of <see cref="BaseData"/></returns>
+        public IEnumerable<BaseData> GetLiveData()
+        {
+            return _socketConnection.GetLiveData();
         }
 
         /// <summary>

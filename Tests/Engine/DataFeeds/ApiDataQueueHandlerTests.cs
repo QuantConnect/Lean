@@ -79,7 +79,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
         }
 
-        
         [Test]
         public void ApiDataQueueHandler_CanUnubscribeToSymbols_Successfully()
         {
