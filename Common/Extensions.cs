@@ -295,6 +295,46 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Breaks the specified string into csv components, works correctly with commas in data fields 
+        /// </summary>
+        /// <param name="str">The string to be broken into csv</param>
+        /// <param name="size">The expected size of the output list</param>
+        /// <returns>A list of the csv pieces</returns>
+        public static List<string> ToCsvData(this string str, int size = 4)
+        {
+            var csv = new List<string>(size);
+
+            int last = -1;
+            bool textDataField = false;
+
+            for (var i = 0; i < str.Length; i++)
+            {
+                switch (str[i])
+                {
+                    case '"':
+                        textDataField = !textDataField;
+                        break;
+                    case ',':
+                        if (!textDataField)
+                        {
+                            csv.Add(str.Substring(last + 1, (i - last)).Trim(' ', ','));
+                            last = i;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            if (last != str.Length - 1)
+            {
+                csv.Add(str.Substring(last + 1).Trim());
+            }
+
+            return csv;
+        }
+
+        /// <summary>
         /// Check if a number is NaN or equal to zero
         /// </summary>
         /// <param name="value">The double value to check</param>

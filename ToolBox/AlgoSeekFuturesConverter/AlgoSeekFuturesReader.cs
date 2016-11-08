@@ -33,6 +33,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         private Stream _stream;
         private StreamReader _streamReader;
         private HashSet<string> _symbolFilter;
+        private Dictionary<string, decimal> _symbolMultipliers;
 
         private readonly int _columnTimestamp = -1;
         private readonly int _columnSecID = -1;
@@ -46,13 +47,15 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         /// Enumerate through the lines of the algoseek files.
         /// </summary>
         /// <param name="file">BZ File for algoseek</param>
-        /// <param name="date">Reference date of the folder</param>
-        public AlgoSeekFuturesReader(string file, HashSet<string> symbolFilter = null)
+        /// <param name="symbolMultipliers">Symbol price multiplier</param>
+        /// <param name="symbolFilter">Symbol filter to apply, if any</param>
+        public AlgoSeekFuturesReader(string file, Dictionary<string, decimal> symbolMultipliers, HashSet<string> symbolFilter = null)
         {
             var streamProvider = StreamProvider.ForExtension(Path.GetExtension(file));
             _stream = streamProvider.Open(file).First();
             _streamReader = new StreamReader(_stream);
             _symbolFilter = symbolFilter;
+            _symbolMultipliers = symbolMultipliers.ToDictionary(); 
 
             // detecting column order in the file
             var header = _streamReader.ReadLine().ToCsv();
@@ -204,8 +207,10 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 var expirationYearMonth = new DateTime(expirationYear, expirationMonth, DateTime.DaysInMonth(expirationYear, expirationMonth));
                 var symbol = Symbol.CreateFuture(underlying, Market.USA, expirationYearMonth);
               
-                var price = csv[_columnPrice].ToDecimal() / 100000000m;
+                var price = csv[_columnPrice].ToDecimal() / 10000000000m;
                 var quantity = csv[_columnQuantity].ToInt32();
+
+                price *= _symbolMultipliers.ContainsKey(underlying) ? _symbolMultipliers[underlying] : 1.0m;
 
                 var tick = new Tick
                 {

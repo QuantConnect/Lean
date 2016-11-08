@@ -79,6 +79,8 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             var zipper = OS.IsWindows ? "C:/Program Files/7-Zip/7z.exe" : "7z";
             var random = new Random((int)DateTime.Now.Ticks);
 
+            var symbolMultipliers = LoadSymbolMultipliers();
+
             //Extract each file massively in parallel.
             Parallel.ForEach(files, parallelOptions, file =>
             {
@@ -108,7 +110,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 // var symbolFilter = symbolFilterNames.SelectMany(name => new[] { name, name + "1", name + ".1" }).ToHashSet();
                 // var reader = new AlgoSeekFuturesReader(csvFile, symbolFilter);
 
-                var reader = new AlgoSeekFuturesReader(csvFile);
+                var reader = new AlgoSeekFuturesReader(csvFile, symbolMultipliers);
                 if (start == DateTime.MinValue)
                 {
                     start = DateTime.Now;
@@ -165,6 +167,30 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             });
 
 
+        }
+
+        /// <summary>
+        /// Private method loads symbol multipliers from algoseek csv file
+        /// </summary>
+        /// <returns></returns>
+
+        private Dictionary<string, decimal> LoadSymbolMultipliers()
+        {
+            const int columnsCount = 4;
+            const int columnUnderlying = 0;
+            const int columnProductName = 1;
+            const int columnMultipleFactor = 2;
+            const int columnInfo = 3;
+
+            return File.ReadAllLines("AlgoSeekFuturesConverter/AlgoSeek.US.Futures.PriceMultipliers.1.1.csv")
+                    .Select(line => line.ToCsvData())
+                    // skipping empty fields
+                    .Where(line => !string.IsNullOrEmpty(line[columnUnderlying]) && 
+                                   !string.IsNullOrEmpty(line[columnMultipleFactor]))
+                    // skipping header
+                    .Skip(1)
+                    .ToDictionary(line => line[columnUnderlying],
+                                  line => System.Convert.ToDecimal(line[columnMultipleFactor]));
         }
 
         /// <summary>
