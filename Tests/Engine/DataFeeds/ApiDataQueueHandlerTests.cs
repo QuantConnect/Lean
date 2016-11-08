@@ -34,8 +34,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     public class ApiDataQueueHandlerTests
     {
         private WebSocketServer _mockServer;
-        private readonly string _liveDataUrl = Config.Get("live-data-url", "wss://www.quantconnect.com/api/v2/live/data");
-        private readonly int _liveDataPort = Config.GetInt("live-data-port", 443);
         private ApiDataQueueHandler _dataQueueHandler;
         private List<Symbol> _symbols;
         private MockServerBehavior _mockServerBehavior;
@@ -49,17 +47,20 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 Symbol.Create("AIG", SecurityType.Equity, Market.USA)
             };
 
+            Config.Set("live-data-url", "ws://127.0.0.1");
+            Config.Set("live-data-port", "8080");
+
             _mockServerBehavior = new MockServerBehavior();
             _dataQueueHandler = new ApiDataQueueHandler();
-            var liveDataUri = new Uri(_liveDataUrl);
+            var liveDataUri = new Uri(Config.Get("live-data-url"));
             var uriBuilder = new UriBuilder(liveDataUri);
-            uriBuilder.Port = _liveDataPort;
+            uriBuilder.Port = Config.Get("live-data-port").ToInt32();
 
             Task.Run(() =>
             {
                 _mockServer = new WebSocketServer(uriBuilder.ToString());
                 _mockServer.AddWebSocketService("/", () => _mockServerBehavior);
-                
+
                 Log.Trace("ApiDataQueueHandlerTests.Setup(): Starting the mock server.");
                 _mockServer.Start();
 
@@ -74,7 +75,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void ApiDataQueueHandler_CanSubscribeToSymbols_Successfully()
         {
             _dataQueueHandler.Subscribe(new LiveNodePacket(), _symbols);
-            
+
             // Give ApiDataQueueHandler at least one second to open the connection
             Thread.Sleep(1000);
 
