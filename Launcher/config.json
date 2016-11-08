@@ -50,8 +50,8 @@
   "api-access-token": "",
 
   // live data configuration
-  "live-data-url": "ws://127.0.0.1",
-  "live-data-port": 8080,
+  "live-data-url": "wss://127.0.0.1",
+  "live-data-port": 443,
 
   // interactive brokers configuration
   "ib-account": "DUxxxx",
