@@ -78,7 +78,7 @@ namespace QuantConnect.Api
             var connectionRetryAttempts = 0;
 
             var timeStamp = (int)Time.TimeStamp();
-            var hash = ApiExtensions.CreateSecureHash(timeStamp, _token);
+            var hash = Api.CreateSecureHash(timeStamp, _token);
 
             _ws.SetCookie(new Cookie("Timestamp", timeStamp.ToString()));
             _ws.SetCookie(new Cookie("hash", hash));

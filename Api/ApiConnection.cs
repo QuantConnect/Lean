@@ -85,7 +85,7 @@ namespace QuantConnect.Api
                 // Add the UTC timestamp to the request header.
                 // Timestamps older than 1800 seconds will not work.
                 var timestamp = (int)Time.TimeStamp();
-                var hash = ApiExtensions.CreateSecureHash(timestamp, _token);
+                var hash = Api.CreateSecureHash(timestamp, _token);
                 request.AddHeader("Timestamp", timestamp.ToString());
                 Client.Authenticator = new HttpBasicAuthenticator(_userId, hash);
                 
