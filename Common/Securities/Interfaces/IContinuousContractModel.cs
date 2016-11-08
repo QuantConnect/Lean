@@ -44,7 +44,7 @@ namespace QuantConnect.Securities.Interfaces
         /// e.g. 6BH15, 6BM15, 6BU15, 6BZ15 will result in one 6B continuous historical series for 2015
         /// </summary>
         /// <returns>Continuous prices</returns>
-        IEnumerator<BaseData> GetContinuousData(DateFormat dateTime);
+        IEnumerator<BaseData> GetContinuousData(DateTime dateTime);
 
         /// <summary>
         /// Returns the list of roll dates for the contract. 
@@ -57,6 +57,6 @@ namespace QuantConnect.Securities.Interfaces
         /// or null if none.
         /// </summary>
         /// <returns>Current symbol name</returns>
-        Symbol GetCurrentSymbol(DateFormat dateTime);
+        Symbol GetCurrentSymbol(DateTime dateTime);
     }
 }

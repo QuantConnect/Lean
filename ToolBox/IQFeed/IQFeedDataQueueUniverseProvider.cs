@@ -602,13 +602,17 @@ namespace QuantConnect.ToolBox.IQFeed
 
                 EventHandler<Level1FundamentalEventArgs> dataEventHandler = (sender, e) =>
                 {
-                    expiry = e.ExpirationDate;
-                    rootSymbol = e.ExchangeRoot;
-                    manualResetEvent.Set();
+                    if (e.Symbol == ticker)
+                    {
+                        expiry = e.ExpirationDate;
+                        rootSymbol = e.ExchangeRoot;
+
+                        manualResetEvent.Set();
+                    }
                 };
                 EventHandler<Level1SummaryUpdateEventArgs> noDataEventHandler = (sender, e) =>
                 {
-                    if (e.NotFound)
+                    if (e.Symbol == ticker && e.NotFound)
                     {
                         manualResetEvent.Set();
                     }
