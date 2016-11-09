@@ -69,11 +69,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var dataQueue = new ConcurrentQueue<BaseData>();
             var exchange = CreateExchange(dataQueue);
 
-            var untouchedHandler = new ManualResetEvent(true);
+            var touchedHandler = new AutoResetEvent(false);
 
             exchange.SetDataHandler(Symbols.SPY, spy =>
             {
-                untouchedHandler.Reset();
+                touchedHandler.Set();
             });
             exchange.RemoveDataHandler(Symbols.SPY);
 
@@ -81,7 +81,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             Task.Run(() => exchange.Start());
 
-            Assert.IsTrue(untouchedHandler.WaitOne(DefaultTimeout));
+            Assert.IsFalse(touchedHandler.WaitOne(DefaultTimeout));
         }
 
         [Test]
