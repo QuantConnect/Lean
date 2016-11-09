@@ -13,28 +13,24 @@
  * limitations under the License.
 */
 
-using NUnit.Framework;
 using QuantConnect.Data.Market;
-using QuantConnect.Indicators;
 
-namespace QuantConnect.Tests.Indicators
+namespace QuantConnect.Indicators
 {
-    [TestFixture]
-    public class MidPriceTests : CommonIndicatorTests<IBaseDataBar>
+    /// <summary>
+    /// The BarIndicator is an indicator that accepts IBaseDataBar data as its input.
+    /// 
+    /// This type is more of a shim/typedef to reduce the need to refer to things as IndicatorBase&lt;IBaseDataBar&gt;
+    /// </summary>
+    public abstract class BarIndicator : IndicatorBase<IBaseDataBar>
     {
-        protected override IndicatorBase<IBaseDataBar> CreateIndicator()
+        /// <summary>
+        /// Creates a new TradeBarIndicator with the specified name
+        /// </summary>
+        /// <param name="name">The name of this indicator</param>
+        protected BarIndicator(string name)
+            : base(name)
         {
-            return new MidPrice(5);
-        }
-
-        protected override string TestFileName
-        {
-            get { return "spy_midprice.txt"; }
-        }
-
-        protected override string TestColumnName
-        {
-            get { return "MIDPRICE_5"; }
         }
     }
 }

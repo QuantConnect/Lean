@@ -126,6 +126,20 @@ namespace QuantConnect.Tests.Indicators
         /// <param name="externalDataFilename"></param>
         /// <param name="targetColumn">The column with the correct answers</param>
         /// <param name="epsilon">The maximum delta between expected and actual</param>
+        public static void TestIndicator(IndicatorBase<IBaseDataBar> indicator, string externalDataFilename, string targetColumn, double epsilon = 1e-3)
+        {
+            TestIndicator(indicator, externalDataFilename, targetColumn, (i, expected) => Assert.AreEqual(expected, (double)i.Current.Value, epsilon, "Failed at " + i.Current.Time.ToString("o")));
+        }
+
+
+        /// <summary>
+        /// Compare the specified indicator against external data using the specificied comma delimited text file.
+        /// The 'Close' column will be fed to the indicator as input
+        /// </summary>
+        /// <param name="indicator">The indicator under test</param>
+        /// <param name="externalDataFilename"></param>
+        /// <param name="targetColumn">The column with the correct answers</param>
+        /// <param name="epsilon">The maximum delta between expected and actual</param>
         public static void TestIndicator(IndicatorBase<TradeBar> indicator, string externalDataFilename, string targetColumn, double epsilon = 1e-3)
         {
             TestIndicator(indicator, externalDataFilename, targetColumn, (i, expected) => Assert.AreEqual(expected, (double)i.Current.Value, epsilon, "Failed at " + i.Current.Time.ToString("o")));
@@ -144,6 +158,61 @@ namespace QuantConnect.Tests.Indicators
             where T : Indicator
         {
             TestIndicator(indicator, externalDataFilename, targetColumn, (i, expected) => Assert.AreEqual(expected, selector(indicator), epsilon, "Failed at " + i.Current.Time.ToString("o")));
+        }
+
+        /// <summary>
+        /// Compare the specified indicator against external data using the specified comma delimited text file.
+        /// The 'Close' column will be fed to the indicator as input
+        /// </summary>
+        /// <param name="indicator">The indicator under test</param>
+        /// <param name="externalDataFilename">The external CSV file name</param>
+        /// <param name="targetColumn">The column with the correct answers</param>
+        /// <param name="customAssertion">Sets custom assertion logic, parameter is the indicator, expected value from the file</param>
+        public static void TestIndicator(IndicatorBase<IBaseDataBar> indicator, string externalDataFilename, string targetColumn, Action<IndicatorBase<IBaseDataBar>, double> customAssertion)
+        {
+            // TODO : Collapse duplicate implementations -- type constraint shenanigans and after 4am
+
+            bool first = true;
+            int targetIndex = -1;
+            bool fileHasVolume = false;
+            foreach (var line in File.ReadLines(Path.Combine("TestData", externalDataFilename)))
+            {
+                var parts = line.Split(',');
+                if (first)
+                {
+                    fileHasVolume = parts[5].Trim() == "Volume";
+                    first = false;
+                    for (int i = 0; i < parts.Length; i++)
+                    {
+                        if (parts[i].Trim() == targetColumn)
+                        {
+                            targetIndex = i;
+                            break;
+                        }
+                    }
+                    continue;
+                }
+
+                var tradebar = new TradeBar
+                {
+                    Time = Time.ParseDate(parts[0]),
+                    Open = parts[1].ToDecimal(),
+                    High = parts[2].ToDecimal(),
+                    Low = parts[3].ToDecimal(),
+                    Close = parts[4].ToDecimal(),
+                    Volume = fileHasVolume ? long.Parse(parts[5], NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture) : 0
+                };
+
+                indicator.Update(tradebar);
+
+                if (!indicator.IsReady || parts[targetIndex].Trim() == string.Empty)
+                {
+                    continue;
+                }
+
+                double expected = double.Parse(parts[targetIndex], CultureInfo.InvariantCulture);
+                customAssertion.Invoke(indicator, expected);
+            }
         }
 
         /// <summary>
@@ -197,6 +266,26 @@ namespace QuantConnect.Tests.Indicators
                 double expected = double.Parse(parts[targetIndex], CultureInfo.InvariantCulture);
                 customAssertion.Invoke(indicator, expected);
             }
+        }
+
+        /// <summary>
+        /// Tests a reset of the specified indicator after processing external data using the specified comma delimited text file.
+        /// The 'Close' column will be fed to the indicator as input
+        /// </summary>
+        /// <param name="indicator">The indicator under test</param>
+        /// <param name="externalDataFilename">The external CSV file name</param>
+        public static void TestIndicatorReset(IndicatorBase<IBaseDataBar> indicator, string externalDataFilename)
+        {
+            foreach (var data in GetTradeBarStream(externalDataFilename, false))
+            {
+                indicator.Update(data);
+            }
+
+            Assert.IsTrue(indicator.IsReady);
+
+            indicator.Reset();
+
+            AssertIndicatorIsInDefaultState(indicator);
         }
 
         /// <summary>
@@ -280,7 +369,7 @@ namespace QuantConnect.Tests.Indicators
         /// </summary>
         /// <param name="indicator">The indicator to assert</param>
         public static void AssertIndicatorIsInDefaultState<T>(IndicatorBase<T> indicator)
-            where T : BaseData
+            where T : IBaseData
         {
             Assert.AreEqual(0m, indicator.Current.Value);
             Assert.AreEqual(DateTime.MinValue, indicator.Current.Time);

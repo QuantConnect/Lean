@@ -23,7 +23,7 @@ namespace QuantConnect.Indicators
     /// The Average Directional Movement Index Rating is calculated with the following formula:
     /// ADXR[i] = (ADX[i] + ADX[i - period + 1]) / 2
     /// </summary>
-    public class AverageDirectionalMovementIndexRating : TradeBarIndicator
+    public class AverageDirectionalMovementIndexRating : BarIndicator
     {
         private readonly int _period;
         private readonly AverageDirectionalIndex _adx;
@@ -64,7 +64,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(TradeBar input)
+        protected override decimal ComputeNextValue(IBaseDataBar input)
         {
             _adx.Update(input);
             _adxHistory.Add(_adx);

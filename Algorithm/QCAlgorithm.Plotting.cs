@@ -202,7 +202,7 @@ namespace QuantConnect.Algorithm
         /// <param name="indicators">The indicatorsto plot</param>
         /// <seealso cref="Plot(string,string,decimal)"/>
         public void Plot<T>(string chart, params IndicatorBase<T>[] indicators)
-            where T : BaseData
+            where T : IBaseData
         {
             foreach (var indicator in indicators)
             {
@@ -214,7 +214,7 @@ namespace QuantConnect.Algorithm
         /// Automatically plots each indicator when a new value is available
         /// </summary>
         public void PlotIndicator<T>(string chart, params IndicatorBase<T>[] indicators)
-            where T : BaseData
+            where T : IBaseData
         {
             foreach (var i in indicators)
             {
@@ -231,7 +231,7 @@ namespace QuantConnect.Algorithm
         /// Automatically plots each indicator when a new value is available, optionally waiting for indicator.IsReady to return true
         /// </summary>
         public void PlotIndicator<T>(string chart, bool waitForReady, params IndicatorBase<T>[] indicators)
-            where T : BaseData
+            where T : IBaseData
         {
             foreach (var i in indicators)
             {

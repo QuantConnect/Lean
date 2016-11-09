@@ -31,7 +31,7 @@ namespace QuantConnect.ToolBox
         /// Invoked for each piece of data from the source file
         /// </summary>
         /// <param name="data">The data to be processed</param>
-        void Process(BaseData data);
+        void Process(IBaseData data);
     }
 
     /// <summary>
@@ -42,7 +42,7 @@ namespace QuantConnect.ToolBox
         /// <summary>
         /// Creates a new data processor that will filter in input data before piping it into the specified processor
         /// </summary>
-        public static IDataProcessor FilteredBy(this IDataProcessor processor, Func<BaseData, bool> predicate)
+        public static IDataProcessor FilteredBy(this IDataProcessor processor, Func<IBaseData, bool> predicate)
         {
             return new FilteredDataProcessor(processor, predicate);
         }
@@ -97,7 +97,7 @@ namespace QuantConnect.ToolBox
             return secondRoot;
         }
 
-        private static IDataConsolidator CreateConsolidator(Resolution resolution, TickType tickType, BaseData data, bool sourceIsTick)
+        private static IDataConsolidator CreateConsolidator(Resolution resolution, TickType tickType, IBaseData data, bool sourceIsTick)
         {
             var securityType = data.Symbol.ID.SecurityType;
             switch (securityType)

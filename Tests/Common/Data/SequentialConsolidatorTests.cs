@@ -26,8 +26,8 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void SequentialConsolidatorsFiresAllEvents()
         {
-            var first = new IdentityDataConsolidator<BaseData>();
-            var second = new IdentityDataConsolidator<BaseData>();
+            var first = new IdentityDataConsolidator<IBaseData>();
+            var second = new IdentityDataConsolidator<IBaseData>();
             var sequential = new SequentialConsolidator(first, second);
 
             bool firstFired = false;
@@ -60,7 +60,7 @@ namespace QuantConnect.Tests.Common.Data
         public void SequentialConsolidatorAcceptsSubTypesForSecondInputType()
         {
             var first = new IdentityDataConsolidator<TradeBar>();
-            var second = new IdentityDataConsolidator<BaseData>();
+            var second = new IdentityDataConsolidator<IBaseData>();
             var sequential = new SequentialConsolidator(first, second);
 
 

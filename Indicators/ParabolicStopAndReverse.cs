@@ -22,10 +22,10 @@ namespace QuantConnect.Indicators
     /// Parabolic SAR Indicator 
     /// Based on TA-Lib implementation
     /// </summary>
-    public class ParabolicStopAndReverse : TradeBarIndicator
+    public class ParabolicStopAndReverse : BarIndicator
     {
         private bool _isLong;
-        private TradeBar _previousBar;
+        private IBaseDataBar _previousBar;
         private decimal _sar;
         private decimal _ep;
         private decimal _outputSar;
@@ -83,7 +83,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The trade bar input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(TradeBar input)
+        protected override decimal ComputeNextValue(IBaseDataBar input)
         {
             // On first iteration we can’t produce an SAR value so we save the current bar and return zero
             if (Samples == 1)
@@ -119,7 +119,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Initialize the indicator values 
         /// </summary>
-        private void Init(TradeBar currentBar)
+        private void Init(IBaseDataBar currentBar)
         {
             // init position
             _isLong = currentBar.Close >= _previousBar.Close;
@@ -141,7 +141,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Calculate indicator value when the position is long
         /// </summary>
-        private void HandleLongPosition(TradeBar currentBar)
+        private void HandleLongPosition(IBaseDataBar currentBar)
         {
             // Switch to short if the low penetrates the SAR value.
             if (currentBar.Low <= _sar)
@@ -203,7 +203,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Calculate indicator value when the position is short
         /// </summary>
-        private void HandleShortPosition(TradeBar currentBar)
+        private void HandleShortPosition(IBaseDataBar currentBar)
         {
             // Switch to long if the high penetrates the SAR value.
             if (currentBar.High >= _sar)

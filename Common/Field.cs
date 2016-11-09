@@ -27,7 +27,7 @@ namespace QuantConnect
         /// <summary>
         /// Gets a selector that selects the Open value
         /// </summary>
-        public static Func<BaseData, decimal> Open
+        public static Func<IBaseData, decimal> Open
         {
             get { return TradeBarPropertyOrValue(x => x.Open); }
         }
@@ -35,7 +35,7 @@ namespace QuantConnect
         /// <summary>
         /// Gets a selector that selects the High value
         /// </summary>
-        public static Func<BaseData, decimal> High
+        public static Func<IBaseData, decimal> High
         {
             get { return TradeBarPropertyOrValue(x => x.High); }
         }
@@ -43,7 +43,7 @@ namespace QuantConnect
         /// <summary>
         /// Gets a selector that selects the Low value
         /// </summary>
-        public static Func<BaseData, decimal> Low
+        public static Func<IBaseData, decimal> Low
         {
             get { return TradeBarPropertyOrValue(x => x.Low); }
         }
@@ -51,7 +51,7 @@ namespace QuantConnect
         /// <summary>
         /// Gets a selector that selects the Close value
         /// </summary>
-        public static Func<BaseData, decimal> Close
+        public static Func<IBaseData, decimal> Close
         {
             get { return x => x.Value; }
         }
@@ -59,7 +59,7 @@ namespace QuantConnect
         /// <summary>
         /// Defines an average price that is equal to (O + H + L + C) / 4
         /// </summary>
-        public static Func<BaseData, decimal> Average
+        public static Func<IBaseData, decimal> Average
         {
             get { return TradeBarPropertyOrValue(x => (x.Open + x.High + x.Low + x.Close) / 4m); }
         }
@@ -67,7 +67,7 @@ namespace QuantConnect
         /// <summary>
         /// Defines an average price that is equal to (H + L) / 2
         /// </summary>
-        public static Func<BaseData, decimal> Median
+        public static Func<IBaseData, decimal> Median
         {
             get { return TradeBarPropertyOrValue(x => (x.High + x.Low) / 2m); }
         }
@@ -75,7 +75,7 @@ namespace QuantConnect
         /// <summary>
         /// Defines an average price that is equal to (H + L + C) / 3
         /// </summary>
-        public static Func<BaseData, decimal> Typical
+        public static Func<IBaseData, decimal> Typical
         {
             get { return TradeBarPropertyOrValue(x => (x.High + x.Low + x.Close) / 3m); }
         }
@@ -83,7 +83,7 @@ namespace QuantConnect
         /// <summary>
         /// Defines an average price that is equal to (H + L + 2*C) / 4
         /// </summary>
-        public static Func<BaseData, decimal> Weighted
+        public static Func<IBaseData, decimal> Weighted
         {
             get { return TradeBarPropertyOrValue(x => (x.High + x.Low + 2 * x.Close) / 4m); }
         }
@@ -91,7 +91,7 @@ namespace QuantConnect
         /// <summary>
         /// Defines an average price that is equal to (2*O + H + L + 3*C)/7
         /// </summary>
-        public static Func<BaseData, decimal> SevenBar
+        public static Func<IBaseData, decimal> SevenBar
         {
             get { return TradeBarPropertyOrValue(x => (2*x.Open + x.High + x.Low + 3*x.Close)/7m); }
         }
@@ -99,12 +99,12 @@ namespace QuantConnect
         /// <summary>
         /// Gets a selector that selectors the Volume value
         /// </summary>
-        public static Func<BaseData, decimal> Volume
+        public static Func<IBaseData, decimal> Volume
         {
             get { return TradeBarPropertyOrValue(x => x.Volume, x => 0m); }
         }
 
-        private static Func<BaseData, decimal> TradeBarPropertyOrValue(Func<TradeBar, decimal> selector, Func<BaseData, decimal> defaultSelector = null)
+        private static Func<IBaseData, decimal> TradeBarPropertyOrValue(Func<TradeBar, decimal> selector, Func<IBaseData, decimal> defaultSelector = null)
         {
             return x =>
             {
