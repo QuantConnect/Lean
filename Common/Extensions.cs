@@ -107,6 +107,23 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Encrypt the token:time data to make our API hash.
+        /// </summary>
+        /// <param name="data">Data to be hashed by SHA256</param>
+        /// <returns>Hashed string.</returns>
+        public static string ToSHA256(this string data)
+        {
+            var crypt = new SHA256Managed();
+            var hash = new StringBuilder();
+            var crypto = crypt.ComputeHash(Encoding.UTF8.GetBytes(data), 0, Encoding.UTF8.GetByteCount(data));
+            foreach (var theByte in crypto)
+            {
+                hash.Append(theByte.ToString("x2"));
+            }
+            return hash.ToString();
+        }
+
+        /// <summary>
         /// Extension method to automatically set the update value to same as "add" value for TryAddUpdate. 
         /// This makes the API similar for traditional and concurrent dictionaries.
         /// </summary>
@@ -195,8 +212,8 @@ namespace QuantConnect
         /// as a decimal, then the closest decimal value will be returned</returns>
         public static decimal SafeDecimalCast(this double input)
         {
-            if (input <= (double) decimal.MinValue) return decimal.MinValue;
-            if (input >= (double) decimal.MaxValue) return decimal.MaxValue;
+            if (input <= (double) Decimal.MinValue) return Decimal.MinValue;
+            if (input >= (double) Decimal.MaxValue) return Decimal.MaxValue;
             return (decimal) input;
         }
 
@@ -300,7 +317,7 @@ namespace QuantConnect
         /// <param name="value">The double value to check</param>
         public static bool IsNaNOrZero(this double value)
         {
-            return double.IsNaN(value) || Math.Abs(value) < double.Epsilon;
+            return Double.IsNaN(value) || Math.Abs(value) < Double.Epsilon;
         }
 
         /// <summary>
@@ -455,14 +472,14 @@ namespace QuantConnect
         /// <returns>The time in terms of the to time zone</returns>
         public static DateTime ConvertTo(this DateTime time, DateTimeZone from, DateTimeZone to, bool strict = false)
         {
-            if (ReferenceEquals(from, to)) return time;
+            if (ReferenceEquals(@from, to)) return time;
 
             if (strict)
             {
-                return from.AtStrictly(LocalDateTime.FromDateTime(time)).WithZone(to).ToDateTimeUnspecified();
+                return @from.AtStrictly(LocalDateTime.FromDateTime(time)).WithZone(to).ToDateTimeUnspecified();
             }
             
-            return from.AtLeniently(LocalDateTime.FromDateTime(time)).WithZone(to).ToDateTimeUnspecified();
+            return @from.AtLeniently(LocalDateTime.FromDateTime(time)).WithZone(to).ToDateTimeUnspecified();
         }
 
         /// <summary>
@@ -488,10 +505,10 @@ namespace QuantConnect
         {
             if (strict)
             {
-                return from.AtStrictly(LocalDateTime.FromDateTime(time)).ToDateTimeUtc();
+                return @from.AtStrictly(LocalDateTime.FromDateTime(time)).ToDateTimeUtc();
             }
 
-            return from.AtLeniently(LocalDateTime.FromDateTime(time)).ToDateTimeUtc();
+            return @from.AtLeniently(LocalDateTime.FromDateTime(time)).ToDateTimeUtc();
         }
 
         /// <summary>
@@ -570,7 +587,7 @@ namespace QuantConnect
             {
                 var genericArguments = type.GetGenericArguments();
                 var toBeReplaced = "`" + (genericArguments.Length);
-                name = name.Replace(toBeReplaced, "<" + string.Join(", ", genericArguments.Select(x => x.GetBetterTypeName())) + ">");
+                name = name.Replace(toBeReplaced, "<" + String.Join(", ", genericArguments.Select(x => x.GetBetterTypeName())) + ">");
             }
             return name;
         }
