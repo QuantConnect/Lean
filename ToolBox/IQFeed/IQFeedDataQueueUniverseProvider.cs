@@ -62,15 +62,16 @@ namespace QuantConnect.ToolBox.IQFeed
         // we have a special treatment of futures, because IQFeed renamed exchange tickers and doesn't include 
         // futures expiration dates in the symbol universe file. We fix this: 
         // We map those tickers back to their original names using the map below
-        private Dictionary<string, string> _iqFeedNameMap = new Dictionary<string, string>(); 
+        private Dictionary<string, string> _iqFeedNameMap = new Dictionary<string, string>();
 
-        // map of IQFeed exchange names to QC markets
+        // Map of IQFeed exchange names to QC markets
+        // Prioritized list of exchanges used to find right futures contract 
         private readonly Dictionary<string, string> _futuresExchanges = new Dictionary<string, string>
         {
             { "CME", Market.Globex },
             { "NYMEX", Market.NYMEX },
-            { "ICEFU", Market.ICE },
             { "CBOT", Market.CBOT },
+            { "ICEFU", Market.ICE },
             { "CFE", Market.CBOE  }
         };
 
@@ -141,23 +142,28 @@ namespace QuantConnect.ToolBox.IQFeed
                                             (securityExchange == null || x.SecurityExchange == securityExchange))
                                          .ToList();
 
-            bool onDemandRequests = false;
-            foreach (var symbolData in result)
-            {
-                // we check if the result contains the data that needs to be loaded on demand (e.g. options, futures)
-                if (!symbolData.IsDataLoaded())
-                {
-                    var loadedData = LoadSymbolOnDemand(symbolData);
+            bool onDemandRequests = result.All(symbolData => !symbolData.IsDataLoaded());
 
-                    // Replace placeholder item in _symbolUniverse with the data loaded on demand
-                    UpdateCollectionsOnDemand(symbolData, loadedData);
-                    onDemandRequests = true;
-                }
-            }
-
-            // if we found some data that was loaded on demand, then we have to re-run the query to include that data into method output
             if (onDemandRequests)
             {
+                var exchanges = securityType == SecurityType.Future ? 
+                                    _futuresExchanges.Values.Reverse().ToArray() : 
+                                    new string[] { };
+
+                // sorting list of available contracts by exchange priority, taking the top 1
+                var symbolData = 
+                    result
+                    .OrderByDescending(e => Array.IndexOf(exchanges, e))
+                    .First();
+
+                // we check if the result contains the data that needs to be loaded on demand (e.g. options, futures)
+                var loadedData = LoadSymbolOnDemand(symbolData);
+
+                // Replace placeholder item in _symbolUniverse with the data loaded on demand
+                UpdateCollectionsOnDemand(symbolData, loadedData);
+                
+                // if we found some data that was loaded on demand, then we have to re-run the query to include that data into method output
+
                 result = _symbolUniverse.Where(x => lookupFunc(x.Symbol) == lookupName &&
                                             x.Symbol.ID.SecurityType == securityType &&
                                             (securityCurrency == null || x.SecurityCurrency == securityCurrency) &&
@@ -193,8 +199,11 @@ namespace QuantConnect.ToolBox.IQFeed
 
             foreach (var symbolData in cleanData)
             {
-                _symbols.Add(symbolData.Symbol, symbolData.Ticker);
-                _tickers.Add(symbolData.Ticker, symbolData.Symbol);
+                if (!_symbols.ContainsKey(symbolData.Symbol))
+                    _symbols.Add(symbolData.Symbol, symbolData.Ticker);
+
+                if (!_tickers.ContainsKey(symbolData.Ticker))
+                    _tickers.Add(symbolData.Ticker, symbolData.Symbol);
             }
         }
 
@@ -367,7 +376,7 @@ namespace QuantConnect.ToolBox.IQFeed
                             }
                         }
 
-                        var market = Market.USA;
+                        var market = _futuresExchanges.ContainsKey(columns[columnExchange]) ? _futuresExchanges[columns[columnExchange]] : Market.USA;
                         canonicalSymbol = Symbol.Create(underlyingString, SecurityType.Future, market);
 
                         if (!symbolCache.ContainsKey(canonicalSymbol))
