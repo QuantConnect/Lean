@@ -423,7 +423,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                             {
                                 // error in message processing thread, log error and disconnect
                                 Log.Error("Error in message processing thread: " + error);
-                                Disconnect();
                             }
                         }
 
