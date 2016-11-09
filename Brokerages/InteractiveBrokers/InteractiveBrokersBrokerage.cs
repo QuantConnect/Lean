@@ -414,8 +414,17 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                         while (_client.ClientSocket.IsConnected())
                         {
-                            signal.waitForSignal();
-                            reader.processMsgs();
+                            try
+                            {
+                                signal.waitForSignal();
+                                reader.processMsgs();
+                            }
+                            catch (Exception error)
+                            {
+                                // error in message processing thread, log error and disconnect
+                                Log.Error("Error in message processing thread: " + error);
+                                Disconnect();
+                            }
                         }
 
                         Log.Trace("IB message processing thread ended.");
