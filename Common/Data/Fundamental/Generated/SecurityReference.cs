@@ -291,6 +291,8 @@ namespace QuantConnect.Data.Fundamental
 		/// <param name="previous">The previous instance</param>
 		public void UpdateValues(SecurityReference previous)
 		{
+			if (previous == null) return;
+
 		}
 	}
 }
