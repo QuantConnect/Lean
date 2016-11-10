@@ -146,6 +146,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _clientId = IncrementClientId();
             _agentDescription = agentDescription;
             _client = new IB.InteractiveBrokersClient();
+            
+            Log.Trace("InteractiveBrokersBrokerage.Constructor(): Server Version: " + _client.ClientSocket.ServerVersion);
 
             // set up event handlers
             _client.UpdatePortfolio += HandlePortfolioUpdates;
