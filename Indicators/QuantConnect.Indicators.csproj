@@ -122,6 +122,7 @@
     <Compile Include="FractalAdaptiveMovingAverage.cs" />
     <Compile Include="RegressionChannel.cs" />
     <Compile Include="SwissArmyKnife.cs" />
+    <Compile Include="TradeBarIndicator.cs" />
     <Compile Include="VolumeWeightedAveragePriceIndicator.cs" />
     <Compile Include="FisherTransform.cs" />
     <Compile Include="HeikinAshi.cs" />
@@ -181,7 +182,7 @@
     <Compile Include="SimpleMovingAverage.cs" />
     <Compile Include="MovingAverageTypeExtensions.cs" />
     <Compile Include="Maximum.cs" />
-    <Compile Include="TradeBarIndicator.cs" />
+    <Compile Include="BarIndicator.cs" />
     <Compile Include="WindowIndicator.cs" />
     <Compile Include="StandardDeviation.cs" />
     <Compile Include="BollingerBands.cs" />

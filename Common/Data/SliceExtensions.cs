@@ -67,7 +67,7 @@ namespace QuantConnect.Data
         /// <param name="symbol">The symbol to retrieve</param>
         /// <returns>An enumerable of T for the matching symbol, if no T is found for symbol, empty enumerable is returned</returns>
         public static IEnumerable<T> Get<T>(this IEnumerable<DataDictionary<T>> dataDictionaries, Symbol symbol)
-            where T : BaseData
+            where T : IBaseData
         {
             return dataDictionaries.Where(x => x.ContainsKey(symbol)).Select(x => x[symbol]);
         }
@@ -120,7 +120,7 @@ namespace QuantConnect.Data
         /// <param name="slices">The enumerable of slice</param>
         /// <returns>An enumerable of data dictionary of the requested type</returns>
         public static IEnumerable<DataDictionary<T>> Get<T>(this IEnumerable<Slice> slices)
-            where T : BaseData
+            where T : IBaseData
         {
             return slices.Select(x => x.Get<T>()).Where(x => x.Count > 0);
         }
@@ -133,7 +133,7 @@ namespace QuantConnect.Data
         /// <param name="symbol">The symbol to retrieve</param>
         /// <returns>An enumerable of T by accessing each slice for the requested symbol</returns>
         public static IEnumerable<T> Get<T>(this IEnumerable<Slice> slices, Symbol symbol)
-            where T : BaseData
+            where T : IBaseData
         {
             return slices.Select(x => x.Get<T>()).Where(x => x.ContainsKey(symbol)).Select(x => x[symbol]);
         }

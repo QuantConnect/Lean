@@ -198,7 +198,7 @@ namespace QuantConnect
         /// <summary>
         /// Function used to select a trade bar that has double the values of the input trade bar
         /// </summary>
-        private static TradeBar SelectorDoubleTradeBar(BaseData baseData)
+        private static TradeBar SelectorDoubleTradeBar(IBaseData baseData)
         {
             var bar = (TradeBar)baseData;
             return new TradeBar

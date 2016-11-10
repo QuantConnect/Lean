@@ -25,7 +25,7 @@ namespace QuantConnect.Indicators
     /// <typeparam name="T">The type of data input into this indicator</typeparam>
     [DebuggerDisplay("{ToDetailedString()}")]
     public abstract partial class IndicatorBase<T> : IIndicator<T>
-        where T : BaseData
+        where T : IBaseData
     {
         /// <summary>the most recent input that was given to this indicator</summary>
         private T _previousInput;
@@ -103,7 +103,7 @@ namespace QuantConnect.Indicators
         public virtual void Reset()
         {
             Samples = 0;
-            _previousInput = null;
+            _previousInput = default(T);
             Current = new IndicatorDataPoint(DateTime.MinValue, default(decimal));
         }
 

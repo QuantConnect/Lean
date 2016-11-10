@@ -152,7 +152,7 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         public IEnumerable<DataDictionary<T>> History<T>(TimeSpan span, Resolution? resolution = null)
-            where T : BaseData
+            where T : IBaseData
         {
             return History<T>(Securities.Keys, span, resolution).Memoize();
         }
@@ -167,7 +167,7 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, TimeSpan span, Resolution? resolution = null)
-            where T : BaseData
+            where T : IBaseData
         {
             return History<T>(symbols, Time - span, Time, resolution).Memoize();
         }
@@ -183,7 +183,7 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null) 
-            where T : BaseData
+            where T : IBaseData
         {
             var requests = symbols.Select(x =>
             {
@@ -209,7 +209,7 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null) 
-            where T : BaseData
+            where T : IBaseData
         {
             var requests = symbols.Select(x =>
             {
@@ -232,7 +232,7 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         public IEnumerable<T> History<T>(Symbol symbol, TimeSpan span, Resolution? resolution = null)
-            where T : BaseData
+            where T : IBaseData
         {
             return History<T>(symbol, Time - span, Time, resolution).Memoize();
         }
@@ -262,7 +262,7 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         public IEnumerable<T> History<T>(Symbol symbol, int periods, Resolution? resolution = null)
-            where T : BaseData
+            where T : IBaseData
         {
             if (resolution == Resolution.Tick) throw new ArgumentException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
             var security = Securities[symbol];
@@ -288,7 +288,7 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
         public IEnumerable<T> History<T>(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null)
-            where T : BaseData
+            where T : IBaseData
         {
             var security = Securities[symbol];
             // verify the types match

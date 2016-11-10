@@ -24,7 +24,7 @@ namespace QuantConnect.Indicators
     /// </summary>
     /// <typeparam name="T">The input type for this indicator</typeparam>
     public class FunctionalIndicator<T> : IndicatorBase<T>
-        where T : BaseData
+        where T : IBaseData
     {
         /// <summary>function implementation of the IndicatorBase.IsReady property</summary>
         private readonly Func<IndicatorBase<T>, bool> _isReady;

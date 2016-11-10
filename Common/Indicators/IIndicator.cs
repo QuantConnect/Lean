@@ -24,7 +24,7 @@ namespace QuantConnect.Indicators
     /// </summary>
     /// <typeparam name="T">The indicators input data type for the <see cref="Update"/> method</typeparam>
     public interface IIndicator<T> : IComparable<IIndicator<T>>, IComparable
-        where T : BaseData
+        where T : IBaseData
     {
         /// <summary>
         /// Event handler that fires after this indicator is updated

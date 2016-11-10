@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -13,28 +13,12 @@
  * limitations under the License.
 */
 
-using NUnit.Framework;
-using QuantConnect.Data.Market;
-using QuantConnect.Indicators;
-
-namespace QuantConnect.Tests.Indicators
+namespace QuantConnect.Data.Market
 {
-    [TestFixture]
-    public class MidPriceTests : CommonIndicatorTests<IBaseDataBar>
+    /// <summary>
+    /// Represents a type that is both a bar and base data
+    /// </summary>
+    public interface IBaseDataBar : IBaseData, IBar
     {
-        protected override IndicatorBase<IBaseDataBar> CreateIndicator()
-        {
-            return new MidPrice(5);
-        }
-
-        protected override string TestFileName
-        {
-            get { return "spy_midprice.txt"; }
-        }
-
-        protected override string TestColumnName
-        {
-            get { return "MIDPRICE_5"; }
-        }
     }
 }

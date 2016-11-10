@@ -152,6 +152,7 @@
     <Compile Include="Commands\OrderCommand.cs" />
     <Compile Include="Commands\QuitCommand.cs" />
     <Compile Include="Commands\UpdateOrderCommand.cs" />
+    <Compile Include="Data\Market\IBaseDataBar.cs" />
     <Compile Include="Data\Market\RenkoType.cs" />
     <Compile Include="Data\Custom\DailyFx.cs" />
     <Compile Include="Data\Fundamental\FineFundamental.cs" />

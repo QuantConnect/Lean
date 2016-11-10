@@ -22,7 +22,7 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     public abstract class CommonIndicatorTests<T> 
-        where T : BaseData, new()
+        where T : IBaseData
     {
         [Test]
         public virtual void ComparesAgainstExternalData()
@@ -46,6 +46,8 @@ namespace QuantConnect.Tests.Indicators
             var indicator = CreateIndicator();
             if (indicator is IndicatorBase<IndicatorDataPoint>)
                 TestHelper.TestIndicatorReset(indicator as IndicatorBase<IndicatorDataPoint>, TestFileName);
+            else if (indicator is IndicatorBase<IBaseDataBar>)
+                TestHelper.TestIndicatorReset(indicator as IndicatorBase<IBaseDataBar>, TestFileName);
             else if (indicator is IndicatorBase<TradeBar>)
                 TestHelper.TestIndicatorReset(indicator as IndicatorBase<TradeBar>, TestFileName);
             else
@@ -59,6 +61,8 @@ namespace QuantConnect.Tests.Indicators
         {
             if (indicator is IndicatorBase<IndicatorDataPoint>)
                 TestHelper.TestIndicator(indicator as IndicatorBase<IndicatorDataPoint>, TestFileName, TestColumnName, Assertion as Action<IndicatorBase<IndicatorDataPoint>, double>);
+            else if (indicator is IndicatorBase<IBaseDataBar>)
+                TestHelper.TestIndicator(indicator as IndicatorBase<IBaseDataBar>, TestFileName, TestColumnName, Assertion as Action<IndicatorBase<IBaseDataBar>, double>);
             else if (indicator is IndicatorBase<TradeBar>)
                 TestHelper.TestIndicator(indicator as IndicatorBase<TradeBar>, TestFileName, TestColumnName, Assertion as Action<IndicatorBase<TradeBar>, double>);
             else

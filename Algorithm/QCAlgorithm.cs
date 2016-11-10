@@ -1363,7 +1363,7 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">Resolution of the data</param>
         /// <remarks>Generic type T must implement base data</remarks>
         public void AddData<T>(string symbol, Resolution resolution = Resolution.Minute)
-            where T : BaseData, new()
+            where T : IBaseData, new()
         {
             if (_locked) return;
 
@@ -1384,7 +1384,7 @@ namespace QuantConnect.Algorithm
         /// <param name="leverage">Custom leverage per security</param>
         /// <remarks>Generic type T must implement base data</remarks>
         public void AddData<T>(string symbol, Resolution resolution, bool fillDataForward, decimal leverage = 1.0m)
-            where T : BaseData, new()
+            where T : IBaseData, new()
         {
             if (_locked) return;
 
@@ -1401,7 +1401,7 @@ namespace QuantConnect.Algorithm
         /// <param name="leverage">Custom leverage per security</param>
         /// <remarks>Generic type T must implement base data</remarks>
         public void AddData<T>(string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
-            where T : BaseData, new()
+            where T : IBaseData, new()
         {
             if (_locked) return;
 

@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Consolidators
     /// <typeparam name="T">The input type of the consolidator</typeparam>
     /// <typeparam name="TConsolidated">The output type of the consolidator</typeparam>
     public abstract class PeriodCountConsolidatorBase<T, TConsolidated> : DataConsolidator<T>
-        where T : class, IBaseData
+        where T : IBaseData
         where TConsolidated : BaseData
     {
         //The minimum timespan between creating new bars.
@@ -80,7 +80,7 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Gets a clone of the data being currently consolidated
         /// </summary>
-        public override BaseData WorkingData
+        public override IBaseData WorkingData
         {
             get { return _workingBar != null ? _workingBar.Clone() : null; }
         }

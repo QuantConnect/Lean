@@ -134,7 +134,7 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
         }
 
         [Test, TestCaseSource("PatternTestParameters")]
-        public void ComparesAgainstExternalData(IndicatorBase<TradeBar> indicator, string columnName, string testFileName)
+        public void ComparesAgainstExternalData(IndicatorBase<IBaseDataBar> indicator, string columnName, string testFileName)
         {
             TestHelper.TestIndicator(indicator, testFileName, columnName, Assertion);
         }
@@ -153,7 +153,7 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
             TestHelper.TestIndicatorReset(indicator, testFileName);
         }
 
-        private static Action<IndicatorBase<TradeBar>, double> Assertion
+        private static Action<IndicatorBase<IBaseDataBar>, double> Assertion
         {
             get
             {
