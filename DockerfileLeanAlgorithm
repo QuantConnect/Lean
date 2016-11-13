@@ -1,0 +1,38 @@
+#
+#	LEAN Algorithm Docker Container November-2016
+#	Cross platform deployment for multiple brokerages
+#
+
+FROM quantconnect/lean:foundation
+
+MAINTAINER QuantConnect <contact@quantconnect.com>
+
+#################################
+# Option 1: Download from Master
+# RUN \
+#	wget https://github.com/QuantConnect/Lean/archive/master.zip && \
+#	unzip master.zip ~/Lean && \
+#	cd ~/Lean
+# RUN \
+#	sed -i 's/4.5/4.0/' Algorithm.VisualBasic/QuantConnect.Algorithm.VisualBasic.vbproj && \
+#	wget https://nuget.org/nuget.exe && \
+#	mono nuget.exe restore QuantConnect.Lean.sln -NonInteractive && \
+#	xbuild /property:Configuration=Release && \
+#	cd ~/Lean/Launcher/bin/Release/
+#################################
+
+
+################################
+# Option 2: Run Local Binaries:
+COPY ./Data ~/Lean/Data
+COPY ./Launcher/bin/Release ~/Lean/Launcher/bin/Release
+#################################
+
+# Finally.
+WORKDIR ~/Lean/Launcher/bin/Release
+CMD [ "mono", "QuantConnect.Lean.Launcher.exe"] # Run app
+
+# Usage: 
+# docker build -t lean:foundation -f DockerfileLeanFoundation .
+# docker build -t lean:algorithm -f DockerfileLeanAlgorithm .
+# docker run lean:algorithm

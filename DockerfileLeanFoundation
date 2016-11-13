@@ -1,0 +1,52 @@
+#
+#	LEAN Foundation Docker Container November-2016
+#	Cross platform deployment for multiple brokerages	
+#	Intended to be used in conjunction with DockerfileLeanAlgorithm. This is just the foundation common OS+Dependencies required.
+#
+
+# Use base system for cleaning up wayward processes
+FROM phusion/baseimage:0.9.19
+
+MAINTAINER QuantConnect <contact@quantconnect.com>
+
+# Use baseimage-docker's init system.
+CMD ["/sbin/my_init"]
+
+# Install OS Packages:
+# Misc tools for running IB inside a headless container.
+RUN \
+  apt-get update && \
+  apt-get install -y dos2unix wget xvfb unzip curl libxrender1 libxtst6 libxi6 
+
+# Java for running IB inside container:
+# https://github.com/dockerfile/java/blob/master/oracle-java8/Dockerfile
+RUN \
+  echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | debconf-set-selections && \
+  add-apt-repository -y ppa:webupd8team/java && \
+  apt-get update && \
+  apt-get install -y oracle-java8-installer && \
+  rm -rf /var/lib/apt/lists/* && \
+  rm -rf /var/cache/oracle-jdk8-installer
+  
+# Install IB Gateway: Installs to ~/Jts
+RUN \
+	wget http://data.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64-v960.2a.sh && \
+	chmod +x ibgateway-latest-standalone-linux-x64-v960.2a.sh && \
+	./ibgateway-latest-standalone-linux-x64-v960.2a.sh -q && \
+	rm ibgateway-latest-standalone-linux-x64-v960.2a.sh
+	
+# Install IB Controller: Installs to ~/IBController
+RUN \
+	wget https://github.com/ib-controller/ib-controller/releases/download/3.2.0/IBController-3.2.0.zip && \
+	unzip IBController-3.2.0.zip -d ~/IBController && \
+	chmod -R +x ~/IBController && \
+	rm IBController-3.2.0.zip
+  
+# Mono C# for LEAN:
+# From https://github.com/mono/docker/blob/master/4.6.1.5/	
+RUN apt-get update && rm -rf /var/lib/apt/lists/*
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
+RUN echo "deb http://download.mono-project.com/repo/debian wheezy/snapshots/4.6.1.5 main" > /etc/apt/sources.list.d/mono-xamarin.list \
+  && apt-get update \
+  && apt-get install -y binutils mono-complete ca-certificates-mono fsharp mono-vbnc nuget referenceassemblies-pcl \
+  && rm -rf /var/lib/apt/lists/* /tmp/*
