@@ -50,7 +50,6 @@ namespace QuantConnect.Brokerages.Fxcm
         private readonly object _lockerConnectionMonitor = new object();
         private DateTime _lastReadyMessageTime;
         private volatile bool _connectionLost;
-        private volatile bool _connectionError;
 
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private readonly ConcurrentQueue<OrderEvent> _orderEventQueue = new ConcurrentQueue<OrderEvent>();
@@ -110,14 +109,21 @@ namespace QuantConnect.Brokerages.Fxcm
             {
                 while (!_cancellationTokenSource.IsCancellationRequested)
                 {
-                    OrderEvent orderEvent;
-                    if (!_orderEventQueue.TryDequeue(out orderEvent))
+                    try
                     {
-                        Thread.Sleep(1);
-                        continue;
-                    }
+                        OrderEvent orderEvent;
+                        if (!_orderEventQueue.TryDequeue(out orderEvent))
+                        {
+                            Thread.Sleep(1);
+                            continue;
+                        }
 
-                    OnOrderEvent(orderEvent);
+                        OnOrderEvent(orderEvent);
+                    }
+                    catch (Exception exception)
+                    {
+                        Log.Error(exception);
+                    }
                 }
             });
             _orderEventThread.Start();
@@ -168,38 +174,28 @@ namespace QuantConnect.Brokerages.Fxcm
                             elapsed = DateTime.UtcNow - _lastReadyMessageTime;
                         }
 
-                        if (!_connectionLost && elapsed > TimeSpan.FromSeconds(5))
+                        if (!_connectionLost && elapsed > TimeSpan.FromSeconds(10))
                         {
                             _connectionLost = true;
 
                             OnMessage(BrokerageMessageEvent.Disconnected("Connection with FXCM server lost. " +
                                                                          "This could be because of internet connectivity issues. "));
                         }
-                        else if (_connectionLost && elapsed <= TimeSpan.FromSeconds(5) && IsWithinTradingHours())
+                        else if (_connectionLost && IsWithinTradingHours())
                         {
-                            Log.Trace("FxcmBrokerage.Connect(): Attempting reconnection...");
-
-                            try
-                            {
-                                _gateway.relogin();
-
-                                _connectionLost = false;
-
-                                OnMessage(BrokerageMessageEvent.Reconnected("Connection with FXCM server restored."));
-                            }
-                            catch (Exception exception)
-                            {
-                                Log.Error(exception);
-                            }
-                        }
-                        else if (_connectionError && IsWithinTradingHours())
-                        {
-                            Log.Trace("FxcmBrokerage.Connect(): Attempting reconnection...");
+                            Log.Trace("FxcmBrokerage.ConnectionMonitorThread(): Attempting reconnection...");
 
                             try
                             {
                                 // log out
-                                _gateway.logout();
+                                try
+                                {
+                                    _gateway.logout();
+                                }
+                                catch (Exception)
+                                {
+                                    // ignored
+                                }
 
                                 // remove the message listeners
                                 _gateway.removeGenericMessageListener(this);
@@ -221,13 +217,13 @@ namespace QuantConnect.Brokerages.Fxcm
                                     LoadOpenPositions();
                                 }
 
-                                _connectionError = false;
                                 _connectionLost = false;
 
                                 OnMessage(BrokerageMessageEvent.Reconnected("Connection with FXCM server restored."));
                             }
                             catch (Exception exception)
                             {
+                                Log.Trace("FxcmBrokerage.ConnectionMonitorThread(): reconnect failed.");
                                 Log.Error(exception);
                             }
                         }
@@ -283,8 +279,15 @@ namespace QuantConnect.Brokerages.Fxcm
             if (_gateway != null)
             {
                 // log out
-                if (_gateway.isConnected())
-                    _gateway.logout();
+                try
+                {
+                    if (_gateway.isConnected())
+                        _gateway.logout();
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
 
                 // remove the message listeners
                 _gateway.removeGenericMessageListener(this);

@@ -509,11 +509,6 @@ namespace QuantConnect.Brokerages.Fxcm
                     {
                         _lastReadyMessageTime = DateTime.UtcNow;
                     }
-                    _connectionError = false;
-                    break;
-
-                case ISessionStatus.__Fields.STATUSCODE_ERROR:
-                    _connectionError = true;
                     break;
             }
         }
