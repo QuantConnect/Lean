@@ -126,13 +126,21 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             _resolution = resolution;
             _queue = new Queue<BaseData>();
             _dataDirectory = dataDirectory;
-            _consolidator = new TickConsolidator(resolution.ToTimeSpan());
 
             // Setup the consolidator for the requested resolution
             if (resolution == Resolution.Tick) throw new NotSupportedException();
-            if (tickType == TickType.Quote)
+
+            switch (tickType)
             {
-                _consolidator = new TickQuoteBarConsolidator(resolution.ToTimeSpan());
+                case TickType.Trade:
+                    _consolidator = new TickConsolidator(resolution.ToTimeSpan());
+                    break;
+                case TickType.Quote:
+                    _consolidator = new TickQuoteBarConsolidator(resolution.ToTimeSpan());
+                    break;
+                case TickType.OpenInterest:
+                    _consolidator = new OpenInterestConsolidator(resolution.ToTimeSpan());
+                    break;
             }
 
             // On consolidating the bars put the bar into a queue in memory to be written to disk later.

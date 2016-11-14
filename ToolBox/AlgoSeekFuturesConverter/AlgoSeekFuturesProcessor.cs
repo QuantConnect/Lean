@@ -45,7 +45,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         };
 
         /// <summary>
-        /// Zip entry name for the option contract
+        /// Zip entry name for the futures contract
         /// </summary>
         public string EntryPath
         {
@@ -61,7 +61,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         }
 
         /// <summary>
-        /// Zip file path for the option contract collection
+        /// Zip file path for the futures contract collection
         /// </summary>
         public string ZipPath
         {
@@ -101,7 +101,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         }
 
         /// <summary>
-        /// Type of this option processor. 
+        /// Type of this futures processor. 
         /// ASOP's are grouped trade type for file writing.
         /// </summary>
         public TickType TickType
@@ -126,13 +126,21 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             _resolution = resolution;
             _queue = new Queue<BaseData>();
             _dataDirectory = dataDirectory;
-            _consolidator = new TickConsolidator(resolution.ToTimeSpan());
 
             // Setup the consolidator for the requested resolution
             if (resolution == Resolution.Tick) throw new NotSupportedException();
-            if (tickType == TickType.Quote)
+
+            switch (tickType)
             {
-                _consolidator = new TickQuoteBarConsolidator(resolution.ToTimeSpan());
+                case TickType.Trade:
+                    _consolidator = new TickConsolidator(resolution.ToTimeSpan());
+                    break;
+                case TickType.Quote:
+                    _consolidator = new TickQuoteBarConsolidator(resolution.ToTimeSpan());
+                    break;
+                case TickType.OpenInterest:
+                    _consolidator = new OpenInterestConsolidator(resolution.ToTimeSpan());
+                    break;
             }
 
             // On consolidating the bars put the bar into a queue in memory to be written to disk later.
@@ -184,7 +192,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             {
                 if (_windowsRestrictedNames.Contains(symbol.Value.ToLower()))
                 {
-                    symbol = Symbol.CreateOption(SafeName(symbol.Underlying.Value), Market.USA, OptionStyle.American, symbol.ID.OptionRight, symbol.ID.StrikePrice, symbol.ID.Date);
+                    symbol = Symbol.CreateFuture(SafeName(symbol.Underlying.Value), Market.USA, symbol.ID.Date);
                 }
             }
             return symbol;

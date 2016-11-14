@@ -30,7 +30,7 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class FuturesChainUniverse : Universe
     {
-        private static readonly IReadOnlyList<TickType> QuotesAndTrades = new[] { TickType.Quote, TickType.Trade };
+        private static readonly IReadOnlyList<TickType> dataTypes = new[] { TickType.Quote, TickType.Trade, TickType.OpenInterest };
 
         private readonly Future _future;
         private readonly UniverseSettings _universeSettings;
@@ -90,7 +90,7 @@ namespace QuantConnect.Data.UniverseSelection
         public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(Security security, DateTime currentTimeUtc, DateTime maximumEndTimeUtc)
         {
             // we want to return both quote and trade subscriptions
-            return QuotesAndTrades
+            return dataTypes
                 .Select(tickType => new SubscriptionDataConfig(
                     objectType: GetDataType(UniverseSettings.Resolution, tickType),
                     symbol: security.Symbol,
@@ -166,6 +166,7 @@ namespace QuantConnect.Data.UniverseSelection
         private static Type GetDataType(Resolution resolution, TickType tickType)
         {
             if (resolution == Resolution.Tick) return typeof(Tick);
+            if (tickType == TickType.OpenInterest) return typeof(OpenInterest);
             if (tickType == TickType.Quote) return typeof(QuoteBar);
             return typeof(TradeBar);
         }

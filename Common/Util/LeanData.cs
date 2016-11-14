@@ -92,6 +92,11 @@ namespace QuantConnect.Util
                                 return ToCsv(milliseconds,
                                     Scale(tick.BidPrice), tick.BidSize, Scale(tick.AskPrice), tick.AskSize, tick.Exchange, tick.Suspicious ? "1" : "0");
                             }
+                            if (tick.TickType == TickType.OpenInterest)
+                            {
+                                return ToCsv(milliseconds,
+                                    Scale(tick.BidPrice), tick.BidSize, Scale(tick.AskPrice), tick.AskSize, tick.Exchange, tick.Suspicious ? "1" : "0");
+                            }
                             break;
 
                         case Resolution.Second:
@@ -110,6 +115,11 @@ namespace QuantConnect.Util
                                 return ToCsv(milliseconds,
                                     Scale(tradeBar.Open), Scale(tradeBar.High), Scale(tradeBar.Low), Scale(tradeBar.Close), tradeBar.Volume);
                             }
+                            var openInterest = data as OpenInterest;
+                            if (openInterest != null)
+                            {
+                                return ToCsv(milliseconds, openInterest.Value);
+                            }
                             break;
 
                         case Resolution.Hour:
@@ -127,6 +137,11 @@ namespace QuantConnect.Util
                             {
                                 return ToCsv(longTime,
                                     ToCsv(bigTradeBar), bigTradeBar.Volume);
+                            }
+                            var bigOpenInterest = data as OpenInterest;
+                            if (bigOpenInterest != null)
+                            {
+                                return ToCsv(milliseconds, bigOpenInterest.Value);
                             }
                             break;
 

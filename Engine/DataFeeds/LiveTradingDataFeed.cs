@@ -439,8 +439,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             var quoteBarAggregator = new QuoteBarBuilderEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider);
                             _exchange.AddDataHandler(request.Configuration.Symbol, data =>
                             {
-                                quoteBarAggregator.ProcessData((Tick)data);
-                                if (subscription != null) subscription.RealtimePrice = data.Value;
+                                var tick = data as Tick;
+
+                                if (tick.TickType == TickType.Quote)
+                                {
+                                    quoteBarAggregator.ProcessData(tick);
+                                    if (subscription != null) subscription.RealtimePrice = data.Value;
+                                }
                             });
                             enumerator = quoteBarAggregator;
                             break;
@@ -449,10 +454,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             var tradeBarAggregator = new TradeBarBuilderEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider);
                             _exchange.AddDataHandler(request.Configuration.Symbol, data =>
                             {
-                                tradeBarAggregator.ProcessData((Tick)data);
-                                if (subscription != null) subscription.RealtimePrice = data.Value;
+                                var tick = data as Tick;
+
+                                if (tick.TickType == TickType.Trade)
+                                {
+                                    tradeBarAggregator.ProcessData(tick);
+                                    if (subscription != null) subscription.RealtimePrice = data.Value;
+                                }
                             });
                             enumerator = tradeBarAggregator;
+                            break;
+                        case TickType.OpenInterest:
+                            var oiAggregator = new OpenInterestEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider);
+                            _exchange.AddDataHandler(request.Configuration.Symbol, data =>
+                            {
+                                var tick = data as Tick;
+
+                                if (tick.TickType == TickType.OpenInterest)
+                                {
+                                    oiAggregator.ProcessData(tick);
+                                }
+                            });
+                            enumerator = oiAggregator;
                             break;
                     }
                 }

@@ -256,6 +256,7 @@ namespace QuantConnect.Data.Market
                         break;
                     }
 
+                    case SecurityType.Future:
                     case SecurityType.Option:
                     {
                         var csv = line.ToCsv(7);
@@ -383,7 +384,8 @@ namespace QuantConnect.Data.Market
         {
             return (TickType == TickType.Trade && LastPrice > 0.0m && Quantity > 0) ||
                    (TickType == TickType.Quote && AskPrice > 0.0m && AskSize > 0) ||
-                   (TickType == TickType.Quote && BidPrice > 0.0m && BidSize > 0);
+                   (TickType == TickType.Quote && BidPrice > 0.0m && BidSize > 0) ||
+                   (TickType == TickType.OpenInterest && Value > 0);
         }
 
         /// <summary>

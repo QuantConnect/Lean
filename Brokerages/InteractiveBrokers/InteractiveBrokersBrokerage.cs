@@ -1559,7 +1559,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                                 var id = GetNextTickerId();
                                 var contract = CreateContract(subscribeSymbol);
-                                Client.ClientSocket.reqMktData(id, contract, string.Empty, false, new List<TagValue>());
+
+                                // we would like to receive OI (101)
+                                Client.ClientSocket.reqMktData(id, contract, "101", false, new List<TagValue>());
 
                                 _subscribedSymbols[symbol] = id;
                                 _subscribedTickets[id] = subscribeSymbol;
@@ -1633,7 +1635,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 (securityType == SecurityType.Option && market == Market.USA) ||
                 (securityType == SecurityType.Future);
         }
-
+        
         private void HandleTickPrice(object sender, IB.TickPriceEventArgs e)
         {
             Symbol symbol;
@@ -1765,6 +1767,21 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         
                     break;
 
+                case IBApi.TickType.OPEN_INTEREST:
+                case IBApi.TickType.OPTION_CALL_OPEN_INTEREST:
+                case IBApi.TickType.OPTION_PUT_OPEN_INTEREST:
+
+                    if (symbol.ID.SecurityType == SecurityType.Option || symbol.ID.SecurityType == SecurityType.Future)
+                    {
+                        if (!_openInterests.ContainsKey(symbol) || _openInterests[symbol] != e.Size)
+                        {
+                            tick.TickType = TickType.OpenInterest;
+                            tick.Value = e.Size;
+                            _openInterests[symbol] = e.Size;
+                        }
+                    }
+                    break;
+
                 default:
                     return;
             }
@@ -1818,6 +1835,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly ConcurrentDictionary<Symbol, int> _lastBidSizes = new ConcurrentDictionary<Symbol, int>();
         private readonly ConcurrentDictionary<Symbol, decimal> _lastAskPrices = new ConcurrentDictionary<Symbol, decimal>();
         private readonly ConcurrentDictionary<Symbol, int> _lastAskSizes = new ConcurrentDictionary<Symbol, int>();
+        private readonly ConcurrentDictionary<string, int> _openInterests = new ConcurrentDictionary<string, int>();
         private readonly List<Tick> _ticks = new List<Tick>();
 
 

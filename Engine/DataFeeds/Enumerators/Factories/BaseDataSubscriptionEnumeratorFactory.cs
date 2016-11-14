@@ -83,11 +83,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         private string GetMappedSymbol(SubscriptionRequest request, DateTime date)
         {
             var config = request.Configuration;
-            var mapFile = config.Symbol.HasUnderlying ?
-                    _mapFileResolver.ResolveMapFile(config.Symbol.Underlying.ID.Symbol, config.Symbol.Underlying.ID.Date) :
-                    _mapFileResolver.ResolveMapFile(config.Symbol.ID.Symbol, config.Symbol.ID.Date);
+            if (config.Symbol.ID.SecurityType == SecurityType.Option ||
+                config.Symbol.ID.SecurityType == SecurityType.Equity )
+            {
+                var mapFile = config.Symbol.HasUnderlying ?
+                        _mapFileResolver.ResolveMapFile(config.Symbol.Underlying.ID.Symbol, config.Symbol.Underlying.ID.Date) :
+                        _mapFileResolver.ResolveMapFile(config.Symbol.ID.Symbol, config.Symbol.ID.Date);
 
-            return mapFile.GetMappedSymbol(date);
+                return mapFile.GetMappedSymbol(date);
+            }
+            else
+            {
+                return config.MappedSymbol;
+            }
         }
     }
 }

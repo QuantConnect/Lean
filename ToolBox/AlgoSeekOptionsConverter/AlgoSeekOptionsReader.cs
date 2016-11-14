@@ -22,6 +22,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Util;
 using QuantConnect.Logging;
 using System.Globalization;
+using QuantConnect.Data;
 
 namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
 {
@@ -155,6 +156,9 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
 
                 switch (csv[_columnType])
                 {
+                    case "O":
+                        tickType = TickType.OpenInterest;
+                        break;
                     case "T":
                         tickType = TickType.Trade;
                         break;
@@ -182,6 +186,11 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                 if (_symbolFilter != null && !_symbolFilter.Contains(underlying))
                     return null;
 
+                if (string.IsNullOrEmpty(underlying))
+                {
+                    return null;
+                }
+
                 // ignoring time zones completely -- this is all in the 'data-time-zone'
                 var timeString = csv[_columnTimestamp];
                 var hours = timeString.Substring(0, 2).ToInt32();
@@ -206,34 +215,61 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                 var price = csv[_columnPremium].ToDecimal() / 10000m;
                 var quantity = csv[_columnQuantity].ToInt32();
 
-                var tick = new Tick
+                switch (tickType)
                 {
-                    Symbol = symbol,
-                    Time = time,
-                    TickType = tickType,
-                    Exchange = csv[_columnExchange],
-                    Value = price
-                };
+                    case TickType.Quote:
 
-                if (tickType == TickType.Quote)
-                {
-                    if (isAsk)
-                    {
-                        tick.AskPrice = price;
-                        tick.AskSize = quantity;
-                    }
-                    else
-                    {
-                        tick.BidPrice = price;
-                        tick.BidSize = quantity;
-                    }
-                }
-                else
-                {
-                    tick.Quantity = quantity;
+                        var tick = new Tick
+                        {
+                            Symbol = symbol,
+                            Time = time,
+                            TickType = tickType,
+                            Exchange = Market.USA,
+                            Value = price
+                        };
+
+                        if (isAsk)
+                        {
+                            tick.AskPrice = price;
+                            tick.AskSize = quantity;
+                        }
+                        else
+                        {
+                            tick.BidPrice = price;
+                            tick.BidSize = quantity;
+                        }
+
+                        return tick;
+
+                    case TickType.Trade:
+
+                        tick = new Tick
+                        {
+                            Symbol = symbol,
+                            Time = time,
+                            TickType = tickType,
+                            Exchange = Market.USA,
+                            Value = price,
+                            Quantity = quantity
+                        };
+
+                        return tick;
+
+                    case TickType.OpenInterest:
+
+                        tick = new Tick
+                        {
+                            Symbol = symbol,
+                            Time = time,
+                            TickType = tickType,
+                            Exchange = Market.USA,
+                            Value = quantity
+                        };
+
+                        return tick;
                 }
 
-                return tick;
+                return null;
             }
             catch(Exception err)
             {

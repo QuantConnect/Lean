@@ -177,7 +177,8 @@ namespace QuantConnect.Util
                 symbol = Symbol.Create(ticker, securityType, market);
             }
 
-            var tickType = filename.Contains("_quote") ? TickType.Quote : TickType.Trade;
+            var tickType = filename.Contains("_quote") ? TickType.Quote : (filename.Contains("_openinterest") ? TickType.OpenInterest : TickType.Trade);
+
             return new LeanDataPathComponents(securityType, market, resolution, symbol, filename, date, tickType);
         }
     }

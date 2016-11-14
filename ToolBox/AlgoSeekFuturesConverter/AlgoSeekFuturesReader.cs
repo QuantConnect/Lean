@@ -22,6 +22,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Util;
 using QuantConnect.Logging;
 using System.Globalization;
+using QuantConnect.Data;
 
 namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 {
@@ -139,6 +140,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             {
                 const int TradeMask = 2;
                 const int QuoteMask = 1;
+                const int OpenInterestMask = 11;
                 const int MessageTypeMask = 15;
 
                 // parse csv check column count
@@ -165,6 +167,10 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 if ((type & MessageTypeMask) == TradeMask)
                 {
                     tickType = TickType.Trade;
+                }
+                else if ((type & MessageTypeMask) == OpenInterestMask)
+                {
+                    tickType = TickType.OpenInterest;
                 }
                 else if ((type & MessageTypeMask) == QuoteMask)
                 {
@@ -194,11 +200,22 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                     return null;
                 }
 
+                if (string.IsNullOrEmpty(ticker))
+                {
+                    return null;
+                }
+
                 // ignoring time zones completely -- this is all in the 'data-time-zone'
                 var timeString = csv[_columnTimestamp];
                 var time = DateTime.ParseExact(timeString, "yyyyMMddHHmmssFFF", CultureInfo.InvariantCulture);
 
                 var parsed = SymbolRepresentation.ParseFutureTicker(ticker);
+
+                if (parsed == null)
+                {
+                    return null;
+                }
+
                 var underlying = parsed.Item1;
                 var expirationYearShort = parsed.Item2;
                 var expirationMonth = parsed.Item3;
@@ -212,34 +229,61 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 
                 price *= _symbolMultipliers.ContainsKey(underlying) ? _symbolMultipliers[underlying] : 1.0m;
 
-                var tick = new Tick
+                switch (tickType)
                 {
-                    Symbol = symbol,
-                    Time = time,
-                    TickType = tickType,
-                    Exchange = Market.USA,
-                    Value = price
-                };
+                    case TickType.Quote:
 
-                if (tickType == TickType.Quote)
-                {
-                    if (isAsk)
-                    {
-                        tick.AskPrice = price;
-                        tick.AskSize = quantity;
-                    }
-                    else
-                    {
-                        tick.BidPrice = price;
-                        tick.BidSize = quantity;
-                    }
+                        var tick = new Tick
+                        {
+                            Symbol = symbol,
+                            Time = time,
+                            TickType = tickType,
+                            Exchange = Market.USA,
+                            Value = price
+                        };
+
+                        if (isAsk)
+                        {
+                            tick.AskPrice = price;
+                            tick.AskSize = quantity;
+                        }
+                        else
+                        {
+                            tick.BidPrice = price;
+                            tick.BidSize = quantity;
+                        }
+
+                        return tick;
+
+                    case TickType.Trade:
+
+                        tick = new Tick
+                        {
+                            Symbol = symbol,
+                            Time = time,
+                            TickType = tickType,
+                            Exchange = Market.USA,
+                            Value = price,
+                            Quantity = quantity
+                        };
+
+                        return tick;
+
+                    case TickType.OpenInterest:
+
+                        tick = new Tick
+                        {
+                            Symbol = symbol,
+                            Time = time,
+                            TickType = tickType,
+                            Exchange = Market.USA,
+                            Value = quantity
+                        };
+
+                        return tick;
                 }
-                else
-                {
-                    tick.Quantity = quantity;
-                }
-             
-                return tick;
+
+                return null;
             }
             catch (Exception err)
             {

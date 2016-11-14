@@ -347,6 +347,7 @@ namespace QuantConnect.ToolBox.IQFeed
             private readonly Timer _timer;
             private readonly BlockingCollection<BaseData> _dataQueue;
             private readonly ConcurrentDictionary<string, double> _prices;
+            private readonly ConcurrentDictionary<string, int> _openInterests;
             private readonly IQFeedDataQueueUniverseProvider _symbolUniverse;
 
             public DateTime FeedTime
@@ -368,6 +369,7 @@ namespace QuantConnect.ToolBox.IQFeed
             {
                 start = DateTime.Now;
                 _prices = new ConcurrentDictionary<string, double>();
+                _openInterests = new ConcurrentDictionary<string, int>();
 
                 _dataQueue = dataQueue;
                 _symbolUniverse = symbolUniverse;
@@ -407,7 +409,6 @@ namespace QuantConnect.ToolBox.IQFeed
 
             private void OnLevel1FundamentalEvent(object sender, Level1FundamentalEventArgs e)
             {
-
                 // handle split data, they're only valid today, they'll show up around 4:45am EST
                 if (e.SplitDate1.Date == DateTime.Today && DateTime.Now.TimeOfDay.TotalHours <= 8) // they will always be sent premarket
                 {
@@ -475,6 +476,17 @@ namespace QuantConnect.ToolBox.IQFeed
 
                 _dataQueue.Add(tick);
                 _prices[e.Symbol] = e.Last;
+
+                if (symbol.ID.SecurityType == SecurityType.Option || symbol.ID.SecurityType == SecurityType.Future)
+                {
+                    if (!_openInterests.ContainsKey(e.Symbol) || _openInterests[e.Symbol] != e.OpenInterest)
+                    {
+                        var oi = new OpenInterest(time, symbol, e.OpenInterest);
+                        _dataQueue.Add(oi);
+
+                        _openInterests[e.Symbol] = e.OpenInterest;
+                    }
+                }
             }
 
             /// <summary>

@@ -133,16 +133,17 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                         List<AlgoSeekOptionsProcessor> symbolProcessors;
                         if (!processors.TryGetValue(tick.Symbol, out symbolProcessors))
                         {
-                            symbolProcessors = new List<AlgoSeekOptionsProcessor>(2)
+                            symbolProcessors = new List<AlgoSeekOptionsProcessor>(3)
                                         {
                                             new AlgoSeekOptionsProcessor(tick.Symbol, _referenceDate, TickType.Trade, _resolution, _destination),
-                                            new AlgoSeekOptionsProcessor(tick.Symbol, _referenceDate, TickType.Quote, _resolution, _destination)
+                                            new AlgoSeekOptionsProcessor(tick.Symbol, _referenceDate, TickType.Quote, _resolution, _destination),
+                                            new AlgoSeekOptionsProcessor(tick.Symbol, _referenceDate, TickType.OpenInterest, _resolution, _destination)
                                         };
 
                             processors[tick.Symbol] = symbolProcessors;
                         }
 
-                        // Pass current tick into processor: enum 0 = trade; 1 = quote.
+                        // Pass current tick into processor: enum 0 = trade; 1 = quote, , 2 = oi
                         symbolProcessors[(int)tick.TickType].Process(tick);
 
                         if (Interlocked.Increment(ref totalLinesProcessed) % 1000000m == 0)

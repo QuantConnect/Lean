@@ -385,18 +385,41 @@ namespace QuantConnect.Tests
                 {"Drawdown", "0.000%"},
                 {"Expectancy", "-1"},
                 {"Net Profit", "0.004%"},
-                {"Sharpe Ratio", "3.992"},
+                {"Sharpe Ratio", "3.657"},
                 {"Loss Rate", "100%"},
                 {"Win Rate", "0%"},
                 {"Profit-Loss Ratio", "0"},
-                {"Alpha", "0.003"},
+                {"Alpha", "0.002"},
                 {"Beta", "0"},
                 {"Annual Standard Deviation", "0.001"},
                 {"Annual Variance", "0"},
-                {"Information Ratio", "8.598"},
-                {"Tracking Error", "0.767"},
-                {"Treynor Ratio", "27.491"},
+                {"Information Ratio", "7.649"},
+                {"Tracking Error", "0.69"},
+                {"Treynor Ratio", "35.18"},
                 {"Total Fees", "$2.00"},
+            };
+
+            var optionOpenInterestRegressionAlgorithmStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "2"},
+                {"Average Win", "0%"},
+                {"Average Loss", "-0.01%"},
+                {"Compounding Annual Return", "-2.032%"},
+                {"Drawdown", "0.600%"},
+                {"Expectancy", "-1"},
+                {"Net Profit", "-0.010%"},
+                {"Sharpe Ratio", "-11.225"},
+                {"Loss Rate", "100%"},
+                {"Win Rate", "0%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "0"},
+                {"Beta", "-0.035"},
+                {"Annual Standard Deviation", "0.001"},
+                {"Annual Variance", "0"},
+                {"Information Ratio", "-11.225"},
+                {"Tracking Error", "0.033"},
+                {"Treynor Ratio", "0.355"},
+                {"Total Fees", "$0.00"},
             };
 
             return new List<AlgorithmStatisticsTestParameters>
@@ -418,6 +441,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("CoarseFineFundamentalRegressionAlgorithm", coarseFineFundamentalRegressionAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("OptionSplitRegressionAlgorithm", optionSplitRegressionAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("OptionRenameRegressionAlgorithm", optionRenameRegressionAlgorithmStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("OptionOpenInterestRegressionAlgorithm", optionOpenInterestRegressionAlgorithmStatistics, Language.CSharp),
 
                 // FSharp
                 // new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.FSharp),

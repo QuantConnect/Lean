@@ -569,6 +569,14 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Access to the open interest of the security today
+        /// </summary>
+        public virtual long OpenInterest
+        {
+            get { return Cache.OpenInterest; }
+        }
+
+        /// <summary>
         /// Get the last price update set to the security.
         /// </summary>
         /// <returns>BaseData object for this security</returns>

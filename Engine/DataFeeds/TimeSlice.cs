@@ -350,6 +350,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     BidSize = security.BidSize,
                     AskPrice = security.AskPrice,
                     AskSize = security.AskSize,
+                    OpenInterest = security.OpenInterest,
                     UnderlyingLastPrice = chain.Underlying.Price 
                 };
 
@@ -424,7 +425,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     BidPrice = security.BidPrice,
                     BidSize = security.BidSize,
                     AskPrice = security.AskPrice,
-                    AskSize = security.AskSize
+                    AskSize = security.AskSize,
+                    OpenInterest = security.OpenInterest
                 };
                 chain.Contracts[baseData.Symbol] = contract;
             }
@@ -490,6 +492,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     contract.BidSize = tick.BidSize;
                 }
             }
+            else if (tick.TickType == TickType.OpenInterest)
+            {
+                if (tick.Value != 0m)
+                {
+                    contract.OpenInterest = tick.Value;
+                }
+            }
         }
 
         private static void UpdateContract(FuturesContract contract, QuoteBar quote)
@@ -523,6 +532,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     contract.BidPrice = tick.BidPrice;
                     contract.BidSize = tick.BidSize;
+                }
+            }
+            else if (tick.TickType == TickType.OpenInterest)
+            {
+                if (tick.Value != 0m)
+                {
+                    contract.OpenInterest = tick.Value;
                 }
             }
         }

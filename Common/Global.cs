@@ -355,15 +355,17 @@ namespace QuantConnect
     }
 
     /// <summary>
-    /// Types of tick data - trades or quote ticks.
+    /// Types of tick data 
     /// </summary>
-    /// <remarks>QuantConnect currently only has trade tick data but can handle quote tick data with the same data structures.</remarks>
+    /// <remarks>QuantConnect currently only has trade, quote, open interest tick data.</remarks>
     public enum TickType
     {
         /// Trade type tick object.
         Trade,
         /// Quote type tick object.
-        Quote
+        Quote, 
+        /// Open Interest type tick object (for options, futures)
+        OpenInterest
     }
 
     /// <summary>
