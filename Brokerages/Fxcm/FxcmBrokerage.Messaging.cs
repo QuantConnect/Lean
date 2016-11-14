@@ -286,7 +286,6 @@ namespace QuantConnect.Brokerages.Fxcm
         /// </summary>
         private void OnMarketDataSnapshot(MarketDataSnapshot message)
         {
-            var time = FromJavaDate(message.getDate().toDate());
             var instrument = message.getInstrument();
             var securityType = _symbolMapper.GetBrokerageSecurityType(instrument.getSymbol());
             var symbol = _symbolMapper.GetLeanSymbol(instrument.getSymbol(), securityType, Market.FXCM);
@@ -294,6 +293,8 @@ namespace QuantConnect.Brokerages.Fxcm
             var isHistoryResponse = _pendingHistoryRequests.Contains(message.getRequestID());
             if (isHistoryResponse)
             {
+                var time = FromJavaDate(message.getDate().toDate());
+
                 // append ticks/bars to history
                 if (message.getFXCMTimingInterval() == FXCMTimingIntervalFactory.TICK)
                 {
@@ -322,6 +323,10 @@ namespace QuantConnect.Brokerages.Fxcm
                 // if instrument is subscribed, add ticks to list
                 if (_subscribedSymbols.Contains(symbol))
                 {
+                    // For some unknown reason, messages returned by SubscriptionRequestTypeFactory.SUBSCRIBE
+                    // have message.getDate() rounded to the second, so we use message.getMakingTime() instead
+                    var time = FromJavaDate(new java.util.Date(message.getMakingTime()));
+
                     var bidPrice = Convert.ToDecimal(message.getBidClose());
                     var askPrice = Convert.ToDecimal(message.getAskClose());
                     var tick = new Tick(time, symbol, bidPrice, askPrice);
