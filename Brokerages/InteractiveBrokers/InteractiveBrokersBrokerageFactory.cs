@@ -50,6 +50,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 data.Add("ib-account", Config.Get("ib-account"));
                 data.Add("ib-user-name", Config.Get("ib-user-name"));
                 data.Add("ib-password", Config.Get("ib-password"));
+                data.Add("ib-trading-mode", Config.Get("ib-trading-mode"));
                 data.Add("ib-agent-description", Config.Get("ib-agent-description"));
                 return data;
             }
