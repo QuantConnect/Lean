@@ -61,6 +61,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                     Config.Get("ib-tws-dir"),
                     Config.Get("ib-user-name"),
                     Config.Get("ib-password"),
+                    Config.Get("ib-trading-mode"),
                     Config.GetBool("ib-use-tws")
                     );
             }

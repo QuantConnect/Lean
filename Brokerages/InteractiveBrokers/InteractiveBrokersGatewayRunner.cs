@@ -44,6 +44,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Config.Get("ib-tws-dir"),
                 Config.Get("ib-user-name"),
                 Config.Get("ib-password"),
+                Config.Get("ib-trading-mode"),
                 Config.GetBool("ib-use-tws")
                 );
         }
@@ -53,10 +54,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         /// <param name="ibControllerDirectory">Directory to the IB controller installation</param>
         /// <param name="twsDirectory"></param>
-        /// <param name="userID">The log in user id</param>
+        /// <param name="userId">The log in user id</param>
         /// <param name="password">The log in password</param>
+        /// <param name="tradingMode">Live or Paper trading modes</param>
         /// <param name="useTws">True to use Trader Work Station, false to just launch the API gateway</param>
-        public static void Start(string ibControllerDirectory, string twsDirectory, string userID, string password, bool useTws = false)
+        public static void Start(string ibControllerDirectory, string twsDirectory, string userId, string password, string tradingMode, bool useTws = false)
         {
             var useTwsSwitch = useTws ? "TWS" : "GATEWAY";
             var batchFilename = Path.Combine("InteractiveBrokers", "run-ib-controller.bat");
@@ -65,9 +67,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             try
             {
                 var file = OS.IsWindows ? batchFilename : bashFilename;
-                var arguments = string.Format("{0} {1} {2} {3} {4} {5}", file, ibControllerDirectory, twsDirectory, userID, password, useTwsSwitch);
+                var arguments = string.Format("{0} {1} {2} {3} {4} {5} {6}", file, ibControllerDirectory, twsDirectory, userId, password, useTwsSwitch, tradingMode);
 
-                Log.Trace("InteractiveBrokersGatewayRunner.Start(): Launching IBController for account " + userID + "...");
+                Log.Trace("InteractiveBrokersGatewayRunner.Start(): Launching IBController for account " + userId + "...");
 
                 var processStartInfo = OS.IsWindows ? new ProcessStartInfo("cmd.exe", "/C " + arguments) : new ProcessStartInfo("bash", arguments);
 

@@ -81,8 +81,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var ibControllerDirectory = Config.Get("ib-controller-dir", "C:\\IBController");
 
             var account = Read<string>(job.BrokerageData, "ib-account", errors);
-            var userID = Read<string>(job.BrokerageData, "ib-user-name", errors);
+            var userId = Read<string>(job.BrokerageData, "ib-user-name", errors);
             var password = Read<string>(job.BrokerageData, "ib-password", errors);
+            var tradingMode = Read<string>(job.BrokerageData, "ib-trading-mode", errors);
             var agentDescription = Read<string>(job.BrokerageData, "ib-agent-description", errors);
 
             if (errors.Count != 0)
@@ -90,9 +91,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // if we had errors then we can't create the instance
                 throw new Exception(string.Join(Environment.NewLine, errors));
             }
-            
+
+            if (tradingMode == "")
+            {
+                throw new Exception("No trading mode selected. Please select either 'paper' or 'live' trading.");
+            }
+
             // launch the IB gateway
-            InteractiveBrokersGatewayRunner.Start(ibControllerDirectory, twsDirectory, userID, password, useTws);
+            InteractiveBrokersGatewayRunner.Start(ibControllerDirectory, twsDirectory, userId, password, tradingMode, useTws);
 
             var ib = new InteractiveBrokersBrokerage(algorithm.Transactions, algorithm.Portfolio, account, host, port, agentDescription);
             Composer.Instance.AddPart<IDataQueueHandler>(ib);
