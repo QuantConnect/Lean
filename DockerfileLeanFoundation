@@ -16,7 +16,7 @@ CMD ["/sbin/my_init"]
 # Misc tools for running IB inside a headless container.
 RUN \
   apt-get update && \
-  apt-get install -y dos2unix wget xvfb unzip curl libxrender1 libxtst6 libxi6 
+  apt-get install -y wget xvfb unzip curl libxrender1 libxtst6 libxi6 
 
 # Java for running IB inside container:
 # https://github.com/dockerfile/java/blob/master/oracle-java8/Dockerfile
@@ -37,10 +37,10 @@ RUN \
 	
 # Install IB Controller: Installs to ~/IBController
 RUN \
-	wget https://github.com/ib-controller/ib-controller/releases/download/3.2.0/IBController-3.2.0.zip && \
-	unzip IBController-3.2.0.zip -d ~/IBController && \
+	wget http://data.quantconnect.com/interactive/IBController-QuantConnect-3.2.0.zip && \
+	unzip IBController-QuantConnect-3.2.0.zip -d ~/IBController && \
 	chmod -R +x ~/IBController && \
-	rm IBController-3.2.0.zip
+	rm IBController-QuantConnect-3.2.0.zip
   
 # Mono C# for LEAN:
 # From https://github.com/mono/docker/blob/master/4.6.1.5/	
@@ -50,3 +50,4 @@ RUN echo "deb http://download.mono-project.com/repo/debian wheezy/snapshots/4.6.
   && apt-get update \
   && apt-get install -y binutils mono-complete ca-certificates-mono fsharp mono-vbnc nuget referenceassemblies-pcl \
   && rm -rf /var/lib/apt/lists/* /tmp/*
+
