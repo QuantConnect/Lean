@@ -639,6 +639,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 details = args.ContractDetails;
                 _contractDetails.TryAdd(contract.Symbol, details);
                 manualResetEvent.Set();
+                Log.Trace("InteractiveBrokersBrokerage.GetContractDetails(): clientOnContractDetails event: " + contract.Symbol);
             };
 
             _client.ContractDetails += clientOnContractDetails;
@@ -665,6 +666,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 return 1m;
             }
+
+            Log.Trace("InteractiveBrokersBrokerage.GetUsdCurrency(): Getting USD conversion for " + currency);
 
             // determine the correct symbol to choose
             var invertedSymbol = "USD" + currency;
@@ -694,7 +697,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // and if not present, we'll use the latest from the history request
 
             var data = new List<IB.HistoricalDataEventArgs>();
-            int historicalTicker = GetNextTickerId();
+            var historicalTicker = GetNextTickerId();
             var lastHistoricalData = DateTime.MaxValue;
             EventHandler<IB.HistoricalDataEventArgs> clientOnHistoricalData = (sender, args) =>
             {
@@ -705,6 +708,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 }
             };
 
+            Log.Trace("InteractiveBrokersBrokerage.GetUsdCurrency(): Requesting historical data for " + contract.Symbol);
             _client.HistoricalData += clientOnHistoricalData;
 
             // request some historical data, IB's api takes into account weekends/market opening hours
@@ -718,10 +722,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 if (args.TickerId == marketDataTicker && args.Field == IBApi.TickType.ASK)
                 {
                     rate = Convert.ToDecimal(args.Price);
+                    Log.Trace("InteractiveBrokersBrokerage.GetUsdCurrency(): Price rate is " + args.Price + " for Currency " + symbol.ToString());
                     manualResetEvent.Set();
                 }
             };
 
+            Log.Trace("InteractiveBrokersBrokerage.GetUsdCurrency(): Requesting market data for " + contract.Symbol);
             _client.TickPrice += clientOnTickPrice;
 
             _client.ClientSocket.reqMktData(marketDataTicker, contract, string.Empty, true, new List<TagValue>());
@@ -733,8 +739,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // check to see if ticks returned something
             if (rate == 0)
             {
+                Log.Trace("InteractiveBrokersBrokerage.GetUsdCurrency(): History conversion rate returned 0, waiting for data");
+
                 // history doesn't have a completed event, so we'll just wait for it to not have been called for a second
-                while (DateTime.UtcNow - lastHistoricalData < Time.OneSecond) Thread.Sleep(20);
+                while (DateTime.UtcNow - lastHistoricalData < Time.OneSecond)
+                {
+                    Log.Trace("InteractiveBrokersBrokerage.GetUsdCurrency(): Waiting for history requests to finish...", true);
+                    Thread.Sleep(300);
+                }
 
                 // check for history
                 var ordered = data.OrderByDescending(x => x.Date);
