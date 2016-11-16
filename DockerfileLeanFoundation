@@ -31,15 +31,16 @@ RUN \
 # Install IB Gateway: Installs to ~/Jts
 RUN \
 	wget http://data.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64-v960.2a.sh && \
-	chmod +x ibgateway-latest-standalone-linux-x64-v960.2a.sh && \
+	chmod 777 ibgateway-latest-standalone-linux-x64-v960.2a.sh && \
 	./ibgateway-latest-standalone-linux-x64-v960.2a.sh -q && \
+	wget -O ~/Jts/jts.ini http://data.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64-v960.2a.jts.ini && \
 	rm ibgateway-latest-standalone-linux-x64-v960.2a.sh
 	
 # Install IB Controller: Installs to ~/IBController
 RUN \
 	wget http://data.quantconnect.com/interactive/IBController-QuantConnect-3.2.0.zip && \
 	unzip IBController-QuantConnect-3.2.0.zip -d ~/IBController && \
-	chmod -R +x ~/IBController && \
+	chmod -R 777 ~/IBController && \
 	rm IBController-QuantConnect-3.2.0.zip
   
 # Mono C# for LEAN:

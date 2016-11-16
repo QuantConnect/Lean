@@ -32,6 +32,6 @@ WORKDIR /root/Lean/Launcher/bin/Release
 CMD [ "mono", "QuantConnect.Lean.Launcher.exe"] # Run app
 
 # Usage: 
-# docker build -t lean:foundation -f DockerfileLeanFoundation .
-# docker build -t lean:algorithm -f DockerfileLeanAlgorithm .
-# docker run -v "(absolute to your data folder):/root/Lean/Data" lean:algorithm 
+# docker build -t quantconnect/lean:foundation -f DockerfileLeanFoundation .
+# docker build -t quantconnect/lean:algorithm -f DockerfileLeanAlgorithm .
+# docker run -v "(absolute to your data folder):/root/Lean/Data" quantconnect/lean:algorithm 
