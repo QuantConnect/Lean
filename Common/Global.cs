@@ -93,7 +93,7 @@ namespace QuantConnect
             Symbol = holding.Symbol;
             Type = holding.Type;
             Quantity = holding.Quantity;
-            CurrencySymbol = Currencies.CurrencySymbols[security.QuoteCurrency.Symbol];
+            CurrencySymbol = Currencies.GetCurrencySymbol(security.QuoteCurrency.Symbol);
             ConversionRate = security.QuoteCurrency.ConversionRate;
 
             var rounding = 2;

@@ -223,7 +223,7 @@ namespace QuantConnect.Securities
                 Symbol, 
                 Amount.ToString("0.00"), 
                 rate.ToString("0.00####"), 
-                Currencies.CurrencySymbols[Symbol], 
+                Currencies.GetCurrencySymbol(Symbol), 
                 Math.Round(ValueInAccountCurrency, 2)
                 );
         }

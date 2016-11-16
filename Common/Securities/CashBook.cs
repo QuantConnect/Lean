@@ -132,7 +132,7 @@ namespace QuantConnect.Securities
             }
             sb.AppendLine("-------------------------------------------------");
             sb.AppendLine(string.Format("CashBook Total Value:                {0}{1}", 
-                Currencies.CurrencySymbols[AccountCurrency], 
+                Currencies.GetCurrencySymbol(AccountCurrency), 
                 Math.Round(TotalValueInAccountCurrency, 2))
                 );
 
