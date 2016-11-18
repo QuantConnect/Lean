@@ -458,13 +458,14 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             if (message.getAccount() == _accountId)
             {
-                if (_openPositions.ContainsKey(message.getCurrency()) && message is ClosedPositionReport)
+                var fxcmSymbol = message.getInstrument().getSymbol();
+                if (_openPositions.ContainsKey(fxcmSymbol) && message is ClosedPositionReport)
                 {
-                    _openPositions.Remove(message.getCurrency());
+                    _openPositions.Remove(fxcmSymbol);
                 }
                 else
                 {
-                    _openPositions[message.getCurrency()] = message;
+                    _openPositions[fxcmSymbol] = message;
                 }
             }
 
