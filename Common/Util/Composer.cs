@@ -185,6 +185,17 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Gets all exports of all types registered
+        /// </summary>
+        public IEnumerable<KeyValuePair<Type, IEnumerable>> EnumerateExportedValues()
+        {
+            lock (_exportedValuesLockObject)
+            {
+                return _exportedValues.AsEnumerable();
+            }
+        }
+
+        /// <summary>
         /// Clears the cache of exported values, causing new instances to be created.
         /// </summary>
         public void Reset()

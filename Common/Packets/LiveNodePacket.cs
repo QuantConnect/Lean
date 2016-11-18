@@ -43,6 +43,12 @@ namespace QuantConnect.Packets
         public Dictionary<string, string> BrokerageData = new Dictionary<string, string>();
 
         /// <summary>
+        /// String name of the DataQuoueHandler we're running with
+        /// </summary>
+        [JsonProperty(PropertyName = "sDataQuoueHandler")]
+        public string DataQuoueHandler = "";
+
+        /// <summary>
         /// Default constructor for JSON of the Live Task Packet
         /// </summary>
         public LiveNodePacket() 

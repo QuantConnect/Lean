@@ -33,6 +33,8 @@ namespace QuantConnect.Queues
         // The type name of the QuantConnect.Brokerages.Paper.PaperBrokerage
         private static readonly TextWriter Console = System.Console.Out;
         private const string PaperBrokerageTypeName = "PaperBrokerage";
+        private const string DefaultHistoryProvider = "SubscriptionDataReaderHistoryProvider";
+        private const string DefaultDataQuoueHandler = "LiveDataQueue";
         private bool _liveMode = Config.GetBool("live-mode");
         private static readonly string AccessToken = Config.Get("api-access-token");
         private static readonly int UserId = Config.GetInt("job-user-id", 0);
@@ -93,6 +95,8 @@ namespace QuantConnect.Queues
                     Type = PacketType.LiveNode,
                     Algorithm = File.ReadAllBytes(AlgorithmLocation),
                     Brokerage = Config.Get("live-mode-brokerage", PaperBrokerageTypeName),
+                    HistoryProvider = Config.Get("history-provider", DefaultHistoryProvider),
+                    DataQuoueHandler = Config.Get("data-queue-handler", DefaultDataQuoueHandler),
                     Channel = AccessToken,
                     UserId = UserId,
                     ProjectId = ProjectId,
@@ -123,6 +127,7 @@ namespace QuantConnect.Queues
             {
                 Type = PacketType.BacktestNode,
                 Algorithm = File.ReadAllBytes(AlgorithmLocation),
+                HistoryProvider = Config.Get("history-provider", DefaultHistoryProvider),
                 Channel = AccessToken,
                 UserId = UserId,
                 ProjectId = ProjectId,
