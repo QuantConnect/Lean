@@ -681,5 +681,19 @@ namespace QuantConnect.Securities
             if (!subscription.ExchangeTimeZone.Equals(Exchange.TimeZone)) throw new ArgumentException("ExchangeTimeZones must match.", "subscription.ExchangeTimeZone");
             SubscriptionsBag.Add(subscription);
         }
+
+        /// <summary>
+        /// Adds the specified data subscriptions to this security.
+        /// </summary>
+        /// <param name="subscriptions">The subscription configuration to add. The Symbol and ExchangeTimeZone properties must match the existing Security object</param>
+        internal void AddData(SubscriptionDataConfigList subscriptions)
+        {
+            foreach (var subscription in subscriptions)
+            {
+                if (subscription.Symbol != _symbol) throw new ArgumentException("Symbols must match.", "subscription.Symbol");
+                if (!subscription.ExchangeTimeZone.Equals(Exchange.TimeZone)) throw new ArgumentException("ExchangeTimeZones must match.", "subscription.ExchangeTimeZone");
+                SubscriptionsBag.Add(subscription);
+            }
+        }
     }
 }

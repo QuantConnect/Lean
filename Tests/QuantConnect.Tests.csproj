@@ -95,6 +95,7 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="AlgorithmRunner.cs" />
+    <Compile Include="Algorithm\AlgorithmAddDataTests.cs" />
     <Compile Include="Algorithm\AlgorithmSetBrokerageTests.cs" />
     <Compile Include="Algorithm\AlgorithmSetHoldingsTests.cs" />
     <Compile Include="Algorithm\AlgorithmTradingTests.cs" />

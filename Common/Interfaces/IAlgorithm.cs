@@ -507,5 +507,16 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="max">Maximum order count int</param>
         void SetMaximumOrders(int max);
+
+        /// <summary>
+        /// Set the available <see cref="TickType"/> supported by each <see cref="SecurityType"/> in <see cref="SecurityManager"/>
+        /// </summary>
+        /// <param name="availableDataFeeds">>The different <see cref="TickType"/> each <see cref="Security"/> supports</param>
+        void SetAvailableDataFeeds(Dictionary<SecurityType, List<TickType>> availableDataFeeds);
+
+        /// <summary>
+        /// Get the available <see cref="TickType"/> supported by each <see cref="SecurityType"/> in <see cref="SecurityManager"/>
+        /// </summary>
+        Dictionary<SecurityType, List<TickType>> GetAvailableDataFeeds();
     }
 }

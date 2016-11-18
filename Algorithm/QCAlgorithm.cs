@@ -62,7 +62,9 @@ namespace QuantConnect.Algorithm
         private ConcurrentQueue<string> _debugMessages = new ConcurrentQueue<string>();
         private ConcurrentQueue<string> _logMessages = new ConcurrentQueue<string>();
         private ConcurrentQueue<string> _errorMessages = new ConcurrentQueue<string>();
-        
+
+        private Dictionary<SecurityType, List<TickType>> _availableDataFeeds;
+
         //Error tracking to avoid message flooding:
         private string _previousDebugMessage = "";
         private string _previousErrorMessage = "";
@@ -111,6 +113,9 @@ namespace QuantConnect.Algorithm
 
             //Initialise Data Manager 
             SubscriptionManager = new SubscriptionManager(_timeKeeper);
+
+            // Initialize the default data feeds for each security type
+            _availableDataFeeds = DefaultDataFeeds();
 
             Securities = new SecurityManager(_timeKeeper);
             Transactions = new SecurityTransactionManager(Securities);
@@ -536,6 +541,43 @@ namespace QuantConnect.Algorithm
             {
                 Error("Error applying parameter values: " + err.Message);
             }
+        }
+
+        /// <summary>
+        /// Set the available data feeds in the <see cref="SecurityManager"/>
+        /// </summary>
+        /// <param name="availableDataFeeds">The different <see cref="TickType"/> each <see cref="Security"/> supports</param>
+        public void SetAvailableDataFeeds(Dictionary<SecurityType, List<TickType>> availableDataFeeds)
+        {
+            foreach (var dataFeed in availableDataFeeds)
+            {
+                _availableDataFeeds[dataFeed.Key] = dataFeed.Value;
+            }
+        }
+
+        /// <summary>
+        /// Get the current list of available data feeds
+        /// </summary>
+        public Dictionary<SecurityType, List<TickType>> GetAvailableDataFeeds()
+        {
+            return _availableDataFeeds;
+        }
+
+        /// <summary>
+        /// Hard code the set of default available data feeds
+        /// </summary>
+        public Dictionary<SecurityType, List<TickType>> DefaultDataFeeds()
+        {
+            return new Dictionary<SecurityType, List<TickType>>()
+            {
+                {SecurityType.Base, new List<TickType>() { TickType.Trade } },
+                {SecurityType.Forex, new List<TickType>() { TickType.Trade } },
+                {SecurityType.Equity, new List<TickType>() { TickType.Trade } },
+                {SecurityType.Option, new List<TickType>() { TickType.Quote } },
+                {SecurityType.Cfd, new List<TickType>() { TickType.Trade } },
+                {SecurityType.Future, new List<TickType>() { TickType.Trade, TickType.Quote } },
+                {SecurityType.Commodity, new List<TickType>() { TickType.Trade } },
+            };
         }
 
         /// <summary>
@@ -1250,7 +1292,7 @@ namespace QuantConnect.Algorithm
                     symbolObject = QuantConnect.Symbol.Create(symbol, securityType, market);
                 }
 
-                var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer,
+                var security = SecurityManager.CreateSecurity(_availableDataFeeds, Portfolio, SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer,
                     symbolObject, resolution, fillDataForward, leverage, extendedMarketHours, false, false, LiveMode);
 
                 AddToUserDefinedUniverse(security);
@@ -1306,7 +1348,7 @@ namespace QuantConnect.Algorithm
 
             var marketHoursEntry = _marketHoursDatabase.GetEntry(market, underlying, SecurityType.Option);
             var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(market, underlying, SecurityType.Option, CashBook.AccountCurrency);
-            var canonicalSecurity = (Option) SecurityManager.CreateSecurity(typeof (ZipEntryName), Portfolio, SubscriptionManager,
+            var canonicalSecurity = (Option) SecurityManager.CreateSecurity(typeof (ZipEntryName), _availableDataFeeds, Portfolio, SubscriptionManager,
                 marketHoursEntry.ExchangeHours, marketHoursEntry.DataTimeZone, symbolProperties, SecurityInitializer, canonicalSymbol, resolution,
                 fillDataForward, leverage, false, false, false, LiveMode, true, false);
             canonicalSecurity.IsTradable = false;
@@ -1352,7 +1394,7 @@ namespace QuantConnect.Algorithm
 
             var marketHoursEntry = _marketHoursDatabase.GetEntry(market, symbol, SecurityType.Future);
             var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(market, symbol, SecurityType.Future, CashBook.AccountCurrency);
-            var canonicalSecurity = (Future)SecurityManager.CreateSecurity(typeof(ZipEntryName), Portfolio, SubscriptionManager,
+            var canonicalSecurity = (Future)SecurityManager.CreateSecurity(typeof(ZipEntryName), _availableDataFeeds, Portfolio, SubscriptionManager,
                 marketHoursEntry.ExchangeHours, marketHoursEntry.DataTimeZone, symbolProperties, SecurityInitializer, canonicalSymbol, resolution,
                 fillDataForward, leverage, false, false, false, LiveMode, true, false);
             canonicalSecurity.IsTradable = false;
@@ -1491,7 +1533,7 @@ namespace QuantConnect.Algorithm
             var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(Market.USA, symbol, SecurityType.Base, CashBook.AccountCurrency);
 
             //Add this new generic data as a tradeable security: 
-            var security = SecurityManager.CreateSecurity(typeof(T), Portfolio, SubscriptionManager, marketHoursDbEntry.ExchangeHours, marketHoursDbEntry.DataTimeZone, 
+            var security = SecurityManager.CreateSecurity(typeof(T), _availableDataFeeds, Portfolio, SubscriptionManager, marketHoursDbEntry.ExchangeHours, marketHoursDbEntry.DataTimeZone, 
                 symbolProperties, SecurityInitializer, symbolObject, resolution, fillDataForward, leverage, true, false, true, LiveMode);
 
             AddToUserDefinedUniverse(security);
@@ -1605,7 +1647,7 @@ namespace QuantConnect.Algorithm
                 symbol = QuantConnect.Symbol.Create(ticker, securityType, market);
             }
 
-            var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer,
+            var security = SecurityManager.CreateSecurity(_availableDataFeeds, Portfolio, SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer,
                 symbol, resolution, fillDataForward, leverage, extendedMarketHours, false, false, LiveMode);
             AddToUserDefinedUniverse(security);
             return (T)security;
@@ -1634,7 +1676,7 @@ namespace QuantConnect.Algorithm
 
                 resolution = hasNonAddSecurityUniverses ? UniverseSettings.Resolution : Resolution.Daily;
             }
-            return SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer, _benchmarkSymbol, resolution, true, 1m, false, true, false, LiveMode);
+            return SecurityManager.CreateSecurity(_availableDataFeeds, Portfolio, SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer, _benchmarkSymbol, resolution, true, 1m, false, true, false, LiveMode);
         }
     }
 }
