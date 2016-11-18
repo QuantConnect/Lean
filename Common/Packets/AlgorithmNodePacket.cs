@@ -132,6 +132,13 @@ namespace QuantConnect.Packets
         /// </summary>
         [JsonProperty(PropertyName = "aParameters")]
         public Dictionary<string, string> Parameters = new Dictionary<string, string>();
+
+        /// <summary>
+        /// String name of the HistoryProvider we're running with
+        /// </summary>
+        [JsonProperty(PropertyName = "sHistoryProvider")]
+        public string HistoryProvider = "";
+
     } // End Node Packet:
 
 } // End of Namespace:
