@@ -28,6 +28,7 @@ using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Statistics;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine 
 {
@@ -122,7 +123,8 @@ namespace QuantConnect.Lean.Engine
                     _algorithmHandlers.CommandQueue.Initialize(job, algorithm);
 
                     // set the history provider before setting up the algorithm
-                    _algorithmHandlers.HistoryProvider.Initialize(job, _algorithmHandlers.MapFileProvider, _algorithmHandlers.FactorFileProvider, _algorithmHandlers.DataFileProvider, progress =>
+                    var historyProvider = GetHistoryProvider(job.HistoryProvider);
+                    historyProvider.Initialize(job, _algorithmHandlers.MapFileProvider, _algorithmHandlers.FactorFileProvider, _algorithmHandlers.DataFileProvider, progress =>
                     {
                         // send progress updates to the result handler only during initialization
                         if (!algorithm.GetLocked() || algorithm.IsWarmingUp)
@@ -131,7 +133,7 @@ namespace QuantConnect.Lean.Engine
                                 string.Format("Processing history {0}%...", progress));
                         }
                     });
-                    algorithm.HistoryProvider = _algorithmHandlers.HistoryProvider;
+                    algorithm.HistoryProvider = historyProvider;
 
                     // initialize the default brokerage message handler
                     algorithm.BrokerageMessageHandler = factory.CreateBrokerageMessageHandler(algorithm, job, _systemHandlers.Api);
@@ -323,7 +325,7 @@ namespace QuantConnect.Lean.Engine
 
                         //Diagnostics Completed, Send Result Packet:
                         var totalSeconds = (DateTime.Now - startTime).TotalSeconds;
-                        var dataPoints = algorithmManager.DataPoints + _algorithmHandlers.HistoryProvider.DataPointCount;
+                        var dataPoints = algorithmManager.DataPoints + algorithm.HistoryProvider.DataPointCount;
                         _algorithmHandlers.Results.DebugMessage(
                             string.Format("Algorithm Id:({0}) completed in {1} seconds at {2}k data points per second. Processing total of {3} data points.",
                                 job.AlgorithmId, totalSeconds.ToString("F2"), ((dataPoints/(double) 1000)/totalSeconds).ToString("F0"),
@@ -392,7 +394,25 @@ namespace QuantConnect.Lean.Engine
                 _algorithmHandlers.RealTime.Exit();
             }
         }
+        
+        private IHistoryProvider GetHistoryProvider(string historyProvider)
+        {
+            // we first check if class has already been instantiated 
+            var match = Composer.Instance.EnumerateExportedValues()
+                .SelectMany(x => x.Value.Cast<object>().Where(o => o.GetType().MatchesTypeName(historyProvider)))
+                .OfType<IHistoryProvider>()
+                .DistinctBy(x => x.GetHashCode())
+                .ToList();
 
+            if (match.Any())
+            {
+                return match.First();
+            }
+            else
+            {
+                return Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>(historyProvider);
+            }
+        }
         private static void SaveListOfTrades(IOrderProvider transactions, string csvFileName)
         {
             var orders = transactions.GetOrders(x => x.Status.IsFill());
