@@ -483,12 +483,16 @@ namespace QuantConnect.Lean.Engine
                     foreach (var update in timeSlice.ConsolidatorUpdateData)
                     {
                         var consolidators = update.Target.Consolidators;
-                        foreach (var dataPoint in update.Data)
+                        foreach (var consolidator in consolidators)
                         {
-                            foreach (var consolidator in consolidators)
+                            foreach (var dataPoint in update.Data)
                             {
                                 consolidator.Update(dataPoint);
                             }
+
+                            // scan for time after we've pumped all the data through for this consolidator
+                            var localTime = time.ConvertFromUtc(update.Target.ExchangeTimeZone);
+                            consolidator.Scan(localTime);
                         }
                     }
                 }

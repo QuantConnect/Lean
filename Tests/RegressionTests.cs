@@ -353,6 +353,29 @@ namespace QuantConnect.Tests
                 {"Total Fees", "$13.91"},
             };
 
+            var macdTrendAlgorithmStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "127"},
+                {"Average Win", "3.65%"},
+                {"Average Loss", "-2.38%"},
+                {"Compounding Annual Return", "2.295%"},
+                {"Drawdown", "31.900%"},
+                {"Expectancy", "0.209"},
+                {"Net Profit", "28.377%"},
+                {"Sharpe Ratio", "0.226"},
+                {"Loss Rate", "52%"},
+                {"Win Rate", "48%"},
+                {"Profit-Loss Ratio", "1.54"},
+                {"Alpha", "-0.006"},
+                {"Beta", "0.394"},
+                {"Annual Standard Deviation", "0.108"},
+                {"Annual Variance", "0.012"},
+                {"Information Ratio", "-0.392"},
+                {"Tracking Error", "0.135"},
+                {"Treynor Ratio", "0.062"},
+                {"Total Fees", "$604.31"},
+            };
+
             return new List<AlgorithmStatisticsTestParameters>
             {
                 // CSharp
@@ -370,6 +393,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("HistoryAlgorithm", historyAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("CoarseFundamentalTop5Algorithm", coarseFundamentalTop5AlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("CoarseFineFundamentalRegressionAlgorithm", coarseFineFundamentalRegressionAlgorithmStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("MACDTrendAlgorithm", macdTrendAlgorithmStatistics, Language.CSharp)
 
                 // FSharp
                 // new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.FSharp),

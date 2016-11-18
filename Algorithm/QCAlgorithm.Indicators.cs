@@ -1203,12 +1203,10 @@ namespace QuantConnect.Algorithm
         {
             var subscription = GetSubscription(symbol);
 
-            // if the resolution is null or if the requested resolution matches the subscription, return identity
-            if (!resolution.HasValue || subscription.Resolution == resolution.Value)
+            // if not specified, default to the subscription's resolution
+            if (!resolution.HasValue)
             {
-                // since there's a generic type parameter that we don't have access to, we'll just use the activator
-                var identityConsolidatorType = typeof(IdentityDataConsolidator<>).MakeGenericType(subscription.Type);
-                return (IDataConsolidator)Activator.CreateInstance(identityConsolidatorType);
+                resolution = subscription.Resolution;
             }
 
             var timeSpan = resolution.Value.ToTimeSpan();
@@ -1236,12 +1234,10 @@ namespace QuantConnect.Algorithm
         {
             var subscription = GetSubscription(symbol);
 
-            // if the time span is null or if the requested time span matches the subscription, return identity
-            if (!timeSpan.HasValue || subscription.Resolution.ToTimeSpan() == timeSpan.Value)
+            // if not specified, default to the subscription resolution
+            if (!timeSpan.HasValue)
             {
-                // since there's a generic type parameter that we don't have access to, we'll just use the activator
-                var identityConsolidatorType = typeof(IdentityDataConsolidator<>).MakeGenericType(subscription.Type);
-                return (IDataConsolidator)Activator.CreateInstance(identityConsolidatorType);
+                timeSpan = subscription.Resolution.ToTimeSpan();
             }
 
             // verify this consolidator will give reasonable results, if someone asks for second consolidation but we have minute
