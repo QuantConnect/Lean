@@ -138,15 +138,24 @@ namespace QuantConnect.Util
                             x => x.ContractName == AttributedModelServices.GetContractName(type));
                     instance = (T)selectedPart.CreatePart().GetExportedValue(exportDefinition);
 
-                    // cache the new value for next time
-                    if (values == null)
+                    var exportedParts = instance.GetType().GetInterfaces()
+                        .Where(interfaceType => interfaceType.GetCustomAttribute<InheritedExportAttribute>() != null);
+
+                    foreach (var export in exportedParts)
                     {
-                        values = new List<T> { instance };
-                        _exportedValues[type] = values;
-                    }
-                    else
-                    {
-                        ((List<T>)values).Add(instance);
+                        var exportList = _exportedValues.SingleOrDefault(kvp => kvp.Key == export).Value;
+
+                        // cache the new value for next time
+                        if (exportList == null)
+                        {
+                            var list = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(export));
+                            list.Add(instance);
+                            _exportedValues[export] = list;
+                        }
+                        else
+                        {
+                            ((IList)exportList).Add(instance);
+                        }
                     }
 
                     return instance;
@@ -181,17 +190,6 @@ namespace QuantConnect.Util
                 values = _compositionContainer.GetExportedValues<T>().ToList();
                 _exportedValues[typeof (T)] = values;
                 return values.OfType<T>();
-            }
-        }
-
-        /// <summary>
-        /// Gets all exports of all types registered
-        /// </summary>
-        public IEnumerable<KeyValuePair<Type, IEnumerable>> EnumerateExportedValues()
-        {
-            lock (_exportedValuesLockObject)
-            {
-                return _exportedValues.AsEnumerable();
             }
         }
 

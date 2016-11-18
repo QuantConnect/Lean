@@ -397,21 +397,7 @@ namespace QuantConnect.Lean.Engine
         
         private IHistoryProvider GetHistoryProvider(string historyProvider)
         {
-            // we first check if class has already been instantiated 
-            var match = Composer.Instance.EnumerateExportedValues()
-                .SelectMany(x => x.Value.Cast<object>().Where(o => o.GetType().MatchesTypeName(historyProvider)))
-                .OfType<IHistoryProvider>()
-                .DistinctBy(x => x.GetHashCode())
-                .ToList();
-
-            if (match.Any())
-            {
-                return match.First();
-            }
-            else
-            {
-                return Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>(historyProvider);
-            }
+            return Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>(historyProvider);
         }
         private static void SaveListOfTrades(IOrderProvider transactions, string csvFileName)
         {
