@@ -366,7 +366,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>The loaded <see cref="IDataQueueHandler"/></returns>
         protected virtual IDataQueueHandler GetDataQueueHandler()
         {
-            return Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(_job.DataQuoueHandler);
+            return Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>(_job.DataQueueHandler);
         }
 
         /// <summary>
