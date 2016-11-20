@@ -236,7 +236,7 @@ namespace QuantConnect.Lean.Engine
                             }
 
                             Log.Trace("Engine.Run(): Exiting Algorithm Manager");
-                        }, job.RamAllocation);
+                        }, job.Controls.RamAllocation);
 
                         if (!complete)
                         {

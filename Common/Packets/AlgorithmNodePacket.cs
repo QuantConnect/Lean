@@ -119,7 +119,9 @@ namespace QuantConnect.Packets
         /// The maximum amount of RAM (in MB) this algorithm is allowed to utilize
         /// </summary>
         [JsonProperty(PropertyName = "iMaxRamAllocation")]
-        public int RamAllocation;
+        public int RamAllocation {
+            get { return Controls.RamAllocation; }
+        }
 
         /// <summary>
         /// Specifies values to control algorithm limits

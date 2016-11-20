@@ -82,7 +82,8 @@ namespace QuantConnect.Queues
             {
                 MinuteLimit = Config.GetInt("symbol-minute-limit", 10000),
                 SecondLimit = Config.GetInt("symbol-second-limit", 10000),
-                TickLimit = Config.GetInt("symbol-tick-limit", 10000)
+                TickLimit = Config.GetInt("symbol-tick-limit", 10000),
+                RamAllocation = int.MaxValue
             };
 
             //If this isn't a backtesting mode/request, attempt a live job.
@@ -98,7 +99,6 @@ namespace QuantConnect.Queues
                     ProjectId = ProjectId,
                     Version = Globals.Version,
                     DeployId = AlgorithmTypeName,
-                    RamAllocation = int.MaxValue,
                     Parameters = parameters,
                     Language = Language,
                     Controls = controls
@@ -128,7 +128,6 @@ namespace QuantConnect.Queues
                 ProjectId = ProjectId,
                 Version = Globals.Version,
                 BacktestId = AlgorithmTypeName,
-                RamAllocation = int.MaxValue,
                 Language = Language,
                 Parameters = parameters,
                 Controls = controls

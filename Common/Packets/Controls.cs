@@ -42,6 +42,12 @@ namespace QuantConnect.Packets
         public int TickLimit;
 
         /// <summary>
+        /// Ram allocation for this backtest in MB
+        /// </summary>
+        [JsonProperty(PropertyName = "iRamAllocation")]
+        public int RamAllocation;
+
+        /// <summary>
         /// Initializes a new default instance of the <see cref="Controls"/> class
         /// </summary>
         public Controls()
@@ -49,6 +55,7 @@ namespace QuantConnect.Packets
             MinuteLimit = 500;
             SecondLimit = 100;
             TickLimit = 30;
+            RamAllocation = 1024;
         }
     }
 }
