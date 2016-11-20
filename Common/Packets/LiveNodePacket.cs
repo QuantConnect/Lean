@@ -50,9 +50,10 @@ namespace QuantConnect.Packets
         {
             Controls = new Controls
             {
-                MinuteLimit = 50,
-                SecondLimit = 25,
-                TickLimit = 15
+                MinuteLimit = 100,
+                SecondLimit = 50,
+                TickLimit = 25,
+                RamAllocation = 512
             };
         }
 
