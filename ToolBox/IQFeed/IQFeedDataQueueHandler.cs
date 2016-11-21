@@ -598,7 +598,10 @@ namespace QuantConnect.ToolBox.IQFeed
             /// </summary>
             public IEnumerable<Slice> ProcessHistoryRequests(HistoryRequest request)
             {
-                if (!CanHandle(request.Symbol))
+                // skipping universe and canonical symbols 
+                if (!CanHandle(request.Symbol) ||
+                    (request.Symbol.ID.SecurityType == SecurityType.Option && request.Symbol.ID.Date == SecurityIdentifier.DefaultDate) ||
+                    (request.Symbol.ID.SecurityType == SecurityType.Future && request.Symbol.ID.Date == SecurityIdentifier.DefaultDate))
                 {
                     yield break;
                 }
@@ -670,6 +673,7 @@ namespace QuantConnect.ToolBox.IQFeed
                 return lookupType + id.ToString("0000000");
             }
 
+            
             /// <summary>
             /// Method called when a new Lookup event is fired
             /// </summary>
@@ -717,7 +721,7 @@ namespace QuantConnect.ToolBox.IQFeed
                     current.Add(data);
                 }
             }
-
+            
             /// <summary>
             /// Transform received data into BaseData object
             /// </summary>
@@ -727,7 +731,6 @@ namespace QuantConnect.ToolBox.IQFeed
             private BaseData GetData(LookupEventArgs e, HistoryRequest requestData)
             {
                 var isEquity = requestData.SecurityType == SecurityType.Equity;
-                var scale = isEquity ? 1000m : 1m;
                 try
                 {
                     switch (e.Type)
@@ -735,19 +738,19 @@ namespace QuantConnect.ToolBox.IQFeed
                         case LookupType.REQ_HST_TCK:
                             var t = (LookupTickEventArgs)e;
                             var time = isEquity ? t.DateTimeStamp : t.DateTimeStamp.ConvertTo(TimeZones.NewYork, TimeZones.EasternStandard);
-                            return new Tick(time, requestData.Symbol, (decimal)t.Last * scale, (decimal)t.Bid * scale, (decimal)t.Ask * scale);
+                            return new Tick(time, requestData.Symbol, (decimal)t.Last, (decimal)t.Bid, (decimal)t.Ask);
                         case LookupType.REQ_HST_INT:
                             var i = (LookupIntervalEventArgs)e;
                             if (i.DateTimeStamp == DateTime.MinValue) return null;
                             var istartTime = i.DateTimeStamp - requestData.Resolution.ToTimeSpan();
                             if (!isEquity) istartTime = istartTime.ConvertTo(TimeZones.NewYork, TimeZones.EasternStandard);
-                            return new TradeBar(istartTime, requestData.Symbol, (decimal)i.Open * scale, (decimal)i.High * scale, (decimal)i.Low * scale, (decimal)i.Close * scale, i.PeriodVolume);
+                            return new TradeBar(istartTime, requestData.Symbol, (decimal)i.Open, (decimal)i.High, (decimal)i.Low, (decimal)i.Close, i.PeriodVolume);
                         case LookupType.REQ_HST_DWM:
                             var d = (LookupDayWeekMonthEventArgs)e;
                             if (d.DateTimeStamp == DateTime.MinValue) return null;
-                            var dstartTime = d.DateTimeStamp - requestData.Resolution.ToTimeSpan();
+                            var dstartTime = d.DateTimeStamp.Date;
                             if (!isEquity) dstartTime = dstartTime.ConvertTo(TimeZones.NewYork, TimeZones.EasternStandard);
-                            return new TradeBar(dstartTime, requestData.Symbol, (decimal)d.Open * scale, (decimal)d.High * scale, (decimal)d.Low * scale, (decimal)d.Close * scale, d.PeriodVolume);
+                            return new TradeBar(dstartTime, requestData.Symbol, (decimal)d.Open, (decimal)d.High, (decimal)d.Low, (decimal)d.Close, d.PeriodVolume);
 
                         // we don't need to handle these other types
                         case LookupType.REQ_SYM_SYM:

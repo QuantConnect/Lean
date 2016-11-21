@@ -9,7 +9,7 @@
   "environment": "live-paper",// "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
 
   // algorithm class selector
-  "algorithm-type-name": "BasicTemplateOptionStrategyAlgorithm",
+  "algorithm-type-name": "BasicTemplateOptionsHistoryAlgorithm",
 
   // Algorithm language selector - options CSharp, FSharp, VisualBasic, Python, Java
   "algorithm-language": "CSharp",
@@ -126,7 +126,8 @@
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
       "data-queue-handler": "QuantConnect.ToolBox.IQFeed.IQFeedDataQueueHandler",
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
-      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler",
+      "history-provider" :  "QuantConnect.ToolBox.IQFeed.IQFeedDataQueueHandler"
     },
 
     // defines the 'live-tradier' environment
@@ -159,7 +160,8 @@
         "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
         "data-queue-handler": "QuantConnect.Brokerages.InteractiveBrokers.InteractiveBrokersBrokerage",
         "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
-        "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler"
+        "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+        "history-provider" :  "QuantConnect.Brokerages.InteractiveBrokers.InteractiveBrokersBrokerage"
     },
 
     // defines the 'live-interactive-iqfeed' environment
@@ -173,7 +175,8 @@
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
       "data-queue-handler": "QuantConnect.ToolBox.IQFeed.IQFeedDataQueueHandler",
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
-      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler"
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+      "history-provider" :  "QuantConnect.ToolBox.IQFeed.IQFeedDataQueueHandler"
     },
 
     // defines the 'live-fxcm' environment

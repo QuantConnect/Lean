@@ -33,13 +33,14 @@ using QuantConnect.Util;
 using Order = QuantConnect.Orders.Order;
 using IB = QuantConnect.Brokerages.InteractiveBrokers.Client;
 using IBApi;
+using NodaTime;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
     /// <summary>
     /// The Interactive Brokers brokerage
     /// </summary>
-    public sealed class InteractiveBrokersBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider
+    public sealed class InteractiveBrokersBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider, IHistoryProvider
     {
         // next valid order id for this client
         private int _nextValidId;
@@ -188,6 +189,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             get { return _client; }
         }
+
 
         /// <summary>
         /// Places a new order and assigns a new broker ID to the order
@@ -1363,6 +1365,66 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
+        /// Maps Resolution to IB representation 
+        /// </summary>
+        /// <param name="resolution"></param>
+        /// <returns></returns>
+        private string ConvertResolution(Resolution resolution)
+        {
+            switch(resolution)
+            {
+                case Resolution.Tick:
+                case Resolution.Second:
+                    return IB.BarSize.OneSecond;
+                case Resolution.Minute:
+                    return IB.BarSize.OneMinute;
+                case Resolution.Hour:
+                    return IB.BarSize.OneHour;
+                case Resolution.Daily:
+                default:
+                    return IB.BarSize.OneDay;
+            }
+        }
+
+        /// <summary>
+        /// Maps Resolution to IB span 
+        /// </summary>
+        /// <param name="resolution"></param>
+        /// <returns></returns>
+        private string ConvertResolutionToDuration(Resolution resolution)
+        {
+            switch (resolution)
+            {
+                case Resolution.Tick:
+                case Resolution.Second:
+                    return "60 S";
+                case Resolution.Minute:
+                    return "1 D";
+                case Resolution.Hour:
+                    return "1 M";
+                case Resolution.Daily:
+                default:
+                    return "1 Y";
+            }
+        }
+
+        private TradeBar ConvertTradeBar(Symbol symbol, Resolution resolution, IB.HistoricalDataEventArgs historyBar)
+        {
+            var trade = new TradeBar();
+            var time = resolution != Resolution.Daily ?
+                                DateTime.ParseExact(historyBar.Date, "yyyyMMdd  HH:mm:ss", CultureInfo.InvariantCulture) :
+                                DateTime.ParseExact(historyBar.Date, "yyyyMMdd", CultureInfo.InvariantCulture);
+            trade.Time = time;
+            trade.Period = resolution.ToTimeSpan();
+            trade.UpdateTrade((decimal)historyBar.Close, historyBar.Volume);
+            trade.High = (decimal)historyBar.High;
+            trade.Low = (decimal)historyBar.Low;
+            trade.Open = (decimal)historyBar.Open;
+            trade.Symbol = symbol;
+            return trade;
+        }
+
+        /// <summary>
         /// Creates a holding object from te UpdatePortfolioEventArgs
         /// </summary>
         private Holding CreateHolding(IB.UpdatePortfolioEventArgs e)
@@ -1824,6 +1886,186 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return results
                     .Where(x => exchangeFilter(x.Summary)) 
                     .Select(x => MapSymbol(x.Summary));
+        }
+
+
+        /// <summary>
+        /// Gets the total number of data points emitted by this history provider
+        /// </summary>
+        public int DataPointCount { get; private set; }
+
+        /// <summary>
+        /// Initializes this history provider to work for the specified job
+        /// </summary>
+        /// <param name="job">The job</param>
+        /// <param name="mapFileProvider">Provider used to get a map file resolver to handle equity mapping</param>
+        /// <param name="factorFileProvider">Provider used to get factor files to handle equity price scaling</param>
+        /// <param name="dataFileProvider">Provider used to get data when it is not present on disk</param>
+        /// <param name="statusUpdate">Function used to send status updates</param>
+        public void Initialize(AlgorithmNodePacket job, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, IDataFileProvider dataFileProvider, Action<int> statusUpdate)
+        {
+        }
+
+        /// <summary>
+        /// Gets the history for the requested securities
+        /// </summary>
+        /// <param name="requests">The historical data requests</param>
+        /// <param name="sliceTimeZone">The time zone used when time stamping the slice instances</param>
+        /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
+        public IEnumerable<Slice> GetHistory(IEnumerable<Data.HistoryRequest> requests, DateTimeZone sliceTimeZone)
+        {
+            foreach(var request in requests)
+            {
+                foreach (var history in GetHistory(request, sliceTimeZone))
+                {
+                    yield return history;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Private method gets the history for the requested security
+        /// </summary>
+        /// <param name="request">The historical data request</param>
+        /// <param name="sliceTimeZone">The time zone used when time stamping the slice instances</param>
+        /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
+        /// <remarks>For IB history limitations see https://www.interactivebrokers.com/en/software/api/apiguide/tables/historical_data_limitations.htm </remarks>
+        private IEnumerable<Slice> GetHistory(Data.HistoryRequest request, DateTimeZone sliceTimeZone)
+        {
+            const int timeOut = 60; // seconds timeout
+
+            var history = new List<TradeBar>();
+            var dataDownloading = new AutoResetEvent(false);
+            var dataDownloaded = new AutoResetEvent(false);
+
+            // skipping universe and canonical symbols 
+            if (!CanSubscribe(request.Symbol) ||
+                (request.Symbol.ID.SecurityType == SecurityType.Option && request.Symbol.ID.Date == SecurityIdentifier.DefaultDate) ||
+                (request.Symbol.ID.SecurityType == SecurityType.Future && request.Symbol.ID.Date == SecurityIdentifier.DefaultDate))
+            {
+                yield break;
+            }
+
+            // preparing the data for IB request
+            var contract = CreateContract(request.Symbol);
+            var resolution = ConvertResolution(request.Resolution);
+            var duration = ConvertResolutionToDuration(request.Resolution);
+            var useRTH = Convert.ToInt32(request.IncludeExtendedMarketHours);
+            var startTime = request.Resolution == Resolution.Daily ? 
+                            request.StartTimeUtc.ConvertFromUtc(request.ExchangeHours.TimeZone) :
+                            request.StartTimeUtc.ConvertFromUtc(DateTimeZoneProviders.Bcl.GetSystemDefault()); 
+            var endTime = request.Resolution == Resolution.Daily ?
+                            request.EndTimeUtc.ConvertFromUtc(request.ExchangeHours.TimeZone) :
+                            request.EndTimeUtc.ConvertFromUtc(DateTimeZoneProviders.Bcl.GetSystemDefault());
+            var pacing = false;
+            var dataType = request.Symbol.ID.SecurityType == SecurityType.Forex? HistoricalDataType.BidAsk : HistoricalDataType.Trades;
+
+            Log.Trace("InteractiveBrokersBrokerage::GetHistory() Requesting history for {0}...", request.Symbol.Value);
+
+            // making multiple requests if needed in order to download the history
+            while (endTime >= startTime)
+            {
+                var historyPiece = new List<TradeBar>();
+                int historicalTicker = GetNextTickerId();
+
+                EventHandler<IB.HistoricalDataEventArgs> clientOnHistoricalData = (sender, args) =>
+                {
+                    if (args.RequestId == historicalTicker)
+                    {
+                        var bar = ConvertTradeBar(request.Symbol, request.Resolution, args);
+
+                        bar.Time = request.Resolution == Resolution.Daily ?
+                            bar.Time.ConvertTo(request.ExchangeHours.TimeZone, sliceTimeZone) :
+                            bar.Time.ConvertTo(DateTimeZoneProviders.Bcl.GetSystemDefault(), sliceTimeZone);
+
+                        historyPiece.Add(bar);
+                        dataDownloading.Set();
+                    }
+                };
+
+                EventHandler<IB.HistoricalDataEndEventArgs> clientOnHistoricalDataEnd = (sender, args) =>
+                {
+                    if (args.RequestId == historicalTicker)
+                    {
+                        dataDownloaded.Set();
+                    }
+                };
+                EventHandler<IB.ErrorEventArgs> clientOnError = (sender, args) =>
+                {
+                    if (args.Code == 162 && args.Message.Contains("pacing violation"))
+                    {
+                        // pacing violation happened
+                        pacing = true;
+                    }
+                    if (args.Code == 162 && args.Message.Contains("no data"))
+                    {
+                        dataDownloaded.Set();
+                    }
+                };
+
+                Client.Error += clientOnError;
+                Client.HistoricalData += clientOnHistoricalData;
+                Client.HistoricalDataEnd += clientOnHistoricalDataEnd;
+
+                Client.ClientSocket.reqHistoricalData(historicalTicker, contract, endTime.ToString("yyyyMMdd HH:mm:ss"),
+                    duration, resolution, dataType, useRTH, 1, new List<TagValue>());
+
+                var waitResult = 0;
+                while (waitResult == 0)
+                {
+                    waitResult = WaitHandle.WaitAny(new[] { dataDownloading, dataDownloaded }, timeOut * 1000);
+                }
+
+                Client.Error -= clientOnError;
+                Client.HistoricalData -= clientOnHistoricalData;
+                Client.HistoricalDataEnd -= clientOnHistoricalDataEnd;
+
+                if (waitResult == WaitHandle.WaitTimeout)
+                {
+                    if (pacing)
+                    {
+                        // we received 'pacing violation' error from IB. So we had to wait
+                        Log.Trace("InteractiveBrokersBrokerage::GetHistory() Pacing violation. Paused for {0} secs.", timeOut);
+                        continue;
+                    }
+                    else
+                    {
+                        Log.Trace("InteractiveBrokersBrokerage::GetHistory() History request timed out ({0} sec)", timeOut);
+                        break;
+                    }
+                }
+
+                // if no data has been received this time, we exit
+                if (!historyPiece.Any())
+                {
+                    break;
+                }
+
+                var filteredPiece = historyPiece.OrderBy(x => x.Time);
+
+                history.AddRange(filteredPiece);
+
+                // moving endTime to the new position to proceed with next request (if needed) 
+                endTime = filteredPiece.First().Time;
+            }
+
+            // cleaning the data before returning it back to user
+            var sliceStartTime = request.StartTimeUtc.ConvertFromUtc(sliceTimeZone);
+            var sliceEndTime = request.EndTimeUtc.ConvertFromUtc(sliceTimeZone);
+            var filteredHistory =
+                        history
+                        .Where(bar => bar.Time >= sliceStartTime && bar.EndTime <= sliceEndTime)
+                        .GroupBy(bar => bar.Time)
+                        .Select(group => group.First())
+                        .OrderBy(x => x.Time);
+
+            foreach (var bar in filteredHistory)
+            {
+                DataPointCount++;
+                yield return new Slice(bar.EndTime, new[] { bar });
+            }
+
+            Log.Trace("InteractiveBrokersBrokerage::GetHistory() Download completed");
         }
 
         private readonly ConcurrentDictionary<Symbol, int> _subscribedSymbols = new ConcurrentDictionary<Symbol, int>();
