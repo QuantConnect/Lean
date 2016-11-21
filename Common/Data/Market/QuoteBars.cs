@@ -36,5 +36,30 @@ namespace QuantConnect.Data.Market
             : base(time)
         {
         }
+
+        /// <summary>
+        /// Collapses QuoteBars into TradeBars object when
+        ///  algorithm requires FX data, but calls OnData(<see cref="TradeBars"/>)
+        /// TODO: (2017) Remove this method in favor of using OnData(<see cref="Slice"/>)
+        /// </summary>
+        /// <returns><see cref="TradeBars"/></returns>
+        [Obsolete("For backwards compatibility only.  When FX data is traded, all algorithms should use OnData(Slice)")]
+        public TradeBars Collapse()
+        {
+            var tradeBars = new TradeBars();
+
+            foreach (var kvp in this)
+            {
+                tradeBars.Add(kvp.Key, new TradeBar(kvp.Value.Time,
+                                                    kvp.Key,
+                                                    kvp.Value.Open,
+                                                    kvp.Value.High,
+                                                    kvp.Value.Low,
+                                                    kvp.Value.Close,
+                                                    0));
+            }
+
+            return tradeBars;
+        }
     }
 }
