@@ -328,38 +328,15 @@ namespace QuantConnect.Securities
             // add the symbol to our cache
             if (addToSymbolCache) SymbolCache.Set(symbol.Value, symbol);
 
-            //Add the symbol to Data Manager -- generate unified data streams for algorithm events
+            // Add the symbol to Data Manager -- generate unified data streams for algorithm events
             SubscriptionDataConfigList configList = new SubscriptionDataConfigList(symbol);
+
+            // Get the type that will be used in the data feed
+            // Could be more than one for a given security - i.e. More than one subscription needed
             foreach (var dataFeed in availableDataFeeds[symbol.ID.SecurityType])
             {
-                Type dataFeedType;
-                
-                // if it is a QC Data type
-                if (factoryType == typeof(TradeBar) || 
-                    factoryType == typeof(QuoteBar) ||
-                    factoryType == typeof(OpenInterest))
-                {
-                    switch (dataFeed)
-                    {
-                        case TickType.Trade:
-                            dataFeedType = typeof(TradeBar);
-                            break;
-                        case TickType.Quote:
-                            dataFeedType = typeof(QuoteBar);
-                            break;
-                        case TickType.OpenInterest:
-                            dataFeedType = typeof(OpenInterest);
-                            break;
-                        default:
-                            throw new ArgumentException("SecurityManager.CreateSecurity(): DataFeed not implemented for security type.");
-                    }
-                }
-                else
-                {
-                    // it is a custom data type
-                    dataFeedType = factoryType;
-                }
-                
+                var dataFeedType = GetDataFeedType(factoryType, dataFeed);
+
                 configList.Add(subscriptionManager.Add(dataFeedType, symbol, resolution, dataTimeZone, exchangeHours.TimeZone, isCustomData, fillDataForward,
                                                         extendedMarketHours, isInternalFeed, isFilteredSubscription));
             }
@@ -448,6 +425,46 @@ namespace QuantConnect.Securities
             }
 
             return security;
+        }
+
+        /// <summary>
+        /// Get the data feed type for the given security
+        /// </summary>
+        /// <param name="factoryType"><see cref="BaseData"/> type of the security</param>
+        /// <param name="tickType">The <see cref="TickType"/> of the security</param>
+        /// <returns>Type that should be added as a subscription</returns>
+        private static Type GetDataFeedType(Type factoryType, TickType tickType)
+        {
+            Type dataFeedType;
+
+            // if it is a standard QC Data type
+            if (factoryType == typeof(TradeBar) ||
+                factoryType == typeof(QuoteBar) ||
+                factoryType == typeof(OpenInterest))
+            {
+                switch (tickType)
+                {
+                    case TickType.Trade:
+                        dataFeedType = typeof(TradeBar);
+                        break;
+                    case TickType.Quote:
+                        dataFeedType = typeof(QuoteBar);
+                        break;
+                    case TickType.OpenInterest:
+                        dataFeedType = typeof(OpenInterest);
+                        break;
+                    default:
+                        throw new ArgumentException(
+                            "SecurityManager.GetDataFeedType(): DataFeed not implemented for security type.");
+                }
+            }
+            else
+            {
+                // it is a custom data type
+                dataFeedType = factoryType;
+            }
+
+            return dataFeedType;
         }
 
         /// <summary>

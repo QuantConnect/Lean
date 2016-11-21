@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
-using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Algorithm
@@ -19,13 +17,33 @@ namespace QuantConnect.Tests.Algorithm
     [TestFixture]
     public class AlgorithmAddDataTests
     {
-        private static SubscriptionDataConfig GetMatchingSubscription(Security security, Type type)
+        [Test]
+        public void DefaultDataFeeds_CanBeOverwritten_Successfully()
         {
-            // find a subscription matchin the requested type with a higher resolution than requested
-            return (from sub in security.Subscriptions.OrderByDescending(s => s.Resolution)
-                    where type.IsAssignableFrom(sub.Type)
-                    select sub).FirstOrDefault();
+            Config.Set("security-data-feeds", "{ Forex: [\"Quote\"] }");
+            var algo = new QCAlgorithm();
+
+            // forex defult - should be tradebar
+            var forexTrade = algo.AddForex("EURUSD");
+            Assert.IsTrue(forexTrade.Subscriptions.Count() == 1);
+            Assert.IsTrue(GetMatchingSubscription(forexTrade, typeof(TradeBar)) != null);
+
+            // Change 
+            var dataFeedsConfigString = Config.Get("security-data-feeds");
+            Dictionary<SecurityType, List<TickType>> dataFeeds = new Dictionary<SecurityType, List<TickType>>();
+            if (dataFeedsConfigString != string.Empty)
+            {
+                dataFeeds = JsonConvert.DeserializeObject<Dictionary<SecurityType, List<TickType>>>(dataFeedsConfigString);
+            }
+
+            algo.SetAvailableDataFeeds(dataFeeds);
+
+            // new forex - should be quotebar
+            var forexQuote = algo.AddForex("EURUSD");
+            Assert.IsTrue(forexQuote.Subscriptions.Count() == 1);
+            Assert.IsTrue(GetMatchingSubscription(forexQuote, typeof(QuoteBar)) != null);
         }
+
 
         [Test]
         public void DefaultDataFeeds_AreAdded_Successfully()
@@ -58,32 +76,30 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(future.Subscriptions.FirstOrDefault(x => typeof(ZipEntryName).IsAssignableFrom(x.Type)) != null);
         }
 
+
         [Test]
-        public void DefaultDataFeeds_CanBeOverwritten_Successfully()
+        public void CustomDataTypes_AreAddedToSubscriptions_Successfully()
         {
-            Config.Set("security-data-feeds", "{ Forex: [\"Quote\"] }");
-            var algo = new QCAlgorithm();
+            var qcAlgorithm = new QCAlgorithm();
 
-            // forex defult - should be tradebar
-            var forexTrade = algo.AddSecurity(SecurityType.Forex, "eurusd");
-            Assert.IsTrue(forexTrade.Subscriptions.Count() == 1);
-            Assert.IsTrue(GetMatchingSubscription(forexTrade, typeof(TradeBar)) != null);
+            // Add a bitcoin subscription
+            qcAlgorithm.AddData<Bitcoin>("BTC");
+            var bitcoinSubscription = qcAlgorithm.SubscriptionManager.Subscriptions.FirstOrDefault(x => x.Type == typeof(Bitcoin));
+            Assert.AreEqual(bitcoinSubscription.Type, typeof(Bitcoin));
 
-            // Change 
-            var dataFeedsConfigString = Config.Get("security-data-feeds");
-            Dictionary<SecurityType, List<TickType>> dataFeeds = new Dictionary<SecurityType, List<TickType>>();
-            if (dataFeedsConfigString != string.Empty)
-            {
-                dataFeeds = JsonConvert.DeserializeObject<Dictionary<SecurityType, List<TickType>>>(dataFeedsConfigString);
-            }
+            // Add a quandl subscription
+            qcAlgorithm.AddData<Quandl>("EURCAD");
+            var quandlSubscription = qcAlgorithm.SubscriptionManager.Subscriptions.FirstOrDefault(x => x.Type == typeof(Quandl));
+            Assert.AreEqual(quandlSubscription.Type, typeof(Quandl));
+        }
 
-            algo.SetAvailableDataFeeds(dataFeeds);
 
-            // new forex - should be quotebar
-            var forexQuote = algo.AddForex("eurusd");
-            Assert.IsTrue(forexQuote.Subscriptions.Count() == 1);
-            Assert.IsTrue(GetMatchingSubscription(forexQuote, typeof(QuoteBar)) != null);
-
+        private static SubscriptionDataConfig GetMatchingSubscription(Security security, Type type)
+        {
+            // find a subscription matchin the requested type with a higher resolution than requested
+            return (from sub in security.Subscriptions.OrderByDescending(s => s.Resolution)
+                    where type.IsAssignableFrom(sub.Type)
+                    select sub).FirstOrDefault();
         }
     }
 }
