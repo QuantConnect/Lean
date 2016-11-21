@@ -174,7 +174,7 @@ namespace QuantConnect.Data.UniverseSelection
         public virtual Security CreateSecurity(Symbol symbol, IAlgorithm algorithm, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase)
         {
             // by default invoke the create security method to handle security initialization
-            return SecurityManager.CreateSecurity(algorithm.GetAvailableDataFeeds(), algorithm.Portfolio, algorithm.SubscriptionManager, marketHoursDatabase, symbolPropertiesDatabase,
+            return SecurityManager.CreateSecurity(algorithm.AvailableDataFeeds, algorithm.Portfolio, algorithm.SubscriptionManager, marketHoursDatabase, symbolPropertiesDatabase,
                 SecurityInitializer, symbol, UniverseSettings.Resolution, UniverseSettings.FillForward, UniverseSettings.Leverage,
                 UniverseSettings.ExtendedMarketHours, false, false, algorithm.LiveMode, symbol.ID.SecurityType == SecurityType.Option);
         }
