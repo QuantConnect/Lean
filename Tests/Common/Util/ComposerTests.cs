@@ -28,11 +28,12 @@ namespace QuantConnect.Tests.Common.Util
         public void ComposesTypes()
         {
             var instances = Composer.Instance.GetExportedValues<IExport>().ToList();
-            Assert.AreEqual(4, instances.Count);
+            Assert.AreEqual(5, instances.Count);
             Assert.AreEqual(1, instances.Count(x => x.GetType() == typeof (Export1)));
             Assert.AreEqual(1, instances.Count(x => x.GetType() == typeof (Export2)));
             Assert.AreEqual(1, instances.Count(x => x.GetType() == typeof (Export3)));
             Assert.AreEqual(1, instances.Count(x => x.GetType() == typeof (Export4)));
+            Assert.AreEqual(1, instances.Count(x => x.GetType() == typeof(Export5)));
         }
 
         [Test]
