@@ -20,13 +20,13 @@ namespace QuantConnect.Tests.Algorithm
         [Test]
         public void DefaultDataFeeds_CanBeOverwritten_Successfully()
         {
-            Config.Set("security-data-feeds", "{ Forex: [\"Quote\"] }");
+            Config.Set("security-data-feeds", "{ Forex: [\"Trade\"] }");
             var algo = new QCAlgorithm();
 
             // forex defult - should be tradebar
             var forexTrade = algo.AddForex("EURUSD");
             Assert.IsTrue(forexTrade.Subscriptions.Count() == 1);
-            Assert.IsTrue(GetMatchingSubscription(forexTrade, typeof(TradeBar)) != null);
+            Assert.IsTrue(GetMatchingSubscription(forexTrade, typeof(QuoteBar)) != null);
 
             // Change 
             var dataFeedsConfigString = Config.Get("security-data-feeds");
@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Algorithm
             // new forex - should be quotebar
             var forexQuote = algo.AddForex("EURUSD");
             Assert.IsTrue(forexQuote.Subscriptions.Count() == 1);
-            Assert.IsTrue(GetMatchingSubscription(forexQuote, typeof(QuoteBar)) != null);
+            Assert.IsTrue(GetMatchingSubscription(forexQuote, typeof(TradeBar)) != null);
         }
 
 
@@ -53,7 +53,7 @@ namespace QuantConnect.Tests.Algorithm
             // forex
             var forex = algo.AddSecurity(SecurityType.Forex, "eurusd");
             Assert.IsTrue(forex.Subscriptions.Count() == 1);
-            Assert.IsTrue(GetMatchingSubscription(forex, typeof(TradeBar)) != null);
+            Assert.IsTrue(GetMatchingSubscription(forex, typeof(QuoteBar)) != null);
 
             // equity
             var equity = algo.AddSecurity(SecurityType.Equity, "goog");
