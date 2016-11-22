@@ -1599,7 +1599,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     {
                         lock (_sync)
                         {
-                            Log.Trace("InteractiveBrokersBrokerage.Subscribe(): Subscribe Request: " + symbol.ToString());
+                            Log.Trace("InteractiveBrokersBrokerage.Subscribe(): Subscribe Request: " + symbol.Value);
 
                             if (!_subscribedSymbols.ContainsKey(symbol))
                             {
@@ -1628,7 +1628,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                                 _subscribedSymbols[symbol] = id;
                                 _subscribedTickets[id] = subscribeSymbol;
 
-                                Log.Trace("InteractiveBrokersBrokerage.Subscribe(): Subscribe Processed: " + symbol.ToString());
+                                Log.Trace("InteractiveBrokersBrokerage.Subscribe(): Subscribe Processed: {0} ({1}) # {2}", symbol.Value, contract.ToString(), id);
                             }
                         }
                     }
@@ -1653,7 +1653,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 {
                     lock (_sync)
                     {
-                        Log.Trace("InteractiveBrokersBrokerage.Unsubscribe(): " + symbol.ToString());
+                        Log.Trace("InteractiveBrokersBrokerage.Unsubscribe(): " + symbol.Value);
 
                         if (symbol.ID.SecurityType == SecurityType.Option && symbol.ID.StrikePrice == 0.0m)
                         {
@@ -1867,25 +1867,34 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             // setting up exchange defaults and filters
             var exchangeSpecifier = securityType == SecurityType.Future ? securityExchange ?? "" : securityExchange ?? "Smart";
-            var futuresExchanges = _futuresExchanges.Values.ToHashSet();
-            Func<Contract, bool> exchangeFilter = c => securityType != SecurityType.Future || futuresExchanges.Contains(c.Exchange);
+            var futuresExchanges = _futuresExchanges.Values.Reverse().ToArray();
+            Func<string, int> exchangeFilter = exchange => securityType == SecurityType.Future ? Array.IndexOf(futuresExchanges, exchange) : 0;
 
             // setting up lookup request
             var contract = new Contract();
-            contract.Symbol = lookupName;
+            contract.Symbol = _symbolMapper.GetBrokerageRootSymbol(lookupName);
             contract.Currency = securityCurrency??"USD";
             contract.Exchange = exchangeSpecifier;
             contract.SecType = ConvertSecurityType(securityType);
 
-            Log.Trace("Requesting symbol list ...");
+            Log.Trace("InteractiveBrokersBrokerage.LookupSymbols(): Requesting symbol list ...");
 
             // processing request
             var results = FindContracts(contract);
 
+            // filtering results
+            var filteredResults =
+                    results
+                    .Select(x => x.Summary)
+                    .GroupBy(x => x.Exchange)
+                    .OrderByDescending(g => exchangeFilter(g.Key))
+                    .FirstOrDefault();
+
+            Log.Trace("InteractiveBrokersBrokerage.LookupSymbols(): Returning {0} symbol(s)", filteredResults != null ? filteredResults.Count() : 0);
+
             // returning results
-            return results
-                    .Where(x => exchangeFilter(x.Summary)) 
-                    .Select(x => MapSymbol(x.Summary));
+            return filteredResults != null ? filteredResults.Select(x => MapSymbol(x)) : Enumerable.Empty<Symbol>();
+                    
         }
 
 
@@ -1936,7 +1945,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             var history = new List<TradeBar>();
             var dataDownloading = new AutoResetEvent(false);
-            var dataDownloaded = new AutoResetEvent(false);
+            var dataDownloaded = new ManualResetEvent(false);
 
             // skipping universe and canonical symbols 
             if (!CanSubscribe(request.Symbol) ||
@@ -2013,7 +2022,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 var waitResult = 0;
                 while (waitResult == 0)
                 {
-                    waitResult = WaitHandle.WaitAny(new[] { dataDownloading, dataDownloaded }, timeOut * 1000);
+                    waitResult = WaitHandle.WaitAny(new WaitHandle[] { dataDownloading, dataDownloaded }, timeOut * 1000);
                 }
 
                 Client.Error -= clientOnError;

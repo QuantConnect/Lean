@@ -90,13 +90,13 @@ usa,ZL,future,,USD,600,0.01,1
 usa,ZO,future,,USD,50,0.01,1
 usa,KE,future,,USD,50,0.01,1
 usa,DX,future,,USD,1000,0.01,1
-usa,GBP,future,,USD,62500,0.01,1
-usa,CAD,future,,USD,100000,0.01,1
-usa,JPY,future,,USD,125000,0.01,1
-usa,CHF,future,,USD,125000,0.01,1
-usa,EUR,future,,USD,125000,0.01,1
-usa,AUD,future,,USD,100000,0.01,1
-usa,NZD,future,,USD,100000,0.01,1
+usa,6B,future,,USD,62500,0.01,1
+usa,6C,future,,USD,100000,0.01,1
+usa,6J,future,,USD,125000,0.01,1
+usa,6S,future,,USD,125000,0.01,1
+usa,6E,future,,USD,125000,0.01,1
+usa,6A,future,,USD,100000,0.01,1
+usa,6N,future,,USD,100000,0.01,1
 usa,CL,future,,USD,1000,0.01,1
 usa,HO,future,,USD,42000,0.01,1
 usa,RB,future,,USD,42000,0.01,1
@@ -121,6 +121,7 @@ usa,OJ,future,,USD,15000,0.01,1
 usa,KC,future,,USD,37500,0.01,1
 usa,SB,future,,USD,112000,0.01,1
 usa,CC,future,,USD,10,0.01,1
+usa,VX,future,,USD,10,0.05,1
 usa,[*],future,,USD,1,0.01,1
 
 fxcm,AUDCAD,forex,,CAD,1,0.00001,1000

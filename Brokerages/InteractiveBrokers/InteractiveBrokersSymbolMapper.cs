@@ -13,7 +13,11 @@
  * limitations under the License.
 */
 
+using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
@@ -22,6 +26,24 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
     /// </summary>
     public class InteractiveBrokersSymbolMapper : ISymbolMapper
     {
+        // we have a special treatment of futures, because IB renamed several exchange tickers (like GBP instead of 6B). We fix this: 
+        // We map those tickers back to their original names using the map below
+        private Dictionary<string, string> _ibNameMap = new Dictionary<string, string>();
+
+        /// <summary>
+        /// Constructs InteractiveBrokersSymbolMapper
+        /// </summary>
+        public InteractiveBrokersSymbolMapper()
+        {
+            var ibNameMapFileName = "IB-symbol-map.json";
+            var ibNameMapFullName = Path.Combine("InteractiveBrokers", ibNameMapFileName);
+
+            if (File.Exists(ibNameMapFullName))
+            {
+                _ibNameMap = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(ibNameMapFullName));
+            }
+
+        }
         /// <summary>
         /// Converts a Lean symbol instance to an InteractiveBrokers symbol
         /// </summary>
@@ -41,10 +63,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             if (symbol.ID.SecurityType == SecurityType.Forex && symbol.Value.Length != 6)
                 throw new ArgumentException("Forex symbol length must be equal to 6: " + symbol.Value);
 
-            if (symbol.ID.SecurityType == SecurityType.Option ||
-               symbol.ID.SecurityType == SecurityType.Future)
+            if (symbol.ID.SecurityType == SecurityType.Option)
             {
                 return symbol.Underlying.Value;
+            }
+            if (symbol.ID.SecurityType == SecurityType.Future)
+            {
+                return GetBrokerageRootSymbol(symbol.Underlying.Value);
             }
 
             return symbol.Value;
@@ -65,7 +90,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             if (string.IsNullOrWhiteSpace(brokerageSymbol))
                 throw new ArgumentException("Invalid symbol: " + brokerageSymbol);
 
-            if (securityType != SecurityType.Forex && 
+            if (securityType != SecurityType.Forex &&
                 securityType != SecurityType.Equity &&
                 securityType != SecurityType.Option &&
                 securityType != SecurityType.Future)
@@ -73,7 +98,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             if (securityType == SecurityType.Future)
             {
-                return Symbol.CreateFuture(brokerageSymbol, market, expirationDate);
+                return Symbol.CreateFuture(GetLeanRootSymbol(brokerageSymbol), market, expirationDate);
             }
             else if (securityType == SecurityType.Option)
             {
@@ -82,5 +107,29 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             return Symbol.Create(brokerageSymbol, securityType, market);
         }
+
+
+        /// <summary>
+        /// IB specific versions of the symbol mapping (GetBrokerageRootSymbol) for future root symbols
+        /// </summary>
+        /// <param name="rootSymbol">LEAN root symbol</param>
+        /// <returns></returns>
+        public string GetBrokerageRootSymbol(string rootSymbol)
+        {
+            var brokerageSymbol = _ibNameMap.Where(kv => kv.Value == rootSymbol).FirstOrDefault();
+
+            return !string.IsNullOrEmpty(brokerageSymbol.Key) ? brokerageSymbol.Key : rootSymbol;
+        }
+
+        /// <summary>
+        /// IB specific versions of the symbol mapping (GetLeanRootSymbol) for future root symbols
+        /// </summary>
+        /// <param name="brokerageRootSymbol">IB Brokerage root symbol</param>
+        /// <returns></returns>
+        public string GetLeanRootSymbol(string brokerageRootSymbol)
+        {
+            return _ibNameMap.ContainsKey(brokerageRootSymbol) ? _ibNameMap[brokerageRootSymbol] : brokerageRootSymbol;
+        }
+
     }
 }

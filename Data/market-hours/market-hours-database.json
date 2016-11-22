@@ -897,7 +897,7 @@
       "saturday": [],
       "holidays": []
     },
-	"Future-usa-GBP": {
+	"Future-usa-6B": {
       "dataTimeZone": "America/Chicago",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -965,7 +965,7 @@
       "saturday": [],
       "holidays": []
     },
-	"Future-usa-CAD": {
+	"Future-usa-6C": {
       "dataTimeZone": "America/Chicago",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -1033,7 +1033,7 @@
       "saturday": [],
       "holidays": []
     },
-	"Future-usa-JPY": {
+	"Future-usa-6J": {
       "dataTimeZone": "America/Chicago",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -1101,7 +1101,7 @@
       "saturday": [],
       "holidays": []
     },
-	"Future-usa-CHF": {
+	"Future-usa-6S": {
       "dataTimeZone": "America/Chicago",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -1169,7 +1169,7 @@
       "saturday": [],
       "holidays": []
     },
-	"Future-usa-EUR": {
+	"Future-usa-6E": {
       "dataTimeZone": "America/Chicago",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -1237,7 +1237,7 @@
       "saturday": [],
       "holidays": []
     },
-	"Future-usa-AUD": {
+	"Future-usa-6A": {
       "dataTimeZone": "America/Chicago",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [
@@ -1305,7 +1305,7 @@
       "saturday": [],
       "holidays": []
     },
-	"Future-usa-NZD": {
+	"Future-usa-6N": {
       "dataTimeZone": "America/Chicago",
       "exchangeTimeZone": "America/Chicago",
       "sunday": [

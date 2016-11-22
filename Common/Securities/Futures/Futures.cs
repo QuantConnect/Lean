@@ -64,49 +64,49 @@ namespace QuantConnect.Securities
             /// U.S. Dollar Index Futures  
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string USDollarIndex = "DX";
+            public const string USD = "DX";
 
             /// <summary>
             /// British Pound Futures  
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string BritishPound = "GBP";
+            public const string GBP = "6B";
 
             /// <summary>
             /// Canadian Dollar Futures  
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string CanadianDollar = "CAD";
+            public const string CAD = "6C";
 
             /// <summary>
             /// Japanese Yen Futures  
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string JapaneseYen = "JPY";
+            public const string JPY = "6J";
 
             /// <summary>
             /// Swiss Franc Futures  
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string SwissFranc = "CHF";
+            public const string CHF = "6S";
 
             /// <summary>
             /// Euro FX Futures  
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string Euro = "EUR";
+            public const string EUR = "6E";
 
             /// <summary>
             /// Australian Dollar Futures  
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string AustralianDollar = "AUD";
+            public const string AUD = "6A";
 
             /// <summary>
             /// New Zealand Dollar Futures  
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string NewZealandDollar = "NZD";
+            public const string NZD = "6N";
         }
 
         /// <summary>
