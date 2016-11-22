@@ -214,7 +214,7 @@ namespace QuantConnect.Brokerages
 
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
-                    return new SpreadSlippageModel();
+                    return new ConstantSlippageModel(0);
 
                 case SecurityType.Commodity:
                 case SecurityType.Option:
