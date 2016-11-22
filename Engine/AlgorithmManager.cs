@@ -562,18 +562,14 @@ namespace QuantConnect.Lean.Engine
 
                     // TODO: For backwards compatibility only. Remove in 2017
                     // For compatibility with Forex Trade data, moving 
-                    
                     if (timeSlice.Slice.QuoteBars.Count > 0)
                     {
                         foreach (var tradeBar in timeSlice.Slice.QuoteBars.Where(x => x.Key.ID.SecurityType == SecurityType.Forex))
                         {
-                            timeSlice.Slice.Bars.Add(tradeBar.Collapse());
+                            timeSlice.Slice.Bars.Add(tradeBar.Value.Collapse());
                         }
                     }
-
-                    if (timeSlice.Slice.Bars.Count > 0)
-                        methodInvokers[typeof(TradeBars)](algorithm, timeSlice.Slice.Bars);
-
+                    if (hasOnDataTradeBars && timeSlice.Slice.Bars.Count > 0) methodInvokers[typeof(TradeBars)](algorithm, timeSlice.Slice.Bars);
                     if (hasOnDataQuoteBars && timeSlice.Slice.QuoteBars.Count > 0) methodInvokers[typeof(QuoteBars)](algorithm, timeSlice.Slice.QuoteBars);
                     if (hasOnDataOptionChains && timeSlice.Slice.OptionChains.Count > 0) methodInvokers[typeof(OptionChains)](algorithm, timeSlice.Slice.OptionChains);
                     if (hasOnDataTicks && timeSlice.Slice.Ticks.Count > 0) methodInvokers[typeof(Ticks)](algorithm, timeSlice.Slice.Ticks);

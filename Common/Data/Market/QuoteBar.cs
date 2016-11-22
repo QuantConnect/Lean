@@ -418,5 +418,18 @@ namespace QuantConnect.Data.Market
                 DataType = DataType
             };
         }
+
+
+        /// <summary>
+        /// Collapses QuoteBars into TradeBars object when
+        ///  algorithm requires FX data, but calls OnData(<see cref="TradeBars"/>)
+        /// TODO: (2017) Remove this method in favor of using OnData(<see cref="Slice"/>)
+        /// </summary>
+        /// <returns><see cref="TradeBars"/></returns>
+        [Obsolete("For backwards compatibility only.  When FX data is traded, all algorithms should use OnData(Slice)")]
+        public TradeBar Collapse()
+        {
+            return new TradeBar(EndTime, Symbol, Open, High, Low, Close, 0);
+        }
     }
 }
