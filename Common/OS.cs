@@ -83,7 +83,7 @@ namespace QuantConnect
             {
                 if (_cpuUsageCounter == null)
                 {
-                    _cpuUsageCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+                    _cpuUsageCounter = new PerformanceCounter("Process", "% Processor Time", Process.GetCurrentProcess().Id.ToString());
                 }
                 return _cpuUsageCounter;
             }
@@ -223,6 +223,7 @@ namespace QuantConnect
                 {"Total RAM (MB)",        TotalPhysicalMemory.ToString()},
                 {"Used Disk Space (MB)", DriveSpaceUsed.ToString() },
                 {"Total Disk Space (MB)", DriveTotalSpace.ToString() },
+                { "Hostname", Environment.MachineName },
                 {"LEAN Version", "v" + Globals.Version}
             };
         }
