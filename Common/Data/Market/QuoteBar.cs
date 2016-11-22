@@ -257,9 +257,16 @@ namespace QuantConnect.Data.Market
         /// <param name="line">Line from the data file requested</param>
         /// <param name="date">Date of this reader request</param>
         /// <returns><see cref="QuoteBar"/> with the bid/ask prices set to same values</returns>
+        private static bool HasShownWarning;
         [Obsolete("All Forex data should use Quotes instead of Trades.")]
         private QuoteBar ParseTradeAsQuoteBar(SubscriptionDataConfig config, DateTime date, string line)
         {
+            if (!HasShownWarning)
+            {
+                Logging.Log.Error("QuoteBar.ParseTradeAsQuoteBar(): Data formatted as Trade when Quote format was expected.  Support for this will disappear June 2017.");
+                HasShownWarning = true;
+            }
+
             var quoteBar = new QuoteBar
             {
                 Period = config.Increment,
