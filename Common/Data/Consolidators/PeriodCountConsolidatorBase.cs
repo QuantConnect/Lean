@@ -150,7 +150,11 @@ namespace QuantConnect.Data.Consolidators
 
             if (aggregateBeforeFire)
             {
-                AggregateBar(ref _workingBar, data);
+                // prevent starting new bars on fill forward data
+                if (_workingBar != null || !data.IsFillForward)
+                {
+                    AggregateBar(ref _workingBar, data);
+                }
             }
 
             //Fire the event
@@ -178,7 +182,11 @@ namespace QuantConnect.Data.Consolidators
 
             if (!aggregateBeforeFire)
             {
-                AggregateBar(ref _workingBar, data);
+                // prevent starting new bars on fill forward data
+                if (_workingBar != null || !data.IsFillForward)
+                {
+                    AggregateBar(ref _workingBar, data);
+                }
             }
         }
 
