@@ -83,7 +83,8 @@ namespace QuantConnect
             {
                 if (_cpuUsageCounter == null)
                 {
-                    _cpuUsageCounter = new PerformanceCounter("Process", "% Processor Time", Process.GetCurrentProcess().Id.ToString());
+                    _cpuUsageCounter = new PerformanceCounter("Process", "% Processor Time", 
+                        IsWindows ? Process.GetCurrentProcess().ProcessName : Process.GetCurrentProcess().Id.ToString());
                 }
                 return _cpuUsageCounter;
             }
