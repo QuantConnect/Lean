@@ -246,7 +246,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="instruments">list of instruments to stream rates for</param>
         /// <param name="accountId">the account ID you want to stream on</param>
         /// <returns>the WebResponse object that can be used to retrieve the rates as they stream</returns>
-        public WebResponse StartRatesSession(List<Instrument> instruments, int accountId)
+        public WebResponse StartRatesSession(List<Instrument> instruments, string accountId)
         {
             var instrumentList = string.Join(",", instruments.Select(x => x.instrument));
 
@@ -278,7 +278,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         /// <param name="accountId">the account IDs you want to stream on</param>
         /// <returns>the WebResponse object that can be used to retrieve the events as they stream</returns>
-        public WebResponse StartEventsSession(List<int> accountId = null)
+        public WebResponse StartEventsSession(List<string> accountId = null)
         {
             var requestString = EndpointResolver.ResolveEndpoint(_environment, Server.StreamingEvents) + "events";
 
@@ -403,7 +403,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         /// <param name="accountId">positions will be retrieved for this account id</param>
         /// <returns>List of Position objects with the details for each position (or empty list iff no positions)</returns>
-        private List<Position> GetPositions(int accountId)
+        private List<Position> GetPositions(string accountId)
         {
             var requestString = EndpointResolver.ResolveEndpoint(_environment, Server.Account) + "accounts/" + accountId + "/positions";
             var positionResponse = MakeRequest<PositionsResponse>(requestString);

@@ -36,7 +36,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
         /// <summary>
         /// Initializes a new instance of the <see cref="OandaDataDownloader"/> class
         /// </summary>
-        public OandaDataDownloader(string accessToken, int accountId)
+        public OandaDataDownloader(string accessToken, string accountId)
         {
             // Set Oanda account credentials
             _brokerage = new OandaBrokerage(null, null, Environment.Practice, accessToken, accountId);

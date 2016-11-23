@@ -60,7 +60,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
             {
                 var environment = Config.Get("oanda-environment").ConvertTo<Environment>();
                 var accessToken = Config.Get("oanda-access-token");
-                var accountId = Config.Get("oanda-account-id").ConvertTo<int>();
+                var accountId = Config.Get("oanda-account-id");
 
                 var brokerage = new OandaBrokerage(null, null, environment, accessToken, accountId);
         
