@@ -36,12 +36,12 @@ namespace QuantConnect.Brokerages.Oanda.Session
     {
         public delegate void DataHandler(T data);
 
-        protected readonly int _accountId;
+        protected readonly string _accountId;
         private WebResponse _response;
         private bool _shutdown;
         private Task _runningTask;
 
-        protected StreamSession(int accountId)
+        protected StreamSession(string accountId)
         {
             _accountId = accountId;
         }
