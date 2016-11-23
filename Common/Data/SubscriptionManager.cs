@@ -171,6 +171,16 @@ namespace QuantConnect.Data
                 {SecurityType.Commodity, new List<TickType>() { TickType.Trade } }
             };
         }
+
+        /// <summary>
+        /// Get the available data types for a security
+        /// </summary>
+        public IReadOnlyList<TickType> GetDataTypesForSecurity(SecurityType securityType)
+        {
+            return AvailableDataTypes[securityType];
+        }
+
+
     } // End Algorithm MetaData Manager Class
 
 } // End QC Namespace

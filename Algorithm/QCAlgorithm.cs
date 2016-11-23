@@ -1329,7 +1329,7 @@ namespace QuantConnect.Algorithm
             if (!UniverseManager.TryGetValue(canonicalSymbol, out universe))
             {
                 var settings = new UniverseSettings(resolution, leverage, true, false, TimeSpan.Zero);
-                universe = new OptionChainUniverse(canonicalSecurity, settings, SecurityInitializer);
+                universe = new OptionChainUniverse(canonicalSecurity, settings, SubscriptionManager, SecurityInitializer);
                 UniverseManager.Add(canonicalSymbol, universe);
             }
 
@@ -1375,7 +1375,7 @@ namespace QuantConnect.Algorithm
             if (!UniverseManager.TryGetValue(canonicalSymbol, out universe))
             {
                 var settings = new UniverseSettings(resolution, leverage, true, false, TimeSpan.Zero);
-                universe = new FuturesChainUniverse(canonicalSecurity, settings, SecurityInitializer);
+                universe = new FuturesChainUniverse(canonicalSecurity, settings, SubscriptionManager, SecurityInitializer);
                 UniverseManager.Add(canonicalSymbol, universe);
             }
 
