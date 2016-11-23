@@ -137,7 +137,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     // set our parameters
                     algorithm.SetParameters(baseJob.Parameters);
                     algorithm.SetLiveMode(false);
-                    algorithm.SetAvailableDataFeeds(GetConfiguredDataFeeds());
+                    algorithm.SetAvailableDataTypes(GetConfiguredDataFeeds());
                     //Set the source impl for the event scheduling
                     algorithm.Schedule.SetEventSchedule(realTimeHandler);
                     //Setup Base Algorithm:

@@ -133,11 +133,6 @@ namespace QuantConnect.Interfaces
             set;
         }
 
-        Dictionary<SecurityType, List<TickType>> AvailableDataFeeds
-        {
-            get;
-        }
-
         /// <summary>
         /// Gets whether or not this algorithm is still warming up
         /// </summary>
@@ -516,7 +511,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Set the available <see cref="TickType"/> supported by each <see cref="SecurityType"/> in <see cref="SecurityManager"/>
         /// </summary>
-        /// <param name="availableDataFeeds">>The different <see cref="TickType"/> each <see cref="Security"/> supports</param>
-        void SetAvailableDataFeeds(Dictionary<SecurityType, List<TickType>> availableDataFeeds);
+        /// <param name="availableDataTypes">>The different <see cref="TickType"/> each <see cref="Security"/> supports</param>
+        void SetAvailableDataTypes(Dictionary<SecurityType, List<TickType>> availableDataTypes);
     }
 }

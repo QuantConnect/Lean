@@ -36,7 +36,7 @@ namespace QuantConnect.Tests.Algorithm
                 dataFeeds = JsonConvert.DeserializeObject<Dictionary<SecurityType, List<TickType>>>(dataFeedsConfigString);
             }
 
-            algo.SetAvailableDataFeeds(dataFeeds);
+            algo.SetAvailableDataTypes(dataFeeds);
 
             // new forex - should be quotebar
             var forexQuote = algo.AddForex("EURUSD");
@@ -62,7 +62,7 @@ namespace QuantConnect.Tests.Algorithm
 
             // option
             var option = algo.AddSecurity(SecurityType.Option, "goog");
-            Assert.IsTrue(option.Subscriptions.Count() == 1);
+            Assert.IsTrue(option.Subscriptions.Count() == 2);
             Assert.IsTrue(GetMatchingSubscription(option, typeof(ZipEntryName)) != null);
 
             // cfd 

@@ -32,6 +32,15 @@ namespace QuantConnect.Data
         public List<SubscriptionDataConfig> Subscriptions;
 
         /// <summary>
+        /// 
+        /// </summary>
+        public Dictionary<SecurityType, List<TickType>> AvailableDataTypes
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
         /// Initialise the Generic Data Manager Class
         /// </summary>
         /// <param name="timeKeeper">The algoritm's time keeper</param>
@@ -40,6 +49,9 @@ namespace QuantConnect.Data
             _timeKeeper = timeKeeper;
             //Generic Type Data Holder:
             Subscriptions = new List<SubscriptionDataConfig>();
+
+            // Initialize the default data feeds for each security type
+            AvailableDataTypes = DefaultDataTypes();
         }
 
         /// <summary>
@@ -143,6 +155,22 @@ namespace QuantConnect.Data
             throw new ArgumentException("Please subscribe to this symbol before adding a consolidator for it. Symbol: " + symbol.ToString());
         }
 
+        /// <summary>
+        /// Hard code the set of default available data feeds
+        /// </summary>
+        public Dictionary<SecurityType, List<TickType>> DefaultDataTypes()
+        {
+            return new Dictionary<SecurityType, List<TickType>>()
+            {
+                {SecurityType.Base, new List<TickType>() { TickType.Trade } },
+                {SecurityType.Forex, new List<TickType>() { TickType.Quote } },
+                {SecurityType.Equity, new List<TickType>() { TickType.Trade } },
+                {SecurityType.Option, new List<TickType>() { TickType.Quote, TickType.OpenInterest } },
+                {SecurityType.Cfd, new List<TickType>() { TickType.Trade } },
+                {SecurityType.Future, new List<TickType>() { TickType.Quote, TickType.OpenInterest } },
+                {SecurityType.Commodity, new List<TickType>() { TickType.Trade } }
+            };
+        }
     } // End Algorithm MetaData Manager Class
 
 } // End QC Namespace

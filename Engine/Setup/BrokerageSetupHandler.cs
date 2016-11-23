@@ -188,7 +188,7 @@ namespace QuantConnect.Lean.Engine.Setup
                         algorithm.SetBrokerageModel(_factory.BrokerageModel);
                         //Set our parameters
                         algorithm.SetParameters(job.Parameters);
-                        algorithm.SetAvailableDataFeeds(GetConfiguredDataFeeds());
+                        algorithm.SetAvailableDataTypes(GetConfiguredDataFeeds());
                         //Algorithm is live, not backtesting:
                         algorithm.SetLiveMode(true);
                         //Initialize the algorithm's starting date
