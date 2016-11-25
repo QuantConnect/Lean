@@ -20,6 +20,9 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Securities.Option;
+using QuantConnect.Securities;
+using QuantConnect.Indicators;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -43,10 +46,11 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption(UnderlyingTicker);
 
             equity.SetDataNormalizationMode(DataNormalizationMode.Raw);
+            option.PriceModel = OptionPriceModels.CrankNicolsonFD();
+            //option.EnableGreekApproximation = true;
 
-            option.SetFilter(-2, +2, TimeSpan.FromDays(00), TimeSpan.FromDays(400));
+            option.SetFilter(-2, +2, TimeSpan.FromDays(00), TimeSpan.FromDays(300));
 
-            // use the underlying equity as the benchmark
             SetBenchmark(equity.Symbol);
         }
 
@@ -60,14 +64,23 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 foreach (var chain in slice.OptionChains)
                 {
+                    var underlying = Securities[chain.Key.Underlying];
                     foreach (var contract in chain.Value)
                     {
-                        Log(String.Format("{0},Bid={1} Ask={2} Last={3} OI={4}",
+                        Log(String.Format(@"{0},Bid={1} Ask={2} Last={3} OI={4} σ={5:0.000} NPV={6:0.000} Δ={7:0.000} Γ={8:0.000} ν={9:0.000} ρ={10:0.00} Θ={11:0.00} IV={12:0.000}",
                              contract.Symbol.Value,
                              contract.BidPrice,
                              contract.AskPrice,
                              contract.LastPrice,
-                             contract.OpenInterest));
+                             contract.OpenInterest,
+                             underlying.VolatilityModel.Volatility,
+                             contract.TheoreticalPrice,
+                             contract.Greeks.Delta,
+                             contract.Greeks.Gamma,
+                             contract.Greeks.Vega,
+                             contract.Greeks.Rho,
+                             contract.Greeks.Theta / 365.0m,
+                             contract.ImpliedVolatility));
                     }
                 }
             }

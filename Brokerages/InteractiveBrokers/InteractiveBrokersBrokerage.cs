@@ -34,6 +34,7 @@ using Order = QuantConnect.Orders.Order;
 using IB = QuantConnect.Brokerages.InteractiveBrokers.Client;
 using IBApi;
 using NodaTime;
+using System.Text;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
@@ -1410,18 +1411,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         private TradeBar ConvertTradeBar(Symbol symbol, Resolution resolution, IB.HistoricalDataEventArgs historyBar)
         {
-            var trade = new TradeBar();
             var time = resolution != Resolution.Daily ?
                                 DateTime.ParseExact(historyBar.Date, "yyyyMMdd  HH:mm:ss", CultureInfo.InvariantCulture) :
                                 DateTime.ParseExact(historyBar.Date, "yyyyMMdd", CultureInfo.InvariantCulture);
-            trade.Time = time;
-            trade.Period = resolution.ToTimeSpan();
-            trade.UpdateTrade((decimal)historyBar.Close, historyBar.Volume);
-            trade.High = (decimal)historyBar.High;
-            trade.Low = (decimal)historyBar.Low;
-            trade.Open = (decimal)historyBar.Open;
-            trade.Symbol = symbol;
-            return trade;
+
+            return new TradeBar(time, symbol, (decimal)historyBar.Open, (decimal)historyBar.High, (decimal)historyBar.Low, 
+                (decimal)historyBar.Close, historyBar.Volume, resolution.ToTimeSpan());
         }
 
         /// <summary>
@@ -1969,7 +1964,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var pacing = false;
             var dataType = request.Symbol.ID.SecurityType == SecurityType.Forex? HistoricalDataType.BidAsk : HistoricalDataType.Trades;
 
-            Log.Trace("InteractiveBrokersBrokerage::GetHistory() Requesting history for {0}...", request.Symbol.Value);
+            Log.Trace("InteractiveBrokersBrokerage::GetHistory(): Submitting request: {0}({1}): {2} {3}->{4}", request.Symbol.Value, contract, request.Resolution, startTime, endTime);
+
 
             // making multiple requests if needed in order to download the history
             while (endTime >= startTime)

@@ -342,11 +342,11 @@
     <Compile Include="Securities\Futures\Futures.cs" />
     <Compile Include="Securities\Futures\FutureMarginModel.cs" />
     <Compile Include="Securities\IDerivativeSecurityFilter.cs" />
-    <Compile Include="Securities\IndicatorVolatilityModel.cs" />
+    <Compile Include="Securities\Volatility\IndicatorVolatilityModel.cs" />
     <Compile Include="Securities\Interfaces\IContinuousContractModel.cs" />
     <Compile Include="Securities\ISecurityInitializer.cs" />
     <Compile Include="Securities\ISettlementModel.cs" />
-    <Compile Include="Securities\IVolatilityModel.cs" />
+    <Compile Include="Securities\Volatility\IVolatilityModel.cs" />
     <Compile Include="Securities\LocalMarketHours.cs" />
     <Compile Include="Securities\MarketHoursSegment.cs" />
     <Compile Include="Securities\MarketHoursState.cs" />
@@ -372,7 +372,8 @@
     <Compile Include="Securities\Option\OptionMarginModel.cs" />
     <Compile Include="Securities\Option\QLOptionPriceModel.cs" />
     <Compile Include="Securities\PatternDayTradingMarginModel.cs" />
-    <Compile Include="Securities\RelativeStandardDeviationVolatilityModel.cs" />
+    <Compile Include="Securities\Volatility\StandardDeviationOfReturnsVolatilityModel.cs" />
+    <Compile Include="Securities\Volatility\RelativeStandardDeviationVolatilityModel.cs" />
     <Compile Include="Securities\SecurityDatabaseKey.cs" />
     <Compile Include="Securities\SecurityExchangeHours.cs" />
     <Compile Include="Securities\MarketHoursDatabase.cs" />

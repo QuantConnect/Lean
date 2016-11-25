@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System;
+
 namespace QuantConnect.Data.Market
 {
     /// <summary>
@@ -20,6 +22,17 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public class Greeks
     {
+        private Lazy<decimal> _delta;
+        private Lazy<decimal> _gamma;
+        private Lazy<decimal> _vega;
+        private Lazy<decimal> _theta;
+        private Lazy<decimal> _rho;
+        private Lazy<decimal> _lambda;
+
+        // _deltagamma stores gamma and delta combined and is done
+        // for optimization purposes (approximation of delta and gamma is very similar)
+        private Lazy<Tuple<decimal, decimal>> _deltaGamma;
+
         /// <summary>
         /// Gets the delta.
         /// <para>
@@ -29,7 +42,14 @@ namespace QuantConnect.Data.Market
         /// </summary>
         public decimal Delta
         {
-            get; private set;
+            get
+            {
+                return _delta != null ? _delta.Value : _deltaGamma.Value.Item1;
+            }
+            private set
+            {
+                _delta = new Lazy<decimal>(() => value);
+            }
         }
 
         /// <summary>
@@ -41,7 +61,14 @@ namespace QuantConnect.Data.Market
         /// </summary>
         public decimal Gamma
         {
-            get; private set;
+            get
+            {
+                return _gamma != null ? _gamma.Value : _deltaGamma.Value.Item2;
+            }
+            private set
+            {
+                _gamma = new Lazy<decimal>(() => value);
+            }
         }
 
         /// <summary>
@@ -53,7 +80,14 @@ namespace QuantConnect.Data.Market
         /// </summary>
         public decimal Vega
         {
-            get; private set;
+            get
+            {
+                return _vega.Value;
+            }
+            private set
+            {
+                _vega = new Lazy<decimal>(() => value);
+            }
         }
 
         /// <summary>
@@ -65,7 +99,14 @@ namespace QuantConnect.Data.Market
         /// </summary>
         public decimal Theta
         {
-            get; private set;
+            get
+            {
+                return _theta.Value;
+            }
+            private set
+            {
+                _theta = new Lazy<decimal>(() => value);
+            }
         }
 
         /// <summary>
@@ -77,7 +118,14 @@ namespace QuantConnect.Data.Market
         /// </summary>
         public decimal Rho
         {
-            get; private set;
+            get
+            {
+                return _rho.Value;
+            }
+            private set
+            {
+                _rho = new Lazy<decimal>(() => value);
+            }
         }
 
         /// <summary>
@@ -90,7 +138,14 @@ namespace QuantConnect.Data.Market
         /// </summary>
         public decimal Lambda
         {
-            get; private set;
+            get
+            {
+                return _lambda.Value;
+            }
+            private set
+            {
+                _lambda = new Lazy<decimal>(() => value);
+            }
         }
 
         /// <summary>
@@ -111,6 +166,29 @@ namespace QuantConnect.Data.Market
             Theta = theta;
             Rho = rho;
             Lambda = lambda;
+        }
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Greeks"/> class
+        /// </summary>
+        public Greeks(Func<decimal> delta, Func<decimal> gamma, Func<decimal> vega, Func<decimal> theta, Func<decimal> rho, Func<decimal> lambda)
+        {
+            _delta = new Lazy<decimal>(delta);
+            _gamma = new Lazy<decimal>(gamma);
+            _vega = new Lazy<decimal>(vega);
+            _theta = new Lazy<decimal>(theta);
+            _rho = new Lazy<decimal>(rho);
+            _lambda = new Lazy<decimal>(lambda);
+        }
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Greeks"/> class
+        /// </summary>
+        public Greeks(Func<Tuple<decimal, decimal>> deltaGamma, Func<decimal> vega, Func<decimal> theta, Func<decimal> rho, Func<decimal> lambda)
+        {
+            _deltaGamma = new Lazy<Tuple<decimal, decimal>>(deltaGamma);
+            _vega = new Lazy<decimal>(vega);
+            _theta = new Lazy<decimal>(theta);
+            _rho = new Lazy<decimal>(rho);
+            _lambda = new Lazy<decimal>(lambda);
         }
     }
 }

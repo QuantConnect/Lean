@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Data;
+using System;
 
 namespace QuantConnect.Securities
 {
@@ -34,6 +35,14 @@ namespace QuantConnect.Securities
         /// <param name="security">The security to calculate volatility for</param>
         /// <param name="data">The new data used to update the model</param>
         void Update(Security security, BaseData data);
+
+        /// <summary>
+        /// Returns history requirements for the volatility model expressed in the form of history request
+        /// </summary>
+        /// <param name="security">The security of the request</param>
+        /// <param name="utcTime">The date/time of the request</param>
+        /// <returns>History request object, or null if no requirements</returns>
+        HistoryRequest HistoryRequirements(Security security, DateTime utcTime);
     }
 
     /// <summary>
@@ -50,7 +59,10 @@ namespace QuantConnect.Securities
         private sealed class NullVolatilityModel : IVolatilityModel
         {
             public decimal Volatility { get; private set; }
+
             public void Update(Security security, BaseData data) { }
+
+            public HistoryRequest HistoryRequirements(Security security, DateTime utcTime) { return null; }
         }
     }
 }

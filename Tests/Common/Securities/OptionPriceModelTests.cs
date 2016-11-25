@@ -143,6 +143,44 @@ namespace QuantConnect.Tests.Common
             Assert.GreaterOrEqual(Math.Round(leftPart, 4), Math.Round(rightPart,4));
         }
 
+
+        [Test]
+        public void GreekApproximationTest()
+        {
+            const decimal price = 82.00m;
+            const decimal underlyingPrice = 120m;
+            const decimal underlyingVol = 0.15m;
+            const decimal riskFreeRate = 0.01m;
+            var tz = TimeZones.NewYork;
+            var evaluationDate = new DateTime(2015, 2, 19);
+
+            var equity = new Equity(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            equity.SetMarketPrice(new Tick { Value = underlyingPrice });
+            equity.VolatilityModel = new DummyVolatilityModel(underlyingVol);
+
+            var contract = new OptionContract(Symbols.SPY_P_192_Feb19_2016, Symbols.SPY) { Time = evaluationDate };
+            var optionPut = new Option(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY_C_192_Feb19_2016, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)));
+            optionPut.SetMarketPrice(new Tick { Value = price });
+            optionPut.Underlying = equity;
+            optionPut.EnableGreekApproximation = false;
+
+            var priceModel = OptionPriceModels.CrankNicolsonFD();
+            var results = priceModel.Evaluate(optionPut, null, contract);
+            var greeks = results.Greeks;
+
+            Assert.AreEqual(greeks.Rho, 0);
+            Assert.AreEqual(greeks.Vega, 0);
+
+            optionPut.EnableGreekApproximation = true;
+
+            priceModel = OptionPriceModels.CrankNicolsonFD();
+            results = priceModel.Evaluate(optionPut, null, contract);
+            greeks = results.Greeks;
+
+            Assert.AreNotEqual(greeks.Rho, 0);
+            Assert.AreNotEqual(greeks.Vega, 0);
+        }
+
         /// <summary>
         /// Dummy implementation of volatility model (for tests only)
         /// </summary>
@@ -160,6 +198,11 @@ namespace QuantConnect.Tests.Common
                 {
                     return _volatility;
                 }
+            }
+
+            public HistoryRequest HistoryRequirements(Security security, DateTime date)
+            {
+                return null;
             }
 
             public void Update(Security security, BaseData data)

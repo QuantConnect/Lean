@@ -17,19 +17,21 @@ using System;
 using MathNet.Numerics.Statistics;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Securities
 {
     /// <summary>
     /// Provides an implementation of <see cref="IVolatilityModel"/> that computes the
-    /// relative standard deviation as the volatility of the security
+    /// annualized sample standard deviation of daily returns as the volatility of the security
     /// </summary>
-    public class RelativeStandardDeviationVolatilityModel : IVolatilityModel
+    public class StandardDeviationOfReturnsVolatilityModel : IVolatilityModel
     {
         private bool _needsUpdate;
         private decimal _volatility;
-        private DateTime _lastUpdate;
-        private readonly TimeSpan _periodSpan;
+        private DateTime _lastUpdate = DateTime.MinValue;
+        private decimal _lastPrice;
+        private readonly TimeSpan _periodSpan = TimeSpan.FromDays(1);
         private readonly object _sync = new object();
         private readonly RollingWindow<double> _window;
 
@@ -50,13 +52,8 @@ namespace QuantConnect.Securities
                     if (_needsUpdate)
                     {
                         _needsUpdate = false;
-                        var mean = Math.Abs(_window.Mean().SafeDecimalCast());
-                        if (mean != 0m)
-                        {
-                            // volatility here is supposed to be a percentage
-                            var std = _window.StandardDeviation().SafeDecimalCast();
-                            _volatility = std/mean;
-                        }
+                        var std = _window.StandardDeviation().SafeDecimalCast();
+                        _volatility = std * (decimal)Math.Sqrt(252.0);
                     }
                 }
                 return _volatility;
@@ -64,16 +61,13 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RelativeStandardDeviationVolatilityModel"/> class
+        /// Initializes a new instance of the <see cref="StandardDeviationOfReturnsVolatilityModel"/> class
         /// </summary>
-        /// <param name="periodSpan">The time span representing one 'period' length</param>
-        /// <param name="periods">The nuber of 'period' lengths to wait until updating the value</param>
-        public RelativeStandardDeviationVolatilityModel(TimeSpan periodSpan, int periods)
+        /// <param name="periods">The number of periods (days) to wait until updating the value</param>
+        public StandardDeviationOfReturnsVolatilityModel(int periods)
         {
             if (periods < 2) throw new ArgumentOutOfRangeException("periods", "'periods' must be greater than or equal to 2.");
-            _periodSpan = periodSpan;
             _window = new RollingWindow<double>(periods);
-            _lastUpdate = DateTime.MinValue + TimeSpan.FromMilliseconds(periodSpan.TotalMilliseconds*periods);
         }
 
         /// <summary>
@@ -89,14 +83,40 @@ namespace QuantConnect.Securities
             {
                 lock (_sync)
                 {
-                    _needsUpdate = true;
-                    // we purposefully use security.Price for consistency in our reporting
-                    // some streams of data will have trade/quote data, so if we just use
-                    // data.Value we could be mixing and matching data streams
-                    _window.Add((double) security.Price);
+                    if (_lastPrice > 0.0m)
+                    {
+                        _needsUpdate = true;
+                        _window.Add((double)(data.Price / _lastPrice) - 1.0);
+                    }
                 }
                 _lastUpdate = data.EndTime;
+                _lastPrice = data.Price;
             }
+        }
+
+        /// <summary>
+        /// Returns history requirements for the volatility model expressed in the form of history request
+        /// </summary>
+        /// <param name="security">The security of the request</param>
+        /// <param name="utcTime">The date of the request</param>
+        /// <returns>History request object, or null if no requirements</returns>
+        public HistoryRequest HistoryRequirements(Security security, DateTime utcTime)
+        {
+            var barCount = _window.Size + 1;
+            var localStartTime = Time.GetStartTimeForTradeBars(security.Exchange.Hours, utcTime.ConvertFromUtc(security.Exchange.TimeZone), _periodSpan, barCount, security.IsExtendedMarketHours);
+            var utcStartTime = localStartTime.ConvertToUtc(security.Exchange.TimeZone);
+
+            return new HistoryRequest()
+                {
+                    StartTimeUtc = utcStartTime,
+                    EndTimeUtc = utcTime,
+                    Resolution = Resolution.Daily,
+                    FillForwardResolution = Resolution.Daily,
+                    IncludeExtendedMarketHours = true,
+                    Symbol = security.Symbol,
+                    DataType = typeof(TradeBar),
+                    TimeZone = security.Exchange.TimeZone
+                };
         }
     }
 }

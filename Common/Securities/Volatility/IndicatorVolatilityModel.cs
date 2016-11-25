@@ -77,5 +77,16 @@ namespace QuantConnect.Securities
                 _indicatorUpdate(security, data, _indicator);
             }
         }
+
+        /// <summary>
+        /// Returns history requirements for the volatility model expressed in the form of history request
+        /// </summary>
+        /// <param name="security">The security of the request</param>
+        /// <param name="utcTime">The date/time of the request</param>
+        /// <returns>History request object, or null if no requirements</returns>
+        public HistoryRequest HistoryRequirements(Security security, DateTime utcTime)
+        {
+            return null;
+        }
     }
 }

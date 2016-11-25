@@ -39,7 +39,7 @@ namespace QuantConnect.Securities.Option
         /// available to the algorithm</param>
         /// <param name="contract">The option contract to evaluate</param>
         /// <returns>The estimate</returns>
-        public Handle<BlackVolTermStructure> Estimate(Security security, Slice slice, OptionContract contract)
+        public double Estimate(Security security, Slice slice, OptionContract contract)
         {
             var option = security as Option;
 
@@ -48,17 +48,10 @@ namespace QuantConnect.Securities.Option
                 option.Underlying.VolatilityModel != null &&
                 option.Underlying.VolatilityModel.Volatility > 0m)
             {
-                var calendar = new UnitedStates();
-                var dayCounter = new Actual365Fixed();
-                var settlementDate = contract.Time.Date.AddDays(Option.DefaultSettlementDays);
-
-                return 
-                    new Handle<BlackVolTermStructure>(
-                                new BlackConstantVol(settlementDate, calendar,
-                                                     (double)option.Underlying.VolatilityModel.Volatility, dayCounter));
+                return (double)option.Underlying.VolatilityModel.Volatility;
             }
 
-            return null;
+            return 0.0;
         }
     }
 }

@@ -214,6 +214,14 @@ namespace QuantConnect.Securities.Option
         {
             get; set;
         }
+
+        /// <summary>
+        /// When enabled, approximates Greeks if corresponding pricing model didn't calculate exact numbers
+        /// </summary>
+        public bool EnableGreekApproximation
+        {
+            get; set;
+        }
         /// <summary>
         /// Gets or sets the contract filter
         /// </summary>

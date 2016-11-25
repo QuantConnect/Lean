@@ -31,18 +31,32 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private Dictionary<string, string> _ibNameMap = new Dictionary<string, string>();
 
         /// <summary>
+        /// Constructs InteractiveBrokersSymbolMapper. Default parameters are used.
+        /// </summary>
+        public InteractiveBrokersSymbolMapper():
+            this(Path.Combine("InteractiveBrokers", "IB-symbol-map.json"))
+        {
+        }
+
+        /// <summary>
         /// Constructs InteractiveBrokersSymbolMapper
         /// </summary>
-        public InteractiveBrokersSymbolMapper()
+        /// <param name="ibNameMap">New names map (IB -> LEAN)</param>
+        public InteractiveBrokersSymbolMapper(Dictionary<string, string> ibNameMap)
         {
-            var ibNameMapFileName = "IB-symbol-map.json";
-            var ibNameMapFullName = Path.Combine("InteractiveBrokers", ibNameMapFileName);
+            _ibNameMap = ibNameMap;
+        }
 
+        /// <summary>
+        /// Constructs InteractiveBrokersSymbolMapper
+        /// </summary>
+        /// <param name="ibNameMapFullName">Full file name of the map file</param>
+        public InteractiveBrokersSymbolMapper(string ibNameMapFullName)
+        {
             if (File.Exists(ibNameMapFullName))
             {
                 _ibNameMap = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(ibNameMapFullName));
             }
-
         }
         /// <summary>
         /// Converts a Lean symbol instance to an InteractiveBrokers symbol

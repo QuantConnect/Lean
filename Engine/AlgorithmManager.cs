@@ -685,6 +685,12 @@ namespace QuantConnect.Lean.Engine
             var timeZone = algorithm.TimeZone;
             var history = algorithm.HistoryProvider;
 
+            // fulfilling history requirements of volatility models in live mode
+            if (algorithm.LiveMode)
+            {
+                ProcessVolatilityHistoryRequirements(algorithm);
+            }
+
             // get the required history job from the algorithm
             DateTime? lastHistoryTimeUtc = null;
             var historyRequests = algorithm.GetWarmupHistoryRequests().ToList();
@@ -846,6 +852,32 @@ namespace QuantConnect.Lean.Engine
                     }
                 }
                 yield return timeSlice;
+            }
+        }
+
+        private void ProcessVolatilityHistoryRequirements(IAlgorithm algorithm)
+        {
+            Log.Trace("AlgorithmManager.ProcessVolatilityHistoryRequirements(): Updating volatility models with historical data...");
+
+            foreach (var security in algorithm.Securities.Values)
+            {
+                if (security.VolatilityModel != VolatilityModel.Null)
+                {
+                    var historyReq = security.VolatilityModel.HistoryRequirements(security, algorithm.UtcTime);
+
+                    if (historyReq != null && algorithm.HistoryProvider != null)
+                    {
+                        var history = algorithm.HistoryProvider.GetHistory(new[] { historyReq }, algorithm.TimeZone);
+                        if (history != null)
+                        {
+                            foreach (var slice in history)
+                            {
+                                if (slice.Bars.ContainsKey(security.Symbol))
+                                    security.VolatilityModel.Update(security, slice.Bars[security.Symbol]);
+                            }
+                        }
+                    }
+                }
             }
         }
 

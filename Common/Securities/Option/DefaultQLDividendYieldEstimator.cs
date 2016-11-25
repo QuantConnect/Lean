@@ -30,12 +30,12 @@ namespace QuantConnect.Securities.Option
     /// </summary>
     class DefaultQLDividendYieldEstimator : IQLDividendYieldEstimator
     {
-        private readonly decimal _dividendYield;
+        private readonly double _dividendYield;
         /// <summary>
         /// Constructor initializes class with constant dividend yield. 
         /// </summary>
         /// <param name="dividendYield"></param>
-        public DefaultQLDividendYieldEstimator(decimal dividendYield = 0.00m)
+        public DefaultQLDividendYieldEstimator(double dividendYield = 0.00)
         {
             _dividendYield = dividendYield;
         }
@@ -48,13 +48,9 @@ namespace QuantConnect.Securities.Option
         /// available to the algorithm</param>
         /// <param name="contract">The option contract to evaluate</param>
         /// <returns>The estimate</returns>
-        public Handle<YieldTermStructure> Estimate(Security security, Slice slice, OptionContract contract)
+        public double Estimate(Security security, Slice slice, OptionContract contract)
         {
-            var dayCounter = new Actual365Fixed();
-            var settlementDate = contract.Time.Date.AddDays(Option.DefaultSettlementDays);
-
-            return new Handle<YieldTermStructure>(
-                        new FlatForward(settlementDate, (double)_dividendYield, dayCounter));
+            return _dividendYield;
         }
     }
 }

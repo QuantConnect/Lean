@@ -30,12 +30,12 @@ namespace QuantConnect.Securities.Option
     /// </summary>
     public class DefaultQLRiskFreeRateEstimator : IQLRiskFreeRateEstimator
     {
-        private readonly decimal _riskFreeRate;
+        private readonly double _riskFreeRate;
         /// <summary>
         /// Constructor initializes class with risk free rate constant
         /// </summary>
         /// <param name="riskFreeRate"></param>
-        public DefaultQLRiskFreeRateEstimator(decimal riskFreeRate = 0.01m)
+        public DefaultQLRiskFreeRateEstimator(double riskFreeRate = 0.01)
         {
             _riskFreeRate = riskFreeRate;
         }
@@ -48,13 +48,9 @@ namespace QuantConnect.Securities.Option
         /// available to the algorithm</param>
         /// <param name="contract">The option contract to evaluate</param>
         /// <returns>The estimate</returns>
-        public Handle<YieldTermStructure> Estimate(Security security, Slice slice, OptionContract contract)
+        public double Estimate(Security security, Slice slice, OptionContract contract)
         {
-            var dayCounter = new Actual365Fixed();
-            var settlementDate = contract.Time.Date.AddDays(Option.DefaultSettlementDays);
-
-            return new Handle<YieldTermStructure>(
-                        new FlatForward(settlementDate, (double)_riskFreeRate, dayCounter));
+            return _riskFreeRate;
         }
     }
 }

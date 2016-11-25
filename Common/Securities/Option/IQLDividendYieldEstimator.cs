@@ -37,7 +37,7 @@ namespace QuantConnect.Securities.Option
         /// <param name="slice">The current data slice. This can be used to access other information
         /// available to the algorithm</param>
         /// <param name="contract">The option contract to evaluate</param>
-        /// <returns>The term structure estimate</returns>
-        Handle<YieldTermStructure> Estimate(Security security, Slice slice, OptionContract contract);
+        /// <returns>Dividend yield</returns>
+        double Estimate(Security security, Slice slice, OptionContract contract);
     }
 }

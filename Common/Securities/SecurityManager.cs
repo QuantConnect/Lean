@@ -366,6 +366,7 @@ namespace QuantConnect.Securities
                     break;
 
                 case SecurityType.Option:
+                    if (addToSymbolCache) SymbolCache.Set(symbol.Underlying.Value, symbol.Underlying);
                     config.DataNormalizationMode = DataNormalizationMode.Raw;
                     security = new Option.Option(exchangeHours, config, securityPortfolioManager.CashBook[CashBook.AccountCurrency], new Option.OptionSymbolProperties(symbolProperties));
                     break;
