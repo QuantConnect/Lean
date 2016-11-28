@@ -325,7 +325,7 @@ namespace QuantConnect.Brokerages.Oanda
             }
             var request = WebRequest.CreateHttp(requestString);
             request.Headers[HttpRequestHeader.Authorization] = "Bearer " + _accessToken;
-            request.Headers[HttpRequestHeader.AcceptEncoding] = "gzip, deflate";
+            request.Headers[HttpRequestHeader.AcceptEncoding] = "gzip";
             request.Method = method;
 
             try
