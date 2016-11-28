@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm
         private ConcurrentQueue<string> _debugMessages = new ConcurrentQueue<string>();
         private ConcurrentQueue<string> _logMessages = new ConcurrentQueue<string>();
         private ConcurrentQueue<string> _errorMessages = new ConcurrentQueue<string>();
-        
+
         //Error tracking to avoid message flooding:
         private string _previousDebugMessage = "";
         private string _previousErrorMessage = "";
@@ -528,6 +528,18 @@ namespace QuantConnect.Algorithm
             catch (Exception err)
             {
                 Error("Error applying parameter values: " + err.Message);
+            }
+        }
+
+        /// <summary>
+        /// Set the available data feeds in the <see cref="SecurityManager"/>
+        /// </summary>
+        /// <param name="availableDataTypes">The different <see cref="TickType"/> each <see cref="Security"/> supports</param>
+        public void SetAvailableDataTypes(Dictionary<SecurityType, List<TickType>> availableDataTypes)
+        {
+            foreach (var dataFeed in availableDataTypes)
+            {
+                SubscriptionManager.AvailableDataTypes[dataFeed.Key] = dataFeed.Value;
             }
         }
 
@@ -1310,7 +1322,7 @@ namespace QuantConnect.Algorithm
             if (!UniverseManager.TryGetValue(canonicalSymbol, out universe))
             {
                 var settings = new UniverseSettings(resolution, leverage, true, false, TimeSpan.Zero);
-                universe = new OptionChainUniverse(canonicalSecurity, settings, SecurityInitializer);
+                universe = new OptionChainUniverse(canonicalSecurity, settings, SubscriptionManager, SecurityInitializer);
                 UniverseManager.Add(canonicalSymbol, universe);
             }
 
@@ -1356,7 +1368,7 @@ namespace QuantConnect.Algorithm
             if (!UniverseManager.TryGetValue(canonicalSymbol, out universe))
             {
                 var settings = new UniverseSettings(resolution, leverage, true, false, TimeSpan.Zero);
-                universe = new FuturesChainUniverse(canonicalSecurity, settings, SecurityInitializer);
+                universe = new FuturesChainUniverse(canonicalSecurity, settings, SubscriptionManager, SecurityInitializer);
                 UniverseManager.Add(canonicalSymbol, universe);
             }
 

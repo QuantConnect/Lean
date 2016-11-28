@@ -559,6 +559,16 @@ namespace QuantConnect.Lean.Engine
                 //After we've fired all other events in this second, fire the pricing events:
                 try
                 {
+
+                    // TODO: For backwards compatibility only. Remove in 2017
+                    // For compatibility with Forex Trade data, moving 
+                    if (timeSlice.Slice.QuoteBars.Count > 0)
+                    {
+                        foreach (var tradeBar in timeSlice.Slice.QuoteBars.Where(x => x.Key.ID.SecurityType == SecurityType.Forex))
+                        {
+                            timeSlice.Slice.Bars.Add(tradeBar.Value.Collapse());
+                        }
+                    }
                     if (hasOnDataTradeBars && timeSlice.Slice.Bars.Count > 0) methodInvokers[typeof(TradeBars)](algorithm, timeSlice.Slice.Bars);
                     if (hasOnDataQuoteBars && timeSlice.Slice.QuoteBars.Count > 0) methodInvokers[typeof(QuoteBars)](algorithm, timeSlice.Slice.QuoteBars);
                     if (hasOnDataOptionChains && timeSlice.Slice.OptionChains.Count > 0) methodInvokers[typeof(OptionChains)](algorithm, timeSlice.Slice.OptionChains);

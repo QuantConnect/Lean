@@ -34,18 +34,24 @@ namespace QuantConnect.Data.UniverseSelection
 
         private readonly Future _future;
         private readonly UniverseSettings _universeSettings;
+        private SubscriptionManager _subscriptionManager;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FuturesChainUniverse"/> class
         /// </summary>
         /// <param name="future">The canonical future chain security</param>
         /// <param name="universeSettings">The universe settings to be used for new subscriptions</param>
+        /// <param name="subscriptionManager">The subscription manager used to return available data types</param>
         /// <param name="securityInitializer">The security initializer to use on newly created securities</param>
-        public FuturesChainUniverse(Future future, UniverseSettings universeSettings, ISecurityInitializer securityInitializer = null)
+        public FuturesChainUniverse(Future future, 
+                                    UniverseSettings universeSettings,
+                                    SubscriptionManager subscriptionManager,
+                                    ISecurityInitializer securityInitializer = null)
             : base(future.SubscriptionDataConfig, securityInitializer)
         {
             _future = future;
             _universeSettings = universeSettings;
+            _subscriptionManager = subscriptionManager;
         }
 
         /// <summary>
@@ -90,7 +96,7 @@ namespace QuantConnect.Data.UniverseSelection
         public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(Security security, DateTime currentTimeUtc, DateTime maximumEndTimeUtc)
         {
             // we want to return both quote and trade subscriptions
-            return dataTypes
+            return _subscriptionManager.GetDataTypesForSecurity(SecurityType.Future)
                 .Select(tickType => new SubscriptionDataConfig(
                     objectType: GetDataType(UniverseSettings.Resolution, tickType),
                     symbol: security.Symbol,

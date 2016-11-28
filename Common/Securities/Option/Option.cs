@@ -55,13 +55,46 @@ namespace QuantConnect.Securities.Option
                 new OptionPortfolioModel(),
                 new ImmediateFillModel(),
                 new InteractiveBrokersFeeModel(),
-                new SpreadSlippageModel(),
+                new ConstantSlippageModel(0),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
                 new OptionMarginModel(),
                 new OptionDataFilter(),
                 new AdjustedPriceVariationModel()
                 )
+        {
+            StrikePrice = Symbol.ID.StrikePrice;
+            ExerciseSettlement = SettlementType.PhysicalDelivery;
+            OptionExerciseModel = new DefaultExerciseModel();
+            PriceModel = new CurrentPriceOptionPriceModel();
+            ContractFilter = new StrikeExpiryOptionFilter(-5, 5, TimeSpan.Zero, TimeSpan.FromDays(35));
+            Holdings = new OptionHolding(this);
+            _symbolProperties = symbolProperties;
+        }
+
+        /// <summary>
+        /// Constructor for the option security
+        /// </summary>
+        /// <param name="symbol">The symbol of the security</param>
+        /// <param name="exchangeHours">Defines the hours this exchange is open</param>
+        /// <param name="quoteCurrency">The cash object that represent the quote currency</param>
+        /// <param name="symbolProperties">The symbol properties for this security</param>
+        public Option(Symbol symbol, SecurityExchangeHours exchangeHours, Cash quoteCurrency, OptionSymbolProperties symbolProperties)
+           : base(symbol,
+               quoteCurrency,
+               symbolProperties,
+               new OptionExchange(exchangeHours),
+               new OptionCache(),
+               new OptionPortfolioModel(),
+               new ImmediateFillModel(),
+               new InteractiveBrokersFeeModel(),
+               new ConstantSlippageModel(0),
+               new ImmediateSettlementModel(),
+               Securities.VolatilityModel.Null,
+               new OptionMarginModel(),
+               new OptionDataFilter(),
+               new AdjustedPriceVariationModel()
+               )
         {
             StrikePrice = Symbol.ID.StrikePrice;
             ExerciseSettlement = SettlementType.PhysicalDelivery;

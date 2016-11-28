@@ -54,7 +54,38 @@ namespace QuantConnect.Securities.Future
                 new SecurityPortfolioModel(),
                 new ImmediateFillModel(),
                 new InteractiveBrokersFeeModel(),
-                new SpreadSlippageModel(),
+                new ConstantSlippageModel(0),
+                new ImmediateSettlementModel(),
+                Securities.VolatilityModel.Null,
+                new FutureMarginModel(),
+                new SecurityDataFilter(),
+                new AdjustedPriceVariationModel()
+                )
+        {
+            // for now all futures are cash settled as we don't allow underlying (Live Cattle?) to be posted on the account
+            SettlementType = SettlementType.Cash;
+            ContractFilter = new ExpiryFutureFilter(TimeSpan.Zero, TimeSpan.FromDays(35));
+            Holdings = new FutureHolding(this);
+            _symbolProperties = symbolProperties;
+        }
+
+        /// <summary>
+        /// Constructor for the Future security
+        /// </summary>
+        /// <param name="symbol">The subscription security symbol</param>
+        /// <param name="exchangeHours">Defines the hours this exchange is open</param>
+        /// <param name="quoteCurrency">The cash object that represent the quote currency</param>
+        /// <param name="symbolProperties">The symbol properties for this security</param>
+        public Future(Symbol symbol, SecurityExchangeHours exchangeHours, Cash quoteCurrency, SymbolProperties symbolProperties)
+            : base(symbol,
+                quoteCurrency,
+                symbolProperties,
+                new FutureExchange(exchangeHours),
+                new FutureCache(),
+                new SecurityPortfolioModel(),
+                new ImmediateFillModel(),
+                new InteractiveBrokersFeeModel(),
+                new ConstantSlippageModel(0),
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
                 new FutureMarginModel(),

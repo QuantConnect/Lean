@@ -188,6 +188,7 @@
     <Compile Include="Data\Market\QuoteBars.cs" />
     <Compile Include="Data\Market\BarDirection.cs" />
     <Compile Include="Data\Market\IntraDayDividendSplit.cs" />
+    <Compile Include="Data\SubscriptionDataConfigList.cs" />
     <Compile Include="Data\UniverseSelection\CoarseFundamentalUniverse.cs" />
     <Compile Include="Data\UniverseSelection\FineFundamentalUniverse.cs" />
     <Compile Include="Data\UniverseSelection\GetSubscriptionRequestsUniverseDecorator.cs" />
@@ -289,7 +290,6 @@
     <Compile Include="Orders\OrderExtensions.cs" />
     <Compile Include="Orders\OrderTicket.cs" />
     <Compile Include="Orders\Slippage\ConstantSlippageModel.cs" />
-    <Compile Include="Orders\Slippage\SpreadSlippageModel.cs" />
     <Compile Include="Orders\Slippage\ISlippageModel.cs" />
     <Compile Include="Orders\StopLimitOrder.cs" />
     <Compile Include="Orders\StopMarketOrder.cs" />

@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
@@ -187,6 +188,7 @@ namespace QuantConnect.Lean.Engine.Setup
                         algorithm.SetBrokerageModel(_factory.BrokerageModel);
                         //Set our parameters
                         algorithm.SetParameters(job.Parameters);
+                        algorithm.SetAvailableDataTypes(GetConfiguredDataFeeds());
                         //Algorithm is live, not backtesting:
                         algorithm.SetLiveMode(true);
                         //Initialize the algorithm's starting date
@@ -385,6 +387,24 @@ namespace QuantConnect.Lean.Engine.Setup
 
             return Errors.Count == 0;
         }
+
+        /// <summary>
+        /// Get the available data feeds from config.json,
+        /// If none available, throw an error
+        /// </summary>
+        private static Dictionary<SecurityType, List<TickType>> GetConfiguredDataFeeds()
+        {
+            var dataFeedsConfigString = Config.Get("security-data-feeds");
+
+            Dictionary<SecurityType, List<TickType>> dataFeeds = new Dictionary<SecurityType, List<TickType>>();
+            if (dataFeedsConfigString != string.Empty)
+            {
+                dataFeeds = JsonConvert.DeserializeObject<Dictionary<SecurityType, List<TickType>>>(dataFeedsConfigString);
+            }
+
+            return dataFeeds;
+        }
+
 
         /// <summary>
         /// Adds initializaion error to the Errors list

@@ -23,7 +23,7 @@ using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
-namespace QuantConnect.Securities 
+namespace QuantConnect.Securities
 {
     /// <summary>
     /// Enumerable security management class for grouping security objects into an array and providing any common properties.
@@ -216,7 +216,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
         /// <returns>Enumerable key value pair</returns>
-        IEnumerator<KeyValuePair<Symbol, Security>> IEnumerable<KeyValuePair<Symbol, Security>>.GetEnumerator() 
+        IEnumerator<KeyValuePair<Symbol, Security>> IEnumerable<KeyValuePair<Symbol, Security>>.GetEnumerator()
         {
             return _securityManager.GetEnumerator();
         }
@@ -226,7 +226,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
         /// <returns>Enumerator.</returns>
-        IEnumerator IEnumerable.GetEnumerator() 
+        IEnumerator IEnumerable.GetEnumerator()
         {
             return _securityManager.GetEnumerator();
         }
@@ -239,12 +239,12 @@ namespace QuantConnect.Securities
         /// <returns>Security</returns>
         public Security this[Symbol symbol]
         {
-            get 
+            get
             {
                 if (!_securityManager.ContainsKey(symbol))
                 {
                     throw new Exception(string.Format("This asset symbol ({0}) was not found in your security list. Please add this security or check it exists before using it with 'Securities.ContainsKey(\"{1}\")'", symbol, SymbolCache.GetTicker(symbol)));
-                } 
+                }
                 return _securityManager[symbol];
             }
             set
@@ -327,9 +327,18 @@ namespace QuantConnect.Securities
             // add the symbol to our cache
             if (addToSymbolCache) SymbolCache.Set(symbol.Value, symbol);
 
-            //Add the symbol to Data Manager -- generate unified data streams for algorithm events
-            var config = subscriptionManager.Add(factoryType, symbol, resolution, dataTimeZone, exchangeHours.TimeZone, isCustomData, fillDataForward,
-                extendedMarketHours, isInternalFeed, isFilteredSubscription);
+            // Add the symbol to Data Manager -- generate unified data streams for algorithm events
+            SubscriptionDataConfigList configList = new SubscriptionDataConfigList(symbol);
+
+            // Get the type that will be used in the data feed
+            // Could be more than one for a given security - i.e. More than one subscription needed
+            foreach (var dataFeed in subscriptionManager.AvailableDataTypes[symbol.ID.SecurityType])
+            {
+                var dataFeedType = GetDataFeedType(factoryType, dataFeed);
+
+                configList.Add(subscriptionManager.Add(dataFeedType, symbol, resolution, dataTimeZone, exchangeHours.TimeZone, isCustomData, fillDataForward,
+                                                        extendedMarketHours, isInternalFeed, isFilteredSubscription));
+            }
 
             // verify the cash book is in a ready state
             var quoteCurrency = symbolProperties.QuoteCurrency;
@@ -355,11 +364,11 @@ namespace QuantConnect.Securities
                     securityPortfolioManager.CashBook.Add(quoteCurrency, 0, 0);
                 }
             }
-            
+
             var quoteCash = securityPortfolioManager.CashBook[symbolProperties.QuoteCurrency];
 
             Security security;
-            switch (config.SecurityType)
+            switch (configList.Symbol.ID.SecurityType)
             {
                 case SecurityType.Equity:
                     security = new Equity.Equity(symbol, exchangeHours, quoteCash, symbolProperties);
@@ -367,13 +376,13 @@ namespace QuantConnect.Securities
 
                 case SecurityType.Option:
                     if (addToSymbolCache) SymbolCache.Set(symbol.Underlying.Value, symbol.Underlying);
-                    config.DataNormalizationMode = DataNormalizationMode.Raw;
-                    security = new Option.Option(exchangeHours, config, securityPortfolioManager.CashBook[CashBook.AccountCurrency], new Option.OptionSymbolProperties(symbolProperties));
+                    configList.SetDataNormalizationMode(DataNormalizationMode.Raw);
+                    security = new Option.Option(symbol, exchangeHours, securityPortfolioManager.CashBook[CashBook.AccountCurrency], new Option.OptionSymbolProperties(symbolProperties));
                     break;
 
                 case SecurityType.Future:
-                    config.DataNormalizationMode = DataNormalizationMode.Raw;
-                    security = new Future.Future(exchangeHours, config, securityPortfolioManager.CashBook[CashBook.AccountCurrency], symbolProperties);
+                    configList.SetDataNormalizationMode(DataNormalizationMode.Raw);
+                    security = new Future.Future(symbol, exchangeHours, securityPortfolioManager.CashBook[CashBook.AccountCurrency], symbolProperties);
                     break;
 
                 case SecurityType.Forex:
@@ -392,12 +401,12 @@ namespace QuantConnect.Securities
 
             // if we're just creating this security and it only has an internal
             // feed, mark it as non-tradable since the user didn't request this data
-            if (!config.IsInternalFeed)
+            if (!configList.IsInternalFeed)
             {
                 security.IsTradable = true;
             }
 
-            security.AddData(config);
+            security.AddData(configList);
 
             // invoke the security initializer
             securityInitializer.Initialize(security);
@@ -416,6 +425,46 @@ namespace QuantConnect.Securities
             }
 
             return security;
+        }
+
+        /// <summary>
+        /// Get the data feed type for the given security
+        /// </summary>
+        /// <param name="factoryType"><see cref="BaseData"/> type of the security</param>
+        /// <param name="tickType">The <see cref="TickType"/> of the security</param>
+        /// <returns>Type that should be added as a subscription</returns>
+        private static Type GetDataFeedType(Type factoryType, TickType tickType)
+        {
+            Type dataFeedType;
+
+            // if it is a standard QC Data type
+            if (factoryType == typeof(TradeBar) ||
+                factoryType == typeof(QuoteBar) ||
+                factoryType == typeof(OpenInterest))
+            {
+                switch (tickType)
+                {
+                    case TickType.Trade:
+                        dataFeedType = typeof(TradeBar);
+                        break;
+                    case TickType.Quote:
+                        dataFeedType = typeof(QuoteBar);
+                        break;
+                    case TickType.OpenInterest:
+                        dataFeedType = typeof(OpenInterest);
+                        break;
+                    default:
+                        throw new ArgumentException(
+                            "SecurityManager.GetDataFeedType(): DataFeed not implemented for security type.");
+                }
+            }
+            else
+            {
+                // it is a custom data type
+                dataFeedType = factoryType;
+            }
+
+            return dataFeedType;
         }
 
         /// <summary>
