@@ -297,7 +297,8 @@ namespace QuantConnect.Api
             {
                 _ws.Send(JsonConvert.SerializeObject(_subscribedSymbols));
                 Log.Trace(
-                    "WebSocketConnection.SendSubscription(): Sent subscriptions to: {0}",
+                    "WebSocketConnection.SendSubscription(): Sent {0} subscriptions to: {1}",
+                    _subscribedSymbols.Count,
                     _builder);
             }
         }
