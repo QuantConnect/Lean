@@ -54,6 +54,10 @@
   "job-user-id": "0",
   "api-access-token": "",
 
+  // live data configuration
+  "live-data-url": "ws://127.0.0.1",
+  "live-data-port": 8080,
+
   // interactive brokers configuration
   "ib-account": "DUxxxx",
   "ib-user-name": "",
