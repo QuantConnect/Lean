@@ -185,9 +185,38 @@ namespace QuantConnect.Securities.Option
             Func<double> reevalTheta = () =>
             {
                 var step = 1.0 / 365.0;
-                Settings.setEvaluationDate(settlementDate.AddDays(-1));
+
+                /*Settings.setEvaluationDate(settlementDate.AddDays(-1));
                 var npvMinus = option.NPV();
                 Settings.setEvaluationDate(settlementDate);
+
+                return (npv - npvMinus) / step;*/
+
+                // This code is a workaround for the bug in QLNet
+                var newSettlementDate = settlementDate.AddDays(-1);
+
+                var newDividendYield = new Handle<YieldTermStructure>(new FlatForward(newSettlementDate, dividendYieldValue, dayCounter));
+
+                var newRiskFreeRate = new Handle<YieldTermStructure>(new FlatForward(newSettlementDate, riskFreeRateValue, dayCounter));
+
+                var newUnderlyingVol = new Handle<BlackVolTermStructure>(new BlackConstantVol(newSettlementDate, calendar, new Handle<Quote>(underlyingVolValue), dayCounter));
+
+                // preparing stochastic process and payoff functions
+                var newStochasticProcess = new BlackScholesMertonProcess(new Handle<Quote>(underlyingQuoteValue), newDividendYield, newRiskFreeRate, newUnderlyingVol);
+                var newPayoff = new PlainVanillaPayoff(contract.Right == OptionRight.Call ? QLNet.Option.Type.Call : QLNet.Option.Type.Put, (double)contract.Strike);
+
+                // creating option QL object
+                var newOption = contract.Symbol.ID.OptionStyle == OptionStyle.American ?
+                            new VanillaOption(newPayoff, new AmericanExercise(newSettlementDate, maturityDate)) :
+                            new VanillaOption(newPayoff, new EuropeanExercise(maturityDate));
+
+                Settings.setEvaluationDate(newSettlementDate);
+
+                // preparing pricing engine QL object
+                newOption.setPricingEngine(_pricingEngineFunc(contract.Symbol, newStochasticProcess));
+
+                // running calculations
+                var npvMinus = newOption.NPV();
 
                 return (npv - npvMinus) / step;
             };

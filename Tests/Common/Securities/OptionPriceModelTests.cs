@@ -143,16 +143,47 @@ namespace QuantConnect.Tests.Common
             Assert.GreaterOrEqual(Math.Round(leftPart, 4), Math.Round(rightPart,4));
         }
 
+        [Test]
+        public void EvaluationDateWorksInPortfolioTest()
+        {
+            const decimal price = 30.00m;
+            const decimal underlyingPrice = 200m;
+            const decimal underlyingVol = 0.25m;
+            const decimal riskFreeRate = 0.01m;
+            var tz = TimeZones.NewYork;
+            var evaluationDate1 = new DateTime(2015, 2, 19);
+            var evaluationDate2 = new DateTime(2015, 2, 20);
+
+            var equity = new Equity(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            equity.SetMarketPrice(new Tick { Value = underlyingPrice });
+            equity.VolatilityModel = new DummyVolatilityModel(underlyingVol);
+
+            var contract = new OptionContract(Symbols.SPY_C_192_Feb19_2016, Symbols.SPY) { Time = evaluationDate1 };
+            var optionCall = new Option(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY_C_192_Feb19_2016, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)));
+            optionCall.SetMarketPrice(new Tick { Value = price });
+            optionCall.Underlying = equity;
+
+            var priceModel = OptionPriceModels.BaroneAdesiWhaley();
+            var results = priceModel.Evaluate(optionCall, null, contract);
+
+            var callPrice1 = results.TheoreticalPrice;
+
+            contract.Time = evaluationDate2;
+            results = priceModel.Evaluate(optionCall, null, contract);
+
+            var callPrice2 = results.TheoreticalPrice;
+            Assert.Greater(callPrice1, callPrice2);
+        }
+
 
         [Test]
         public void GreekApproximationTest()
         {
-            const decimal price = 82.00m;
-            const decimal underlyingPrice = 120m;
+            const decimal price = 20.00m;
+            const decimal underlyingPrice = 190m;
             const decimal underlyingVol = 0.15m;
-            const decimal riskFreeRate = 0.01m;
             var tz = TimeZones.NewYork;
-            var evaluationDate = new DateTime(2015, 2, 19);
+            var evaluationDate = new DateTime(2016, 1, 19);
 
             var equity = new Equity(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
             equity.SetMarketPrice(new Tick { Value = underlyingPrice });
@@ -168,6 +199,7 @@ namespace QuantConnect.Tests.Common
             var results = priceModel.Evaluate(optionPut, null, contract);
             var greeks = results.Greeks;
 
+            Assert.AreEqual(greeks.Theta, 0);
             Assert.AreEqual(greeks.Rho, 0);
             Assert.AreEqual(greeks.Vega, 0);
 
@@ -177,6 +209,7 @@ namespace QuantConnect.Tests.Common
             results = priceModel.Evaluate(optionPut, null, contract);
             greeks = results.Greeks;
 
+            Assert.AreNotEqual(greeks.Theta, 0);
             Assert.AreNotEqual(greeks.Rho, 0);
             Assert.AreNotEqual(greeks.Vega, 0);
         }
