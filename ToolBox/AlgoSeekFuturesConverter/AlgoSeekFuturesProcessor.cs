@@ -128,19 +128,24 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             _dataDirectory = dataDirectory;
 
             // Setup the consolidator for the requested resolution
-            if (resolution == Resolution.Tick) throw new NotSupportedException();
-
-            switch (tickType)
+            if (resolution == Resolution.Tick)
             {
-                case TickType.Trade:
-                    _consolidator = new TickConsolidator(resolution.ToTimeSpan());
-                    break;
-                case TickType.Quote:
-                    _consolidator = new TickQuoteBarConsolidator(resolution.ToTimeSpan());
-                    break;
-                case TickType.OpenInterest:
-                    _consolidator = new OpenInterestConsolidator(resolution.ToTimeSpan());
-                    break;
+                _consolidator = new IdentityDataConsolidator<Tick>();
+            }
+            else
+            {
+                switch (tickType)
+                {
+                    case TickType.Trade:
+                        _consolidator = new TickConsolidator(resolution.ToTimeSpan());
+                        break;
+                    case TickType.Quote:
+                        _consolidator = new TickQuoteBarConsolidator(resolution.ToTimeSpan());
+                        break;
+                    case TickType.OpenInterest:
+                        _consolidator = new OpenInterestConsolidator(resolution.ToTimeSpan());
+                        break;
+                }
             }
 
             // On consolidating the bars put the bar into a queue in memory to be written to disk later.
@@ -199,9 +204,12 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         }
         private static string SafeName(string fileName)
         {
-            foreach (var name in _windowsRestrictedNames)
+            if (OS.IsWindows)
             {
-                fileName = fileName.Replace(name, "_" + name);
+                foreach (var name in _windowsRestrictedNames)
+                {
+                    fileName = fileName.Replace(name, "_" + name);
+                }
             }
             return fileName;
         }

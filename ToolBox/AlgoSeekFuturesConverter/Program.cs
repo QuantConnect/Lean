@@ -19,6 +19,9 @@ using System.Diagnostics;
 using System.Globalization;
 using QuantConnect.Configuration;
 using QuantConnect.Util;
+using System.Collections.Generic;
+using System.Linq;
+using System.IO;
 
 namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 {
@@ -30,22 +33,54 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         public static void Main(string[] args)
         {
             var date = args[0];
+
             // There are practical file limits we need to override for this to work. 
             // By default programs are only allowed 1024 files open; for futures parsing we need 100k
             Environment.SetEnvironmentVariable("MONO_MANAGED_WATCHER", "disabled");
             Log.LogHandler = new CompositeLogHandler(new ILogHandler[] { new ConsoleLogHandler(), new FileLogHandler("log.txt") });
 
             // Directory for the data, output and processed cache:
-            var dataDirectory = Config.Get("data-directory");
+            var remoteDirectory = Config.Get("futures-remote-directory").Replace("{0}", date);
             var sourceDirectory = Config.Get("futures-source-directory").Replace("{0}", date);
+            var dataDirectory = Config.Get("data-directory").Replace("{0}", date);
+            var resolutions = Config.Get("resolutions");
+            var cleanSourceDirectory = Config.GetBool("clean-source-directory", false);
+
+            Log.Trace("CONFIGURATION:");
+            Log.Trace("Processor Count: " + Environment.ProcessorCount);
+            Log.Trace("Remote Directory: " + remoteDirectory);
+            Log.Trace("Source Directory: " + sourceDirectory);
+            Log.Trace("Destination Directory: " + dataDirectory);
 
             // Date for the option bz files.
             var referenceDate = DateTime.ParseExact(date, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
-            //var referenceDate = DateTime.ParseExact(Config.Get("futures-reference-date"), DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+
+            Log.Trace("DateTime: " + referenceDate.Date.ToString());
+
+            // checking if remote folder exists
+            if(!Directory.Exists(remoteDirectory))
+            {
+                Log.Error("Remote Directory doesn't exist: " + remoteDirectory);
+                return;
+            }
+
+            // prepare tick types
+            var resolutionList = new[] { Resolution.Minute };
+
+            if (!string.IsNullOrEmpty(resolutions))
+            {
+                var names = resolutions.Split(new[] { ';' });
+                resolutionList = 
+                    names
+                    .Where(x => !string.IsNullOrEmpty(x))
+                    .Select(name => (Resolution)Enum.Parse(typeof(Resolution), name, true)).ToArray();
+            }
+  
+            Log.Trace("Resolutions: " + string.Join(";", resolutionList.Select(x => x.ToString()).ToArray()));
 
             // Convert the date:
             var timer = Stopwatch.StartNew();
-            var converter = new AlgoSeekFuturesConverter(Resolution.Minute, referenceDate, sourceDirectory, dataDirectory);
+            var converter = new AlgoSeekFuturesConverter(resolutionList.ToList() , referenceDate, remoteDirectory, sourceDirectory, dataDirectory);
             converter.Convert();
             Log.Trace(string.Format("AlgoSeekFuturesConverter.Main(): {0} Conversion finished in time: {1}", referenceDate, timer.Elapsed));
 
@@ -53,6 +88,20 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             timer.Restart();
             converter.Package(referenceDate);
             Log.Trace(string.Format("AlgoSeekFuturesConverter.Main(): {0} Compression finished in time: {1}", referenceDate, timer.Elapsed));
+
+            if (cleanSourceDirectory)
+            {
+                Log.Trace(string.Format("AlgoSeekFuturesConverter.Main(): Cleaning source directory: {0}", sourceDirectory));
+
+                try
+                {
+                    Directory.Delete(sourceDirectory, true);
+                }
+                catch(Exception err)
+                {
+                    Log.Trace(string.Format("AlgoSeekFuturesConverter.Main(): Error while cleaning source directory {0}", err.Message));
+                }
+            }
         }
     }
 }

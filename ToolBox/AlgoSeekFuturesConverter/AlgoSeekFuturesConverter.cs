@@ -30,15 +30,16 @@ using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 {
-    using Processors = Dictionary<Symbol, List<AlgoSeekFuturesProcessor>>;
+    using Processors = Dictionary<Symbol, List<List<AlgoSeekFuturesProcessor>>>;
     /// <summary>
     /// Process a directory of algoseek futures files into separate resolutions.
     /// </summary>
     public class AlgoSeekFuturesConverter
     {
         private string _source;
+        private string _remote;
         private string _destination;
-        private Resolution _resolution;
+        private List<Resolution> _resolutions;
         private DateTime _referenceDate;
 
         private readonly ParallelOptions parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount * 5 };
@@ -46,17 +47,18 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         /// <summary>
         /// Create a new instance of the AlgoSeekFutures Converter. Parse a single input directory into an output.
         /// </summary>
-        /// <param name="resolution">Convert this resolution</param>
+        /// <param name="resolutions">Convert this resolution</param>
         /// <param name="referenceDate">Datetime to be added to the milliseconds since midnight. Algoseek data is stored in channel files (XX.bz2) and in a source directory</param>
-        /// <param name="source">Source directory of the .bz algoseek files</param>
+        /// <param name="source">Remote directory of the .bz algoseek files</param>
+        /// <param name="source">Source directory of the .csv algoseek files</param>
         /// <param name="destination">Data directory of LEAN</param>
-        /// <param name="cache">Cache for the temporary serialized data</param>
-        public AlgoSeekFuturesConverter(Resolution resolution, DateTime referenceDate, string source, string destination)
+        public AlgoSeekFuturesConverter(List<Resolution> resolutions, DateTime referenceDate, string remote, string source, string destination)
         {
             _source = source;
+            _remote = remote;
             _referenceDate = referenceDate;
             _destination = destination;
-            _resolution = resolution;
+            _resolutions = resolutions;
         }
 
         /// <summary>
@@ -65,7 +67,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         public void Convert()
         {
             //Get the list of all the files, then for each file open a separate streamer.
-            var files = Directory.EnumerateFiles(_source, "*.bz2");
+            var files = Directory.EnumerateFiles(_remote, "*.bz2");
             files = files.Where(x => Path.GetFileNameWithoutExtension(x).ToLower().IndexOf("option") == -1);
 
             Log.Trace("AlgoSeekFuturesConverter.Convert(): Loading {0} AlgoSeekFuturesReader for {1} ", files.Count(), _referenceDate);
@@ -84,7 +86,12 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             //Extract each file massively in parallel.
             Parallel.ForEach(files, parallelOptions, file =>
             {
-                var csvFile = file.Replace(".bz2", "");
+                Log.Trace("Remote File :" + file);
+
+                var csvFile = Path.Combine(_source, Path.GetFileName(file).Replace(".bz2", ""));
+
+                Log.Trace("Source File :" + csvFile);
+
                 if (!File.Exists(csvFile))
                 {
                     Log.Trace("AlgoSeekFuturesConverter.Convert(): Extracting " + file);
@@ -100,6 +107,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                         Log.Error("7Zip Exited Unsuccessfully: " + file);
                     }
                 }
+                Log.Trace("Source File :" + csvFile);
 
                 // setting up local processors and the flush event
                 var processors = new Processors();
@@ -134,25 +142,30 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                         }
 
                         //Add or create the consolidator-flush mechanism for symbol:
-                        List<AlgoSeekFuturesProcessor> symbolProcessors;
+                        List<List<AlgoSeekFuturesProcessor>> symbolProcessors;
                         if (!processors.TryGetValue(tick.Symbol, out symbolProcessors))
                         {
-                            symbolProcessors = new List<AlgoSeekFuturesProcessor>(3)
+                            symbolProcessors = new List<List<AlgoSeekFuturesProcessor>>(3)
                                         {
-                                            new AlgoSeekFuturesProcessor(tick.Symbol, _referenceDate, TickType.Trade, _resolution, _destination),
-                                            new AlgoSeekFuturesProcessor(tick.Symbol, _referenceDate, TickType.Quote, _resolution, _destination),
-                                            new AlgoSeekFuturesProcessor(tick.Symbol, _referenceDate, TickType.OpenInterest, _resolution, _destination)
+                                            { _resolutions.Select(x => new AlgoSeekFuturesProcessor(tick.Symbol, _referenceDate, TickType.Trade, x, _destination)).ToList() },
+                                            { _resolutions.Select(x => new AlgoSeekFuturesProcessor(tick.Symbol, _referenceDate, TickType.Quote, x, _destination)).ToList() },
+                                            { _resolutions.Select(x => new AlgoSeekFuturesProcessor(tick.Symbol, _referenceDate, TickType.OpenInterest, x, _destination)).ToList() }
                                         };
 
                             processors[tick.Symbol] = symbolProcessors;
                         }
 
                         // Pass current tick into processor: enum 0 = trade; 1 = quote, 2 = oi
-                        symbolProcessors[(int)tick.TickType].Process(tick);
+                        foreach (var processor in symbolProcessors[(int)tick.TickType])
+                        {
+                            processor.Process(tick);
+                        }
 
                         if (Interlocked.Increment(ref totalLinesProcessed) % 1000000m == 0)
                         {
-                            Log.Trace("AlgoSeekFuturesConverter.Convert(): Processed {0,3}M ticks( {1}k / sec); Memory in use: {2} MB; Total progress: {3}%", Math.Round(totalLinesProcessed / 1000000m, 2), Math.Round(totalLinesProcessed / 1000L / (DateTime.Now - start).TotalSeconds), Process.GetCurrentProcess().WorkingSet64 / (1024 * 1024), 100 * totalFilesProcessed / totalFiles);
+                            var pro = (double)processors.Values.SelectMany( p => p.SelectMany( x => x.Select( c => c ))).Count();
+                            var symbols = (double)processors.Keys.Count();
+                            Log.Trace("AlgoSeekFuturesConverter.Convert(): Processed {0,3}M ticks( {1}k / sec); Memory in use: {2} MB; Total progress: {3}%, Processor per symbol {4}", Math.Round(totalLinesProcessed / 1000000m, 2), Math.Round(totalLinesProcessed / 1000L / (DateTime.Now - start).TotalSeconds), Process.GetCurrentProcess().WorkingSet64 / (1024 * 1024), 100 * totalFilesProcessed / totalFiles, pro / symbols);
                         }
 
                     }
@@ -212,15 +225,15 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 foreach (var type in Enum.GetValues(typeof(TickType)))
                 {
                     var tickType = type;
-                    var groups = processors.Values.Select(x => x[(int)tickType]).Where(x => x.Queue.Count > 0).GroupBy(process => process.Symbol.Underlying.Value);
+                    var groups = processors.Values.SelectMany(x => x[(int)tickType]).Where(x => x.Queue.Count > 0).GroupBy(process => process.Symbol.Underlying.Value);
 
-                    Parallel.ForEach(groups, group =>
+                    Parallel.ForEach(groups, parallelOptions, group =>
                     {
                         var symbol = group.Key;
-                        var zip = group.First().ZipPath.Replace(".zip", string.Empty);
 
                         foreach (var processor in group)
                         {
+                            var zip = processor.ZipPath.Replace(".zip", string.Empty);
                             var tempFileName = Path.Combine(zip, processor.EntryPath);
 
                             Directory.CreateDirectory(zip);
@@ -257,7 +270,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         {
             foreach (var symbol in processors.Keys)
             {
-                processors[symbol].ForEach(x => x.FlushBuffer(time, final));
+                processors[symbol].ForEach(p => p.ForEach(x => x.FlushBuffer(time, final)));
             }
         }
 
@@ -275,7 +288,8 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 
             var files =
                 Directory.EnumerateFiles(destination, dateMask + "*.csv", SearchOption.AllDirectories)
-                .GroupBy(x => Directory.GetParent(x).FullName);
+                .GroupBy(x => Directory.GetParent(x).FullName)
+                .ToList();
 
             //Zip each file massively in parallel.
             Parallel.ForEach(files, parallelOptions, file =>

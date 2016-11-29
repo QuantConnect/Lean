@@ -43,6 +43,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         private readonly int _columnSide = -1;
         private readonly int _columnQuantity = -1;
         private readonly int _columnPrice = -1;
+        private readonly int _columnsCount = -1;
 
         /// <summary>
         /// Enumerate through the lines of the algoseek files.
@@ -56,7 +57,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             _stream = streamProvider.Open(file).First();
             _streamReader = new StreamReader(_stream);
             _symbolFilter = symbolFilter;
-            _symbolMultipliers = symbolMultipliers.ToDictionary(); 
+            _symbolMultipliers = symbolMultipliers.ToDictionary();
 
             // detecting column order in the file
             var header = _streamReader.ReadLine().ToCsv();
@@ -67,6 +68,8 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             _columnSecID = header.FindIndex(x => x == "SecurityID");
             _columnQuantity = header.FindIndex(x => x == "Quantity");
             _columnPrice = header.FindIndex(x => x == "Price");
+
+            _columnsCount = Enumerable.Max(new[] { _columnTimestamp, _columnTicker, _columnType, _columnSide, _columnSecID, _columnQuantity, _columnPrice });
 
             //Prime the data pump, set the current.
             Current = null;
@@ -144,9 +147,8 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 const int MessageTypeMask = 15;
 
                 // parse csv check column count
-                const int columns = 11;
-                var csv = line.ToCsv(columns);
-                if (csv.Count < columns)
+                var csv = line.ToCsv();
+                if (csv.Count - 1 < _columnsCount)
                 {
                     return null;
                 }
@@ -185,7 +187,9 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                             isAsk = true;
                             break;
                         default:
-                            return null;
+                            {
+                                return null;
+                            }
                     }
                 }
                 else
@@ -252,7 +256,6 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                             tick.BidPrice = price;
                             tick.BidSize = quantity;
                         }
-
                         return tick;
 
                     case TickType.Trade:
@@ -266,7 +269,6 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                             Value = price,
                             Quantity = quantity
                         };
-
                         return tick;
 
                     case TickType.OpenInterest:
@@ -279,7 +281,6 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                             Exchange = Market.USA,
                             Value = quantity
                         };
-
                         return tick;
                 }
 
