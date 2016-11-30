@@ -54,7 +54,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _dataQueueHandler = new ApiDataQueueHandler();
             var liveDataUri = new Uri(Config.Get("live-data-url"));
             var uriBuilder = new UriBuilder(liveDataUri);
-            uriBuilder.Port = Config.Get("live-data-port").ToInt32();
+            uriBuilder.Port = Config.GetInt("live-data-port");
 
             Task.Run(() =>
             {

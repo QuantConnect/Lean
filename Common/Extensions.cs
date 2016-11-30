@@ -212,8 +212,8 @@ namespace QuantConnect
         /// as a decimal, then the closest decimal value will be returned</returns>
         public static decimal SafeDecimalCast(this double input)
         {
-            if (input <= (double) Decimal.MinValue) return Decimal.MinValue;
-            if (input >= (double) Decimal.MaxValue) return Decimal.MaxValue;
+            if (input <= (double) decimal.MinValue) return decimal.MinValue;
+            if (input >= (double) decimal.MaxValue) return decimal.MaxValue;
             return (decimal) input;
         }
 
@@ -317,7 +317,7 @@ namespace QuantConnect
         /// <param name="value">The double value to check</param>
         public static bool IsNaNOrZero(this double value)
         {
-            return Double.IsNaN(value) || Math.Abs(value) < Double.Epsilon;
+            return double.IsNaN(value) || Math.Abs(value) < double.Epsilon;
         }
 
         /// <summary>
@@ -472,14 +472,14 @@ namespace QuantConnect
         /// <returns>The time in terms of the to time zone</returns>
         public static DateTime ConvertTo(this DateTime time, DateTimeZone from, DateTimeZone to, bool strict = false)
         {
-            if (ReferenceEquals(@from, to)) return time;
+            if (ReferenceEquals(from, to)) return time;
 
             if (strict)
             {
-                return @from.AtStrictly(LocalDateTime.FromDateTime(time)).WithZone(to).ToDateTimeUnspecified();
+                return from.AtStrictly(LocalDateTime.FromDateTime(time)).WithZone(to).ToDateTimeUnspecified();
             }
             
-            return @from.AtLeniently(LocalDateTime.FromDateTime(time)).WithZone(to).ToDateTimeUnspecified();
+            return from.AtLeniently(LocalDateTime.FromDateTime(time)).WithZone(to).ToDateTimeUnspecified();
         }
 
         /// <summary>
@@ -505,10 +505,10 @@ namespace QuantConnect
         {
             if (strict)
             {
-                return @from.AtStrictly(LocalDateTime.FromDateTime(time)).ToDateTimeUtc();
+                return from.AtStrictly(LocalDateTime.FromDateTime(time)).ToDateTimeUtc();
             }
 
-            return @from.AtLeniently(LocalDateTime.FromDateTime(time)).ToDateTimeUtc();
+            return from.AtLeniently(LocalDateTime.FromDateTime(time)).ToDateTimeUtc();
         }
 
         /// <summary>
@@ -587,7 +587,7 @@ namespace QuantConnect
             {
                 var genericArguments = type.GetGenericArguments();
                 var toBeReplaced = "`" + (genericArguments.Length);
-                name = name.Replace(toBeReplaced, "<" + String.Join(", ", genericArguments.Select(x => x.GetBetterTypeName())) + ">");
+                name = name.Replace(toBeReplaced, "<" + string.Join(", ", genericArguments.Select(x => x.GetBetterTypeName())) + ">");
             }
             return name;
         }

@@ -50,8 +50,8 @@
   "api-access-token": "",
 
   // live data configuration
-  "live-data-url": "wss://127.0.0.1",
-  "live-data-port": 443,
+  "live-data-url": "ws://www.quantconnect.com/api/v2/live/data/",
+  "live-data-port": 8020,
 
   // interactive brokers configuration
   "ib-account": "DUxxxx",
