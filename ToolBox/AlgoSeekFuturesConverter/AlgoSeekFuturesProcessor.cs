@@ -21,6 +21,8 @@ using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Util;
 using System.Linq;
+using System.Threading;
+using QuantConnect.Logging;
 
 namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 {
@@ -28,8 +30,9 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
     /// Processor for caching and consolidating ticks; 
     /// then flushing the ticks in memory to disk when triggered.
     /// </summary>
-    public class AlgoSeekFuturesProcessor : IDisposable
+    public class AlgoSeekFuturesProcessor
     {
+        static private int _curFileCount = 0;
         private string _zipPath;
         private string _entryPath;
         private Symbol _symbol;
@@ -151,6 +154,12 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             {
                 _streamWriter.WriteLine(LeanData.GenerateLine(consolidated, SecurityType.Future, Resolution));
             };
+
+            Interlocked.Add(ref _curFileCount, 1);
+            if (_curFileCount % 1000 == 0)
+            {
+                Log.Trace("Opened more files: {0}", _curFileCount);
+            }
         }
 
         /// <summary>
@@ -182,6 +191,14 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             {
                 _streamWriter.WriteLine(LeanData.GenerateLine(_consolidator.WorkingData, SecurityType.Future, Resolution));
                 _streamWriter.Flush();
+                _streamWriter.Close();
+                _streamWriter = null;
+
+                Interlocked.Add(ref _curFileCount, -1);
+                if (_curFileCount % 1000 == 0)
+                {
+                    Log.Trace("Closed some files: {0}", _curFileCount);
+                }
             }
         }
 
@@ -211,26 +228,6 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 }
             }
             return fileName;
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposed)
-                return;
-
-            if (disposing)
-            {
-                _streamWriter.Flush();
-                _streamWriter.Close();
-                _streamWriter.Dispose();
-            }
-
-            disposed = true;
         }
     }
 }

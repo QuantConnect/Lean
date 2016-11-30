@@ -36,7 +36,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
     /// </summary>
     public class AlgoSeekFuturesConverter
     {
-        private const int execTimeout = 180;// sec
+        private const int execTimeout = 60;// sec
         private string _source;
         private string _remote;
         private string _destination;
@@ -169,7 +169,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 
                         if (Interlocked.Increment(ref totalLinesProcessed) % 1000000m == 0)
                         {
-                            var pro = (double)processors.Values.SelectMany( p => p.SelectMany( x => x.Select( c => c ))).Count();
+                            var pro = (double)processors.Values.SelectMany( p => p.SelectMany( x => x )).Count();
                             var symbols = (double)processors.Keys.Count();
                             Log.Trace("AlgoSeekFuturesConverter.Convert(): Processed {0,3}M ticks( {1}k / sec); Memory in use: {2} MB; Total progress: {3}%, Processor per symbol {4}", Math.Round(totalLinesProcessed / 1000000m, 2), Math.Round(totalLinesProcessed / 1000L / (DateTime.Now - start).TotalSeconds), Process.GetCurrentProcess().WorkingSet64 / (1024 * 1024), 100 * totalFilesProcessed / totalFiles, pro / symbols);
                         }
@@ -180,6 +180,10 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                     Log.Trace("AlgoSeekFuturesConverter.Convert(): Performing final flush to disk... ");
                     Flush(processors, DateTime.MaxValue, true);
                 }
+
+                processors = null;
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
 
                 Log.Trace("AlgoSeekFuturesConverter.Convert(): Finished processing file: " + file);
                 Interlocked.Increment(ref totalFilesProcessed);
@@ -271,17 +275,15 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                     {
                         Log.Error("7Zip Exited Unsuccessfully: " + outputFileName);
                     }
-                    else
-                    {
-                        try
-                        {
-                            Directory.Delete(file.Key, true);
-                        }
-                        catch (Exception err)
-                        {
-                            Log.Error("Directory.Delete returned error: " + err.Message);
-                        }
-                    }
+                }
+
+                try
+                {
+                    Directory.Delete(file.Key, true);
+                }
+                catch (Exception err)
+                {
+                    Log.Error("Directory.Delete returned error: " + err.Message);
                 }
             });
         }
