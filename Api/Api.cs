@@ -16,9 +16,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 using Newtonsoft.Json;
 using QuantConnect.API;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
@@ -34,6 +38,7 @@ namespace QuantConnect.Api
     public class Api : IApi
     {
         private ApiConnection _connection;
+        private ApiWebSocketConnection _socketConnection;
         private static MarketHoursDatabase _marketHoursDatabase;
         private string _dataFolder;
 
@@ -44,6 +49,7 @@ namespace QuantConnect.Api
         public virtual void Initialize(int userId, string token, string dataFolder)
         {
             _connection = new ApiConnection(userId, token);
+            _socketConnection = new ApiWebSocketConnection(userId, token);
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             _dataFolder = dataFolder;
 
@@ -702,6 +708,33 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
+        /// Adds the specified symbols to the subscription
+        /// </summary>
+        /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
+        public void LiveSubscribe(IEnumerable<Symbol> symbols)
+        {
+            _socketConnection.Subscribe(symbols);
+        }
+
+        /// <summary>
+        /// Removes the specified symbols to the subscription
+        /// </summary>
+        /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
+        public void LiveUnsubscribe(IEnumerable<Symbol> symbols)
+        {
+            _socketConnection.Unsubscribe(symbols);
+        }
+
+        /// <summary>
+        /// Get next ticks if they have arrived from the server.
+        /// </summary>
+        /// <returns>Array of <see cref="BaseData"/></returns>
+        public IEnumerable<BaseData> GetLiveData()
+        {
+            return _socketConnection.GetLiveData();
+        }
+
+        /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         /// <filterpriority>2</filterpriority>
@@ -709,6 +742,19 @@ namespace QuantConnect.Api
         public virtual void Dispose()
         {
             // NOP
+        }
+
+
+        /// <summary>
+        /// Generate a secure hash for the authorization headers.
+        /// </summary>
+        /// <returns>Time based hash of user token and timestamp.</returns>
+        public static string CreateSecureHash(int timestamp, string token)
+        {
+            // Create a new hash using current UTC timestamp.
+            // Hash must be generated fresh each time.
+            var data = string.Format("{0}:{1}", token, timestamp);
+            return data.ToSHA256();
         }
     }
 }

@@ -54,6 +54,10 @@
   "job-user-id": "0",
   "api-access-token": "",
 
+  // live data configuration
+  "live-data-url": "ws://www.quantconnect.com/api/v2/live/data/",
+  "live-data-port": 8020,
+
   // interactive brokers configuration
   "ib-account": "DUxxxx",
   "ib-user-name": "",

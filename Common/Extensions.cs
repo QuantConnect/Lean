@@ -107,6 +107,23 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Encrypt the token:time data to make our API hash.
+        /// </summary>
+        /// <param name="data">Data to be hashed by SHA256</param>
+        /// <returns>Hashed string.</returns>
+        public static string ToSHA256(this string data)
+        {
+            var crypt = new SHA256Managed();
+            var hash = new StringBuilder();
+            var crypto = crypt.ComputeHash(Encoding.UTF8.GetBytes(data), 0, Encoding.UTF8.GetByteCount(data));
+            foreach (var theByte in crypto)
+            {
+                hash.Append(theByte.ToString("x2"));
+            }
+            return hash.ToString();
+        }
+
+        /// <summary>
         /// Extension method to automatically set the update value to same as "add" value for TryAddUpdate. 
         /// This makes the API similar for traditional and concurrent dictionaries.
         /// </summary>

@@ -95,6 +95,10 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="websocket-sharp, Version=1.0.2.59611, Culture=neutral, PublicKeyToken=5660b08a1845a91e, processorArchitecture=MSIL">
+      <HintPath>..\packages\WebSocketSharp.1.0.3-rc11\lib\websocket-sharp.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
@@ -103,6 +107,7 @@
     <Compile Include="Api.cs" />
     <Compile Include="ApiConnection.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ApiWebSocketConnection.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\QuantConnect.csproj">
