@@ -89,7 +89,16 @@ namespace QuantConnect.Api
             {
                 lock (_locker)
                 {
-                    var baseDatas = BaseData.DeserializeMessage(e.Data);
+                    IEnumerable<BaseData> baseDatas = new List<BaseData>();
+                    try
+                    {
+                        baseDatas = BaseData.DeserializeMessage(e.Data);
+                    }
+                    catch
+                    {
+                        Log.Error("ApiWebSocketConnection.OnMessage(): An error was received from the server: {0}", e.Data);
+                    }
+                    
                     foreach (var baseData in baseDatas)
                     {
                         _baseDataFromServer.Enqueue(baseData);
@@ -232,8 +241,6 @@ namespace QuantConnect.Api
                 {
                     _subscribedSymbols.Remove(symbol);
                 }
-
-                Log.Trace("WebSocketConnection.Unsubscribe(): Unsubscribed from : {0}", string.Join(",", symbolsToUnsubscribe.Select(x => x.Value)));
             }
 
             if (_initialized)

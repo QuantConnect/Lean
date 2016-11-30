@@ -313,25 +313,18 @@ namespace QuantConnect.Data
         /// <returns>An enumerable of base data, if unsuccessful, returns an empty enumerable</returns>
         public static IEnumerable<BaseData> DeserializeMessage(string serialized)
         {
-            try
+            var deserialized = JsonConvert.DeserializeObject(serialized, JsonSerializerSettings);
+
+            var enumerable = deserialized as IEnumerable<BaseData>;
+            if (enumerable != null)
             {
-                var deserialized = JsonConvert.DeserializeObject(serialized, JsonSerializerSettings);
-
-                var enumerable = deserialized as IEnumerable<BaseData>;
-                if (enumerable != null)
-                {
-                    return enumerable;
-                }
-
-                var data = deserialized as BaseData;
-                if (data != null)
-                {
-                    return new[] { data };
-                }
+                return enumerable;
             }
-            catch (Exception err)
+
+            var data = deserialized as BaseData;
+            if (data != null)
             {
-                Log.Error("BaseData.DeserializeMessage(): {0}", err);
+                return new[] { data };
             }
 
             return Enumerable.Empty<BaseData>();
