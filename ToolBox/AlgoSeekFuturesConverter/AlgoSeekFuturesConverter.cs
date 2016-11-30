@@ -36,7 +36,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
     /// </summary>
     public class AlgoSeekFuturesConverter
     {
-        const int execTimeout = 180;
+        private const int execTimeout = 180;// sec
         private string _source;
         private string _remote;
         private string _destination;
@@ -101,23 +101,28 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                         CreateNoWindow = true,
                         WindowStyle = ProcessWindowStyle.Hidden,
                         UseShellExecute = false,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true
+                        RedirectStandardOutput = true
                     };
 
                     var process = new Process();
-                    process.OutputDataReceived += (sender, e) => { };
-                    process.ErrorDataReceived += (sender, e) => { };
                     process.StartInfo = psi;
                     process.Start();
+
+                    while (!process.StandardOutput.EndOfStream)
+                    {
+                        process.StandardOutput.ReadLine();
+                    }
 
                     if (!process.WaitForExit(execTimeout * 1000))
                     {
                         Log.Error("7Zip timed out: " + file);
                     }
-                    if (process.ExitCode > 0)
+                    else
                     {
-                        Log.Error("7Zip Exited Unsuccessfully: " + file);
+                        if (process.ExitCode > 0)
+                        {
+                            Log.Error("7Zip Exited Unsuccessfully: " + file);
+                        }
                     }
                 }
                 Log.Trace("Source File :" + csvFile);
@@ -245,31 +250,37 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                     CreateNoWindow = true,
                     WindowStyle = ProcessWindowStyle.Hidden,
                     UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
+                    RedirectStandardOutput = true
                 };
                 var process = new Process();
-                process.OutputDataReceived += (sender, e) => { };
-                process.ErrorDataReceived += (sender, e) => { };
                 process.StartInfo = psi;
                 process.Start();
+
+                while (!process.StandardOutput.EndOfStream)
+                {
+                    process.StandardOutput.ReadLine();
+                }
+
                 if (!process.WaitForExit(execTimeout * 1000))
                 {
                     Log.Error("7Zip timed out: " + outputFileName);
                 }
-                if (process.ExitCode > 0)
-                {
-                    Log.Error("7Zip Exited Unsuccessfully: " + outputFileName);
-                }
                 else
                 {
-                    try
+                    if (process.ExitCode > 0)
                     {
-                        Directory.Delete(file.Key, true);
+                        Log.Error("7Zip Exited Unsuccessfully: " + outputFileName);
                     }
-                    catch (Exception err)
+                    else
                     {
-                        Log.Error("Directory.Delete returned error: " + err.Message);
+                        try
+                        {
+                            Directory.Delete(file.Key, true);
+                        }
+                        catch (Exception err)
+                        {
+                            Log.Error("Directory.Delete returned error: " + err.Message);
+                        }
                     }
                 }
             });
