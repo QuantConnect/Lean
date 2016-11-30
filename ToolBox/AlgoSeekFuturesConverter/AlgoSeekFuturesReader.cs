@@ -224,7 +224,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 var expirationYearShort = parsed.Item2;
                 var expirationMonth = parsed.Item3;
 
-                var expirationYear = 2010 + expirationYearShort;
+                var expirationYear = GetExpirationYear(time, expirationYearShort);
                 var expirationYearMonth = new DateTime(expirationYear, expirationMonth, DateTime.DaysInMonth(expirationYear, expirationMonth));
                 var symbol = Symbol.CreateFuture(underlying, Market.USA, expirationYearMonth);
               
@@ -292,6 +292,16 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 Log.Trace("Line: {0}", line);
                 return null;
             }
+        }
+
+        private int GetExpirationYear(DateTime currentdate, int year)
+        {
+            var baseNum = 2000;
+            while (baseNum + year < currentdate.Year)
+            {
+                baseNum += 10;
+            }
+            return baseNum + year;
         }
     }
 }

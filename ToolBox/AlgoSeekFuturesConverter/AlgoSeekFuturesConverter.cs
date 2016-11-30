@@ -36,6 +36,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
     /// </summary>
     public class AlgoSeekFuturesConverter
     {
+        private const int execTimeout = 180;// sec
         private string _source;
         private string _remote;
         private string _destination;
@@ -98,13 +99,30 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                     var psi = new ProcessStartInfo(zipper, " e " + file + " -o" + _source)
                     {
                         CreateNoWindow = true,
-                        WindowStyle = ProcessWindowStyle.Hidden
+                        WindowStyle = ProcessWindowStyle.Hidden,
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true
                     };
-                    var process = Process.Start(psi);
-                    process.WaitForExit();
-                    if (process.ExitCode > 0)
+
+                    var process = new Process();
+                    process.StartInfo = psi;
+                    process.Start();
+
+                    while (!process.StandardOutput.EndOfStream)
                     {
-                        Log.Error("7Zip Exited Unsuccessfully: " + file);
+                        process.StandardOutput.ReadLine();
+                    }
+
+                    if (!process.WaitForExit(execTimeout * 1000))
+                    {
+                        Log.Error("7Zip timed out: " + file);
+                    }
+                    else
+                    {
+                        if (process.ExitCode > 0)
+                        {
+                            Log.Error("7Zip Exited Unsuccessfully: " + file);
+                        }
                     }
                 }
                 Log.Trace("Source File :" + csvFile);
@@ -302,23 +320,39 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 var psi = new ProcessStartInfo(zipper, cmdArgs)
                 {
                     CreateNoWindow = true,
-                    WindowStyle = ProcessWindowStyle.Hidden
+                    WindowStyle = ProcessWindowStyle.Hidden,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true
                 };
-                var process = Process.Start(psi);
-                process.WaitForExit();
-                if (process.ExitCode > 0)
+                var process = new Process();
+                process.StartInfo = psi;
+                process.Start();
+
+                while (!process.StandardOutput.EndOfStream)
                 {
-                    Log.Error("7Zip Exited Unsuccessfully: " + outputFileName);
+                    process.StandardOutput.ReadLine();
+                }
+
+                if (!process.WaitForExit(execTimeout * 1000))
+                {
+                    Log.Error("7Zip timed out: " + outputFileName);
                 }
                 else
                 {
-                    try
+                    if (process.ExitCode > 0)
                     {
-                        Directory.Delete(file.Key, true);
+                        Log.Error("7Zip Exited Unsuccessfully: " + outputFileName);
                     }
-                    catch (Exception err)
+                    else
                     {
-                        Log.Error("Directory.Delete returned error: " + err.Message);
+                        try
+                        {
+                            Directory.Delete(file.Key, true);
+                        }
+                        catch (Exception err)
+                        {
+                            Log.Error("Directory.Delete returned error: " + err.Message);
+                        }
                     }
                 }
             });
