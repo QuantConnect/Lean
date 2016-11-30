@@ -28,14 +28,14 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
     /// Processor for caching and consolidating ticks; 
     /// then flushing the ticks in memory to disk when triggered.
     /// </summary>
-    public class AlgoSeekFuturesProcessor
+    public class AlgoSeekFuturesProcessor : IDisposable
     {
         private string _zipPath;
         private string _entryPath;
         private Symbol _symbol;
         private TickType _tickType;
         private Resolution _resolution;
-        private Queue<BaseData> _queue;
+        private StreamWriter _streamWriter;
         private string _dataDirectory;
         private IDataConsolidator _consolidator;
         private DateTime _referenceDate;
@@ -43,6 +43,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         {
             "con", "prn", "aux", "nul"
         };
+        private bool disposed = false;
 
         /// <summary>
         /// Zip entry name for the futures contract
@@ -85,14 +86,6 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         }
 
         /// <summary>
-        /// Output base data queue for processing in memory
-        /// </summary>
-        public Queue<BaseData> Queue
-        {
-            get { return _queue; }
-        }
-
-        /// <summary>
         /// Accessor for the final enumerator
         /// </summary>
         public Resolution Resolution
@@ -124,7 +117,6 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             _tickType = tickType;
             _referenceDate = date;
             _resolution = resolution;
-            _queue = new Queue<BaseData>();
             _dataDirectory = dataDirectory;
 
             // Setup the consolidator for the requested resolution
@@ -148,10 +140,16 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 }
             }
 
+            var path = ZipPath.Replace(".zip", string.Empty);
+            Directory.CreateDirectory(path);
+
+            var file = Path.Combine(path, EntryPath);
+            _streamWriter = new StreamWriter(file);
+
             // On consolidating the bars put the bar into a queue in memory to be written to disk later.
             _consolidator.DataConsolidated += (sender, consolidated) =>
             {
-                _queue.Enqueue(consolidated);
+                _streamWriter.WriteLine(LeanData.GenerateLine(consolidated, SecurityType.Future, Resolution));
             };
         }
 
@@ -182,7 +180,8 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             // If this is the final packet dump it to the queue
             if (finalFlush && _consolidator.WorkingData != null)
             {
-                _queue.Enqueue(_consolidator.WorkingData);
+                _streamWriter.WriteLine(LeanData.GenerateLine(_consolidator.WorkingData, SecurityType.Future, Resolution));
+                _streamWriter.Flush();
             }
         }
 
@@ -212,6 +211,26 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 }
             }
             return fileName;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposed)
+                return;
+
+            if (disposing)
+            {
+                _streamWriter.Flush();
+                _streamWriter.Close();
+                _streamWriter.Dispose();
+            }
+
+            disposed = true;
         }
     }
 }
