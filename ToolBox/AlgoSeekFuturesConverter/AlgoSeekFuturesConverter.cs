@@ -36,7 +36,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
     /// </summary>
     public class AlgoSeekFuturesConverter
     {
-        private const int execTimeout = 180;// sec
+        private const int execTimeout = 60;// sec
         private string _source;
         private string _remote;
         private string _destination;
@@ -129,7 +129,6 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 
                 // setting up local processors and the flush event
                 var processors = new Processors();
-                var waitForFlush = new ManualResetEvent(true);
 
                 // symbol filters 
                 // var symbolFilterNames = new string[] { "AAPL", "TWX", "NWSA", "FOXA", "AIG", "EGLE", "EGEC" };
@@ -142,22 +141,11 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                     start = DateTime.Now;
                 }
 
-                var flushStep = TimeSpan.FromMinutes(15 + random.NextDouble() * 5);
-
                 if (reader.Current != null) // reader contains the data
                 {
-                    var previousFlush = reader.Current.Time.RoundDown(flushStep);
-
                     do
                     {
                         var tick = reader.Current as Tick;
-
-                        //If the next minute has clocked over; flush the consolidators; serialize and store data to disk.
-                        if (tick.Time.RoundDown(flushStep) > previousFlush)
-                        {
-                            previousFlush = WriteToDisk(processors, waitForFlush, tick.Time, flushStep);
-                            processors = new Processors();
-                        }
 
                         //Add or create the consolidator-flush mechanism for symbol:
                         List<List<AlgoSeekFuturesProcessor>> symbolProcessors;
@@ -181,7 +169,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 
                         if (Interlocked.Increment(ref totalLinesProcessed) % 1000000m == 0)
                         {
-                            var pro = (double)processors.Values.SelectMany( p => p.SelectMany( x => x.Select( c => c ))).Count();
+                            var pro = (double)processors.Values.SelectMany( p => p.SelectMany( x => x )).Count();
                             var symbols = (double)processors.Keys.Count();
                             Log.Trace("AlgoSeekFuturesConverter.Convert(): Processed {0,3}M ticks( {1}k / sec); Memory in use: {2} MB; Total progress: {3}%, Processor per symbol {4}", Math.Round(totalLinesProcessed / 1000000m, 2), Math.Round(totalLinesProcessed / 1000L / (DateTime.Now - start).TotalSeconds), Process.GetCurrentProcess().WorkingSet64 / (1024 * 1024), 100 * totalFilesProcessed / totalFiles, pro / symbols);
                         }
@@ -191,8 +179,11 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 
                     Log.Trace("AlgoSeekFuturesConverter.Convert(): Performing final flush to disk... ");
                     Flush(processors, DateTime.MaxValue, true);
-                    WriteToDisk(processors, waitForFlush, DateTime.MaxValue, flushStep, true);
                 }
+
+                processors = null;
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
 
                 Log.Trace("AlgoSeekFuturesConverter.Convert(): Finished processing file: " + file);
                 Interlocked.Increment(ref totalFilesProcessed);
@@ -223,65 +214,6 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                     .Skip(1)
                     .ToDictionary(line => line[columnUnderlying],
                                   line => System.Convert.ToDecimal(line[columnMultipleFactor]));
-        }
-
-        /// <summary>
-        /// Write the processor queues to disk
-        /// </summary>
-        /// <param name="peekTickTime">Time of the next tick in the stream</param>
-        /// <param name="step">Period between flushes to disk</param>
-        /// <param name="final">Final push to disk</param>
-        /// <returns></returns>
-        private DateTime WriteToDisk(Processors processors, ManualResetEvent waitForFlush, DateTime peekTickTime, TimeSpan step, bool final = false)
-        {
-            waitForFlush.WaitOne();
-            waitForFlush.Reset();
-            Flush(processors, peekTickTime, final);
-
-            Task.Run(() =>
-            {
-                foreach (var type in Enum.GetValues(typeof(TickType)))
-                {
-                    var tickType = type;
-                    var groups = processors.Values.SelectMany(x => x[(int)tickType]).Where(x => x.Queue.Count > 0).GroupBy(process => process.Symbol.Underlying.Value);
-
-                    Parallel.ForEach(groups, parallelOptions, group =>
-                    {
-                        var symbol = group.Key;
-
-                        foreach (var processor in group)
-                        {
-                            var zip = processor.ZipPath.Replace(".zip", string.Empty);
-                            var tempFileName = Path.Combine(zip, processor.EntryPath);
-
-                            Directory.CreateDirectory(zip);
-                            File.AppendAllText(tempFileName, FileBuilder(processor));
-                        }
-                    });
-                }
-                waitForFlush.Set();
-            });
-
-            //Pause while writing the final flush.
-            if (final) waitForFlush.WaitOne();
-
-            return peekTickTime.RoundDown(step);
-        }
-
-
-        /// <summary>
-        /// Output a list of basedata objects into a string csv line.
-        /// </summary>
-        /// <param name="processor"></param>
-        /// <returns></returns>
-        private string FileBuilder(AlgoSeekFuturesProcessor processor)
-        {
-            var sb = new StringBuilder();
-            foreach (var data in processor.Queue)
-            {
-                sb.AppendLine(LeanData.GenerateLine(data, SecurityType.Future, processor.Resolution));
-            }
-            return sb.ToString();
         }
 
         private void Flush(Processors processors, DateTime time, bool final)
@@ -343,17 +275,15 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                     {
                         Log.Error("7Zip Exited Unsuccessfully: " + outputFileName);
                     }
-                    else
-                    {
-                        try
-                        {
-                            Directory.Delete(file.Key, true);
-                        }
-                        catch (Exception err)
-                        {
-                            Log.Error("Directory.Delete returned error: " + err.Message);
-                        }
-                    }
+                }
+
+                try
+                {
+                    Directory.Delete(file.Key, true);
+                }
+                catch (Exception err)
+                {
+                    Log.Error("Directory.Delete returned error: " + err.Message);
                 }
             });
         }
