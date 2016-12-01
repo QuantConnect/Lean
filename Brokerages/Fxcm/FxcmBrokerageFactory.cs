@@ -93,7 +93,7 @@ namespace QuantConnect.Brokerages.Fxcm
 
             var brokerage = new FxcmBrokerage(algorithm.Transactions, algorithm.Portfolio, server, terminal, userName, password, accountId);
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
-
+            Composer.Instance.AddPart<IHistoryProvider>(brokerage);
             return brokerage;
         }
 
