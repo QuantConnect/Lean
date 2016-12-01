@@ -673,7 +673,7 @@ namespace QuantConnect.ToolBox.IQFeed
             var item = new IQLevel1WatchItem(symbol, active, regionOn);
             if (_key.ContainsKey(item.Symbol))
             {
-                throw new Exception("Symbol (" + item.Symbol + ") already exists");
+                return;
             }
             _key.Add(item.Symbol, item);
             item.Connect(this);
@@ -690,7 +690,7 @@ namespace QuantConnect.ToolBox.IQFeed
         {
             if (!_key.ContainsKey(symbol))
             {
-                throw new Exception("Symbol (" + symbol + ") does not exist");
+                return;
             }
             _key[symbol].DeActivate();
             _key.Remove(symbol);

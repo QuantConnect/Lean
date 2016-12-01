@@ -30,23 +30,29 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class OptionChainUniverse : Universe
     {
-        private static readonly IReadOnlyList<TickType> QuotesAndTrades = new[] { TickType.Quote, TickType.Trade };
+        private static readonly IReadOnlyList<TickType> dataTypes = new[] { TickType.Quote, TickType.Trade, TickType.OpenInterest };
 
         private BaseData _underlying;
         private readonly Option _option;
         private readonly UniverseSettings _universeSettings;
+        private SubscriptionManager _subscriptionManager;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OptionChainUniverse"/> class
         /// </summary>
         /// <param name="option">The canonical option chain security</param>
         /// <param name="universeSettings">The universe settings to be used for new subscriptions</param>
+        /// <param name="subscriptionManager">The subscription manager used to return available data types</param>
         /// <param name="securityInitializer">The security initializer to use on newly created securities</param>
-        public OptionChainUniverse(Option option, UniverseSettings universeSettings, ISecurityInitializer securityInitializer = null)
+        public OptionChainUniverse(Option option, 
+                                   UniverseSettings universeSettings, 
+                                   SubscriptionManager subscriptionManager, 
+                                   ISecurityInitializer securityInitializer = null)
             : base(option.SubscriptionDataConfig, securityInitializer)
         {
             _option = option;
             _universeSettings = universeSettings;
+            _subscriptionManager = subscriptionManager;
         }
 
         /// <summary>
@@ -92,6 +98,31 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
+        /// Adds the specified security to this universe
+        /// </summary>
+        /// <param name="utcTime">The current utc date time</param>
+        /// <param name="security">The security to be added</param>
+        /// <returns>True if the security was successfully added,
+        /// false if the security was already in the universe</returns>
+        internal override bool AddMember(DateTime utcTime, Security security)
+        {
+            if (Securities.ContainsKey(security.Symbol))
+            {
+                return false;
+            }
+
+            // method take into account the case, when the option has experienced an adjustment 
+            // we update member reference in this case
+            if (Securities.Any(x => x.Value.Security == security))
+            {
+                Member member;
+                Securities.TryRemove(security.Symbol, out member);
+            }
+
+            return Securities.TryAdd(security.Symbol, new Member(utcTime, security));
+        }
+
+        /// <summary>
         /// Gets the subscription requests to be added for the specified security
         /// </summary>
         /// <param name="security">The security to get subscriptions for</param>
@@ -101,7 +132,7 @@ namespace QuantConnect.Data.UniverseSelection
         public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(Security security, DateTime currentTimeUtc, DateTime maximumEndTimeUtc)
         {
             // we want to return both quote and trade subscriptions
-            return QuotesAndTrades
+            return _subscriptionManager.GetDataTypesForSecurity(SecurityType.Option)
                 .Select(tickType => new SubscriptionDataConfig(
                     objectType: GetDataType(UniverseSettings.Resolution, tickType),
                     symbol: security.Symbol,
@@ -113,7 +144,8 @@ namespace QuantConnect.Data.UniverseSelection
                     isInternalFeed: false,
                     isCustom: false,
                     tickType: tickType,
-                    isFilteredSubscription: true
+                    isFilteredSubscription: true,
+                    dataNormalizationMode:  DataNormalizationMode.Raw
                     ))
                 .Select(config => new SubscriptionRequest(
                     isUniverseSubscription: false,
@@ -177,6 +209,7 @@ namespace QuantConnect.Data.UniverseSelection
         private static Type GetDataType(Resolution resolution, TickType tickType)
         {
             if (resolution == Resolution.Tick) return typeof(Tick);
+            if (tickType == TickType.OpenInterest) return typeof(OpenInterest);
             if (tickType == TickType.Quote) return typeof(QuoteBar);
             return typeof(TradeBar);
         }

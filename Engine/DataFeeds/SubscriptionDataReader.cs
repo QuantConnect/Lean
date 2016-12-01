@@ -202,6 +202,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
+            // load up the map and factor files for underlying of equity option
+            if (!config.IsCustomData && config.SecurityType == SecurityType.Option)
+            {
+                try
+                {
+                    var mapFile = mapFileResolver.ResolveMapFile(config.Symbol.Underlying.ID.Symbol, config.Symbol.Underlying.ID.Date);
+
+                    // only take the resolved map file if it has data, otherwise we'll use the empty one we defined above
+                    if (mapFile.Any()) _mapFile = mapFile;
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err, "Map Factors: " + config.Symbol.ID + ": ");
+                }
+            }
+
             _subscriptionFactoryEnumerator = ResolveDataEnumerator(true);
         }
 
@@ -327,6 +343,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // we've made it past all of our filters, we're withing the requested start/end of the subscription,
                     // we've satisfied user and market hour filters, so this data is good to go as current
                     Current = instance;
+
                     return true;
                 }
 
@@ -418,13 +435,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 switch (args.Source.TransportMedium)
                 {
                     case SubscriptionTransportMedium.LocalFile:
-                        // FineFundamental data can have many missing dates, so we ignore the error to avoid flooding the logs
-                        if (_config.Type != typeof (FineFundamental))
-                        {
-                            // the local uri doesn't exist, write an error and return null so we we don't try to get data for today
-                            Log.Trace(string.Format("SubscriptionDataReader.GetReader(): Could not find QC Data, skipped: {0}", source));
-                        }
-
+                        // the local uri doesn't exist, write an error and return null so we we don't try to get data for today
+                        // Log.Trace(string.Format("SubscriptionDataReader.GetReader(): Could not find QC Data, skipped: {0}", source));
                         _resultHandler.SamplePerformance(_tradeableDates.Current, 0);
                         break;
 
@@ -447,14 +459,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var textSubscriptionFactory = (TextSubscriptionDataSourceReader)dataSourceReader;
                 textSubscriptionFactory.CreateStreamReaderError += (sender, args) =>
                 {
-                    // FineFundamental data can have many missing dates, so we ignore the error to avoid flooding the logs
-                    if (_config.Type != typeof (FineFundamental))
+                    //Log.Error(string.Format("Failed to get StreamReader for data source({0}), symbol({1}). Skipping date({2}). Reader is null.", args.Source.Source, _mappedSymbol, args.Date.ToShortDateString()));
+                    if (_config.IsCustomData)
                     {
-                        Log.Error(string.Format("Failed to get StreamReader for data source({0}), symbol({1}). Skipping date({2}). Reader is null.", args.Source.Source, _mappedSymbol, args.Date.ToShortDateString()));
-                        if (_config.IsCustomData)
-                        {
-                            _resultHandler.ErrorMessage(string.Format("We could not fetch the requested data. This may not be valid data, or a failed download of custom data. Skipping source ({0}).", args.Source.Source));
-                        }
+                        _resultHandler.ErrorMessage(string.Format("We could not fetch the requested data. This may not be valid data, or a failed download of custom data. Skipping source ({0}).", args.Source.Source));
                     }
                 };
 
@@ -508,17 +516,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // if we have factor files check to see if we need to update the scale factors
                 if (_hasScaleFactors)
                 {
-                    // check to see if the symbol was remapped
-                    var newSymbol = _mapFile.GetMappedSymbol(date);
-                    if (_mappedSymbol != "" && newSymbol != _mappedSymbol)
+                    // update our price scaling factors in light of the normalization mode
+                    UpdateScaleFactors(date);
+                }
+
+                // check to see if the symbol was remapped
+                var newSymbol = _mapFile.GetMappedSymbol(date);
+                if (newSymbol != _mappedSymbol)
+                {
+                    if (_mappedSymbol != "")
                     {
                         var changed = new SymbolChangedEvent(_config.Symbol, date, _mappedSymbol, newSymbol);
                         _auxiliaryData.Enqueue(changed);
                     }
                     _config.MappedSymbol = _mappedSymbol = newSymbol;
-
-                    // update our price scaling factors in light of the normalization mode
-                    UpdateScaleFactors(date);
                 }
 
                 // we've passed initial checks,now go get data for this date!
@@ -613,19 +624,47 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         private void CheckForDelisting(DateTime date)
         {
-            // these ifs set flags to tell us to produce a delisting instance
-            if (!_delistedWarning && date >= _mapFile.DelistingDate)
+            switch (_config.Symbol.ID.SecurityType)
             {
-                _delistedWarning = true;
-                var price = _previous != null ? _previous.Price : 0;
-                _auxiliaryData.Enqueue(new Delisting(_config.Symbol, date, price, DelistingType.Warning));
-            }
-            else if (!_delisted && date > _mapFile.DelistingDate)
-            {
-                _delisted = true;
-                var price = _previous != null ? _previous.Price : 0;
-                // delisted at EOD
-                _auxiliaryData.Enqueue(new Delisting(_config.Symbol, _mapFile.DelistingDate.AddDays(1), price, DelistingType.Delisted));
+                /*
+                This is commented out until we update delistings logic to delist instrument in the end of the day, 
+                not submit MOC order in the morning. 
+
+                case SecurityType.Future:
+                case SecurityType.Option:
+                    // futures and options are delisted on expiration 
+                    var delistingDate = _config.Symbol.ID.Date;
+
+                    if (!_delistedWarning && date >= delistingDate)
+                    {
+                        _delistedWarning = true;
+                        var price = _previous != null ? _previous.Price : 0;
+                        _auxiliaryData.Enqueue(new Delisting(_config.Symbol, date, price, DelistingType.Warning));
+                    }
+                    else if (!_delisted && date > delistingDate)
+                    {
+                        _delisted = true;
+                        var price = _previous != null ? _previous.Price : 0;
+                        // delisted at EOD
+                        _auxiliaryData.Enqueue(new Delisting(_config.Symbol, delistingDate.AddDays(1), price, DelistingType.Delisted));
+                    }
+                    break;*/
+                default:
+                    // these ifs set flags to tell us to produce a delisting instance
+                    if (!_delistedWarning && date >= _mapFile.DelistingDate)
+                    {
+                        _delistedWarning = true;
+                        var price = _previous != null ? _previous.Price : 0;
+                        _auxiliaryData.Enqueue(new Delisting(_config.Symbol, date, price, DelistingType.Warning));
+                    }
+                    else if (!_delisted && date > _mapFile.DelistingDate)
+                    {
+                        _delisted = true;
+                        var price = _previous != null ? _previous.Price : 0;
+                        // delisted at EOD
+                        _auxiliaryData.Enqueue(new Delisting(_config.Symbol, _mapFile.DelistingDate.AddDays(1), price, DelistingType.Delisted));
+                    }
+                    break;
             }
         }
 

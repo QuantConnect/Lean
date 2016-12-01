@@ -16,6 +16,7 @@
 
 using System;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace QuantConnect
 {
@@ -46,6 +47,7 @@ namespace QuantConnect
         public static Symbol Create(string ticker, SecurityType securityType, string market, string alias = null)
         {
             SecurityIdentifier sid;
+            Symbol underlyingSumbol = null;
             switch (securityType)
             {
                 case SecurityType.Base:
@@ -61,16 +63,17 @@ namespace QuantConnect
                     sid = SecurityIdentifier.GenerateCfd(ticker, market);
                     break;
                 case SecurityType.Option:
-                    alias = alias ?? "?" + ticker.ToUpper();
-                    sid = SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, ticker, market, 0, default(OptionRight), default(OptionStyle));
-                    break;
+                    return CreateOption(ticker, market, default(OptionStyle), default(OptionRight), 0, SecurityIdentifier.DefaultDate);
+
                 case SecurityType.Commodity:
                 case SecurityType.Future:
+                    return CreateFuture(ticker, market, SecurityIdentifier.DefaultDate);
+
                 default:
                     throw new NotImplementedException("The security type has not been implemented yet: " + securityType);
             }
 
-            return new Symbol(sid, alias ?? ticker);
+            return new Symbol(sid, alias ?? ticker, underlyingSumbol);
         }
 
         /// <summary>
@@ -87,12 +90,69 @@ namespace QuantConnect
         /// <returns>A new Symbol object for the specified option contract</returns>
         public static Symbol CreateOption(string underlying, string market, OptionStyle style, OptionRight right, decimal strike, DateTime expiry, string alias = null)
         {
-            var sid = SecurityIdentifier.GenerateOption(expiry, underlying, market, strike, right, style);
-            var sym = sid.Symbol;
-            if (sym.Length > 5) sym += " ";
-            // format spec: http://www.optionsclearing.com/components/docs/initiatives/symbology/symbology_initiative_v1_8.pdf
-            alias = alias ?? string.Format("{0,-6}{1}{2}{3:00000000}", sym, sid.Date.ToString(DateFormat.SixCharacter), sid.OptionRight.ToString()[0], sid.StrikePrice * 1000m);
-            return new Symbol(sid, alias);
+            var underlyingSid = SecurityIdentifier.GenerateEquity(underlying, market);
+            var underlyingSymbol = new Symbol(underlyingSid, underlying);
+
+            return CreateOption(underlyingSymbol, market, style, right, strike, expiry, alias);
+        }
+
+        /// <summary>
+        /// Provides a convenience method for creating an option Symbol using SecurityIdentifier.
+        /// </summary>
+        /// <param name="underlyingSymbol">The underlying security symbol</param>
+        /// <param name="market">The market the underlying resides in</param>
+        /// <param name="style">The option style (American, European, ect..)</param>
+        /// <param name="right">The option right (Put/Call)</param>
+        /// <param name="strike">The option strike price</param>
+        /// <param name="expiry">The option expiry date</param>
+        /// <param name="alias">An alias to be used for the symbol cache. Required when 
+        /// adding the same security from diferent markets</param>
+        /// <returns>A new Symbol object for the specified option contract</returns>
+        public static Symbol CreateOption(Symbol underlyingSymbol, string market, OptionStyle style, OptionRight right, decimal strike, DateTime expiry, string alias = null)
+        {
+            var sid = SecurityIdentifier.GenerateOption(expiry, underlyingSymbol.ID, market, strike, right, style);
+    
+            if (expiry == SecurityIdentifier.DefaultDate)
+            {
+                alias = alias ?? "?" + underlyingSymbol.Value.ToUpper();
+            }
+            else
+            {
+                var sym = underlyingSymbol.Value;
+                if (sym.Length > 5) sym += " ";
+
+                alias = alias ?? SymbolRepresentation.GenerateOptionTickerOSI(sym, sid.OptionRight, sid.StrikePrice, sid.Date);
+            }
+
+            return new Symbol(sid, alias, underlyingSymbol);
+        }
+
+        /// <summary>
+        /// Provides a convenience method for creating a futures Symbol.
+        /// </summary>
+        /// <param name="underlying">The underlying ticker</param>
+        /// <param name="market">The market the underlying resides in</param>
+        /// <param name="expiry">The option expiry date</param>
+        /// <param name="alias">An alias to be used for the symbol cache. Required when 
+        /// adding the same security from different markets</param>
+        /// <returns>A new Symbol object for the specified option contract</returns>
+        public static Symbol CreateFuture(string underlying, string market, DateTime expiry, string alias = null)
+        {
+            var underlyingSid = SecurityIdentifier.GenerateBase(underlying, market);
+            var sid = SecurityIdentifier.GenerateFuture(expiry, underlyingSid, market);
+            var underlyingSymbol = new Symbol(underlyingSid, underlying);
+
+            if (expiry == SecurityIdentifier.DefaultDate)
+            {
+                alias = alias ?? "?" + underlying.ToUpper();
+            }
+            else
+            {
+                var sym = sid.Symbol;
+                alias = alias ?? SymbolRepresentation.GenerateFutureTicker(sym, sid.Date);
+            }
+
+            return new Symbol(sid, alias, underlyingSymbol);
         }
 
         #region Properties
@@ -106,6 +166,20 @@ namespace QuantConnect
         /// Gets the security identifier for this symbol
         /// </summary>
         public SecurityIdentifier ID { get; private set; }
+
+        /// <summary>
+        /// Gets whether or not this <see cref="Symbol"/> is a derivative,
+        /// that is, it has a valid <see cref="Underlying"/> property
+        /// </summary>
+        public bool HasUnderlying
+        {
+            get { return !ReferenceEquals(Underlying, null); }
+        }
+
+        /// <summary>
+        /// Gets the security underlying symbol, if any
+        /// </summary>
+        public Symbol Underlying { get; private set; }
 
         #endregion
 
@@ -124,6 +198,49 @@ namespace QuantConnect
             }
             ID = sid;
             Value = value.ToUpper();
+        }
+
+        /// <summary>
+        /// Creates new symbol with updated mapped symbol. Symbol Mapping: When symbols change over time (e.g. CHASE-> JPM) need to update the symbol requested.
+        /// Method returns newly created symbol 
+        /// </summary>
+        public Symbol UpdateMappedSymbol(string mappedSymbol)
+        {
+            if (ID.SecurityType == SecurityType.Option)
+            {
+                var underlyingSymbol = new Symbol(Underlying.ID, mappedSymbol, null);
+
+                var alias = Value;
+
+                if (ID.Date != SecurityIdentifier.DefaultDate)
+                {
+                    var sym = mappedSymbol;
+                    alias = SymbolRepresentation.GenerateOptionTickerOSI(sym, ID.OptionRight, ID.StrikePrice, ID.Date);
+                }
+
+                return new Symbol(ID, alias, underlyingSymbol);
+            }
+            else
+            {
+                return new Symbol(ID, mappedSymbol, Underlying);
+            }
+        }
+
+        /// <summary>
+        /// Private constructor initializes a new instance of the <see cref="Symbol"/> class with underlying
+        /// </summary>
+        /// <param name="sid">The security identifier for this symbol</param>
+        /// <param name="value">The current ticker symbol value</param>
+        /// <param name="underlying">The underlying symbol</param>
+        internal Symbol(SecurityIdentifier sid, string value, Symbol underlying)
+        {
+            if (value == null)
+            {
+                throw new ArgumentNullException("value");
+            }
+            ID = sid;
+            Value = value.ToUpper();
+            Underlying = underlying;
         }
 
         #endregion

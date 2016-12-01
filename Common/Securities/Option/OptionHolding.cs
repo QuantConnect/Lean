@@ -12,6 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+using System;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Securities.Option
 {
@@ -28,6 +30,53 @@ namespace QuantConnect.Securities.Option
         public OptionHolding(Security security)
             : base(security)
         {
+        }
+
+        /// <summary>
+        /// Option Holding Class constructor
+        /// </summary>
+        /// <param name="security">The option security being held</param>
+        /// <param name="holding">The option security holding</param>
+        public OptionHolding(Security security, OptionHolding holding)
+            : base(security)
+        {
+            _averagePrice = holding._averagePrice;
+            _quantity = holding._quantity;
+            _price = holding._price;
+            _totalSaleVolume = holding._totalSaleVolume;
+            _profit = holding._profit;
+            _lastTradeProfit = holding._lastTradeProfit;
+            _totalFees = holding._totalFees;
+        }
+
+        /// <summary>
+        /// Sets new option holding parameters (strike price, multiplier, unit of size) in accordance with underlying split event details
+        /// </summary>
+        /// <param name="splitFactor">Split ratio of the underlying split</param>
+        public void SplitUnderlying(decimal splitFactor)
+        {
+            var optionSecurity = (Option)_security;
+            var inverseFactor = 1.0m / splitFactor;
+
+            // detect forward (even and odd) and reverse splits
+            if (splitFactor > 1.0m)
+            {
+                // reverse split: we adjust units of trade for the security
+                optionSecurity.ContractUnitOfTrade /= (int)splitFactor;
+            }
+
+            if ((int)Math.Round(inverseFactor, 5) == (int)inverseFactor)
+            {
+                // even split (e.g. 2 for 1): we adjust position size and strike price
+                _quantity = (int)((decimal)_quantity * inverseFactor);
+                _averagePrice *= splitFactor;
+            }
+            else
+            {
+                // odd split (e.g. 3 for 2): we adjust strike price, unit of trade, and multiplier
+                optionSecurity.ContractUnitOfTrade *= (int)inverseFactor;
+                optionSecurity.ContractMultiplier *= (int)inverseFactor;
+            }
         }
     }
 }
