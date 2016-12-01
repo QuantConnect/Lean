@@ -209,9 +209,9 @@ namespace QuantConnect.Tests.Common
             results = priceModel.Evaluate(optionPut, null, contract);
             greeks = results.Greeks;
 
-            Assert.AreNotEqual(greeks.Theta, 0);
+            Assert.LessOrEqual(greeks.Theta, 0);
             Assert.AreNotEqual(greeks.Rho, 0);
-            Assert.AreNotEqual(greeks.Vega, 0);
+            Assert.Greater(greeks.Vega, 0);
         }
 
         /// <summary>

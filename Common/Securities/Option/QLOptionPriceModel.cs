@@ -90,13 +90,13 @@ namespace QuantConnect.Securities.Option
             var underlyingQuoteValue = new SimpleQuote((double)optionSecurity.Underlying.Price);
 
             var dividendYieldValue = new SimpleQuote(_dividendYieldEstimator.Estimate(security, slice, contract));
-            var dividendYield = new Handle<YieldTermStructure>( new FlatForward(settlementDate, dividendYieldValue, dayCounter));
+            var dividendYield = new Handle<YieldTermStructure>( new FlatForward(0, calendar, dividendYieldValue, dayCounter));
 
             var riskFreeRateValue = new SimpleQuote(_riskFreeRateEstimator.Estimate(security, slice, contract));
-            var riskFreeRate = new Handle<YieldTermStructure>(new FlatForward(settlementDate, riskFreeRateValue, dayCounter));
+            var riskFreeRate = new Handle<YieldTermStructure>(new FlatForward(0, calendar, riskFreeRateValue, dayCounter));
 
             var underlyingVolValue = new SimpleQuote(_underlyingVolEstimator.Estimate(security, slice, contract));
-            var underlyingVol = new Handle<BlackVolTermStructure>( new BlackConstantVol(settlementDate, calendar, new Handle<Quote>(underlyingVolValue), dayCounter));
+            var underlyingVol = new Handle<BlackVolTermStructure>( new BlackConstantVol(0, calendar, new Handle<Quote>(underlyingVolValue), dayCounter));
             
             // preparing stochastic process and payoff functions
             var stochasticProcess = new BlackScholesMertonProcess(new Handle<Quote>(underlyingQuoteValue), dividendYield, riskFreeRate, underlyingVol);
@@ -186,37 +186,9 @@ namespace QuantConnect.Securities.Option
             {
                 var step = 1.0 / 365.0;
 
-                /*Settings.setEvaluationDate(settlementDate.AddDays(-1));
+                Settings.setEvaluationDate(settlementDate.AddDays(-1));
                 var npvMinus = option.NPV();
                 Settings.setEvaluationDate(settlementDate);
-
-                return (npv - npvMinus) / step;*/
-
-                // This code is a workaround for the bug in QLNet
-                var newSettlementDate = settlementDate.AddDays(-1);
-
-                var newDividendYield = new Handle<YieldTermStructure>(new FlatForward(newSettlementDate, dividendYieldValue, dayCounter));
-
-                var newRiskFreeRate = new Handle<YieldTermStructure>(new FlatForward(newSettlementDate, riskFreeRateValue, dayCounter));
-
-                var newUnderlyingVol = new Handle<BlackVolTermStructure>(new BlackConstantVol(newSettlementDate, calendar, new Handle<Quote>(underlyingVolValue), dayCounter));
-
-                // preparing stochastic process and payoff functions
-                var newStochasticProcess = new BlackScholesMertonProcess(new Handle<Quote>(underlyingQuoteValue), newDividendYield, newRiskFreeRate, newUnderlyingVol);
-                var newPayoff = new PlainVanillaPayoff(contract.Right == OptionRight.Call ? QLNet.Option.Type.Call : QLNet.Option.Type.Put, (double)contract.Strike);
-
-                // creating option QL object
-                var newOption = contract.Symbol.ID.OptionStyle == OptionStyle.American ?
-                            new VanillaOption(newPayoff, new AmericanExercise(newSettlementDate, maturityDate)) :
-                            new VanillaOption(newPayoff, new EuropeanExercise(maturityDate));
-
-                Settings.setEvaluationDate(newSettlementDate);
-
-                // preparing pricing engine QL object
-                newOption.setPricingEngine(_pricingEngineFunc(contract.Symbol, newStochasticProcess));
-
-                // running calculations
-                var npvMinus = newOption.NPV();
 
                 return (npv - npvMinus) / step;
             };
