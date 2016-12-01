@@ -7,6 +7,6 @@ namespace QuantConnect.Securities
     /// </summary>
     public interface ISecuritySeeder
     {
-        BaseData GetLastData(Security security);
+        BaseData GetSeedData(Security security);
     }
 }

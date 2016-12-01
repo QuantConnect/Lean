@@ -34,6 +34,7 @@ namespace QuantConnect.Securities
         /// for the specified algorithm
         /// </summary>
         /// <param name="brokerageModel">The brokerage model used to initialize the security models</param>
+        /// <param name="securitySeeder">An <see cref="ISecuritySeeder"/> used to seed the initial price of the security</param>
         public BrokerageModelSecurityInitializer(IBrokerageModel brokerageModel, ISecuritySeeder securitySeeder)
         {
             _brokerageModel = brokerageModel;
@@ -53,7 +54,7 @@ namespace QuantConnect.Securities
             security.SlippageModel = _brokerageModel.GetSlippageModel(security);
             security.SettlementModel = _brokerageModel.GetSettlementModel(security, _brokerageModel.AccountType);
 
-            BaseData seedData = _securitySeeder.GetLastData(security);
+            BaseData seedData = _securitySeeder.GetSeedData(security);
             if (seedData != null)
             {
                 security.SetMarketPrice(seedData);

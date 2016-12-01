@@ -407,14 +407,15 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Get a single bar of history, useful seeded securities with the correct price
+        /// Get the last known price using the history provider.
+        /// Useful for seeding securities with the correct price
         /// </summary>
         /// <param name="security"><see cref="Security"/> object for which to retrieve historical data</param>
-        /// <returns>A single <see cref="BaseData"/> object</returns>
-        public BaseData GetSingleBarHistory(Security security)
+        /// <returns>A single <see cref="BaseData"/> object with the last known price</returns>
+        public BaseData GetLastKnownPrice(Security security)
         {
-            var startTime = GetStartTimeAlgoTzForSecurity(security, 1, security.Resolution);
-            var endTime = Time.RoundDown(security.Resolution.ToTimeSpan());
+            var startTime = GetStartTimeAlgoTzForSecurity(security, 1);
+            var endTime   = Time.RoundDown(security.Resolution.ToTimeSpan());
 
             var request = new HistoryRequest()
             {
@@ -442,11 +443,13 @@ namespace QuantConnect.Algorithm
         /// Gets the start time required for the specified bar count for a security in terms of the algorithm's time zone
         /// Used when the security has not yet been subscribed to
         /// </summary>
-        private DateTime GetStartTimeAlgoTzForSecurity(Security security, int periods, Resolution? resolution = null)
+        private DateTime GetStartTimeAlgoTzForSecurity(Security security, int periods)
         {
-            var timeSpan = (resolution ?? security.Resolution).ToTimeSpan();
+            var timeSpan = security.Resolution.ToTimeSpan();
+
             // make this a minimum of one second
             timeSpan = timeSpan < QuantConnect.Time.OneSecond ? QuantConnect.Time.OneSecond : timeSpan;
+
             var localStartTime = QuantConnect.Time.GetStartTimeForTradeBars(security.Exchange.Hours, UtcTime.ConvertFromUtc(security.Exchange.TimeZone), timeSpan, periods, security.IsExtendedMarketHours);
             return localStartTime.ConvertTo(security.Exchange.TimeZone, TimeZone);
         }

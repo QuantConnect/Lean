@@ -4,27 +4,37 @@ using QuantConnect.Logging;
 
 namespace QuantConnect.Securities
 {
+    /// <summary>
+    /// Seed a security price from a history function
+    /// </summary>
     public class FuncSecuritySeeder : ISecuritySeeder
     {
-        private Func<Security, BaseData> _historySeeder;
+        private readonly Func<Security, BaseData> _seedFunction;
 
-        public FuncSecuritySeeder(Func<Security, BaseData> historySeeder)
+        /// <summary>
+        /// Constructor that takes as a parameter the security used to seed the price
+        /// </summary>
+        /// <param name="seedFunction"></param>
+        public FuncSecuritySeeder(Func<Security, BaseData> seedFunction)
         {
-            _historySeeder = historySeeder;
+            _seedFunction = seedFunction;
         }
 
-        public BaseData GetLastData(Security security)
+        /// <summary>
+        /// Get the last data point using the seed function
+        /// </summary>
+        /// <param name="security"><see cref="Security"/> being seeded</param>
+        /// <returns><see cref="BaseData"/> representing the last known data of the security</returns>
+        public BaseData GetSeedData(Security security)
         {
             try
             {
-                return _historySeeder(security);
+                return _seedFunction(security);
             }
             catch (Exception ex)
             {
-                Log.Error("FuncSecuritySeeder.GetSeedPrice(): " + ex.GetBaseException());
+                Log.Error("FuncSecuritySeeder.GetSeedPrice():  Could not seed price for security {0}: {1}", security.Symbol, ex.GetBaseException());
             }
-
-            Log.Trace("FuncSecuritySeeder.GetSeedPrice(): Could not seed price for security {0} from history.", security.Symbol);
 
             return null;
         }

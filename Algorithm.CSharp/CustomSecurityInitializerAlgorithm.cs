@@ -31,7 +31,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             // set our initializer to our custom type
             SetBrokerageModel(BrokerageName.TradierBrokerage);
-            SetSecurityInitializer(new CustomSecurityInitializer(BrokerageModel, new FuncSecuritySeeder(GetSingleBarHistory), DataNormalizationMode.Raw));
+            SetSecurityInitializer(new CustomSecurityInitializer(BrokerageModel, new FuncSecuritySeeder(GetLastKnownPrice), DataNormalizationMode.Raw));
 
             SetStartDate(2012, 01, 01);
             SetEndDate(2013, 01, 01);
