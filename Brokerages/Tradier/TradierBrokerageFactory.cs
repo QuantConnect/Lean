@@ -176,7 +176,7 @@ namespace QuantConnect.Brokerages.Tradier
 
             //Add the brokerage to the composer to ensure its accessible to the live data feed.
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
-
+            Composer.Instance.AddPart<IHistoryProvider>(brokerage);
             return brokerage;
         }
 

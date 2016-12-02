@@ -406,6 +406,54 @@ namespace QuantConnect.Algorithm
             return History(requests, TimeZone).Memoize();
         }
 
+        /// <summary>
+        /// Get the last known price using the history provider.
+        /// Useful for seeding securities with the correct price
+        /// </summary>
+        /// <param name="security"><see cref="Security"/> object for which to retrieve historical data</param>
+        /// <returns>A single <see cref="BaseData"/> object with the last known price</returns>
+        public BaseData GetLastKnownPrice(Security security)
+        {
+            var startTime = GetStartTimeAlgoTzForSecurity(security, 1);
+            var endTime   = Time.RoundDown(security.Resolution.ToTimeSpan());
+
+            var request = new HistoryRequest()
+            {
+                StartTimeUtc = startTime.ConvertToUtc(_localTimeKeeper.TimeZone),
+                EndTimeUtc = endTime.ConvertToUtc(_localTimeKeeper.TimeZone),
+                DataType = security.Resolution == Resolution.Tick ? typeof(Tick) : typeof(TradeBar),
+                Resolution = security.Resolution,
+                FillForwardResolution = security.Resolution,
+                Symbol = security.Symbol,
+                Market = security.Symbol.ID.Market,
+                ExchangeHours = security.Exchange.Hours
+            };
+
+            var history = History(new List<HistoryRequest> { request });
+
+            if (history.Any() && history.First().Values.Any())
+            {
+                return history.First().Values.First();
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Gets the start time required for the specified bar count for a security in terms of the algorithm's time zone
+        /// Used when the security has not yet been subscribed to
+        /// </summary>
+        private DateTime GetStartTimeAlgoTzForSecurity(Security security, int periods)
+        {
+            var timeSpan = security.Resolution.ToTimeSpan();
+
+            // make this a minimum of one second
+            timeSpan = timeSpan < QuantConnect.Time.OneSecond ? QuantConnect.Time.OneSecond : timeSpan;
+
+            var localStartTime = QuantConnect.Time.GetStartTimeForTradeBars(security.Exchange.Hours, UtcTime.ConvertFromUtc(security.Exchange.TimeZone), timeSpan, periods, security.IsExtendedMarketHours);
+            return localStartTime.ConvertTo(security.Exchange.TimeZone, TimeZone);
+        }
+
         private IEnumerable<Slice> History(IEnumerable<HistoryRequest> requests, DateTimeZone timeZone)
         {
             var sentMessage = false;
