@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using Newtonsoft.Json.Linq;
-using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 
@@ -12,7 +11,9 @@ namespace QuantConnect.ToolBox.AccernDataSplitter
     public class Program
     {
         private static readonly JObject Config = JObject.Parse(File.ReadAllText("AccernDataSplitter/config.json"));
+        //Location of the raw accern data gzip files
         private static readonly string BaseFolder = Config.GetValue("accern-data-folder").Value<string>();
+        //Loction of the cache folder
         private static readonly string CacheDirectory = Config.GetValue("data-cache-directory").Value<string>();
         private static int _count;
 

@@ -6,6 +6,6 @@
 	},
 
 	// Delete the configuration after loading
-	"accern-data-folder": "H:\\Lean Projects\\Lean Mini Projects\\AccernData",
-	"data-cache-directory": "H:\\Lean Projects\\Lean Mini Projects\\AccernCache"
+	"accern-data-folder": "",
+	"data-cache-directory": ""
 }
