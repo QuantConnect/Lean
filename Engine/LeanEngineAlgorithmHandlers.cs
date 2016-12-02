@@ -37,7 +37,6 @@ namespace QuantConnect.Lean.Engine
         private readonly IResultHandler _results;
         private readonly IRealTimeHandler _realTime;
         private readonly ITransactionHandler _transactions;
-        private readonly IHistoryProvider _historyProvider;
         private readonly ICommandQueueHandler _commandQueue;
         private readonly IMapFileProvider _mapFileProvider;
         private readonly IFactorFileProvider _factorFileProvider;
@@ -84,14 +83,6 @@ namespace QuantConnect.Lean.Engine
         }
 
         /// <summary>
-        /// Gets the history provider used to process historical data requests within the algorithm
-        /// </summary>
-        public IHistoryProvider HistoryProvider
-        {
-            get { return _historyProvider; }
-        }
-
-        /// <summary>
         /// Gets the command queue responsible for receiving external commands for the algorithm
         /// </summary>
         public ICommandQueueHandler CommandQueue
@@ -131,7 +122,6 @@ namespace QuantConnect.Lean.Engine
         /// <param name="dataFeed">The data feed handler used to pump data to the algorithm</param>
         /// <param name="transactions">The transaction handler used to process orders from the algorithm</param>
         /// <param name="realTime">The real time handler used to process real time events</param>
-        /// <param name="historyProvider">The history provider used to process historical data requests</param>
         /// <param name="commandQueue">The command queue handler used to receive external commands for the algorithm</param>
         /// <param name="mapFileProvider">The map file provider used to retrieve map files for the data feed</param>
         /// <param name="factorFileProvider">Map file provider used as a map file source for the data feed</param>
@@ -141,7 +131,6 @@ namespace QuantConnect.Lean.Engine
             IDataFeed dataFeed,
             ITransactionHandler transactions,
             IRealTimeHandler realTime,
-            IHistoryProvider historyProvider,
             ICommandQueueHandler commandQueue,
             IMapFileProvider mapFileProvider,
             IFactorFileProvider factorFileProvider,
@@ -168,10 +157,6 @@ namespace QuantConnect.Lean.Engine
             {
                 throw new ArgumentNullException("realTime");
             }
-            if (historyProvider == null)
-            {
-                throw new ArgumentNullException("realTime");
-            }
             if (commandQueue == null)
             {
                 throw new ArgumentNullException("commandQueue");
@@ -193,7 +178,6 @@ namespace QuantConnect.Lean.Engine
             _dataFeed = dataFeed;
             _transactions = transactions;
             _realTime = realTime;
-            _historyProvider = historyProvider;
             _commandQueue = commandQueue;
             _mapFileProvider = mapFileProvider;
             _factorFileProvider = factorFileProvider;
@@ -213,7 +197,6 @@ namespace QuantConnect.Lean.Engine
             var realTimeHandlerTypeName = Config.Get("real-time-handler", "BacktestingRealTimeHandler");
             var dataFeedHandlerTypeName = Config.Get("data-feed-handler", "FileSystemDataFeed");
             var resultHandlerTypeName = Config.Get("result-handler", "BacktestingResultHandler");
-            var historyProviderTypeName = Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider");
             var commandQueueHandlerTypeName = Config.Get("command-queue-handler", "EmptyCommandQueueHandler");
             var mapFileProviderTypeName = Config.Get("map-file-provider", "LocalDiskMapFileProvider");
             var factorFileProviderTypeName = Config.Get("factor-file-provider", "LocalDiskFactorFileProvider");
@@ -225,7 +208,6 @@ namespace QuantConnect.Lean.Engine
                 composer.GetExportedValueByTypeName<IDataFeed>(dataFeedHandlerTypeName),
                 composer.GetExportedValueByTypeName<ITransactionHandler>(transactionHandlerTypeName),
                 composer.GetExportedValueByTypeName<IRealTimeHandler>(realTimeHandlerTypeName),
-                composer.GetExportedValueByTypeName<IHistoryProvider>(historyProviderTypeName),
                 composer.GetExportedValueByTypeName<ICommandQueueHandler>(commandQueueHandlerTypeName),
                 composer.GetExportedValueByTypeName<IMapFileProvider>(mapFileProviderTypeName),
                 composer.GetExportedValueByTypeName<IFactorFileProvider>(factorFileProviderTypeName),

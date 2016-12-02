@@ -93,7 +93,7 @@ namespace QuantConnect.Brokerages.Oanda
 
             var brokerage = new OandaBrokerage(algorithm.Transactions, algorithm.Portfolio, environment, accessToken, accountId);
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
-
+            Composer.Instance.AddPart<IHistoryProvider>(brokerage);
             return brokerage;
         }
 
