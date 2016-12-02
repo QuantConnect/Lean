@@ -29,6 +29,8 @@ using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace QuantConnect.Lean.Engine 
 {
@@ -88,6 +90,15 @@ namespace QuantConnect.Lean.Engine
             var statusPingThread = new Thread(statusPing.Run);
             statusPingThread.Start();
 
+            var json = JsonConvert.SerializeObject(job);
+            var jObj = JObject.Parse(json);
+            jObj.Descendants().OfType<JProperty>()
+                              .Where(p => p.Name == "oAlgorithm")
+                              .ToList()
+                              .ForEach(att => att.Remove());
+            var newJson = jObj.ToString();
+            throw new Exception("DEBUG: " + newJson);
+
             try
             {
                 //Reset thread holders.
@@ -96,6 +107,7 @@ namespace QuantConnect.Lean.Engine
                 Thread threadTransactions = null;
                 Thread threadResults = null;
                 Thread threadRealTime = null;
+
 
                 //-> Initialize messaging system
                 _systemHandlers.Notify.SetAuthentication(job);
