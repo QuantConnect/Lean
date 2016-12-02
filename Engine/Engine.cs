@@ -397,6 +397,10 @@ namespace QuantConnect.Lean.Engine
         
         private IHistoryProvider GetHistoryProvider(string historyProvider)
         {
+            if (historyProvider.IsNullOrEmpty())
+            {
+                historyProvider = Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider");
+            }
             return Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>(historyProvider);
         }
         private static void SaveListOfTrades(IOrderProvider transactions, string csvFileName)
