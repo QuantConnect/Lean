@@ -71,9 +71,8 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (contract != null)
                     {
-                        var quantity = CalculateOrderQuantity(contract.Symbol, -1m);
-                        MarketOrder(contract.Symbol, quantity);
-                        MarketOnCloseOrder(contract.Symbol, -quantity);
+                        MarketOrder(contract.Symbol, 1);
+                        MarketOnCloseOrder(contract.Symbol, -1);
                     }
                 }
             }

@@ -44,7 +44,7 @@ namespace QuantConnect.Securities
         public decimal ContractMultiplier
         {
             get; 
-            private set;
+            protected set;
         }
 
         /// <summary>

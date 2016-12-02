@@ -21,6 +21,8 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using System.Threading;
+using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 {
@@ -29,17 +31,43 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     /// </summary>
     public class OptionChainUniverseSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory
     {
-        private readonly BaseDataSubscriptionEnumeratorFactory _factory;
         private readonly Func<SubscriptionRequest, IEnumerator<BaseData>, IEnumerator<BaseData>> _enumeratorConfigurator;
+        private readonly bool _isLiveMode;
+
+        private readonly IDataQueueUniverseProvider _symbolUniverse;
+        private readonly ITimeProvider _timeProvider;
+
+        private readonly MapFileResolver _mapFileResolver;
+        private readonly IFactorFileProvider _factorFileProvider;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OptionChainUniverseSubscriptionEnumeratorFactory"/> class
         /// </summary>
         /// <param name="enumeratorConfigurator">Function used to configure the sub-enumerators before sync (fill-forward/filter/ect...)</param>
-        public OptionChainUniverseSubscriptionEnumeratorFactory(Func<SubscriptionRequest, IEnumerator<BaseData>, IEnumerator<BaseData>> enumeratorConfigurator)
+        /// <param name="mapFileResolver">Map file resolver</param>
+        /// <param name="factorFileProvider">Factor file provider</param>
+        public OptionChainUniverseSubscriptionEnumeratorFactory(Func<SubscriptionRequest, IEnumerator<BaseData>, IEnumerator<BaseData>> enumeratorConfigurator,
+                    MapFileResolver mapFileResolver,
+                    IFactorFileProvider factorFileProvider)
         {
+            _isLiveMode = false;
             _enumeratorConfigurator = enumeratorConfigurator;
-            _factory = new BaseDataSubscriptionEnumeratorFactory();
+            _mapFileResolver = mapFileResolver;
+            _factorFileProvider = factorFileProvider;
+
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="OptionChainUniverseSubscriptionEnumeratorFactory"/> class
+        /// </summary>
+        /// <param name="symbolUniverse">Symbol universe provider of the data queue</param>
+        public OptionChainUniverseSubscriptionEnumeratorFactory(Func<SubscriptionRequest, IEnumerator<BaseData>, IEnumerator<BaseData>> enumeratorConfigurator, 
+                                                                IDataQueueUniverseProvider symbolUniverse, ITimeProvider timeProvider)
+        {
+            _isLiveMode = true;
+            _symbolUniverse = symbolUniverse;
+            _timeProvider = timeProvider;
+            _enumeratorConfigurator = enumeratorConfigurator;
         }
 
         /// <summary>
@@ -50,28 +78,57 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <returns>An enumerator reading the subscription request</returns>
         public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataFileProvider dataFileProvider)
         {
-            var enumerators = GetSubscriptionConfigurations(request)
-                .Select(c => new SubscriptionRequest(request, configuration: c))
-                .Select(sr => _enumeratorConfigurator(request, _factory.CreateEnumerator(sr, dataFileProvider))
-                );
+            if (_isLiveMode)
+            {
+                var localTime = request.StartTimeUtc.ConvertFromUtc(request.Configuration.ExchangeTimeZone);
+                
+                // loading the list of option contract and converting them into zip entries
+                var symbols = _symbolUniverse.LookupSymbols(request.Security.Symbol.Underlying.ToString(), request.Security.Type);
+                var zipEntries = symbols.Select(x => new ZipEntryName { Time = localTime, Symbol = x } as BaseData).ToList();
 
-            var sync = new SynchronizingEnumerator(enumerators);
-            return new OptionChainUniverseDataCollectionAggregatorEnumerator(sync, request.Security.Symbol);
+                // creating trade bar builder enumerator to model underlying price change
+                var underlyingEnumerator = new TradeBarBuilderEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider);
+
+                // configuring the enumerator
+                var subscriptionConfiguration = GetSubscriptionConfigurations(request).First();
+                var subscriptionRequest = new SubscriptionRequest(request, configuration: subscriptionConfiguration);
+                var configuredEnumerator = _enumeratorConfigurator(subscriptionRequest, underlyingEnumerator);
+
+                return new DataQueueOptionChainUniverseDataCollectionEnumerator(request.Security.Symbol, configuredEnumerator, zipEntries);
+            }
+            else
+            {
+                var factory = new BaseDataSubscriptionEnumeratorFactory(_mapFileResolver, _factorFileProvider);
+
+                var enumerators = GetSubscriptionConfigurations(request)
+                    .Select(c => new SubscriptionRequest(request, configuration: c))
+                    .Select(sr => _enumeratorConfigurator(request, factory.CreateEnumerator(sr, dataFileProvider)));
+
+                var sync = new SynchronizingEnumerator(enumerators);
+                return new OptionChainUniverseDataCollectionAggregatorEnumerator(sync, request.Security.Symbol);
+            }
         }
 
         private IEnumerable<SubscriptionDataConfig> GetSubscriptionConfigurations(SubscriptionRequest request)
         {
             // canonical also needs underlying price data
             var config = request.Configuration;
-            var underlying = Symbol.Create(config.Symbol.ID.Symbol, SecurityType.Equity, config.Market);
+            var underlying = config.Symbol.Underlying;
             var resolution = config.Resolution == Resolution.Tick ? Resolution.Second : config.Resolution;
-            return new[]
+
+            var configurations = new List<SubscriptionDataConfig>
             {
-                // rewrite the primary to be non-tick and fill forward
-                new SubscriptionDataConfig(config, resolution: resolution, fillForward: true),
                 // add underlying trade data
                 new SubscriptionDataConfig(config, resolution: resolution, fillForward: true, symbol: underlying, objectType: typeof (TradeBar), tickType: TickType.Trade),
             };
+
+            if (!_isLiveMode)
+            {
+                // rewrite the primary to be non-tick and fill forward
+                configurations.Add(new SubscriptionDataConfig(config, resolution: resolution, fillForward: true));
+            }
+
+            return configurations;
         }
     }
 }

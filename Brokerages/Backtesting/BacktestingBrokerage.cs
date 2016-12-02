@@ -21,6 +21,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Brokerages.Backtesting
 {
@@ -38,6 +39,7 @@ namespace QuantConnect.Brokerages.Backtesting
         protected readonly IAlgorithm Algorithm;
         private readonly ConcurrentDictionary<int, Order> _pending;
         private readonly object _needsScanLock = new object();
+
 
         /// <summary>
         /// Creates a new BacktestingBrokerage for the specified algorithm
@@ -62,6 +64,17 @@ namespace QuantConnect.Brokerages.Backtesting
             _pending = new ConcurrentDictionary<int, Order>();
         }
 
+        /// <summary>
+        /// Creates a new BacktestingBrokerage for the specified algorithm. Adds market simulation to BacktestingBrokerage;
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
+        public BacktestingBrokerage(IAlgorithm algorithm, IBacktestingMarketSimulation marketSimulation)
+            : base("Backtesting Brokerage")
+        {
+            Algorithm = algorithm;
+            MarketSimulation = marketSimulation;
+            _pending = new ConcurrentDictionary<int, Order>();
+        }
         /// <summary>
         /// Gets the connection status
         /// </summary>
@@ -191,6 +204,11 @@ namespace QuantConnect.Brokerages.Backtesting
         }
 
         /// <summary>
+        /// Market Simulation - simulates various market conditions in backtest
+        /// </summary>
+        public IBacktestingMarketSimulation MarketSimulation { get; set; }
+
+        /// <summary>
         /// Scans all the outstanding orders and applies the algorithm model fills to generate the order events
         /// </summary>
         public void Scan()
@@ -295,6 +313,11 @@ namespace QuantConnect.Brokerages.Backtesting
                                 case OrderType.MarketOnClose:
                                     fill = model.MarketOnCloseFill(security, order as MarketOnCloseOrder);
                                     break;
+
+                                case OrderType.OptionExercise:
+                                    var option = (Option)security;
+                                    fill = option.OptionExerciseModel.OptionExercise(option, order as OptionExerciseOrder);
+                                    break;
                             }
                         }
                         catch (Exception err)
@@ -332,6 +355,38 @@ namespace QuantConnect.Brokerages.Backtesting
                 // if we didn't fill then we need to continue to scan
                 _needsScan = stillNeedsScan;
             }
+        }
+
+        /// <summary>
+        /// Runs market simulation 
+        /// </summary>
+        public void SimulateMarket()
+        {
+            // if simulator is installed, we run it
+            if (MarketSimulation != null)
+                MarketSimulation.SimulateMarketConditions(this, Algorithm);
+        }
+
+        /// <summary>
+        /// This method is called by market simulator in order to launch an assignment event
+        /// </summary>
+        /// <param name="option">Option security to assign</param>
+        /// <param name="quantity">Quantity to assign</param>
+        public virtual void ActivateOptionAssignment(Option option, int quantity)
+        {
+            var request = new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, -quantity, 0.0m, 0.0m, Algorithm.UtcTime, "Simulated option assignment");
+            var order = (OptionExerciseOrder)Order.CreateOrder(request);
+            var fill = option.OptionExerciseModel.OptionExercise(option, order);
+            var portfolioModel = (OptionPortfolioModel)option.PortfolioModel;
+
+            // processing assignment in the portfolio first
+            portfolioModel.ProcessAssignmentFill(Algorithm.Portfolio, option, order, fill);
+            
+            // firing event informing interested parties that option position has been assigned
+            OnOptionPositionAssigned(fill);
+
+            // informing user algorithm that option position has been assigned
+            Algorithm.OnAssignmentOrderEvent(fill);
         }
 
         /// <summary>

@@ -34,6 +34,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     [TestFixture]
     public class BaseDataExchangeTests
     {
+        // This is a default timeout for all tests to wait if something went wrong 
+        const int DefaultTimeout = 10000;
+
         [Test]
         public void FiresCorrectHandlerBySymbol()
         {
@@ -41,25 +44,23 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var exchange = CreateExchange(dataQueue);
             exchange.SleepInterval = 1;
 
-            var firedHandler = false;
-            var firedWrongHandler = false;
+            var firedHandler = new AutoResetEvent(false);
+            var firedWrongHandler = new AutoResetEvent(false);
+
             exchange.SetDataHandler(Symbols.SPY, spy =>
             {
-                firedHandler = true;
+                firedHandler.Set();
             });
             exchange.SetDataHandler(Symbols.EURUSD, eurusd =>
             {
-                firedWrongHandler = true;
+                firedWrongHandler.Set();
             });
 
             dataQueue.Enqueue(new Tick{Symbol = Symbols.SPY});
 
             Task.Run(() => exchange.Start());
 
-            Thread.Sleep(50);
-
-            Assert.IsTrue(firedHandler);
-            Assert.IsFalse(firedWrongHandler);
+            Assert.AreEqual(0, WaitHandle.WaitAny(new[] { firedHandler, firedWrongHandler }, DefaultTimeout));
         }
 
         [Test]
@@ -68,10 +69,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var dataQueue = new ConcurrentQueue<BaseData>();
             var exchange = CreateExchange(dataQueue);
 
-            var firedHandler = false;
+            var touchedHandler = new AutoResetEvent(false);
+
             exchange.SetDataHandler(Symbols.SPY, spy =>
             {
-                firedHandler = true;
+                touchedHandler.Set();
             });
             exchange.RemoveDataHandler(Symbols.SPY);
 
@@ -79,12 +81,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             Task.Run(() => exchange.Start());
 
-            Thread.Sleep(10);
-
-            Assert.IsFalse(firedHandler);
+            Assert.IsFalse(touchedHandler.WaitOne(DefaultTimeout));
         }
 
-        [Test, Category("TravisExclude")]
+        [Test]
         public void EndsQueueConsumption()
         {
             var dataQueue = new ConcurrentQueue<BaseData>();
@@ -100,18 +100,21 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             });
 
             BaseData last = null;
+            var lastUpdated = new AutoResetEvent(false);
             exchange.SetDataHandler(Symbols.SPY, spy =>
             {
                 last = spy;
+                lastUpdated.Set();
             });
 
-            Task.Run(() => exchange.Start());
+            var finishedRunning = new AutoResetEvent(false);
+            Task.Run(() => { exchange.Start(); finishedRunning.Set(); } );
 
-            Thread.Sleep(1);
-
-            Thread.Sleep(25);
+            Assert.IsTrue(lastUpdated.WaitOne(DefaultTimeout));
 
             exchange.Stop();
+
+            Assert.IsTrue(finishedRunning.WaitOne(DefaultTimeout));
 
             var endTime = DateTime.UtcNow;
 
@@ -136,6 +139,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var first = true;
             BaseData last = null;
+            var lastUpdated = new AutoResetEvent(false);
             exchange.SetDataHandler(Symbols.SPY, spy =>
             {
                 if (first)
@@ -144,15 +148,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     throw new Exception("This exception should be swalloed by the exchange!");
                 }
                 last = spy;
+                lastUpdated.Set();
             });
 
             Task.Run(() => exchange.Start());
 
-            Thread.Sleep(50);
+            Assert.IsTrue(lastUpdated.WaitOne(DefaultTimeout));
 
             exchange.Stop();
-
-            Assert.IsNotNull(last);
         }
 
         [Test]
@@ -171,7 +174,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             });
 
             var first = true;
+            var errorCaught = new AutoResetEvent(true);
             BaseData last = null;
+
+            exchange.SetErrorHandler(error => 
+            {
+                errorCaught.Set();
+                return true;
+            });
+
             exchange.SetDataHandler(Symbols.SPY, spy =>
             {
                 if (first)
@@ -182,11 +193,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 last = spy;
             });
 
-            exchange.SetErrorHandler(error => true);
-
             Task.Run(() => exchange.Start());
 
-            Thread.Sleep(25);
+            Assert.IsTrue(errorCaught.WaitOne(DefaultTimeout));
 
             exchange.Stop();
 

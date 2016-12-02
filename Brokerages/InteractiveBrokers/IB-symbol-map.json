@@ -1,0 +1,11 @@
+/* This is a manually created file that contains mappings from IB own naming to original symbols defined by respective exchanges. */
+{
+    "GBP": "6B",
+    "CAD": "6C",
+    "JPY": "6J",
+    "CHF": "6S",
+    "EUR": "6E",
+    "AUD": "6A",
+    "NZD": "6N",
+    "VIX": "VX"
+}

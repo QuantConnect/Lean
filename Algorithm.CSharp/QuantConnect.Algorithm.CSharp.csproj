@@ -64,10 +64,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.cs" />
+    <Compile Include="BasicTemplateFuturesHistoryAlgorithm.cs" />
+    <Compile Include="BasicTemplateOptionsHistoryAlgorithm.cs" />
+    <Compile Include="BasicTemplateOptionTradesAlgorithm.cs" />
+    <Compile Include="OptionOpenInterestRegressionAlgorithm.cs" />
     <Compile Include="RegressionChannelAlgorithm.cs" />
+    <Compile Include="BasicTemplateFuturesAlgorithm.cs" />
+    <Compile Include="BasicTemplateOptionStrategyAlgorithm.cs" />
     <Compile Include="CoarseFineFundamentalRegressionAlgorithm.cs" />
     <Compile Include="CoarseFineFundamentalComboAlgorithm.cs" />
     <Compile Include="FuzzyInferenceAlgorithm.cs" />
+    <Compile Include="OptionRenameRegressionAlgorithm.cs" />
+    <Compile Include="OptionSplitRegressionAlgorithm.cs" />
     <Compile Include="PortfolioOptimizationNumericsAlgorithm.cs" />
     <Compile Include="DailyFxAlgorithm.cs" />
     <Compile Include="BasicTemplateForexAlgorithm.cs" />

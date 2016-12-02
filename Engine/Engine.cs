@@ -164,6 +164,18 @@ namespace QuantConnect.Lean.Engine
                     _systemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, runtimeMessage);
                 }
 
+
+                // log the job endpoints
+                Log.Trace("JOB HANDLERS: ");
+                Log.Trace("         DataFeed:     " + _algorithmHandlers.DataFeed.GetType().FullName);
+                Log.Trace("         Setup:        " + _algorithmHandlers.Setup.GetType().FullName);
+                Log.Trace("         RealTime:     " + _algorithmHandlers.RealTime.GetType().FullName);
+                Log.Trace("         Results:      " + _algorithmHandlers.Results.GetType().FullName);
+                Log.Trace("         Transactions: " + _algorithmHandlers.Transactions.GetType().FullName);
+                Log.Trace("         Commands:     " + _algorithmHandlers.CommandQueue.GetType().FullName);
+                Log.Trace("         History Provider:     " + algorithm.HistoryProvider.GetType().FullName);
+                if (job is LiveNodePacket) Log.Trace("         Brokerage:      " + brokerage.GetType().FullName);
+
                 //-> Using the job + initialization: load the designated handlers:
                 if (initializeComplete)
                 {
