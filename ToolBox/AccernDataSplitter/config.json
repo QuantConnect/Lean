@@ -1,0 +1,11 @@
+﻿{
+    "environment": "desktop",
+
+	"environments": {
+		"desktop": {}
+	},
+
+	// Delete the configuration after loading
+	"accern-data-folder": "H:\\Lean Projects\\Lean Mini Projects\\AccernData",
+	"data-cache-directory": "H:\\Lean Projects\\Lean Mini Projects\\AccernCache"
+}
