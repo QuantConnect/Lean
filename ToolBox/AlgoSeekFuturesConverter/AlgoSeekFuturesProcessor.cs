@@ -187,9 +187,13 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             _consolidator.Scan(frontierTime);
 
             // If this is the final packet dump it to the queue
-            if (finalFlush && _consolidator.WorkingData != null)
+            if (finalFlush)
             {
-                _streamWriter.WriteLine(LeanData.GenerateLine(_consolidator.WorkingData, SecurityType.Future, Resolution));
+                if (_consolidator.WorkingData != null)
+                {
+                    _streamWriter.WriteLine(LeanData.GenerateLine(_consolidator.WorkingData, SecurityType.Future, Resolution));
+                }
+
                 _streamWriter.Flush();
                 _streamWriter.Close();
                 _streamWriter = null;

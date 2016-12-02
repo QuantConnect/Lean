@@ -272,6 +272,10 @@ namespace QuantConnect.Data.Market
                             SaleCondition = csv[4];
                             Suspicious = csv[5] == "1";
                         }
+                        else if (TickType == TickType.OpenInterest)
+                        {
+                            Value = csv[1].ToDecimal();
+                        }
                         else
                         {
                             if (csv[1].Length != 0)

@@ -108,8 +108,7 @@ namespace QuantConnect.Util
                             }
                             if (tick.TickType == TickType.OpenInterest)
                             {
-                                return ToCsv(milliseconds,
-                                    Scale(tick.BidPrice), tick.BidSize, Scale(tick.AskPrice), tick.AskSize, tick.Exchange, tick.Suspicious ? "1" : "0");
+                                return ToCsv(milliseconds, tick.Value);
                             }
                             break;
 
