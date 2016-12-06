@@ -147,7 +147,21 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             Directory.CreateDirectory(path);
 
             var file = Path.Combine(path, EntryPath);
-            _streamWriter = new StreamWriter(file);
+
+            try
+            {
+                _streamWriter = new StreamWriter(file);
+            }
+            catch (Exception err)
+            {
+                // we are unable to open new file - it is already opened due to bug in algoseek data
+                Log.Error("File: {0} Err: {1} Source: {2} Stack: {3}", file, err.Message, err.Source, err.StackTrace);
+                var newRandomizedName = (file + "-" + Math.Abs(file.GetHashCode()).ToString()).Replace(".csv", string.Empty) + ".csv";
+
+                // we store the information under different (randomized) name
+                Log.Trace("Changing name from {0} to {1}", file, newRandomizedName);
+                _streamWriter = new StreamWriter(newRandomizedName);
+            }
 
             // On consolidating the bars put the bar into a queue in memory to be written to disk later.
             _consolidator.DataConsolidated += (sender, consolidated) =>

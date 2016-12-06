@@ -60,17 +60,20 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             _symbolMultipliers = symbolMultipliers.ToDictionary();
 
             // detecting column order in the file
-            var header = _streamReader.ReadLine().ToCsv();
-            _columnTimestamp = header.FindIndex(x => x == "Timestamp");
-            _columnTicker = header.FindIndex(x => x == "Ticker");
-            _columnType = header.FindIndex(x => x == "Type");
-            _columnSide = header.FindIndex(x => x == "Side");
-            _columnSecID = header.FindIndex(x => x == "SecurityID");
-            _columnQuantity = header.FindIndex(x => x == "Quantity");
-            _columnPrice = header.FindIndex(x => x == "Price");
+            var headerLine = _streamReader.ReadLine();
+            if (!string.IsNullOrEmpty(headerLine))
+            {
+                var header = headerLine.ToCsv();
+                _columnTimestamp = header.FindIndex(x => x == "Timestamp");
+                _columnTicker = header.FindIndex(x => x == "Ticker");
+                _columnType = header.FindIndex(x => x == "Type");
+                _columnSide = header.FindIndex(x => x == "Side");
+                _columnSecID = header.FindIndex(x => x == "SecurityID");
+                _columnQuantity = header.FindIndex(x => x == "Quantity");
+                _columnPrice = header.FindIndex(x => x == "Price");
 
-            _columnsCount = Enumerable.Max(new[] { _columnTimestamp, _columnTicker, _columnType, _columnSide, _columnSecID, _columnQuantity, _columnPrice });
-
+                _columnsCount = Enumerable.Max(new[] { _columnTimestamp, _columnTicker, _columnType, _columnSide, _columnSecID, _columnQuantity, _columnPrice });
+            }
             //Prime the data pump, set the current.
             Current = null;
             MoveNext();

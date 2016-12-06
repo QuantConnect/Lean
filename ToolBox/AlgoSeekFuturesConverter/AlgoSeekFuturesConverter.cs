@@ -87,106 +87,113 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             //Extract each file massively in parallel.
             Parallel.ForEach(files, parallelOptions, file =>
             {
-                Log.Trace("Remote File :" + file);
-
-                var csvFile = Path.Combine(_source, Path.GetFileName(file).Replace(".bz2", ""));
-
-                Log.Trace("Source File :" + csvFile);
-
-                if (!File.Exists(csvFile))
+                try
                 {
-                    Log.Trace("AlgoSeekFuturesConverter.Convert(): Extracting " + file);
-                    var psi = new ProcessStartInfo(zipper, " e " + file + " -o" + _source)
-                    {
-                        CreateNoWindow = true,
-                        WindowStyle = ProcessWindowStyle.Hidden,
-                        UseShellExecute = false,
-                        RedirectStandardOutput = true
-                    };
+                    Log.Trace("Remote File :" + file);
 
-                    var process = new Process();
-                    process.StartInfo = psi;
-                    process.Start();
+                    var csvFile = Path.Combine(_source, Path.GetFileName(file).Replace(".bz2", ""));
 
-                    while (!process.StandardOutput.EndOfStream)
-                    {
-                        process.StandardOutput.ReadLine();
-                    }
+                    Log.Trace("Source File :" + csvFile);
 
-                    if (!process.WaitForExit(execTimeout * 1000))
+                    if (!File.Exists(csvFile))
                     {
-                        Log.Error("7Zip timed out: " + file);
-                    }
-                    else
-                    {
-                        if (process.ExitCode > 0)
+                        Log.Trace("AlgoSeekFuturesConverter.Convert(): Extracting " + file);
+                        var psi = new ProcessStartInfo(zipper, " e " + file + " -o" + _source)
                         {
-                            Log.Error("7Zip Exited Unsuccessfully: " + file);
+                            CreateNoWindow = true,
+                            WindowStyle = ProcessWindowStyle.Hidden,
+                            UseShellExecute = false,
+                            RedirectStandardOutput = true
+                        };
+
+                        var process = new Process();
+                        process.StartInfo = psi;
+                        process.Start();
+
+                        while (!process.StandardOutput.EndOfStream)
+                        {
+                            process.StandardOutput.ReadLine();
+                        }
+
+                        if (!process.WaitForExit(execTimeout * 1000))
+                        {
+                            Log.Error("7Zip timed out: " + file);
+                        }
+                        else
+                        {
+                            if (process.ExitCode > 0)
+                            {
+                                Log.Error("7Zip Exited Unsuccessfully: " + file);
+                            }
                         }
                     }
-                }
-                Log.Trace("Source File :" + csvFile);
+                    Log.Trace("Source File :" + csvFile);
 
-                // setting up local processors and the flush event
-                var processors = new Processors();
+                    // setting up local processors and the flush event
+                    var processors = new Processors();
 
-                // symbol filters 
-                // var symbolFilterNames = new string[] { "AAPL", "TWX", "NWSA", "FOXA", "AIG", "EGLE", "EGEC" };
-                // var symbolFilter = symbolFilterNames.SelectMany(name => new[] { name, name + "1", name + ".1" }).ToHashSet();
-                // var reader = new AlgoSeekFuturesReader(csvFile, symbolFilter);
+                    // symbol filters 
+                    // var symbolFilterNames = new string[] { "AAPL", "TWX", "NWSA", "FOXA", "AIG", "EGLE", "EGEC" };
+                    // var symbolFilter = symbolFilterNames.SelectMany(name => new[] { name, name + "1", name + ".1" }).ToHashSet();
+                    // var reader = new AlgoSeekFuturesReader(csvFile, symbolFilter);
 
-                var reader = new AlgoSeekFuturesReader(csvFile, symbolMultipliers);
-                if (start == DateTime.MinValue)
-                {
-                    start = DateTime.Now;
-                }
-
-                if (reader.Current != null) // reader contains the data
-                {
-                    do
+                    var reader = new AlgoSeekFuturesReader(csvFile, symbolMultipliers);
+                    if (start == DateTime.MinValue)
                     {
-                        var tick = reader.Current as Tick;
+                        start = DateTime.Now;
+                    }
 
-                        //Add or create the consolidator-flush mechanism for symbol:
-                        List<List<AlgoSeekFuturesProcessor>> symbolProcessors;
-                        if (!processors.TryGetValue(tick.Symbol, out symbolProcessors))
+                    if (reader.Current != null) // reader contains the data
+                    {
+                        do
                         {
-                            symbolProcessors = new List<List<AlgoSeekFuturesProcessor>>(3)
+                            var tick = reader.Current as Tick;
+
+                            //Add or create the consolidator-flush mechanism for symbol:
+                            List<List<AlgoSeekFuturesProcessor>> symbolProcessors;
+                            if (!processors.TryGetValue(tick.Symbol, out symbolProcessors))
+                            {
+                                symbolProcessors = new List<List<AlgoSeekFuturesProcessor>>(3)
                                         {
                                             { _resolutions.Select(x => new AlgoSeekFuturesProcessor(tick.Symbol, _referenceDate, TickType.Trade, x, _destination)).ToList() },
                                             { _resolutions.Select(x => new AlgoSeekFuturesProcessor(tick.Symbol, _referenceDate, TickType.Quote, x, _destination)).ToList() },
                                             { _resolutions.Select(x => new AlgoSeekFuturesProcessor(tick.Symbol, _referenceDate, TickType.OpenInterest, x, _destination)).ToList() }
                                         };
 
-                            processors[tick.Symbol] = symbolProcessors;
-                        }
+                                processors[tick.Symbol] = symbolProcessors;
+                            }
 
-                        // Pass current tick into processor: enum 0 = trade; 1 = quote, 2 = oi
-                        foreach (var processor in symbolProcessors[(int)tick.TickType])
-                        {
-                            processor.Process(tick);
-                        }
+                            // Pass current tick into processor: enum 0 = trade; 1 = quote, 2 = oi
+                            foreach (var processor in symbolProcessors[(int)tick.TickType])
+                            {
+                                processor.Process(tick);
+                            }
 
-                        if (Interlocked.Increment(ref totalLinesProcessed) % 1000000m == 0)
-                        {
-                            var pro = (double)processors.Values.SelectMany( p => p.SelectMany( x => x )).Count();
-                            var symbols = (double)processors.Keys.Count();
-                            Log.Trace("AlgoSeekFuturesConverter.Convert(): Processed {0,3}M ticks( {1}k / sec); Memory in use: {2} MB; Total progress: {3}%, Processor per symbol {4}", Math.Round(totalLinesProcessed / 1000000m, 2), Math.Round(totalLinesProcessed / 1000L / (DateTime.Now - start).TotalSeconds), Process.GetCurrentProcess().WorkingSet64 / (1024 * 1024), 100 * totalFilesProcessed / totalFiles, pro / symbols);
-                        }
+                            if (Interlocked.Increment(ref totalLinesProcessed) % 1000000m == 0)
+                            {
+                                var pro = (double)processors.Values.SelectMany(p => p.SelectMany(x => x)).Count();
+                                var symbols = (double)processors.Keys.Count();
+                                Log.Trace("AlgoSeekFuturesConverter.Convert(): Processed {0,3}M ticks( {1}k / sec); Memory in use: {2} MB; Total progress: {3}%, Processor per symbol {4}", Math.Round(totalLinesProcessed / 1000000m, 2), Math.Round(totalLinesProcessed / 1000L / (DateTime.Now - start).TotalSeconds), Process.GetCurrentProcess().WorkingSet64 / (1024 * 1024), 100 * totalFilesProcessed / totalFiles, pro / symbols);
+                            }
 
+                        }
+                        while (reader.MoveNext());
+
+                        Log.Trace("AlgoSeekFuturesConverter.Convert(): Performing final flush to disk... ");
+                        Flush(processors, DateTime.MaxValue, true);
                     }
-                    while (reader.MoveNext());
 
-                    Log.Trace("AlgoSeekFuturesConverter.Convert(): Performing final flush to disk... ");
-                    Flush(processors, DateTime.MaxValue, true);
+                    processors = null;
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+
+                    Log.Trace("AlgoSeekFuturesConverter.Convert(): Finished processing file: " + file);
+                    Interlocked.Increment(ref totalFilesProcessed);
                 }
-
-                processors = null;
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-
-                Log.Trace("AlgoSeekFuturesConverter.Convert(): Finished processing file: " + file);
-                Interlocked.Increment(ref totalFilesProcessed);
+                catch(Exception err)
+                {
+                    Log.Error("Exception caught! File: {0} Err: {1} Source {2} Stack {3}", file, err.Message, err.Source, err.StackTrace);
+                }
             });
 
 
@@ -244,46 +251,53 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             //Zip each file massively in parallel.
             Parallel.ForEach(files, parallelOptions, file =>
             {
-                var outputFileName = file.Key + ".zip";
-                var inputFileNames = Path.Combine(file.Key, "*.csv");
-                var cmdArgs = " a " + outputFileName + " " + inputFileNames;
-
-                Log.Trace("AlgoSeekFuturesConverter.Convert(): Zipping " + outputFileName);
-                var psi = new ProcessStartInfo(zipper, cmdArgs)
-                {
-                    CreateNoWindow = true,
-                    WindowStyle = ProcessWindowStyle.Hidden,
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true
-                };
-                var process = new Process();
-                process.StartInfo = psi;
-                process.Start();
-
-                while (!process.StandardOutput.EndOfStream)
-                {
-                    process.StandardOutput.ReadLine();
-                }
-
-                if (!process.WaitForExit(execTimeout * 1000))
-                {
-                    Log.Error("7Zip timed out: " + outputFileName);
-                }
-                else
-                {
-                    if (process.ExitCode > 0)
-                    {
-                        Log.Error("7Zip Exited Unsuccessfully: " + outputFileName);
-                    }
-                }
-
                 try
                 {
-                    Directory.Delete(file.Key, true);
+                    var outputFileName = file.Key + ".zip";
+                    var inputFileNames = Path.Combine(file.Key, "*.csv");
+                    var cmdArgs = " a " + outputFileName + " " + inputFileNames;
+
+                    Log.Trace("AlgoSeekFuturesConverter.Convert(): Zipping " + outputFileName);
+                    var psi = new ProcessStartInfo(zipper, cmdArgs)
+                    {
+                        CreateNoWindow = true,
+                        WindowStyle = ProcessWindowStyle.Hidden,
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true
+                    };
+                    var process = new Process();
+                    process.StartInfo = psi;
+                    process.Start();
+
+                    while (!process.StandardOutput.EndOfStream)
+                    {
+                        process.StandardOutput.ReadLine();
+                    }
+
+                    if (!process.WaitForExit(execTimeout * 1000))
+                    {
+                        Log.Error("7Zip timed out: " + outputFileName);
+                    }
+                    else
+                    {
+                        if (process.ExitCode > 0)
+                        {
+                            Log.Error("7Zip Exited Unsuccessfully: " + outputFileName);
+                        }
+                    }
+
+                    try
+                    {
+                        Directory.Delete(file.Key, true);
+                    }
+                    catch (Exception err)
+                    {
+                        Log.Error("Directory.Delete returned error: " + err.Message);
+                    }
                 }
                 catch (Exception err)
                 {
-                    Log.Error("Directory.Delete returned error: " + err.Message);
+                    Log.Error("File: {0} Err: {1} Source {2} Stack {3}", file, err.Message, err.Source, err.StackTrace);
                 }
             });
         }
