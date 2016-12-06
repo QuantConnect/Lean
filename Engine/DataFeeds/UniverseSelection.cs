@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
@@ -58,8 +59,40 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="universeData">The data provided to perform selection with</param>
         public SecurityChanges ApplyUniverseSelection(Universe universe, DateTime dateTimeUtc, BaseDataCollection universeData)
         {
-            // perform initial filtering and limit the result
-            var selectSymbolsResult = universe.PerformSelection(dateTimeUtc, universeData);
+            IEnumerable<Symbol> selectSymbolsResult;
+
+            // check if this universe must be filtered with fine fundamental data
+            var fineFiltered = universe as FineFundamentalFilteredUniverse;
+            if (fineFiltered != null)
+            {
+                // perform initial filtering and limit the result
+                selectSymbolsResult = universe.SelectSymbols(dateTimeUtc, universeData);
+
+                // prepare a BaseDataCollection of FineFundamental instances
+                var fineCollection = new BaseDataCollection();
+                var dataFileProvider = new DefaultDataFileProvider();
+
+                foreach (var symbol in selectSymbolsResult)
+                {
+                    var factory = new FineFundamentalSubscriptionEnumeratorFactory(_algorithm.LiveMode, x => new[] { dateTimeUtc });
+                    var config = FineFundamentalUniverse.CreateConfiguration(symbol);
+                    var security = universe.CreateSecurity(symbol, _algorithm, _marketHoursDatabase, _symbolPropertiesDatabase);
+                    var request = new SubscriptionRequest(true, universe, security, config, dateTimeUtc, dateTimeUtc);
+                    var enumerator = factory.CreateEnumerator(request, dataFileProvider);
+                    if (enumerator.MoveNext())
+                    {
+                        fineCollection.Data.Add(enumerator.Current);
+                    }
+                }
+
+                // perform the fine fundamental universe selection
+                selectSymbolsResult = fineFiltered.FineFundamentalUniverse.PerformSelection(dateTimeUtc, fineCollection);
+            }
+            else
+            {
+                // perform initial filtering and limit the result
+                selectSymbolsResult = universe.PerformSelection(dateTimeUtc, universeData);
+            }
 
             // check for no changes first
             if (ReferenceEquals(selectSymbolsResult, Universe.Unchanged))
