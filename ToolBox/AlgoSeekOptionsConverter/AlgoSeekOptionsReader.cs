@@ -46,6 +46,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         private readonly int _columnQuantity = -1;
         private readonly int _columnPremium = -1;
         private readonly int _columnExchange = -1;
+        private readonly int _columnsCount = -1;
 
         /// <summary>
         /// Enumerate through the lines of the algoseek files.
@@ -61,18 +62,24 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             _symbolFilter = symbolFilter;
 
             // detecting column order in the file
-            var header = _streamReader.ReadLine().ToCsv();
-            _columnTimestamp = header.FindIndex(x => x == "Timestamp");
-            _columnTicker = header.FindIndex(x => x == "Ticker");
-            _columnType = header.FindIndex(x => x == "Type");
-            _columnSide = header.FindIndex(x => x == "Side");
-            _columnPutCall = header.FindIndex(x => x == "PutCall");
-            _columnExpiration = header.FindIndex(x => x == "Expiration");
-            _columnStrike = header.FindIndex(x => x == "Strike");
-            _columnQuantity = header.FindIndex(x => x == "Quantity");
-            _columnPremium = header.FindIndex(x => x == "Premium");
-            _columnExchange = header.FindIndex(x => x == "Exchange");
+            var headerLine = _streamReader.ReadLine();
+            if (!string.IsNullOrEmpty(headerLine))
+            {
+                var header = headerLine.ToCsv();
+                _columnTimestamp = header.FindIndex(x => x == "Timestamp");
+                _columnTicker = header.FindIndex(x => x == "Ticker");
+                _columnType = header.FindIndex(x => x == "Type");
+                _columnSide = header.FindIndex(x => x == "Side");
+                _columnPutCall = header.FindIndex(x => x == "PutCall");
+                _columnExpiration = header.FindIndex(x => x == "Expiration");
+                _columnStrike = header.FindIndex(x => x == "Strike");
+                _columnQuantity = header.FindIndex(x => x == "Quantity");
+                _columnPremium = header.FindIndex(x => x == "Premium");
+                _columnExchange = header.FindIndex(x => x == "Exchange");
 
+                _columnsCount = Enumerable.Max(new[] { _columnTimestamp, _columnTicker, _columnType, _columnSide,
+                    _columnPutCall, _columnExpiration, _columnStrike, _columnQuantity, _columnPremium, _columnExchange });
+            }
             //Prime the data pump, set the current.
             Current = null;
             MoveNext();
@@ -144,9 +151,8 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             try
             {
                 // parse csv check column count
-                const int columns = 11;
-                var csv = line.ToCsv(columns);
-                if (csv.Count < columns)
+                var csv = line.ToCsv();
+                if (csv.Count - 1 < _columnsCount)
                 {
                     return null;
                 }

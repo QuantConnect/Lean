@@ -200,9 +200,12 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
 
         private static string SafeName(string fileName)
         {
-            foreach (var name in _windowsRestrictedNames)
+            if (OS.IsWindows)
             {
-                fileName = fileName.Replace(name, "_" + name);
+                foreach (var name in _windowsRestrictedNames)
+                {
+                    fileName = fileName.Replace(name, "_" + name);
+                }
             }
             return fileName;
         }

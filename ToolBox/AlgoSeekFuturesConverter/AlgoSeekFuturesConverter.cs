@@ -127,9 +127,8 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                             }
                         }
                     }
-                    Log.Trace("Source File :" + csvFile);
 
-                    // setting up local processors and the flush event
+                    // setting up local processors 
                     var processors = new Processors();
 
                     // symbol filters 
