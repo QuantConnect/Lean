@@ -46,7 +46,6 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         {
             "con", "prn", "aux", "nul"
         };
-        private bool disposed = false;
 
         /// <summary>
         /// Zip entry name for the futures contract

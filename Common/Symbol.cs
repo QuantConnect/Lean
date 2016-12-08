@@ -87,10 +87,11 @@ namespace QuantConnect
         /// <param name="expiry">The option expiry date</param>
         /// <param name="alias">An alias to be used for the symbol cache. Required when 
         /// adding the same security from diferent markets</param>
+        /// <param name="mapSymbol">Specifies if symbol should be mapped using map file provider</param>
         /// <returns>A new Symbol object for the specified option contract</returns>
-        public static Symbol CreateOption(string underlying, string market, OptionStyle style, OptionRight right, decimal strike, DateTime expiry, string alias = null)
+        public static Symbol CreateOption(string underlying, string market, OptionStyle style, OptionRight right, decimal strike, DateTime expiry, string alias = null, bool mapSymbol = true)
         {
-            var underlyingSid = SecurityIdentifier.GenerateEquity(underlying, market);
+            var underlyingSid = SecurityIdentifier.GenerateEquity(underlying, market, mapSymbol);
             var underlyingSymbol = new Symbol(underlyingSid, underlying);
 
             return CreateOption(underlyingSymbol, market, style, right, strike, expiry, alias);

@@ -19,6 +19,8 @@ using System.Diagnostics;
 using System.Globalization;
 using QuantConnect.Configuration;
 using QuantConnect.Util;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
 {
@@ -33,25 +35,59 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             // There are practical file limits we need to override for this to work. 
             // By default programs are only allowed 1024 files open; for options parsing we need 100k
             Environment.SetEnvironmentVariable("MONO_MANAGED_WATCHER", "disabled");
+            Environment.SetEnvironmentVariable("MONO_GC_PARAMS", "max-heap-size=4g");
             Log.LogHandler = new CompositeLogHandler(new ILogHandler[] { new ConsoleLogHandler(), new FileLogHandler("log.txt") });
 
             // Directory for the data, output and processed cache:
-            var dataDirectory = Config.Get("data-directory");
+            var remoteDirectory = Config.Get("options-remote-directory").Replace("{0}", date);
             var sourceDirectory = Config.Get("options-source-directory").Replace("{0}", date);
-            
+            var dataDirectory = Config.Get("data-directory").Replace("{0}", date);
+            var cleanSourceDirectory = Config.GetBool("clean-source-directory", false);
+
+            Log.Trace("CONFIGURATION:");
+            Log.Trace("Processor Count: " + Environment.ProcessorCount);
+            Log.Trace("Remote Directory: " + remoteDirectory);
+            Log.Trace("Source Directory: " + sourceDirectory);
+            Log.Trace("Destination Directory: " + dataDirectory);
+
             // Date for the option bz files.
             var referenceDate = DateTime.ParseExact(date, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
 
+            Log.Trace("DateTime: " + referenceDate.Date.ToString());
+
+            // checking if remote folder exists
+            if (!Directory.Exists(remoteDirectory))
+            {
+                Log.Error("Remote Directory doesn't exist: " + remoteDirectory);
+                return;
+            }
+
             // Convert the date:
             var timer = Stopwatch.StartNew();
-            var converter = new AlgoSeekOptionsConverter(Resolution.Minute, referenceDate, sourceDirectory, dataDirectory);
+            var converter = new AlgoSeekOptionsConverter(Resolution.Minute, referenceDate, remoteDirectory, sourceDirectory, dataDirectory);
             converter.Convert();
             Log.Trace(string.Format("AlgoSeekOptionConverter.Main(): {0} Conversion finished in time: {1}", referenceDate, timer.Elapsed));
+
 
             // Compress the memory cache to zips.
             timer.Restart();
             converter.Package(referenceDate);
             Log.Trace(string.Format("AlgoSeekOptionConverter.Main(): {0} Compression finished in time: {1}", referenceDate, timer.Elapsed));
+
+            if (cleanSourceDirectory)
+            {
+                Log.Trace(string.Format("AlgoSeekOptionConverter.Main(): Cleaning source directory: {0}", sourceDirectory));
+
+                try
+                {
+                    Directory.Delete(sourceDirectory, true);
+                }
+                catch (Exception err)
+                {
+                    Log.Trace(string.Format("AlgoSeekOptionConverter.Main(): Error while cleaning source directory {0}", err.Message));
+                }
+            }
+
         }
     }
 }

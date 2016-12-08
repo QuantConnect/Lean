@@ -329,18 +329,27 @@ namespace QuantConnect
         /// </summary>
         /// <param name="symbol">The symbol as it is known today</param>
         /// <param name="market">The market</param>
+        /// <param name="mapSymbol">Specifies if symbol should be mapped using map file provider</param>
         /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified symbol today</returns>
-        public static SecurityIdentifier GenerateEquity(string symbol, string market)
+        public static SecurityIdentifier GenerateEquity(string symbol, string market, bool mapSymbol = true)
         {
-            var provider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(MapFileProviderTypeName);
-            var resolver = provider.Get(market);
-            var mapFile = resolver.ResolveMapFile(symbol, DateTime.Today);
-            var firstDate = mapFile.FirstDate;
-            if (mapFile.Any())
+            if (mapSymbol)
             {
-                symbol = mapFile.OrderBy(x => x.Date).First().MappedSymbol;
+                var provider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(MapFileProviderTypeName);
+                var resolver = provider.Get(market);
+                var mapFile = resolver.ResolveMapFile(symbol, DateTime.Today);
+                var firstDate = mapFile.FirstDate;
+                if (mapFile.Any())
+                {
+                    symbol = mapFile.OrderBy(x => x.Date).First().MappedSymbol;
+                }
+                return GenerateEquity(firstDate, symbol, market);
             }
-            return GenerateEquity(firstDate, symbol, market);
+            else
+            {
+                return GenerateEquity(DateTime.MinValue, symbol, market);
+            }
+            
         }
 
         /// <summary>

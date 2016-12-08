@@ -36,6 +36,8 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         private StreamReader _streamReader;
         private HashSet<string> _symbolFilter;
 
+        private Dictionary<string, Symbol> _underlyingCache;
+
         private readonly int _columnTimestamp = -1;
         private readonly int _columnTicker = -1;
         private readonly int _columnType = -1;
@@ -56,6 +58,8 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         public AlgoSeekOptionsReader(string file, DateTime date, HashSet<string> symbolFilter = null)
         {
             _date = date;
+            _underlyingCache = new Dictionary<string, Symbol>();
+
             var streamProvider = StreamProvider.ForExtension(Path.GetExtension(file));
             _stream = streamProvider.Open(file).First();
             _streamReader = new StreamReader(_stream);
@@ -216,7 +220,18 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
 
                 var strike = csv[_columnStrike].ToDecimal() / 10000m;
                 var optionStyle = OptionStyle.American; // couldn't see this specified in the file, maybe need a reference file
-                var symbol = Symbol.CreateOption(underlying, Market.USA, optionStyle, optionRight, strike, expiry);
+
+                Symbol symbol;
+
+                if (!_underlyingCache.ContainsKey(underlying))
+                {
+                    symbol = Symbol.CreateOption(underlying, Market.USA, optionStyle, optionRight, strike, expiry, null, false);
+                    _underlyingCache[underlying] = symbol.Underlying;
+                }
+                else
+                {
+                    symbol = Symbol.CreateOption(_underlyingCache[underlying], Market.USA, optionStyle, optionRight, strike, expiry);
+                }
 
                 var price = csv[_columnPremium].ToDecimal() / 10000m;
                 var quantity = csv[_columnQuantity].ToInt32();

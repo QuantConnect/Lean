@@ -44,7 +44,8 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         private Resolution _resolution;
         private DateTime _referenceDate;
 
-        private readonly ParallelOptions parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount * 5 };
+        private readonly ParallelOptions parallelOptionsProcessing = new ParallelOptions { MaxDegreeOfParallelism = OS.IsWindows ? Environment.ProcessorCount * 5 : 2 /*ubuntu optimal setting*/};
+        private readonly ParallelOptions parallelOptionsZipping = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount * 5 };
 
         /// <summary>
         /// Create a new instance of the AlgoSeekOptions Converter. Parse a single input directory into an output.
@@ -82,7 +83,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             var random = new Random((int)DateTime.Now.Ticks);
 
             //Extract each file massively in parallel.
-            Parallel.ForEach(files, parallelOptions, file =>
+            Parallel.ForEach(files, parallelOptionsProcessing, file =>
             {
                 try
                 {
@@ -285,7 +286,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                 .GroupBy(x => Directory.GetParent(x).FullName);
 
             //Zip each file massively in parallel.
-            Parallel.ForEach(files, parallelOptions, file =>
+            Parallel.ForEach(files, parallelOptionsZipping, file =>
             {
                 try
                 {
