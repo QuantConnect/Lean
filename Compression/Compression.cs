@@ -286,21 +286,30 @@ namespace QuantConnect
         /// <returns>String path for the new zip file</returns>
         public static string Zip(string textPath, string zipEntryName, bool deleteOriginal = true)
         {
-            var zipPath = "";
+            var zipPath = textPath.Replace(".csv", ".zip").Replace(".txt", ".zip");
+            Zip(textPath, zipPath, zipEntryName, deleteOriginal);
+            return zipPath;
+        }
 
+        /// <summary>
+        /// Compresses the specified source file.
+        /// </summary>
+        /// <param name="source">The source file to be compressed</param>
+        /// <param name="destination">The destination zip file path</param>
+        /// <param name="zipEntryName">The zip entry name for the file</param>
+        /// <param name="deleteOriginal">True to delete the source file upon completion</param>
+        public static void Zip(string source, string destination, string zipEntryName, bool deleteOriginal)
+        {
             try
             {
                 var buffer = new byte[4096];
-                zipPath = textPath.Replace(".csv", ".zip");
-                zipPath = zipPath.Replace(".txt", ".zip");
-                //Open the zip:
-                using (var stream = new ZipOutputStream(File.Create(zipPath)))
+                using (var stream = new ZipOutputStream(File.Create(destination)))
                 {
                     //Zip the text file.
                     var entry = new ZipEntry(zipEntryName);
                     stream.PutNextEntry(entry);
 
-                    using (var fs = File.OpenRead(textPath))
+                    using (var fs = File.OpenRead(source))
                     {
                         int sourceBytes;
                         do
@@ -310,18 +319,18 @@ namespace QuantConnect
                         }
                         while (sourceBytes > 0);
                     }
-                    //Close stream:
-                    stream.Finish();
-                    stream.Close();
                 }
+
                 //Delete the old text file:
-                if (deleteOriginal) File.Delete(textPath);
+                if (deleteOriginal)
+                {
+                    File.Delete(source);
+                }
             }
             catch (Exception err)
             {
                 Log.Error(err);
             }
-            return zipPath;
         }
 
         /// <summary>
