@@ -94,6 +94,16 @@ namespace QuantConnect.Securities
         /// </summary>
         public void AddData(BaseData data)
         {
+            var openInterest = data as OpenInterest;
+            if (openInterest != null)
+            {
+                OpenInterest = (long)openInterest.Value;
+                return;
+            }
+
+            _lastData = data;
+            _dataByType[data.GetType()] = data;
+
             var tick = data as Tick;
             if (tick != null)
             {
@@ -138,17 +148,6 @@ namespace QuantConnect.Securities
             else
             {
                 Price = data.Price;
-            }
-
-            var openInterest = data as OpenInterest;
-            if (openInterest != null)
-            {
-                OpenInterest = (long)openInterest.Value;
-            }
-            else
-            {
-                _lastData = data;
-                _dataByType[data.GetType()] = data;
             }
         }
 

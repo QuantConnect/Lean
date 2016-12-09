@@ -410,7 +410,7 @@ namespace QuantConnect.Securities
 
             // invoke the security initializer
             securityInitializer.Initialize(security);
-
+            
             // if leverage was specified then apply to security after the initializer has run, parameters of this
             // method take precedence over the intializer
             if (leverage > 0)
@@ -494,7 +494,7 @@ namespace QuantConnect.Securities
 
             var defaultQuoteCurrency = CashBook.AccountCurrency;
             if (symbol.ID.SecurityType == SecurityType.Forex) defaultQuoteCurrency = symbol.Value.Substring(3);
-            var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType, defaultQuoteCurrency);
+            var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbolValue, symbol.ID.SecurityType, defaultQuoteCurrency);
 
             var type = resolution == Resolution.Tick ? typeof(Tick) : typeof(TradeBar);
             if (symbol.ID.SecurityType == SecurityType.Option && resolution != Resolution.Tick)

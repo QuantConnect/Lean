@@ -62,7 +62,7 @@ namespace QuantConnect.Tests.Algorithm
 
             // option
             var option = algo.AddSecurity(SecurityType.Option, "goog");
-            Assert.IsTrue(option.Subscriptions.Count() == 2);
+            Assert.IsTrue(option.Subscriptions.Count() == 3);
             Assert.IsTrue(GetMatchingSubscription(option, typeof(ZipEntryName)) != null);
 
             // cfd 
@@ -72,7 +72,7 @@ namespace QuantConnect.Tests.Algorithm
 
             // future 
             var future = algo.AddSecurity(SecurityType.Future, "ES");
-            Assert.IsTrue(future.Subscriptions.Count() == 2);
+            Assert.IsTrue(future.Subscriptions.Count() == 3);
             Assert.IsTrue(future.Subscriptions.FirstOrDefault(x => typeof(ZipEntryName).IsAssignableFrom(x.Type)) != null);
         }
 
