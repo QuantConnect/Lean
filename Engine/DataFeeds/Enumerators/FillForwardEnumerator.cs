@@ -19,6 +19,7 @@ using System.Collections;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 
@@ -231,7 +232,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         {
             if (next.EndTime < previous.Time)
             {
-                throw new ArgumentException("FillForwardEnumerator received data out of order. Symbol: " + previous.Symbol.ID);
+                Log.Error("FillForwardEnumerator received data out of order. Symbol: " + previous.Symbol.ID);
+                fillForward = null;
+                return false;
             }
 
             // check to see if the gap between previous and next warrants fill forward behavior
