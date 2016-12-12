@@ -116,13 +116,13 @@ namespace QuantConnect.ToolBox.IQFeed
                                 // processing canonical option symbol to subscribe to underlying prices
                                 var subscribeSymbol = symbol;
 
-                                if (symbol.ID.SecurityType == SecurityType.Option && symbol.ID.Date == SecurityIdentifier.DefaultDate)
+                                if (symbol.ID.SecurityType == SecurityType.Option && symbol.IsCanonical())
                                 {
                                     subscribeSymbol = symbol.Underlying;
                                     _underlyings.Add(subscribeSymbol, symbol);
                                 }
 
-                                if (symbol.ID.SecurityType == SecurityType.Future && symbol.ID.Date == SecurityIdentifier.DefaultDate)
+                                if (symbol.ID.SecurityType == SecurityType.Future && symbol.IsCanonical())
                                 {
                                     // do nothing for now. Later might add continuous contract symbol. 
                                     return;
@@ -600,8 +600,8 @@ namespace QuantConnect.ToolBox.IQFeed
             {
                 // skipping universe and canonical symbols 
                 if (!CanHandle(request.Symbol) ||
-                    (request.Symbol.ID.SecurityType == SecurityType.Option && request.Symbol.ID.Date == SecurityIdentifier.DefaultDate) ||
-                    (request.Symbol.ID.SecurityType == SecurityType.Future && request.Symbol.ID.Date == SecurityIdentifier.DefaultDate))
+                    (request.Symbol.ID.SecurityType == SecurityType.Option && request.Symbol.IsCanonical()) ||
+                    (request.Symbol.ID.SecurityType == SecurityType.Future && request.Symbol.IsCanonical()))
                 {
                     yield break;
                 }

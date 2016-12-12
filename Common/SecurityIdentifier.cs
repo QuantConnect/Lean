@@ -347,7 +347,7 @@ namespace QuantConnect
             }
             else
             {
-                return GenerateEquity(DateTime.MinValue, symbol, market);
+                return GenerateEquity(DefaultDate, symbol, market);
             }
             
         }

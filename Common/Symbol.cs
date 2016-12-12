@@ -156,6 +156,18 @@ namespace QuantConnect
             return new Symbol(sid, alias, underlyingSymbol);
         }
 
+
+        /// <summary>
+        /// Method returns true, if symbol is a derivative canonical symbol
+        /// </summary>
+        /// <returns>true, if symbol is a derivative canonical symbol</returns>
+        public bool IsCanonical()
+        {
+            return (ID.SecurityType == SecurityType.Future || ID.SecurityType == SecurityType.Option) &&
+                   HasUnderlying && 
+                   ID.Date == SecurityIdentifier.DefaultDate;
+        }
+
         #region Properties
 
         /// <summary>
