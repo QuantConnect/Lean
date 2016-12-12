@@ -407,6 +407,15 @@ namespace QuantConnect.Orders.Fills
                 }
             }
 
+            if (direction == OrderDirection.Sell && asset.Cache.BidPrice != 0m)
+            {
+                return new Prices(asset.Cache.BidPrice, 0, 0, 0, 0);
+            }
+            if (direction == OrderDirection.Buy && asset.Cache.AskPrice != 0m)
+            {
+                return new Prices(asset.Cache.AskPrice, 0, 0, 0, 0);
+            }
+
             var tradeBar = asset.Cache.GetData<TradeBar>();
             if (tradeBar != null)
             {
