@@ -361,14 +361,19 @@ namespace QuantConnect.Securities
             get
             {
                 // we can't include forex in this calculation since we would be double accounting with respect to the cash book
+                // we exclude futures as they are calculated separately
                 decimal totalHoldingsValueWithoutForex = 0;
                 foreach (var kvp in Securities)
                 {
                     var position = kvp.Value;
-                    if (position.Type != SecurityType.Forex) totalHoldingsValueWithoutForex += position.Holdings.HoldingsValue;
+                    if (position.Type != SecurityType.Forex &&
+                        position.Type != SecurityType.Future) totalHoldingsValueWithoutForex += position.Holdings.HoldingsValue;
                 }
 
-                return CashBook.TotalValueInAccountCurrency + UnsettledCashBook.TotalValueInAccountCurrency + totalHoldingsValueWithoutForex;
+                var totalFuturesHoldingsValue = Securities.Where(x => x.Value.Type == SecurityType.Future)
+                                                           .Sum(x => x.Value.Holdings.UnrealizedProfit);
+
+                return CashBook.TotalValueInAccountCurrency + UnsettledCashBook.TotalValueInAccountCurrency + totalHoldingsValueWithoutForex + totalFuturesHoldingsValue;
             }
         }
 
@@ -797,9 +802,8 @@ namespace QuantConnect.Securities
 
             if (symbol.HasUnderlying)
             {
-                // if symbol has underlying and was not found in the collection, we look for canonical symbols
-                var result = Securities.Where(x => symbol.Underlying == x.Key.Underlying &&
-                                              x.Key.ID.Date == SecurityIdentifier.DefaultDate)
+                // if symbol has underlying and symbol itself was not found in the collection, then we look for canonical symbols
+                var result = Securities.Where(x => symbol.Underlying == x.Key.Underlying && x.Key.IsCanonical())
                                         .ToList();
                 if (result.Count == 1)
                 {
