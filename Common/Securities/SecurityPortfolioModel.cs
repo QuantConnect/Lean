@@ -58,7 +58,11 @@ namespace QuantConnect.Securities
                 portfolio.CashBook[CashBook.AccountCurrency].AddAmount(-feeThisOrder);
 
                 // apply the funds using the current settlement model
-                security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, quoteCash.Symbol, -fill.FillQuantity * fill.FillPrice * security.SymbolProperties.ContractMultiplier);
+                // we dont adjust funds for futures: it is zero upfront payment derivative (margin applies though)
+                if (security.Type != SecurityType.Future)
+                {
+                    security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, quoteCash.Symbol, -fill.FillQuantity * fill.FillPrice * security.SymbolProperties.ContractMultiplier);
+                }
                 if (security.Type == SecurityType.Forex)
                 {
                     // model forex fills as currency swaps

@@ -789,10 +789,24 @@ namespace QuantConnect.Securities
         Security ISecurityProvider.GetSecurity(Symbol symbol)
         {
             Security security;
+
             if (Securities.TryGetValue(symbol, out security))
             {
                 return security;
             }
+
+            if (symbol.HasUnderlying)
+            {
+                // if symbol has underlying and was not found in the collection, we look for canonical symbols
+                var result = Securities.Where(x => symbol.Underlying == x.Key.Underlying &&
+                                              x.Key.ID.Date == SecurityIdentifier.DefaultDate)
+                                        .ToList();
+                if (result.Count == 1)
+                {
+                    return result.First().Value;
+                }
+            }
+
             return null;
         }
 

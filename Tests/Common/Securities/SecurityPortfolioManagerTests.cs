@@ -401,6 +401,30 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsFalse(sufficientCapital);
         }
 
+
+        [Test]
+        public void BuyingSellingFuturesDoesntAddToCash()
+        {
+            var securities = new SecurityManager(TimeKeeper);
+            var transactions = new SecurityTransactionManager(securities);
+            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            portfolio.SetCash(0);
+
+            securities.Add(Symbols.Fut_SPY_Feb19_2016, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Future, Symbols.Fut_SPY_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
+
+            var fillBuy = new OrderEvent(1, Symbols.Fut_SPY_Feb19_2016, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Buy, 100, 100, 0);
+            portfolio.ProcessFill(fillBuy);
+
+            Assert.AreEqual(0, portfolio.Cash);
+            Assert.AreEqual(100, securities[Symbols.Fut_SPY_Feb19_2016].Holdings.Quantity);
+
+            var fillSell = new OrderEvent(2, Symbols.Fut_SPY_Feb19_2016, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Sell, 100, -100, 0);
+            portfolio.ProcessFill(fillSell);
+
+            Assert.AreEqual(0, portfolio.Cash);
+            Assert.AreEqual(0, securities[Symbols.Fut_SPY_Feb19_2016].Holdings.Quantity);
+        }
+
         [Test]
         public void SellingShortFromZeroAddsToCash()
         {
@@ -1141,6 +1165,8 @@ namespace QuantConnect.Tests.Common.Securities
                 return new SubscriptionDataConfig(typeof (TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true);
             if (type == SecurityType.Forex)
                 return new SubscriptionDataConfig(typeof (TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true);
+            if (type == SecurityType.Future)
+                return new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true);
             throw new NotImplementedException(type.ToString());
         }
         
