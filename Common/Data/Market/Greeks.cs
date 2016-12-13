@@ -151,7 +151,8 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Initializes a new default instance of the <see cref="Greeks"/> class
         /// </summary>
-        public Greeks()
+        public Greeks() 
+            : this(0m, 0m, 0m, 0m, 0m, 0m)
         {
         }
 
