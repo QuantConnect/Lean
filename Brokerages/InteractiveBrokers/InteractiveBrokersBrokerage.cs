@@ -1449,17 +1449,17 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private Holding CreateHolding(IB.UpdatePortfolioEventArgs e)
         {
             var currencySymbol = Currencies.GetCurrencySymbol(e.Contract.Currency);
-
             var symbol = MapSymbol(e.Contract);
-            var security = _securityProvider.GetSecurity(symbol);
-            var contractMultiplier = security != null ? security.SymbolProperties.ContractMultiplier : 1.0m;
+
+            var multiplier = Convert.ToDecimal(e.Contract.Multiplier);
+            if (multiplier == 0m) multiplier = 1m;
 
             return new Holding
             {
                 Symbol = symbol,
                 Type = ConvertSecurityType(e.Contract.SecType),
                 Quantity = e.Position,
-                AveragePrice = Convert.ToDecimal(e.AverageCost) / contractMultiplier,
+                AveragePrice = Convert.ToDecimal(e.AverageCost) / multiplier,
                 MarketPrice = Convert.ToDecimal(e.MarketPrice),
                 ConversionRate = 1m, // this will be overwritten when GetAccountHoldings is called to ensure fresh values
                 CurrencySymbol = currencySymbol
