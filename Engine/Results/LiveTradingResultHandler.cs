@@ -1013,6 +1013,9 @@ namespace QuantConnect.Lean.Engine.Results
                 {
                     foreach (var subscription in _dataFeed.Subscriptions)
                     {
+                        // OI subscription doesn't contain asset market prices
+                        if (subscription.Configuration.TickType == TickType.OpenInterest)
+                            continue;
 
                         Security security;
                         if (_algorithm.Securities.TryGetValue(subscription.Configuration.Symbol, out security))
