@@ -435,7 +435,7 @@ namespace QuantConnect.ToolBox.IQFeed
                 // only update if we have a value
                 if (e.Last == 0) return;
 
-                // only accept trade updates
+                // only accept trade and B/A updates
                 if (e.TypeOfUpdate != Level1SummaryUpdateEventArgs.UpdateType.ExtendedTrade
                  && e.TypeOfUpdate != Level1SummaryUpdateEventArgs.UpdateType.Trade
                  && e.TypeOfUpdate != Level1SummaryUpdateEventArgs.UpdateType.Bid
@@ -447,23 +447,29 @@ namespace QuantConnect.ToolBox.IQFeed
 
                 var symbol = GetLeanSymbol(e.Symbol);
 
+                TickType tradeType;
+
                 switch (symbol.ID.SecurityType)
                 {
                     // the feed time is in NYC/EDT, convert it into EST
                     case SecurityType.Forex:
+
                         time = FeedTime.ConvertTo(TimeZones.NewYork, TimeZones.EasternStandard);
+                        // TypeOfUpdate always equal to UpdateType.Trade for FXCM, but the message contains B/A and last data
+                        tradeType = TickType.Quote;
+
                         break;
 
                     // for all other asset classes we leave it as is (NYC/EDT)
                     default:
+
                         time = FeedTime;
+                        tradeType = e.TypeOfUpdate == Level1SummaryUpdateEventArgs.UpdateType.Bid ||
+                                    e.TypeOfUpdate == Level1SummaryUpdateEventArgs.UpdateType.Ask ?
+                                    TickType.Quote :
+                                    TickType.Trade;
                         break;
                 }
-
-                var tradeType = e.TypeOfUpdate == Level1SummaryUpdateEventArgs.UpdateType.Bid ||
-                                e.TypeOfUpdate == Level1SummaryUpdateEventArgs.UpdateType.Ask ?
-                                TickType.Quote :
-                                TickType.Trade;
 
                 var tick = new Tick(time, symbol, last, (decimal)e.Bid, (decimal)e.Ask)
                 {
