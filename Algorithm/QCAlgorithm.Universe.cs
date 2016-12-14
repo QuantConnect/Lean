@@ -262,17 +262,9 @@ namespace QuantConnect.Algorithm
         /// <param name="fineSelector">Defines a more detailed selection with access to more data</param>
         public void AddUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarseSelector, Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> fineSelector)
         {
-            // create a new universe for coarse fundamental data
             var coarse = new CoarseFundamentalUniverse(UniverseSettings, SecurityInitializer, coarseSelector);
 
-            // create a new universe for fine fundamental data
-            var fine = new FineFundamentalUniverse(UniverseSettings, SecurityInitializer, fineSelector);
-
-            // wire them up such that the results from coarse will be piped into fine
-            var chained = coarse.ChainedTo(fine, configurationPerSymbol: true);
-
-            // finally add the chained universe
-            AddUniverse(chained);
+            AddUniverse(new FineFundamentalFilteredUniverse(coarse, fineSelector));
         }
 
         /// <summary>
@@ -283,14 +275,7 @@ namespace QuantConnect.Algorithm
         /// <param name="fineSelector">Defines a more detailed selection with access to more data</param>
         public void AddUniverse(Universe universe, Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> fineSelector)
         {
-            // create a new universe for fine fundamental data
-            var fine = new FineFundamentalUniverse(UniverseSettings, SecurityInitializer, fineSelector);
-
-            // wire them up such that the results from universe will be piped into fine
-            var chained = universe.ChainedTo(fine, configurationPerSymbol: true);
-
-            // finally add the chained universe
-            AddUniverse(chained);
+            AddUniverse(new FineFundamentalFilteredUniverse(universe, fineSelector));
         }
 
         /// <summary>

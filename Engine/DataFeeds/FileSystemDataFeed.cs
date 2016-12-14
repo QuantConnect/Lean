@@ -22,7 +22,6 @@ using System.Linq;
 using System.Threading;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
-using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
@@ -370,10 +369,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (request.Configuration.Type == typeof (CoarseFundamental))
                 {
                     return new BaseDataCollectionSubscriptionEnumeratorFactory();
-                }
-                if (request.Configuration.Type == typeof(FineFundamental))
-                {
-                    return new FineFundamentalSubscriptionEnumeratorFactory();
                 }
                 if (request.Universe is OptionChainUniverse)
                 {

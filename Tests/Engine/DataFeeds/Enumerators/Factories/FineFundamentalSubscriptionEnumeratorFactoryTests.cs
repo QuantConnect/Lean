@@ -42,7 +42,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             var request = new SubscriptionRequest(false, null, security, config, parameters.StartDate, parameters.EndDate);
             var fileProvider = new DefaultDataFileProvider();
 
-            var factory = new FineFundamentalSubscriptionEnumeratorFactory();
+            var factory = new FineFundamentalSubscriptionEnumeratorFactory(false);
             var enumerator = factory.CreateEnumerator(request, fileProvider);
             while (enumerator.MoveNext())
             {
