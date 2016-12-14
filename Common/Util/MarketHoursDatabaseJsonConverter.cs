@@ -55,7 +55,7 @@ namespace QuantConnect.Util
         public class MarketHoursDatabaseJson
         {
             /// <summary>
-            /// The entries in the market hours database, keyed by <see cref="MarketHoursDatabase.Key.ToString"/>
+            /// The entries in the market hours database, keyed by <see cref="SecurityDatabaseKey"/>
             /// </summary>
             [JsonProperty("entries")]
             public Dictionary<string, MarketHoursDatabaseEntryJson> Entries;
@@ -155,6 +155,11 @@ namespace QuantConnect.Util
             /// </summary>
             [JsonProperty("holidays")]
             public List<string> Holidays;
+            /// <summary>
+            /// Early closes by date
+            /// </summary>
+            [JsonProperty("earlyCloses")]
+            public Dictionary<string, TimeSpan> EarlyCloses = new Dictionary<string, TimeSpan>();
 
             /// <summary>
             /// Initializes a new instance of the <see cref="MarketHoursDatabaseEntryJson"/> class
@@ -193,7 +198,8 @@ namespace QuantConnect.Util
                     { DayOfWeek.Saturday, new LocalMarketHours(DayOfWeek.Saturday, Saturday) }
                 };
                 var holidayDates = Holidays.Select(x => DateTime.ParseExact(x, "M/d/yyyy", CultureInfo.InvariantCulture)).ToHashSet();
-                var exchangeHours = new SecurityExchangeHours(DateTimeZoneProviders.Tzdb[ExchangeTimeZone], holidayDates, hours);
+                var earlyCloses = EarlyCloses.ToDictionary(x => DateTime.ParseExact(x.Key, "M/d/yyyy", CultureInfo.InvariantCulture), x => x.Value);
+                var exchangeHours = new SecurityExchangeHours(DateTimeZoneProviders.Tzdb[ExchangeTimeZone], holidayDates, hours, earlyCloses);
                 return new MarketHoursDatabase.Entry(DateTimeZoneProviders.Tzdb[DataTimeZone], exchangeHours);
             }
 
