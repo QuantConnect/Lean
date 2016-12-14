@@ -48,9 +48,19 @@ namespace QuantConnect.Securities
             try
             {
                 // apply sales value to holdings in the account currency
-                var saleValueInQuoteCurrency = fill.FillPrice * Convert.ToDecimal(fill.AbsoluteFillQuantity) * security.SymbolProperties.ContractMultiplier;
-                var saleValue = saleValueInQuoteCurrency * quoteCash.ConversionRate;
-                security.Holdings.AddNewSale(saleValue);
+                if (security.Type == SecurityType.Future)
+                {
+                    // for futures, we measure volume of sales, not notionals
+                    var saleValueInQuoteCurrency = fill.FillPrice * Convert.ToDecimal(fill.AbsoluteFillQuantity);
+                    var saleValue = saleValueInQuoteCurrency * quoteCash.ConversionRate;
+                    security.Holdings.AddNewSale(saleValue);
+                }
+                else
+                {
+                    var saleValueInQuoteCurrency = fill.FillPrice * Convert.ToDecimal(fill.AbsoluteFillQuantity) * security.SymbolProperties.ContractMultiplier;
+                    var saleValue = saleValueInQuoteCurrency * quoteCash.ConversionRate;
+                    security.Holdings.AddNewSale(saleValue);
+                }
 
                 // subtract transaction fees from the portfolio (assumes in account currency)
                 var feeThisOrder = Math.Abs(fill.OrderFee);

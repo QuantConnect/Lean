@@ -426,6 +426,27 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void BuyingSellingFuturesAddsCorrectSales()
+        {
+            var securities = new SecurityManager(TimeKeeper);
+            var transactions = new SecurityTransactionManager(securities);
+            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            portfolio.SetCash(0);
+
+            securities.Add(Symbols.Fut_SPY_Feb19_2016, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Future, Symbols.Fut_SPY_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), new SymbolProperties("", CashBook.AccountCurrency.ToUpper(), 50, 0.01m, 1)));
+
+            var fillBuy = new OrderEvent(1, Symbols.Fut_SPY_Feb19_2016, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Buy, 100, 100, 0);
+            portfolio.ProcessFill(fillBuy);
+
+            Assert.AreEqual(100 * 100, securities[Symbols.Fut_SPY_Feb19_2016].Holdings.TotalSaleVolume);
+
+            var fillSell = new OrderEvent(2, Symbols.Fut_SPY_Feb19_2016, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Sell, 100, -100, 0);
+            portfolio.ProcessFill(fillSell);
+
+            Assert.AreEqual(2 * 100 * 100, securities[Symbols.Fut_SPY_Feb19_2016].Holdings.TotalSaleVolume);
+        }
+
+        [Test]
         public void SellingShortFromZeroAddsToCash()
         {
             var securities = new SecurityManager(TimeKeeper);
