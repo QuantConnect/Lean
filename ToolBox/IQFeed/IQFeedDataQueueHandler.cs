@@ -756,7 +756,7 @@ namespace QuantConnect.ToolBox.IQFeed
                             if (d.DateTimeStamp == DateTime.MinValue) return null;
                             var dstartTime = d.DateTimeStamp.Date;
                             if (!isEquity) dstartTime = dstartTime.ConvertTo(TimeZones.NewYork, TimeZones.EasternStandard);
-                            return new TradeBar(dstartTime, requestData.Symbol, (decimal)d.Open, (decimal)d.High, (decimal)d.Low, (decimal)d.Close, d.PeriodVolume);
+                            return new TradeBar(dstartTime, requestData.Symbol, (decimal)d.Open, (decimal)d.High, (decimal)d.Low, (decimal)d.Close, d.PeriodVolume, requestData.Resolution.ToTimeSpan());
 
                         // we don't need to handle these other types
                         case LookupType.REQ_SYM_SYM:
