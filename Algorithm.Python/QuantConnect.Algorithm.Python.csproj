@@ -91,6 +91,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="build.sh">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

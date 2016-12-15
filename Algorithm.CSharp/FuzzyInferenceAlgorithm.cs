@@ -1,7 +1,7 @@
 ﻿using System;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
-using AForge.Fuzzy;
+using Accord.Fuzzy;
 
 namespace QuantConnect.Algorithm.CSharp
 {

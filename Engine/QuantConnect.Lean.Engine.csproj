@@ -237,6 +237,7 @@
     <Compile Include="Setup\ConsoleSetupHandler.cs" />
     <Compile Include="Setup\BacktestingSetupHandler.cs" />
     <Compile Include="Setup\ISetupHandler.cs" />
+    <None Include="app.config" />
     <None Include="packages.config" />
     <Compile Include="Results\BacktestingResultHandler.cs" />
     <Compile Include="DataFeeds\FileSystemDataFeed.cs" />

@@ -33,12 +33,24 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Accord, Version=3.0.2.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
-      <HintPath>..\packages\Accord.3.0.2\lib\net45\Accord.dll</HintPath>
+    <Reference Include="Accord, Version=3.3.0.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Accord.3.3.0\lib\net45\Accord.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Accord.Fuzzy, Version=3.0.2.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
-      <HintPath>..\packages\Accord.Fuzzy.3.0.2\lib\net45\Accord.Fuzzy.dll</HintPath>
+    <Reference Include="Accord.Fuzzy, Version=3.3.0.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Accord.Fuzzy.3.3.0\lib\net45\Accord.Fuzzy.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Accord.Math, Version=3.3.0.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Accord.Math.3.3.0\lib\net45\Accord.Math.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Accord.Math.Core, Version=3.3.0.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Accord.Math.3.3.0\lib\net45\Accord.Math.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Accord.Statistics, Version=3.3.0.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Accord.Statistics.3.3.0\lib\net45\Accord.Statistics.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="MathNet.Numerics, Version=3.7.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -146,15 +158,18 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <None Include="app.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="..\packages\Accord.3.0.2\build\Accord.targets" Condition="Exists('..\packages\Accord.3.0.2\build\Accord.targets')" />
+  <Import Project="..\packages\Accord.3.3.0\build\Accord.targets" Condition="Exists('..\packages\Accord.3.3.0\build\Accord.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Accord.3.0.2\build\Accord.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Accord.3.0.2\build\Accord.targets'))" />
+    <Error Condition="!Exists('..\packages\Accord.3.3.0\build\Accord.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Accord.3.3.0\build\Accord.targets'))" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
