@@ -119,6 +119,16 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void GetNextMarketOpenWorksOnHoliday()
+        {
+            var exchangeHours = CreateUsEquitySecurityExchangeHours();
+
+            var startTime = new DateTime(2016, 9, 5, 8, 0, 0);
+            var nextMarketOpen = exchangeHours.GetNextMarketOpen(startTime, false);
+            Assert.AreEqual(new DateTime(2016, 9, 6, 9, 30, 0), nextMarketOpen);
+        }
+
+        [Test]
         public void GetNextMarketOpenWorksOverWeekends()
         {
             var exhangeHours = CreateUsEquitySecurityExchangeHours();
@@ -136,6 +146,16 @@ namespace QuantConnect.Tests.Common.Securities
             var startTime = new DateTime(2015, 6, 30, 16, 0, 0);
             var nextMarketOpen = exhangeHours.GetNextMarketClose(startTime, false);
             Assert.AreEqual(startTime.AddDays(1), nextMarketOpen);
+        }
+
+        [Test]
+        public void GetNextMarketCloseWorksOnHoliday()
+        {
+            var exchangeHours = CreateUsEquitySecurityExchangeHours();
+
+            var startTime = new DateTime(2016, 9, 5, 10, 0, 0);
+            var nextMarketClose = exchangeHours.GetNextMarketClose(startTime, false);
+            Assert.AreEqual(new DateTime(2016, 9, 6, 16, 0, 0), nextMarketClose);
         }
 
         [Test]
