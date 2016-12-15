@@ -66,7 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
             var equity = AddEquity(UnderlyingTicker);
             var option = AddOption(UnderlyingTicker);
             equity.SetDataNormalizationMode(DataNormalizationMode.Raw);
-            option.PriceModel = OptionPriceModels.BjerksundStensland();
+            option.PriceModel = OptionPriceModels.BinomialCoxRossRubinstein();
             // option.EnableGreekApproximation = true;
             // set our expiry filter for this option chain
             option.SetFilter(-2, +2, TimeSpan.FromDays(10), TimeSpan.FromDays(17));
@@ -148,7 +148,7 @@ namespace QuantConnect.Algorithm.CSharp
                     Portfolio.TotalSaleVolume,
                     Portfolio.TotalMarginUsed));
 
-                foreach (var holding in Securities.Values)
+                foreach (var holding in Securities.Values.OrderByDescending(x => x.Holdings.AbsoluteQuantity))
                 {
                     Log(String.Format(" - {0}, Avg Prc:{1:0.00}, Qty:{2:0.00}, Mkt Prc:{3:0.00}, Mkt Val:{4:0.00}, Unreal P/L: {5:0.00}, Fees: {6:0.00}, Vol: {7:0.00}",
                     holding.Symbol.Value,
@@ -169,7 +169,7 @@ namespace QuantConnect.Algorithm.CSharp
                     var underlying = Securities[chain.Key.Underlying];
                     foreach (var contract in chain.Value)
                     {
-                        Log(String.Format(@"{0} {1},Bid={2} Ask={3} Last={4} OI={5} σ={6:0.00} NPV={7:0.00} Δ={8:0.00} Γ={9:0.00} ν={10:0.00} ρ={11:0.00} Θ={12:0.00} IV={13:0.00}",
+                        Log(String.Format(@"{0} {1},B={2} A={3} L={4} OI={5} σ={6:0.00} NPV={7:0.00} Δ={8:0.00} Γ={9:0.00} ν={10:0.00} ρ={11:0.00} Θ={12:0.00} IV={13:0.00}",
                              Time.ToString(),
                              contract.Symbol.Value,
                              contract.BidPrice,
@@ -191,7 +191,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     foreach (var contract in chain.Value)
                     {
-                        Log(String.Format("{0}, {1}, Bid={2} Ask={3} Last={4} OI={5}",
+                        Log(String.Format("{0}, {1}, B={2} A={3} L={4} OI={5}",
                                 contract.Symbol.Value,
                                 Time,
                                 contract.BidPrice,
@@ -204,12 +204,12 @@ namespace QuantConnect.Algorithm.CSharp
 
             foreach (var kpv in slice.QuoteBars)
             {
-                Console.WriteLine("---> QuoteBar: {0}, {1}, {2}", Time, kpv.Key.Value, kpv.Value.Close.ToString("0.00"));
+                Console.WriteLine("---> QuoteBar: {0}, {1}, {2}", Time, kpv.Key.Value, kpv.Value.Close.ToString("0.0000"));
             }
 
             foreach (var kpv in slice.Bars)
             {
-                Console.WriteLine("---> Bar: {0}, {1}, {2}", Time, kpv.Key.Value, kpv.Value.Close.ToString("0.00"));
+                Console.WriteLine("---> Bar: {0}, {1}, {2}", Time, kpv.Key.Value, kpv.Value.Close.ToString("0.0000"));
             }
         }
 
