@@ -273,6 +273,7 @@
     <Compile Include="Symbols.cs" />
     <Compile Include="TestExtensions.cs" />
     <Compile Include="Indicators\LinearWeightedMovingAverageTests.cs" />
+    <None Include="app.config" />
     <None Include="RegressionAlgorithms\Test_Cash.cs" />
     <None Include="RegressionAlgorithms\Test_LiveAlgorithm.cs" />
     <None Include="RegressionAlgorithms\Test_MixedAssets.cs" />
