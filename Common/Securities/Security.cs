@@ -24,6 +24,7 @@ using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Interfaces;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Securities 
 {
@@ -601,15 +602,19 @@ namespace QuantConnect.Securities
                 Exchange.SetLocalDateTimeFrontier(args.Time);
             };
         }
-        
+
         /// <summary>
         /// Update any security properties based on the latest market data and time
         /// </summary>
         /// <param name="data">New data packet from LEAN</param>
+        /// 
         public void SetMarketPrice(BaseData data) 
         {
+            if (data is OpenInterest ||
+                data == null || 
+                data.Price == 0m) return;
+
             //Add new point to cache:
-            if (data == null) return;
             Cache.AddData(data);
             Holdings.UpdateMarketPrice(Price);
             VolatilityModel.Update(this, data);
@@ -621,8 +626,11 @@ namespace QuantConnect.Securities
         /// <param name="data">New data packet from LEAN</param>
         public void SetRealTimePrice(BaseData data)
         {
+            if (data is OpenInterest ||
+                data == null ||
+                data.Price == 0m) return;
+
             //Add new point to cache:
-            if (data == null) return;
             Cache.AddData(data);
             Holdings.UpdateMarketPrice(Price);
         }
