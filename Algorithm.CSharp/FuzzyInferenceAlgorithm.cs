@@ -12,6 +12,15 @@ namespace QuantConnect.Algorithm.CSharp
         private Momentum mom;
         private string symbol = "SPY";
 
+        //
+        // With Accord v3.3.0, we need Accord.Math referenced in other projects that use 
+        // this. By placing a hard reference to an Accord.Math type, the compiler
+        // will properly copy the required dlls into other project bin directories. 
+        // Without this, consuming projects would need to hard reference the Accord dlls,
+        // which is less than perfect. This seems to be the better of two evils
+        //
+        Accord.Math.Matrix3x3 _matrix = new Accord.Math.Matrix3x3();
+
         //Fuzzy Engine
         private FuzzyEngine engine;
 
