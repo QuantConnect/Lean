@@ -260,11 +260,11 @@ namespace QuantConnect.Lean.Engine
                         if (_algorithmHandlers.DataFeed != null) _algorithmHandlers.DataFeed.Exit();
                         if (_algorithmHandlers.Results != null)
                         {
-                            var message = "Runtime Error: " + err.Message;
+                            var message = "Runtime Error: " + err;
                             Log.Trace("Engine.Run(): Sending runtime error to user...");
                             _algorithmHandlers.Results.LogMessage(message);
                             _algorithmHandlers.Results.RuntimeError(message, err.StackTrace);
-                            _systemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, message + " Stack Trace: " + err.StackTrace);
+                            _systemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, message + " Stack Trace: " + err);
                         }
                     }
 

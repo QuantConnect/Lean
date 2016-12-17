@@ -193,7 +193,8 @@ namespace QuantConnect.Lean.Engine.Setup
                 }
                 catch (Exception err)
                 {
-                    Errors.Add("Failed to initialize algorithm: Initialize(): " + err.Message);
+                    Log.Error(err);
+                    Errors.Add("Failed to initialize algorithm: Initialize(): " + err);
                 }
             });
 
