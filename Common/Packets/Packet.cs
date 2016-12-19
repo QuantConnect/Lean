@@ -129,6 +129,9 @@ namespace QuantConnect.Packets
         GitHubHook,
 
         /// Documentation result from docs server
-        DocumentationResult
+        DocumentationResult,
+
+        /// Documentation request to the docs server
+        Documentation
     }
 }
