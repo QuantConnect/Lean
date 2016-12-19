@@ -26,7 +26,7 @@ namespace QuantConnect.Indicators
     /// HA_High[0] = MAX(High[0], HA_Open[0], HA_Close[0])
     /// HA_Low[0] = MIN(Low[0], HA_Open[0], HA_Close[0])
     /// </summary>
-    public class HeikinAshi : BarIndicator
+    public class HeikinAshi : TradeBarIndicator
     {
         /// <summary>
         /// Gets the Heikin-Ashi Open
@@ -49,11 +49,16 @@ namespace QuantConnect.Indicators
         public IndicatorBase<IndicatorDataPoint> Close { get; private set; }
 
         /// <summary>
+        /// Gets the Heikin-Ashi Volume
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> Volume { get; private set; }
+
+        /// <summary>
         /// Gets the Heikin-Ashi current TradeBar
         /// </summary>
         public TradeBar CurrentBar
         {
-            get {  return new TradeBar(Open.Current.Time, Symbol.Empty, Open, High, Low, Close, 0);}
+            get { return new TradeBar(Open.Current.Time, Symbol.Empty, Open, High, Low, Close, Convert.ToInt64(Volume.Current.Value)); }
         }
 
         /// <summary>
@@ -67,6 +72,7 @@ namespace QuantConnect.Indicators
             High = new Identity(name + "_High");
             Low = new Identity(name + "_Low");
             Close = new Identity(name + "_Close");
+            Volume = new Identity(name + "_Volume");
         }
 
         /// <summary>
@@ -90,7 +96,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns> A new value for this indicator </returns>
-        protected override decimal ComputeNextValue(IBaseDataBar input)
+        protected override decimal ComputeNextValue(TradeBar input)
         {
             if (!IsReady)
             {
@@ -107,6 +113,8 @@ namespace QuantConnect.Indicators
                 Low.Update(new IndicatorDataPoint(input.Time, Math.Min(input.Low, Math.Min(Open, Close))));
             }
 
+            Volume.Update(new IndicatorDataPoint(input.Time, input.Volume));
+
             return Close;
         }
 
@@ -119,6 +127,7 @@ namespace QuantConnect.Indicators
             High.Reset();
             Low.Reset();
             Close.Reset();
+            Volume.Reset();
             base.Reset();
         }
     }
