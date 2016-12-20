@@ -611,6 +611,7 @@ namespace QuantConnect.Algorithm
 
             // determine the unit price in terms of the account currency
             var unitPrice = new MarketOrder(symbol, 1, UtcTime).GetValue(security);
+            if (unitPrice == 0) return 0;
 
             // calculate the total margin available
             var marginRemaining = Portfolio.GetMarginRemaining(symbol, direction);
