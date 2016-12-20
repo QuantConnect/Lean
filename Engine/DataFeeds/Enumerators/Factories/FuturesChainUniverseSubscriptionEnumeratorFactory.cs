@@ -103,7 +103,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             // canonical also needs underlying price data
             var config = request.Configuration;
             var underlying = config.Symbol.Underlying;
-            var resolution = config.Resolution == Resolution.Tick ? Resolution.Second : config.Resolution;
+            var resolution = config.Resolution;
 
             var configurations = new List<SubscriptionDataConfig>
             {
