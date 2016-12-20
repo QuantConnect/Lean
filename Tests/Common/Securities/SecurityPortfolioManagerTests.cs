@@ -635,6 +635,104 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsFalse(sufficientCapital);
         }
 
+        [TestCase("XIV", SecurityType.Equity, Market.USA, 1)]
+        [TestCase("EURGBP", SecurityType.Forex, Market.FXCM, 1)]
+        [TestCase("XIV", SecurityType.Equity, Market.USA, 1.5)]
+        [TestCase("EURGBP", SecurityType.Forex, Market.FXCM, 1.5)]
+        public void IssueMarginCallsProperlyWithLeverage(string ticker, SecurityType securityType, string market, decimal multiplier)
+        {
+            const decimal leverage = 2m;
+            const int amount = 2000;
+            var time = DateTime.UtcNow;
+            var price = 0.80146m;
+
+            // When multiplier is equal or less than 1, we are not using margin
+            var quantity = (int)Math.Floor(amount / price * multiplier);
+
+            var symbol = Symbol.Create(ticker, securityType, market);
+            var securities = new SecurityManager(TimeKeeper);
+            var transactions = new SecurityTransactionManager(securities);
+            var orderProcessor = new OrderProcessor();
+            transactions.SetOrderProcessor(orderProcessor);
+            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            var config = CreateTradeBarDataConfig(securityType, symbol);
+            var cash = new Cash(CashBook.AccountCurrency, 0, 1m);
+            var symbolProperties = SymbolProperties.GetDefault(CashBook.AccountCurrency);
+            portfolio.SetCash(amount);
+            portfolio.CashBook.Add("EUR", 0, 1.14064m);
+            portfolio.CashBook.Add("GBP", 0, 1.42317m);
+
+            Security security;
+            switch (securityType)
+            {
+                case SecurityType.Equity:
+                    security = new QuantConnect.Securities.Equity.Equity(SecurityExchangeHours, config, cash, symbolProperties);
+                    break;
+                case SecurityType.Forex:
+                    symbolProperties = new SymbolProperties("","GBP", 1, 0.0001m, 1000);
+                    security = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours, portfolio.CashBook["GBP"], config, symbolProperties);
+                    break;
+                default:
+                    throw new ArgumentException("Invalid SecurityType: " + securityType);
+            }
+
+            securities.Add(security);
+            security.SetLeverage(leverage);
+            security.SetMarketPrice(new TradeBar(time, symbol, price, price, price, price, 1));
+            //quantity = quantity - quantity % Convert.ToInt32(security.SymbolProperties.LotSize);
+
+            var order = new MarketOrder(symbol, quantity, time) { Price = price };
+            var fill = new OrderEvent(order, DateTime.UtcNow, 0) { FillPrice = price, FillQuantity = quantity };
+            orderProcessor.AddOrder(order);
+            var request = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, order.Quantity, 0, 0, order.Time, null);
+            request.SetOrderId(0);
+            orderProcessor.AddTicket(new OrderTicket(null, request));
+
+            portfolio.ProcessFill(fill);
+
+            // price drops 1 pip
+            price -= security.SymbolProperties.PipSize;
+            security.SetMarketPrice(new TradeBar(time, symbol, price, price, price, price, 1));
+            if (securityType == SecurityType.Forex)
+            {
+                portfolio.CashBook["EUR"].ConversionRate = security.QuoteCurrency.ConversionRate * price;
+            }
+
+            // should not create margin call order
+            // should issue margin call warnings on EURGBP using borrowed money not on other cases.
+            bool issueMarginCallWarning;
+            var orderRequests = portfolio.ScanForMarginCall(out issueMarginCallWarning);
+            Assert.AreEqual(0, orderRequests.Count);
+            if (securityType == SecurityType.Forex && multiplier > 1)
+            {
+                Assert.IsTrue(issueMarginCallWarning);
+            }
+            else
+            {
+                Assert.IsFalse(issueMarginCallWarning);
+            }
+
+            // price drops another 50%
+            price /= 2;
+            security.SetMarketPrice(new TradeBar(time, symbol, price, price, price, price, 1));
+            if (securityType == SecurityType.Forex)
+            {
+                portfolio.CashBook["EUR"].ConversionRate = security.QuoteCurrency.ConversionRate * price;
+            }
+            // should not issue margin call warnings and create margin call order if only cash is used to buy asset
+            orderRequests = portfolio.ScanForMarginCall(out issueMarginCallWarning);
+            if (multiplier > 1)
+            {
+                Assert.IsTrue(issueMarginCallWarning);
+                Assert.AreEqual(1, orderRequests.Count);
+            }
+            else
+            {
+                Assert.IsFalse(issueMarginCallWarning);
+                Assert.AreEqual(0, orderRequests.Count);
+            }
+        }
+
         private SubscriptionDataConfig CreateTradeBarDataConfig(SecurityType type, Symbol symbol)
         {
             if (type == SecurityType.Equity)

@@ -553,6 +553,13 @@ namespace QuantConnect.Securities
                 return new List<SubmitOrderRequest>();
             }
 
+            // don't issue a margin call if we're purchasing assets with cash only
+            var quoteCurrencySum = Securities.Values.Where(x => x.Invested).Sum(x => x.QuoteCurrency.Amount);
+            if (quoteCurrencySum + CashBook[CashBook.AccountCurrency].Amount + TotalFees >= 0)
+            {
+                return new List<SubmitOrderRequest>();
+            }
+
             var marginRemaining = MarginRemaining;
 
             // issue a margin warning when we're down to 5% margin remaining
