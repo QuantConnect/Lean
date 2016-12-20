@@ -45,6 +45,11 @@ namespace QuantConnect
             writer.WriteValue(symbol.ID.ToString());
             writer.WritePropertyName("Permtick");
             writer.WriteValue(symbol.Value);
+            if (symbol.HasUnderlying)
+            {
+                writer.WritePropertyName("Underlying");
+                WriteJson(writer, symbol.Underlying, serializer);
+            }
             writer.WriteEndObject();
         }
 
@@ -58,7 +63,16 @@ namespace QuantConnect
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             var jobject = JObject.Load(reader);
-            return new Symbol(SecurityIdentifier.Parse(jobject["ID"].ToString()), jobject["Value"].ToString());
+
+            JToken underlying;
+            Symbol underlyingSymbol = null;
+
+            if (jobject.TryGetValue("Underlying", out underlying))
+            {
+                underlyingSymbol = new Symbol(SecurityIdentifier.Parse(underlying["ID"].ToString()), underlying["Value"].ToString());
+            }
+
+            return new Symbol(SecurityIdentifier.Parse(jobject["ID"].ToString()), jobject["Value"].ToString(), underlyingSymbol);
         }
 
         /// <summary>

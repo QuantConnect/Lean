@@ -97,6 +97,10 @@
     <Compile Include="UniverseDefinitions.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Configuration\QuantConnect.Configuration.csproj">
+      <Project>{0AEB4EA3-28C8-476E-89FD-926F06590B4C}</Project>
+      <Name>QuantConnect.Configuration</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Indicators\QuantConnect.Indicators.csproj">
       <Project>{73FB2522-C3ED-4E47-8E3D-AFAD48A6B888}</Project>
       <Name>QuantConnect.Indicators</Name>

@@ -894,8 +894,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     _algorithm.Portfolio.ProcessFill(fill);
 
                     var conversionRate = security.QuoteCurrency.ConversionRate;
+                    var multiplier = security.SymbolProperties.ContractMultiplier;
 
-                    _algorithm.TradeBuilder.ProcessFill(fill, conversionRate);
+                    _algorithm.TradeBuilder.ProcessFill(fill, conversionRate, multiplier);
                 }
                 catch (Exception err)
                 {

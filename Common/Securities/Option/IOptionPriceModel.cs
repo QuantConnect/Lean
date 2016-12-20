@@ -24,7 +24,7 @@ namespace QuantConnect.Securities.Option
     public interface IOptionPriceModel
     {
         /// <summary>
-        /// Evaluates the specified option contract to compute a theoretical price and greeks
+        /// Evaluates the specified option contract to compute a theoretical price, IV and greeks
         /// </summary>
         /// <param name="security">The option security object</param>
         /// <param name="slice">The current data slice. This can be used to access other information

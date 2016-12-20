@@ -41,6 +41,8 @@ namespace QuantConnect.Lean.Launcher
                 mode = "DEBUG";
             #endif
 
+            Console.OutputEncoding = System.Text.Encoding.Unicode;
+
             var environment = Config.Get("environment");
             var liveMode = Config.GetBool("live-mode");
             Log.DebuggingEnabled = Config.GetBool("debug-mode");
@@ -97,16 +99,6 @@ namespace QuantConnect.Lean.Launcher
                 };
                 Process.Start(info);
             }
-
-            // log the job endpoints
-            Log.Trace("JOB HANDLERS: ");
-            Log.Trace("         DataFeed:     " + leanEngineAlgorithmHandlers.DataFeed.GetType().FullName);
-            Log.Trace("         Setup:        " + leanEngineAlgorithmHandlers.Setup.GetType().FullName);
-            Log.Trace("         RealTime:     " + leanEngineAlgorithmHandlers.RealTime.GetType().FullName);
-            Log.Trace("         Results:      " + leanEngineAlgorithmHandlers.Results.GetType().FullName);
-            Log.Trace("         Transactions: " + leanEngineAlgorithmHandlers.Transactions.GetType().FullName);
-            Log.Trace("         Commands:     " + leanEngineAlgorithmHandlers.CommandQueue.GetType().FullName);
-            if (job is LiveNodePacket) Log.Trace("         Brokerage:    " + ((LiveNodePacket)job).Brokerage);
 
             // if the job version doesn't match this instance version then we can't process it
             // we also don't want to reprocess redelivered jobs
