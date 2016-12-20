@@ -557,7 +557,9 @@ namespace QuantConnect.Securities
 
             // issue a margin warning when we're down to 5% margin remaining
             var totalPortfolioValue = TotalPortfolioValue;
-            if (marginRemaining <= totalPortfolioValue*0.05m)
+
+            var minLeverageUsed = Securities.Values.Where(x => x.Invested).Min(x => x.Leverage);
+            if (totalMarginUsed > totalPortfolioValue * minLeverageUsed * (1 + 0.05m))
             {
                 issueMarginCallWarning = true;
             }
