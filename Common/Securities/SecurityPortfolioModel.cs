@@ -96,6 +96,12 @@ namespace QuantConnect.Securities
                     var conversionFactor = security.QuoteCurrency.ConversionRate*security.SymbolProperties.ContractMultiplier;
                     var lastTradeProfit = (closedSaleValueInQuoteCurrency - closedCost)*conversionFactor;
 
+                    // Reflect account cash adjustment for futures position 
+                    if (security.Type == SecurityType.Future)
+                    {
+                        security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, quoteCash.Symbol, lastTradeProfit);
+                    }
+
                     //Update Vehicle Profit Tracking:
                     security.Holdings.AddNewProfit(lastTradeProfit);
                     security.Holdings.SetLastTradeProfit(lastTradeProfit);
