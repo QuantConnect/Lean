@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using NodaTime;
-using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
 
@@ -99,7 +98,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // so we don't interfere with the enumerator's internal logic
                         var clone = subscription.Current.Clone(subscription.Current.IsFillForward);
                         clone.Time = clone.Time.ExchangeRoundDown(configuration.Increment, subscription.Security.Exchange.Hours, configuration.ExtendedMarketHours);
-                        packet.Add(clone);
+
+                        // do not add fill-forward data if rounded down to the previous day
+                        if (!clone.IsFillForward || clone.Time.Date == subscription.Current.Time.Date)
+                        {
+                            packet.Add(clone);
+                        }
+
                         if (!subscription.MoveNext())
                         {
                             OnSubscriptionFinished(subscription);
