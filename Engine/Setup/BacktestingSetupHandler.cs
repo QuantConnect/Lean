@@ -206,7 +206,7 @@ namespace QuantConnect.Lean.Engine.Setup
             algorithm.PostInitialize();
 
             //Calculate the max runtime for the strategy
-            _maxRuntime = GetMaximumRuntime(job.PeriodStart, job.PeriodFinish, algorithm.SubscriptionManager.Count);
+            _maxRuntime = TimeSpan.FromDays(10 * 365); //GetMaximumRuntime(job.PeriodStart, job.PeriodFinish, algorithm.SubscriptionManager.Count);
 
             //Get starting capital:
             _startingCaptial = algorithm.Portfolio.Cash;
