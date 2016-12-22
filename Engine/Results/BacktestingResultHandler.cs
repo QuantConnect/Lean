@@ -696,8 +696,8 @@ namespace QuantConnect.Lean.Engine.Results
         public void Exit() 
         {
             //Process all the log messages and send them to the S3:
-            var logURL = ProcessLogMessages(_job);
-            if (logURL != "") DebugMessage("Your log was successfully created and can be downloaded from: " + logURL);
+            var logLocation = ProcessLogMessages(_job);
+            DebugMessage("Your log was successfully created and can be retrieved from: " + logLocation);
 
             //Set exit flag, and wait for the messages to send:
             _exitTriggered = true;
@@ -765,70 +765,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <returns>String URL of log</returns>
         private string ProcessLogMessages(AlgorithmNodePacket job)
         {
-            var remoteUrl = @"http://data.quantconnect.com/";
-            var logLength = 0;
-
-            try
-            {
-                //Return nothing if there's no log messages to procesS:
-                if (!_log.Any()) return "";
-
-                //Get the max length allowed for the algorithm:
-                var allowance = _api.ReadLogAllowance(job.UserId, job.ProjectId, job.Channel);
-                var logBacktestMax = allowance[0];
-                var logDailyMax = allowance[1];
-                var logRemaining = Math.Min(logBacktestMax, allowance[2]); //Minimum of maxium backtest or remaining allowance.
-                var hitLimit = false;
-                var serialized = new StringBuilder();
-
-                var key = "backtests/" + job.UserId + "/" + job.ProjectId + "/" + job.AlgorithmId + "-log.txt";
-                remoteUrl += key;
-
-                foreach (var line in _log)
-                {
-                    if ((logLength + line.Length) < logRemaining)
-                    {
-                        serialized.Append(line + "\r\n");
-                        logLength += line.Length;
-                    }
-                    else
-                    {
-                        var btMax = Math.Round((double)logBacktestMax / 1024, 0) + "kb";
-                        var dyMax = Math.Round((double)logDailyMax / 1024, 0) + "kb";
-
-                        //Same cap notice for both free & subscribers
-                        var requestMore = "";
-                        var capNotice = "You currently have a maximum of " + btMax + " of log data per backtest, and " + dyMax + " total max per day.";
-                        DebugMessage("You currently have a maximum of " + btMax + " of log data per backtest remaining, and " + dyMax + " total max per day.");
-                        
-                        //Data providers set max log limits and require email requests for extensions
-                        if (job.UserPlan == UserPlan.Free)
-                        {
-                            requestMore ="Please upgrade your account and contact us to request more allocation here: https://www.quantconnect.com/contact"; 
-                        }
-                        else
-                        {
-                            requestMore = "If you require more please briefly explain request for more allocation here: https://www.quantconnect.com/contact";
-                        }
-                        DebugMessage(requestMore);
-                        serialized.Append(capNotice);
-                        serialized.Append(requestMore);
-                        hitLimit = true;
-                        break;
-                    }
-                }
-
-                //Save the log: Upload this file to S3:
-                _api.Store(serialized.ToString(), key, StoragePermissions.Public);
-                //Record the data usage:
-                _api.UpdateDailyLogUsed(job.UserId, job.AlgorithmId, remoteUrl, logLength, job.Channel, hitLimit);
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
-            }
-            Log.Trace("BacktestingResultHandler.ProcessLogMessages(): Ready: " + remoteUrl);
-            return remoteUrl;
+            return _api.StoreLogs(_log, job, StoragePermissions.Public, false);
         }
 
         /// <summary>
