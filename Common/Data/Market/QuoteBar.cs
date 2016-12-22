@@ -57,7 +57,16 @@ namespace QuantConnect.Data.Market
             {
                 if (Bid != null && Ask != null)
                 {
-                    return (Bid.Open + Ask.Open) / 2m;
+                    if (Bid.Open != 0m && Ask.Open != 0m)
+                        return (Bid.Open + Ask.Open) / 2m;
+
+                    if (Bid.Open != 0)
+                        return Bid.Open;
+
+                    if (Ask.Open != 0)
+                        return Ask.Open;
+
+                    return 0m;
                 }
                 if (Bid != null)
                 {
@@ -80,7 +89,16 @@ namespace QuantConnect.Data.Market
             {
                 if (Bid != null && Ask != null)
                 {
-                    return (Bid.High + Ask.High) / 2m;
+                    if (Bid.High != 0m && Ask.High != 0m)
+                        return (Bid.High + Ask.High) / 2m;
+
+                    if (Bid.High != 0)
+                        return Bid.High;
+
+                    if (Ask.High != 0)
+                        return Ask.High;
+
+                    return 0m;
                 }
                 if (Bid != null)
                 {
@@ -103,7 +121,16 @@ namespace QuantConnect.Data.Market
             {
                 if (Bid != null && Ask != null)
                 {
-                    return (Bid.Low + Ask.Low) / 2m;
+                    if (Bid.Low != 0m && Ask.Low != 0m)
+                        return (Bid.Low + Ask.Low) / 2m;
+
+                    if (Bid.Low != 0)
+                        return Bid.Low;
+
+                    if (Ask.Low != 0)
+                        return Ask.Low;
+
+                    return 0m;
                 }
                 if (Bid != null)
                 {
@@ -126,7 +153,16 @@ namespace QuantConnect.Data.Market
             {
                 if (Bid != null && Ask != null)
                 {
-                    return (Bid.Close + Ask.Close) / 2m;
+                    if (Bid.Close != 0m && Ask.Close != 0m)
+                        return (Bid.Close + Ask.Close) / 2m;
+
+                    if (Bid.Close != 0)
+                        return Bid.Close;
+
+                    if (Ask.Close != 0)
+                        return Ask.Close;
+
+                    return 0m;
                 }
                 if (Bid != null)
                 {
