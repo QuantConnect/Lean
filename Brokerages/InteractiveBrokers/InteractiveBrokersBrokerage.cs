@@ -956,6 +956,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             try
             {
+                if (!IsConnected) return;
+
                 var order = _orderProvider.GetOrderByBrokerageId(update.OrderId);
                 if (order == null)
                 {
