@@ -115,10 +115,18 @@ namespace QuantConnect.Brokerages.Fxcm
                     if (!autoResetEvent.WaitOne(HistoryResponseTimeout))
                     {
                         // no response
+                        if (EnableOnlyHistoryRequests)
+                        {
+                            throw new TimeoutException(string.Format("FxcmBrokerage.GetHistory(): Operation took longer than {0} seconds.", (decimal) HistoryResponseTimeout/1000));
+                        }
+
                         if (++attempt > MaximumHistoryRetryAttempts)
                         {
+                            Log.Trace("FxcmBrokerage.GetHistory(): Maximum attempts reached for: " + request.Symbol.Value);
                             break;
                         }
+
+                        Log.Trace("FxcmBrokerage.GetHistory(): Attempt " + attempt + " for: " + request.Symbol.Value);
                         continue;
                     }
 
