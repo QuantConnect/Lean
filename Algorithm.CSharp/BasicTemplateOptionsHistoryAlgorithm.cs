@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
             option.PriceModel = OptionPriceModels.CrankNicolsonFD();
             //option.EnableGreekApproximation = true;
 
-            option.SetFilter(-2, +2, TimeSpan.FromDays(00), TimeSpan.FromDays(300));
+            option.SetFilter(-2, +2, TimeSpan.FromDays(00), TimeSpan.FromDays(15));
 
             SetBenchmark(equity.Symbol);
         }
