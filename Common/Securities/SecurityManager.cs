@@ -332,10 +332,14 @@ namespace QuantConnect.Securities
 
             // Get the type that will be used in the data feed
             // Could be more than one for a given security - i.e. More than one subscription needed
-            foreach (var dataFeed in subscriptionManager.AvailableDataTypes[symbol.ID.SecurityType])
-            {
-                var dataFeedType = GetDataFeedType(factoryType, dataFeed);
 
+            var dataFeedTypes = subscriptionManager.AvailableDataTypes[symbol.ID.SecurityType]
+                .Select(dataFeed => GetDataFeedType(factoryType, dataFeed))
+                .Distinct()
+                .ToList();
+
+            foreach (var dataFeedType in dataFeedTypes)
+            {
                 configList.Add(subscriptionManager.Add(dataFeedType, symbol, resolution, dataTimeZone, exchangeHours.TimeZone, isCustomData, fillDataForward,
                                                         extendedMarketHours, isInternalFeed, isFilteredSubscription));
             }
