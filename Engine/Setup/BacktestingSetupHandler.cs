@@ -30,6 +30,7 @@ using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
+using QuantConnect.Data;
 
 namespace QuantConnect.Lean.Engine.Setup
 {
@@ -205,8 +206,9 @@ namespace QuantConnect.Lean.Engine.Setup
             algorithm.Transactions.SetOrderProcessor(transactionHandler);
             algorithm.PostInitialize();
 
+            
             //Calculate the max runtime for the strategy
-            _maxRuntime = TimeSpan.FromDays(10 * 365); //GetMaximumRuntime(job.PeriodStart, job.PeriodFinish, algorithm.SubscriptionManager.Count);
+            _maxRuntime = GetMaximumRuntime(job.PeriodStart, job.PeriodFinish, algorithm.SubscriptionManager, baseJob.Controls);
 
             //Get starting capital:
             _startingCaptial = algorithm.Portfolio.Cash;
@@ -244,10 +246,35 @@ namespace QuantConnect.Lean.Engine.Setup
         /// </summary>
         /// <param name="start">State date of the algorithm</param>
         /// <param name="finish">End date of the algorithm</param>
-        /// <param name="subscriptionCount">Number of data feeds the user has requested</param>
+        /// <param name="subscriptionManager">Subscription Manager</param>
+        /// <param name="controls">Job controls instance</param>
         /// <returns>Timespan maximum run period</returns>
-        private TimeSpan GetMaximumRuntime(DateTime start, DateTime finish, int subscriptionCount)
+        private TimeSpan GetMaximumRuntime(DateTime start, DateTime finish, SubscriptionManager subscriptionManager, Controls controls)
         {
+            var derivativeSubscriptions = subscriptionManager.Subscriptions
+                                        .Where( x => x.Symbol.IsCanonical())
+                                        .Select( x => 
+                                        {
+                                            // since number of subscriptions is dynamic and is not known in advance, 
+                                            // we assume maximum use of available capacity by the enduser
+                                            switch (x.Resolution)
+                                            {
+                                                case Resolution.Tick:
+                                                    return controls.TickLimit;
+                                                case Resolution.Second:
+                                                    return controls.SecondLimit;
+                                                default:
+                                                    return controls.MinuteLimit;
+                                            }
+                                        })
+                                        .Sum();
+
+            var otherSubscriptions = subscriptionManager.Subscriptions
+                                        .Where(x => !x.Symbol.IsCanonical())
+                                        .Count();
+
+            var subscriptionCount = otherSubscriptions + derivativeSubscriptions;
+
             double maxRunTime = 0;
             var jobDays = (finish - start).TotalDays;
 
