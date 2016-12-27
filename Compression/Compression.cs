@@ -529,7 +529,20 @@ namespace QuantConnect
 
 
         // ZipArchive cache used by UnzipCached method
-        private static ConcurrentDictionary<string, WeakReference> _zipArchiveCache = new ConcurrentDictionary<string, WeakReference>();
+        private static ConcurrentDictionary<string, ZipArchive> _zipArchiveCache = new ConcurrentDictionary<string, ZipArchive>();
+
+        /// <summary>
+        /// Clears ZipArchive cached used by UnzipCached method
+        /// </summary>
+        public static void ClearZipArchiveCache()
+        {
+            foreach (var zip in _zipArchiveCache)
+            {
+                zip.Value.Dispose();
+            }
+
+            _zipArchiveCache.Clear();
+        }
 
         /// <summary>
         /// Streams a local zip file using a streamreader and cached weak reference to ZipArchive in order to optimize method performance.
@@ -542,7 +555,7 @@ namespace QuantConnect
         public static StreamReader UnzipCached(string filename, string zipEntryName, out ZipArchive outZip)
         {
             StreamReader reader = null;
-            WeakReference zip = null;
+            ZipArchive zip = null;
             outZip = null;
 
             try
@@ -551,21 +564,20 @@ namespace QuantConnect
                 {
                     try
                     {
-                        if (!_zipArchiveCache.TryGetValue(filename, out zip) || zip.Target == null)
+                        if (!_zipArchiveCache.TryGetValue(filename, out zip))
                         {
                             var file = File.OpenRead(filename);
                             // reading up first two bytes 
                             // http://george.chiramattel.com/blog/2007/09/deflatestream-block-length-does-not-match.html
                             file.ReadByte(); file.ReadByte();
 
-                            zip = new WeakReference(new ZipArchive(file));
+                            zip = new ZipArchive(file);
                             _zipArchiveCache[filename] = zip;
                         }
 
-                        lock (_zipArchiveCache[filename].Target)
+                        lock (_zipArchiveCache[filename])
                         {
-                            var zipArchive = (ZipArchive)zip.Target;
-                            var entry = zipArchive.Entries.FirstOrDefault(x => zipEntryName == null || string.Compare(x.FullName, zipEntryName, StringComparison.OrdinalIgnoreCase) == 0);
+                            var entry = zip.Entries.FirstOrDefault(x => zipEntryName == null || string.Compare(x.FullName, zipEntryName, StringComparison.OrdinalIgnoreCase) == 0);
                             if (entry == null)
                             {
                                 // Unable to locate zip entry 
@@ -579,12 +591,12 @@ namespace QuantConnect
                             reader = new StreamReader(stream);
                         };
 
-                        outZip = (ZipArchive)zip.Target;
+                        outZip = zip;
                     }
                     catch (Exception err)
                     {
                         Log.Error(err, "Inner try/catch");
-                        if (zip != null && zip.Target != null) ((ZipArchive)zip.Target).Dispose();
+                        if (zip != null ) zip.Dispose();
                         if (reader != null) reader.Close();
                     }
                 }
