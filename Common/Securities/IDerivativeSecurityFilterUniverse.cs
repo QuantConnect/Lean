@@ -16,20 +16,22 @@
 
 using System.Collections.Generic;
 using QuantConnect.Data;
-using System;
 
 namespace QuantConnect.Securities
 {
     /// <summary>
-    /// Filters a set of derivative symbols using the underlying price data.
+    /// Represents derivative symbols universe used in filtering.
     /// </summary>
-    public interface IDerivativeSecurityFilter
+    public interface IDerivativeSecurityFilterUniverse : IEnumerable<Symbol>
     {
         /// <summary>
-        /// Filters the input set of symbols represented by the universe 
+        /// The underlying price data
         /// </summary>
-        /// <param name="universe">derivative symbols universe used in filtering</param>
-        /// <returns>The filtered set of symbols</returns>
-        IDerivativeSecurityFilterUniverse Filter(IDerivativeSecurityFilterUniverse universe);
+        BaseData Underlying { get; }
+
+        /// <summary>
+        /// True if the universe is dynamic and filter needs to be reapplied during trading day
+        /// </summary>
+        bool IsDynamic { get; }
     }
 }

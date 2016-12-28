@@ -19,6 +19,7 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -43,7 +44,9 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption(UnderlyingTicker);
 
             // set our strike/expiry filter for this option chain
-            option.SetFilter(-2, +2, TimeSpan.Zero, TimeSpan.FromDays(10));
+            option.SetFilter(u => u.IncludeWeeklys()
+                                   .RelativeStrikes(-2, +2)
+                                   .Expiration(TimeSpan.Zero, TimeSpan.FromDays(10)));
 
             // use the underlying equity as the benchmark
             SetBenchmark(equity.Symbol);

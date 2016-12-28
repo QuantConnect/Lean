@@ -332,6 +332,10 @@
     <Compile Include="Securities\DelayedSettlementModel.cs" />
     <Compile Include="Securities\AdjustedPriceVariationModel.cs" />
     <Compile Include="Securities\FuncSecuritySeeder.cs" />
+    <Compile Include="Securities\Futures\FutureExpirationCycles.cs" />
+    <Compile Include="Securities\Futures\FutureFilterUniverse.cs" />
+    <Compile Include="Securities\Option\OptionFilterUniverse.cs" />
+    <Compile Include="Securities\IDerivativeSecurityFilterUniverse.cs" />
     <Compile Include="Securities\ISecuritySeeder.cs" />
     <Compile Include="Securities\NoMarginCallMarginModel.cs" />
     <Compile Include="Securities\SecurityPriceVariationModel.cs" />
@@ -390,8 +394,6 @@
     <Compile Include="Securities\SecurityPortfolioModel.cs" />
     <Compile Include="Securities\SecurityMarginModel.cs" />
     <Compile Include="Securities\ImmediateSettlementModel.cs" />
-    <Compile Include="Securities\ExpiryFutureFilter.cs" />
-    <Compile Include="Securities\StrikeExpiryOptionFilter.cs" />
     <Compile Include="Securities\SymbolProperties.cs" />
     <Compile Include="Securities\SymbolPropertiesDatabase.cs" />
     <Compile Include="Securities\UniverseManager.cs" />

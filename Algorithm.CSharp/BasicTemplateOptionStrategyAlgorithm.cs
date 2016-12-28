@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
             equity.SetDataNormalizationMode(DataNormalizationMode.Raw);
 
             // set our strike/expiry filter for this option chain
-            option.SetFilter(-2, +2, TimeSpan.Zero, TimeSpan.FromDays(10));
+            option.SetFilter(-2, +2, TimeSpan.Zero, TimeSpan.FromDays(180));
 
             // use the underlying equity as the benchmark
             SetBenchmark(equity.Symbol);

@@ -36,6 +36,9 @@ namespace QuantConnect.Data.UniverseSelection
         private readonly UniverseSettings _universeSettings;
         private SubscriptionManager _subscriptionManager;
 
+        private HashSet<Symbol> _cachedSelection;
+        private DateTime _cacheDate;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="FuturesChainUniverse"/> class
         /// </summary>
@@ -78,12 +81,32 @@ namespace QuantConnect.Data.UniverseSelection
 
             var underlying = new Tick { Time = utcTime };
 
-            var availableContracts = futuresUniverseDataCollection.Data.Select(x => x.Symbol);
-            var results = _future.ContractFilter.Filter(availableContracts, underlying).ToHashSet();
+            HashSet<Symbol> resultingSymbols;
 
-            futuresUniverseDataCollection.FilteredContracts = results;
+            if (_cacheDate == null || _cacheDate != data.Time.Date)
+            {
+                var availableContracts = futuresUniverseDataCollection.Data.Select(x => x.Symbol);
+                var results = (OptionFilterUniverse)_future.ContractFilter.Filter(new FutureFilterUniverse(availableContracts, underlying));
 
-            return results;
+                // if results are not dynamic, we cache them and won't call filtering till the end of the day
+                var hashSet = results.ToHashSet();
+
+                if (!results.IsDynamic)
+                {
+                    _cacheDate = data.Time.Date;
+                    _cachedSelection = hashSet;
+                }
+
+                resultingSymbols = hashSet;
+            }
+            else
+            {
+                resultingSymbols = _cachedSelection;
+            }
+
+            futuresUniverseDataCollection.FilteredContracts = resultingSymbols;
+
+            return resultingSymbols;
         }
 
         /// <summary>

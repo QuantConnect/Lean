@@ -132,6 +132,7 @@
     <Compile Include="Common\CurrenciesTests.cs" />
     <Compile Include="Common\Data\Market\QuoteBarTests.cs" />
     <Compile Include="Common\Securities\BrokerageModelSecurityInitializerTests.cs" />
+    <Compile Include="Common\Securities\FutureFilterTests.cs" />
     <Compile Include="Common\Util\FactorFileGeneratorTests.cs" />
     <Compile Include="Common\Data\Auxiliary\LocalDiskFactorFileProviderTests.cs" />
     <Compile Include="Common\Data\Auxiliary\LocalDiskMapFileProviderTests.cs" />
@@ -176,7 +177,7 @@
     <Compile Include="Common\Securities\SecurityTests.cs" />
     <Compile Include="Common\Securities\SecurityTransactionModelTests.cs" />
     <Compile Include="Common\Securities\SubscriptionDataConfigTests.cs" />
-    <Compile Include="Common\Securities\StrikeExpiryOptionFilterTests.cs" />
+    <Compile Include="Common\Securities\OptionFilterTests.cs" />
     <Compile Include="Common\Securities\SymbolPropertiesDatabaseTests.cs" />
     <Compile Include="Common\Securities\TradingCalendarTests.cs" />
     <Compile Include="Common\Securities\UniverseManagerTests.cs" />

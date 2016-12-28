@@ -37,6 +37,9 @@ namespace QuantConnect.Data.UniverseSelection
         private readonly UniverseSettings _universeSettings;
         private SubscriptionManager _subscriptionManager;
 
+        private HashSet<Symbol> _cachedSelection;
+        private DateTime _cacheDate;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="OptionChainUniverse"/> class
         /// </summary>
@@ -85,16 +88,36 @@ namespace QuantConnect.Data.UniverseSelection
                 return Unchanged;
             }
 
-            var availableContracts = optionsUniverseDataCollection.Data.Select(x => x.Symbol);
-            var results = _option.ContractFilter.Filter(availableContracts, _underlying).ToHashSet();
+            HashSet<Symbol> resultingSymbols;
+
+            if (_cacheDate == null || _cacheDate != data.Time.Date)
+            {
+                var availableContracts = optionsUniverseDataCollection.Data.Select(x => x.Symbol);
+                var results = (OptionFilterUniverse)_option.ContractFilter.Filter(new OptionFilterUniverse(availableContracts, _underlying));
+
+                // if results are not dynamic, we cache them and won't call filtering till the end of the day
+                var hashSet = results.ToHashSet();
+
+                if (!results.IsDynamic)
+                {
+                    _cacheDate = data.Time.Date;
+                    _cachedSelection = hashSet;
+                }
+
+                resultingSymbols = hashSet;
+            }
+            else
+            {
+                resultingSymbols = _cachedSelection;
+            }
 
             // we save off the filtered results to the universe data collection for later
             // population into the OptionChain. This is non-ideal and could be remedied by
             // the universe subscription emitting a special type after selection that could
             // be checked for in TimeSlice.Create, but for now this will do
-            optionsUniverseDataCollection.FilteredContracts = results;
+            optionsUniverseDataCollection.FilteredContracts = resultingSymbols;
 
-            return results;
+            return resultingSymbols;
         }
 
         /// <summary>

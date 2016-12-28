@@ -18,7 +18,7 @@ using QuantConnect.Data;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
-
+using System.Collections.Generic;
 
 namespace QuantConnect.Securities.Future
 {
@@ -64,9 +64,9 @@ namespace QuantConnect.Securities.Future
         {
             // for now all futures are cash settled as we don't allow underlying (Live Cattle?) to be posted on the account
             SettlementType = SettlementType.Cash;
-            ContractFilter = new ExpiryFutureFilter(TimeSpan.Zero, TimeSpan.FromDays(35));
             Holdings = new FutureHolding(this);
             _symbolProperties = symbolProperties;
+            SetFilter(TimeSpan.Zero, TimeSpan.FromDays(35));
         }
 
         /// <summary>
@@ -95,9 +95,9 @@ namespace QuantConnect.Securities.Future
         {
             // for now all futures are cash settled as we don't allow underlying (Live Cattle?) to be posted on the account
             SettlementType = SettlementType.Cash;
-            ContractFilter = new ExpiryFutureFilter(TimeSpan.Zero, TimeSpan.FromDays(35));
             Holdings = new FutureHolding(this);
             _symbolProperties = symbolProperties;
+            SetFilter(TimeSpan.Zero, TimeSpan.FromDays(35));
         }
 
 
@@ -137,7 +137,7 @@ namespace QuantConnect.Securities.Future
         }
 
         /// <summary>
-        /// Sets the <see cref="ContractFilter"/> to a new instance of the <see cref="ExpiryFutureFilter"/>
+        /// Sets the <see cref="ContractFilter"/> to a new instance of the filter
         /// using the specified expiration range values
         /// </summary>
         /// <param name="minExpiry">The minimum time until expiry to include, for example, TimeSpan.FromDays(10)
@@ -146,7 +146,23 @@ namespace QuantConnect.Securities.Future
         /// would exclude contracts expiring in more than 10 days</param>
         public void SetFilter(TimeSpan minExpiry, TimeSpan maxExpiry)
         {
-            ContractFilter = new ExpiryFutureFilter(minExpiry, maxExpiry);
+            SetFilter(universe => universe.Expiration(minExpiry, maxExpiry));
+        }
+
+
+        /// <summary>
+        /// Sets the <see cref="ContractFilter"/> to a new universe selection function
+        /// </summary>
+        /// <param name="universeFunc">new universe selection function</param>
+        public void SetFilter(Func<FutureFilterUniverse, FutureFilterUniverse> universeFunc)
+        {
+            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func = universe =>
+            {
+                var futureUniverse = universe as FutureFilterUniverse;
+                return universeFunc(futureUniverse);
+            };
+
+            ContractFilter = new FuncSecurityDerivativeFilter(func);
         }
     }
 }
