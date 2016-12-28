@@ -105,7 +105,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                     .Select(sr => _enumeratorConfigurator(request, factory.CreateEnumerator(sr, dataFileProvider)));
 
                 var sync = new SynchronizingEnumerator(enumerators);
-                return new OptionChainUniverseDataCollectionAggregatorEnumerator(sync, request.Security.Symbol);
+                return new OptionChainUniverseDataCollectionEnumerator(sync, request.Security.Symbol);
             }
         }
 
