@@ -93,7 +93,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 {
                     Log.Trace("Remote File :" + file);
 
-                    var csvFile = Path.Combine(_source, Path.GetFileName(file).Replace(".bz2", ""));
+                    var csvFile = Path.Combine(_source, Path.GetFileName(file).Replace(Path.GetExtension(file), ""));
 
                     Log.Trace("Source File :" + csvFile);
 
