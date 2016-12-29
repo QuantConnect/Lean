@@ -69,7 +69,7 @@ namespace QuantConnect.Algorithm.CSharp
             option.PriceModel = OptionPriceModels.BinomialCoxRossRubinstein();
             // option.EnableGreekApproximation = true;
             // set our expiry filter for this option chain
-            option.SetFilter(-2, +2, TimeSpan.FromDays(10), TimeSpan.FromDays(17));
+            option.SetFilter(-2, +2, TimeSpan.FromDays(10), TimeSpan.FromDays(60));
 
             // setting up stock
             AddEquity(TickerMSFT);
