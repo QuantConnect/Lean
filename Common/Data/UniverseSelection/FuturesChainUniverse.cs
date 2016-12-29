@@ -81,28 +81,21 @@ namespace QuantConnect.Data.UniverseSelection
 
             var underlying = new Tick { Time = utcTime };
 
-            HashSet<Symbol> resultingSymbols;
-
-            if (_cacheDate == null || _cacheDate != data.Time.Date)
+            if (_cacheDate != null && _cacheDate == data.Time.Date)
             {
-                var availableContracts = futuresUniverseDataCollection.Data.Select(x => x.Symbol);
-                var results = (OptionFilterUniverse)_future.ContractFilter.Filter(new FutureFilterUniverse(availableContracts, underlying));
-
-                // if results are not dynamic, we cache them and won't call filtering till the end of the day
-                var hashSet = results.ToHashSet();
-
-                if (!results.IsDynamic)
-                {
-                    _cacheDate = data.Time.Date;
-                    _cachedSelection = hashSet;
-                }
-
-                resultingSymbols = hashSet;
+                return Unchanged;
             }
-            else
+
+            var availableContracts = futuresUniverseDataCollection.Data.Select(x => x.Symbol);
+            var results = (FutureFilterUniverse)_future.ContractFilter.Filter(new FutureFilterUniverse(availableContracts, underlying));
+
+            // if results are not dynamic, we cache them and won't call filtering till the end of the day
+            if (!results.IsDynamic)
             {
-                resultingSymbols = _cachedSelection;
+                _cacheDate = data.Time.Date;
             }
+
+            var resultingSymbols = results.ToHashSet();
 
             futuresUniverseDataCollection.FilteredContracts = resultingSymbols;
 

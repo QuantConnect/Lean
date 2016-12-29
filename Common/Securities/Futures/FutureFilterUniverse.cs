@@ -178,6 +178,7 @@ namespace QuantConnect.Securities
         public static FutureFilterUniverse Where(this FutureFilterUniverse universe, Func<Symbol, bool> predicate)
         {
             universe._allSymbols = universe._allSymbols.Where(predicate);
+            universe._isDynamic = true;
             return universe;
         }
 
@@ -187,6 +188,7 @@ namespace QuantConnect.Securities
         public static FutureFilterUniverse Select(this FutureFilterUniverse universe, Func<Symbol, Symbol> mapFunc)
         {
             universe._allSymbols = universe._allSymbols.Select(mapFunc);
+            universe._isDynamic = true;
             return universe;
         }
 
@@ -196,6 +198,7 @@ namespace QuantConnect.Securities
         public static FutureFilterUniverse SelectMany(this FutureFilterUniverse universe, Func<Symbol, IEnumerable<Symbol>> mapFunc)
         {
             universe._allSymbols = universe._allSymbols.SelectMany(mapFunc);
+            universe._isDynamic = true;
             return universe;
         }
     }

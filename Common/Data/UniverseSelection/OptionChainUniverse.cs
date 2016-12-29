@@ -37,7 +37,6 @@ namespace QuantConnect.Data.UniverseSelection
         private readonly UniverseSettings _universeSettings;
         private SubscriptionManager _subscriptionManager;
 
-        private HashSet<Symbol> _cachedSelection;
         private DateTime _cacheDate;
 
         /// <summary>
@@ -88,28 +87,21 @@ namespace QuantConnect.Data.UniverseSelection
                 return Unchanged;
             }
 
-            HashSet<Symbol> resultingSymbols;
-
-            if (_cacheDate == null || _cacheDate != data.Time.Date)
+            if (_cacheDate != null && _cacheDate == data.Time.Date)
             {
-                var availableContracts = optionsUniverseDataCollection.Data.Select(x => x.Symbol);
-                var results = (OptionFilterUniverse)_option.ContractFilter.Filter(new OptionFilterUniverse(availableContracts, _underlying));
-
-                // if results are not dynamic, we cache them and won't call filtering till the end of the day
-                var hashSet = results.ToHashSet();
-
-                if (!results.IsDynamic)
-                {
-                    _cacheDate = data.Time.Date;
-                    _cachedSelection = hashSet;
-                }
-
-                resultingSymbols = hashSet;
+                return Unchanged;
             }
-            else
+
+            var availableContracts = optionsUniverseDataCollection.Data.Select(x => x.Symbol);
+            var results = (OptionFilterUniverse)_option.ContractFilter.Filter(new OptionFilterUniverse(availableContracts, _underlying));
+
+            // if results are not dynamic, we cache them and won't call filtering till the end of the day
+            if (!results.IsDynamic)
             {
-                resultingSymbols = _cachedSelection;
+                _cacheDate = data.Time.Date;
             }
+
+            var resultingSymbols = results.ToHashSet();
 
             // we save off the filtered results to the universe data collection for later
             // population into the OptionChain. This is non-ideal and could be remedied by
