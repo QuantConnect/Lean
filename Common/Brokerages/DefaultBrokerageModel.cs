@@ -41,6 +41,7 @@ namespace QuantConnect.Brokerages
             {SecurityType.Base, Market.USA},
             {SecurityType.Equity, Market.USA},
             {SecurityType.Option, Market.USA},
+            {SecurityType.Future, Market.USA},
             {SecurityType.Forex, Market.FXCM},
             {SecurityType.Cfd, Market.FXCM}
         }.ToReadOnlyDictionary();
@@ -187,11 +188,11 @@ namespace QuantConnect.Brokerages
 
                 case SecurityType.Forex:
                 case SecurityType.Equity:
+                case SecurityType.Option:
+                case SecurityType.Future:
                     return new InteractiveBrokersFeeModel();
 
                 case SecurityType.Commodity:
-                case SecurityType.Option:
-                case SecurityType.Future:
                 case SecurityType.Cfd:
                 default:
                     return new ConstantFeeModel(0m);
@@ -213,7 +214,7 @@ namespace QuantConnect.Brokerages
 
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
-                    return new SpreadSlippageModel();
+                    return new ConstantSlippageModel(0);
 
                 case SecurityType.Commodity:
                 case SecurityType.Option:

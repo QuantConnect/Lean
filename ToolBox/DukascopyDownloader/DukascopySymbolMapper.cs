@@ -179,8 +179,11 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
         /// <param name="brokerageSymbol">The Dukascopy symbol</param>
         /// <param name="securityType">The security type</param>
         /// <param name="market">The market</param>
+        /// <param name="expirationDate">Expiration date of the security(if applicable)</param>
+        /// <param name="strike">The strike of the security (if applicable)</param>
+        /// <param name="optionRight">The option right of the security (if applicable)</param>
         /// <returns>A new Lean Symbol instance</returns>
-        public Symbol GetLeanSymbol(string brokerageSymbol, SecurityType securityType, string market)
+        public Symbol GetLeanSymbol(string brokerageSymbol, SecurityType securityType, string market, DateTime expirationDate = default(DateTime), decimal strike = 0, OptionRight optionRight = 0)
         {
             if (string.IsNullOrWhiteSpace(brokerageSymbol))
                 throw new ArgumentException("Invalid Dukascopy symbol: " + brokerageSymbol);

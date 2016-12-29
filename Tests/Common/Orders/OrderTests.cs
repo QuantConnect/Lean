@@ -24,6 +24,7 @@ using QuantConnect.Securities;
 using QuantConnect.Securities.Cfd;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Tests.Common.Orders
 {
@@ -62,6 +63,9 @@ namespace QuantConnect.Tests.Common.Orders
             cfd.SetMarketPrice(new Tick { Value = price });
             var multiplierTimesConversionRate = properties.ContractMultiplier*eurCash.ConversionRate;
 
+            var option = new Option(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY_P_192_Feb19_2016, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)));
+            option.SetMarketPrice(new Tick { Value = price });
+
             return new List<ValueTestParameters>
             {
                 // equity orders
@@ -99,6 +103,24 @@ namespace QuantConnect.Tests.Common.Orders
                 new ValueTestParameters("CfdLongStopMarketOrder", cfd, new StopMarketOrder(Symbols.DE10YBEUR, quantity, pricePlusDelta, time), quantity*price*multiplierTimesConversionRate),
                 new ValueTestParameters("CfdShortStopMarketOrder", cfd, new StopMarketOrder(Symbols.DE10YBEUR, -quantity, pricePlusDelta, time), -quantity*pricePlusDelta*multiplierTimesConversionRate),
                 new ValueTestParameters("CfdShortStopMarketOrder", cfd, new StopMarketOrder(Symbols.DE10YBEUR, -quantity, priceMinusDelta, time), -quantity*price*multiplierTimesConversionRate),
+
+                // equity/index option orders
+                new ValueTestParameters("OptionLongMarketOrder", option, new MarketOrder(Symbols.SPY_P_192_Feb19_2016, quantity, time), quantity*price),
+                new ValueTestParameters("OptionShortMarketOrder", option, new MarketOrder(Symbols.SPY_P_192_Feb19_2016, -quantity, time), -quantity*price),
+                new ValueTestParameters("OptionLongLimitOrder", option, new LimitOrder(Symbols.SPY_P_192_Feb19_2016, quantity, priceMinusDelta, time), quantity*priceMinusDelta),
+                new ValueTestParameters("OptionShortLimit Order", option, new LimitOrder(Symbols.SPY_P_192_Feb19_2016, -quantity, pricePlusDelta, time), -quantity*pricePlusDelta),
+                new ValueTestParameters("OptionLongStopLimitOrder", option, new StopLimitOrder(Symbols.SPY_P_192_Feb19_2016, quantity,.5m*priceMinusDelta, priceMinusDelta, time), quantity*priceMinusDelta),
+                new ValueTestParameters("OptionShortStopLimitOrder", option, new StopLimitOrder(Symbols.SPY_P_192_Feb19_2016, -quantity, 1.5m*pricePlusDelta, pricePlusDelta, time),  -quantity*pricePlusDelta),
+                new ValueTestParameters("OptionLongStopMarketOrder", option, new StopMarketOrder(Symbols.SPY_P_192_Feb19_2016, quantity, priceMinusDelta, time), quantity*priceMinusDelta),
+                new ValueTestParameters("OptionLongStopMarketOrder", option, new StopMarketOrder(Symbols.SPY_P_192_Feb19_2016, quantity, pricePlusDelta, time), quantity*price),
+                new ValueTestParameters("OptionShortStopMarketOrder", option, new StopMarketOrder(Symbols.SPY_P_192_Feb19_2016, -quantity, pricePlusDelta, time), -quantity*pricePlusDelta),
+                new ValueTestParameters("OptionShortStopMarketOrder", option, new StopMarketOrder(Symbols.SPY_P_192_Feb19_2016, -quantity, priceMinusDelta, time), -quantity*price),
+
+                new ValueTestParameters("OptionExercisetOrderPut", option, new OptionExerciseOrder(Symbols.SPY_P_192_Feb19_2016, quantity, time), quantity*option.Symbol.ID.StrikePrice),
+                new ValueTestParameters("OptionAssignmentOrderPut", option, new OptionExerciseOrder(Symbols.SPY_P_192_Feb19_2016, -quantity, time), -quantity*option.Symbol.ID.StrikePrice),
+                new ValueTestParameters("OptionExercisetOrderCall", option, new OptionExerciseOrder(Symbols.SPY_C_192_Feb19_2016, quantity, time), quantity*option.Symbol.ID.StrikePrice),
+                new ValueTestParameters("OptionAssignmentOrderCall", option, new OptionExerciseOrder(Symbols.SPY_C_192_Feb19_2016, -quantity, time), -quantity*option.Symbol.ID.StrikePrice),
+
 
             }.Select(x => new TestCaseData(x).SetName(x.Name)).ToArray();
         }

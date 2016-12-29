@@ -16,6 +16,7 @@
 
 using System.IO;
 using Ionic.Zip;
+using System.IO.Compression;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Transport
 {
@@ -25,7 +26,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
     public class LocalFileSubscriptionStreamReader : IStreamReader
     {
         private StreamReader _streamReader;
-        private readonly ZipFile _zipFile;
+        private readonly ZipArchive _zipFile;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LocalFileSubscriptionStreamReader"/> class.
@@ -37,8 +38,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         {
             // unzip if necessary
             _streamReader = source.GetExtension() == ".zip"
-                ? Compression.Unzip(source, entryName, out _zipFile)
+                ? Compression.UnzipCached(source, entryName, out _zipFile)
                 : new StreamReader(source);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LocalFileSubscriptionStreamReader"/> class.
+        /// </summary>
+        /// <param name="source">The local file to be read</param>
+        /// <param name="entryName">Specifies the zip entry to be opened. Leave null if not applicable,
+        /// <param name="startingPosition">The starting position in the local file to be read</param>
+        /// or to open the first zip entry found regardless of name</param>
+        public LocalFileSubscriptionStreamReader(string source, string entryName, long startingPosition)
+        {
+            // unzip if necessary
+            _streamReader = source.GetExtension() == ".zip"
+                ? Compression.UnzipCached(source, entryName, out _zipFile)
+                : new StreamReader(source);
+
+            if (startingPosition != 0)
+            {
+                _streamReader.BaseStream.Seek(startingPosition, SeekOrigin.Begin);
+            }
         }
 
         /// <summary>
@@ -74,10 +95,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
             {
                 _streamReader.Dispose();
                 _streamReader = null;
-            }
-            if (_zipFile != null)
-            {
-                _zipFile.Dispose();
             }
         }
     }

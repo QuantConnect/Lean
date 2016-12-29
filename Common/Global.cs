@@ -45,6 +45,8 @@ namespace QuantConnect
         public const string US = "M/d/yyyy h:mm:ss tt";
         /// Date format of QC forex data
         public const string Forex = "yyyyMMdd HH:mm:ss.ffff";
+        /// YYYYMM Year and Month Character Date Representation (used for futures)
+        public const string YearMonth = "yyyyMM";
     }
 
     /// <summary>
@@ -74,6 +76,12 @@ namespace QuantConnect
         /// Current market conversion rate into the account currency
         public decimal ConversionRate;
 
+        /// Current market value of the holding 
+        public decimal MarketValue;
+
+        /// Current unrealized P/L of the holding 
+        public decimal UnrealizedPnL;
+
         /// Create a new default holding:
         public Holding()
         {
@@ -93,6 +101,8 @@ namespace QuantConnect
             Symbol = holding.Symbol;
             Type = holding.Type;
             Quantity = holding.Quantity;
+            MarketValue = holding.HoldingsValue;
+            UnrealizedPnL = holding.UnrealizedProfit;
             CurrencySymbol = Currencies.GetCurrencySymbol(security.QuoteCurrency.Symbol);
             ConversionRate = security.QuoteCurrency.ConversionRate;
 
@@ -119,6 +129,8 @@ namespace QuantConnect
                 Type = Type,
                 Quantity = Quantity,
                 MarketPrice = MarketPrice,
+                MarketValue = MarketValue,
+                UnrealizedPnL = UnrealizedPnL,
                 ConversionRate  = ConversionRate,
                 CurrencySymbol = CurrencySymbol
             };
@@ -320,7 +332,9 @@ namespace QuantConnect
         /// QuoteBar market data type [Bid(OHLC), Ask(OHLC) and Mid(OHLC) summary bar]
         QuoteBar,
         /// Option chain data
-        OptionChain
+        OptionChain,
+        /// Futures chain data
+        FuturesChain
     }
 
     /// <summary>
@@ -351,15 +365,17 @@ namespace QuantConnect
     }
 
     /// <summary>
-    /// Types of tick data - trades or quote ticks.
+    /// Types of tick data 
     /// </summary>
-    /// <remarks>QuantConnect currently only has trade tick data but can handle quote tick data with the same data structures.</remarks>
+    /// <remarks>QuantConnect currently only has trade, quote, open interest tick data.</remarks>
     public enum TickType
     {
         /// Trade type tick object.
         Trade,
         /// Quote type tick object.
-        Quote
+        Quote, 
+        /// Open Interest type tick object (for options, futures)
+        OpenInterest
     }
 
     /// <summary>
@@ -426,6 +442,22 @@ namespace QuantConnect
         /// European style options are able to be exercised on the expiration date only.
         /// </summary>
         European
+    }
+
+    /// <summary>
+    /// Specifies the type of settlement in derivative deals 
+    /// </summary>
+    public enum SettlementType
+    {
+        /// <summary>
+        /// Physical delivery of the underlying security 
+        /// </summary>
+        PhysicalDelivery, 
+        
+        /// <summary>
+        /// Cash is paid/received on settlement
+        /// </summary>
+        Cash
     }
 
     /// <summary>

@@ -33,20 +33,21 @@ namespace QuantConnect.Tests.Common
             TypeNameHandling = TypeNameHandling.All
         };
 
-        [Test]
-        public void OptionSymbolAliasMatchesOSI()
+        [Theory]
+        [TestCaseSource("GetSymbolCreateTestCaseData")]
+        public void SymbolCreate(string ticker, SecurityType securityType, string market, Symbol expected)
         {
-            const string expected = @"MSFT  060318C00047500";
-            var symbol = Symbol.CreateOption("MSFT", Market.USA, OptionStyle.American, OptionRight.Call, 47.50m, new DateTime(2006, 03, 18));
-            Assert.AreEqual(expected, symbol.Value);
+            Assert.AreEqual(Symbol.Create(ticker, securityType, market), expected);
         }
 
-        [Test]
-        public void OptionSymbolAliasAddsPaddingSpaceForSixOrMoreCharacterSymbols()
+        private TestCaseData[] GetSymbolCreateTestCaseData()
         {
-            const string expected = @"ABCDEF 060318C00047500";
-            var symbol = Symbol.CreateOption("ABCDEF", Market.USA, OptionStyle.American, OptionRight.Call, 47.50m, new DateTime(2006, 03, 18));
-            Assert.AreEqual(expected, symbol.Value);
+            return new []
+            {
+                new TestCaseData("SPY", SecurityType.Equity, Market.USA, new Symbol(SecurityIdentifier.GenerateEquity("SPY", Market.USA), "SPY")),
+                new TestCaseData("EURUSD", SecurityType.Forex, Market.FXCM, new Symbol(SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM), "EURUSD")),
+                new TestCaseData("SPY", SecurityType.Option, Market.USA, new Symbol(SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, Symbols.SPY.ID, Market.USA, 0, default(OptionRight), default(OptionStyle)), "?SPY"))
+            };
         }
 
         [Test]
@@ -69,7 +70,7 @@ namespace QuantConnect.Tests.Common
 
         [Test]
         public void UsesSidForDictionaryKey()
-        {
+        {   
             var sid = SecurityIdentifier.GenerateEquity("SPY", Market.USA);
             var dictionary = new Dictionary<Symbol, int>
             {
@@ -88,6 +89,54 @@ namespace QuantConnect.Tests.Common
             var json = JsonConvert.SerializeObject(expected, Settings);
             var actual = JsonConvert.DeserializeObject<Symbol>(json, Settings);
             Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void CreatesOptionWithUnderlying()
+        {
+            var option = Symbol.CreateOption("XLRE", Market.USA, OptionStyle.American, OptionRight.Call, 21m, new DateTime(2016, 08, 19));
+
+            Assert.AreEqual(option.ID.Date, new DateTime(2016, 08, 19));
+            Assert.AreEqual(option.ID.StrikePrice, 21m);
+            Assert.AreEqual(option.ID.OptionRight, OptionRight.Call);
+            Assert.AreEqual(option.ID.OptionStyle, OptionStyle.American);
+            Assert.AreEqual(option.Underlying.ID.Symbol, "XLRE");
+
+        }
+        [Test]
+        public void SurvivesRoundtripSerializationOption()
+        {
+            var expected = Symbol.CreateOption("XLRE", Market.USA, OptionStyle.American, OptionRight.Call, 21m, new DateTime(2016, 08, 19));
+
+            var json = JsonConvert.SerializeObject(expected, Settings);
+            var actual = JsonConvert.DeserializeObject<Symbol>(json, Settings);
+            Assert.AreEqual(expected, actual);
+
+            Assert.AreEqual(expected.ID, actual.ID);
+            Assert.AreEqual(expected.Value, actual.Value);
+            Assert.AreEqual(expected.ID.Date, actual.ID.Date);
+            Assert.AreEqual(expected.ID.StrikePrice, actual.ID.StrikePrice);
+            Assert.AreEqual(expected.ID.OptionRight, actual.ID.OptionRight);
+            Assert.AreEqual(expected.ID.OptionStyle, actual.ID.OptionStyle);
+
+            Assert.AreEqual(expected.Underlying.ID, actual.Underlying.ID);
+            Assert.AreEqual(expected.Underlying.Value, actual.Underlying.Value);
+        }
+
+        [Test]
+        public void SurvivesRoundtripSerializationCanonicalOption()
+        {
+            var expected = Symbol.Create("SPY", SecurityType.Option, Market.USA);
+
+            var json = JsonConvert.SerializeObject(expected, Settings);
+            var actual = JsonConvert.DeserializeObject<Symbol>(json, Settings);
+            Assert.AreEqual(expected, actual);
+
+            Assert.AreEqual(SecurityIdentifier.DefaultDate, actual.ID.Date);
+            Assert.AreEqual(0m, actual.ID.StrikePrice);
+            Assert.AreEqual(default(OptionRight), actual.ID.OptionRight);
+            Assert.AreEqual(default(OptionStyle), actual.ID.OptionStyle);
+            Assert.AreNotEqual(default(Symbol), actual.Underlying);
         }
 
         [Test]
@@ -246,7 +295,7 @@ namespace QuantConnect.Tests.Common
         {
 #pragma warning disable 0618 // This test requires implicit operators
             // this doesn't exist in the symbol cache
-            var eurusd = new Symbol(SecurityIdentifier.GenerateForex("NOT A SECURITY", Market.FXCM), "EURUSD");
+            var eurusd = new Symbol(SecurityIdentifier.GenerateForex("NOT-A-SECURITY", Market.FXCM), "EURUSD");
             string stringEurusd = eurusd;
             Assert.AreEqual(eurusd.ID.ToString(), stringEurusd);
 

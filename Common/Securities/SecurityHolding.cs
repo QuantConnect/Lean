@@ -24,14 +24,14 @@ namespace QuantConnect.Securities
     public class SecurityHolding
     {
         //Working Variables
-        private decimal _averagePrice;
-        private int     _quantity;
-        private decimal _price;
-        private decimal _totalSaleVolume;
-        private decimal _profit;
-        private decimal _lastTradeProfit;
-        private decimal _totalFees;
-        private readonly Security _security;
+        protected decimal _averagePrice;
+        protected int     _quantity;
+        protected decimal _price;
+        protected decimal _totalSaleVolume;
+        protected decimal _profit;
+        protected decimal _lastTradeProfit;
+        protected decimal _totalFees;
+        protected readonly Security _security;
 
         /// <summary>
         /// Create a new holding class instance setting the initial properties to $0.

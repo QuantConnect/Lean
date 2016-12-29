@@ -34,6 +34,7 @@ using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Lean.Engine
 {
@@ -562,6 +563,16 @@ namespace QuantConnect.Lean.Engine
                 //After we've fired all other events in this second, fire the pricing events:
                 try
                 {
+
+                    // TODO: For backwards compatibility only. Remove in 2017
+                    // For compatibility with Forex Trade data, moving 
+                    if (timeSlice.Slice.QuoteBars.Count > 0)
+                    {
+                        foreach (var tradeBar in timeSlice.Slice.QuoteBars.Where(x => x.Key.ID.SecurityType == SecurityType.Forex))
+                        {
+                            timeSlice.Slice.Bars.Add(tradeBar.Value.Collapse());
+                        }
+                    }
                     if (hasOnDataTradeBars && timeSlice.Slice.Bars.Count > 0) methodInvokers[typeof(TradeBars)](algorithm, timeSlice.Slice.Bars);
                     if (hasOnDataQuoteBars && timeSlice.Slice.QuoteBars.Count > 0) methodInvokers[typeof(QuoteBars)](algorithm, timeSlice.Slice.QuoteBars);
                     if (hasOnDataOptionChains && timeSlice.Slice.OptionChains.Count > 0) methodInvokers[typeof(OptionChains)](algorithm, timeSlice.Slice.OptionChains);
@@ -687,6 +698,12 @@ namespace QuantConnect.Lean.Engine
             bool setStartTime = false;
             var timeZone = algorithm.TimeZone;
             var history = algorithm.HistoryProvider;
+
+            // fulfilling history requirements of volatility models in live mode
+            if (algorithm.LiveMode)
+            {
+                ProcessVolatilityHistoryRequirements(algorithm);
+            }
 
             // get the required history job from the algorithm
             DateTime? lastHistoryTimeUtc = null;
@@ -852,6 +869,32 @@ namespace QuantConnect.Lean.Engine
             }
         }
 
+        private void ProcessVolatilityHistoryRequirements(IAlgorithm algorithm)
+        {
+            Log.Trace("AlgorithmManager.ProcessVolatilityHistoryRequirements(): Updating volatility models with historical data...");
+
+            foreach (var security in algorithm.Securities.Values)
+            {
+                if (security.VolatilityModel != VolatilityModel.Null)
+                {
+                    var historyReq = security.VolatilityModel.HistoryRequirements(security, algorithm.UtcTime);
+
+                    if (historyReq != null && algorithm.HistoryProvider != null)
+                    {
+                        var history = algorithm.HistoryProvider.GetHistory(new[] { historyReq }, algorithm.TimeZone);
+                        if (history != null)
+                        {
+                            foreach (var slice in history)
+                            {
+                                if (slice.Bars.ContainsKey(security.Symbol))
+                                    security.VolatilityModel.Update(security, slice.Bars[security.Symbol]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// Adds a method invoker if the method exists to the method invokers dictionary
         /// </summary>
@@ -884,13 +927,31 @@ namespace QuantConnect.Lean.Engine
                 // submit an order to liquidate on market close
                 if (delisting.Type == DelistingType.Warning)
                 {
-                    delistings.Add(delisting);
+	                SubmitOrderRequest request;
+
+	                delistings.Add(delisting);
                     Log.Trace("AlgorithmManager.Run(): Security delisting warning: " + delisting.Symbol.ID);
                     var security = algorithm.Securities[delisting.Symbol];
                     if (security.Holdings.Quantity == 0) continue;
-                    var submitOrderRequest = new SubmitOrderRequest(OrderType.MarketOnClose, security.Type, security.Symbol,
-                        -security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Liquidate from delisting");
-                    var ticket = algorithm.Transactions.ProcessRequest(submitOrderRequest);
+
+                    if (security.Type == SecurityType.Option)
+                    {
+                        var underlying = algorithm.Securities[security.Symbol.Underlying];
+                        var option = (Option)security;
+
+                        if (option.IsAutoExercised(underlying.Close))
+                            request = new SubmitOrderRequest(OrderType.OptionExercise, security.Type, security.Symbol, 
+                                security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Automatic option exercise on expiration");
+                        else
+                            request = new SubmitOrderRequest(OrderType.MarketOnClose, security.Type, security.Symbol,
+                                -security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Automatic option lapse on expiration");
+                    }
+                    else
+                    {
+                        request = new SubmitOrderRequest(OrderType.MarketOnClose, security.Type, security.Symbol,
+                            -security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Liquidate from delisting");
+                    }
+                    var ticket = algorithm.Transactions.ProcessRequest(request);
                     delisting.SetOrderTicket(ticket);
                 }
                 else
