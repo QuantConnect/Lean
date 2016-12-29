@@ -39,6 +39,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         private const int execTimeout = 60;// sec
         private string _source;
         private string _remote;
+        private string _remoteMask;
         private string _destination;
         private List<Resolution> _resolutions;
         private DateTime _referenceDate;
@@ -53,10 +54,11 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         /// <param name="source">Remote directory of the .bz algoseek files</param>
         /// <param name="source">Source directory of the .csv algoseek files</param>
         /// <param name="destination">Data directory of LEAN</param>
-        public AlgoSeekFuturesConverter(List<Resolution> resolutions, DateTime referenceDate, string remote, string source, string destination)
+        public AlgoSeekFuturesConverter(List<Resolution> resolutions, DateTime referenceDate, string remote, string remoteMask, string source, string destination)
         {
             _source = source;
             _remote = remote;
+            _remoteMask = remoteMask;
             _referenceDate = referenceDate;
             _destination = destination;
             _resolutions = resolutions;
@@ -68,7 +70,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         public void Convert()
         {
             //Get the list of all the files, then for each file open a separate streamer.
-            var files = Directory.EnumerateFiles(_remote, "*.bz2");
+            var files = Directory.EnumerateFiles(_remote, _remoteMask);
             files = files.Where(x => Path.GetFileNameWithoutExtension(x).ToLower().IndexOf("option") == -1);
 
             Log.Trace("AlgoSeekFuturesConverter.Convert(): Loading {0} AlgoSeekFuturesReader for {1} ", files.Count(), _referenceDate);
