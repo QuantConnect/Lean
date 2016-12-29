@@ -44,9 +44,9 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption(UnderlyingTicker);
 
             // set our custom filter for this option chain
-            option.SetFilter(universe => from symbol in universe.WeeklysOnly()
+            option.SetFilter(universe => from symbol in universe
+                                                          .WeeklysOnly()
                                                           .Expiration(TimeSpan.Zero, TimeSpan.FromDays(10))
-                                                          .AbsoluteStrikes(680,700)
                                          where symbol.ID.OptionRight != OptionRight.Put && 
                                               universe.Underlying.Price - symbol.ID.StrikePrice < 60
                                          select symbol);

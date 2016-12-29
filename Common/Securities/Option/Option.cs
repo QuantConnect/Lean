@@ -277,7 +277,7 @@ namespace QuantConnect.Securities.Option
         /// over market price</param>
         public void SetFilter(int minStrike, int maxStrike)
         {
-            SetFilter(universe => universe.RelativeStrikes(minStrike, maxStrike));
+            SetFilter(universe => universe.Strikes(minStrike, maxStrike));
         }
 
         /// <summary>
@@ -297,7 +297,7 @@ namespace QuantConnect.Securities.Option
         public void SetFilter(int minStrike, int maxStrike, TimeSpan minExpiry, TimeSpan maxExpiry)
         {
             SetFilter(universe => universe
-                                .RelativeStrikes(minStrike, maxStrike)
+                                .Strikes(minStrike, maxStrike)
                                 .Expiration(minExpiry, maxExpiry));
         }
 

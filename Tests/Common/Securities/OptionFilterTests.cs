@@ -32,7 +32,7 @@ namespace QuantConnect.Tests.Common.Securities
             var underlying = new Tick { Value = 10m, Time = new DateTime(2016, 02, 26) };
 
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
-                                .RelativeStrikes(-2, 3)
+                                .Strikes(-2, 3)
                                 .Expiration(TimeSpan.Zero, TimeSpan.MaxValue);
 
             Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
@@ -69,7 +69,7 @@ namespace QuantConnect.Tests.Common.Securities
             var underlying = new Tick { Value = 10m, Time = time };
 
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
-                    .RelativeStrikes(0, 0)
+                    .Strikes(0, 0)
                     .Expiration(TimeSpan.FromDays(3), TimeSpan.FromDays(7));
 
             Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
@@ -104,12 +104,16 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void FiltersOutWeeklys()
         {
-            var expiry1 = new DateTime(2016, 12, 02);
-            var expiry2 = new DateTime(2016, 12, 09);
-            var expiry3 = new DateTime(2016, 12, 16); // standard
-            var expiry4 = new DateTime(2016, 12, 23);
+            var expiry1 = new DateTime(2017, 01, 04);
+            var expiry2 = new DateTime(2017, 01, 06);
+            var expiry3 = new DateTime(2017, 01, 11); 
+            var expiry4 = new DateTime(2017, 01, 13);
+            var expiry5 = new DateTime(2017, 01, 18);
+            var expiry6 = new DateTime(2017, 01, 20); // standard
+            var expiry7 = new DateTime(2017, 01, 25);
+            var expiry8 = new DateTime(2017, 01, 27);
 
-            var underlying = new Tick { Value = 10m, Time = new DateTime(2016, 02, 26) };
+            var underlying = new Tick { Value = 10m, Time = new DateTime(2016, 12, 29) };
 
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe;
 
@@ -120,21 +124,22 @@ namespace QuantConnect.Tests.Common.Securities
             var symbols = new[]
             {
                 Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry1),  // 0
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 5, expiry1),  // 1
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 7, expiry1),  // 2
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 8, expiry1),  // 3
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 9, expiry2),  // 4
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, expiry2), // 5
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 11, expiry3), // 6
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 12, expiry3), // 7
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 15, expiry4), // 8
-                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry4), // 9
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 5, expiry2),  // 1
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 7, expiry3),  // 2
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 8, expiry4),  // 3
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 9, expiry5),  // 4
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, expiry6), // 5
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 11, expiry6), // 6
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 12, expiry6), // 7
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 15, expiry7), // 8
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry8), // 9
             };
 
             var filtered = filter.Filter(new OptionFilterUniverse(symbols, underlying)).ToList();
-            Assert.AreEqual(2, filtered.Count);
-            Assert.AreEqual(symbols[6], filtered[0]);
-            Assert.AreEqual(symbols[7], filtered[1]);
+            Assert.AreEqual(3, filtered.Count);
+            Assert.AreEqual(symbols[5], filtered[0]);
+            Assert.AreEqual(symbols[6], filtered[1]);
+            Assert.AreEqual(symbols[7], filtered[2]);
         }
 
         [Test]

@@ -162,12 +162,16 @@ namespace QuantConnect.Securities
         private bool IsStandardType(Symbol symbol)
         {
             var date = symbol.ID.Date;
+            
             // first we find out the day of week of the first day in the month
             var firstDayOfMonth = new DateTime(date.Year, date.Month, 1).DayOfWeek;
+            
             // find out the day of first Friday in this month
             var firstFriday = firstDayOfMonth == DayOfWeek.Saturday ? 7 : 6 - (int)firstDayOfMonth;
+
             // check if the expiration date is within the week containing 3rd Friday
-            return firstFriday + 7 + 2 /*sat, sun*/ < date.Day && date.Day < firstFriday + 2 * 7 + 2;
+            // we exclude monday, wednesday, and friday weeklys
+            return firstFriday + 7 + 5 /*sat -> wed */ < date.Day && date.Day < firstFriday + 2 * 7 + 2 /* sat, sun*/;
         }
 
         /// <summary>
@@ -217,7 +221,7 @@ namespace QuantConnect.Securities
         /// <param name="minStrike">The minimum strike relative to the underlying price, for example, -1 would filter out contracts further than 1 strike below market price</param>
         /// <param name="maxStrike">The maximum strike relative to the underlying price, for example, +1 would filter out contracts further than 1 strike above market price</param>
         /// <returns></returns>
-        public OptionFilterUniverse RelativeStrikes(int minStrike, int maxStrike)
+        public OptionFilterUniverse Strikes(int minStrike, int maxStrike)
         {
             if (_underlying == null)
             {
@@ -249,27 +253,6 @@ namespace QuantConnect.Securities
             _allSymbols = filtered;
             return this;
         }
-
-        /// <summary>
-        /// Applies filter selecting options contracts based on a range of strikes in absolute terms
-        /// </summary>
-        /// <param name="minStrike">The minimum absolute strike price</param>
-        /// <param name="maxStrike">The maximum absolute strike price</param>
-        /// <returns></returns>
-        public OptionFilterUniverse AbsoluteStrikes(decimal minStrike, decimal maxStrike)
-        {
-            // ReSharper disable once PossibleMultipleEnumeration - ReSharper is wrong here due to the ToList call
-            var filtered =
-                   from symbol in _allSymbols
-                   let contract = symbol.ID
-                   where contract.StrikePrice >= minStrike
-                      && contract.StrikePrice <= maxStrike
-                   select symbol;
-
-            _allSymbols = filtered;
-            return this;
-        }
-
 
         /// <summary>
         /// Applies filter selecting options contracts based on a range of expiration dates relative to the current day 
