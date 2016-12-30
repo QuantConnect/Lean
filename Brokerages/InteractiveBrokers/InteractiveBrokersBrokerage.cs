@@ -1199,6 +1199,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 contract.Right = symbol.ID.OptionRight == OptionRight.Call ? IB.RightType.Call : IB.RightType.Put;
                 contract.Strike = Convert.ToDouble(symbol.ID.StrikePrice);
                 contract.Symbol = ibSymbol;
+                contract.Multiplier = "100";
             }
 
             if (symbol.ID.SecurityType == SecurityType.Future)
