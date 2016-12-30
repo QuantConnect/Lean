@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Common.Margin
 
             // we test that options dont have leverage (100%) and it cannot be changed
             Assert.AreEqual(1m, marginModel.GetLeverage(option));
-            marginModel.SetLeverage(option, 10m);
+            Assert.Throws<InvalidOperationException>(() => marginModel.SetLeverage(option, 10m));
             Assert.AreEqual(1m, marginModel.GetLeverage(option));
         }
 

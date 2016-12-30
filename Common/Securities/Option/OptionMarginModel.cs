@@ -59,6 +59,7 @@ namespace QuantConnect.Securities
         public virtual void SetLeverage(Security security, decimal leverage)
         {
             // Options are leveraged products and different leverage cannot be set by user.
+            throw new InvalidOperationException("Options are leveraged products and different leverage cannot be set by user");
         }
 
         /// <summary>

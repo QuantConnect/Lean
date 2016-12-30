@@ -130,9 +130,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns></returns>
         public string GetBrokerageRootSymbol(string rootSymbol)
         {
-            var brokerageSymbol = _ibNameMap.Where(kv => kv.Value == rootSymbol).FirstOrDefault();
+            var brokerageSymbol = _ibNameMap.FirstOrDefault(kv => kv.Value == rootSymbol);
 
-            return !string.IsNullOrEmpty(brokerageSymbol.Key) ? brokerageSymbol.Key : rootSymbol;
+            return brokerageSymbol.Key??rootSymbol;
         }
 
         /// <summary>

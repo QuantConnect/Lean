@@ -64,6 +64,7 @@ namespace QuantConnect.Securities
         public virtual void SetLeverage(Security security, decimal leverage)
         {
             // Futures are leveraged products and different leverage cannot be set by user.
+            throw new InvalidOperationException("Futures are leveraged products and different leverage cannot be set by user");
         }
 
         /// <summary>

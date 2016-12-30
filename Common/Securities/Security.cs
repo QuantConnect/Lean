@@ -639,6 +639,10 @@ namespace QuantConnect.Securities
         /// <param name="leverage">Leverage for this asset</param>
         public void SetLeverage(decimal leverage)
         {
+            if (Symbol.ID.SecurityType == SecurityType.Future ||
+                Symbol.ID.SecurityType == SecurityType.Option)
+                return;
+
             MarginModel.SetLeverage(this, leverage);
         }
 

@@ -66,6 +66,16 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
+        /// Determines whether or not the specified data should be processd
+        /// </summary>
+        /// <param name="tick">The data to check</param>
+        /// <returns>True if the consolidator should process this data, false otherwise</returns>
+        protected override bool ShouldProcess(Tick tick)
+        {
+            return tick.TickType == TickType.OpenInterest;
+        }
+
+        /// <summary>
         /// Aggregates the new 'data' into the 'workingBar'. The 'workingBar' will be
         /// null following the event firing
         /// </summary>
@@ -75,8 +85,6 @@ namespace QuantConnect.Data.Consolidators
         {
             if (workingBar == null)
             {
-                workingBar = new OpenInterest();
-
                 workingBar = new OpenInterest
                 {
                     Symbol = tick.Symbol,

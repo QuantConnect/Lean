@@ -62,8 +62,8 @@ namespace QuantConnect.Brokerages.Backtesting
             {
                 var expirations = algorithm.Securities.Keys
                             .Where(x => x.ID.SecurityType == SecurityType.Option &&
-                                        x.ID.Date > algorithm.UtcTime &&
-                                        x.ID.Date - algorithm.UtcTime <= _securitiesRescanPeriod)
+                                        x.ID.Date > algorithm.Time &&
+                                        x.ID.Date - algorithm.Time <= _securitiesRescanPeriod)
                             .Select(x => x.ID.Date)
                             .OrderBy(x => x)
                             .ToList();
