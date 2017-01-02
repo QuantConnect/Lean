@@ -129,6 +129,11 @@ namespace QuantConnect.Orders
         Filled = 3,
 
         /// <summary>
+        /// Order waiting for confirmation of cancellation
+        /// </summary>
+        CancelPending = 4,
+
+        /// <summary>
         /// Order cancelled before it was filled
         /// </summary>
         Canceled = 5,
