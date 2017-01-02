@@ -95,8 +95,7 @@ namespace QuantConnect
             var holidays = new HashSet<DateTime>();
             foreach (var symbol in symbols)
             {
-                var symbolValue = symbol.ID.SecurityType == SecurityType.Future ? symbol.Underlying.Value : symbol.Value;
-                var entry = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbolValue, symbol.ID.SecurityType);
+                var entry = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
 
                 foreach (var holiday in entry.ExchangeHours.Holidays)
                 {

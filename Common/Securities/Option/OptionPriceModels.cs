@@ -35,9 +35,12 @@ namespace QuantConnect.Securities.Option
     /// </remarks>
     public static class OptionPriceModels
     {
-        private static IQLUnderlyingVolatilityEstimator _underlyingVolEstimator = new DefaultQLUnderlyingVolatilityEstimator();
-        private static IQLRiskFreeRateEstimator _riskFreeRateEstimator = new DefaultQLRiskFreeRateEstimator();
-        private static IQLDividendYieldEstimator _dividendYieldEstimator = new DefaultQLDividendYieldEstimator();
+        private static IQLUnderlyingVolatilityEstimator _underlyingVolEstimator = new ConstantQLUnderlyingVolatilityEstimator();
+        private static IQLRiskFreeRateEstimator _riskFreeRateEstimator = new ConstantQLRiskFreeRateEstimator();
+        private static IQLDividendYieldEstimator _dividendYieldEstimator = new ConstantQLDividendYieldEstimator();
+
+        private const int _timeStepsBinomial = 100;
+        private const int _timeStepsFD = 100;
 
         /// <summary>
         /// Pricing engine for European vanilla options using analytical formulae. 
@@ -95,14 +98,13 @@ namespace QuantConnect.Securities.Option
         /// Pricing engine for European options using finite-differences. 
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
         /// </summary>
-        /// <param name="timeSteps">Number of steps in binomial tree</param>
         /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel CrankNicolsonFD(int timeSteps = 201)
+        public static IOptionPriceModel CrankNicolsonFD()
         {
             PricingEngineFuncEx pricingEngineFunc = (symbol, process) =>
                             symbol.ID.OptionStyle == OptionStyle.American ?
-                            new FDAmericanEngine(process, timeSteps, timeSteps - 1) as IPricingEngine:
-                            new FDEuropeanEngine(process, timeSteps, timeSteps - 1) as IPricingEngine;
+                            new FDAmericanEngine(process, _timeStepsFD, _timeStepsFD - 1) as IPricingEngine:
+                            new FDEuropeanEngine(process, _timeStepsFD, _timeStepsFD - 1) as IPricingEngine;
 
             return new QLOptionPriceModel(pricingEngineFunc,
                                            _underlyingVolEstimator,
@@ -114,11 +116,10 @@ namespace QuantConnect.Securities.Option
         /// Pricing engine for vanilla options using binomial trees. Jarrow-Rudd model.
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
         /// </summary>
-        /// <param name="timeSteps">Number of steps in binomial tree</param>
         /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel BinomialJarrowRudd(int timeSteps = 201)
+        public static IOptionPriceModel BinomialJarrowRudd()
         {
-            return new QLOptionPriceModel(process => new BinomialVanillaEngine<JarrowRudd>(process, timeSteps),
+            return new QLOptionPriceModel(process => new BinomialVanillaEngine<JarrowRudd>(process, _timeStepsBinomial),
                                           _underlyingVolEstimator,
                                           _riskFreeRateEstimator,
                                           _dividendYieldEstimator);
@@ -129,11 +130,10 @@ namespace QuantConnect.Securities.Option
         /// Pricing engine for vanilla options using binomial trees. Cox-Ross-Rubinstein(CRR) model.
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
         /// </summary>
-        /// <param name="timeSteps">Number of steps in binomial tree</param>
         /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel BinomialCoxRossRubinstein(int timeSteps = 201)
+        public static IOptionPriceModel BinomialCoxRossRubinstein()
         {
-            return new QLOptionPriceModel(process => new BinomialVanillaEngine<CoxRossRubinstein>(process, timeSteps),
+            return new QLOptionPriceModel(process => new BinomialVanillaEngine<CoxRossRubinstein>(process, _timeStepsBinomial),
                                           _underlyingVolEstimator,
                                           _riskFreeRateEstimator,
                                           _dividendYieldEstimator);
@@ -143,11 +143,10 @@ namespace QuantConnect.Securities.Option
         /// Pricing engine for vanilla options using binomial trees. Additive Equiprobabilities model.
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
         /// </summary>
-        /// <param name="timeSteps">Number of steps in binomial tree</param>
         /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel AdditiveEquiprobabilities(int timeSteps = 201)
+        public static IOptionPriceModel AdditiveEquiprobabilities()
         {
-            return new QLOptionPriceModel(process => new BinomialVanillaEngine<AdditiveEQPBinomialTree>(process, timeSteps),
+            return new QLOptionPriceModel(process => new BinomialVanillaEngine<AdditiveEQPBinomialTree>(process, _timeStepsBinomial),
                                           _underlyingVolEstimator,
                                           _riskFreeRateEstimator,
                                           _dividendYieldEstimator);
@@ -157,11 +156,10 @@ namespace QuantConnect.Securities.Option
         /// Pricing engine for vanilla options using binomial trees. Trigeorgis model.
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
         /// </summary>
-        /// <param name="timeSteps">Number of steps in binomial tree</param>
         /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel BinomialTrigeorgis(int timeSteps = 201)
+        public static IOptionPriceModel BinomialTrigeorgis()
         {
-            return new QLOptionPriceModel(process => new BinomialVanillaEngine<Trigeorgis>(process, timeSteps),
+            return new QLOptionPriceModel(process => new BinomialVanillaEngine<Trigeorgis>(process, _timeStepsBinomial),
                                           _underlyingVolEstimator,
                                           _riskFreeRateEstimator,
                                           _dividendYieldEstimator);
@@ -171,11 +169,10 @@ namespace QuantConnect.Securities.Option
         /// Pricing engine for vanilla options using binomial trees. Tian model.
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
         /// </summary>
-        /// <param name="timeSteps">Number of steps in binomial tree</param>
         /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel BinomialTian(int timeSteps = 201)
+        public static IOptionPriceModel BinomialTian()
         {
-            return new QLOptionPriceModel(process => new BinomialVanillaEngine<Tian>(process, timeSteps),
+            return new QLOptionPriceModel(process => new BinomialVanillaEngine<Tian>(process, _timeStepsBinomial),
                                           _underlyingVolEstimator,
                                           _riskFreeRateEstimator,
                                           _dividendYieldEstimator);
@@ -185,11 +182,10 @@ namespace QuantConnect.Securities.Option
         /// Pricing engine for vanilla options using binomial trees. Leisen-Reimer model.
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
         /// </summary>
-        /// <param name="timeSteps">Number of steps in binomial tree</param>
         /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel BinomialLeisenReimer(int timeSteps = 201)
+        public static IOptionPriceModel BinomialLeisenReimer()
         {
-            return new QLOptionPriceModel(process => new BinomialVanillaEngine<LeisenReimer>(process, timeSteps),
+            return new QLOptionPriceModel(process => new BinomialVanillaEngine<LeisenReimer>(process, _timeStepsBinomial),
                                           _underlyingVolEstimator,
                                           _riskFreeRateEstimator,
                                           _dividendYieldEstimator);
@@ -199,11 +195,10 @@ namespace QuantConnect.Securities.Option
         /// Pricing engine for vanilla options using binomial trees. Joshi model.
         /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
         /// </summary>
-        /// <param name="timeSteps">Number of steps in binomial tree</param>
         /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel BinomialJoshi(int timeSteps = 201)
+        public static IOptionPriceModel BinomialJoshi()
         {
-            return new QLOptionPriceModel(process => new BinomialVanillaEngine<Joshi4>(process, timeSteps),
+            return new QLOptionPriceModel(process => new BinomialVanillaEngine<Joshi4>(process, _timeStepsBinomial),
                                           _underlyingVolEstimator,
                                           _riskFreeRateEstimator,
                                           _dividendYieldEstimator);

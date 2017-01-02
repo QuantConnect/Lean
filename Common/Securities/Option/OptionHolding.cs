@@ -38,15 +38,8 @@ namespace QuantConnect.Securities.Option
         /// <param name="security">The option security being held</param>
         /// <param name="holding">The option security holding</param>
         public OptionHolding(Security security, OptionHolding holding)
-            : base(security)
+            : base(holding)
         {
-            _averagePrice = holding._averagePrice;
-            _quantity = holding._quantity;
-            _price = holding._price;
-            _totalSaleVolume = holding._totalSaleVolume;
-            _profit = holding._profit;
-            _lastTradeProfit = holding._lastTradeProfit;
-            _totalFees = holding._totalFees;
         }
 
         /// <summary>
@@ -55,7 +48,7 @@ namespace QuantConnect.Securities.Option
         /// <param name="splitFactor">Split ratio of the underlying split</param>
         public void SplitUnderlying(decimal splitFactor)
         {
-            var optionSecurity = (Option)_security;
+            var optionSecurity = (Option)Security;
             var inverseFactor = 1.0m / splitFactor;
 
             // detect forward (even and odd) and reverse splits
@@ -65,11 +58,12 @@ namespace QuantConnect.Securities.Option
                 optionSecurity.ContractUnitOfTrade /= (int)splitFactor;
             }
 
-            if ((int)Math.Round(inverseFactor, 5) == (int)inverseFactor)
+            // check if the split is even or odd
+            if (inverseFactor.RoundToSignificantDigits(5) % 1 == 0)
             {
                 // even split (e.g. 2 for 1): we adjust position size and strike price
-                _quantity = (int)((decimal)_quantity * inverseFactor);
-                _averagePrice *= splitFactor;
+                Quantity = (int)(Quantity * inverseFactor);
+                AveragePrice *= splitFactor;
             }
             else
             {

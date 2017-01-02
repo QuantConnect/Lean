@@ -306,7 +306,7 @@ namespace QuantConnect.ToolBox.IQFeed
 
                         var ticker = columns[columnSymbol];
                         var result = SymbolRepresentation.ParseOptionTickerIQFeed(ticker);
-                        var optionUnderlying = result.Item1;
+                        var optionUnderlying = result.Underlying;
                         var canonicalSymbol = Symbol.Create(optionUnderlying, SecurityType.Option, Market.USA);
 
                         if (!symbolCache.ContainsKey(canonicalSymbol))
@@ -355,7 +355,7 @@ namespace QuantConnect.ToolBox.IQFeed
                         var futuresTicker = columns[columnSymbol].TrimStart(new [] { '@' });
 
                         var parsed = SymbolRepresentation.ParseFutureTicker(futuresTicker);
-                        var underlyingString = parsed.Item1;
+                        var underlyingString = parsed.Underlying;
 
                         if (_iqFeedNameMap.ContainsKey(underlyingString))
                             underlyingString = _iqFeedNameMap[underlyingString];
@@ -463,12 +463,12 @@ namespace QuantConnect.ToolBox.IQFeed
 
                         symbolUniverse.Add(new SymbolData
                         {
-                            Symbol = Symbol.CreateOption(result.Item1,
+                            Symbol = Symbol.CreateOption(result.Underlying,
                                                         Market.USA,
                                                         OptionStyle.American,
-                                                        result.Item2,
-                                                        result.Item3,
-                                                        result.Item4),
+                                                        result.OptionRight,
+                                                        result.OptionStrike,
+                                                        result.ExpirationDate),
                             SecurityCurrency = "USD",
                             SecurityExchange = Market.USA,
                             Ticker = columns[columnSymbol]
@@ -486,7 +486,7 @@ namespace QuantConnect.ToolBox.IQFeed
                         var futuresTicker = columns[columnSymbol].TrimStart(new[] { '@' });
 
                         var parsed = SymbolRepresentation.ParseFutureTicker(futuresTicker);
-                        var underlyingString = parsed.Item1;
+                        var underlyingString = parsed.Underlying;
                         var market = Market.USA;
 
                         if (_iqFeedNameMap.ContainsKey(underlyingString))

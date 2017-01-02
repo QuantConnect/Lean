@@ -24,14 +24,14 @@ namespace QuantConnect.Securities
     public class SecurityHolding
     {
         //Working Variables
-        protected decimal _averagePrice;
-        protected int     _quantity;
-        protected decimal _price;
-        protected decimal _totalSaleVolume;
-        protected decimal _profit;
-        protected decimal _lastTradeProfit;
-        protected decimal _totalFees;
-        protected readonly Security _security;
+        private decimal _averagePrice;
+        private int     _quantity;
+        private decimal _price;
+        private decimal _totalSaleVolume;
+        private decimal _profit;
+        private decimal _lastTradeProfit;
+        private decimal _totalFees;
+        private readonly Security _security;
 
         /// <summary>
         /// Create a new holding class instance setting the initial properties to $0.
@@ -46,6 +46,34 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Create a new holding class instance copying the initial properties
+        /// </summary>
+        /// <param name="holding">The security being held</param>
+        protected SecurityHolding(SecurityHolding holding)
+        {
+            _security = holding._security;
+            _averagePrice = holding._averagePrice;
+            _quantity = holding._quantity;
+            _price = holding._price;
+            _totalSaleVolume = holding._totalSaleVolume;
+            _profit = holding._profit;
+            _lastTradeProfit = holding._lastTradeProfit;
+            _totalFees = holding._totalFees;
+        }
+
+
+        /// <summary>
+        /// The security being held
+        /// </summary>
+        protected Security Security
+        {
+            get
+            {
+                return _security;
+            }
+        }
+
+        /// <summary>
         /// Average price of the security holdings.
         /// </summary>
         public decimal AveragePrice
@@ -53,6 +81,10 @@ namespace QuantConnect.Securities
             get
             {
                 return _averagePrice;
+            }
+            protected set
+            {
+                _averagePrice = value;
             }
         }
 
@@ -66,6 +98,10 @@ namespace QuantConnect.Securities
             get
             {
                 return _quantity;
+            }
+            protected set
+            {
+                _quantity = value;
             }
         }
 
@@ -130,6 +166,10 @@ namespace QuantConnect.Securities
             get
             {
                 return _price;
+            }
+            protected set
+            {
+                _price = value;
             }
         }
 

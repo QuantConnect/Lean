@@ -25,6 +25,7 @@ using QuantConnect.Securities.Cfd;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Option;
+using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Common
 {
@@ -233,9 +234,9 @@ namespace QuantConnect.Tests.Common
                 }
             }
 
-            public HistoryRequest HistoryRequirements(Security security, DateTime date)
+            public IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime date)
             {
-                return null;
+                return Enumerable.Empty<HistoryRequest>();
             }
 
             public void Update(Security security, BaseData data)

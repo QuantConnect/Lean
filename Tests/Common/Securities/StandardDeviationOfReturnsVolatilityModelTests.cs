@@ -19,25 +19,26 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Securities;
+using QuantConnect;
 
 namespace QuantConnect.Tests.Common.Securities
 {
     [TestFixture]
-    public class RelativeStandardDeviationVolatilityModelTests
+    public class StandardDeviationOfReturnsVolatilityModelTests
     {
         [Test]
-        public void UpdatesAfterCorrectPeriodElapses()
+        public void UpdatesAfterCorrectDailyPeriodElapses()
         {
             const int periods = 3;
             var periodSpan = Time.OneMinute;
             var reference = new DateTime(2016, 04, 06, 12, 0, 0);
             var referenceUtc = reference.ConvertToUtc(TimeZones.NewYork);
             var timeKeeper = new TimeKeeper(referenceUtc);
-            var config = new SubscriptionDataConfig(typeof (TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, false, false);
+            var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, false, false);
             var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), config, new Cash("USD", 0, 0), SymbolProperties.GetDefault("USD"));
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
 
-            var model = new RelativeStandardDeviationVolatilityModel(periodSpan, periods);
+            var model = new StandardDeviationOfReturnsVolatilityModel(periods);
             security.VolatilityModel = model;
 
             var first = new IndicatorDataPoint(reference, 1);
@@ -45,19 +46,18 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual(0m, model.Volatility);
 
-            const decimal value = 0.471404520791032M; // std of 1,2 is ~0.707 over a mean of 1.5
-            var second = new IndicatorDataPoint(reference.AddMinutes(1), 2);
+            var second = new IndicatorDataPoint(reference.AddDays(1), 2);
             security.SetMarketPrice(second);
-            Assert.AreEqual(value, model.Volatility);
+            Assert.AreEqual(0, model.Volatility);
 
             // update should not be applied since not enough time has passed
-            var third = new IndicatorDataPoint(reference.AddMinutes(1.01), 1000);
+            var third = new IndicatorDataPoint(reference.AddDays(1.01), 1000);
             security.SetMarketPrice(third);
-            Assert.AreEqual(value, model.Volatility);
+            Assert.AreEqual(0, model.Volatility);
 
-            var fourth = new IndicatorDataPoint(reference.AddMinutes(2), 3m);
+            var fourth = new IndicatorDataPoint(reference.AddDays(2), 3);
             security.SetMarketPrice(fourth);
-            Assert.AreEqual(0.5m, model.Volatility);
+            Assert.AreEqual(5.6124, (double)model.Volatility, 0.0001);
         }
 
         [Test]
@@ -72,7 +72,7 @@ namespace QuantConnect.Tests.Common.Securities
             var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), config, new Cash("USD", 0, 0), SymbolProperties.GetDefault("USD"));
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
 
-            var model = new RelativeStandardDeviationVolatilityModel(periodSpan, periods);
+            var model = new StandardDeviationOfReturnsVolatilityModel(periods);
             security.VolatilityModel = model;
 
             var first = new IndicatorDataPoint(reference, 1);
@@ -80,19 +80,23 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual(0m, model.Volatility);
 
-            const decimal value = 0.471404520791032M; // std of 1,2 is ~0.707 over a mean of 1.5
-            var second = new IndicatorDataPoint(reference.AddMinutes(1), 2);
+            var second = new IndicatorDataPoint(reference.AddDays(1), 2);
             security.SetMarketPrice(second);
-            Assert.AreEqual(value, model.Volatility);
+            Assert.AreEqual(0, model.Volatility);
 
-            var third = new IndicatorDataPoint(reference.AddMinutes(2), 3m);
+            // update should not be applied since not enough time has passed
+            var third = new IndicatorDataPoint(reference.AddDays(1.01), 1000);
             security.SetMarketPrice(third);
-            Assert.AreEqual(0.5m, model.Volatility);
+            Assert.AreEqual(0, model.Volatility);
+
+            var fourth = new IndicatorDataPoint(reference.AddDays(2), 3);
+            security.SetMarketPrice(fourth);
+            Assert.AreEqual(5.6124, (double)model.Volatility, 0.0001);
 
             // update should not be applied as price is 0
-            var forth = new IndicatorDataPoint(reference.AddMinutes(3), 0m);
-            security.SetMarketPrice(forth);
-            Assert.AreEqual(0.5m, model.Volatility);
+            var fifth = new IndicatorDataPoint(reference.AddDays(3), 0m);
+            security.SetMarketPrice(fifth);
+            Assert.AreEqual(5.6124, (double)model.Volatility, 0.0001);
         }
     }
 }

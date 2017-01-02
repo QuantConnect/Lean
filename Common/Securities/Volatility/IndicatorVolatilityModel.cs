@@ -16,6 +16,8 @@
 using System;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Securities
 {
@@ -83,10 +85,10 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="security">The security of the request</param>
         /// <param name="utcTime">The date/time of the request</param>
-        /// <returns>History request object, or null if no requirements</returns>
-        public HistoryRequest HistoryRequirements(Security security, DateTime utcTime)
+        /// <returns>History request object list, or empty if no requirements</returns>
+        public IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime)
         {
-            return null;
+            return Enumerable.Empty<HistoryRequest>();
         }
     }
 }

@@ -12,12 +12,60 @@ namespace QuantConnect
     public static class SymbolRepresentation
     {
         /// <summary>
+        /// Class contains future ticker properties returned by ParseFutureTicker()
+        /// </summary>
+        public class FutureTickerProperties
+        {
+            /// <summary>
+            /// Underlying name
+            /// </summary>
+            public string Underlying { get; set;  }
+
+            /// <summary>
+            /// Short expiration year
+            /// </summary>
+            public int ExpirationYearShort { get; set;  }
+
+            /// <summary>
+            /// Expiration month
+            /// </summary>
+            public int ExpirationMonth { get; set; }
+        }
+
+        /// <summary>
+        /// Class contains option ticker properties returned by ParseOptionTickerIQFeed()
+        /// </summary>
+        public class OptionTickerProperties
+        {
+            /// <summary>
+            /// Underlying name
+            /// </summary>
+            public string Underlying { get; set; }
+
+            /// <summary>
+            /// Option right
+            /// </summary>
+            public OptionRight OptionRight { get; set; }
+
+            /// <summary>
+            /// Option strike
+            /// </summary>
+            public decimal OptionStrike { get; set; }
+
+            /// <summary>
+            /// Expiration date
+            /// </summary>
+            public DateTime ExpirationDate { get; set; }
+        }
+
+
+        /// <summary>
         /// Function returns underlying name, expiration year, expiration month for the future contract ticker. Function detects if
         /// the format is used either XYZH6 or XYZH16. Returns null, if parsing failed.
         /// </summary>
         /// <param name="ticker"></param>
-        /// <returns>Tuple containing 1) underlying name, 2) short expiration year, 3) expiration month</returns>
-        public static Tuple<string, int, int> ParseFutureTicker(string ticker)
+        /// <returns>Results containing 1) underlying name, 2) short expiration year, 3) expiration month</returns>
+        public static FutureTickerProperties ParseFutureTicker(string ticker)
         {
             // we first check if we have XYZH6 or XYZH16 format
             if (char.IsDigit(ticker.Substring(ticker.Length - 2, 1)[0]))
@@ -41,7 +89,12 @@ namespace QuantConnect
 
                 var expirationMonth = _futuresMonthCodeLookup[expirationMonthString];
 
-                return Tuple.Create(underlyingString, expirationYearShort, expirationMonth);
+                return new FutureTickerProperties
+                {
+                    Underlying = underlyingString,
+                    ExpirationYearShort = expirationYearShort,
+                    ExpirationMonth = expirationMonth
+                };
             }
             else
             {
@@ -64,7 +117,12 @@ namespace QuantConnect
 
                 var expirationMonth = _futuresMonthCodeLookup[expirationMonthString];
 
-                return Tuple.Create(underlyingString, expirationYearShort, expirationMonth);
+                return new FutureTickerProperties
+                {
+                    Underlying = underlyingString,
+                    ExpirationYearShort = expirationYearShort,
+                    ExpirationMonth = expirationMonth
+                };
             }
         }
 
@@ -73,7 +131,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="underlying">String underlying</param>
         /// <param name="expiration">Expiration date</param>
-        /// <param name="twoDigitsYear">True if year should represented by two digits; False - one digit</param>
+        /// <param name="doubleDigitsYear">True if year should represented by two digits; False - one digit</param>
         /// <returns></returns>
         public static string GenerateFutureTicker(string underlying, DateTime expiration, bool doubleDigitsYear = true)
         {
@@ -101,8 +159,8 @@ namespace QuantConnect
         /// Symbology details: http://www.iqfeed.net/symbolguide/index.cfm?symbolguide=guide&displayaction=support%C2%A7ion=guide&web=iqfeed&guide=options&web=IQFeed&type=stock
         /// </summary>
         /// <param name="ticker">IQFeed option ticker</param>
-        /// <returns>Tuple containing 1) underlying name, 2) option right, 3) option strike 4) expiration date</returns>
-        public static Tuple<string, OptionRight, decimal, DateTime> ParseOptionTickerIQFeed(string ticker)
+        /// <returns>Results containing 1) underlying name, 2) option right, 3) option strike 4) expiration date</returns>
+        public static OptionTickerProperties ParseOptionTickerIQFeed(string ticker)
         {
             // This table describes IQFeed option symbology  
             var symbology = new Dictionary<string, Tuple<int, OptionRight>>
@@ -130,7 +188,7 @@ namespace QuantConnect
 
             var lookupResult = symbology[ticker[optionTypeDelimiter].ToString()];
             var month = lookupResult.Item1;
-            var optionType = lookupResult.Item2;
+            var optionRight = lookupResult.Item2;
 
             var dayString = ticker.Substring(optionTypeDelimiter - 2, 2);
             var yearString = ticker.Substring(optionTypeDelimiter - 4, 2);
@@ -159,11 +217,17 @@ namespace QuantConnect
 
             var expirationDate = new DateTime(2000 + year, month, day);
 
-            return Tuple.Create(underlying, optionType, strikePrice, expirationDate);
+            return new OptionTickerProperties
+            {
+                Underlying = underlying,
+                OptionRight = optionRight,
+                OptionStrike = strikePrice,
+                ExpirationDate = expirationDate
+            };
         }
 
 
-        private static Dictionary<string, int> _futuresMonthCodeLookup = new Dictionary<string, int>
+        private static IReadOnlyDictionary<string, int> _futuresMonthCodeLookup = new Dictionary<string, int>
                         {
                             { "F", 1 },
                             { "G", 2 },
@@ -179,6 +243,6 @@ namespace QuantConnect
                             { "Z", 12 }
                         };
 
-        private static Dictionary<int, string> _futuresMonthLookup = _futuresMonthCodeLookup.ToDictionary(kv => kv.Value, kv => kv.Key);
+        private static IReadOnlyDictionary<int, string> _futuresMonthLookup = _futuresMonthCodeLookup.ToDictionary(kv => kv.Value, kv => kv.Key);
     }
 }

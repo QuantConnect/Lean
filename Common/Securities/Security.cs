@@ -37,8 +37,8 @@ namespace QuantConnect.Securities
     /// </remarks>
     public class Security 
     {
-        protected Symbol _symbol;
-        protected LocalTimeKeeper _localTimeKeeper;
+        private readonly Symbol _symbol;
+        private LocalTimeKeeper _localTimeKeeper;
         // using concurrent bag to avoid list enumeration threading issues
         protected readonly ConcurrentBag<SubscriptionDataConfig> SubscriptionsBag;
 

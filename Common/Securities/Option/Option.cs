@@ -64,7 +64,6 @@ namespace QuantConnect.Securities.Option
                 new AdjustedPriceVariationModel()
                 )
         {
-            StrikePrice = Symbol.ID.StrikePrice;
             ExerciseSettlement = SettlementType.PhysicalDelivery;
             OptionExerciseModel = new DefaultExerciseModel();
             PriceModel = new CurrentPriceOptionPriceModel();
@@ -97,7 +96,6 @@ namespace QuantConnect.Securities.Option
                new AdjustedPriceVariationModel()
                )
         {
-            StrikePrice = Symbol.ID.StrikePrice;
             ExerciseSettlement = SettlementType.PhysicalDelivery;
             OptionExerciseModel = new DefaultExerciseModel();
             PriceModel = new CurrentPriceOptionPriceModel();
@@ -115,7 +113,7 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         public decimal StrikePrice
         {
-            get; set; 
+            get { return Symbol.ID.StrikePrice; }
         }
 
         /// <summary>
@@ -307,14 +305,12 @@ namespace QuantConnect.Securities.Option
         /// <param name="universeFunc">new universe selection function</param>
         public void SetFilter(Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc)
         {
-            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func = universe =>
+            ContractFilter = new FuncSecurityDerivativeFilter(universe =>
             {
                 var optionUniverse = universe as OptionFilterUniverse;
                 var result = universeFunc(optionUniverse);
                 return result.ApplyOptionTypesFilter();
-            };
-
-            ContractFilter = new FuncSecurityDerivativeFilter(func);
+            });
         }
 
     }

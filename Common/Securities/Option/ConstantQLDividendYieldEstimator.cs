@@ -28,14 +28,14 @@ namespace QuantConnect.Securities.Option
     /// <summary>
     /// Class implements default flat dividend yield curve estimator, implementing <see cref="IQLDividendYieldEstimator"/>.  
     /// </summary>
-    class DefaultQLDividendYieldEstimator : IQLDividendYieldEstimator
+    class ConstantQLDividendYieldEstimator : IQLDividendYieldEstimator
     {
         private readonly double _dividendYield;
         /// <summary>
         /// Constructor initializes class with constant dividend yield. 
         /// </summary>
         /// <param name="dividendYield"></param>
-        public DefaultQLDividendYieldEstimator(double dividendYield = 0.00)
+        public ConstantQLDividendYieldEstimator(double dividendYield = 0.00)
         {
             _dividendYield = dividendYield;
         }

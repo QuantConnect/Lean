@@ -877,11 +877,11 @@ namespace QuantConnect.Lean.Engine
             {
                 if (security.VolatilityModel != VolatilityModel.Null)
                 {
-                    var historyReq = security.VolatilityModel.HistoryRequirements(security, algorithm.UtcTime);
+                    var historyReq = security.VolatilityModel.GetHistoryRequirements(security, algorithm.UtcTime);
 
                     if (historyReq != null && algorithm.HistoryProvider != null)
                     {
-                        var history = algorithm.HistoryProvider.GetHistory(new[] { historyReq }, algorithm.TimeZone);
+                        var history = algorithm.HistoryProvider.GetHistory(historyReq, algorithm.TimeZone);
                         if (history != null)
                         {
                             foreach (var slice in history)

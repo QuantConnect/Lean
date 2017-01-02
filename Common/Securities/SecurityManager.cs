@@ -492,13 +492,12 @@ namespace QuantConnect.Securities
             bool addToSymbolCache = true
             )
         {
-            var symbolValue = symbol.ID.SecurityType == SecurityType.Future ? symbol.Underlying.Value : symbol.Value;
-            var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbolValue, symbol.ID.SecurityType);
+            var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
             var exchangeHours = marketHoursDbEntry.ExchangeHours;
 
             var defaultQuoteCurrency = CashBook.AccountCurrency;
             if (symbol.ID.SecurityType == SecurityType.Forex) defaultQuoteCurrency = symbol.Value.Substring(3);
-            var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbolValue, symbol.ID.SecurityType, defaultQuoteCurrency);
+            var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, defaultQuoteCurrency);
 
             var type = resolution == Resolution.Tick ? typeof(Tick) : typeof(TradeBar);
             if (symbol.ID.SecurityType == SecurityType.Option && resolution != Resolution.Tick)

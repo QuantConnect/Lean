@@ -43,9 +43,6 @@ namespace QuantConnect.Securities.Option
             {
                 return _impliedVolatility.Value;
             }
-            private set
-            {
-            }
         }
 
         /// <summary>
@@ -56,9 +53,6 @@ namespace QuantConnect.Securities.Option
             get
             {
                 return _greeks.Value;
-            }
-            private set
-            {
             }
         }
 

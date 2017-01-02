@@ -18,6 +18,7 @@ using MathNet.Numerics.Statistics;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 using QuantConnect.Data.Market;
+using System.Collections.Generic;
 
 namespace QuantConnect.Securities
 {
@@ -79,7 +80,7 @@ namespace QuantConnect.Securities
         public void Update(Security security, BaseData data)
         {
             var timeSinceLastUpdate = data.EndTime - _lastUpdate;
-            if (timeSinceLastUpdate >= _periodSpan)
+            if (timeSinceLastUpdate >= _periodSpan && data.Price > 0)
             {
                 lock (_sync)
                 {
@@ -99,14 +100,16 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="security">The security of the request</param>
         /// <param name="utcTime">The date of the request</param>
-        /// <returns>History request object, or null if no requirements</returns>
-        public HistoryRequest HistoryRequirements(Security security, DateTime utcTime)
+        /// <returns>History request object list, or empty if no requirements</returns>
+        public IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime)
         {
             var barCount = _window.Size + 1;
             var localStartTime = Time.GetStartTimeForTradeBars(security.Exchange.Hours, utcTime.ConvertFromUtc(security.Exchange.TimeZone), _periodSpan, barCount, security.IsExtendedMarketHours);
             var utcStartTime = localStartTime.ConvertToUtc(security.Exchange.TimeZone);
 
-            return new HistoryRequest()
+            return new[]
+            {
+                new HistoryRequest()
                 {
                     StartTimeUtc = utcStartTime,
                     EndTimeUtc = utcTime,
@@ -116,7 +119,8 @@ namespace QuantConnect.Securities
                     Symbol = security.Symbol,
                     DataType = typeof(TradeBar),
                     TimeZone = security.Exchange.TimeZone
-                };
+                }
+            };
         }
     }
 }

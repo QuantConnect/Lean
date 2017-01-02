@@ -359,9 +359,9 @@
     <Compile Include="Securities\MarketHoursSegment.cs" />
     <Compile Include="Securities\MarketHoursState.cs" />
     <Compile Include="Securities\Option\CurrentPriceOptionPriceModel.cs" />
-    <Compile Include="Securities\Option\DefaultQLDividendYieldEstimator.cs" />
-    <Compile Include="Securities\Option\DefaultQLRiskFreeRateEstimator.cs" />
-    <Compile Include="Securities\Option\DefaultQLUnderlyingVolatilityEstimator.cs" />
+    <Compile Include="Securities\Option\ConstantQLDividendYieldEstimator.cs" />
+    <Compile Include="Securities\Option\ConstantQLRiskFreeRateEstimator.cs" />
+    <Compile Include="Securities\Option\ConstantQLUnderlyingVolatilityEstimator.cs" />
     <Compile Include="Securities\Option\IQLDividendYieldEstimator.cs" />
     <Compile Include="Securities\Option\IOptionPriceModel.cs" />
     <Compile Include="Securities\Option\IQLRiskFreeRateEstimator.cs" />
@@ -472,7 +472,7 @@
     <Compile Include="Statistics\TradeEnums.cs" />
     <Compile Include="SymbolCache.cs" />
     <Compile Include="SymbolJsonConverter.cs" />
-    <Compile Include="SymbolRepr.cs" />
+    <Compile Include="SymbolRepresentation.cs" />
     <Compile Include="SymbolValueJsonConverter.cs" />
     <Compile Include="Time.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

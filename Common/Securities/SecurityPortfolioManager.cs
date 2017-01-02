@@ -749,7 +749,9 @@ namespace QuantConnect.Securities
                 // reverse split
                 newRootSymbol = symbol.Underlying.Value + "1";
             }
-            if ((int)Math.Round(inverseFactor, 5) == (int)inverseFactor)
+
+            // check if the split is even or odd
+            if (inverseFactor.RoundToSignificantDigits(5) % 1 == 0)
             {
                 // even split (e.g. 2 for 1)
                 newStrike = Math.Round(symbol.ID.StrikePrice / inverseFactor, 2);
@@ -798,17 +800,6 @@ namespace QuantConnect.Securities
             if (Securities.TryGetValue(symbol, out security))
             {
                 return security;
-            }
-
-            if (symbol.HasUnderlying)
-            {
-                // if symbol has underlying and symbol itself was not found in the collection, then we look for canonical symbols
-                var result = Securities.Where(x => symbol.Underlying == x.Key.Underlying && x.Key.IsCanonical())
-                                        .ToList();
-                if (result.Count == 1)
-                {
-                    return result.First().Value;
-                }
             }
 
             return null;

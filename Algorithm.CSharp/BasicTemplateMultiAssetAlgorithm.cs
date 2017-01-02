@@ -112,7 +112,7 @@ namespace QuantConnect.Algorithm.CSharp
                     OptionChain optionChain;
                     if (slice.OptionChains.TryGetValue(OptionSymbol, out optionChain))
                     {
-                        // find the second call strike under market price 
+                        // find a farthest ATM contract 
                         var contract = optionChain
                             .OrderBy(x => Math.Abs(optionChain.Underlying.Price - x.Strike))
                             .ThenByDescending(x => x.Expiry)

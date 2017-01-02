@@ -223,9 +223,9 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                     return null;
                 }
 
-                var underlying = parsed.Item1;
-                var expirationYearShort = parsed.Item2;
-                var expirationMonth = parsed.Item3;
+                var underlying = parsed.Underlying;
+                var expirationYearShort = parsed.ExpirationYearShort;
+                var expirationMonth = parsed.ExpirationMonth;
 
                 var expirationYear = GetExpirationYear(time, expirationYearShort);
                 var expirationYearMonth = new DateTime(expirationYear, expirationMonth, DateTime.DaysInMonth(expirationYear, expirationMonth));

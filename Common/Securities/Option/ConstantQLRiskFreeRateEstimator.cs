@@ -26,13 +26,22 @@ using QLNet;
 namespace QuantConnect.Securities.Option
 {
     /// <summary>
-    /// Class implements default underlying constant volatility estimator (<see cref="IQLUnderlyingVolatilityEstimator"/>.), that projects the underlying own volatility 
-    /// model into corresponding option pricing model.
+    /// Class implements default flat risk free curve, implementing <see cref="IQLRiskFreeRateEstimator"/>.
     /// </summary>
-    class DefaultQLUnderlyingVolatilityEstimator : IQLUnderlyingVolatilityEstimator
+    public class ConstantQLRiskFreeRateEstimator : IQLRiskFreeRateEstimator
     {
+        private readonly double _riskFreeRate;
         /// <summary>
-        /// Returns current estimate of the underlying volatility
+        /// Constructor initializes class with risk free rate constant
+        /// </summary>
+        /// <param name="riskFreeRate"></param>
+        public ConstantQLRiskFreeRateEstimator(double riskFreeRate = 0.01)
+        {
+            _riskFreeRate = riskFreeRate;
+        }
+
+        /// <summary>
+        /// Returns current flat estimate of the risk free rate
         /// </summary>
         /// <param name="security">The option security object</param>
         /// <param name="slice">The current data slice. This can be used to access other information
@@ -41,17 +50,7 @@ namespace QuantConnect.Securities.Option
         /// <returns>The estimate</returns>
         public double Estimate(Security security, Slice slice, OptionContract contract)
         {
-            var option = security as Option;
-
-            if (option != null &&
-                option.Underlying != null &&
-                option.Underlying.VolatilityModel != null &&
-                option.Underlying.VolatilityModel.Volatility > 0m)
-            {
-                return (double)option.Underlying.VolatilityModel.Volatility;
-            }
-
-            return 0.0;
+            return _riskFreeRate;
         }
     }
 }

@@ -9,7 +9,7 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Tests.Common
 {
     [TestFixture]
-    public class SymbolReprTests
+    public class SymbolRepresentationTests
     {
         [Test]
         public void OptionSymbolAliasMatchesOSI()
@@ -33,10 +33,10 @@ namespace QuantConnect.Tests.Common
             // ticker contains two digits year of expiration
             var result = SymbolRepresentation.ParseOptionTickerIQFeed("MSFT1615D30");
 
-            Assert.AreEqual(result.Item1, "MSFT");
-            Assert.AreEqual(result.Item2, OptionRight.Call);
-            Assert.AreEqual(result.Item3, 30m); 
-            Assert.AreEqual(result.Item4, new DateTime(2016, 4, 15)); 
+            Assert.AreEqual(result.Underlying, "MSFT");
+            Assert.AreEqual(result.OptionRight, OptionRight.Call);
+            Assert.AreEqual(result.OptionStrike, 30m); 
+            Assert.AreEqual(result.ExpirationDate, new DateTime(2016, 4, 15)); 
         }
 
         [Test]
@@ -44,15 +44,15 @@ namespace QuantConnect.Tests.Common
         {
             // ticker contains two digits year of expiration
             var result = SymbolRepresentation.ParseFutureTicker("EDX20");
-            Assert.AreEqual(result.Item1, "ED");
-            Assert.AreEqual(result.Item2, 20);
-            Assert.AreEqual(result.Item3, 11); // November
+            Assert.AreEqual(result.Underlying, "ED");
+            Assert.AreEqual(result.ExpirationYearShort, 20);
+            Assert.AreEqual(result.ExpirationMonth, 11); // November
 
             // ticker contains one digit year of expiration
             result = SymbolRepresentation.ParseFutureTicker("ABCZ1");
-            Assert.AreEqual(result.Item1, "ABC");
-            Assert.AreEqual(result.Item2, 1);
-            Assert.AreEqual(result.Item3, 12); // December
+            Assert.AreEqual(result.Underlying, "ABC");
+            Assert.AreEqual(result.ExpirationYearShort, 1);
+            Assert.AreEqual(result.ExpirationMonth, 12); // December
         }
 
         [Test]
@@ -74,7 +74,7 @@ namespace QuantConnect.Tests.Common
         {
             const string expected = @"EDZ16";
             var result = SymbolRepresentation.ParseFutureTicker(expected);
-            var ticker = SymbolRepresentation.GenerateFutureTicker(result.Item1, new DateTime(2000 + result.Item2, result.Item3, 1));
+            var ticker = SymbolRepresentation.GenerateFutureTicker(result.Underlying, new DateTime(2000 + result.ExpirationYearShort, result.ExpirationMonth, 1));
 
             Assert.AreEqual(ticker, expected);
         }
