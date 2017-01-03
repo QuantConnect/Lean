@@ -46,7 +46,8 @@ namespace QuantConnect.Tests.Brokerages
         {
             Security holding;
             _securities.TryGetValue(symbol, out holding);
-            return holding;
+
+            return holding ?? BrokerageTests.CreateSecurity(symbol);
         }
 
         public bool TryGetValue(Symbol symbol, out Security security)
