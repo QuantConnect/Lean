@@ -27,7 +27,7 @@ namespace QuantConnect.Securities
     /// This is a default implementation that orders the generated margin call orders by the unrealized
     /// profit (losers first) and executes each order synchronously until we're within the margin requirements
     /// </remarks>
-    public class MarginCallModel
+    public class DefaultMarginCallModel : IMarginCallModel
     {
         /// <summary>
         /// Gets the portfolio that margin calls will be transacted against
@@ -35,10 +35,10 @@ namespace QuantConnect.Securities
         protected SecurityPortfolioManager Portfolio { get; private set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MarginCallModel"/> class
+        /// Initializes a new instance of the <see cref="DefaultMarginCallModel"/> class
         /// </summary>
         /// <param name="portfolio">The portfolio object to receive margin calls</param>
-        public MarginCallModel(SecurityPortfolioManager portfolio)
+        public DefaultMarginCallModel(SecurityPortfolioManager portfolio)
         {
             Portfolio = portfolio;
         }
