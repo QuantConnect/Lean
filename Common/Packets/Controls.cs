@@ -74,6 +74,9 @@ namespace QuantConnect.Packets
             SecondLimit = 100;
             TickLimit = 30;
             RamAllocation = 1024;
+            BacktestLogLimit = 10000;
+            DailyLogLimit = 3000000;
+            RemainingLogAllowance = 10000;
         }
     }
 }
