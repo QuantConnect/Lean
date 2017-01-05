@@ -30,7 +30,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class BasicTemplateOptionsAlgorithm : QCAlgorithm
     {
-        private const string UnderlyingTicker = "GOOG";
+        private const string UnderlyingTicker = "GOOG"; 
         public readonly Symbol Underlying = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Equity, Market.USA);
         public readonly Symbol OptionSymbol = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
 
