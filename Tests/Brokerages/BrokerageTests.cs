@@ -138,9 +138,7 @@ namespace QuantConnect.Tests.Brokerages
             {
                 // these securities don't need to be real, just used for the ISecurityProvider impl, required
                 // by brokerages to track holdings
-                SecurityProvider[accountHolding.Symbol] = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                    new SubscriptionDataConfig(typeof (TradeBar), accountHolding.Symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, false),
-                    new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+                SecurityProvider[accountHolding.Symbol] = CreateSecurity(accountHolding.Symbol);
             }
             brokerage.OrderStatusChanged += (sender, args) =>
             {
@@ -161,18 +159,8 @@ namespace QuantConnect.Tests.Brokerages
                     }
                     else
                     {
-                        var accountHoldings = brokerage.GetAccountHoldings().ToDictionary(x => x.Symbol);
-                        if (accountHoldings.ContainsKey(args.Symbol))
-                        {
-                            _securityProvider[args.Symbol].Holdings.SetHoldings(args.FillPrice, args.FillQuantity);
-                        }
-                        else
-                        {
-                            _securityProvider[args.Symbol] = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                                new SubscriptionDataConfig(typeof (TradeBar), args.Symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, false),
-                                new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
-                            _securityProvider[args.Symbol].Holdings.SetHoldings(args.FillPrice, args.FillQuantity);
-                        }
+                        _securityProvider[args.Symbol] = CreateSecurity(args.Symbol);
+                        _securityProvider[args.Symbol].Holdings.SetHoldings(args.FillPrice, args.FillQuantity);
                     }
 
                     Log.Trace("--HOLDINGS: " + _securityProvider[args.Symbol]);
@@ -183,6 +171,13 @@ namespace QuantConnect.Tests.Brokerages
                 }
             };
             return brokerage;
+        }
+
+        internal static Security CreateSecurity(Symbol symbol)
+        {
+            return new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                new SubscriptionDataConfig(typeof (TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, false),
+                new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
         }
 
         public OrderProvider OrderProvider 
