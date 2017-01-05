@@ -48,6 +48,24 @@ namespace QuantConnect.Packets
         public int RamAllocation;
 
         /// <summary>
+        /// The user backtesting log limit
+        /// </summary>
+        [JsonProperty(PropertyName = "iBacktestLogLimit")]
+        public int BacktestLogLimit;
+
+        /// <summary>
+        /// The daily log limit of a user
+        /// </summary>
+        [JsonProperty(PropertyName = "iDailyLogLimit")]
+        public int DailyLogLimit;
+
+        /// <summary>
+        /// The remaining log allowance for a user
+        /// </summary>
+        [JsonProperty(PropertyName = "iRemainingLogAllowance")]
+        public int RemainingLogAllowance;
+
+        /// <summary>
         /// Initializes a new default instance of the <see cref="Controls"/> class
         /// </summary>
         public Controls()
