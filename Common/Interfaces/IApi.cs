@@ -22,6 +22,7 @@ using QuantConnect.API;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Packets;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Interfaces
@@ -251,18 +252,6 @@ namespace QuantConnect.Interfaces
         //void NotifyOwner(int projectId, string algorithmId, string subject, string body);
         //IEnumerable<MarketHoursSegment> MarketHours(int projectId, DateTime time, Symbol symbol);
 
-
-
-        /// <summary>
-        /// Read the maximum log allowance
-        /// </summary>
-        int[] ReadLogAllowance(int userId, int projectId, string userToken);
-
-        /// <summary>
-        /// Update running total of log usage
-        /// </summary>
-        void UpdateDailyLogUsed(int userId, string backtestId, string url, int length, string userToken, bool hitLimit = false);
-
         /// <summary>
         /// Get the algorithm current status, active or cancelled from the user
         /// </summary>
@@ -303,7 +292,17 @@ namespace QuantConnect.Interfaces
         IEnumerable<MarketHoursSegment> MarketToday(DateTime time, Symbol symbol);
 
         /// <summary>
-        /// Store the algorithm logs.
+        /// Store logs in the cloud
+        /// </summary>
+        /// <param name="logs">The list of individual logs to be stored</param>
+        /// <param name="job">The <see cref="AlgorithmNodePacket"/> used to generate the url to the logs</param>
+        /// <param name="permissions">The <see cref="StoragePermissions"/> for the file</param>
+        /// <param name="async">Bool indicating whether the method to <see cref="Store"/> should be async</param>
+        /// <returns>The url where the logs can be accessed</returns>
+        string StoreLogs(List<string> logs, AlgorithmNodePacket job, StoragePermissions permissions, bool async = false);
+
+        /// <summary>
+        /// Store data in the cloud
         /// </summary>
         void Store(string data, string location, StoragePermissions permissions, bool async = false);
 
