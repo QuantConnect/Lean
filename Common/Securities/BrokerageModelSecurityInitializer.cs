@@ -28,6 +28,7 @@ namespace QuantConnect.Securities
     {
         private readonly IBrokerageModel _brokerageModel;
         private readonly ISecuritySeeder _securitySeeder;
+        private readonly ISecurityMarginModel _securityMarginModel;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BrokerageModelSecurityInitializer"/> class
@@ -35,10 +36,12 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="brokerageModel">The brokerage model used to initialize the security models</param>
         /// <param name="securitySeeder">An <see cref="ISecuritySeeder"/> used to seed the initial price of the security</param>
-        public BrokerageModelSecurityInitializer(IBrokerageModel brokerageModel, ISecuritySeeder securitySeeder)
+        /// <param name="securityMarginModel">The margin model to be used for the security</param>
+        public BrokerageModelSecurityInitializer(IBrokerageModel brokerageModel, ISecuritySeeder securitySeeder, ISecurityMarginModel securityMarginModel)
         {
             _brokerageModel = brokerageModel;
             _securitySeeder = securitySeeder;
+            _securityMarginModel = securityMarginModel;
         }
 
         /// <summary>
@@ -48,6 +51,7 @@ namespace QuantConnect.Securities
         public virtual void Initialize(Security security)
         {
             // set leverage and models
+            security.MarginModel = _securityMarginModel;
             security.SetLeverage(_brokerageModel.GetLeverage(security));
             security.FillModel = _brokerageModel.GetFillModel(security);
             security.FeeModel = _brokerageModel.GetFeeModel(security);

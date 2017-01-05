@@ -318,6 +318,7 @@
     <Compile Include="Securities\FuncSecuritySeeder.cs" />
     <Compile Include="Securities\ISecuritySeeder.cs" />
     <Compile Include="Securities\NoMarginCallMarginModel.cs" />
+    <Compile Include="Securities\NullMarginCallModel.cs" />
     <Compile Include="Securities\SecurityPriceVariationModel.cs" />
     <Compile Include="Securities\FuncSecurityDerivativeFilter.cs" />
     <Compile Include="Securities\FuncSecurityInitializer.cs" />
