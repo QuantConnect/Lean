@@ -67,7 +67,7 @@ namespace QuantConnect.Securities
         {
             Securities = securityManager;
             Transactions = transactions;
-            MarginCallModel = new MarginCallModel(this);
+            MarginCallModel = new DefaultMarginCallModel(this);
 
             CashBook = new CashBook();
             UnsettledCashBook = new CashBook();
@@ -437,7 +437,7 @@ namespace QuantConnect.Securities
         /// Gets or sets the <see cref="MarginCallModel"/> for the portfolio. This
         /// is used to executed margin call orders.
         /// </summary>
-        public MarginCallModel MarginCallModel { get; set; }
+        public IMarginCallModel MarginCallModel { get; set; }
 
         /// <summary>
         /// Indexer for the PortfolioManager class to access the underlying security holdings objects.

@@ -316,9 +316,9 @@
     <Compile Include="Securities\DelayedSettlementModel.cs" />
     <Compile Include="Securities\AdjustedPriceVariationModel.cs" />
     <Compile Include="Securities\FuncSecuritySeeder.cs" />
+    <Compile Include="Securities\IMarginCallModel.cs" />
     <Compile Include="Securities\ISecuritySeeder.cs" />
     <Compile Include="Securities\NoMarginCallMarginModel.cs" />
-    <Compile Include="Securities\NullMarginCallModel.cs" />
     <Compile Include="Securities\SecurityPriceVariationModel.cs" />
     <Compile Include="Securities\FuncSecurityDerivativeFilter.cs" />
     <Compile Include="Securities\FuncSecurityInitializer.cs" />
@@ -350,7 +350,7 @@
     <Compile Include="Securities\ISecurityMarginModel.cs" />
     <Compile Include="Securities\IOrderProvider.cs" />
     <Compile Include="Securities\ISecurityPortfolioModel.cs" />
-    <Compile Include="Securities\MarginCallModel.cs" />
+    <Compile Include="Securities\DefaultMarginCallModel.cs" />
     <Compile Include="Securities\SecurityPortfolioModel.cs" />
     <Compile Include="Securities\SecurityMarginModel.cs" />
     <Compile Include="Securities\ImmediateSettlementModel.cs" />
