@@ -114,7 +114,7 @@ namespace QuantConnect.Data.UniverseSelection
             // we want to return both quote and trade subscriptions
             return _subscriptionManager.GetDataTypesForSecurity(SecurityType.Future)
                 .Select(tickType => new SubscriptionDataConfig(
-                    objectType: GetDataType(UniverseSettings.Resolution, tickType),
+                    objectType: LeanData.GetDataType(UniverseSettings.Resolution, tickType),
                     symbol: security.Symbol,
                     resolution: UniverseSettings.Resolution,
                     dataTimeZone: Configuration.DataTimeZone,
@@ -180,17 +180,6 @@ namespace QuantConnect.Data.UniverseSelection
                 return true;
             }
             return false;
-        }
-
-        /// <summary>
-        /// Gets the data type required for the specified combination of resolution and tick type
-        /// </summary>
-        private static Type GetDataType(Resolution resolution, TickType tickType)
-        {
-            if (resolution == Resolution.Tick) return typeof(Tick);
-            if (tickType == TickType.OpenInterest) return typeof(OpenInterest);
-            if (tickType == TickType.Quote) return typeof(QuoteBar);
-            return typeof(TradeBar);
         }
     }
 }

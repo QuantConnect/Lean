@@ -22,6 +22,7 @@ using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Util;
 
 namespace QuantConnect.Securities
 {
@@ -334,7 +335,7 @@ namespace QuantConnect.Securities
             // Could be more than one for a given security - i.e. More than one subscription needed
 
             var dataFeedTypes = subscriptionManager.AvailableDataTypes[symbol.ID.SecurityType]
-                .Select(dataFeed => GetDataFeedType(factoryType, dataFeed))
+                .Select(dataFeed => GetDataFeedType(factoryType, dataFeed, resolution))
                 .Distinct()
                 .ToList();
 
@@ -432,43 +433,18 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Get the data feed type for the given security
+        /// Get the data feed type for the given security. If it is a common data type, LeanData Methods can be used 
+        /// to retrieve the returned type. If not, the type passed in is returned.
         /// </summary>
         /// <param name="factoryType"><see cref="BaseData"/> type of the security</param>
         /// <param name="tickType">The <see cref="TickType"/> of the security</param>
+        /// <param name="resolution"></param>
         /// <returns>Type that should be added as a subscription</returns>
-        private static Type GetDataFeedType(Type factoryType, TickType tickType)
+        private static Type GetDataFeedType(Type factoryType, TickType tickType, Resolution resolution)
         {
-            Type dataFeedType;
-
-            // if it is a standard QC Data type
-            if (factoryType == typeof(TradeBar) ||
-                factoryType == typeof(QuoteBar) ||
-                factoryType == typeof(OpenInterest))
-            {
-                switch (tickType)
-                {
-                    case TickType.Trade:
-                        dataFeedType = typeof(TradeBar);
-                        break;
-                    case TickType.Quote:
-                        dataFeedType = typeof(QuoteBar);
-                        break;
-                    case TickType.OpenInterest:
-                        dataFeedType = typeof(OpenInterest);
-                        break;
-                    default:
-                        throw new ArgumentException(
-                            "SecurityManager.GetDataFeedType(): DataFeed not implemented for security type.");
-                }
-            }
-            else
-            {
-                // it is a custom data type
-                dataFeedType = factoryType;
-            }
-
-            return dataFeedType;
+            return LeanData.IsCommonLeanDataType(factoryType) ?
+                            LeanData.GetDataType(resolution, tickType) :
+                            factoryType;
         }
 
         /// <summary>

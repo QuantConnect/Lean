@@ -133,6 +133,36 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(expected, source.Source);
         }
 
+        [Test]
+        public void GetDataType_ReturnsCorrectType()
+        {
+            var tickType = typeof(Tick);
+            var openInterestType = typeof(OpenInterest);
+            var quoteBarType = typeof(QuoteBar);
+            var tradeBarType = typeof(TradeBar);
+
+            Assert.AreEqual(LeanData.GetDataType(Resolution.Tick, TickType.OpenInterest), tickType);
+            Assert.AreNotEqual(LeanData.GetDataType(Resolution.Daily, TickType.OpenInterest), tickType);
+
+            Assert.AreEqual(LeanData.GetDataType(Resolution.Second, TickType.OpenInterest), openInterestType);
+            Assert.AreNotEqual(LeanData.GetDataType(Resolution.Tick, TickType.OpenInterest), openInterestType);
+
+            Assert.AreEqual(LeanData.GetDataType(Resolution.Minute, TickType.Quote), quoteBarType);
+            Assert.AreNotEqual(LeanData.GetDataType(Resolution.Second, TickType.Trade), quoteBarType);
+
+            Assert.AreEqual(LeanData.GetDataType(Resolution.Hour, TickType.Trade), tradeBarType);
+            Assert.AreNotEqual(LeanData.GetDataType(Resolution.Tick, TickType.OpenInterest), tradeBarType);
+        }
+
+        [Test]
+        public void LeanData_CanDetermineTheCorrectCommonDataTypes()
+        {
+            Assert.IsTrue(LeanData.IsCommonLeanDataType(typeof(OpenInterest)));
+            Assert.IsTrue(LeanData.IsCommonLeanDataType(typeof(TradeBar)));
+            Assert.IsTrue(LeanData.IsCommonLeanDataType(typeof(QuoteBar)));
+            Assert.IsFalse(LeanData.IsCommonLeanDataType(typeof(Bitcoin)));
+        }
+
         private static void AssertBarsAreEqual(IBar expected, IBar actual)
         {
             if (expected == null && actual == null)
