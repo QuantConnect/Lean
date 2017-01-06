@@ -25,6 +25,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
+using QuantConnect.Packets;
 using QuantConnect.Securities;
 using RestSharp;
 using RestSharp.Extensions;
@@ -595,35 +596,6 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
-        /// Calculate the remaining bytes of user log allowed based on the user's cap and daily cumulative usage.
-        /// </summary>
-        /// <param name="userId">User ID</param>
-        /// <param name="projectId">Project ID</param>
-        /// <param name="userToken">User API token</param>
-        /// <returns>int[3] iUserBacktestLimit, iUserDailyLimit, remaining</returns>
-        
-        public virtual int[] ReadLogAllowance(int userId, int projectId, string userToken)
-        {
-            return new[] { int.MaxValue, int.MaxValue, int.MaxValue };
-        }
-
-        /// <summary>
-        /// Update the daily log of allowed logging-data
-        /// </summary>
-        /// <param name="userId">Id of the User</param>
-        /// <param name="backtestId">BacktestId</param>
-        /// <param name="url">URL of the log entry</param>
-        /// <param name="length">length of data</param>
-        /// <param name="userToken">User access token</param>
-        /// <param name="hitLimit">Boolean signifying hit log limit</param>
-        /// <returns>Number of bytes remaining</returns>
-        
-        public virtual void UpdateDailyLogUsed(int userId, string backtestId, string url, int length, string userToken, bool hitLimit = false)
-        {
-            //
-        }
-
-        /// <summary>
         /// Get the algorithm status from the user with this algorithm id.
         /// </summary>
         /// <param name="algorithmId">String algorithm id we're searching for.</param>
@@ -687,9 +659,24 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
-        /// Store logs with these authentication type
+        /// Retrieves the location of the logs
         /// </summary>
-        
+        /// <param name="logs">The list of individual logs to be stored</param>
+        /// <param name="job">The <see cref="AlgorithmNodePacket"/> used to generate the url to the logs</param>
+        /// <param name="permissions">The <see cref="StoragePermissions"/> for the file</param>
+        /// <param name="async">Bool indicating whether the method to <see cref="Store"/> should be async</param>
+        /// <returns>The location where the logs can be accessed</returns>
+        /// <remarks>Since the logs are stored on disc during local backtest, this method simply returns the location of those logs
+        /// TODO: Get the filename of the logs instead of hard coding it.
+        ///  </remarks>
+        public virtual string StoreLogs(List<string> logs, AlgorithmNodePacket job, StoragePermissions permissions, bool async = false)
+        {
+            return Path.Combine(Directory.GetCurrentDirectory(), "log.txt");
+        }
+
+        /// <summary>
+        /// Store data with these authentication type
+        /// </summary>
         public virtual void Store(string data, string location, StoragePermissions permissions, bool async = false)
         {
             //

@@ -298,6 +298,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 }
                 else
                 {
+                    // update the order status
+                    order.Status = OrderStatus.CancelPending;
+
+                    // notify the algorithm with an order event
+                    HandleOrderEvent(new OrderEvent(order, _algorithm.UtcTime, 0m));
+
                     // send the request to be processed
                     request.SetResponse(OrderResponse.Success(request), OrderRequestStatus.Processing);
                     _orderRequestQueue.Add(request);
