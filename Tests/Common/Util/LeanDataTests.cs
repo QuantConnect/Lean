@@ -133,6 +133,27 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(expected, source.Source);
         }
 
+        [Test]
+        public void GetDataType_ReturnsCorrectType()
+        {
+            var tickType = typeof(Tick);
+            var openInterestType = typeof(OpenInterest);
+            var quoteBarType = typeof(QuoteBar);
+            var tradeBarType = typeof(TradeBar);
+
+            Assert.AreEqual(LeanData.GetDataType(Resolution.Tick, TickType.OpenInterest), tickType);
+            Assert.AreNotEqual(LeanData.GetDataType(Resolution.Daily, TickType.OpenInterest), tickType);
+
+            Assert.AreEqual(LeanData.GetDataType(Resolution.Second, TickType.OpenInterest), openInterestType);
+            Assert.AreNotEqual(LeanData.GetDataType(Resolution.Tick, TickType.OpenInterest), openInterestType);
+
+            Assert.AreEqual(LeanData.GetDataType(Resolution.Minute, TickType.Quote), quoteBarType);
+            Assert.AreNotEqual(LeanData.GetDataType(Resolution.Second, TickType.Trade), quoteBarType);
+
+            Assert.AreEqual(LeanData.GetDataType(Resolution.Hour, TickType.Trade), tradeBarType);
+            Assert.AreNotEqual(LeanData.GetDataType(Resolution.Tick, TickType.OpenInterest), tradeBarType);
+        }
+
         private static void AssertBarsAreEqual(IBar expected, IBar actual)
         {
             if (expected == null && actual == null)

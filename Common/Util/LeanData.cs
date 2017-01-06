@@ -168,6 +168,20 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Gets the data type required for the specified combination of resolution and tick type
+        /// </summary>
+        /// <param name="resolution">The resolution, if Tick, the Type returned is always Tick</param>
+        /// <param name="tickType">The <see cref="TickType"/> that primarily dictates the type returned</param>
+        /// <returns>The Type used to create a subscription</returns>
+        public static Type GetDataType(Resolution resolution, TickType tickType)
+        {
+            if (resolution == Resolution.Tick) return typeof(Tick);
+            if (tickType == TickType.OpenInterest) return typeof(OpenInterest);
+            if (tickType == TickType.Quote) return typeof(QuoteBar);
+            return typeof(TradeBar);
+        }
+
+        /// <summary>
         /// Generates the full zip file path rooted in the <paramref name="dataDirectory"/>
         /// </summary>
         public static string GenerateZipFilePath(string dataDirectory, Symbol symbol, DateTime date, Resolution resolution, TickType tickType)
