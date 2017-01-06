@@ -145,7 +145,7 @@ namespace QuantConnect
 
             if (expiry == SecurityIdentifier.DefaultDate)
             {
-                alias = alias ?? "?" + underlying.ToUpper();
+                alias = alias ?? "/" + underlying.ToUpper();
             }
             else
             {
@@ -193,6 +193,16 @@ namespace QuantConnect
         /// Gets the security underlying symbol, if any
         /// </summary>
         public Symbol Underlying { get; private set; }
+
+
+        /// <summary>
+        /// Gets the security type of the symbol
+        /// </summary>
+        public SecurityType SecurityType
+        {
+            get { return ID.SecurityType; }
+        }
+
 
         #endregion
 
