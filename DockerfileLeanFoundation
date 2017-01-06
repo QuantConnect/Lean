@@ -13,10 +13,11 @@ MAINTAINER QuantConnect <contact@quantconnect.com>
 CMD ["/sbin/my_init"]
 
 # Install OS Packages:
-# Misc tools for running IB inside a headless container.
+# Misc tools for running Python.NET and IB inside a headless container.
 RUN \
   apt-get update && \
-  apt-get install -y wget xvfb unzip curl libxrender1 libxtst6 libxi6 
+  apt-get install -y wget xvfb unzip curl libxrender1 libxtst6 libxi6 git libglib2.0-dev python-pip && \
+  pip install --upgrade pip && pip install pycparser pandas scipy numpy
 
 # Java for running IB inside container:
 # https://github.com/dockerfile/java/blob/master/oracle-java8/Dockerfile
@@ -49,6 +50,12 @@ RUN apt-get update && rm -rf /var/lib/apt/lists/*
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
 RUN echo "deb http://download.mono-project.com/repo/debian wheezy/snapshots/4.6.1.5 main" > /etc/apt/sources.list.d/mono-xamarin.list \
   && apt-get update \
-  && apt-get install -y binutils mono-complete ca-certificates-mono fsharp mono-vbnc nuget referenceassemblies-pcl \
-  && rm -rf /var/lib/apt/lists/* /tmp/*
+  && apt-get install -y binutils mono-complete ca-certificates-mono mono-vbnc nuget referenceassemblies-pcl \
+  && apt-get install -y fsharp && rm -rf /var/lib/apt/lists/* /tmp/*
 
+# Install Python.NET
+RUN cd ~ && \
+    git clone https://github.com/QuantConnect/pythonnet.git && \
+    cd ~/pythonnet && \
+    python setup.py build_ext --inplace && \
+    ln -s /usr/lib/python2.7/config-x86_64-linux-gnu/libpython2.7.so .
