@@ -26,14 +26,14 @@ using QuantConnect.Securities;
 namespace QuantConnect.Tests.Common.Securities
 {
     [TestFixture]
-    public class NoMarginCallMarginCallModelTests
+    public class MarginCallModelTests
     {
         [Test]
         public void InitializationTest()
         {
             const decimal actual = 2;
             var security = GetSecurity(Symbols.AAPL);
-            security.MarginModel = new NoMarginCallMarginModel(actual);
+            security.MarginModel = new SecurityMarginModel(actual);
             var expected = security.Leverage;
 
             Assert.AreEqual(expected, actual);
@@ -43,8 +43,8 @@ namespace QuantConnect.Tests.Common.Securities
         public void SetAndGetLeverageTest()
         {
             var security = GetSecurity(Symbols.AAPL);
-            security.MarginModel = new NoMarginCallMarginModel(2);
-            
+            security.MarginModel = new SecurityMarginModel(2);
+
             const decimal actual = 50;
             security.SetLeverage(actual);
             var expected = security.Leverage;
@@ -60,7 +60,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void GetInitialMarginRequiredForOrderTest()
         {
             var security = GetSecurity(Symbols.AAPL);
-            security.MarginModel = new NoMarginCallMarginModel(2);
+            security.MarginModel = new SecurityMarginModel(2);
             var order = new MarketOrder(security.Symbol, 100, DateTime.Now);
             var actual = security.MarginModel.GetInitialMarginRequiredForOrder(security, order);
 
@@ -75,7 +75,7 @@ namespace QuantConnect.Tests.Common.Securities
             var expected = quantity / leverage;
 
             var security = GetSecurity(Symbols.AAPL);
-            security.MarginModel = new NoMarginCallMarginModel(leverage);
+            security.MarginModel = new SecurityMarginModel(leverage);
             security.Holdings.SetHoldings(1m, quantity);
             var actual = security.MarginModel.GetMaintenanceMargin(security);
 
@@ -89,9 +89,11 @@ namespace QuantConnect.Tests.Common.Securities
             const decimal leverage = 2;
             var orderProcessor = new OrderProcessor();
             var portfolio = GetPortfolio(orderProcessor, quantity);
+            portfolio.MarginCallModel = MarginCallModel.Null;
+
             var security = GetSecurity(Symbols.AAPL);
+            security.MarginModel = new SecurityMarginModel(leverage);
             portfolio.Securities.Add(security);
-            security.MarginModel = new NoMarginCallMarginModel(leverage);
             
             security.Holdings.SetHoldings(1m, quantity);
             var actual1 = security.MarginModel.GetMarginRemaining(portfolio, security, OrderDirection.Buy);
@@ -119,8 +121,9 @@ namespace QuantConnect.Tests.Common.Securities
             const decimal leverage = 1m;
             var orderProcessor = new OrderProcessor();
             var portfolio = GetPortfolio(orderProcessor, quantity);
+            portfolio.MarginCallModel = MarginCallModel.Null;
+
             var security = GetSecurity(Symbols.AAPL);
-            security.MarginModel = new NoMarginCallMarginModel(leverage);
             portfolio.Securities.Add(security);
 
             var time = DateTime.Now;
@@ -223,7 +226,7 @@ namespace QuantConnect.Tests.Common.Securities
                 SymbolProperties.GetDefault(CashBook.AccountCurrency));
         }
         
-        class OrderProcessor : IOrderProcessor
+        public class OrderProcessor : IOrderProcessor
         {
             private readonly ConcurrentDictionary<int, Order> _orders = new ConcurrentDictionary<int, Order>();
             private readonly ConcurrentDictionary<int, OrderTicket> _tickets = new ConcurrentDictionary<int, OrderTicket>();

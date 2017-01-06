@@ -67,7 +67,7 @@ namespace QuantConnect.Securities
         {
             Securities = securityManager;
             Transactions = transactions;
-            MarginCallModel = new MarginCallModel(this);
+            MarginCallModel = new DefaultMarginCallModel(this);
 
             CashBook = new CashBook();
             UnsettledCashBook = new CashBook();
@@ -437,7 +437,7 @@ namespace QuantConnect.Securities
         /// Gets or sets the <see cref="MarginCallModel"/> for the portfolio. This
         /// is used to executed margin call orders.
         /// </summary>
-        public MarginCallModel MarginCallModel { get; set; }
+        public IMarginCallModel MarginCallModel { get; set; }
 
         /// <summary>
         /// Indexer for the PortfolioManager class to access the underlying security holdings objects.
@@ -571,7 +571,8 @@ namespace QuantConnect.Securities
                 // skip securities that have no price data or no holdings, we can't liquidate nothingness
                 foreach (var security in Securities.Values.Where(x => x.Holdings.Quantity != 0 && x.Price != 0))
                 {
-                    var marginCallOrder = security.MarginModel.GenerateMarginCallOrder(security, totalPortfolioValue, totalMarginUsed);
+                    var maintenanceMarginRequirement = security.MarginModel.GetMaintenanceMarginRequirement(security);
+                    var marginCallOrder = MarginCallModel.GenerateMarginCallOrder(security, totalPortfolioValue, totalMarginUsed, maintenanceMarginRequirement);
                     if (marginCallOrder != null && marginCallOrder.Quantity != 0)
                     {
                         marginCallOrders.Add(marginCallOrder);

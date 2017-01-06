@@ -26,6 +26,7 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Setup
@@ -184,6 +185,8 @@ namespace QuantConnect.Lean.Engine.Setup
                     {
                         //Set the default brokerage model before initialize
                         algorithm.SetBrokerageModel(_factory.BrokerageModel);
+                        //Margin calls are disabled by default in live mode
+                        algorithm.Portfolio.MarginCallModel = MarginCallModel.Null;
                         //Set our parameters
                         algorithm.SetParameters(job.Parameters);
                         //Algorithm is live, not backtesting:
