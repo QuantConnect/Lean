@@ -571,7 +571,8 @@ namespace QuantConnect.Securities
                 // skip securities that have no price data or no holdings, we can't liquidate nothingness
                 foreach (var security in Securities.Values.Where(x => x.Holdings.Quantity != 0 && x.Price != 0))
                 {
-                    var marginCallOrder = security.MarginModel.GenerateMarginCallOrder(security, totalPortfolioValue, totalMarginUsed);
+                    var maintenanceMarginRequirement = security.MarginModel.GetMaintenanceMarginRequirement(security);
+                    var marginCallOrder = MarginCallModel.GenerateMarginCallOrder(security, totalPortfolioValue, totalMarginUsed, maintenanceMarginRequirement);
                     if (marginCallOrder != null && marginCallOrder.Quantity != 0)
                     {
                         marginCallOrders.Add(marginCallOrder);

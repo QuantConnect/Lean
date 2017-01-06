@@ -25,6 +25,17 @@ namespace QuantConnect.Securities
     public interface IMarginCallModel
     {
         /// <summary>
+        /// Generates a new order for the specified security taking into account the total margin
+        /// used by the account. Returns null when no margin call is to be issued.
+        /// </summary>
+        /// <param name="security">The security to generate a margin call order for</param>
+        /// <param name="netLiquidationValue">The net liquidation value for the entire account</param>
+        /// <param name="totalMargin">The totl margin used by the account in units of base currency</param>
+        /// <param name="maintenanceMarginRequirement">The percentage of the holding's absolute cost that must be held in free cash in order to avoid a margin call</param>
+        /// <returns>An order object representing a liquidation order to be executed to bring the account within margin requirements</returns>
+        SubmitOrderRequest GenerateMarginCallOrder(Security security, decimal netLiquidationValue, decimal totalMargin, decimal maintenanceMarginRequirement);
+
+        /// <summary>
         /// Executes synchronous orders to bring the account within margin requirements.
         /// </summary>
         /// <param name="generatedMarginCallOrders">These are the margin call orders that were generated
@@ -46,6 +57,12 @@ namespace QuantConnect.Securities
 
         private sealed class NullMarginCallModel : IMarginCallModel
         {
+            public SubmitOrderRequest GenerateMarginCallOrder(Security security, decimal netLiquidationValue, decimal totalMargin,
+                decimal maintenanceMarginRequirement)
+            {
+                return null;
+            }
+
             public List<OrderTicket> ExecuteMarginCall(IEnumerable<SubmitOrderRequest> generatedMarginCallOrders)
             {
                 return new List<OrderTicket>();

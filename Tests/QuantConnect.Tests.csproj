@@ -165,7 +165,7 @@
     <Compile Include="Common\Securities\SecurityExchangeHoursTests.cs" />
     <Compile Include="Common\Securities\SecurityIdentifierTests.cs" />
     <Compile Include="Common\Securities\SecurityManagerTests.cs" />
-    <Compile Include="Common\Securities\NoMarginCallMarginModelTests.cs" />
+    <Compile Include="Common\Securities\MarginCallModelTests.cs" />
     <Compile Include="Common\Securities\SecurityPortfolioModelTests.cs" />
     <Compile Include="Common\Securities\SecurityTests.cs" />
     <Compile Include="Common\Securities\SecurityTransactionModelTests.cs" />

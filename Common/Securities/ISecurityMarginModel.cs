@@ -64,13 +64,13 @@ namespace QuantConnect.Securities
         decimal GetMarginRemaining(SecurityPortfolioManager portfolio, Security security, OrderDirection direction);
 
         /// <summary>
-        /// Generates a new order for the specified security taking into account the total margin
-        /// used by the account. Returns null when no margin call is to be issued.
+        /// The percentage of an order's absolute cost that must be held in free cash in order to place the order
         /// </summary>
-        /// <param name="security">The security to generate a margin call order for</param>
-        /// <param name="netLiquidationValue">The net liquidation value for the entire account</param>
-        /// <param name="totalMargin">The totl margin used by the account in units of base currency</param>
-        /// <returns>An order object representing a liquidation order to be executed to bring the account within margin requirements</returns>
-        SubmitOrderRequest GenerateMarginCallOrder(Security security, decimal netLiquidationValue, decimal totalMargin);
+        decimal GetInitialMarginRequirement(Security security);
+
+        /// <summary>
+        /// The percentage of the holding's absolute cost that must be held in free cash in order to avoid a margin call
+        /// </summary>
+        decimal GetMaintenanceMarginRequirement(Security security);
     }
 }

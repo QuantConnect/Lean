@@ -31,7 +31,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             // set our initializer to our custom type
             SetBrokerageModel(BrokerageName.TradierBrokerage);
-            SetSecurityInitializer(new CustomSecurityInitializer(BrokerageModel, new FuncSecuritySeeder(GetLastKnownPrice), new SecurityMarginModel(1m), DataNormalizationMode.Raw));
+            SetSecurityInitializer(new CustomSecurityInitializer(BrokerageModel, new FuncSecuritySeeder(GetLastKnownPrice), DataNormalizationMode.Raw));
 
             SetStartDate(2012, 01, 01);
             SetEndDate(2013, 01, 01);
@@ -62,11 +62,9 @@ namespace QuantConnect.Algorithm.CSharp
             /// with the specified normalization mode
             /// </summary>
             /// <param name="brokerageModel">The brokerage model used to get fill/fee/slippage/settlement models</param>
-            /// <param name="securitySeeder">An <see cref="ISecuritySeeder"/> used to seed the initial price of the security</param>
-            /// <param name="securityMarginModel">The margin model to be used for the security</param>
             /// <param name="dataNormalizationMode">The desired data normalization mode</param>
-            public CustomSecurityInitializer(IBrokerageModel brokerageModel, ISecuritySeeder securitySeeder, ISecurityMarginModel securityMarginModel, DataNormalizationMode dataNormalizationMode)
-                : base(brokerageModel, securitySeeder, securityMarginModel)
+            public CustomSecurityInitializer(IBrokerageModel brokerageModel, ISecuritySeeder securitySeeder, DataNormalizationMode dataNormalizationMode)
+                : base(brokerageModel, securitySeeder)
             {
                 _dataNormalizationMode = dataNormalizationMode;
             }

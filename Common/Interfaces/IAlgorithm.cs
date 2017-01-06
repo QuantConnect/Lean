@@ -309,9 +309,9 @@ namespace QuantConnect.Interfaces
         /// Sets the brokerage model used to resolve transaction models, settlement models,
         /// and brokerage specified ordering behaviors.
         /// </summary>
-        /// <param name="brokerageModel">The brokerage model used to emulate the real brokerage</param>
-        /// <param name="marginModel">The margin model to use</param>
-        void SetBrokerageModel(IBrokerageModel brokerageModel, ISecurityMarginModel marginModel = null);
+        /// <param name="brokerageModel">The brokerage model used to emulate the real
+        /// brokerage</param>
+        void SetBrokerageModel(IBrokerageModel brokerageModel);
 
         // <summary>
         // v1.0 Handler for Tick Events [DEPRECATED June-2014]
