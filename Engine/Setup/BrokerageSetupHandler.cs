@@ -186,7 +186,7 @@ namespace QuantConnect.Lean.Engine.Setup
                         //Set the default brokerage model before initialize
                         algorithm.SetBrokerageModel(_factory.BrokerageModel, new NoMarginCallMarginModel(1m));
                         //Margin calls are disabled by default in live mode
-                        algorithm.Portfolio.MarginCallModel = MarginCallModel.Null;
+                        algorithm.Portfolio.MarginCallModel = new NullMarginCallModel(algorithm.Portfolio);
                         //Set our parameters
                         algorithm.SetParameters(job.Parameters);
                         //Algorithm is live, not backtesting:
