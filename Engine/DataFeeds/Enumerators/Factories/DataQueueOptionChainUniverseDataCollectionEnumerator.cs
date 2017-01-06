@@ -27,16 +27,15 @@ using System.Collections;
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
     /// <summary>
-    /// Provides an implementation of <see cref="ISubscriptionEnumeratorFactory"/> that reads
-    /// a live dataset provided by symbol universe provider into a <see cref="OptionChainUniverseDataCollection"/> enumerator
+    /// Enumerates live options symbol universe data  into <see cref="OptionChainUniverseDataCollection"/> instances
     /// </summary>
     public class DataQueueOptionChainUniverseDataCollectionEnumerator : IEnumerator<OptionChainUniverseDataCollection>
     {
         private readonly List<BaseData> _symbolUniverse;
         private readonly IEnumerator<BaseData> _underlying;
         private readonly Symbol _symbol;
-        OptionChainUniverseDataCollection _current;
-        bool _needNewCurrent;
+        private OptionChainUniverseDataCollection _current;
+        private bool _needNewCurrent;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DataQueueOptionChainUniverseDataCollectionEnumerator"/> class.

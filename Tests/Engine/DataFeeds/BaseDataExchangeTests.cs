@@ -64,6 +64,38 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [Test]
+        public void Fires2CorrectHandlersBySymbol()
+        {
+            var dataQueue = new ConcurrentQueue<BaseData>();
+            var exchange = CreateExchange(dataQueue);
+            exchange.SleepInterval = 1;
+
+            var firedHandler1 = new AutoResetEvent(false);
+            var firedHandler2 = new AutoResetEvent(false);
+            var firedWrongHandler = new AutoResetEvent(false);
+
+            exchange.AddDataHandler(Symbols.SPY, spy =>
+            {
+                firedHandler1.Set();
+            });
+            exchange.AddDataHandler(Symbols.SPY, spy =>
+            {
+                firedHandler2.Set();
+            });
+            exchange.SetDataHandler(Symbols.EURUSD, eurusd =>
+            {
+                firedWrongHandler.Set();
+            });
+
+            dataQueue.Enqueue(new Tick { Symbol = Symbols.SPY });
+
+            Task.Run(() => exchange.Start());
+
+            Assert.IsTrue(WaitHandle.WaitAll(new[] { firedHandler1, firedHandler2 }, DefaultTimeout));
+            Assert.IsFalse(firedWrongHandler.WaitOne(DefaultTimeout));
+        }
+
+        [Test]
         public void RemovesHandlerBySymbol()
         {
             var dataQueue = new ConcurrentQueue<BaseData>();

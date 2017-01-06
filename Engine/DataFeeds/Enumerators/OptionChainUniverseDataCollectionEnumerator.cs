@@ -47,7 +47,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             if (baseDataCollection != null)
             {
                 if (baseDataCollection.Data.Count > 1)
-                    AddAll(collection, baseDataCollection.Data);
+                    SetData(collection, baseDataCollection.Data);
 
                 else if (baseDataCollection.Data.Count == 1)
                     collection.Underlying = baseDataCollection.Data[0];

@@ -65,6 +65,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 working.EndTime = barStartTime + _barSize;
                 _queue.Enqueue(working);
             }
+            else
+            {
+                working.Value = data.Value;
+            }
         }
 
         /// <summary>

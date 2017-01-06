@@ -113,7 +113,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 
             if (!_isLiveMode)
             {
-                // rewrite the primary to be non-tick and fill forward
+                // rewrite the primary to be fill forward
                 configurations.Add(new SubscriptionDataConfig(config, resolution: resolution, fillForward: true));
             }
 

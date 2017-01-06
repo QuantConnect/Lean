@@ -144,14 +144,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>An identifier that can be used to remove this handler</returns>
         public void AddDataHandler(Symbol symbol, Action<BaseData> handler)
         {
-            if (_dataHandlers.ContainsKey(symbol))
-            {
-                _dataHandlers[symbol].DataEmitted += (sender, args) => handler(args); 
-            }
-            else
-            {
-                SetDataHandler(symbol, handler);
-            }
+            _dataHandlers.AddOrUpdate(symbol,
+                x =>
+                {
+                    var dataHandler = new DataHandler(symbol);
+                    dataHandler.DataEmitted += (sender, args) => handler(args);
+                    return dataHandler;
+                },
+                (x, existingHandler) => 
+                {
+                    existingHandler.DataEmitted += (sender, args) => handler(args);
+                    return existingHandler;
+                });
         }
 
         /// <summary>
