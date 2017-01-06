@@ -154,6 +154,15 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreNotEqual(LeanData.GetDataType(Resolution.Tick, TickType.OpenInterest), tradeBarType);
         }
 
+        [Test]
+        public void LeanData_CanDetermineTheCorrectCommonDataTypes()
+        {
+            Assert.IsTrue(LeanData.IsCommonLeanDataType(typeof(OpenInterest)));
+            Assert.IsTrue(LeanData.IsCommonLeanDataType(typeof(TradeBar)));
+            Assert.IsTrue(LeanData.IsCommonLeanDataType(typeof(QuoteBar)));
+            Assert.IsFalse(LeanData.IsCommonLeanDataType(typeof(Bitcoin)));
+        }
+
         private static void AssertBarsAreEqual(IBar expected, IBar actual)
         {
             if (expected == null && actual == null)

@@ -181,6 +181,27 @@ namespace QuantConnect.Util
             return typeof(TradeBar);
         }
 
+
+        /// <summary>
+        /// Determines if the Type is a 'common' type used throughout lean
+        /// This method is helpful in creating <see cref="SubscriptionDataConfig"/>
+        /// </summary>
+        /// <param name="baseDataType">The Type to check</param>
+        /// <returns>A bool indicating whether the type is of type <see cref="TradeBar"/>
+        ///  <see cref="QuoteBar"/> or <see cref="OpenInterest"/></returns>
+        public static bool IsCommonLeanDataType(Type baseDataType)
+        {
+            if (baseDataType == typeof(TradeBar) ||
+                baseDataType == typeof(QuoteBar) ||
+                baseDataType == typeof(OpenInterest))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+
         /// <summary>
         /// Generates the full zip file path rooted in the <paramref name="dataDirectory"/>
         /// </summary>
