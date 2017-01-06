@@ -141,8 +141,7 @@ namespace QuantConnect.Algorithm
             TradeBuilder = new TradeBuilder(FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO);
 
             SecurityInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(AccountType.Margin),
-                                                                        new FuncSecuritySeeder(GetLastKnownPrice),
-                                                                        new SecurityMarginModel(1m));
+                                                                        new FuncSecuritySeeder(GetLastKnownPrice));
 
             CandlestickPatterns = new CandlestickPatterns(this);
         }
@@ -821,28 +820,23 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="brokerage">The brokerage to emulate</param>
         /// <param name="accountType">The account type (Cash or Margin)</param>
-        /// <param name="marginModel">The margin model to use</param>
-        public void SetBrokerageModel(BrokerageName brokerage, AccountType accountType = AccountType.Margin, ISecurityMarginModel marginModel = null)
+        public void SetBrokerageModel(BrokerageName brokerage, AccountType accountType = AccountType.Margin)
         {
-            SetBrokerageModel(Brokerages.BrokerageModel.Create(brokerage, accountType), marginModel);
+            SetBrokerageModel(Brokerages.BrokerageModel.Create(brokerage, accountType));
         }
 
         /// <summary>
         /// Sets the brokerage to emulate in backtesting or paper trading.
         /// This can be used to set a custom brokerage model.
         /// </summary>
-        /// <param name="brokerageModel">The brokerage model to use</param>
-        /// <param name="marginModel">The margin model to use</param>
-        public void SetBrokerageModel(IBrokerageModel brokerageModel, ISecurityMarginModel marginModel = null)
+        /// <param name="model">The brokerage model to use</param>
+        public void SetBrokerageModel(IBrokerageModel model)
         {
-            BrokerageModel = brokerageModel;
+            BrokerageModel = model;
             if (!_userSetSecurityInitializer)
             {
                 // purposefully use the direct setter vs Set method so we don't flip the switch :/
-                SecurityInitializer = new BrokerageModelSecurityInitializer(
-                    brokerageModel, 
-                    new FuncSecuritySeeder(GetLastKnownPrice), 
-                    marginModel ?? new SecurityMarginModel(1m));
+                SecurityInitializer = new BrokerageModelSecurityInitializer(model, new FuncSecuritySeeder(GetLastKnownPrice));
             }
         }
 
