@@ -223,6 +223,7 @@ namespace QuantConnect.Lean.Engine
         {
             Setup.Dispose();
             CommandQueue.Dispose();
+            DataFileProvider.Dispose();
         }
     }
 }

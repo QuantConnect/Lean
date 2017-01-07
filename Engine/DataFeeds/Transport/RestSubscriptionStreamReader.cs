@@ -17,6 +17,7 @@
 using System;
 using QuantConnect.Logging;
 using RestSharp;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Transport
 {

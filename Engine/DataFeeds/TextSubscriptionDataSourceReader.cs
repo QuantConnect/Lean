@@ -176,23 +176,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         private IStreamReader HandleLocalFileSource(SubscriptionDataSource source)
         {
-            string entryName = null; // default to all entries
-            var file = source.Source;
-            var hashIndex = source.Source.LastIndexOf("#", StringComparison.Ordinal);
-            if (hashIndex != -1)
-            {
-                entryName = source.Source.Substring(hashIndex + 1);
-                file = source.Source.Substring(0, hashIndex);
-            }
+            var reader = _dataFileProvider.Fetch(_config.Symbol, source, _date, _config.Resolution, _config.TickType);
 
-            if (!File.Exists(file) && !_dataFileProvider.Fetch(_config.Symbol, _date, _config.Resolution, _config.TickType))
+            if (reader == null)
             {
-                OnInvalidSource(source, new FileNotFoundException("The specified file was not found", file));
+                OnInvalidSource(source, new FileNotFoundException("The specified source was not found", source.Source));
                 return null;
             }
 
-            // handles zip or text files
-            return new LocalFileSubscriptionStreamReader(file, entryName);
+            return reader;
         }
 
         /// <summary>
