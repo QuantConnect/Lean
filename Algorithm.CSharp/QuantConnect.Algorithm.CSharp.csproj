@@ -81,6 +81,7 @@
     <Compile Include="BasicTemplateOptionsFilterUniverseAlgorithm.cs" />
     <Compile Include="BasicTemplateOptionsHistoryAlgorithm.cs" />
     <Compile Include="BasicTemplateOptionTradesAlgorithm.cs" />
+    <Compile Include="OptionChainConsistencyRegressionAlgorithm.cs" />
     <Compile Include="OptionOpenInterestRegressionAlgorithm.cs" />
     <Compile Include="RegressionChannelAlgorithm.cs" />
     <Compile Include="BasicTemplateFuturesAlgorithm.cs" />

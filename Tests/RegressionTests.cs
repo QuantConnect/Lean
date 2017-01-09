@@ -26,6 +26,11 @@ namespace QuantConnect.Tests
         public void AlgorithmStatisticsRegression(AlgorithmStatisticsTestParameters parameters)
         {
             QuantConnect.Configuration.Config.Set("quandl-auth-token", "WyAazVXnq7ATy_fefTqm");
+
+            QuantConnect.Configuration.Config.Set("symbol-minute-limit", "100");
+            QuantConnect.Configuration.Config.Set("symbol-second-limit", "100");
+            QuantConnect.Configuration.Config.Set("symbol-tick-limit", "100");
+
             AlgorithmRunner.RunLocalBacktest(parameters.Algorithm, parameters.Statistics, parameters.Language);
         }
 
@@ -445,6 +450,29 @@ namespace QuantConnect.Tests
                 {"Total Fees", "$0.50"},
             };
 
+            var optionChainConsistencyRegressionAlgorithmStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "2"},
+                {"Average Win", "0%"},
+                {"Average Loss", "-3.86%"},
+                {"Compounding Annual Return", "-100.000%"},
+                {"Drawdown", "3.900%"},
+                {"Expectancy", "-1"},
+                {"Net Profit", "-3.855%"},
+                {"Sharpe Ratio", "0"},
+                {"Loss Rate", "100%"},
+                {"Win Rate", "0%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "0"},
+                {"Beta", "0"},
+                {"Annual Standard Deviation", "0"},
+                {"Annual Variance", "0"},
+                {"Information Ratio", "0"},
+                {"Tracking Error", "0"},
+                {"Treynor Ratio", "0"},
+                {"Total Fees", "$0.50"},
+            };
+
 
             return new List<AlgorithmStatisticsTestParameters>
             {
@@ -467,6 +495,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("OptionSplitRegressionAlgorithm", optionSplitRegressionAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("OptionRenameRegressionAlgorithm", optionRenameRegressionAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("OptionOpenInterestRegressionAlgorithm", optionOpenInterestRegressionAlgorithmStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("OptionChainConsistencyRegressionAlgorithm", optionChainConsistencyRegressionAlgorithmStatistics, Language.CSharp),
 
                 // FSharp
                 // new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.FSharp),
