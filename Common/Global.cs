@@ -102,7 +102,6 @@ namespace QuantConnect
             Type = holding.Type;
             Quantity = holding.Quantity;
             MarketValue = holding.HoldingsValue;
-            UnrealizedPnL = holding.UnrealizedProfit;
             CurrencySymbol = Currencies.GetCurrencySymbol(security.QuoteCurrency.Symbol);
             ConversionRate = security.QuoteCurrency.ConversionRate;
 
@@ -114,6 +113,7 @@ namespace QuantConnect
 
             AveragePrice = Math.Round(holding.AveragePrice, rounding);
             MarketPrice = Math.Round(holding.Price, rounding);
+            UnrealizedPnL = Math.Round(holding.UnrealizedProfit, rounding);
         }
 
         /// <summary>
