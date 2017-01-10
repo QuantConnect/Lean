@@ -35,6 +35,7 @@ using QuantConnect.Securities;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
+using System.Linq;
 
 namespace QuantConnect.Lean.Engine.HistoricalData
 {
@@ -121,6 +122,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 config.SecurityType == SecurityType.Equity ? _mapFileProvider.Get(config.Market) : MapFileResolver.Empty, 
                 _factorFileProvider,
                 _dataFileProvider,
+                null, 
                 Time.EachTradeableDay(request.ExchangeHours, start, end), 
                 false,
                 includeAuxilliaryData: false

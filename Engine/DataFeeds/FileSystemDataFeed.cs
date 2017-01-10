@@ -51,6 +51,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private UniverseSelection _universeSelection;
         private DateTime _frontierUtc;
+        private IDataFileCacheProvider _dataFileCacheProvider;
 
         /// <summary>
         /// Gets all of the current subscriptions this data feed is processing
@@ -78,6 +79,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _subscriptions = new SubscriptionCollection();
             _universeSelection = new UniverseSelection(this, algorithm, job.Controls);
             _cancellationTokenSource = new CancellationTokenSource();
+            _dataFileCacheProvider = new ZipDataFileCacheProvider();
 
             IsActive = true;
             var threadCount = Math.Max(1, Math.Min(4, Environment.ProcessorCount - 3));
@@ -377,11 +379,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (request.Universe is OptionChainUniverse)
                 {
                     return new OptionChainUniverseSubscriptionEnumeratorFactory((req, e) => ConfigureEnumerator(req, true, e), 
-                        _mapFileProvider.Get(request.Security.Symbol.ID.Market), _factorFileProvider);
+                        _mapFileProvider.Get(request.Security.Symbol.ID.Market), _factorFileProvider, _dataFileCacheProvider);
                 }
                 if (request.Universe is FuturesChainUniverse)
                 {
-                    return new FuturesChainUniverseSubscriptionEnumeratorFactory((req, e) => ConfigureEnumerator(req, true, e));
+                    return new FuturesChainUniverseSubscriptionEnumeratorFactory((req, e) => ConfigureEnumerator(req, true, e), _dataFileCacheProvider);
                 }
             }
 
@@ -390,7 +392,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 : MapFileResolver.Empty;
 
             return new PostCreateConfigureSubscriptionEnumeratorFactory(
-                new SubscriptionDataReaderSubscriptionEnumeratorFactory(_resultHandler, mapFileResolver, _factorFileProvider, _dataFileProvider, false, true),
+                new SubscriptionDataReaderSubscriptionEnumeratorFactory(_resultHandler, mapFileResolver, _factorFileProvider, _dataFileProvider, _dataFileCacheProvider, false, true),
                 enumerator => ConfigureEnumerator(request, false, enumerator)
                 );
         }
@@ -475,6 +477,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 subscription.Dispose();
             }
+
+            if (_dataFileCacheProvider != null) _dataFileCacheProvider.Dispose();
 
             Log.Trace(string.Format("FileSystemDataFeed.Run(): Data Feed Completed at {0} UTC", _frontierUtc));
         }

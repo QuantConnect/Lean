@@ -36,6 +36,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly DateTime _date;
         private readonly SubscriptionDataConfig _config;
         private readonly IDataFileProvider _dataFileProvider;
+        private readonly IDataFileCacheProvider _dataFileCacheProvider;
 
         /// <summary>
         /// Event fired when the specified source is considered invalid, this may
@@ -55,6 +56,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public event EventHandler<CreateStreamReaderErrorEventArgs> CreateStreamReaderError;
 
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TextSubscriptionDataSourceReader"/> class
+        /// </summary>
+        /// <param name="dataFileProvider">Attempts to fetch remote file provider</param>
+        /// <param name="dataFileCacheProvider">Caches files</param>
+        /// <param name="config">The subscription's configuration</param>
+        /// <param name="date">The date this factory was produced to read data for</param>
+        /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
+        public TextSubscriptionDataSourceReader(IDataFileProvider dataFileProvider, IDataFileCacheProvider dataFileCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        {
+            _dataFileProvider = dataFileProvider;
+            _dataFileCacheProvider = dataFileCacheProvider ?? new DefaultDataFileCacheProvider();
+            _date = date;
+            _config = config;
+            _isLiveMode = isLiveMode;
+            _factory = (BaseData)ObjectActivator.GetActivator(config.Type).Invoke(new object[0]);
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="TextSubscriptionDataSourceReader"/> class
         /// </summary>
@@ -63,12 +83,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
         public TextSubscriptionDataSourceReader(IDataFileProvider dataFileProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            :this(dataFileProvider, null, config, date, isLiveMode)
         {
-            _dataFileProvider = dataFileProvider;
-            _date = date;
-            _config = config;
-            _isLiveMode = isLiveMode;
-            _factory = (BaseData) ObjectActivator.GetActivator(config.Type).Invoke(new object[0]);
         }
 
         /// <summary>
@@ -95,7 +111,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     BaseData instance = null;
                     try
                     {
-                        instance  = _factory.Reader(_config, line, _date, _isLiveMode);
+                        instance = _factory.Reader(_config, line, _date, _isLiveMode);
                     }
                     catch (Exception err)
                     {
@@ -176,15 +192,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         private IStreamReader HandleLocalFileSource(SubscriptionDataSource source)
         {
-            var reader = _dataFileProvider.Fetch(_config.Symbol, source, _date, _config.Resolution, _config.TickType);
-
-            if (reader == null)
+            string entryName = null; // default to all entries
+            var file = source.Source;
+            var hashIndex = source.Source.LastIndexOf("#", StringComparison.Ordinal);
+            if (hashIndex != -1)
             {
-                OnInvalidSource(source, new FileNotFoundException("The specified source was not found", source.Source));
+                entryName = source.Source.Substring(hashIndex + 1);
+                file = source.Source.Substring(0, hashIndex);
+            }
+
+            if (!File.Exists(file) && !_dataFileProvider.Fetch(_config.Symbol, _date, _config.Resolution, _config.TickType))
+            {
+                OnInvalidSource(source, new FileNotFoundException("The specified file was not found", file));
                 return null;
             }
 
-            return reader;
+            // handles zip or text files
+            return _dataFileCacheProvider.Fetch(_config.Symbol, source, _date, _config.Resolution, _config.TickType);
         }
 
         /// <summary>

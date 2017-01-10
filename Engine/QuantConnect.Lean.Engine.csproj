@@ -175,7 +175,8 @@
     </Compile>
     <Compile Include="AlgorithmManager.cs" />
     <Compile Include="DataFeeds\ApiDataFileProvider.cs" />
-    <Compile Include="DataFeeds\CachingDataFileProvider.cs" />
+    <Compile Include="DataFeeds\DefaultDataFileCacheProvider.cs" />
+    <Compile Include="DataFeeds\ZipDataFileCacheProvider.cs" />
     <Compile Include="DataFeeds\Enumerators\BaseDataCollectionAggregatorEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\EnqueueableEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\BaseDataCollectionSubscriptionEnumeratorFactory.cs" />

@@ -148,9 +148,9 @@ namespace QuantConnect.Securities
                     default:
                         return false;
                 }
-            }).ToList();
+            });
 
-            _allSymbols = filtered;
+            _allSymbols = filtered.ToList();
             return this;
         }
 
@@ -185,7 +185,7 @@ namespace QuantConnect.Securities
             var ordered = this.OrderBy(x => x.ID.Date).ToList();
             var frontMonth = ordered.TakeWhile(x => ordered[0].ID.Date == x.ID.Date);
 
-            _allSymbols = frontMonth;
+            _allSymbols = frontMonth.ToList();
             return this;
         }
 
@@ -201,7 +201,7 @@ namespace QuantConnect.Securities
             var ordered = this.OrderBy(x => x.ID.Date).ToList();
             var backMonths = ordered.SkipWhile(x => ordered[0].ID.Date == x.ID.Date);
 
-            _allSymbols = backMonths;
+            _allSymbols = backMonths.ToList();
             return this;
         }
 
@@ -240,7 +240,6 @@ namespace QuantConnect.Securities
             var minPrice = _underlying.Price + minStrike * _strikeSize;
             var maxPrice = _underlying.Price + maxStrike * _strikeSize;
 
-            // ReSharper disable once PossibleMultipleEnumeration - ReSharper is wrong here due to the ToList call
             var filtered = 
                    from symbol in _allSymbols
                    let contract = symbol.ID
@@ -250,7 +249,7 @@ namespace QuantConnect.Securities
 
             // new universe is dynamic
             _isDynamic = true;
-            _allSymbols = filtered;
+            _allSymbols = filtered.ToList();
             return this;
         }
 
@@ -282,7 +281,7 @@ namespace QuantConnect.Securities
                       && contract.Date <= maxExpiryToDate
                    select symbol;
 
-            _allSymbols = filtered;
+            _allSymbols = filtered.ToList();
             return this;
         }
 
@@ -316,7 +315,7 @@ namespace QuantConnect.Securities
         /// <returns></returns>
         public static OptionFilterUniverse Where(this OptionFilterUniverse universe, Func<Symbol, bool> predicate)
         {
-            universe._allSymbols = universe._allSymbols.Where(predicate);
+            universe._allSymbols = universe._allSymbols.Where(predicate).ToList();
             universe._isDynamic = true;
             return universe;
         }
@@ -326,7 +325,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public static OptionFilterUniverse Select(this OptionFilterUniverse universe, Func<Symbol, Symbol> mapFunc)
         {
-            universe._allSymbols = universe._allSymbols.Select(mapFunc);
+            universe._allSymbols = universe._allSymbols.Select(mapFunc).ToList();
             universe._isDynamic = true;
             return universe;
         }
@@ -336,7 +335,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public static OptionFilterUniverse SelectMany(this OptionFilterUniverse universe, Func<Symbol, IEnumerable<Symbol>> mapFunc)
         {
-            universe._allSymbols = universe._allSymbols.SelectMany(mapFunc);
+            universe._allSymbols = universe._allSymbols.SelectMany(mapFunc).ToList();
             universe._isDynamic = true;
             return universe;
         }

@@ -25,14 +25,16 @@ using System.Linq;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
-    using CacheEntry = Tuple<DateTime, ZipArchive>;
+    using CacheEntry = Tuple<DateTime, TimeSpan, ZipArchive>;
 
     /// <summary>
     /// File provider implements optimized zip archives caching facility
     /// </summary>
-    public class CachingDataFileProvider : IDataFileProvider
+    public class ZipDataFileCacheProvider : IDataFileCacheProvider
     {
-        // ZipArchive cache used by UnzipCached method
+        const int _cachePeriodBars = 10;
+
+        // ZipArchive cache used by the class
         private ConcurrentDictionary<string, Lazy<CacheEntry>> _zipArchiveCache = new ConcurrentDictionary<string, Lazy<CacheEntry>>();
         private DateTime lastDate = DateTime.MinValue;
 
@@ -65,10 +67,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // cleaning the outdated cache items
                     if (lastDate == DateTime.MinValue || lastDate < date.Date)
                     {
-                        foreach (var zip in _zipArchiveCache.Where(x => x.Value.Value.Item1 < date.Date))
+                        // clean all items that that are older than N bars than the current date
+                        foreach (var zip in _zipArchiveCache.Where(x => x.Value.Value.Item1 < date.Date.AddDays(-x.Value.Value.Item2.TotalDays * _cachePeriodBars)))
                         {
                             // disposing zip archive
-                            zip.Value.Value.Item2.Dispose();
+                            zip.Value.Value.Item3.Dispose();
 
                             // removing it from the cache
                             Lazy<CacheEntry> removed;
@@ -86,13 +89,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             // http://george.chiramattel.com/blog/2007/09/deflatestream-block-length-does-not-match.html
                             file.ReadByte(); file.ReadByte();
 
-                            var newItem = Tuple.Create(date.Date, new ZipArchive(file));
-                            reader = new LocalFileSubscriptionStreamReader(newItem.Item2, entryName);
+                            var newItem = Tuple.Create(date.Date, resolution.ToTimeSpan(), new ZipArchive(file));
+                            reader = new LocalFileSubscriptionStreamReader(newItem.Item3, entryName);
                             return newItem;
                         },
                         (x, existingEntry) =>
                         {
-                            reader = new LocalFileSubscriptionStreamReader(existingEntry.Item2, entryName);
+                            reader = new LocalFileSubscriptionStreamReader(existingEntry.Item3, entryName);
                             return existingEntry;
                         });
 
@@ -120,7 +123,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             foreach (var zip in _zipArchiveCache)
             {
-                zip.Value.Value.Item2.Dispose();
+                zip.Value.Value.Item3.Dispose();
             }
 
             _zipArchiveCache.Clear();

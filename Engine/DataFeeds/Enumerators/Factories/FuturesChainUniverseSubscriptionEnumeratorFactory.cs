@@ -37,26 +37,34 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         private readonly IDataQueueUniverseProvider _symbolUniverse;
         private readonly ITimeProvider _timeProvider;
 
+        private readonly IDataFileCacheProvider _dataFileCacheProvider;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="FuturesChainUniverseSubscriptionEnumeratorFactory"/> class
         /// </summary>
         /// <param name="enumeratorConfigurator">Function used to configure the sub-enumerators before sync (fill-forward/filter/ect...)</param>
-        public FuturesChainUniverseSubscriptionEnumeratorFactory(Func<SubscriptionRequest, IEnumerator<BaseData>, IEnumerator<BaseData>> enumeratorConfigurator)
+        /// <param name="dataFileCacheProvider">Provider used to get data when it is not present on disk</param>
+        public FuturesChainUniverseSubscriptionEnumeratorFactory(Func<SubscriptionRequest, IEnumerator<BaseData>, IEnumerator<BaseData>> enumeratorConfigurator,
+                                                          IDataFileCacheProvider dataFileCacheProvider)
         {
             _isLiveMode = false;
             _enumeratorConfigurator = enumeratorConfigurator;
+            _dataFileCacheProvider = dataFileCacheProvider;
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FuturesChainUniverseSubscriptionEnumeratorFactory"/> class
         /// </summary>
         /// <param name="symbolUniverse">Symbol universe provider of the data queue</param>
-        public FuturesChainUniverseSubscriptionEnumeratorFactory(IDataQueueUniverseProvider symbolUniverse, ITimeProvider timeProvider)
+        /// <param name="dataFileCacheProvider">Provider used to get data when it is not present on disk</param>
+        public FuturesChainUniverseSubscriptionEnumeratorFactory(IDataQueueUniverseProvider symbolUniverse, ITimeProvider timeProvider,
+                                                                IDataFileCacheProvider dataFileCacheProvider)
         {
             _isLiveMode = true;
             _symbolUniverse = symbolUniverse;
             _timeProvider = timeProvider;
             _enumeratorConfigurator = (sr, input) => input;
+            _dataFileCacheProvider = dataFileCacheProvider;
         }
 
         /// <summary>
@@ -87,7 +95,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             }
             else
             {
-                var factory = new BaseDataSubscriptionEnumeratorFactory();
+                var factory = new BaseDataSubscriptionEnumeratorFactory(_dataFileCacheProvider);
 
                 var enumerators = GetSubscriptionConfigurations(request)
                     .Select(c => new SubscriptionRequest(request, configuration: c))
