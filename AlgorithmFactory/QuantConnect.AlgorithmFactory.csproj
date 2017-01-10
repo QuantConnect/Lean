@@ -64,6 +64,10 @@
       <Private>True</Private>
       <HintPath>..\packages\IronPython.2.7.5\lib\Net45\Microsoft.Scripting.Metadata.dll</HintPath>
     </Reference>
+    <Reference Include="Python.Runtime, Version=4.0.0.1, Culture=neutral, processorArchitecture=AMD64">
+      <HintPath>..\packages\AlexCatarino.PythonNET.Runtime.1.0.4\lib\UCS2\Python.Runtime.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -80,6 +84,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">
+      <Project>{3240ACA4-BDD4-4D24-AC36-BBB651C39212}</Project>
+      <Name>QuantConnect.Algorithm</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Common\QuantConnect.csproj">
       <Project>{2545c0b4-fabb-49c9-8dd1-9ad7ee23f86b}</Project>
       <Name>QuantConnect</Name>

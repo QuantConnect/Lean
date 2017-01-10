@@ -20,12 +20,12 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using ImpromptuInterface;
-using IronPython.Hosting;
+using Python.Runtime;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 
-namespace QuantConnect.AlgorithmFactory 
+namespace QuantConnect.AlgorithmFactory
 {
     /// <summary>
     /// Loader creates and manages the memory and exception space of the algorithm, ensuring if it explodes the Lean Engine is intact.
@@ -140,79 +140,87 @@ namespace QuantConnect.AlgorithmFactory
         /// <returns></returns>
         private bool TryCreatePythonAlgorithm(string assemblyPath, out IAlgorithm algorithmInstance, out string errorMessage)
         {
-            var success = false;
             algorithmInstance = null;
             errorMessage = "";
 
+            var algorithmName = Config.Get("algorithm-type-name", "main");
+
+            // Copies file to execution location
+            foreach (var file in new DirectoryInfo(@"../../../Algorithm.Python/").GetFiles("*.py"))
+            {
+                file.CopyTo(file.FullName.Replace(file.DirectoryName, Environment.CurrentDirectory), true);
+            }
+
+            if (!File.Exists(algorithmName + ".py"))
+            {
+                errorMessage = "Loader.TryCreatePythonAlgorithm(): Unable to find py file: " + algorithmName + ".py";
+                return false;
+            }
+            
+            Environment.SetEnvironmentVariable("PYTHONPATH", Environment.CurrentDirectory);
+            
             try
             {
-                //Create the python engine
-                var engine = Python.CreateEngine();
-                var paths = engine.GetSearchPaths();
-                paths.Add(_ironPythonLibrary);
-                engine.SetSearchPaths(paths);
-
-                //Load the dll - built with clr.Compiler()
-                Log.Trace("Loader.TryCreatePythonAlgorithm(): Loading python assembly: " + assemblyPath);
-                var library = Assembly.LoadFile(Path.GetFullPath(assemblyPath));
-                engine.Runtime.LoadAssembly(library);
-
-                //Import the python dll: requires a main.py file to serve as starting point for the algorithm.
-                var items = new List<KeyValuePair<string, dynamic>>();
-                try
+                // Initialize Python Engine
+                if (!PythonEngine.IsInitialized)
                 {
-                    Log.Trace("Loader.TryCreatePythonAlgorithm(): Importing python module...");
-                    var algorithmName = Config.Get("algorithm-type-name");
-                    var scope = engine.Runtime.ImportModule(string.IsNullOrEmpty(algorithmName) ? "main" : algorithmName);
-                    items = (List<KeyValuePair<string, dynamic>>)scope.GetItems();
+                    PythonEngine.Initialize();
+                    PythonEngine.BeginAllowThreads();
                 }
-                catch (Exception err)
+                
+                using (Py.GIL())
                 {
-                    Log.Error(err);
-                    errorMessage = err.Message + " - could not locate 'main' module. Please make sure you have a main.py file in your project.";
-                    return false;
-                }
+                    Log.Trace("Loader.TryCreatePythonAlgorithm(): Importing python module " + algorithmName);
 
-                //Loop through the types in the dll, see if we can find a "QCAlgorithm" base class
-                Log.Trace("Loader.TryCreatePythonAlgorithm(): Finding QCAlgorithm...");
-                dynamic dynamicAlgorithm = null;
-                foreach (var item in items)
-                {
-                    try
+                    var scope = Py.Import(algorithmName);
+                    if (scope == null)
                     {
-                        string baseName = item.Value.__bases__.ToString().ToString();
-                        if (baseName.Contains("QCAlgorithm"))
+                        errorMessage = "Loader.TryCreatePythonAlgorithm(): Unable to import python module. Check for errors in the py file.";
+                        return false;
+                    }
+
+                    var baseClass = scope.GetAttr("QCAlgorithm");
+                    if (baseClass == null)
+                    {
+                        errorMessage = "Loader.TryCreatePythonAlgorithm(): Unable to find QCAlgorithm class in module.";
+                        return false;
+                    }
+
+                    Log.Trace("Loader.TryCreatePythonAlgorithm(): Creating IAlgorithm instance.");
+                    
+                    foreach (var name in scope.Dir())
+                    {
+                        var attr = scope.GetAttr(name.ToString());
+
+                        if (attr.IsSubclass(baseClass) && attr.Repr().Contains(algorithmName))
                         {
-                            dynamicAlgorithm = item.Value;
+                            var addUniverse = Py.Import("qc_algorithm_helper").GetAttr("AddUniverse");
+                            attr.SetAttr("Add_Universe", addUniverse);
+
+                            algorithmInstance = Impromptu.ActLike<IAlgorithm>(attr.Invoke());
+                            break;
                         }
                     }
-                    catch (Exception)
-                    { 
-                        //Suppress the error messages
-                    }
                 }
 
-                //If we haven't found it yet
-                if (dynamicAlgorithm == null)
+                if (algorithmInstance == null)
                 {
-                    errorMessage = "Could not find QCAlgorithm class in your project";
+                    errorMessage = "Loader.TryCreatePythonAlgorithm(): Unable to create IAlgorithm instance. ";
                     return false;
                 }
 
-                //Cast DLR object to an IAlgorithm instance with Impromptu
-                Log.Trace("Loader.TryCreatePythonAlgorithm(): Creating IAlgorithm instance...");
-                dynamic instance = engine.Operations.CreateInstance(dynamicAlgorithm);
-                algorithmInstance = Impromptu.ActLike<IAlgorithm>(instance);
-                success = true;
+                // Wraps algorithm to prevent access violation
+                // All calls to python should be inside a "using (Py.GIL()) {/* Your code here */}" block.
+                algorithmInstance = new AlgorithmPythonWrapper(algorithmInstance);
             }
             catch (Exception err)
             {
                 Log.Error(err);
+                errorMessage = err.Message;
             }
 
-            return success && (algorithmInstance != null);
+            return algorithmInstance != null;
         }
-
 
         /// <summary>
         /// Create a generic IL algorithm 
