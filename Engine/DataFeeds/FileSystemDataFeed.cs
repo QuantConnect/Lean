@@ -51,6 +51,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private UniverseSelection _universeSelection;
         private DateTime _frontierUtc;
+        private SubscriptionDataReaderSubscriptionEnumeratorFactory _subscriptionfactory;
 
         /// <summary>
         /// Gets all of the current subscriptions this data feed is processing
@@ -78,6 +79,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _subscriptions = new SubscriptionCollection();
             _universeSelection = new UniverseSelection(this, algorithm, job.Controls);
             _cancellationTokenSource = new CancellationTokenSource();
+            _subscriptionfactory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(_resultHandler, _mapFileProvider, _factorFileProvider, _dataFileProvider, false, true);
 
             IsActive = true;
             var threadCount = Math.Max(1, Math.Min(4, Environment.ProcessorCount - 3));
@@ -385,14 +387,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
-            var mapFileResolver = request.Configuration.SecurityType == SecurityType.Equity || request.Configuration.SecurityType == SecurityType.Option
-                ? _mapFileProvider.Get(request.Security.Symbol.ID.Market) 
-                : MapFileResolver.Empty;
-
-            return new PostCreateConfigureSubscriptionEnumeratorFactory(
-                new SubscriptionDataReaderSubscriptionEnumeratorFactory(_resultHandler, mapFileResolver, _factorFileProvider, _dataFileProvider, false, true),
-                enumerator => ConfigureEnumerator(request, false, enumerator)
-                );
+            return new PostCreateConfigureSubscriptionEnumeratorFactory(_subscriptionfactory, enumerator => ConfigureEnumerator(request, false, enumerator));
         }
 
         /// <summary>
@@ -475,6 +470,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 subscription.Dispose();
             }
+
+            if (_subscriptionfactory != null)
+                _subscriptionfactory.Dispose();
 
             Log.Trace(string.Format("FileSystemDataFeed.Run(): Data Feed Completed at {0} UTC", _frontierUtc));
         }

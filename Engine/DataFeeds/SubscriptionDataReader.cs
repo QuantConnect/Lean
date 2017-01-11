@@ -92,6 +92,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private bool _emittedAuxilliaryData;
         private BaseData _lastInstanceBeforeAuxilliaryData;
         private readonly IDataFileProvider _dataFileProvider;
+        private readonly DataFileCacheProvider _dataFileCacheProvider;
 
         /// <summary>
         /// Last read BaseData object from this type and source
@@ -120,6 +121,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="mapFileResolver">Used for resolving the correct map files</param>
         /// <param name="factorFileProvider">Used for getting factor files</param>
         /// <param name="dataFileProvider">Used for getting files not present on disk</param>
+        /// <param name="dataFileCacheProvider">Used for caching files</param>
         /// <param name="tradeableDates">Defines the dates for which we'll request data, in order, in the security's exchange time zone</param>
         /// <param name="isLiveMode">True if we're in live mode, false otherwise</param>
         /// <param name="includeAuxilliaryData">True if we want to emit aux data, false to only emit price data</param>
@@ -132,6 +134,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IDataFileProvider dataFileProvider,
             IEnumerable<DateTime> tradeableDates,
             bool isLiveMode,
+            DataFileCacheProvider dataFileCacheProvider = null,
             bool includeAuxilliaryData = true)
         {
             //Save configuration of data-subscription:
@@ -143,6 +146,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _periodStart = periodStart;
             _periodFinish = periodFinish;
             _dataFileProvider = dataFileProvider;
+            _dataFileCacheProvider = dataFileCacheProvider;
 
             //Save access to securities
             _isLiveMode = isLiveMode;
@@ -163,7 +167,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             //Create an instance of the "Type":
-            var userObj = objectActivator.Invoke(new object[] {});
+            var userObj = objectActivator.Invoke(new object[] { });
             _dataFactory = userObj as BaseData;
 
             //If its quandl set the access token in data factory:
@@ -422,7 +426,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private ISubscriptionDataSourceReader CreateSubscriptionFactory(SubscriptionDataSource source)
         {
-            var factory = SubscriptionDataSourceReader.ForSource(source, _dataFileProvider, _config, _tradeableDates.Current, _isLiveMode);
+            var factory = SubscriptionDataSourceReader.ForSource(source, _dataFileProvider, _dataFileCacheProvider, _config, _tradeableDates.Current, _isLiveMode);
             AttachEventHandlers(factory, source);
             return factory;
         }

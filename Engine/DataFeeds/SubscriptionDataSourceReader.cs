@@ -30,16 +30,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="source">The subscription data source to create a factory for</param>
         /// <param name="dataFileProvider">Retrieves files if not found on disk</param>
+        /// <param name="dataFileCacheProvider">Caches files</param>
         /// <param name="config">The configuration of the subscription</param>
         /// <param name="date">The date to be processed</param>
         /// <param name="isLiveMode">True for live mode, false otherwise</param>
         /// <returns>A new <see cref="ISubscriptionDataSourceReader"/> that can read the specified <paramref name="source"/></returns>
-        public static ISubscriptionDataSourceReader ForSource(SubscriptionDataSource source, IDataFileProvider dataFileProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public static ISubscriptionDataSourceReader ForSource(SubscriptionDataSource source, IDataFileProvider dataFileProvider, DataFileCacheProvider dataFileCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             switch (source.Format)
             {
                 case FileFormat.Csv:
-                    return new TextSubscriptionDataSourceReader(dataFileProvider, config, date, isLiveMode);
+                    return new TextSubscriptionDataSourceReader(dataFileProvider, dataFileCacheProvider, config, date, isLiveMode);
 
                 case FileFormat.Collection:
                     return new CollectionSubscriptionDataSourceReader(config, date, isLiveMode);
@@ -50,6 +51,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 default:
                     throw new NotImplementedException("SubscriptionFactory.ForSource(" + source + ") has not been implemented yet.");
             }
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="ISubscriptionDataSourceReader"/> capable of handling the specified <paramref name="source"/>
+        /// </summary>
+        /// <param name="source">The subscription data source to create a factory for</param>
+        /// <param name="dataFileProvider">Retrieves files if not found on disk</param>
+        /// <param name="config">The configuration of the subscription</param>
+        /// <param name="date">The date to be processed</param>
+        /// <param name="isLiveMode">True for live mode, false otherwise</param>
+        /// <returns>A new <see cref="ISubscriptionDataSourceReader"/> that can read the specified <paramref name="source"/></returns>
+        public static ISubscriptionDataSourceReader ForSource(SubscriptionDataSource source, IDataFileProvider dataFileProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        {
+            return ForSource(source, dataFileProvider, null, config, date, isLiveMode);
         }
     }
 
