@@ -18,7 +18,6 @@ using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds.Transport;
 using QuantConnect.Util;
-using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {

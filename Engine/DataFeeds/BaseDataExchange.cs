@@ -36,7 +36,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private readonly string _name;
         private readonly object _enumeratorsWriteLock = new object();
-        private readonly ConcurrentDictionary<Symbol, Lazy<DataHandler>> _dataHandlers;
+        private readonly ConcurrentDictionary<Symbol, DataHandler> _dataHandlers;
         private ConcurrentDictionary<Symbol, EnumeratorHandler> _enumerators;
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             _name = name;
             _isFatalError = x => false;
-            _dataHandlers = new ConcurrentDictionary<Symbol, Lazy<DataHandler>>();
+            _dataHandlers = new ConcurrentDictionary<Symbol, DataHandler>();
             _enumerators = new ConcurrentDictionary<Symbol, EnumeratorHandler>();
         }
 
@@ -120,7 +120,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>An identifier that can be used to remove this handler</returns>
         public void SetDataHandler(DataHandler handler)
         {
-            _dataHandlers[handler.Symbol] = new Lazy<DataHandler>(() => handler);
+            _dataHandlers[handler.Symbol] = handler;
         }
 
         /// <summary>
@@ -164,7 +164,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="symbol">The symbol to remove handlers for</param>
         public bool RemoveDataHandler(Symbol symbol)
         {
-            Lazy<DataHandler> handler;
+            DataHandler handler;
             return _dataHandlers.TryRemove(symbol, out handler);
         }
 
@@ -251,11 +251,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
 
                         // invoke the correct handler
-                        Lazy<DataHandler> dataHandler;
+                        DataHandler dataHandler;
                         if (_dataHandlers.TryGetValue(enumerator.Current.Symbol, out dataHandler))
                         {
                             handled = true;
-                            dataHandler.Value.OnDataEmitted(enumerator.Current);
+                            dataHandler.OnDataEmitted(enumerator.Current);
                         }
                     }
 

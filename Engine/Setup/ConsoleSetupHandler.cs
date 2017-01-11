@@ -219,6 +219,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
+            Compression.ClearZipArchiveCache();
         }
 
     } // End Result Handler Thread:

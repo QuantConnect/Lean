@@ -17,7 +17,6 @@
 using System;
 using System.IO;
 using System.Net;
-using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Transport
 {

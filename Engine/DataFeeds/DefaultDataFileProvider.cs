@@ -15,9 +15,6 @@
 
 using System;
 using QuantConnect.Interfaces;
-using QuantConnect.Data;
-using System.IO;
-using QuantConnect.Lean.Engine.DataFeeds.Transport;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -29,32 +26,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Does not attempt to retrieve any data
         /// </summary>
-        public IStreamReader Fetch(Symbol symbol, SubscriptionDataSource source, DateTime date, Resolution resolution, TickType tickType)
+        public bool Fetch(Symbol symbol, DateTime date, Resolution resolution, TickType tickType)
         {
-            string entryName = null; // default to all entries
-            var file = source.Source;
-            var hashIndex = source.Source.LastIndexOf("#", StringComparison.Ordinal);
-            if (hashIndex != -1)
-            {
-                entryName = source.Source.Substring(hashIndex + 1);
-                file = source.Source.Substring(0, hashIndex);
-            }
-
-            if (!File.Exists(file))
-            {
-                return null;
-            }
-
-            // handles zip or text files
-            return new LocalFileSubscriptionStreamReader(file, entryName);
-        }
-
-        /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-        /// </summary>
-        /// <filterpriority>2</filterpriority>
-        public void Dispose()
-        {
+            return false;
         }
     }
 }

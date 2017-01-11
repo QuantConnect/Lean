@@ -266,7 +266,6 @@
     <Compile Include="Interfaces\IJobQueueHandler.cs" />
     <Compile Include="Interfaces\IMapFileProvider.cs" />
     <Compile Include="Interfaces\IMessagingHandler.cs" />
-    <Compile Include="Interfaces\IStreamReader.cs" />
     <Compile Include="LocalTimeKeeper.cs" />
     <Compile Include="Market.cs" />
     <Compile Include="Notifications\Notification.cs" />

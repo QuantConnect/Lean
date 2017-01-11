@@ -17,9 +17,6 @@ using System;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
-using QuantConnect.Data;
-using System.IO;
-using QuantConnect.Lean.Engine.DataFeeds.Transport;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -32,27 +29,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly int _uid = Config.GetInt("job-user-id", 0);
         private readonly string _token = Config.Get("api-access-token", "1");
         private readonly string _dataPath = Config.Get("data-folder", "../../../Data/");
-        public IStreamReader Fetch(Symbol symbol, SubscriptionDataSource source, DateTime date, Resolution resolution, TickType tickType)
+        public bool Fetch(Symbol symbol, DateTime date, Resolution resolution, TickType tickType)
         {
             Log.Trace(
                 string.Format(
                     "Attempting to get data from QuantConnect.com's data library for symbol({0}), resolution({1}) and date({2}).",
                     symbol.ID, resolution, date.Date.ToShortDateString()));
-
-            string entryName = null; // default to all entries
-            var file = source.Source;
-            var hashIndex = source.Source.LastIndexOf("#", StringComparison.Ordinal);
-            if (hashIndex != -1)
-            {
-                entryName = source.Source.Substring(hashIndex + 1);
-                file = source.Source.Substring(0, hashIndex);
-            }
-
-            if (File.Exists(file))
-            {
-                // handles zip or text files
-                return new LocalFileSubscriptionStreamReader(file, entryName);
-            }
 
             var api = new Api.Api();
             api.Initialize(_uid, _token, _dataPath);
@@ -65,7 +47,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     string.Format(
                         "Successfully retrieved data for symbol({0}), resolution({1}) and date({2}).",
                         symbol.ID, resolution, date.Date.ToShortDateString()));
-                return new LocalFileSubscriptionStreamReader(file, entryName);
+                return true;
             }
 
 
@@ -73,15 +55,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     string.Format(
                         "Unable to remotely retrieve data for symbol({0}), resolution({1}) and date({2}). Please make sure you have the necessary data in your online QuantConnect data library.",
                         symbol.ID, resolution, date.Date.ToShortDateString()));
-            return null;
-        }
-
-        /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-        /// </summary>
-        /// <filterpriority>2</filterpriority>
-        public void Dispose()
-        {
+            return false;
         }
     }
 }

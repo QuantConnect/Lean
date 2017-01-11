@@ -16,7 +16,7 @@
 
 using System;
 
-namespace QuantConnect.Interfaces
+namespace QuantConnect.Lean.Engine.DataFeeds.Transport
 {
     /// <summary>
     /// Defines a transport mechanism for data from its source into various reader methods

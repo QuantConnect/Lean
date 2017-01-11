@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data;
 using System;
 using System.ComponentModel.Composition;
 
@@ -24,17 +23,16 @@ namespace QuantConnect.Interfaces
     /// Must save the file to Globals.DataFolder.
     /// </summary>
     [InheritedExport(typeof(IDataFileProvider))]
-    public interface IDataFileProvider : IDisposable
+    public interface IDataFileProvider
     {
         /// <summary>
         /// Gets and downloads the remote file
         /// </summary>
         /// <param name="symbol"><see cref="Symbol"/> of the security</param>
-        /// <param name="source"><see cref="SubscriptionDataSource"/> of the security</param>
         /// <param name="resolution"><see cref="Resolution"/> of the data requested</param>
         /// <param name="date">DateTime of the data requested</param>
         /// <param name="tickType"><see cref="TickType"/> of the security</param>
-        /// <returns><see cref="IStreamReader"/> or null if the remote file was not fetched correctly</returns>
-        IStreamReader Fetch(Symbol symbol, SubscriptionDataSource source, DateTime date, Resolution resolution, TickType tickType);
+        /// <returns>Bool indicating whether the remote file was fetched correctly</returns>
+        bool Fetch(Symbol symbol, DateTime date, Resolution resolution, TickType tickType);
     }
 }

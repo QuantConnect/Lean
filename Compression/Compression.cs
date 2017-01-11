@@ -474,7 +474,7 @@ namespace QuantConnect
         /// <param name="filename">Location of the original zip file</param>
         /// <param name="zip">The ZipFile instance to be returned to the caller</param>
         /// <returns>Stream reader of the first file contents in the zip file</returns>
-        public static StreamReader Unzip(string filename, out ZipArchive zip)
+        public static StreamReader Unzip(string filename, out ZipFile zip)
         {
             return Unzip(filename, null, out zip);
         }
@@ -485,9 +485,9 @@ namespace QuantConnect
         /// </summary>
         /// <param name="filename">Location of the original zip file</param>
         /// <param name="zipEntryName">The zip entry name to open a reader for. Specify null to access the first entry</param>
-        /// <param name="zip">The ZipArchive instance to be returned to the caller</param>
+        /// <param name="zip">The ZipFile instance to be returned to the caller</param>
         /// <returns>Stream reader of the first file contents in the zip file</returns>
-        public static StreamReader Unzip(string filename, string zipEntryName, out ZipArchive zip)
+        public static StreamReader Unzip(string filename, string zipEntryName, out ZipFile zip)
         {
             StreamReader reader = null;
             zip = null;
@@ -498,20 +498,15 @@ namespace QuantConnect
                 {
                     try
                     {
-                        var file = File.OpenRead(filename);
-                        // reading up first two bytes 
-                        // http://george.chiramattel.com/blog/2007/09/deflatestream-block-length-does-not-match.html
-                        file.ReadByte(); file.ReadByte();
-
-                        zip = new ZipArchive(file);
-                        var entry = zip.Entries.FirstOrDefault(x => zipEntryName == null || string.Compare(x.FullName, zipEntryName, StringComparison.OrdinalIgnoreCase) == 0);
+                        zip = new ZipFile(filename);
+                        var entry = zip.FirstOrDefault(x => zipEntryName == null || string.Compare(x.FileName, zipEntryName, StringComparison.OrdinalIgnoreCase) == 0);
                         if (entry == null)
                         {
                             // Unable to locate zip entry 
                             return null;
                         }
 
-                        reader = new StreamReader(entry.Open());
+                        reader = new StreamReader(entry.OpenReader());
                     }
                     catch (Exception err)
                     {
@@ -532,7 +527,90 @@ namespace QuantConnect
             return reader;
         }
 
-        
+
+        // ZipArchive cache used by UnzipCached method
+        private static ConcurrentDictionary<string, ZipArchive> _zipArchiveCache = new ConcurrentDictionary<string, ZipArchive>();
+
+        /// <summary>
+        /// Clears ZipArchive cached used by UnzipCached method
+        /// </summary>
+        public static void ClearZipArchiveCache()
+        {
+            foreach (var zip in _zipArchiveCache)
+            {
+                zip.Value.Dispose();
+            }
+
+            _zipArchiveCache.Clear();
+        }
+
+        /// <summary>
+        /// Streams a local zip file using a streamreader and cached weak reference to ZipArchive in order to optimize method performance.
+        /// Important: the caller must call Dispose() on the returned ZipFile instance.
+        /// </summary>
+        /// <param name="filename">Location of the original zip file</param>
+        /// <param name="zipEntryName">The zip entry name to open a reader for. Specify null to access the first entry</param>
+        /// <param name="zipOut">The ZipArchive instance to be returned to the caller</param>
+        /// <returns>Stream reader of the first file contents in the zip file</returns>
+        public static StreamReader UnzipCached(string filename, string zipEntryName, out ZipArchive outZip)
+        {
+            StreamReader reader = null;
+            ZipArchive zip = null;
+            outZip = null;
+
+            try
+            {
+                if (File.Exists(filename))
+                {
+                    try
+                    {
+                        if (!_zipArchiveCache.TryGetValue(filename, out zip))
+                        {
+                            var file = File.OpenRead(filename);
+                            // reading up first two bytes 
+                            // http://george.chiramattel.com/blog/2007/09/deflatestream-block-length-does-not-match.html
+                            file.ReadByte(); file.ReadByte();
+
+                            zip = new ZipArchive(file);
+                            _zipArchiveCache[filename] = zip;
+                        }
+
+                        lock (_zipArchiveCache[filename])
+                        {
+                            var entry = zip.Entries.FirstOrDefault(x => zipEntryName == null || string.Compare(x.FullName, zipEntryName, StringComparison.OrdinalIgnoreCase) == 0);
+                            if (entry == null)
+                            {
+                                // Unable to locate zip entry 
+                                return null;
+                            }
+
+                            var stream = new MemoryStream();
+                            entry.Open().CopyTo(stream);
+                            stream.Position = 0;
+
+                            reader = new StreamReader(stream);
+                        };
+
+                        outZip = zip;
+                    }
+                    catch (Exception err)
+                    {
+                        Log.Error(err, "Inner try/catch");
+                        if (zip != null ) zip.Dispose();
+                        if (reader != null) reader.Close();
+                    }
+                }
+                else
+                {
+                    Log.Error("Compression.UnzipCached: File doesn't exist: " + filename);
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err, "File: " + filename);
+            }
+            return reader;
+        }
 
         /// <summary>
         /// Streams the unzipped file as key value pairs of file name to file contents.

@@ -19,7 +19,6 @@ using System.IO;
 using Ionic.Zip;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds.Transport;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -63,23 +62,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>An <see cref="IEnumerable{BaseData}"/> that contains the data in the source</returns>
         public IEnumerable<BaseData> Read(SubscriptionDataSource source)
         {
-            var reader = _dataFileProvider.Fetch(_config.Symbol, source, _date, _config.Resolution, _config.TickType);
-
-            if (reader == null)
+            if (!File.Exists(source.Source) && !_dataFileProvider.Fetch(_config.Symbol, _date, _config.Resolution, _config.TickType))
             {
-                OnInvalidSource(source, new FileNotFoundException("The specified source was not found", source.Source));
+                OnInvalidSource(source, new FileNotFoundException("The specified file was not found", source.Source));
+            }
+
+            ZipFile zip;
+            try
+            {
+                zip = new ZipFile(source.Source);
+            }
+            catch (ZipException err)
+            {
+                OnInvalidSource(source, err);
                 yield break;
             }
 
-            var zipReader = reader as LocalFileSubscriptionStreamReader;
-
-            if (zipReader == null)
-            {
-                OnInvalidSource(source, new FileNotFoundException("The specified zip source was not found", source.Source));
-                yield break;
-            }
-
-            foreach (var entryFileName in zipReader.EntryFileNames)
+            foreach (var entryFileName in zip.EntryFileNames)
             {
                 yield return _factory.Reader(_config, entryFileName, _date, _isLiveMode);
             }

@@ -36,7 +36,7 @@
   "command-json-file": "command.json",
   "map-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskMapFileProvider",
   "factor-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskFactorFileProvider",
-  "data-file-provider": "QuantConnect.Lean.Engine.DataFeeds.CachingDataFileProvider",
+  "data-file-provider": "QuantConnect.Lean.Engine.DataFeeds.DefaultDataFileProvider",
 
   // limits on number of symbols to allow
   "symbol-minute-limit": 10000, 
