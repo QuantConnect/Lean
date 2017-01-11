@@ -17,6 +17,10 @@
 using System.IO;
 using Ionic.Zip;
 using System.IO.Compression;
+using QuantConnect.Interfaces;
+using System.Collections.Generic;
+using System.Linq;
+using System;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Transport
 {
@@ -26,7 +30,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
     public class LocalFileSubscriptionStreamReader : IStreamReader
     {
         private StreamReader _streamReader;
-        private readonly ZipArchive _zipFile;
+        private readonly ZipArchive _zipArchive;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LocalFileSubscriptionStreamReader"/> class.
@@ -38,7 +42,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         {
             // unzip if necessary
             _streamReader = source.GetExtension() == ".zip"
-                ? Compression.UnzipCached(source, entryName, out _zipFile)
+                ? Compression.Unzip(source, entryName, out _zipArchive)
                 : new StreamReader(source);
         }
 
@@ -53,12 +57,43 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         {
             // unzip if necessary
             _streamReader = source.GetExtension() == ".zip"
-                ? Compression.UnzipCached(source, entryName, out _zipFile)
+                ? Compression.Unzip(source, entryName, out _zipArchive)
                 : new StreamReader(source);
 
             if (startingPosition != 0)
             {
                 _streamReader.BaseStream.Seek(startingPosition, SeekOrigin.Begin);
+            }
+
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LocalFileSubscriptionStreamReader"/> class.
+        /// </summary>
+        /// <param name="zipArchive">The local zip archive to be read</param>
+        /// <param name="entryName">Specifies the zip entry to be opened. Leave null if not applicable,
+        /// or to open the first zip entry found regardless of name</param>
+        public LocalFileSubscriptionStreamReader(ZipArchive zipArchive, string entryName = null)
+        {
+            _zipArchive = zipArchive;
+            var entry = _zipArchive.Entries.FirstOrDefault(x => entryName == null || string.Compare(x.FullName, entryName, StringComparison.OrdinalIgnoreCase) == 0);
+            if (entry != null)
+            {
+                var stream = new MemoryStream();
+                entry.Open().CopyTo(stream);
+                stream.Position = 0;
+                _streamReader = new StreamReader(stream);
+            }
+        }
+
+        /// <summary>
+        /// Returns the list of zip entries if local file stream reader is reading zip archive
+        /// </summary>
+        public IEnumerable<string> EntryFileNames
+        {
+            get
+            {
+                return _zipArchive != null ? _zipArchive.Entries.Select(x => x.FullName).ToList() : Enumerable.Empty<string>();
             }
         }
 

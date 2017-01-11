@@ -24,6 +24,7 @@ using Newtonsoft.Json.Linq;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Util;
 using Log = QuantConnect.Logging.Log;
+using System.IO.Compression;
 
 namespace QuantConnect.ToolBox.CoarseUniverseGenerator
 {
@@ -202,7 +203,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                         }
                     }
 
-                    ZipFile zip;
+                    ZipArchive zip;
                     using (var reader = Compression.Unzip(file, out zip))
                     {
                         // 30 period EMA constant
