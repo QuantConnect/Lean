@@ -36,7 +36,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         private readonly MapFileResolver _mapFileResolver;
         private readonly IFactorFileProvider _factorFileProvider;
         private readonly IDataFileProvider _dataFileProvider;
-        private readonly IDataFileCacheProvider _dataFileCacheProvider;
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
 
 
@@ -47,7 +46,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="mapFileResolver">The map file resolver</param>
         /// <param name="factorFileProvider">The factory file provider</param>
         /// <param name="dataFileProvider">Provider used to get data when it is not present on disk</param>
-        /// <param name="dataFileCacheProvider">Provider used to cache data</param>
         /// <param name="isLiveMode">True if runnig live algorithm, false otherwise</param>
         /// <param name="includeAuxiliaryData">True to check for auxiliary data, false otherwise</param>
         /// <param name="tradableDaysProvider">Function used to provide the tradable dates to be enumerator.
@@ -56,7 +54,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             MapFileResolver mapFileResolver,
             IFactorFileProvider factorFileProvider,
             IDataFileProvider dataFileProvider,
-            IDataFileCacheProvider dataFileCacheProvider,
             bool isLiveMode,
             bool includeAuxiliaryData,
             Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null
@@ -66,7 +63,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             _mapFileResolver = mapFileResolver;
             _factorFileProvider = factorFileProvider;
             _dataFileProvider = dataFileProvider;
-            _dataFileCacheProvider = dataFileCacheProvider;
             _isLiveMode = isLiveMode;
             _includeAuxiliaryData = includeAuxiliaryData;
             _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
@@ -86,8 +82,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 _resultHandler, 
                 _mapFileResolver,
                 _factorFileProvider,
-                _dataFileProvider,
-                _dataFileCacheProvider,
+                _dataFileProvider, 
                 _tradableDaysProvider(request), 
                 _isLiveMode, 
                 _includeAuxiliaryData

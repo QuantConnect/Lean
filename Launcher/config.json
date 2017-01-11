@@ -9,7 +9,7 @@
   "environment": "live-paper",// "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
 
   // algorithm class selector
-  "algorithm-type-name": "BasicTemplateAlgorithm",
+  "algorithm-type-name": "BasicTemplateOptionsHistoryAlgorithm",
 
   // Algorithm language selector - options CSharp, FSharp, VisualBasic, Python, Java
   "algorithm-language": "CSharp",
@@ -36,7 +36,7 @@
   "command-json-file": "command.json",
   "map-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskMapFileProvider",
   "factor-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskFactorFileProvider",
-  "data-file-provider": "QuantConnect.Lean.Engine.DataFeeds.DefaultDataFileProvider",
+  "data-file-provider": "QuantConnect.Lean.Engine.DataFeeds.CachingDataFileProvider",
 
   // limits on number of symbols to allow
   "symbol-minute-limit": 10000, 

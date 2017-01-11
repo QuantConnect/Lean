@@ -53,7 +53,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         // used to keep time constant during a time sync iteration
         private ManualTimeProvider _frontierTimeProvider;
         private IDataFileProvider _dataFileProvider;
-        private IDataFileCacheProvider _dataFileCacheProvider;
 
         private Ref<TimeSpan> _fillForwardResolution;
         private IResultHandler _resultHandler;
@@ -98,7 +97,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _algorithm = algorithm;
             _job = (LiveNodePacket) job;
             _resultHandler = resultHandler;
-            _dataFileCacheProvider = new DefaultDataFileCacheProvider();
             _timeProvider = GetTimeProvider();
             _dataQueueHandler = GetDataQueueHandler();
             _dataFileProvider = dataFileProvider;
@@ -359,7 +357,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _cancellationTokenSource.Cancel();
             
             if (_bridge != null) _bridge.Dispose();
-            if (_dataFileCacheProvider != null) _dataFileCacheProvider.Dispose();
         }
 
         /// <summary>
@@ -409,7 +406,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var refresher = new RefreshEnumerator<BaseData>(() =>
                     {
                         var dateInDataTimeZone = DateTime.UtcNow.ConvertFromUtc(request.Configuration.DataTimeZone).Date;
-                        var enumeratorFactory = new BaseDataSubscriptionEnumeratorFactory(_dataFileCacheProvider, r => new[] { dateInDataTimeZone });
+                        var enumeratorFactory = new BaseDataSubscriptionEnumeratorFactory(r => new[] { dateInDataTimeZone });
                         var factoryReadEnumerator = enumeratorFactory.CreateEnumerator(request, _dataFileProvider);
                         var maximumDataAge = TimeSpan.FromTicks(Math.Max(request.Configuration.Increment.Ticks, TimeSpan.FromSeconds(5).Ticks));
                         var fastForward = new FastForwardEnumerator(factoryReadEnumerator, _timeProvider, request.Security.Exchange.TimeZone, maximumDataAge);
@@ -602,7 +599,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 var symbolUniverse = _dataQueueHandler as IDataQueueUniverseProvider;
 
-                var enumeratorFactory = new OptionChainUniverseSubscriptionEnumeratorFactory(configure, symbolUniverse, _timeProvider, _dataFileCacheProvider);
+                var enumeratorFactory = new OptionChainUniverseSubscriptionEnumeratorFactory(configure, symbolUniverse, _timeProvider);
                 enumerator = enumeratorFactory.CreateEnumerator(request, _dataFileProvider);
 
                 enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, tzOffsetProvider);
@@ -613,7 +610,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 var symbolUniverse = _dataQueueHandler as IDataQueueUniverseProvider;
 
-                var enumeratorFactory = new FuturesChainUniverseSubscriptionEnumeratorFactory(symbolUniverse, _timeProvider, _dataFileCacheProvider);
+                var enumeratorFactory = new FuturesChainUniverseSubscriptionEnumeratorFactory(symbolUniverse, _timeProvider);
                 enumerator = enumeratorFactory.CreateEnumerator(request, _dataFileProvider);
 
                 enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, tzOffsetProvider);

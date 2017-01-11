@@ -33,20 +33,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
         private readonly MapFileResolver _mapFileResolver;
         private readonly IFactorFileProvider _factorFileProvider;
-        private readonly IDataFileCacheProvider _dataFileCacheProvider;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseDataSubscriptionEnumeratorFactory"/> class
         /// </summary>
-        /// <param name="mapFileResolver">Map file Resolver</param>
-        /// <param name="factorFileProvider">Factor file provider</param>
-        /// <param name="dataFileCacheProvider">Data cache provider</param>
-        /// <param name="tradableDaysProvider">Function used to provide the tradable dates to be enumerator. Specify null to default to <see cref="SubscriptionRequest.TradableDays"/></param>
-        public BaseDataSubscriptionEnumeratorFactory(MapFileResolver mapFileResolver, IFactorFileProvider factorFileProvider,
-                                                     IDataFileCacheProvider dataFileCacheProvider, 
-                                                     Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null)
+        /// <param name="tradableDaysProvider">Function used to provide the tradable dates to be enumerator.
+        /// Specify null to default to <see cref="SubscriptionRequest.TradableDays"/></param>
+        public BaseDataSubscriptionEnumeratorFactory(MapFileResolver mapFileResolver, IFactorFileProvider factorFileProvider, Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null)
         {
-            _dataFileCacheProvider = dataFileCacheProvider;
             _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
             _mapFileResolver = mapFileResolver;
             _factorFileProvider = factorFileProvider;
@@ -55,12 +49,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseDataSubscriptionEnumeratorFactory"/> class
         /// </summary>
-        /// <param name="dataFileCacheProvider">Data cache provider</param>
         /// <param name="tradableDaysProvider">Function used to provide the tradable dates to be enumerator.
         /// Specify null to default to <see cref="SubscriptionRequest.TradableDays"/></param>
-        public BaseDataSubscriptionEnumeratorFactory(IDataFileCacheProvider dataFileCacheProvider, Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null)
+        public BaseDataSubscriptionEnumeratorFactory(Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null)
         {
-            _dataFileCacheProvider = dataFileCacheProvider;
             _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
         }
 
@@ -80,7 +72,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 request.Configuration.MappedSymbol = GetMappedSymbol(request, date);
                 var source = sourceFactory.GetSource(request.Configuration, date, false);
                 request.Configuration.MappedSymbol = currentSymbol;
-                var factory = SubscriptionDataSourceReader.ForSource(source, dataFileProvider, _dataFileCacheProvider, request.Configuration, date, false);
+                var factory = SubscriptionDataSourceReader.ForSource(source, dataFileProvider, request.Configuration, date, false);
                 var entriesForDate = factory.Read(source);
                 foreach(var entry in entriesForDate)
                 {

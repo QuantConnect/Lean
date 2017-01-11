@@ -33,7 +33,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly bool _isLiveMode;
         private readonly BaseData _factory;
         private readonly IDataFileProvider _dataFileProvider;
-        private readonly IDataFileCacheProvider _dataFileCacheProvider;
 
         /// <summary>
         /// Event fired when the specified source is considered invalid, this may
@@ -45,30 +44,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Initializes a new instance of the <see cref="ZipEntryNameSubscriptionDataSourceReader"/> class
         /// </summary>
         /// <param name="dataFileProvider">Attempts to fetch remote file</param>
-        /// <param name="dataFileCacheProvider">File cache provider</param>
-        /// <param name="config">The subscription's configuration</param>
-        /// <param name="date">The date this factory was produced to read data for</param>
-        /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
-        public ZipEntryNameSubscriptionDataSourceReader(IDataFileProvider dataFileProvider, IDataFileCacheProvider dataFileCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
-        {
-            _dataFileProvider = dataFileProvider;
-            _dataFileCacheProvider = dataFileCacheProvider ?? new DefaultDataFileCacheProvider();
-            _config = config;
-            _date = date;
-            _isLiveMode = isLiveMode;
-            _factory = (BaseData)Activator.CreateInstance(config.Type);
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ZipEntryNameSubscriptionDataSourceReader"/> class
-        /// </summary>
-        /// <param name="dataFileProvider">Attempts to fetch remote file</param>
         /// <param name="config">The subscription's configuration</param>
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
         public ZipEntryNameSubscriptionDataSourceReader(IDataFileProvider dataFileProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
-            : this(dataFileProvider, null, config, date, isLiveMode)
         {
+            _dataFileProvider = dataFileProvider;
+            _config = config;
+            _date = date;
+            _isLiveMode = isLiveMode;
+            _factory = (BaseData) Activator.CreateInstance(config.Type);
         }
 
         /// <summary>
@@ -78,20 +63,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>An <see cref="IEnumerable{BaseData}"/> that contains the data in the source</returns>
         public IEnumerable<BaseData> Read(SubscriptionDataSource source)
         {
-            if (!File.Exists(source.Source) && !_dataFileProvider.Fetch(_config.Symbol, _date, _config.Resolution, _config.TickType))
-            {
-                OnInvalidSource(source, new FileNotFoundException("The specified file was not found", source.Source));
-            }
-
-            var reader = _dataFileCacheProvider.Fetch(_config.Symbol, source, _date, _config.Resolution, _config.TickType) as LocalFileSubscriptionStreamReader;
+            var reader = _dataFileProvider.Fetch(_config.Symbol, source, _date, _config.Resolution, _config.TickType);
 
             if (reader == null)
             {
-                OnInvalidSource(source, new FileNotFoundException("Could not get the file using built-in cache", source.Source));
+                OnInvalidSource(source, new FileNotFoundException("The specified source was not found", source.Source));
                 yield break;
             }
-          
-            foreach (var entryFileName in reader.EntryFileNames)
+
+            var zipReader = reader as LocalFileSubscriptionStreamReader;
+
+            if (zipReader == null)
+            {
+                OnInvalidSource(source, new FileNotFoundException("The specified zip source was not found", source.Source));
+                yield break;
+            }
+
+            foreach (var entryFileName in zipReader.EntryFileNames)
             {
                 yield return _factory.Reader(_config, entryFileName, _date, _isLiveMode);
             }
