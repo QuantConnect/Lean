@@ -414,6 +414,11 @@ namespace QuantConnect.Algorithm
         /// <returns>A single <see cref="BaseData"/> object with the last known price</returns>
         public BaseData GetLastKnownPrice(Security security)
         {
+            if (security.Symbol.IsCanonical())
+            {
+                return null;
+            }
+
             // For speed and memory usage, use Resolution.Minute as the minimum resolution
             var resolution = (Resolution)Math.Max((int)Resolution.Minute, (int)security.Resolution);
 
@@ -429,7 +434,8 @@ namespace QuantConnect.Algorithm
                 FillForwardResolution = resolution,
                 Symbol = security.Symbol,
                 Market = security.Symbol.ID.Market,
-                ExchangeHours = security.Exchange.Hours
+                ExchangeHours = security.Exchange.Hours,
+                SecurityType = security.Type
             };
 
             var history = History(new List<HistoryRequest> { request });

@@ -101,6 +101,7 @@ namespace QuantConnect.Data.Market
             QuoteBars = new QuoteBars(time);
             Contracts = new OptionContracts(time);
             FilteredContracts = new HashSet<Symbol>();
+            Underlying = new QuoteBar();
         }
 
         /// <summary>

@@ -147,6 +147,11 @@ namespace QuantConnect.Util
                     var tickerWithoutStyle = ticker.Substring(0, ticker.LastIndexOf("_"));
                     ticker = tickerWithoutStyle.Substring(0, tickerWithoutStyle.LastIndexOf("_"));
                 }
+                if (securityType == SecurityType.Future)
+                {
+                    // ticker_trade
+                    ticker = ticker.Substring(0, ticker.LastIndexOf("_"));
+                }
             }
             else
             {
@@ -163,12 +168,17 @@ namespace QuantConnect.Util
                 var style = (OptionStyle) Enum.Parse(typeof (OptionStyle), rawValue, true);
                 symbol = Symbol.CreateOption(ticker, market, style, OptionRight.Call | OptionRight.Put, 0, SecurityIdentifier.DefaultDate);
             }
+            else if (securityType == SecurityType.Future)
+            {
+                symbol = Symbol.CreateFuture(ticker, market, SecurityIdentifier.DefaultDate);
+            }
             else
             {
                 symbol = Symbol.Create(ticker, securityType, market);
             }
 
-            var tickType = filename.Contains("_quote") ? TickType.Quote : TickType.Trade;
+            var tickType = filename.Contains("_quote") ? TickType.Quote : (filename.Contains("_openinterest") ? TickType.OpenInterest : TickType.Trade);
+
             return new LeanDataPathComponents(securityType, market, resolution, symbol, filename, date, tickType);
         }
     }

@@ -85,10 +85,22 @@ namespace QuantConnect.Securities
         public long Volume { get; private set; }
 
         /// <summary>
+        /// Gets the most recent open interest submitted to this cache
+        /// </summary>
+        public long OpenInterest { get; private set; }
+
+        /// <summary>
         /// Add a new market data point to the local security cache for the current market price.
         /// </summary>
         public void AddData(BaseData data)
         {
+            var openInterest = data as OpenInterest;
+            if (openInterest != null)
+            {
+                OpenInterest = (long)openInterest.Value;
+                return;
+            }
+
             _lastData = data;
             _dataByType[data.GetType()] = data;
 

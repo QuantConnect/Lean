@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
@@ -37,7 +38,7 @@ namespace QuantConnect.Securities.Option
         /// price of the specified option contract</returns>
         public OptionPriceModelResult Evaluate(Security security, Slice slice, OptionContract contract)
         {
-            return new OptionPriceModelResult(security.Price, new FirstOrderGreeks());
+            return new OptionPriceModelResult(security.Price, new Greeks());
         }
     }
 }
