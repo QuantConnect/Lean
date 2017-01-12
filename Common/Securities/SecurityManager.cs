@@ -430,21 +430,6 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Get the data feed type for the given security. If it is a common data type, LeanData Methods can be used 
-        /// to retrieve the returned type. If not, the type passed in is returned.
-        /// </summary>
-        /// <param name="factoryType"><see cref="BaseData"/> type of the security</param>
-        /// <param name="tickType">The <see cref="TickType"/> of the security</param>
-        /// <param name="resolution"></param>
-        /// <returns>Type that should be added as a subscription</returns>
-        private static Type GetDataFeedType(Type factoryType, TickType tickType, Resolution resolution)
-        {
-            return LeanData.IsCommonLeanDataType(factoryType) ?
-                            LeanData.GetDataType(resolution, tickType) :
-                            factoryType;
-        }
-
-        /// <summary>
         /// Creates a security and matching configuration. This applies the default leverage if
         /// leverage is less than or equal to zero.
         /// This method also add the new symbol mapping to the <see cref="SymbolCache"/>
