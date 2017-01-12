@@ -30,7 +30,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Python.Runtime;
 
-namespace QuantConnect.Algorithm
+namespace QuantConnect.Algorithm.PythonWrappers
 {
     /// <summary>
     /// Wrapper for an IAlgorithm instance created in Python.

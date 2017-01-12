@@ -22,7 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace QuantConnect.Algorithm
+namespace QuantConnect.Algorithm.PythonWrappers
 {
     /// <summary>
     /// Wrapper for an IHistoryProvider instance created in Python.

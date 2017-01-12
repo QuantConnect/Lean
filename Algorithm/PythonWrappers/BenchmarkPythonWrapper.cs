@@ -17,7 +17,7 @@ using Python.Runtime;
 using QuantConnect.Benchmarks;
 using System;
 
-namespace QuantConnect.Algorithm
+namespace QuantConnect.Algorithm.PythonWrappers
 {
     /// <summary>
     /// Wrapper for an IBenchmark instance created in Python.

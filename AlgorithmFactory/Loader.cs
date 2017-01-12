@@ -24,7 +24,7 @@ using Python.Runtime;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
-using QuantConnect.Algorithm;
+using QuantConnect.Algorithm.PythonWrappers;
 
 namespace QuantConnect.AlgorithmFactory
 {
