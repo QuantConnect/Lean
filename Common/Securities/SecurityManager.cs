@@ -325,6 +325,11 @@ namespace QuantConnect.Securities
             bool addToSymbolCache = true,
             bool isFilteredSubscription = true)
         {
+            if (!factoryTypes.Any())
+            {
+                throw new ArgumentNullException("factoryTypes", "At least one type needed to create security");
+            }
+
             // add the symbol to our cache
             if (addToSymbolCache) SymbolCache.Set(symbol.Value, symbol);
 
@@ -467,12 +472,9 @@ namespace QuantConnect.Securities
             if (symbol.ID.SecurityType == SecurityType.Forex) defaultQuoteCurrency = symbol.Value.Substring(3);
             var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, defaultQuoteCurrency);
 
-            var type = resolution == Resolution.Tick ? typeof(Tick) : typeof(TradeBar);
-            if (symbol.ID.SecurityType == SecurityType.Forex && resolution != Resolution.Tick)
-            {
-                type = typeof(QuoteBar);
-            }
-            return CreateSecurity(new List<Type>() { type }, securityPortfolioManager, subscriptionManager, exchangeHours, marketHoursDbEntry.DataTimeZone, symbolProperties, securityInitializer, symbol, resolution,
+            var types = subscriptionManager.LookupSubscriptionConfigDataTypes(symbol.SecurityType, resolution, symbol.IsCanonical());
+            
+            return CreateSecurity(types, securityPortfolioManager, subscriptionManager, exchangeHours, marketHoursDbEntry.DataTimeZone, symbolProperties, securityInitializer, symbol, resolution,
                 fillDataForward, leverage, extendedMarketHours, isInternalFeed, isCustomData, isLiveMode, addToSymbolCache);
         }
     }
