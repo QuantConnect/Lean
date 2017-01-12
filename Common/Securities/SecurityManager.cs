@@ -468,7 +468,7 @@ namespace QuantConnect.Securities
             var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, defaultQuoteCurrency);
 
             var type = resolution == Resolution.Tick ? typeof(Tick) : typeof(TradeBar);
-            if (symbol.ID.SecurityType == SecurityType.Option && resolution != Resolution.Tick)
+            if (symbol.ID.SecurityType == SecurityType.Forex && resolution != Resolution.Tick)
             {
                 type = typeof(QuoteBar);
             }
