@@ -65,11 +65,14 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             // Convert the date:
             var timer = Stopwatch.StartNew();
             var converter = new AlgoSeekOptionsConverter(Resolution.Minute, referenceDate, remoteDirectory, sourceDirectory, dataDirectory);
+
+            converter.Clean(referenceDate);
+            Log.Trace(string.Format("AlgoSeekOptionConverter.Main(): {0} Cleaning finished in time: {1}", referenceDate, timer.Elapsed));
+
+            timer.Restart();
             converter.Convert();
             Log.Trace(string.Format("AlgoSeekOptionConverter.Main(): {0} Conversion finished in time: {1}", referenceDate, timer.Elapsed));
 
-
-            // Compress the memory cache to zips.
             timer.Restart();
             converter.Package(referenceDate);
             Log.Trace(string.Format("AlgoSeekOptionConverter.Main(): {0} Compression finished in time: {1}", referenceDate, timer.Elapsed));

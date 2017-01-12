@@ -96,34 +96,9 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                     if (!File.Exists(csvFile))
                     {
                         Log.Trace("AlgoSeekOptionsConverter.Convert(): Extracting " + file);
-                        var psi = new ProcessStartInfo(zipper, " e " + file + " -o" + _source)
-                        {
-                            CreateNoWindow = true,
-                            WindowStyle = ProcessWindowStyle.Hidden,
-                            UseShellExecute = false,
-                            RedirectStandardOutput = true
-                        };
 
-                        var process = new Process();
-                        process.StartInfo = psi;
-                        process.Start();
-
-                        while (!process.StandardOutput.EndOfStream)
-                        {
-                            process.StandardOutput.ReadLine();
-                        }
-
-                        if (!process.WaitForExit(execTimeout * 1000))
-                        {
-                            Log.Error("7Zip timed out: " + file);
-                        }
-                        else
-                        {
-                            if (process.ExitCode > 0)
-                            {
-                                Log.Error("7Zip Exited Unsuccessfully: " + file);
-                            }
-                        }
+                        var cmdArgs = " e " + file + " -o" + _source;
+                        RunZipper(zipper, cmdArgs);
                     }
 
                     // setting up local processors and the flush event
@@ -294,34 +269,9 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                     var inputFileNames = Path.Combine(file.Key, "*.csv");
                     var cmdArgs = " a " + outputFileName + " " + inputFileNames;
 
-                    Log.Trace("AlgoSeekOptionsConverter.Convert(): Zipping " + outputFileName);
-                    var psi = new ProcessStartInfo(zipper, cmdArgs)
-                    {
-                        CreateNoWindow = true,
-                        WindowStyle = ProcessWindowStyle.Hidden,
-                        UseShellExecute = false,
-                        RedirectStandardOutput = true
-                    };
-                    var process = new Process();
-                    process.StartInfo = psi;
-                    process.Start();
+                    Log.Trace("AlgoSeekOptionsConverter.Package(): Zipping " + outputFileName);
 
-                    while (!process.StandardOutput.EndOfStream)
-                    {
-                        process.StandardOutput.ReadLine();
-                    }
-
-                    if (!process.WaitForExit(execTimeout * 1000))
-                    {
-                        Log.Error("7Zip timed out: " + outputFileName);
-                    }
-                    else
-                    {
-                        if (process.ExitCode > 0)
-                        {
-                            Log.Error("7Zip Exited Unsuccessfully: " + outputFileName);
-                        }
-                    }
+                    RunZipper(zipper, cmdArgs);
 
                     try
                     {
@@ -329,7 +279,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                     }
                     catch (Exception err)
                     {
-                        Log.Error("Directory.Delete returned error: " + err.Message);
+                        Log.Error("AlgoSeekOptionsConverter.Package(): Directory.Delete returned error: " + err.Message);
                     }
                 }
                 catch (Exception err)
@@ -337,6 +287,90 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                     Log.Error("File: {0} Err: {1} Source {2} Stack {3}", file, err.Message, err.Source, err.StackTrace);
                 }
             });
+        }
+
+        /// <summary>
+        /// Cleans zip archives and source data folders before run
+        /// </summary>
+        public void Clean(DateTime date)
+        {
+            Log.Trace("AlgoSeekOptionsConverter.Clean(): cleaning all zip and csv files for {0} before start...", date.ToShortDateString());
+
+            var extensions = new HashSet<string> { ".zip", ".csv" };
+            var destination = Path.Combine(_destination, "option");
+            var dateMask = date.ToString(DateFormat.EightCharacter);
+
+            var files =
+                Directory.EnumerateFiles(destination, dateMask + "_" + "*.*", SearchOption.AllDirectories)
+                .Where(x => extensions.Contains(Path.GetExtension(x)))
+                .ToList();
+
+            Log.Trace("AlgoSeekOptionsConverter.Clean(): found {0} files..", files.Count);
+
+            //Clean each file massively in parallel.
+            Parallel.ForEach(files, parallelOptionsZipping, file =>
+            {
+                try
+                {
+                    File.Delete(file);
+                }
+                catch (Exception err)
+                {
+                    Log.Error("AlgoSeekOptionsConverter.Clean(): File.Delete returned error: " + err.Message);
+                }
+            });
+        }
+
+        private static void RunZipper(string zipper, string cmdArgs)
+        {
+            bool timedOut = false;
+            try
+            {
+                Func<object, string> readStream = streamReader => ((StreamReader)streamReader).ReadToEnd();
+
+                using (var process = new Process())
+                {
+                    process.StartInfo.UseShellExecute = false;
+                    process.StartInfo.CreateNoWindow = true;
+                    process.StartInfo.RedirectStandardError = true;
+                    process.StartInfo.RedirectStandardOutput = true;
+                    process.StartInfo.FileName = zipper;
+                    process.StartInfo.Arguments = cmdArgs;
+
+                    process.Start();
+
+                    using (var processWaiter = Task.Factory.StartNew(() => process.WaitForExit(execTimeout * 1000)))
+                    using (var outputReader = Task.Factory.StartNew(readStream, process.StandardOutput))
+                    using (var errorReader = Task.Factory.StartNew(readStream, process.StandardError))
+                    {
+                        Task.WaitAll(new Task[] { processWaiter, outputReader, errorReader }, execTimeout * 1000);
+
+                        if (!processWaiter.IsCompleted)
+                        {
+                            Log.Error("7Zip timed out: " + cmdArgs);
+                            timedOut = true;
+                        }
+                        else
+                        {
+                            if (process.ExitCode > 0)
+                            {
+                                Log.Error("7Zip Exited Unsuccessfully: " + cmdArgs);
+                            }
+                            else
+                            {
+                                Log.Trace("7Zip Exited Successfully: " + cmdArgs);
+                            }
+                        }
+                    }
+                }
+            }
+            catch(Exception e)
+            {
+                if (!timedOut)
+                {
+                    Log.Error("RunZipper() failed: " + e.Message);
+                }
+            }
         }
 
     }
