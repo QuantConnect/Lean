@@ -307,7 +307,7 @@ namespace QuantConnect.Securities
         /// leverage is less than or equal to zero.
         /// This method also add the new symbol mapping to the <see cref="SymbolCache"/>
         /// </summary>
-        public static Security CreateSecurity(Type factoryType,
+        public static Security CreateSecurity(List<Type> factoryTypes,
             SecurityPortfolioManager securityPortfolioManager,
             SubscriptionManager subscriptionManager,
             SecurityExchangeHours exchangeHours,
@@ -331,15 +331,7 @@ namespace QuantConnect.Securities
             // Add the symbol to Data Manager -- generate unified data streams for algorithm events
             SubscriptionDataConfigList configList = new SubscriptionDataConfigList(symbol);
 
-            // Get the type that will be used in the data feed
-            // Could be more than one for a given security - i.e. More than one subscription needed
-
-            var dataFeedTypes = subscriptionManager.AvailableDataTypes[symbol.ID.SecurityType]
-                .Select(dataFeed => GetDataFeedType(factoryType, dataFeed, resolution))
-                .Distinct()
-                .ToList();
-
-            foreach (var dataFeedType in dataFeedTypes)
+            foreach (var dataFeedType in factoryTypes)
             {
                 configList.Add(subscriptionManager.Add(dataFeedType, symbol, resolution, dataTimeZone, exchangeHours.TimeZone, isCustomData, fillDataForward,
                                                         extendedMarketHours, isInternalFeed, isFilteredSubscription));
@@ -480,7 +472,7 @@ namespace QuantConnect.Securities
             {
                 type = typeof(QuoteBar);
             }
-            return CreateSecurity(type, securityPortfolioManager, subscriptionManager, exchangeHours, marketHoursDbEntry.DataTimeZone, symbolProperties, securityInitializer, symbol, resolution,
+            return CreateSecurity(new List<Type>() { type }, securityPortfolioManager, subscriptionManager, exchangeHours, marketHoursDbEntry.DataTimeZone, symbolProperties, securityInitializer, symbol, resolution,
                 fillDataForward, leverage, extendedMarketHours, isInternalFeed, isCustomData, isLiveMode, addToSymbolCache);
         }
     }
