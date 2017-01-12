@@ -24,6 +24,7 @@ using Python.Runtime;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Algorithm;
 
 namespace QuantConnect.AlgorithmFactory
 {
@@ -144,9 +145,10 @@ namespace QuantConnect.AlgorithmFactory
             errorMessage = "";
 
             var algorithmName = Config.Get("algorithm-type-name", "main");
-
+            var algorithmPath = Config.Get("algorithm-path-python", "../../../Algorithm.Python/");
+            
             // Copies file to execution location
-            foreach (var file in new DirectoryInfo(@"../../../Algorithm.Python/").GetFiles("*.py"))
+            foreach (var file in new DirectoryInfo(algorithmPath).GetFiles("*.py"))
             {
                 file.CopyTo(file.FullName.Replace(file.DirectoryName, Environment.CurrentDirectory), true);
             }

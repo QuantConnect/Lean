@@ -1565,11 +1565,6 @@ namespace QuantConnect.Algorithm
         /// <param name="historyProvider">Historical data provider</param>
         public void SetHistoryProvider(IHistoryProvider historyProvider)
         {
-            if (historyProvider == null)
-            {
-                throw new ArgumentNullException("historyProvider");
-            }
-
             HistoryProvider = historyProvider;
         }
 
@@ -1579,11 +1574,6 @@ namespace QuantConnect.Algorithm
         /// <param name="exception">Represents error that occur during execution</param>
         public void SetRunTimeError(Exception exception)
         {
-            if (exception == null)
-            {
-                throw new ArgumentNullException("exception");
-            }
-
             RunTimeError = exception;
         }
 

@@ -23,7 +23,7 @@ using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
 using System.Collections.Generic;
 
-namespace QuantConnect
+namespace QuantConnect.Algorithm
 {
     /// <summary>
     /// Wrapper for an IBrokerageModel instance created in Python.
