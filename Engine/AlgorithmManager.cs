@@ -493,7 +493,7 @@ namespace QuantConnect.Lean.Engine
                                 // This is needed to avoid feeding in higher resolution data, typically fill-forward bars.
                                 // It also prevents volume-based indicators or consolidators summing up volume to generate
                                 // invalid values.
-                                if (algorithm.Time == dataPoint.EndTime.RoundUp(resolutionTimeSpan))
+                                if (algorithm.UtcTime == dataPoint.EndTime.RoundUp(resolutionTimeSpan).ConvertToUtc(update.Target.DataTimeZone))
                                 {
                                     consolidator.Update(dataPoint);
                                 }
