@@ -307,7 +307,7 @@ namespace QuantConnect.Securities
         /// leverage is less than or equal to zero.
         /// This method also add the new symbol mapping to the <see cref="SymbolCache"/>
         /// </summary>
-        public static Security CreateSecurity(Type factoryType,
+        public static Security CreateSecurity(List<Type> factoryTypes,
             SecurityPortfolioManager securityPortfolioManager,
             SubscriptionManager subscriptionManager,
             SecurityExchangeHours exchangeHours,
@@ -325,21 +325,18 @@ namespace QuantConnect.Securities
             bool addToSymbolCache = true,
             bool isFilteredSubscription = true)
         {
+            if (!factoryTypes.Any())
+            {
+                throw new ArgumentNullException("factoryTypes", "At least one type needed to create security");
+            }
+
             // add the symbol to our cache
             if (addToSymbolCache) SymbolCache.Set(symbol.Value, symbol);
 
             // Add the symbol to Data Manager -- generate unified data streams for algorithm events
             SubscriptionDataConfigList configList = new SubscriptionDataConfigList(symbol);
 
-            // Get the type that will be used in the data feed
-            // Could be more than one for a given security - i.e. More than one subscription needed
-
-            var dataFeedTypes = subscriptionManager.AvailableDataTypes[symbol.ID.SecurityType]
-                .Select(dataFeed => GetDataFeedType(factoryType, dataFeed, resolution))
-                .Distinct()
-                .ToList();
-
-            foreach (var dataFeedType in dataFeedTypes)
+            foreach (var dataFeedType in factoryTypes)
             {
                 configList.Add(subscriptionManager.Add(dataFeedType, symbol, resolution, dataTimeZone, exchangeHours.TimeZone, isCustomData, fillDataForward,
                                                         extendedMarketHours, isInternalFeed, isFilteredSubscription));
@@ -433,21 +430,6 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Get the data feed type for the given security. If it is a common data type, LeanData Methods can be used 
-        /// to retrieve the returned type. If not, the type passed in is returned.
-        /// </summary>
-        /// <param name="factoryType"><see cref="BaseData"/> type of the security</param>
-        /// <param name="tickType">The <see cref="TickType"/> of the security</param>
-        /// <param name="resolution"></param>
-        /// <returns>Type that should be added as a subscription</returns>
-        private static Type GetDataFeedType(Type factoryType, TickType tickType, Resolution resolution)
-        {
-            return LeanData.IsCommonLeanDataType(factoryType) ?
-                            LeanData.GetDataType(resolution, tickType) :
-                            factoryType;
-        }
-
-        /// <summary>
         /// Creates a security and matching configuration. This applies the default leverage if
         /// leverage is less than or equal to zero.
         /// This method also add the new symbol mapping to the <see cref="SymbolCache"/>
@@ -475,12 +457,9 @@ namespace QuantConnect.Securities
             if (symbol.ID.SecurityType == SecurityType.Forex) defaultQuoteCurrency = symbol.Value.Substring(3);
             var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, defaultQuoteCurrency);
 
-            var type = resolution == Resolution.Tick ? typeof(Tick) : typeof(TradeBar);
-            if (symbol.ID.SecurityType == SecurityType.Option && resolution != Resolution.Tick)
-            {
-                type = typeof(QuoteBar);
-            }
-            return CreateSecurity(type, securityPortfolioManager, subscriptionManager, exchangeHours, marketHoursDbEntry.DataTimeZone, symbolProperties, securityInitializer, symbol, resolution,
+            var types = subscriptionManager.LookupSubscriptionConfigDataTypes(symbol.SecurityType, resolution, symbol.IsCanonical());
+            
+            return CreateSecurity(types, securityPortfolioManager, subscriptionManager, exchangeHours, marketHoursDbEntry.DataTimeZone, symbolProperties, securityInitializer, symbol, resolution,
                 fillDataForward, leverage, extendedMarketHours, isInternalFeed, isCustomData, isLiveMode, addToSymbolCache);
         }
     }

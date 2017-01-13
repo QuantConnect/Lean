@@ -15,9 +15,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NodaTime;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data
 {
@@ -180,6 +183,27 @@ namespace QuantConnect.Data
             return AvailableDataTypes[securityType];
         }
 
+        /// <summary>
+        /// Get the data feed types for a given <see cref="SecurityType"/> <see cref="Resolution"/> 
+        /// </summary>
+        /// <param name="symbolSecurityType">The <see cref="SecurityType"/> used to determine the types</param>
+        /// <param name="resolution">The resolution of the data requested</param>
+        /// <param name="isCanonical">Indicates whether the security is Canonical (future and options)</param>
+        /// <returns>Types that should be added to the <see cref="SubscriptionDataConfig"/></returns>
+        public List<Type> LookupSubscriptionConfigDataTypes(SecurityType symbolSecurityType, Resolution resolution, bool isCanonical)
+        {
+            if (isCanonical)
+            {
+                return new List<Type>() { typeof(ZipEntryName) };
+            }
+
+            if (resolution == Resolution.Tick)
+            {
+                return new List<Type>() { typeof(Tick) };
+            }
+
+            return AvailableDataTypes[symbolSecurityType].Select(tickType => LeanData.GetDataType(resolution, tickType)).ToList();
+        }
 
     } // End Algorithm MetaData Manager Class
 
