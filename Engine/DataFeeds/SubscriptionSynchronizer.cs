@@ -99,11 +99,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         var clone = subscription.Current.Clone(subscription.Current.IsFillForward);
                         clone.Time = clone.Time.ExchangeRoundDown(configuration.Increment, subscription.Security.Exchange.Hours, configuration.ExtendedMarketHours);
 
-                        // do not add fill-forward data if rounded down to the previous day
-                        if (!clone.IsFillForward || clone.Time.Date == subscription.Current.Time.Date)
-                        {
-                            packet.Add(clone);
-                        }
+                        packet.Add(clone);
 
                         if (!subscription.MoveNext())
                         {
