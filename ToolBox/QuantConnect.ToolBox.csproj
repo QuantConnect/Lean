@@ -142,6 +142,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AccernDataSplitter\Program.cs" />
     <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsParser.cs" />
     <Compile Include="AlgoSeekOptionsConverter\Program.cs" />
     <Compile Include="Bz2StreamProvider.cs" />
@@ -191,6 +192,9 @@
     <Compile Include="ZipStreamProvider.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="AccernDataSplitter\config.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="CoarseUniverseGenerator\config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

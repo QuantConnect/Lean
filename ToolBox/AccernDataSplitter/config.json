@@ -1,0 +1,11 @@
+﻿{
+    "environment": "desktop",
+
+	"environments": {
+		"desktop": {}
+	},
+
+	// Delete the configuration after loading
+	"accern-data-folder": "",
+	"data-cache-directory": ""
+}
