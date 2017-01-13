@@ -27,9 +27,13 @@ namespace QuantConnect.Tests
         {
             QuantConnect.Configuration.Config.Set("quandl-auth-token", "WyAazVXnq7ATy_fefTqm");
 
-            QuantConnect.Configuration.Config.Set("symbol-minute-limit", "100");
-            QuantConnect.Configuration.Config.Set("symbol-second-limit", "100");
-            QuantConnect.Configuration.Config.Set("symbol-tick-limit", "100");
+            if (parameters.Algorithm == "OptionChainConsistencyRegressionAlgorithm")
+            {
+                // special arrangement for consistency test - we check if limits work fine
+                QuantConnect.Configuration.Config.Set("symbol-minute-limit", "100");
+                QuantConnect.Configuration.Config.Set("symbol-second-limit", "100");
+                QuantConnect.Configuration.Config.Set("symbol-tick-limit", "100");
+            }
 
             AlgorithmRunner.RunLocalBacktest(parameters.Algorithm, parameters.Statistics, parameters.Language);
         }
