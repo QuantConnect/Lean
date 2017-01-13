@@ -36,7 +36,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
     /// </summary>
     public class AlgoSeekOptionsConverter
     {
-        private const int execTimeout = 60;// sec
+        private const int execTimeout = 180;// sec
 
         private string _source;
         private string _remote;
@@ -343,9 +343,17 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                     using (var outputReader = Task.Factory.StartNew(readStream, process.StandardOutput))
                     using (var errorReader = Task.Factory.StartNew(readStream, process.StandardError))
                     {
-                        Task.WaitAll(new Task[] { processWaiter, outputReader, errorReader }, execTimeout * 1000);
+                        bool waitResult = processWaiter.Result;
 
-                        if (!processWaiter.IsCompleted)
+                        if (!waitResult)
+                        {
+                            process.Kill();
+                            Log.Trace("7Zip Process Killed: " + cmdArgs);
+                        }
+
+                        Task.WaitAll(new Task[] { outputReader, errorReader }, execTimeout * 1000);
+
+                        if (!waitResult)
                         {
                             Log.Error("7Zip timed out: " + cmdArgs);
                             timedOut = true;
