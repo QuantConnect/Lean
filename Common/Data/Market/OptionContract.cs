@@ -27,7 +27,8 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public class OptionContract
     {
-        private Lazy<OptionPriceModelResult> _optionPriceModelResult = new Lazy<OptionPriceModelResult>(() => new OptionPriceModelResult(0m, new FirstOrderGreeks())); 
+        private Lazy<OptionPriceModelResult> _optionPriceModelResult = new Lazy<OptionPriceModelResult>(() => 
+                                                                            new OptionPriceModelResult(0m, new Greeks())); 
 
         /// <summary>
         /// Gets the option contract's symbol
@@ -78,9 +79,17 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
+        /// Gets the implied volatility of the option contract as computed by the <see cref="IOptionPriceModel"/>
+        /// </summary>
+        public decimal ImpliedVolatility
+        {
+            get { return _optionPriceModelResult.Value.ImpliedVolatility; }
+        }
+
+        /// <summary>
         /// Gets the greeks for this contract
         /// </summary>
-        public FirstOrderGreeks Greeks
+        public Greeks Greeks
         {
             get { return _optionPriceModelResult.Value.Greeks; }
         }

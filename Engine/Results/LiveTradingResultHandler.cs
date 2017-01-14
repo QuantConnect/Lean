@@ -298,7 +298,7 @@ namespace QuantConnect.Lean.Engine.Results
                     serverStatistics["Total RAM (MB)"] = _job.Controls.RamAllocation.ToString();
 
                     // Only send holdings updates when we have changes in orders, except for first time, then we want to send all
-                    foreach (var asset in _algorithm.Securities.Values.Where(x => !x.IsInternalFeed()).OrderBy(x => x.Symbol.Value))
+                    foreach (var asset in _algorithm.Securities.Values.Where(x => !x.IsInternalFeed() && !x.Symbol.IsCanonical()).OrderBy(x => x.Symbol.Value))
                     {
                         holdings.Add(asset.Symbol.Value, new Holding(asset));
                     }
@@ -1013,6 +1013,9 @@ namespace QuantConnect.Lean.Engine.Results
                 {
                     foreach (var subscription in _dataFeed.Subscriptions)
                     {
+                        // OI subscription doesn't contain asset market prices
+                        if (subscription.Configuration.TickType == TickType.OpenInterest)
+                            continue;
 
                         Security security;
                         if (_algorithm.Securities.TryGetValue(subscription.Configuration.Symbol, out security))

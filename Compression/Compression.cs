@@ -30,8 +30,11 @@ using ZipEntry = ICSharpCode.SharpZipLib.Zip.ZipEntry;
 using ZipFile = Ionic.Zip.ZipFile;
 using ZipInputStream = ICSharpCode.SharpZipLib.Zip.ZipInputStream;
 using ZipOutputStream = ICSharpCode.SharpZipLib.Zip.ZipOutputStream;
+using System.Collections.Concurrent;
+using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 
-namespace QuantConnect 
+namespace QuantConnect
 {
     /// <summary>
     /// Compression class manages the opening and extraction of compressed files (zip, tar, tar.gz).
@@ -471,7 +474,7 @@ namespace QuantConnect
         /// <param name="filename">Location of the original zip file</param>
         /// <param name="zip">The ZipFile instance to be returned to the caller</param>
         /// <returns>Stream reader of the first file contents in the zip file</returns>
-        public static StreamReader Unzip(string filename, out ZipFile zip)
+        public static StreamReader Unzip(string filename, out ZipArchive zip)
         {
             return Unzip(filename, null, out zip);
         }
@@ -482,9 +485,9 @@ namespace QuantConnect
         /// </summary>
         /// <param name="filename">Location of the original zip file</param>
         /// <param name="zipEntryName">The zip entry name to open a reader for. Specify null to access the first entry</param>
-        /// <param name="zip">The ZipFile instance to be returned to the caller</param>
+        /// <param name="zip">The ZipArchive instance to be returned to the caller</param>
         /// <returns>Stream reader of the first file contents in the zip file</returns>
-        public static StreamReader Unzip(string filename, string zipEntryName, out ZipFile zip)
+        public static StreamReader Unzip(string filename, string zipEntryName, out ZipArchive zip)
         {
             StreamReader reader = null;
             zip = null;
@@ -495,15 +498,20 @@ namespace QuantConnect
                 {
                     try
                     {
-                        zip = new ZipFile(filename);
-                        var entry = zip.FirstOrDefault(x => zipEntryName == null || string.Compare(x.FileName, zipEntryName, StringComparison.OrdinalIgnoreCase) == 0);
+                        var file = File.OpenRead(filename);
+                        // reading up first two bytes 
+                        // http://george.chiramattel.com/blog/2007/09/deflatestream-block-length-does-not-match.html
+                        file.ReadByte(); file.ReadByte();
+
+                        zip = new ZipArchive(file);
+                        var entry = zip.Entries.FirstOrDefault(x => zipEntryName == null || string.Compare(x.FullName, zipEntryName, StringComparison.OrdinalIgnoreCase) == 0);
                         if (entry == null)
                         {
-                            Log.Error("Compression.Unzip(): Unable to locate zip entry with name: " + zipEntryName + " in file: " + filename);
+                            // Unable to locate zip entry 
                             return null;
                         }
 
-                        reader = new StreamReader(entry.OpenReader());
+                        reader = new StreamReader(entry.Open());
                     }
                     catch (Exception err)
                     {
@@ -523,6 +531,8 @@ namespace QuantConnect
             }
             return reader;
         }
+
+
 
         /// <summary>
         /// Streams the unzipped file as key value pairs of file name to file contents.

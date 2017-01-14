@@ -63,7 +63,7 @@ namespace QuantConnect.Tests.Common
             Assert.IsTrue(SymbolCache.TryGetTicker(Symbols.EURUSD, out ticker));
             Assert.AreEqual(Symbols.EURUSD.Value, ticker);
 
-            var symbol = new Symbol(SecurityIdentifier.GenerateForex("NOT A FOREX PAIR", Market.FXCM), "EURGBP");
+            var symbol = new Symbol(SecurityIdentifier.GenerateForex("NOT-A-FOREX-PAIR", Market.FXCM), "EURGBP");
             Assert.IsFalse(SymbolCache.TryGetTicker(symbol, out ticker));
             Assert.AreEqual(default(string), ticker);
         }
@@ -79,7 +79,7 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void TryGetTickerFromUncachedSymbol()
         {
-            var symbol = Symbol.Create("My Ticker", SecurityType.Equity, Market.USA);
+            var symbol = Symbol.Create("My-Ticker", SecurityType.Equity, Market.USA);
             var ticker = SymbolCache.GetTicker(symbol);
             Assert.AreEqual(symbol.ID.ToString(), ticker);
         }

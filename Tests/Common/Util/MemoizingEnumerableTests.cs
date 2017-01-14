@@ -32,6 +32,16 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         [Test]
+        public void ChainedMemoizingEnumerables()
+        {
+            var list = new int [] { 1, 2, 3, 4, 5 };
+            var memoized = new MemoizingEnumerable<int>(list);
+            var memoized2 = new MemoizingEnumerable<int>(memoized);
+            var memoized3 = new MemoizingEnumerable<int>(memoized2);
+            CollectionAssert.AreEqual(list, memoized3);
+        }
+
+        [Test]
         public void EnumeratesOnce()
         {
             int i = 0;

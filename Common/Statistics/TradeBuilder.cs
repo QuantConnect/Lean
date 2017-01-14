@@ -118,7 +118,8 @@ namespace QuantConnect.Statistics
         /// </summary>
         /// <param name="fill">The new fill order event</param>
         /// <param name="conversionRate">The current market conversion rate into the account currency</param>
-        public void ProcessFill(OrderEvent fill, decimal conversionRate)
+        /// <param name="multiplier">The contract multiplier</param>
+        public void ProcessFill(OrderEvent fill, decimal conversionRate, decimal multiplier = 1.0m)
         {
             // If we have multiple fills per order, we assign the order fee only to its first fill
             // to avoid counting the same order fee multiple times.
@@ -132,20 +133,20 @@ namespace QuantConnect.Statistics
             switch (_groupingMethod)
             {
                 case FillGroupingMethod.FillToFill:
-                    ProcessFillUsingFillToFill(fill.Clone(), orderFee, conversionRate);
+                    ProcessFillUsingFillToFill(fill.Clone(), orderFee, conversionRate, multiplier);
                     break;
 
                 case FillGroupingMethod.FlatToFlat:
-                    ProcessFillUsingFlatToFlat(fill.Clone(), orderFee, conversionRate);
+                    ProcessFillUsingFlatToFlat(fill.Clone(), orderFee, conversionRate, multiplier);
                     break;
 
                 case FillGroupingMethod.FlatToReduced:
-                    ProcessFillUsingFlatToReduced(fill.Clone(), orderFee, conversionRate);
+                    ProcessFillUsingFlatToReduced(fill.Clone(), orderFee, conversionRate, multiplier);
                     break;
             }
         }
 
-        private void ProcessFillUsingFillToFill(OrderEvent fill, decimal orderFee, decimal conversionRate)
+        private void ProcessFillUsingFillToFill(OrderEvent fill, decimal orderFee, decimal conversionRate, decimal multiplier)
         {
             Position position;
             if (!_positions.TryGetValue(fill.Symbol, out position) || position.PendingTrades.Count == 0)
@@ -206,11 +207,11 @@ namespace QuantConnect.Statistics
 
                         trade.ExitTime = fill.UtcTime;
                         trade.ExitPrice = fill.FillPrice;
-                        trade.ProfitLoss = Math.Round((trade.ExitPrice - trade.EntryPrice) * trade.Quantity * (trade.Direction == TradeDirection.Long ? +1 : -1) * conversionRate, 2);
+                        trade.ProfitLoss = Math.Round((trade.ExitPrice - trade.EntryPrice) * trade.Quantity * (trade.Direction == TradeDirection.Long ? +1 : -1) * conversionRate * multiplier, 2);
                         // if closing multiple trades with the same order, assign order fee only once
                         trade.TotalFees += orderFeeAssigned ? 0 : orderFee;
-                        trade.MAE = Math.Round((trade.Direction == TradeDirection.Long ? position.MinPrice - trade.EntryPrice : trade.EntryPrice - position.MaxPrice) * trade.Quantity * conversionRate, 2);
-                        trade.MFE = Math.Round((trade.Direction == TradeDirection.Long ? position.MaxPrice - trade.EntryPrice : trade.EntryPrice - position.MinPrice) * trade.Quantity * conversionRate, 2);
+                        trade.MAE = Math.Round((trade.Direction == TradeDirection.Long ? position.MinPrice - trade.EntryPrice : trade.EntryPrice - position.MaxPrice) * trade.Quantity * conversionRate * multiplier, 2);
+                        trade.MFE = Math.Round((trade.Direction == TradeDirection.Long ? position.MaxPrice - trade.EntryPrice : trade.EntryPrice - position.MinPrice) * trade.Quantity * conversionRate * multiplier, 2);
                         
                         AddNewTrade(trade);
                     }
@@ -228,10 +229,10 @@ namespace QuantConnect.Statistics
                             Quantity = fill.AbsoluteFillQuantity,
                             ExitTime = fill.UtcTime,
                             ExitPrice = fill.FillPrice,
-                            ProfitLoss = Math.Round((fill.FillPrice - trade.EntryPrice) * fill.AbsoluteFillQuantity * (trade.Direction == TradeDirection.Long ? +1 : -1) * conversionRate, 2),
+                            ProfitLoss = Math.Round((fill.FillPrice - trade.EntryPrice) * fill.AbsoluteFillQuantity * (trade.Direction == TradeDirection.Long ? +1 : -1) * conversionRate * multiplier, 2),
                             TotalFees = trade.TotalFees + (orderFeeAssigned ? 0 : orderFee),
-                            MAE = Math.Round((trade.Direction == TradeDirection.Long ? position.MinPrice - trade.EntryPrice : trade.EntryPrice - position.MaxPrice) * fill.AbsoluteFillQuantity * conversionRate, 2),
-                            MFE = Math.Round((trade.Direction == TradeDirection.Long ? position.MaxPrice - trade.EntryPrice : trade.EntryPrice - position.MinPrice) * fill.AbsoluteFillQuantity * conversionRate, 2)
+                            MAE = Math.Round((trade.Direction == TradeDirection.Long ? position.MinPrice - trade.EntryPrice : trade.EntryPrice - position.MaxPrice) * fill.AbsoluteFillQuantity * conversionRate * multiplier, 2),
+                            MFE = Math.Round((trade.Direction == TradeDirection.Long ? position.MaxPrice - trade.EntryPrice : trade.EntryPrice - position.MinPrice) * fill.AbsoluteFillQuantity * conversionRate * multiplier, 2)
                         });
 
                         trade.TotalFees = 0;
@@ -266,7 +267,7 @@ namespace QuantConnect.Statistics
             }
         }
 
-        private void ProcessFillUsingFlatToFlat(OrderEvent fill, decimal orderFee, decimal conversionRate)
+        private void ProcessFillUsingFlatToFlat(OrderEvent fill, decimal orderFee, decimal conversionRate, decimal multiplier)
         {
             Position position;
             if (!_positions.TryGetValue(fill.Symbol, out position) || position.PendingFills.Count == 0)
@@ -339,10 +340,10 @@ namespace QuantConnect.Statistics
                         Quantity = Math.Abs(totalEntryQuantity),
                         ExitTime = fill.UtcTime,
                         ExitPrice = exitAveragePrice,
-                        ProfitLoss = Math.Round((exitAveragePrice - entryAveragePrice) * Math.Abs(totalEntryQuantity) * Math.Sign(totalEntryQuantity) * conversionRate, 2),
+                        ProfitLoss = Math.Round((exitAveragePrice - entryAveragePrice) * Math.Abs(totalEntryQuantity) * Math.Sign(totalEntryQuantity) * conversionRate * multiplier, 2),
                         TotalFees = position.TotalFees,
-                        MAE = Math.Round((direction == TradeDirection.Long ? position.MinPrice - entryAveragePrice : entryAveragePrice - position.MaxPrice) * Math.Abs(totalEntryQuantity) * conversionRate, 2),
-                        MFE = Math.Round((direction == TradeDirection.Long ? position.MaxPrice - entryAveragePrice : entryAveragePrice - position.MinPrice) * Math.Abs(totalEntryQuantity) * conversionRate, 2)
+                        MAE = Math.Round((direction == TradeDirection.Long ? position.MinPrice - entryAveragePrice : entryAveragePrice - position.MaxPrice) * Math.Abs(totalEntryQuantity) * conversionRate * multiplier, 2),
+                        MFE = Math.Round((direction == TradeDirection.Long ? position.MaxPrice - entryAveragePrice : entryAveragePrice - position.MinPrice) * Math.Abs(totalEntryQuantity) * conversionRate * multiplier, 2)
                     });
 
                     _positions.Remove(fill.Symbol);
@@ -369,7 +370,7 @@ namespace QuantConnect.Statistics
             }
         }
 
-        private void ProcessFillUsingFlatToReduced(OrderEvent fill, decimal orderFee, decimal conversionRate)
+        private void ProcessFillUsingFlatToReduced(OrderEvent fill, decimal orderFee, decimal conversionRate, decimal multiplier)
         {
             Position position;
             if (!_positions.TryGetValue(fill.Symbol, out position) || position.PendingFills.Count == 0)
@@ -435,10 +436,10 @@ namespace QuantConnect.Statistics
                     Quantity = Math.Abs(totalExecutedQuantity),
                     ExitTime = fill.UtcTime,
                     ExitPrice = fill.FillPrice,
-                    ProfitLoss = Math.Round((fill.FillPrice - entryPrice) * Math.Abs(totalExecutedQuantity) * Math.Sign(-totalExecutedQuantity) * conversionRate, 2),
+                    ProfitLoss = Math.Round((fill.FillPrice - entryPrice) * Math.Abs(totalExecutedQuantity) * Math.Sign(-totalExecutedQuantity) * conversionRate * multiplier, 2),
                     TotalFees = position.TotalFees,
-                    MAE = Math.Round((direction == TradeDirection.Long ? position.MinPrice - entryPrice : entryPrice - position.MaxPrice) * Math.Abs(totalExecutedQuantity) * conversionRate, 2),
-                    MFE = Math.Round((direction == TradeDirection.Long ? position.MaxPrice - entryPrice : entryPrice - position.MinPrice) * Math.Abs(totalExecutedQuantity) * conversionRate, 2)
+                    MAE = Math.Round((direction == TradeDirection.Long ? position.MinPrice - entryPrice : entryPrice - position.MaxPrice) * Math.Abs(totalExecutedQuantity) * conversionRate * multiplier, 2),
+                    MFE = Math.Round((direction == TradeDirection.Long ? position.MaxPrice - entryPrice : entryPrice - position.MinPrice) * Math.Abs(totalExecutedQuantity) * conversionRate * multiplier, 2)
                 });
 
                 if (Math.Abs(totalExecutedQuantity) < fill.AbsoluteFillQuantity)

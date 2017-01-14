@@ -53,6 +53,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             base.ProcessSynchronousEvents();
 
+            _brokerage.SimulateMarket();
             _brokerage.Scan();
         }
 
@@ -63,6 +64,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             base.ProcessAsynchronousEvents();
 
+            _brokerage.SimulateMarket();
             _brokerage.Scan();
         }
     }

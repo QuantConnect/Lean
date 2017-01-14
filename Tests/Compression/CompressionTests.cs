@@ -18,6 +18,7 @@ using System.Linq;
 using System.Text;
 using Ionic.Zip;
 using NUnit.Framework;
+using System.IO.Compression;
 
 namespace QuantConnect.Tests.Compression
 {
@@ -54,9 +55,9 @@ namespace QuantConnect.Tests.Compression
         public void ExtractsZipEntryByName()
         {
             var zip = Path.Combine("TestData", "multizip.zip");
-            ZipFile zipFile;
-            using (var entryStream = QuantConnect.Compression.Unzip(zip, "multizip/two.txt", out zipFile))
-            using (zipFile)
+            ZipArchive zipArchive;
+            using (var entryStream = QuantConnect.Compression.Unzip(zip, "multizip/two.txt", out zipArchive))
+            using (zipArchive)
             {
                 var text = entryStream.ReadToEnd();
                 Assert.AreEqual("2", text);
