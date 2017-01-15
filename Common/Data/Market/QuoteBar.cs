@@ -15,7 +15,6 @@
 
 using System;
 using System.Globalization;
-using QLNet;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 
@@ -290,7 +289,7 @@ namespace QuantConnect.Data.Market
             }
             catch (Exception err)
             {
-                Log.Error("QuoteBar.Reader(): Error on line {0}. Message: {1}", line, err);
+                Log.Error("QuoteBar.Reader(): Error on line {0} for date {1}. Message: {2}", line, date, err);
             }
 
             // if we couldn't parse it above return a default instance
