@@ -15,6 +15,7 @@
 
 using System;
 using System.Globalization;
+using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect.Data.Market
@@ -271,18 +272,28 @@ namespace QuantConnect.Data.Market
         /// <returns>Enumerable iterator for returning each line of the required data.</returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            var quoteBar = new QuoteBar();
-
             var csvLength = line.Split(',').Length;
 
-            // "Scaffold" code - simple check to see how the data is formatted and decide how to parse appropriately
-            // TODO: Once all FX is reprocessed to QuoteBars, remove this check
-            if (csvLength > 5)
-                quoteBar = ParseQuoteAsQuoteBar(config, date, line);
-            else
-                quoteBar = ParseTradeAsQuoteBar(config, date, line);
+            try
+            {
+                // "Scaffold" code - simple check to see how the data is formatted and decide how to parse appropriately
+                // TODO: Once all FX is reprocessed to QuoteBars, remove this check
+                if (csvLength > 5)
+                {
+                    // Parse as quote
+                    return ParseQuoteAsQuoteBar(config, date, line);
+                }
 
-            return quoteBar;
+                // Parse as trade
+                return ParseTradeAsQuoteBar(config, date, line);
+            }
+            catch (Exception err)
+            {
+                Log.Error("QuoteBar.Reader(): Error on line {0} for date {1}. Message: {2}", line, date, err);
+            }
+
+            // if we couldn't parse it above return a default instance
+            return new QuoteBar { Symbol = config.Symbol, Period = config.Increment };
         }
 
         /// <summary>
