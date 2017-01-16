@@ -53,7 +53,7 @@ namespace QuantConnect
         /// <summary>
         /// Gets the set of invalids symbol characters
         /// </summary>
-        public static readonly IReadOnlyCollection<char> InvalidSymbolCharacters = (IReadOnlyCollection<char>)new HashSet<char>(InvalidCharacters);
+        public static readonly HashSet<char> InvalidSymbolCharacters = new HashSet<char>(InvalidCharacters);
 
         #endregion
 
