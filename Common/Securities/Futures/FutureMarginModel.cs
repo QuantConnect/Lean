@@ -220,7 +220,7 @@ namespace QuantConnect.Securities
         {
             lock (DataFolderSymbolLock)
             {
-                var directory = Path.Combine(Globals.DataFolder, "margins");
+                var directory = Path.Combine(Globals.DataFolder, Path.Combine(SecurityType.Future.ToLower(), "margins"));
                 return FromCsvFile(Path.Combine(directory, symbol + ".csv"));
             }
         }
