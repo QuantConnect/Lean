@@ -198,7 +198,7 @@ namespace QuantConnect.Securities
         {
             if (_marginRequirementsHistory == null)
             {
-                _marginRequirementsHistory = LoadMarginRequirementsHistory(symbol.Underlying.Value);
+                _marginRequirementsHistory = LoadMarginRequirementsHistory(symbol);
                 _marginCurrentIndex = 0;
             }
 
@@ -216,12 +216,15 @@ namespace QuantConnect.Securities
         /// data found in /Data/symbol-margin/
         /// </summary>
         /// <returns>Sorted list of historical margin changes</returns>
-        private MarginRequirementsEntry[] LoadMarginRequirementsHistory(string symbol)
+        private MarginRequirementsEntry[] LoadMarginRequirementsHistory(Symbol symbol)
         {
             lock (DataFolderSymbolLock)
             {
-                var directory = Path.Combine(Globals.DataFolder, "margins");
-                return FromCsvFile(Path.Combine(directory, symbol + ".csv"));
+                var directory = Path.Combine(Globals.DataFolder,
+                                            symbol.SecurityType.ToLower(),
+                                            symbol.ID.Market.ToLower(),
+                                            "margins");
+                return FromCsvFile(Path.Combine(directory, symbol.Underlying.Value + ".csv"));
             }
         }
                 
