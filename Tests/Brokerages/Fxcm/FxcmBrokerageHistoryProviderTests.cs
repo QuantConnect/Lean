@@ -14,6 +14,8 @@
 */
 
 using System;
+using System.Diagnostics;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Brokerages.Fxcm;
 using QuantConnect.Data;
@@ -98,6 +100,43 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
             {
                 Assert.DoesNotThrow(test);
             }
+        }
+
+        [Test]
+        public void GetsFullDayTickHistory()
+        {
+            var symbol = Symbols.EURUSD;
+            const Resolution resolution = Resolution.Tick;
+
+            var startDate = new DateTime(2016, 11, 1);
+            var endDate = startDate.AddDays(1);
+
+            var brokerage = (FxcmBrokerage)Brokerage;
+
+            var stopwatch = Stopwatch.StartNew();
+
+            var requests = new[]
+            {
+                new HistoryRequest
+                {
+                    Symbol = symbol,
+                    Resolution = resolution,
+                    StartTimeUtc = startDate,
+                    EndTimeUtc = endDate
+                }
+            };
+
+            var history = brokerage.GetHistory(requests, TimeZones.Utc);
+            var tickCount = history.SelectMany(slice => slice.Ticks[symbol]).Count();
+
+            stopwatch.Stop();
+            Log.Trace("Download time: " + stopwatch.Elapsed);
+
+            Log.Trace("History ticks returned: " + tickCount);
+            Log.Trace("Data points retrieved: " + brokerage.DataPointCount);
+
+            Assert.AreEqual(tickCount, brokerage.DataPointCount);
+            Assert.AreEqual(241233, tickCount);
         }
     }
 }
