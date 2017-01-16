@@ -22,6 +22,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Tests.Common.Securities
@@ -147,6 +148,7 @@ namespace QuantConnect.Tests.Common.Securities
                 false);
             Assert.AreEqual(forex.Subscriptions.Count(), 1);
             Assert.AreEqual(forex.Subscriptions.First().Type, typeof(QuoteBar));
+            Assert.AreEqual(forex.Subscriptions.First().TickType, TickType.Quote);
         }
 
         [Test]
@@ -176,6 +178,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual(option.Subscriptions.Count(), 1);
             Assert.AreEqual(option.Subscriptions.First().Type, typeof(ZipEntryName));
+            Assert.AreEqual(option.Subscriptions.First().TickType, TickType.Trade);
         }
 
 
@@ -206,10 +209,41 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual(equity.Subscriptions.Count(), 1);
             Assert.AreEqual(equity.Subscriptions.First().Type, typeof(TradeBar));
+            Assert.AreEqual(equity.Subscriptions.First().TickType, TickType.Trade);
         }
 
         [Test]
-        public void SecurityManagerCanCreate_Custom_WithCorrectSubscriptions()
+        public void SecurityManagerCanCreate_Cfd_WithCorrectSubscriptions()
+        {
+            var symbol = Symbol.Create("abc", SecurityType.Cfd, Market.USA);
+            var marketHoursDbEntry = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, SecurityType.Equity);
+            var defaultQuoteCurrency = CashBook.AccountCurrency;
+            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, defaultQuoteCurrency);
+            var subscriptionTypes = new List<Type>() { typeof(TradeBar) };
+
+            var subscriptions = SecurityManager.CreateSecurity(subscriptionTypes,
+                _securityPortfolioManager,
+                _subscriptionManager,
+                marketHoursDbEntry.ExchangeHours,
+                marketHoursDbEntry.DataTimeZone,
+                symbolProperties,
+                _securityInitializer,
+                symbol,
+                Resolution.Second,
+                false,
+                1.0m,
+                false,
+                false,
+                false,
+                false);
+
+            Assert.AreEqual(subscriptions.Subscriptions.Count(), 1);
+            Assert.AreEqual(subscriptions.Subscriptions.First().Type, typeof(TradeBar));
+            Assert.AreEqual(subscriptions.Subscriptions.First().TickType, TickType.Trade);
+        }
+
+        [Test]
+        public void SecurityManagerCanCreate_CustomSecurities_WithCorrectSubscriptions()
         {
             var equitySymbol = new Symbol(SecurityIdentifier.GenerateBase("BTC", Market.USA), "BTC");
             var equityMarketHoursDbEntry = _marketHoursDatabase.GetEntry(Market.USA, "BTC", SecurityType.Base, TimeZones.NewYork);
@@ -234,6 +268,77 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual(equity.Subscriptions.Count(), 1);
             Assert.AreEqual(equity.Subscriptions.First().Type, typeof(Bitcoin));
+            Assert.AreEqual(equity.Subscriptions.First().TickType, TickType.Trade);
+        }
+
+        [Test]
+        public void SecurityManagerCanCreate_ConcreteOptions_WithCorrectSubscriptions()
+        {
+            var underlying = SecurityIdentifier.GenerateEquity(new DateTime(1998, 01, 02), "SPY", Market.USA);
+            var optionIdentifier = SecurityIdentifier.GenerateOption(new DateTime(2015, 09, 18), underlying, Market.USA, 195.50m, OptionRight.Put, OptionStyle.European);
+            var optionSymbol = new Symbol(optionIdentifier, "SPY", Symbol.Empty);
+            var optionMarketHoursDbEntry = _marketHoursDatabase.GetEntry(Market.USA, "SPY", SecurityType.Equity, TimeZones.NewYork);
+            var optionSymbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(optionSymbol.ID.Market, "SPY", optionSymbol.ID.SecurityType, CashBook.AccountCurrency);
+
+            var subscriptionTypes = new List<Type>() { typeof(TradeBar), typeof(QuoteBar), typeof(OpenInterest) };
+
+            var optionSubscriptions = SecurityManager.CreateSecurity(subscriptionTypes,
+                _securityPortfolioManager,
+                _subscriptionManager,
+                optionMarketHoursDbEntry.ExchangeHours,
+                optionMarketHoursDbEntry.DataTimeZone,
+                optionSymbolProperties,
+                _securityInitializer,
+                optionSymbol,
+                Resolution.Second,
+                false,
+                1.0m,
+                false,
+                false,
+                false,
+                false);
+
+            Assert.IsFalse(optionSymbol.IsCanonical());
+
+            Assert.AreEqual(optionSubscriptions.Subscriptions.Count(), 3);
+            Assert.IsTrue(optionSubscriptions.Subscriptions.Any(x => x.TickType == TickType.OpenInterest && x.Type == typeof(OpenInterest)));
+            Assert.IsTrue(optionSubscriptions.Subscriptions.Any(x => x.TickType == TickType.Quote && x.Type == typeof(QuoteBar)));
+            Assert.IsTrue(optionSubscriptions.Subscriptions.Any(x => x.TickType == TickType.Trade && x.Type == typeof(TradeBar)));
+        }
+
+        [Test]
+        public void SecurityManagerCanCreate_ConcreteFutures_WithCorrectSubscriptions()
+        {
+            var ed = SecurityIdentifier.GenerateBase("ED", Market.USA);
+            var identifier = SecurityIdentifier.GenerateFuture(new DateTime(2020, 12, 15), ed, Market.USA);
+            var symbol = new Symbol(identifier, "ED", Symbol.Empty);
+            var marketHoursDbEntry = _marketHoursDatabase.GetEntry(Market.USA, "ED", SecurityType.Equity, TimeZones.NewYork);
+            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, "ED", symbol.ID.SecurityType, CashBook.AccountCurrency);
+
+            var subscriptionTypes = new List<Type>() { typeof(TradeBar), typeof(QuoteBar), typeof(OpenInterest) };
+
+            var subscriptions = SecurityManager.CreateSecurity(subscriptionTypes,
+                _securityPortfolioManager,
+                _subscriptionManager,
+                marketHoursDbEntry.ExchangeHours,
+                marketHoursDbEntry.DataTimeZone,
+                symbolProperties,
+                _securityInitializer,
+                symbol,
+                Resolution.Second,
+                false,
+                1.0m,
+                false,
+                false,
+                false,
+                false);
+
+            Assert.IsFalse(symbol.IsCanonical());
+
+            Assert.AreEqual(subscriptions.Subscriptions.Count(), 3);
+            Assert.IsTrue(subscriptions.Subscriptions.Any(x => x.TickType == TickType.OpenInterest && x.Type == typeof(OpenInterest)));
+            Assert.IsTrue(subscriptions.Subscriptions.Any(x => x.TickType == TickType.Quote && x.Type == typeof(QuoteBar)));
+            Assert.IsTrue(subscriptions.Subscriptions.Any(x => x.TickType == TickType.Trade && x.Type == typeof(TradeBar)));
         }
 
         private SubscriptionDataConfig CreateTradeBarConfig()
