@@ -196,7 +196,7 @@ namespace QuantConnect.Securities
             do
             {
                 var marketHours = GetMarketHours(time.DayOfWeek);
-                if (!marketHours.IsClosedAllDay && !_holidays.Contains(time.Ticks))
+                if (!marketHours.IsClosedAllDay && !_holidays.Contains(time.Date.Ticks))
                 {
                     var marketOpenTimeOfDay = marketHours.GetMarketOpen(time.TimeOfDay, extendedMarket);
                     if (marketOpenTimeOfDay.HasValue)
@@ -229,7 +229,7 @@ namespace QuantConnect.Securities
             do
             {
                 var marketHours = GetMarketHours(time.DayOfWeek);
-                if (!marketHours.IsClosedAllDay && !_holidays.Contains(time.Ticks))
+                if (!marketHours.IsClosedAllDay && !_holidays.Contains(time.Date.Ticks))
                 {
                     var marketCloseTimeOfDay = marketHours.GetMarketClose(time.TimeOfDay, extendedMarket);
                     if (marketCloseTimeOfDay.HasValue)
