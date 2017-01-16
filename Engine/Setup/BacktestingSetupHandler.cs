@@ -122,8 +122,8 @@ namespace QuantConnect.Lean.Engine.Setup
             string error;
             IAlgorithm algorithm;
 
-            // limit load times to 10 seconds and force the assembly to have exactly one derived type
-            var loader = new Loader(language, TimeSpan.FromSeconds(15), names => names.SingleOrDefault());
+            // limit load times to 60 seconds and force the assembly to have exactly one derived type
+            var loader = new Loader(language, TimeSpan.FromSeconds(60), names => names.SingleOrDefault());
             var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, out algorithm, out error);
             if (!complete) throw new Exception(error + " Try re-building algorithm.");
 
