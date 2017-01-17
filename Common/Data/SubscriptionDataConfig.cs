@@ -19,7 +19,9 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using NodaTime;
 using QuantConnect.Data.Consolidators;
+using QuantConnect.Data.Market;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data
 {
@@ -190,11 +192,7 @@ namespace QuantConnect.Data
 
             if (!tickType.HasValue)
             {
-                TickType = TickType.Trade;
-                if (SecurityType == SecurityType.Forex || SecurityType == SecurityType.Cfd || SecurityType == SecurityType.Option)
-                {
-                    TickType = TickType.Quote;
-                }
+                TickType = LeanData.GetCommonTickTypeForCommonDataTypes(objectType);
             }
             else
             {

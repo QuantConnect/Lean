@@ -131,6 +131,8 @@
     <Compile Include="Brokerages\Tradier\TradierBrokerageTests.cs" />
     <Compile Include="Common\CurrenciesTests.cs" />
     <Compile Include="Common\Data\Market\QuoteBarTests.cs" />
+    <Compile Include="Common\Data\UniverseSelection\FutureChainUniverseTests.cs" />
+    <Compile Include="Common\Data\UniverseSelection\OptionsChainUniverseTests.cs" />
     <Compile Include="Common\Securities\BrokerageModelSecurityInitializerTests.cs" />
     <Compile Include="Common\Securities\FutureFilterTests.cs" />
     <Compile Include="Common\Securities\StandardDeviationOfReturnsVolatilityModelTests.cs" />

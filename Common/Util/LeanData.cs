@@ -18,6 +18,7 @@ using System.Globalization;
 using System.IO;
 using NodaTime;
 using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 
@@ -551,6 +552,34 @@ namespace QuantConnect.Util
                 return ToCsv(string.Empty, string.Empty, string.Empty, string.Empty);
             }
             return ToCsv(Scale(bar.Open), Scale(bar.High), Scale(bar.Low), Scale(bar.Close));
+        }
+
+        /// <summary>
+        /// Get the <see cref="TickType"/> for common Lean data types.
+        /// If not a Lean common data type, return a TickType of Trade.
+        /// </summary>
+        /// <param name="type">A Type used to determine the TickType</param>
+        /// <returns>A TickType corresponding to the type</returns>
+        public static TickType GetCommonTickTypeForCommonDataTypes(Type type)
+        {
+            if (type == typeof(TradeBar))
+            {
+                return TickType.Trade;
+            }
+            if (type == typeof(QuoteBar))
+            {
+                return TickType.Quote;
+            }
+            if (type == typeof(OpenInterest))
+            {
+                return TickType.OpenInterest;
+            }
+            if (type == typeof(ZipEntryName))
+            {
+                return TickType.Trade;
+            }
+
+            return TickType.Trade;
         }
     }
 }
