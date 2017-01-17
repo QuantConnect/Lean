@@ -180,7 +180,7 @@ namespace QuantConnect.Securities
                 // and holidays, but we'll express them in a different time zone
                 if (overrideTimeZone != null && !entry.ExchangeHours.TimeZone.Equals(overrideTimeZone))
                 {
-                    return new Entry(overrideTimeZone, new SecurityExchangeHours(overrideTimeZone, entry.ExchangeHours.Holidays, entry.ExchangeHours.MarketHours));
+                    return new Entry(overrideTimeZone, new SecurityExchangeHours(overrideTimeZone, entry.ExchangeHours.Holidays, entry.ExchangeHours.MarketHours, entry.ExchangeHours.EarlyCloses));
                 }
             }
 
