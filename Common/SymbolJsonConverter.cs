@@ -72,7 +72,14 @@ namespace QuantConnect
                 underlyingSymbol = new Symbol(SecurityIdentifier.Parse(underlying["ID"].ToString()), underlying["Value"].ToString());
             }
 
-            return new Symbol(SecurityIdentifier.Parse(jobject["ID"].ToString()), jobject["Value"].ToString(), underlyingSymbol);
+            var symbolId = jobject["ID"];
+
+            if (symbolId == null)
+            {
+                return null;
+            }
+
+            return new Symbol(SecurityIdentifier.Parse(symbolId.ToString()), jobject["Value"].ToString(), underlyingSymbol);
         }
 
         /// <summary>
