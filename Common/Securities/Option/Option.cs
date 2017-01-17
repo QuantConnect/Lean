@@ -61,7 +61,7 @@ namespace QuantConnect.Securities.Option
                 Securities.VolatilityModel.Null,
                 new OptionMarginModel(),
                 new OptionDataFilter(),
-                new AdjustedPriceVariationModel()
+                new SecurityPriceVariationModel()
                 )
         {
             ExerciseSettlement = SettlementType.PhysicalDelivery;
@@ -93,7 +93,7 @@ namespace QuantConnect.Securities.Option
                Securities.VolatilityModel.Null,
                new OptionMarginModel(),
                new OptionDataFilter(),
-               new AdjustedPriceVariationModel()
+               new SecurityPriceVariationModel()
                )
         {
             ExerciseSettlement = SettlementType.PhysicalDelivery;
