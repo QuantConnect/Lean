@@ -59,7 +59,7 @@ namespace QuantConnect.Securities.Future
                 Securities.VolatilityModel.Null,
                 new FutureMarginModel(),
                 new SecurityDataFilter(),
-                new AdjustedPriceVariationModel()
+                new SecurityPriceVariationModel()
                 )
         {
             // for now all futures are cash settled as we don't allow underlying (Live Cattle?) to be posted on the account
@@ -90,7 +90,7 @@ namespace QuantConnect.Securities.Future
                 Securities.VolatilityModel.Null,
                 new FutureMarginModel(),
                 new SecurityDataFilter(),
-                new AdjustedPriceVariationModel()
+                new SecurityPriceVariationModel()
                 )
         {
             // for now all futures are cash settled as we don't allow underlying (Live Cattle?) to be posted on the account
