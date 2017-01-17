@@ -90,6 +90,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 var attempt = 1;
                 while (end > request.StartTimeUtc)
                 {
+                    Log.Debug(string.Format("FxcmBrokerage.HistoryProvider.GetHistory(): Requesting {0:O} to {1:O}", end, request.StartTimeUtc));
                     _lastHistoryChunk.Clear();
 
                     var mdr = new MarketDataRequest();
@@ -117,6 +118,12 @@ namespace QuantConnect.Brokerages.Fxcm
                         // no response
                         if (EnableOnlyHistoryRequests)
                         {
+                            // Potentially no response because no data; widen the search net to 5m if we don't get a response.
+                            if (request.StartTimeUtc.AddSeconds(300) >= end)
+                            {
+                                break;
+                            }
+                                
                             throw new TimeoutException(string.Format("FxcmBrokerage.GetHistory(): Operation took longer than {0} seconds.", (decimal) HistoryResponseTimeout/1000));
                         }
 
