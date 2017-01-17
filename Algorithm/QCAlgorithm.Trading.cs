@@ -180,6 +180,12 @@ namespace QuantConnect.Algorithm
 
             var request = CreateSubmitOrderRequest(OrderType.Market, security, quantity, tag);
 
+            // If warming up, do not submit
+            if (IsWarmingUp)
+            {
+                return OrderTicket.InvalidWarmingUp(Transactions, request);
+            }
+
             //Initialize the Market order parameters:
             var preOrderCheckResponse = PreOrderChecks(request);
             if (preOrderCheckResponse.IsError)
@@ -316,6 +322,12 @@ namespace QuantConnect.Algorithm
             var option = (Option)Securities[optionSymbol];
 
             var request = CreateSubmitOrderRequest(OrderType.OptionExercise, option, quantity, tag);
+
+            // If warming up, do not submit
+            if (IsWarmingUp)
+            {
+                return OrderTicket.InvalidWarmingUp(Transactions, request);
+            }
 
             //Initialize the exercise order parameters
             var preOrderCheckResponse = PreOrderChecks(request);
