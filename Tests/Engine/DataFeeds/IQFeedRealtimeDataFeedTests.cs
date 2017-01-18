@@ -16,7 +16,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     /// <summary>
     ///  Test fixture is explicit, because tests are dependent on network and are long
     /// </summary>
-    [TestFixture, Explicit]
+    [TestFixture, Ignore("Tests are dependent on network and are long")]
     public class IQFeedRealtimeDataFeedTests
     {
 

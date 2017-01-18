@@ -232,7 +232,13 @@ namespace QuantConnect.Securities.Option
         {
             try
             {
-                return option.NPV();
+                var npv = option.NPV();
+
+                if (double.IsNaN(npv) ||
+                    double.IsInfinity(npv))
+                    npv = 0.0;
+
+                return npv;
             }
             catch (Exception err)
             {
