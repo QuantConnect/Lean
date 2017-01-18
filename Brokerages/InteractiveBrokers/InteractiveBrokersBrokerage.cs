@@ -628,6 +628,24 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return details.Summary.PrimaryExch;
         }
 
+        private string GetTradingClass(Contract contract)
+        {
+            ContractDetails details;
+            if (_contractDetails.TryGetValue(contract.Symbol, out details))
+            {
+                return details.Summary.TradingClass;
+            }
+
+            details = GetContractDetails(contract);
+            if (details == null)
+            {
+                // we were unable to find the contract details
+                return null;
+            }
+
+            return details.Summary.TradingClass;
+        }
+
         private decimal GetMinTick(Contract contract)
         {
             ContractDetails details;
@@ -1200,6 +1218,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 contract.Strike = Convert.ToDouble(symbol.ID.StrikePrice);
                 contract.Symbol = ibSymbol;
                 contract.Multiplier = "100";
+                contract.TradingClass = GetTradingClass(contract);
             }
 
             if (symbol.ID.SecurityType == SecurityType.Future)
