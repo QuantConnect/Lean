@@ -113,7 +113,7 @@ namespace QuantConnect
 
             AveragePrice = Math.Round(holding.AveragePrice, rounding);
             MarketPrice = Math.Round(holding.Price, rounding);
-            UnrealizedPnL = Math.Round(holding.UnrealizedProfit, rounding);
+            UnrealizedPnL = Math.Round(holding.UnrealizedProfit, 2);
         }
 
         /// <summary>
