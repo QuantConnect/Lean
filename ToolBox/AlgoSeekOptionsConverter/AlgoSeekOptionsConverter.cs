@@ -36,7 +36,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
     /// </summary>
     public class AlgoSeekOptionsConverter
     {
-        private const int execTimeout = 180;// sec
+        private const int execTimeout = 300;// sec
 
         private string _source;
         private string _remote;
@@ -164,8 +164,6 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                     }
 
                     processors = null;
-                    GC.Collect();
-                    GC.WaitForPendingFinalizers();
 
                     Log.Trace("AlgoSeekOptionsConverter.Convert(): Finished processing file: " + file);
                     Interlocked.Increment(ref totalFilesProcessed);
