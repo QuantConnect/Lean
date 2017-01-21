@@ -55,9 +55,9 @@ namespace QuantConnect.Tests.Compression
         public void ExtractsZipEntryByName()
         {
             var zip = Path.Combine("TestData", "multizip.zip");
-            ZipArchive zipArchive;
-            using (var entryStream = QuantConnect.Compression.Unzip(zip, "multizip/two.txt", out zipArchive))
-            using (zipArchive)
+            ZipFile zipFile;
+            using (var entryStream = QuantConnect.Compression.Unzip(zip, "multizip/two.txt", out zipFile))
+            using (zipFile)
             {
                 var text = entryStream.ReadToEnd();
                 Assert.AreEqual("2", text);
