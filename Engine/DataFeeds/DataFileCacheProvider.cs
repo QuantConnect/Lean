@@ -18,14 +18,14 @@ using QuantConnect.Data;
 using System.IO;
 using QuantConnect.Lean.Engine.DataFeeds.Transport;
 using System.Collections.Concurrent;
-using System.IO.Compression;
 using QuantConnect.Logging;
 using System.Linq;
+using Ionic.Zip;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     // Cache entry tuple contains: date of the cache entry, and reference to .net zip archive
-    using CacheEntry = Tuple<DateTime, ZipArchive>;
+    using CacheEntry = Tuple<DateTime, ZipFile>;
 
     /// <summary>
     /// File provider implements optimized zip archives caching facility. Cache is thread safe.
@@ -35,7 +35,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         const int _cachePeriodBars = 10;
 
         // ZipArchive cache used by the class
-        private ConcurrentDictionary<string, Lazy<CacheEntry>> _zipArchiveCache = new ConcurrentDictionary<string, Lazy<CacheEntry>>();
+        private ConcurrentDictionary<string, Lazy<CacheEntry>> _zipFileCache = new ConcurrentDictionary<string, Lazy<CacheEntry>>();
         private DateTime lastDate = DateTime.MinValue;
 
         /// <summary>
@@ -68,28 +68,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (lastDate == DateTime.MinValue || lastDate < date.Date)
                     {
                         // clean all items that that are older than _cachePeriodBars bars than the current date
-                        foreach (var zip in _zipArchiveCache.Where(x => x.Value.Value.Item1 < date.Date.AddDays(-_cachePeriodBars)))
+                        foreach (var zip in _zipFileCache.Where(x => x.Value.Value.Item1 < date.Date.AddDays(-_cachePeriodBars)))
                         {
                             // disposing zip archive
                             zip.Value.Value.Item2.Dispose();
 
                             // removing it from the cache
                             Lazy<CacheEntry> removed;
-                            _zipArchiveCache.TryRemove(zip.Key, out removed);
+                            _zipFileCache.TryRemove(zip.Key, out removed);
                         }
 
                         lastDate = date.Date;
                     }
 
-                    _zipArchiveCache.AddOrUpdate(filename,
+                    _zipFileCache.AddOrUpdate(filename,
                         x =>
                         {
-                            var file = File.OpenRead(filename);
-                            // reading up first two bytes 
-                            // http://george.chiramattel.com/blog/2007/09/deflatestream-block-length-does-not-match.html
-                            file.ReadByte(); file.ReadByte();
-
-                            var newItem = Tuple.Create(date.Date, new ZipArchive(file));
+                            var newItem = Tuple.Create(date.Date, new ZipFile(filename));
                             reader = new LocalFileSubscriptionStreamReader(newItem.Item2, entryName);
                             return newItem;
                         },
@@ -121,12 +116,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-            foreach (var zip in _zipArchiveCache)
+            foreach (var zip in _zipFileCache)
             {
                 zip.Value.Value.Item2.Dispose();
             }
 
-            _zipArchiveCache.Clear();
+            _zipFileCache.Clear();
         }
     }
 }

@@ -30,7 +30,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
     public class LocalFileSubscriptionStreamReader : IStreamReader
     {
         private StreamReader _streamReader;
-        private readonly ZipArchive _zipArchive;
+        private readonly ZipFile _zipFile;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LocalFileSubscriptionStreamReader"/> class.
@@ -42,7 +42,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         {
             // unzip if necessary
             _streamReader = source.GetExtension() == ".zip"
-                ? Compression.Unzip(source, entryName, out _zipArchive)
+                ? Compression.Unzip(source, entryName, out _zipFile)
                 : new StreamReader(source);
         }
 
@@ -57,7 +57,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         {
             // unzip if necessary
             _streamReader = source.GetExtension() == ".zip"
-                ? Compression.Unzip(source, entryName, out _zipArchive)
+                ? Compression.Unzip(source, entryName, out _zipFile)
                 : new StreamReader(source);
 
             if (startingPosition != 0)
@@ -70,17 +70,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// <summary>
         /// Initializes a new instance of the <see cref="LocalFileSubscriptionStreamReader"/> class.
         /// </summary>
-        /// <param name="zipArchive">The local zip archive to be read</param>
+        /// <param name="zipFile">The local zip archive to be read</param>
         /// <param name="entryName">Specifies the zip entry to be opened. Leave null if not applicable,
         /// or to open the first zip entry found regardless of name</param>
-        public LocalFileSubscriptionStreamReader(ZipArchive zipArchive, string entryName = null)
+        public LocalFileSubscriptionStreamReader(ZipFile zipFile, string entryName = null)
         {
-            _zipArchive = zipArchive;
-            var entry = _zipArchive.Entries.FirstOrDefault(x => entryName == null || string.Compare(x.FullName, entryName, StringComparison.OrdinalIgnoreCase) == 0);
+            _zipFile = zipFile;
+            var entry = _zipFile.Entries.FirstOrDefault(x => entryName == null || string.Compare(x.FileName, entryName, StringComparison.OrdinalIgnoreCase) == 0);
             if (entry != null)
             {
                 var stream = new MemoryStream();
-                entry.Open().CopyTo(stream);
+                entry.OpenReader().CopyTo(stream);
                 stream.Position = 0;
                 _streamReader = new StreamReader(stream);
             }
@@ -93,7 +93,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         {
             get
             {
-                return _zipArchive != null ? _zipArchive.Entries.Select(x => x.FullName).ToList() : Enumerable.Empty<string>();
+                return _zipFile != null ? _zipFile.Entries.Select(x => x.FileName).ToList() : Enumerable.Empty<string>();
             }
         }
 
