@@ -37,7 +37,7 @@ namespace QuantConnect.Algorithm.CSharp
         public Symbol SymbolSP500 = QuantConnect.Symbol.Create(TickerSP500, SecurityType.Future, Market.USA);
 
         // Google options
-        private const string UnderlyingTicker = "GOOG";
+        private const string UnderlyingTicker = "DIA";
         public readonly Symbol Underlying = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Equity, Market.USA);
         public readonly Symbol OptionSymbol = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
 
@@ -53,8 +53,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void Initialize()
         {
-            SetStartDate(2014, 01, 01);
-            SetEndDate(2014, 02, 01);
+            SetStartDate(2016, 01, 28);
+            SetEndDate(2016, 02, 29);
             SetCash(1000000);
 
             // setting futures
@@ -69,7 +69,7 @@ namespace QuantConnect.Algorithm.CSharp
             option.PriceModel = OptionPriceModels.BinomialCoxRossRubinstein();
             // option.EnableGreekApproximation = true;
             // set our expiry filter for this option chain
-            option.SetFilter(-2, +2, TimeSpan.FromDays(10), TimeSpan.FromDays(60));
+            option.SetFilter(-2, +2, TimeSpan.Zero, TimeSpan.FromDays(180));
 
             // setting up stock
             AddEquity(TickerMSFT);
@@ -89,7 +89,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             barCount++;
 
-            if (barCount % 3 == 0)
+            if (barCount % 20 == 0)
             {
                 if (!Portfolio.Invested)
                 {
@@ -137,7 +137,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
 
-            if (barCount % 3 == 1)
+            if (barCount % 20 == 1)
             {
                 Log(String.Format("P/L:{0:0.00}, Fees:{1:0.00}, Profit:{2:0.00}, Eq:{3:0.00}, Holdings:{4:0.00}, Vol: {5:0.00}, Margin: {6:0.00}",
                     Portfolio.TotalUnrealisedProfit,
@@ -162,7 +162,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
 
-            if (barCount % 3 == 2)
+            if (barCount % 20 == 2)
             {
                 foreach (var chain in slice.OptionChains)
                 {
@@ -222,6 +222,5 @@ namespace QuantConnect.Algorithm.CSharp
         {
             Log(orderEvent.ToString());
         }
-        
     }
 }
