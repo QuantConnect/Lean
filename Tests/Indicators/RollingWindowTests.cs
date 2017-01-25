@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Indicators;
@@ -35,18 +36,23 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void AddsData()
         {
-            var window = new RollingWindow<int>(1);
+            var window = new RollingWindow<int>(2);
+            Assert.AreEqual(0, window.Count);
+            Assert.AreEqual(0, window.Samples);
+            Assert.AreEqual(2, window.Size);
+            Assert.IsFalse(window.IsReady);
+
             window.Add(1);
             Assert.AreEqual(1, window.Count);
             Assert.AreEqual(1, window.Samples);
-            Assert.AreEqual(1, window.Size);
+            Assert.AreEqual(2, window.Size);
             Assert.IsFalse(window.IsReady);
 
             // add one more and the window is ready
             window.Add(2);
-            Assert.AreEqual(1, window.Count);
+            Assert.AreEqual(2, window.Count);
             Assert.AreEqual(2, window.Samples);
-            Assert.AreEqual(1, window.Size);
+            Assert.AreEqual(2, window.Size);
             Assert.IsTrue(window.IsReady);
         }
 
@@ -54,12 +60,11 @@ namespace QuantConnect.Tests.Indicators
         public void OldDataFallsOffBackOfWindow()
         {
             var window = new RollingWindow<int>(1);
-            window.Add(0);
             Assert.IsFalse(window.IsReady);
 
-            // add one more and the window is ready
+            // add one and the window is ready
 
-            window.Add(1);
+            window.Add(0);
             Assert.AreEqual(0, window.MostRecentlyRemoved);
             Assert.AreEqual(1, window.Count);
             Assert.IsTrue(window.IsReady);
@@ -110,8 +115,9 @@ namespace QuantConnect.Tests.Indicators
             window.Reset();
             Assert.AreEqual(0, window.Samples);
         }
+
         [Test]
-        public void RetievesNonZeroIndexProperlyAfterReset()
+        public void RetrievesNonZeroIndexProperlyAfterReset()
         {
             var window = new RollingWindow<int>(3);
             window.Add(0);
@@ -156,6 +162,22 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(1, window[2]);
             Assert.AreEqual(2, window[1]);
             Assert.AreEqual(3, window[0]);
+        }
+
+        [Test]
+        public void ThrowsWhenIndexingOutOfRange()
+        {
+            var window = new RollingWindow<int>(1);
+            Assert.IsFalse(window.IsReady);
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => { var x = window[0]; });
+
+            window.Add(0);
+            Assert.AreEqual(1, window.Count);
+            Assert.AreEqual(0, window[0]);
+            Assert.IsTrue(window.IsReady);
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => { var x = window[1]; });
         }
     }
 }

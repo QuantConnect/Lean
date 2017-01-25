@@ -83,7 +83,7 @@ namespace QuantConnect.Tests.Indicators
             for (int i = 0; i < LSMAPeriod + 1; i++)
             {
                 LSMA.Update(new IndicatorDataPoint(time, 1m));
-                time.AddMinutes(1);
+                time = time.AddMinutes(1);
             }
             Assert.IsTrue(LSMA.IsReady, "LSMA ready");
             LSMA.Reset();

@@ -48,7 +48,7 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
-            if (!window.IsReady)
+            if (window.Samples <= window.Size)
             {
                 // keep returning the delta from the first item put in there to init
                 return input - window[window.Count - 1];
