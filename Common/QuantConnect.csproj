@@ -156,6 +156,9 @@
     <Compile Include="Commands\OrderCommand.cs" />
     <Compile Include="Commands\QuitCommand.cs" />
     <Compile Include="Commands\UpdateOrderCommand.cs" />
+    <Compile Include="Data\Locking\BasicFileLock.cs" />
+    <Compile Include="Data\Locking\DataFileLocks.cs" />
+    <Compile Include="Data\Locking\IDataFileLock.cs" />
     <Compile Include="Data\Market\IBaseDataBar.cs" />
     <Compile Include="Data\Consolidators\OpenInterestConsolidator.cs" />
     <Compile Include="Data\Market\OpenInterest.cs" />
