@@ -122,7 +122,7 @@ namespace QuantConnect.Indicators
                 {
                     _listLock.EnterReadLock();
 
-                    if (!IsReady)
+                    if (Samples <= Size)
                     {
                         throw new InvalidOperationException("No items have been removed yet!");
                     }

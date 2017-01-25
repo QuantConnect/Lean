@@ -62,9 +62,16 @@ namespace QuantConnect.Tests.Indicators
             var window = new RollingWindow<int>(1);
             Assert.IsFalse(window.IsReady);
 
-            // add one and the window is ready
+            // add one and the window is ready, but MostRecentlyRemoved throws
 
             window.Add(0);
+            Assert.Throws<InvalidOperationException>(() => { var x = window.MostRecentlyRemoved; });
+            Assert.AreEqual(1, window.Count);
+            Assert.IsTrue(window.IsReady);
+
+            // add another one and MostRecentlyRemoved is available
+
+            window.Add(1);
             Assert.AreEqual(0, window.MostRecentlyRemoved);
             Assert.AreEqual(1, window.Count);
             Assert.IsTrue(window.IsReady);
