@@ -584,7 +584,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void RuntimeError(string message, string stacktrace = "") 
         {
             PurgeQueue();
-            Messages.Enqueue(new RuntimeErrorPacket(_backtestId, message, stacktrace));
+            Messages.Enqueue(new RuntimeErrorPacket(_job.UserId, _backtestId, message, stacktrace));
             _errorMessage = message;
         }
 
