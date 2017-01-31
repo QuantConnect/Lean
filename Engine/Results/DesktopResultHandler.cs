@@ -189,7 +189,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="stacktrace">Stacktrace information string</param>
         public void RuntimeError(string message, string stacktrace = "")
         {
-            Messages.Enqueue(new RuntimeErrorPacket("", message, stacktrace));
+            Messages.Enqueue(new RuntimeErrorPacket(_job.UserId, "", message, stacktrace));
         }
 
         /// <summary>
