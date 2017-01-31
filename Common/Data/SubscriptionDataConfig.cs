@@ -240,6 +240,7 @@ namespace QuantConnect.Data
         /// <param name="isCustom">True if this is user supplied custom data, false for normal QC data</param>
         /// <param name="tickType">Specifies if trade or quote data is subscribed</param>
         /// <param name="isFilteredSubscription">True if this subscription should have filters applied to it (market hours/user filters from security), false otherwise</param>
+        /// <param name="dataNormalizationMode">Specifies normalization mode used for this subscription</param>
         public SubscriptionDataConfig(SubscriptionDataConfig config,
             Type objectType = null,
             Symbol symbol = null,
@@ -251,7 +252,8 @@ namespace QuantConnect.Data
             bool? isInternalFeed = null,
             bool? isCustom = null,
             TickType? tickType = null,
-            bool? isFilteredSubscription = null)
+            bool? isFilteredSubscription = null,
+            DataNormalizationMode? dataNormalizationMode = null)
             : this(
             objectType ?? config.Type,
             symbol ?? config.Symbol,
@@ -263,7 +265,8 @@ namespace QuantConnect.Data
             isInternalFeed ?? config.IsInternalFeed,
             isCustom ?? config.IsCustomData,
             tickType ?? config.TickType,
-            isFilteredSubscription ?? config.IsFilteredSubscription
+            isFilteredSubscription ?? config.IsFilteredSubscription,
+            dataNormalizationMode ?? config.DataNormalizationMode
             )
         {
         }

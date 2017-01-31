@@ -109,7 +109,10 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 request.FillForwardResolution.HasValue, 
                 request.IncludeExtendedMarketHours, 
                 false, 
-                request.IsCustomData
+                request.IsCustomData,
+                null,
+                true,
+                request.DataNormalizationMode
                 );
 
             var security = new Security(request.ExchangeHours, config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
