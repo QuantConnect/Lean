@@ -477,6 +477,28 @@ namespace QuantConnect.Tests
                 {"Total Fees", "$0.50"},
             };
 
+            var weeklyUniverseSelectionRegressionAlgorithmStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "8"},
+                {"Average Win", "1.68%"},
+                {"Average Loss", "-0.77%"},
+                {"Compounding Annual Return", "23.389%"},
+                {"Drawdown", "1.900%"},
+                {"Expectancy", "0.597"},
+                {"Net Profit", "1.801%"},
+                {"Sharpe Ratio", "1.884"},
+                {"Loss Rate", "50%"},
+                {"Win Rate", "50%"},
+                {"Profit-Loss Ratio", "2.19"},
+                {"Alpha", "-0.003"},
+                {"Beta", "0.421"},
+                {"Annual Standard Deviation", "0.087"},
+                {"Annual Variance", "0.008"},
+                {"Information Ratio", "-2.459"},
+                {"Tracking Error", "0.094"},
+                {"Treynor Ratio", "0.391"},
+                {"Total Fees", "$23.05"},
+            };
 
             return new List<AlgorithmStatisticsTestParameters>
             {
@@ -500,6 +522,7 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("OptionRenameRegressionAlgorithm", optionRenameRegressionAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("OptionOpenInterestRegressionAlgorithm", optionOpenInterestRegressionAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("OptionChainConsistencyRegressionAlgorithm", optionChainConsistencyRegressionAlgorithmStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("WeeklyUniverseSelectionRegressionAlgorithm", weeklyUniverseSelectionRegressionAlgorithmStatistics, Language.CSharp),
 
                 // FSharp
                 // new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.FSharp),

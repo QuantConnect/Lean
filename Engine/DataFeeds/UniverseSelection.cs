@@ -37,6 +37,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly SubscriptionLimiter _limiter;
         private readonly MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
         private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
+        private readonly HashSet<Security> _pendingRemovals = new HashSet<Security>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UniverseSelection"/> class
@@ -107,6 +108,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var removals = new List<Security>();
             var algorithmEndDateUtc = _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone);
 
+            // remove previously deselected members which were kept in the universe because of holdings or open orders
+            foreach (var member in _pendingRemovals.ToList())
+            {
+                var openOrders = _algorithm.Transactions.GetOrders(x => x.Status.IsOpen() && x.Symbol == member.Symbol);
+                if (!member.HoldStock && !openOrders.Any())
+                {
+                    RemoveSecurityFromUniverse(universe, member, removals, dateTimeUtc, algorithmEndDateUtc);
+
+                    _pendingRemovals.Remove(member);
+                }
+            }
+
             // determine which data subscriptions need to be removed from this universe
             foreach (var member in universe.Members.Values)
             {
@@ -125,27 +138,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var openOrders = _algorithm.Transactions.GetOrders(x => x.Status.IsOpen() && x.Symbol == member.Symbol);
                 if (!member.HoldStock && !openOrders.Any())
                 {
-                    // safe to remove the member from the universe
-                    universe.RemoveMember(dateTimeUtc, member);
-
-                    // we need to mark this security as untradeable while it has no data subscription
-                    // it is expected that this function is called while in sync with the algo thread,
-                    // so we can make direct edits to the security here
-                    member.Cache.Reset();
-                    foreach (var subscription in universe.GetSubscriptionRequests(member, dateTimeUtc, algorithmEndDateUtc))
-                    {
-                        if (subscription.IsUniverseSubscription)
-                        {
-                            removals.Remove(member);
-                        }
-                        else
-                        {
-                            _dataFeed.RemoveSubscription(subscription.Configuration);
-                        }
-                    }
-
-                    // remove symbol mappings for symbols removed from universes // TODO : THIS IS BAD!
-                    SymbolCache.TryRemove(member.Symbol);
+                    RemoveSecurityFromUniverse(universe, member, removals, dateTimeUtc, algorithmEndDateUtc);
+                }
+                else
+                {
+                    _pendingRemovals.Add(member);
                 }
             }
 
@@ -216,6 +213,31 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             return securityChanges;
+        }
+
+        private void RemoveSecurityFromUniverse(Universe universe, Security member, List<Security> removals, DateTime dateTimeUtc, DateTime algorithmEndDateUtc)
+        {
+            // safe to remove the member from the universe
+            universe.RemoveMember(dateTimeUtc, member);
+
+            // we need to mark this security as untradeable while it has no data subscription
+            // it is expected that this function is called while in sync with the algo thread,
+            // so we can make direct edits to the security here
+            member.Cache.Reset();
+            foreach (var subscription in universe.GetSubscriptionRequests(member, dateTimeUtc, algorithmEndDateUtc))
+            {
+                if (subscription.IsUniverseSubscription)
+                {
+                    removals.Remove(member);
+                }
+                else
+                {
+                    _dataFeed.RemoveSubscription(subscription.Configuration);
+                }
+            }
+
+            // remove symbol mappings for symbols removed from universes // TODO : THIS IS BAD!
+            SymbolCache.TryRemove(member.Symbol);
         }
     }
 }
