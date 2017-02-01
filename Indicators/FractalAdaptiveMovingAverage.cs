@@ -74,7 +74,7 @@ namespace QuantConnect.Indicators
             _low.Add((double)input.Low);
 
             // our first data point just return identity
-            if (!_high.IsReady)
+            if (_high.Samples <= _high.Size)
             {
                 _filt = price;
             }

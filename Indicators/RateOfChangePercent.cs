@@ -49,7 +49,7 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
             // if we're not ready just grab the first input point in the window
-            decimal denominator = !window.IsReady ? window[window.Count - 1] : window.MostRecentlyRemoved;
+            decimal denominator = window.Samples <= window.Size ? window[window.Count - 1] : window.MostRecentlyRemoved;
 
             if (denominator == 0)
             {

@@ -54,7 +54,7 @@ namespace QuantConnect.Indicators
         {
             decimal valuef = input;
 
-            decimal value0 = !window.IsReady
+            decimal value0 = window.Samples <= window.Size
                 ? window[window.Count - 1]
                 : window.MostRecentlyRemoved;
 
