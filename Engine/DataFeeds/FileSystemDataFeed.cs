@@ -387,7 +387,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
-            return new PostCreateConfigureSubscriptionEnumeratorFactory(_subscriptionfactory, enumerator => ConfigureEnumerator(request, false, enumerator));
+            return _subscriptionfactory;
         }
 
         /// <summary>
