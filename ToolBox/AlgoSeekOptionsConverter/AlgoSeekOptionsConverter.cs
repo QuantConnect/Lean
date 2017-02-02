@@ -190,24 +190,40 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
 
             Task.Run(() =>
             {
-                foreach (var type in Enum.GetValues(typeof(TickType)))
+                try
                 {
-                    var tickType = type;
-                    var groups = processors.Values.Select(x => x[(int) tickType]).Where(x => x.Queue.Count > 0).GroupBy(process => process.Symbol.Underlying.Value);
-
-                    Parallel.ForEach(groups, group =>
+                    foreach (var type in Enum.GetValues(typeof(TickType)))
                     {
-                        var symbol = group.Key;
-                        var zip = group.First().ZipPath.Replace(".zip", string.Empty);
+                        var tickType = type;
+                        var groups = processors.Values.Select(x => x[(int)tickType]).Where(x => x.Queue.Count > 0).GroupBy(process => process.Symbol.Underlying.Value);
 
-                        foreach (var processor in group)
+                        Parallel.ForEach(groups, group =>
                         {
-                            var tempFileName = Path.Combine(zip, processor.EntryPath);
+                            string zip = string.Empty;
+                             
+                            try
+                            {
+                                var symbol = group.Key;
+                                zip = group.First().ZipPath.Replace(".zip", string.Empty);
 
-                            Directory.CreateDirectory(zip);
-                            File.AppendAllText(tempFileName, FileBuilder(processor));
-                        }
-                    });
+                                foreach (var processor in group)
+                                {
+                                    var tempFileName = Path.Combine(zip, processor.EntryPath);
+
+                                    Directory.CreateDirectory(zip);
+                                    File.AppendAllText(tempFileName, FileBuilder(processor));
+                                }
+                            }
+                            catch (Exception err)
+                            {
+                                Log.Error("AlgoSeekOptionsConverter.WriteToDisk() returned error: " + err.Message + " zip name: " + zip);
+                            }
+                        });
+                    }
+                }
+                catch (Exception err)
+                {
+                    Log.Error("AlgoSeekOptionsConverter.WriteToDisk() returned error: " + err.Message);
                 }
                 waitForFlush.Set();
             });
