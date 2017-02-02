@@ -70,12 +70,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // clean all items that that are older than _cachePeriodBars bars than the current date
                         foreach (var zip in _zipFileCache.Where(x => x.Value.Value.Item1 < date.Date.AddDays(-_cachePeriodBars)))
                         {
-                            // disposing zip archive
-                            zip.Value.Value.Item2.Dispose();
-
                             // removing it from the cache
                             Lazy<CacheEntry> removed;
-                            _zipFileCache.TryRemove(zip.Key, out removed);
+                            if (_zipFileCache.TryRemove(zip.Key, out removed))
+                            {
+                                // disposing zip archive
+                                removed.Value.Item2.Dispose();
+                            }
                         }
 
                         lastDate = date.Date;
