@@ -493,6 +493,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 if (request.Configuration.FillDataForward)
                 {
+                    var subscriptionConfigs = _subscriptions.Select(x => x.Configuration).Concat(new[] { request.Configuration });
+
+                    UpdateFillForwardResolution(subscriptionConfigs);
+
                     enumerator = new LiveFillForwardEnumerator(_frontierTimeProvider, enumerator, request.Security.Exchange, _fillForwardResolution, request.Configuration.ExtendedMarketHours, localEndTime, request.Configuration.Increment);
                 }
 
@@ -594,6 +598,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         });
                     }
 
+                    var subscriptionConfigs = _subscriptions.Select(x => x.Configuration).Concat(new[] { request.Configuration });
+
+                    UpdateFillForwardResolution(subscriptionConfigs);
+
                     return new LiveFillForwardEnumerator(_frontierTimeProvider, input, request.Security.Exchange, _fillForwardResolution, request.Configuration.ExtendedMarketHours, localEndTime, request.Configuration.Increment);
                 };
 
@@ -673,9 +681,29 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         private void UpdateFillForwardResolution()
         {
-            _fillForwardResolution.Value = _subscriptions
-                .Where(x => !x.Configuration.IsInternalFeed)
-                .Select(x => x.Configuration.Resolution)
+            UpdateFillForwardResolution(_subscriptions.Select(x => x.Configuration));
+        }
+
+        /// <summary>
+        /// Updates the fill forward resolution by checking specified subscription configurations and
+        /// selecting the smallest resoluton not equal to tick
+        /// </summary>
+        /// <param name="subscriptionConfigs">Subscription configurations list</param>
+        private void UpdateFillForwardResolution(IEnumerable<SubscriptionDataConfig> subscriptionConfigs)
+        {
+            _fillForwardResolution.Value = GetFillForwardResolution(subscriptionConfigs);
+        }
+
+        /// <summary>
+        /// Returns the fill forward resolution by checking specified subscription configurations and
+        /// selecting the smallest resoluton not equal to tick
+        /// </summary>
+        /// <param name="subscriptionConfigs">Subscription configurations list</param>
+        private TimeSpan GetFillForwardResolution(IEnumerable<SubscriptionDataConfig> subscriptionConfigs)
+        {
+            return subscriptionConfigs
+                .Where(x => !x.IsInternalFeed)
+                .Select(x => x.Resolution)
                 .Where(x => x != Resolution.Tick)
                 .DefaultIfEmpty(Resolution.Minute)
                 .Min().ToTimeSpan();

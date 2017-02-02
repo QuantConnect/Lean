@@ -405,9 +405,29 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         private void UpdateFillForwardResolution()
         {
-            _fillForwardResolution.Value = _subscriptions
-                .Where(x => !x.Configuration.IsInternalFeed)
-                .Select(x => x.Configuration.Resolution)
+            UpdateFillForwardResolution(_subscriptions.Select( x => x.Configuration ));
+        }
+
+        /// <summary>
+        /// Updates the fill forward resolution by checking specified subscription configurations and
+        /// selecting the smallest resoluton not equal to tick
+        /// </summary>
+        /// <param name="subscriptionConfigs">Subscription configurations list</param>
+        private void UpdateFillForwardResolution(IEnumerable<SubscriptionDataConfig> subscriptionConfigs)
+        {
+            _fillForwardResolution.Value = GetFillForwardResolution(subscriptionConfigs);
+        }
+
+        /// <summary>
+        /// Returns the fill forward resolution by checking specified subscription configurations and
+        /// selecting the smallest resoluton not equal to tick
+        /// </summary>
+        /// <param name="subscriptionConfigs">Subscription configurations list</param>
+        private TimeSpan GetFillForwardResolution(IEnumerable<SubscriptionDataConfig> subscriptionConfigs)
+        {
+            return subscriptionConfigs
+                .Where(x => !x.IsInternalFeed)
+                .Select(x => x.Resolution)
                 .Where(x => x != Resolution.Tick)
                 .DefaultIfEmpty(Resolution.Minute)
                 .Min().ToTimeSpan();
@@ -502,6 +522,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // optionally apply fill forward logic, but never for tick data
             if (request.Configuration.FillDataForward && request.Configuration.Resolution != Resolution.Tick)
             {
+                var subscriptionConfigs = _subscriptions.Select(x => x.Configuration).Concat(new[] { request.Configuration });
+
+                UpdateFillForwardResolution(subscriptionConfigs);
+
                 enumerator = new FillForwardEnumerator(enumerator, request.Security.Exchange, _fillForwardResolution,
                     request.Security.IsExtendedMarketHours, request.EndTimeLocal, request.Configuration.Resolution.ToTimeSpan());
             }
