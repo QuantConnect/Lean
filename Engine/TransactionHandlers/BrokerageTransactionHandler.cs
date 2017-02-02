@@ -975,7 +975,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private void HandlePositionAssigned(OrderEvent fill)
         {
             // informing user algorithm that option position has been assigned
-            if (fill.FillPrice > 0 && fill.FillQuantity > 0)
+            if (fill.FillPrice == 0 && fill.FillQuantity > 0)
             {
                 fill.Message = string.Format("Option Assignment: {0}", fill.Symbol.Value);
                 _algorithm.OnAssignmentOrderEvent(fill);
