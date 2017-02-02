@@ -22,6 +22,7 @@ using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Tests.Common
 {
@@ -363,6 +364,33 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(expectedNotFoundSymbol, notFoundSymbol);
             SymbolCache.Clear();
 #pragma warning restore 0618
+        }
+
+
+        [Test]
+        public void TestIfWeDetectCorrectlyWeekliesAndStandardOptionsBeforeFeb2015()
+        {
+            var symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 200, new DateTime(2012, 09, 22));
+            var weeklySymbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 200, new DateTime(2012, 09, 07));
+
+            Assert.True(OptionSymbol.IsStandardContract(symbol));
+            Assert.False(OptionSymbol.IsStandardContract(weeklySymbol));
+
+            Assert.AreEqual(new DateTime(2012, 09, 21)/*Friday*/, OptionSymbol.GetLastDayOfTrading(symbol));
+            Assert.AreEqual(new DateTime(2012, 09, 07)/*Friday*/, OptionSymbol.GetLastDayOfTrading(weeklySymbol));
+        }
+
+        [Test]
+        public void TestIfWeDetectCorrectlyWeekliesAndStandardOptionsAfterFeb2015()
+        {
+            var symbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 200, new DateTime(2016, 02, 19));
+            var weeklySymbol = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 200, new DateTime(2016, 02, 05));
+
+            Assert.True(OptionSymbol.IsStandardContract(symbol));
+            Assert.False(OptionSymbol.IsStandardContract(weeklySymbol));
+
+            Assert.AreEqual(new DateTime(2016, 02, 19)/*Friday*/, OptionSymbol.GetLastDayOfTrading(symbol));
+            Assert.AreEqual(new DateTime(2016, 02, 05)/*Friday*/, OptionSymbol.GetLastDayOfTrading(weeklySymbol));
         }
 
         class OldSymbol

@@ -20,6 +20,7 @@ using QuantConnect.Data;
 using System.Linq;
 using System.Collections;
 using QuantConnect.Util;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Securities
 {
@@ -129,7 +130,7 @@ namespace QuantConnect.Securities
 
                 if (memoizedMap.ContainsKey(dt))
                     return memoizedMap[dt];
-                var res = IsStandardType(symbol);
+                var res = OptionSymbol.IsStandardContract(symbol);
                 memoizedMap[dt] = res;
 
                 return res;
@@ -152,26 +153,6 @@ namespace QuantConnect.Securities
 
             _allSymbols = filtered.ToList();
             return this;
-        }
-
-        /// <summary>
-        /// Returns true is the option is a standard contract that expire 3rd Friday of the month
-        /// </summary>
-        /// <param name="symbol"></param>
-        /// <returns></returns>
-        private bool IsStandardType(Symbol symbol)
-        {
-            var date = symbol.ID.Date;
-
-            // first we find out the day of week of the first day in the month
-            var firstDayOfMonth = new DateTime(date.Year, date.Month, 1).DayOfWeek;
-
-            // find out the day of first Friday in this month
-            var firstFriday = firstDayOfMonth == DayOfWeek.Saturday ? 7 : 6 - (int)firstDayOfMonth;
-
-            // check if the expiration date is within the week containing 3rd Friday
-            // we exclude monday, wednesday, and friday weeklys
-            return firstFriday + 7 + 5 /*sat -> wed */ < date.Day && date.Day < firstFriday + 2 * 7 + 2 /* sat, sun*/;
         }
 
         /// <summary>

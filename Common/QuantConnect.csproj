@@ -338,6 +338,7 @@
     <Compile Include="Securities\IDerivativeSecurityFilterUniverse.cs" />
     <Compile Include="Securities\IMarginCallModel.cs" />
     <Compile Include="Securities\ISecuritySeeder.cs" />
+    <Compile Include="Securities\Option\OptionSymbol.cs" />
     <Compile Include="Securities\SecurityPriceVariationModel.cs" />
     <Compile Include="Securities\FuncSecurityDerivativeFilter.cs" />
     <Compile Include="Securities\FuncSecurityInitializer.cs" />

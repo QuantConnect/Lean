@@ -28,6 +28,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Util;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -628,47 +629,33 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         private void CheckForDelisting(DateTime date)
         {
+            DateTime delistingDate;
+
             switch (_config.Symbol.ID.SecurityType)
             {
-                /*
-                This is commented out until we update delistings logic to delist instrument in the end of the day, 
-                not submit MOC order in the morning. 
-
                 case SecurityType.Future:
-                case SecurityType.Option:
-                    // futures and options are delisted on expiration 
-                    var delistingDate = _config.Symbol.ID.Date;
-
-                    if (!_delistedWarning && date >= delistingDate)
-                    {
-                        _delistedWarning = true;
-                        var price = _previous != null ? _previous.Price : 0;
-                        _auxiliaryData.Enqueue(new Delisting(_config.Symbol, date, price, DelistingType.Warning));
-                    }
-                    else if (!_delisted && date > delistingDate)
-                    {
-                        _delisted = true;
-                        var price = _previous != null ? _previous.Price : 0;
-                        // delisted at EOD
-                        _auxiliaryData.Enqueue(new Delisting(_config.Symbol, delistingDate.AddDays(1), price, DelistingType.Delisted));
-                    }
-                    break;*/
-                default:
-                    // these ifs set flags to tell us to produce a delisting instance
-                    if (!_delistedWarning && date >= _mapFile.DelistingDate)
-                    {
-                        _delistedWarning = true;
-                        var price = _previous != null ? _previous.Price : 0;
-                        _auxiliaryData.Enqueue(new Delisting(_config.Symbol, date, price, DelistingType.Warning));
-                    }
-                    else if (!_delisted && date > _mapFile.DelistingDate)
-                    {
-                        _delisted = true;
-                        var price = _previous != null ? _previous.Price : 0;
-                        // delisted at EOD
-                        _auxiliaryData.Enqueue(new Delisting(_config.Symbol, _mapFile.DelistingDate.AddDays(1), price, DelistingType.Delisted));
-                    }
+                    delistingDate = _config.Symbol.ID.Date;
                     break;
+                case SecurityType.Option:
+                    delistingDate = OptionSymbol.GetLastDayOfTrading(_config.Symbol);
+                    break;
+                default:
+                    delistingDate = _mapFile.DelistingDate;
+                    break;
+            }
+
+            if (!_delistedWarning && date >= delistingDate)
+            {
+                _delistedWarning = true;
+                var price = _previous != null ? _previous.Price : 0;
+                _auxiliaryData.Enqueue(new Delisting(_config.Symbol, date, price, DelistingType.Warning));
+            }
+            else if (!_delisted && date > delistingDate)
+            {
+                _delisted = true;
+                var price = _previous != null ? _previous.Price : 0;
+                // delisted at EOD
+                _auxiliaryData.Enqueue(new Delisting(_config.Symbol, delistingDate.AddDays(1), price, DelistingType.Delisted));
             }
         }
 
