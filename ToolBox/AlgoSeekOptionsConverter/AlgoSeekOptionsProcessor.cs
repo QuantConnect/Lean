@@ -190,7 +190,8 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         {
             if (OS.IsWindows)
             {
-                if (_windowsRestrictedNames.Contains(symbol.Value.ToLower()))
+                if (_windowsRestrictedNames.Contains(symbol.Value.ToLower()) || 
+                    _windowsRestrictedNames.Contains(symbol.Underlying.Value.ToLower()))
                 {
                     symbol = Symbol.CreateOption(SafeName(symbol.Underlying.Value), Market.USA, OptionStyle.American, symbol.ID.OptionRight, symbol.ID.StrikePrice, symbol.ID.Date);
                 }
@@ -202,10 +203,8 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         {
             if (OS.IsWindows)
             {
-                foreach (var name in _windowsRestrictedNames)
-                {
-                    fileName = fileName.Replace(name, "_" + name);
-                }
+                if (_windowsRestrictedNames.Contains(fileName.ToLower()))
+                    return "_" + fileName;
             }
             return fileName;
         }
