@@ -1950,6 +1950,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="statusUpdate">Function used to send status updates</param>
         public void Initialize(AlgorithmNodePacket job, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, IDataFileProvider dataFileProvider, Action<int> statusUpdate)
         {
+            Connect();
         }
 
         /// <summary>
@@ -1960,7 +1961,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
         public IEnumerable<Slice> GetHistory(IEnumerable<Data.HistoryRequest> requests, DateTimeZone sliceTimeZone)
         {
-            foreach(var request in requests)
+            foreach (var request in requests)
             {
                 foreach (var history in GetHistory(request, sliceTimeZone))
                 {
