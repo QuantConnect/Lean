@@ -16,6 +16,7 @@
 
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Securities
 {
@@ -58,6 +59,11 @@ namespace QuantConnect.Securities
             if (seedData != null)
             {
                 security.SetMarketPrice(seedData);
+                Log.Trace("BrokerageModelSecurityInitializer.Initialize(): Seeded security: " + seedData.Symbol.Value + ": " + seedData.Value);
+            }
+            else
+            {
+                Log.Trace("BrokerageModelSecurityInitializer.Initialize(): Unable to seed security: " + security.Symbol.Value);
             }
         }
     }
