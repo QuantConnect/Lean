@@ -73,6 +73,11 @@ namespace QuantConnect.Orders.OptionExercise
                             orderFee,
                             "Adjusting(or removing) the exercised/assigned option");
 
+            if (optionRemoveEvent.FillQuantity > 0)
+            {
+                optionRemoveEvent.IsAssignment = true;
+            }
+
             if (option.ExerciseSettlement == SettlementType.PhysicalDelivery &&
                 option.IsAutoExercised(underlying.Close))
             {
