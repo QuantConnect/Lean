@@ -40,6 +40,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
 
         private string _source;
         private string _remote;
+        private string _remoteMask;
         private string _destination;
         private Resolution _resolution;
         private DateTime _referenceDate;
@@ -55,9 +56,10 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         /// <param name="source">Remote directory of the .bz algoseek files</param>
         /// <param name="source">Source directory of the .csv algoseek files</param>
         /// <param name="destination">Data directory of LEAN</param>
-        public AlgoSeekOptionsConverter(Resolution resolution, DateTime referenceDate, string remote, string source, string destination)
+        public AlgoSeekOptionsConverter(Resolution resolution, DateTime referenceDate, string remote, string remoteMask, string source, string destination)
         {
             _remote = remote;
+            _remoteMask = remoteMask;
             _source = source;
             _referenceDate = referenceDate;
             _destination = destination;
@@ -70,7 +72,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         public void Convert()
         {
             //Get the list of all the files, then for each file open a separate streamer.
-            var files = Directory.EnumerateFiles(_remote, "*.bz2");
+            var files = Directory.EnumerateFiles(_remote, _remoteMask);
             Log.Trace("AlgoSeekOptionsConverter.Convert(): Loading {0} AlgoSeekOptionsReader for {1} ", files.Count(), _referenceDate);
 
             //Initialize parameters
