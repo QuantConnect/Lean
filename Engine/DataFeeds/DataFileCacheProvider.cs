@@ -32,11 +32,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class DataFileCacheProvider : IDisposable
     {
-        const int _cachePeriodBars = 10;
+        private const int CachePeriodBars = 10;
 
         // ZipArchive cache used by the class
-        private ConcurrentDictionary<string, Lazy<CacheEntry>> _zipFileCache = new ConcurrentDictionary<string, Lazy<CacheEntry>>();
-        private DateTime lastDate = DateTime.MinValue;
+        private readonly ConcurrentDictionary<string, Lazy<CacheEntry>> _zipFileCache = new ConcurrentDictionary<string, Lazy<CacheEntry>>();
+        private DateTime _lastDate = DateTime.MinValue;
 
         /// <summary>
         /// Does not attempt to retrieve any data
@@ -65,20 +65,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 try
                 {
                     // cleaning the outdated cache items
-                    if (lastDate == DateTime.MinValue || lastDate < date.Date)
+                    if (_lastDate == DateTime.MinValue || _lastDate < date.Date)
                     {
                         // clean all items that that are older than _cachePeriodBars bars than the current date
-                        foreach (var zip in _zipFileCache.Where(x => x.Value.Value.Item1 < date.Date.AddDays(-_cachePeriodBars)))
+                        foreach (var zip in _zipFileCache.Where(x => x.Value.Value.Item1 < date.Date.AddDays(-CachePeriodBars)))
                         {
-                            // disposing zip archive
-                            zip.Value.Value.Item2.Dispose();
-
                             // removing it from the cache
                             Lazy<CacheEntry> removed;
-                            _zipFileCache.TryRemove(zip.Key, out removed);
+                            if (_zipFileCache.TryRemove(zip.Key, out removed))
+                            {
+                                // disposing zip archive
+                                removed.Value.Item2.Dispose();
+                            }
                         }
 
-                        lastDate = date.Date;
+                        _lastDate = date.Date;
                     }
 
                     _zipFileCache.AddOrUpdate(filename,
