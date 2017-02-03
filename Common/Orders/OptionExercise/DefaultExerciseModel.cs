@@ -34,38 +34,58 @@ namespace QuantConnect.Orders.OptionExercise
         /// </summary>
         /// <param name="option">Option we're trading this order</param>
         /// <param name="order">Order to update</param>
-        public OrderEvent OptionExercise(Option option, OptionExerciseOrder order)
+        public IEnumerable<OrderEvent> OptionExercise(Option option, OptionExerciseOrder order)
         {
-            //Default order event to return
             var utcTime = option.LocalTime.ConvertToUtc(option.Exchange.TimeZone);
-            var deliveryEvent = new OrderEvent(order, utcTime, 0);
 
-            // make sure the exchange is open before filling
-            if (!IsExchangeOpen(option)) return deliveryEvent;
+            var optionQuantity = order.Quantity;
+            var assignment = order.Quantity < 0;
+            var underlying = option.Underlying;
+            var exercisePrice = order.Price;
+            var fillQuantity = option.GetExerciseQuantity(order.Quantity);
+            var exerciseQuantity =
+                    option.Symbol.ID.OptionRight == OptionRight.Call ? fillQuantity : -fillQuantity;
+            var exerciseDirection = assignment? 
+                    (option.Symbol.ID.OptionRight == OptionRight.Call ? OrderDirection.Sell : OrderDirection.Buy):
+                    (option.Symbol.ID.OptionRight == OptionRight.Call ? OrderDirection.Buy : OrderDirection.Sell);
 
-            //Order price for a option exercise order model is the strike price
-            deliveryEvent.FillPrice = order.Price;
-            deliveryEvent.FillQuantity = option.GetExerciseQuantity(order.Quantity);
-            deliveryEvent.OrderFee = option.FeeModel.GetOrderFee(option, order);
-            deliveryEvent.Status = OrderStatus.Filled;
+            var orderFee = option.FeeModel.GetOrderFee(option, order);
 
-            return deliveryEvent;
-        }
-        /// <summary>
-        /// Determines if the exchange is open using the current time of the asset
-        /// </summary>
-        private static bool IsExchangeOpen(Security asset)
-        {
-            if (!asset.Exchange.DateTimeIsOpen(asset.LocalTime))
+            var cashQuote = option.QuoteCurrency;
+
+            var addUnderlyingEvent = new OrderEvent(order.Id,
+                            underlying.Symbol,
+                            utcTime,
+                            OrderStatus.Filled,
+                            exerciseDirection,
+                            exercisePrice,
+                            exerciseQuantity,
+                            0.0m,
+                            "Option Exercise/Assignment");
+
+            var optionRemoveEvent = new OrderEvent(order.Id,
+                            option.Symbol,
+                            utcTime,
+                            OrderStatus.Filled,
+                            assignment ? OrderDirection.Buy : OrderDirection.Sell,
+                            0.0m,
+                            -optionQuantity,
+                            orderFee,
+                            "Adjusting(or removing) the exercised/assigned option");
+
+            if (optionRemoveEvent.FillQuantity > 0)
             {
-                // if we're not open at the current time exactly, check the bar size, this handle large sized bars (hours/days)
-                var currentBar = asset.GetLastData();
-                if (asset.LocalTime.Date != currentBar.EndTime.Date || !asset.Exchange.IsOpenDuringBar(currentBar.Time, currentBar.EndTime, false))
-                {
-                    return false;
-                }
+                optionRemoveEvent.IsAssignment = true;
             }
-            return true;
+
+            if (option.ExerciseSettlement == SettlementType.PhysicalDelivery &&
+                option.IsAutoExercised(underlying.Close))
+            {
+                return new[] { optionRemoveEvent, addUnderlyingEvent };
+            }
+
+            return new[] { optionRemoveEvent };
         }
+        
     }
 }

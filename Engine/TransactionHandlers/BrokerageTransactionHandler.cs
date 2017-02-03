@@ -123,6 +123,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 HandleAccountChanged(account);
             };
 
+            _brokerage.OptionPositionAssigned += (sender, fill) =>
+            {
+                HandlePositionAssigned(fill);
+            };
+
             IsActive = true;
 
             _algorithm = algorithm;
@@ -961,6 +966,19 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 // override the current cash value so we're always guaranteed to be in sync with the brokerage's push updates
                 _algorithm.Portfolio.CashBook[account.CurrencySymbol].SetAmount(account.CashBalance);
+            }
+        }
+
+        /// <summary>
+        /// Option assignment/exercise event is received and propagated to the user algo
+        /// </summary>
+        private void HandlePositionAssigned(OrderEvent fill)
+        {
+            // informing user algorithm that option position has been assigned
+            if (fill.IsAssignment)
+            {
+                fill.Message = string.Format("Option Assignment: {0}", fill.Symbol.Value);
+                _algorithm.OnAssignmentOrderEvent(fill);
             }
         }
 

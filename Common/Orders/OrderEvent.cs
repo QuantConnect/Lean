@@ -88,6 +88,11 @@ namespace QuantConnect.Orders
         public string Message;
 
         /// <summary>
+        /// True if the order event is an assignment
+        /// </summary>
+        public bool IsAssignment;
+
+        /// <summary>
         /// Order Event Constructor.
         /// </summary>
         /// <param name="orderId">Id of the parent order</param>
@@ -111,6 +116,7 @@ namespace QuantConnect.Orders
             FillQuantity = fillQuantity;
             OrderFee = Math.Abs(orderFee);
             Message = message;
+            IsAssignment = false;
         }
 
         /// <summary>
@@ -135,6 +141,7 @@ namespace QuantConnect.Orders
             UtcTime = utcTime;
             OrderFee = Math.Abs(orderFee);
             Message = message;
+            IsAssignment = false;
         }
 
         /// <summary>

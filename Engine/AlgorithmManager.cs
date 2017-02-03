@@ -332,32 +332,8 @@ namespace QuantConnect.Lean.Engine
                 // process fill models on the updated data before entering algorithm, applies to all non-market orders
                 transactions.ProcessSynchronousEvents();
 
-                if (delistings.Count != 0)
-                {
-                    for (int i = 0; i < delistings.Count; i++)
-                    {
-                        var symbol = delistings[i].Symbol;
-                        var ticket = delistings[i].Ticket;
-                        var security = algorithm.Securities[symbol];
-
-                        if (ticket != null && ticket.Status == OrderStatus.Filled)
-                        {
-                            // If invested after market on close order is filled, liquidate
-                            if (security.Invested) algorithm.Liquidate(symbol);
-                            delistings.RemoveAt(i--);
-                        }
-
-                        // Submit an order to liquidate on market close when invested after the delisting warning
-                        if (ticket == null && security.Invested)
-                        {
-                            var submitOrderRequest = new SubmitOrderRequest(OrderType.MarketOnClose, security.Type, security.Symbol,
-                                -security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Liquidate from delisting");
-                            ticket = algorithm.Transactions.ProcessRequest(submitOrderRequest);
-                            delistings[i].SetOrderTicket(ticket);
-                        }
-                    }
-                }
-
+                // process end of day delistings
+                ProcessDelistedSymbols(algorithm, delistings);
 
                 //Check if the user's signalled Quit: loop over data until day changes.
                 if (algorithm.Status == AlgorithmStatus.Stopped)
@@ -925,55 +901,80 @@ namespace QuantConnect.Lean.Engine
             return false;
         }
 
+
         /// <summary>
         /// Performs delisting logic for the securities specified in <paramref name="newDelistings"/> that are marked as <see cref="DelistingType.Delisted"/>. 
-        /// This includes liquidating the position and removing the security from the algorithm's collection.
-        /// If we're unable to liquidate the position (maybe daily data or EOD already) then we'll add it to the <paramref name="delistings"/>
-        /// for the algo manager time loop to check later
         /// </summary>
-        private static void HandleDelistedSymbols(IAlgorithm algorithm, Delistings newDelistings, ICollection<Delisting> delistings)
+        private static void HandleDelistedSymbols(IAlgorithm algorithm, Delistings newDelistings, List<Delisting> delistings)
         {
             foreach (var delisting in newDelistings.Values)
             {
                 // submit an order to liquidate on market close
                 if (delisting.Type == DelistingType.Warning)
                 {
-	                SubmitOrderRequest request;
-
-	                delistings.Add(delisting);
-                    Log.Trace("AlgorithmManager.Run(): Security delisting warning: " + delisting.Symbol.ID);
-                    var security = algorithm.Securities[delisting.Symbol];
-                    if (security.Holdings.Quantity == 0) continue;
-
-                    if (security.Type == SecurityType.Option)
+                    if (!delistings.Any(x => x.Symbol == delisting.Symbol && x.Type == delisting.Type))
                     {
-                        var underlying = algorithm.Securities[security.Symbol.Underlying];
-                        var option = (Option)security;
-
-                        if (option.IsAutoExercised(underlying.Close))
-                            request = new SubmitOrderRequest(OrderType.OptionExercise, security.Type, security.Symbol, 
-                                security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Automatic option exercise on expiration");
-                        else
-                            request = new SubmitOrderRequest(OrderType.MarketOnClose, security.Type, security.Symbol,
-                                -security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Automatic option lapse on expiration");
+                        delistings.Add(delisting);
+                        Log.Trace("AlgorithmManager.Run(): Security delisting warning: " + delisting.Symbol.Value);
                     }
-                    else
-                    {
-                        request = new SubmitOrderRequest(OrderType.MarketOnClose, security.Type, security.Symbol,
-                            -security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Liquidate from delisting");
-                    }
-                    var ticket = algorithm.Transactions.ProcessRequest(request);
-                    delisting.SetOrderTicket(ticket);
                 }
                 else
                 {
-                    Log.Trace("AlgorithmManager.Run(): Security delisted: " + delisting.Symbol.ID);
+                    Log.Trace("AlgorithmManager.Run(): Security delisted: " + delisting.Symbol.Value);
                     var cancelledOrders = algorithm.Transactions.CancelOpenOrders(delisting.Symbol);
                     foreach (var cancelledOrder in cancelledOrders)
                     {
                         Log.Trace("AlgorithmManager.Run(): " + cancelledOrder);
                     }
                 }
+            }
+        }
+        /// <summary>
+        /// Performs actual delisting of the contracts in delistings collection
+        /// </summary>
+        private static void ProcessDelistedSymbols(IAlgorithm algorithm, List<Delisting> delistings)
+        {
+            for (var i = delistings.Count - 1; i >= 0; i--)
+            {
+                // check if we are holding position
+                var security = algorithm.Securities[delistings[i].Symbol];
+                if (security.Holdings.Quantity == 0) continue;
+
+                // check if the time has come for delisting
+                var delistingTime = delistings[i].Time;
+                var nextMarketOpen = security.Exchange.Hours.GetNextMarketOpen(delistingTime, false);
+                var nextMarketClose = security.Exchange.Hours.GetNextMarketClose(nextMarketOpen, false);
+
+                if (security.LocalTime < nextMarketClose) continue;
+
+                // submit an order to liquidate on market close or exercise (for options)
+                SubmitOrderRequest request;
+
+                if (security.Type == SecurityType.Option)
+                {
+                    var underlying = algorithm.Securities[security.Symbol.Underlying];
+                    var option = (Option)security;
+
+                    if (security.Holdings.Quantity > 0)
+                    {
+                        request = new SubmitOrderRequest(OrderType.OptionExercise, security.Type, security.Symbol,
+                            security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Automatic option exercise on expiration");
+                    }
+                    else
+                    {
+                        request = new SubmitOrderRequest(OrderType.OptionExercise, security.Type, security.Symbol,
+                            security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Automatic option assignment on expiration");
+                    }
+                }
+                else
+                {
+                    request = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol,
+                        -security.Holdings.Quantity, 0, 0, algorithm.UtcTime, "Liquidate from delisting");
+                }
+
+                algorithm.Transactions.ProcessRequest(request);
+
+                delistings.RemoveAt(i);
             }
         }
 

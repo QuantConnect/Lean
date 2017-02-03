@@ -15,6 +15,7 @@
 
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
+using System.Collections.Generic;
 
 namespace QuantConnect.Orders.OptionExercise
 {
@@ -30,7 +31,7 @@ namespace QuantConnect.Orders.OptionExercise
         /// <param name="option">Option we're trading this order</param>
         /// <param name="order">Order to update</param>
         /// <returns>Order fill information detailing the average price and quantity filled.</returns>
-        OrderEvent OptionExercise(Option option, OptionExerciseOrder order);
+        IEnumerable<OrderEvent> OptionExercise(Option option, OptionExerciseOrder order);
 
     }
 }

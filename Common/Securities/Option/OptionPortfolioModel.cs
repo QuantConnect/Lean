@@ -52,7 +52,7 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Processes exercise event to the portfolio
+        /// Processes exercise/assignment event to the portfolio
         /// </summary>
         /// <param name="portfolio">The algorithm's portfolio</param>
         /// <param name="security">Option security</param>
@@ -60,155 +60,31 @@ namespace QuantConnect.Securities.Option
         /// <param name="fill">The order event fill object to be applied</param>
         public void ProcessExerciseFill(SecurityPortfolioManager portfolio, Security security, Order order, OrderEvent fill)
         {
-            if (order.Type == OrderType.OptionExercise)
+            var exerciseOrder = (OptionExerciseOrder)order;
+            var option = (Option)portfolio.Securities[exerciseOrder.Symbol];
+            var underlying = option.Underlying;
+            var cashQuote = option.QuoteCurrency;
+            var optionQuantity = order.Quantity;
+            var processSecurity = portfolio.Securities[fill.Symbol];
+
+            // depending on option settlement terms we either add underlying to the account or add cash equivalent 
+            // we then remove the exercised contracts from our option position
+            switch (option.ExerciseSettlement)
             {
-                // option exercise adds several changes to portfolio
+                case SettlementType.PhysicalDelivery:
 
-                // we first prepare parameters of the fill events
-                var exerciseOrder = (OptionExerciseOrder)order;
+                    base.ProcessFill(portfolio, processSecurity, fill);
+                    break;
 
-                var option = (Option)portfolio.Securities[exerciseOrder.Symbol];
-                var optionQuantity = order.Quantity;
+                case SettlementType.Cash:
 
-                var underlying = portfolio.Securities[exerciseOrder.Symbol.Underlying];
-                var exercisePrice = fill.FillPrice;
-                var exerciseQuantity = option.Symbol.ID.OptionRight == OptionRight.Call ? Math.Abs(fill.FillQuantity) : -Math.Abs(fill.FillQuantity);
-                var exerciseDirection = option.Symbol.ID.OptionRight == OptionRight.Call ? OrderDirection.Buy : OrderDirection.Sell;
+                    var cashQuantity = option.GetIntrinsicValue(underlying.Close) * option.ContractUnitOfTrade * option.QuoteCurrency.ConversionRate * optionQuantity;
 
-                var cashQuote = option.QuoteCurrency;
+                    // we add cash equivalent to portfolio
+                    option.SettlementModel.ApplyFunds(portfolio, option, fill.UtcTime, cashQuote.Symbol, cashQuantity);
 
-                if (!option.Holdings.IsLong)
-                {
-                    Log.Error("OptionPortfolioModel.ProcessExerciseFill(): Invalid order event direction. Option holding is not long ");
-                    return;
-                }
-
-                var addUnderlyingEvent = new OrderEvent(fill.OrderId,
-                                underlying.Symbol,
-                                fill.UtcTime,
-                                OrderStatus.Filled,
-                                exerciseDirection,
-                                exercisePrice,
-                                exerciseQuantity,
-                                fill.OrderFee,
-                                fill.Message);
-
-                var optionRemoveEvent = new OrderEvent(fill.OrderId,
-                                option.Symbol,
-                                fill.UtcTime,
-                                OrderStatus.Filled,
-                                OrderDirection.Sell,
-                                0.0m,
-                                -optionQuantity,
-                                0.0m,
-                                "Adjusting(or removing) the exercised option");
-
-                // depending on option settlement terms we either add underlying to the account or add cash equivalent 
-                // we then remove the exercised contracts from our option position
-                switch (option.ExerciseSettlement)
-                {
-                    case SettlementType.PhysicalDelivery:
-
-                        // we add underlying to portfolio
-                        base.ProcessFill(portfolio, underlying, addUnderlyingEvent);
-
-                        // we adjust our option position by removing exercised contracts
-                        base.ProcessFill(portfolio, option, optionRemoveEvent);
-
-                        break;
-                    case SettlementType.Cash:
-
-                        var cashQuantity = option.GetIntrinsicValue(underlying.Close) * option.ContractUnitOfTrade * option.QuoteCurrency.ConversionRate * optionQuantity;
-
-                        // we add cash equivalent to portfolio
-                        option.SettlementModel.ApplyFunds(portfolio, option, fill.UtcTime, cashQuote.Symbol, cashQuantity);
-
-                        // we adjust our option position by removing exercised contracts
-                        base.ProcessFill(portfolio, option, optionRemoveEvent);
-
-                        break;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Processes assignment event to the portfolio
-        /// </summary>
-        /// <param name="portfolio">The algorithm's portfolio</param>
-        /// <param name="security">Option security</param>
-        /// <param name="order">The order object to be applied</param>
-        /// <param name="fill">The order event fill object to be applied</param>
-        public void ProcessAssignmentFill(SecurityPortfolioManager portfolio, Security security, Order order, OrderEvent fill)
-        {
-            if (order.Type == OrderType.OptionExercise)
-            {
-                // option exercise adds several changes to portfolio
-
-                // we first prepare parameters of the fill events
-                var exerciseOrder = (OptionExerciseOrder)order;
-
-                var option = (Option)portfolio.Securities[exerciseOrder.Symbol];
-                var optionQuantity = order.Quantity;
-
-                var underlying = portfolio.Securities[exerciseOrder.Symbol.Underlying];
-                var exercisePrice = fill.FillPrice;
-                var exerciseQuantity = option.Symbol.ID.OptionRight == OptionRight.Call ? -Math.Abs(fill.FillQuantity) : Math.Abs(fill.FillQuantity);
-                var exerciseDirection = option.Symbol.ID.OptionRight == OptionRight.Call ? OrderDirection.Sell : OrderDirection.Buy;
-
-                var cashQuote = option.QuoteCurrency;
-
-                if (!option.Holdings.IsShort)
-                {
-                    Log.Error("OptionPortfolioModel.ProcessAssignmentFill(): Invalid order event direction. Option holding is not short ");
-                    return;
-                }
-
-                var addUnderlyingEvent = new OrderEvent(fill.OrderId,
-                                underlying.Symbol,
-                                fill.UtcTime,
-                                OrderStatus.Filled,
-                                exerciseDirection,
-                                exercisePrice,
-                                exerciseQuantity,
-                                fill.OrderFee,
-                                fill.Message);
-
-                var optionRemoveEvent = new OrderEvent(fill.OrderId,
-                                option.Symbol,
-                                fill.UtcTime,
-                                OrderStatus.Filled,
-                                OrderDirection.Buy,
-                                0.0m,
-                                -optionQuantity,
-                                0.0m,
-                                "Adjusting(or removing) the assigned option");
-
-                // depending on option settlement terms we either add underlying to the account or add cash equivalent 
-                // we then remove the exercised contracts from our option position
-                switch (option.ExerciseSettlement)
-                {
-                    case SettlementType.PhysicalDelivery:
-
-                        // we add underlying to portfolio
-                        base.ProcessFill(portfolio, underlying, addUnderlyingEvent);
-
-                        // we adjust our option position by removing exercised contracts
-                        base.ProcessFill(portfolio, option, optionRemoveEvent);
-
-                        break;
-
-                    case SettlementType.Cash:
-
-                        var cashQuantity = option.GetIntrinsicValue(underlying.Close) * option.ContractUnitOfTrade * option.QuoteCurrency.ConversionRate * optionQuantity;
-
-                        // we add cash equivalent to portfolio
-                        option.SettlementModel.ApplyFunds(portfolio, option, fill.UtcTime, cashQuote.Symbol, cashQuantity);
-
-                        // we adjust our option position by removing exercised contracts
-                        base.ProcessFill(portfolio, option, optionRemoveEvent);
-
-                        break;
-                }
+                    base.ProcessFill(portfolio, processSecurity, fill);
+                    break;
             }
         }
     }

@@ -499,6 +499,28 @@ namespace QuantConnect.Tests
                 {"Treynor Ratio", "0.391"},
                 {"Total Fees", "$23.05"},
             };
+	    var optionExerciseAssignRegressionAlgorithmStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "4"},
+                {"Average Win", "0.30%"},
+                {"Average Loss", "-0.20%"},
+                {"Compounding Annual Return", "-42.722%"},
+                {"Drawdown", "0.400%"},
+                {"Expectancy", "-0.168"},
+                {"Net Profit", "-0.103%"},
+                {"Sharpe Ratio", "0"},
+                {"Loss Rate", "67%"},
+                {"Win Rate", "33%"},
+                {"Profit-Loss Ratio", "1.50"},
+                {"Alpha", "0"},
+                {"Beta", "0"},
+                {"Annual Standard Deviation", "0"},
+                {"Annual Variance", "0"},
+                {"Information Ratio", "0"},
+                {"Tracking Error", "0"},
+                {"Treynor Ratio", "0"},
+                {"Total Fees", "$0.50"},
+            };
 
             return new List<AlgorithmStatisticsTestParameters>
             {
@@ -523,6 +545,8 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("OptionOpenInterestRegressionAlgorithm", optionOpenInterestRegressionAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("OptionChainConsistencyRegressionAlgorithm", optionChainConsistencyRegressionAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("WeeklyUniverseSelectionRegressionAlgorithm", weeklyUniverseSelectionRegressionAlgorithmStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("OptionExerciseAssignRegressionAlgorithm",optionExerciseAssignRegressionAlgorithmStatistics, Language.CSharp),
+                
 
                 // FSharp
                 // new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.FSharp),
