@@ -68,7 +68,7 @@ namespace QuantConnect.Tests.Algorithm
             // cfd 
             var cfd = algo.AddSecurity(SecurityType.Cfd, "abc");
             Assert.IsTrue(cfd.Subscriptions.Count() == 1);
-            Assert.IsTrue(GetMatchingSubscription(cfd, typeof(TradeBar)) != null);
+            Assert.IsTrue(GetMatchingSubscription(cfd, typeof(QuoteBar)) != null);
 
             // future 
             var future = algo.AddSecurity(SecurityType.Future, "ES");
