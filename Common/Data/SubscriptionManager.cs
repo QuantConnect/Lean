@@ -169,7 +169,7 @@ namespace QuantConnect.Data
                 {SecurityType.Forex, new List<TickType>() { TickType.Quote } },
                 {SecurityType.Equity, new List<TickType>() { TickType.Trade } },
                 {SecurityType.Option, new List<TickType>() { TickType.Quote, TickType.Trade, TickType.OpenInterest } },
-                {SecurityType.Cfd, new List<TickType>() { TickType.Trade } },
+                {SecurityType.Cfd, new List<TickType>() { TickType.Quote } },
                 {SecurityType.Future, new List<TickType>() { TickType.Quote, TickType.Trade, TickType.OpenInterest } },
                 {SecurityType.Commodity, new List<TickType>() { TickType.Trade } }
             };
