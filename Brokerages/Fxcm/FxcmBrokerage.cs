@@ -333,7 +333,22 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             Log.Trace("FxcmBrokerage.GetAccountHoldings()");
 
-            var holdings = _openPositions.Values.Select(ConvertHolding).Where(x => x.Quantity != 0).ToList();
+            // FXCM maintains multiple positions per symbol, so we aggregate them by symbol.
+            // The average price for the aggregated position is the quantity weighted average price.
+            var holdings = _openPositions.Values
+                .Select(ConvertHolding)
+                .Where(x => x.Quantity != 0)
+                .GroupBy(x => x.Symbol)
+                .Select(group => new Holding
+                {
+                    Symbol = group.Key,
+                    Type = group.First().Type,
+                    AveragePrice = group.Sum(x => x.AveragePrice * x.Quantity) / group.Sum(x => x.Quantity),
+                    ConversionRate = group.First().ConversionRate,
+                    CurrencySymbol = group.First().CurrencySymbol,
+                    Quantity = group.Sum(x => x.Quantity)
+                })
+                .ToList();
 
             // Set MarketPrice in each Holding
             var fxcmSymbols = holdings
