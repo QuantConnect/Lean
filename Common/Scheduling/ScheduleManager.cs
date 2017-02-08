@@ -18,6 +18,8 @@ using System;
 using System.Collections.Generic;
 using NodaTime;
 using QuantConnect.Securities;
+using QuantConnect.Logging;
+using System.Linq;
 
 namespace QuantConnect.Scheduling
 {
@@ -167,6 +169,22 @@ namespace QuantConnect.Scheduling
             var eventTimes = timeRule.CreateUtcEventTimes(dates);
             var scheduledEvent = new ScheduledEvent(name, eventTimes, callback);
             Add(scheduledEvent);
+
+            var exampleTimes = eventTimes.Take(3)
+                    .Select(x => x.ToString())
+                    .ToArray();
+
+            if (exampleTimes.Length > 0)
+            {
+                Log.Trace("Event Name \"{0}\", scheduled to run at {1} (UTC){2}",
+                        name, string.Join(", ", exampleTimes),
+                        exampleTimes.Length > 1? "..." : "");
+            }
+            else
+            {
+                Log.Trace("Event Name \"{0}\", scheduled to run, but no event times were selected", name);
+            }
+
             return scheduledEvent;
         }
 
