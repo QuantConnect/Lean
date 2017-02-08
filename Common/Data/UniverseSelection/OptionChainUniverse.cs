@@ -138,41 +138,6 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
-        /// Gets the subscription requests to be added for the specified security
-        /// </summary>
-        /// <param name="security">The security to get subscriptions for</param>
-        /// <param name="currentTimeUtc">The current time in utc. This is the frontier time of the algorithm</param>
-        /// <param name="maximumEndTimeUtc">The max end time</param>
-        /// <returns>All subscriptions required by this security</returns>
-        public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(Security security, DateTime currentTimeUtc, DateTime maximumEndTimeUtc)
-        {
-            // we want to return both quote and trade subscriptions
-            return _subscriptionManager.GetDataTypesForSecurity(SecurityType.Option)
-                .Select(tickType => new SubscriptionDataConfig(
-                    objectType: LeanData.GetDataType(UniverseSettings.Resolution, tickType),
-                    symbol: security.Symbol,
-                    resolution: UniverseSettings.Resolution,
-                    dataTimeZone: Configuration.DataTimeZone,
-                    exchangeTimeZone: security.Exchange.TimeZone,
-                    fillForward: UniverseSettings.FillForward,
-                    extendedHours: UniverseSettings.ExtendedMarketHours,
-                    isInternalFeed: false,
-                    isCustom: false,
-                    tickType: tickType,
-                    isFilteredSubscription: true,
-                    dataNormalizationMode:  DataNormalizationMode.Raw
-                    ))
-                .Select(config => new SubscriptionRequest(
-                    isUniverseSubscription: false,
-                    universe: this,
-                    security: security,
-                    configuration: config,
-                    startTimeUtc: currentTimeUtc,
-                    endTimeUtc: maximumEndTimeUtc
-                    ));
-        }
-
-        /// <summary>
         /// Creates and configures a security for the specified symbol
         /// </summary>
         /// <param name="symbol">The symbol of the security to be created</param>
