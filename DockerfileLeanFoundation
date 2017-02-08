@@ -1,5 +1,5 @@
 #
-#	LEAN Foundation Docker Container November-2016
+#	LEAN Foundation Docker Container February-2017
 #	Cross platform deployment for multiple brokerages	
 #	Intended to be used in conjunction with DockerfileLeanAlgorithm. This is just the foundation common OS+Dependencies required.
 #
@@ -16,7 +16,7 @@ CMD ["/sbin/my_init"]
 # Misc tools for running Python.NET and IB inside a headless container.
 RUN \
   apt-get update && \
-  apt-get install -y wget xvfb unzip curl libxrender1 libxtst6 libxi6 git libglib2.0-dev python-pip && \
+  apt-get install -y wget xvfb unzip curl libxrender1 libxtst6 libxi6 python-pip && \
   pip install --upgrade pip && pip install pycparser pandas scipy numpy
 
 # Java for running IB inside container:
@@ -52,10 +52,3 @@ RUN echo "deb http://download.mono-project.com/repo/debian wheezy/snapshots/4.6.
   && apt-get update \
   && apt-get install -y binutils mono-complete ca-certificates-mono mono-vbnc nuget referenceassemblies-pcl \
   && apt-get install -y fsharp && rm -rf /var/lib/apt/lists/* /tmp/*
-
-# Install Python.NET
-RUN cd ~ && \
-    git clone https://github.com/QuantConnect/pythonnet.git && \
-    cd ~/pythonnet && \
-    python setup.py build_ext --inplace && \
-    ln -s /usr/lib/python2.7/config-x86_64-linux-gnu/libpython2.7.so .
