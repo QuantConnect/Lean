@@ -31,6 +31,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
     {
         private StreamReader _streamReader;
         private readonly ZipFile _zipFile;
+        private IDataFileCacheProvider _dataFileCacheProvider;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LocalFileSubscriptionStreamReader"/> class.
@@ -38,12 +39,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// <param name="source">The local file to be read</param>
         /// <param name="entryName">Specifies the zip entry to be opened. Leave null if not applicable,
         /// or to open the first zip entry found regardless of name</param>
-        public LocalFileSubscriptionStreamReader(string source, string entryName = null)
+        public LocalFileSubscriptionStreamReader(IDataFileCacheProvider dataFileCacheProvider, string source, DateTime date, string entryName = null)
         {
             // unzip if necessary
-            _streamReader = source.GetExtension() == ".zip"
-                ? Compression.Unzip(source, entryName, out _zipFile)
-                : new StreamReader(source);
+            //var stream = source.GetExtension() == ".zip"
+            //    ? Compression.UnzipBaseStream(source, entryName)
+            //    : new FileStream(source, FileMode.Open, FileAccess.Read);
+            //_streamReader = new StreamReader(stream);
+
+            _streamReader = new StreamReader(dataFileCacheProvider.Fetch(source, date, entryName));
         }
 
         /// <summary>
@@ -53,8 +57,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// <param name="entryName">Specifies the zip entry to be opened. Leave null if not applicable,
         /// <param name="startingPosition">The starting position in the local file to be read</param>
         /// or to open the first zip entry found regardless of name</param>
-        public LocalFileSubscriptionStreamReader(string source, string entryName, long startingPosition)
+        public LocalFileSubscriptionStreamReader(IDataFileCacheProvider dataFileCacheProvider, string source, string entryName, DateTime date, long startingPosition)
         {
+            _dataFileCacheProvider = dataFileCacheProvider;
+
             // unzip if necessary
             _streamReader = source.GetExtension() == ".zip"
                 ? Compression.Unzip(source, entryName, out _zipFile)

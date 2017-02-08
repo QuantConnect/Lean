@@ -14,8 +14,10 @@
  *
 */
 
+using System;
 using System.IO;
 using NUnit.Framework;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Transport;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Transport
@@ -28,7 +30,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
         {
             var source = Path.Combine("TestData", "multizip.zip");
             const string entryName = "multizip/three.txt";
-            using (var reader = new LocalFileSubscriptionStreamReader(source, entryName))
+            using (var reader = new LocalFileSubscriptionStreamReader(new DefaultDataFileCacheProvider(), source, DateTime.MinValue, entryName))
             {
                 var line = reader.ReadLine();
                 Assert.AreEqual("3", line);

@@ -527,6 +527,55 @@ namespace QuantConnect
             return reader;
         }
 
+        /// <summary>
+        /// Streams a local zip file using a streamreader.
+        /// Important: the caller must call Dispose() on the returned ZipFile instance.
+        /// </summary>
+        /// <param name="filename">Location of the original zip file</param>
+        /// <param name="zipEntryName">The zip entry name to open a reader for. Specify null to access the first entry</param>
+        /// <param name="zip">The ZipFile instance to be returned to the caller</param>
+        /// <returns>Stream reader of the first file contents in the zip file</returns>
+        public static Stream UnzipBaseStream(string filename, string zipEntryName)
+        {
+            Stream stream = null;
+            ZipFile zip = null;
+
+            try
+            {
+                if (File.Exists(filename))
+                {
+                    try
+                    {
+                        zip = new ZipFile(filename);
+                        var entry = zip.FirstOrDefault(x => zipEntryName == null || string.Compare(x.FileName, zipEntryName, StringComparison.OrdinalIgnoreCase) == 0);
+                        if (entry == null)
+                        {
+                            // Unable to locate zip entry 
+                            return null;
+                        }
+
+                        stream = entry.OpenReader();
+                    }
+                    catch (Exception err)
+                    {
+                        Log.Error(err, "Inner try/catch");
+                        if (zip != null) zip.Dispose();
+                        if (stream != null) stream.Close();
+                    }
+                }
+                else
+                {
+                    Log.Error("Data.UnZip(2): File doesn't exist: " + filename);
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err, "File: " + filename);
+            }
+
+            return stream;
+        }
+
 
 
         /// <summary>

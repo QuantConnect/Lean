@@ -16,7 +16,7 @@
 
 using System;
 
-namespace QuantConnect.Lean.Engine.DataFeeds.Transport
+namespace QuantConnect.Interfaces
 {
     /// <summary>
     /// Defines a transport mechanism for data from its source into various reader methods
@@ -32,7 +32,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// Gets whether or not there's more data to be read in the stream
         /// </summary>
         bool EndOfStream { get; }
-        
+
         /// <summary>
         /// Gets the next line/batch of content from the stream 
         /// </summary>

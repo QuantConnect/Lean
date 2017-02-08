@@ -28,6 +28,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Net;
+using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.ToolBox.IQFeed
 {
@@ -49,6 +50,8 @@ namespace QuantConnect.ToolBox.IQFeed
 
         private const string NewLine = "\r\n";
         private const char Tabulation = '\t';
+
+        private IDataFileCacheProvider _dataFileCacheProvider = new DataFileCacheProvider();
 
         // Database of all symbols
         // We store symbol data in memory by default (e.g. Equity, FX),
@@ -269,7 +272,7 @@ namespace QuantConnect.ToolBox.IQFeed
             long currentPosition = 0;
             long prevPosition = 0;
 
-            reader = new LocalFileSubscriptionStreamReader(todayFullCsvName);
+            reader = new LocalFileSubscriptionStreamReader(_dataFileCacheProvider, todayFullCsvName, DateTime.MinValue);
 
             while (!reader.EndOfStream)
             {
@@ -433,7 +436,7 @@ namespace QuantConnect.ToolBox.IQFeed
             var todayCsvFileName = "mktsymbols_v2.txt";
             var todayFullCsvName = Path.Combine(Globals.Cache, todayCsvFileName);
 
-            var reader = new LocalFileSubscriptionStreamReader(todayFullCsvName, null, placeholder.StartPosition);
+            var reader = new LocalFileSubscriptionStreamReader(_dataFileCacheProvider, todayFullCsvName, null, DateTime.MinValue, placeholder.StartPosition);
 
             Log.Trace("Loading data on demand for {0}...", placeholder.Symbol.Underlying.Value);
 
