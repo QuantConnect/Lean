@@ -38,15 +38,14 @@ namespace QuantConnect.Algorithm.CSharp
         {
             SetStartDate(2015, 12, 24);
             SetEndDate(2015, 12, 24);
-            SetCash(10000);
+            SetCash(100000);
 
             var equity = AddEquity(UnderlyingTicker);
             var option = AddOption(UnderlyingTicker);
 
             // set our strike/expiry filter for this option chain
-            option.SetFilter(u => u.IncludeWeeklys()
-                                   .Strikes(-2, +2)
-                                   .Expiration(TimeSpan.Zero, TimeSpan.FromDays(10)));
+            option.SetFilter(u => u.Strikes(-2, +2)
+                                   .Expiration(TimeSpan.Zero, TimeSpan.FromDays(180)));
 
             // use the underlying equity as the benchmark
             SetBenchmark(equity.Symbol);
@@ -63,19 +62,17 @@ namespace QuantConnect.Algorithm.CSharp
                 OptionChain chain;
                 if (slice.OptionChains.TryGetValue(OptionSymbol, out chain))
                 {
-                    // find the second call strike under market price expiring today
-                    var contract = (
-                        from optionContract in chain.OrderByDescending(x => x.Strike)
-                        where optionContract.Right == OptionRight.Call
-                        where optionContract.Expiry == Time.Date
-                        where optionContract.Strike < chain.Underlying.Price
-                        select optionContract
-                        ).Skip(2).FirstOrDefault();
+                    // we find at the money (ATM) contract with farthest expiration
+                    var atmContract = chain
+                        .OrderByDescending(x => x.Expiry)
+                        .ThenBy(x => Math.Abs(chain.Underlying.Price - x.Strike))
+                        .FirstOrDefault();
 
-                    if (contract != null)
+                    if (atmContract != null)
                     {
-                        MarketOrder(contract.Symbol, 1);
-                        MarketOnCloseOrder(contract.Symbol, -1);
+                        // if found, trade it
+                        MarketOrder(atmContract.Symbol, 1);
+                        MarketOnCloseOrder(atmContract.Symbol, -1);
                     }
                 }
             }
