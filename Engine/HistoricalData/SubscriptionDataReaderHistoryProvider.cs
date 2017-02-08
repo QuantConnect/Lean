@@ -48,6 +48,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         private IMapFileProvider _mapFileProvider;
         private IFactorFileProvider _factorFileProvider;
         private IDataFileProvider _dataFileProvider;
+        private IDataFileCacheProvider _dataFileCacheProvider;
 
         /// <summary>
         /// Gets the total number of data points emitted by this history provider
@@ -71,6 +72,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             _mapFileProvider = mapFileProvider;
             _factorFileProvider = factorFileProvider;
             _dataFileProvider = dataFileProvider;
+            _dataFileCacheProvider = dataFileCacheProvider;
         }
 
         /// <summary>
@@ -127,7 +129,8 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 _dataFileProvider,
                 Time.EachTradeableDay(request.ExchangeHours, start, end), 
                 false,
-                includeAuxilliaryData: false
+                _dataFileCacheProvider,
+                false
                 );
 
             // optionally apply fill forward behavior

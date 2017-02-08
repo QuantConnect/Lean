@@ -93,7 +93,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private bool _emittedAuxilliaryData;
         private BaseData _lastInstanceBeforeAuxilliaryData;
         private readonly IDataFileProvider _dataFileProvider;
-        private readonly DataFileCacheProvider _dataFileCacheProvider;
+        private readonly IDataFileCacheProvider _dataFileCacheProvider;
 
         /// <summary>
         /// Last read BaseData object from this type and source
@@ -135,7 +135,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IDataFileProvider dataFileProvider,
             IEnumerable<DateTime> tradeableDates,
             bool isLiveMode,
-            DataFileCacheProvider dataFileCacheProvider = null,
+            IDataFileCacheProvider dataFileCacheProvider = null,
             bool includeAuxilliaryData = true)
         {
             //Save configuration of data-subscription:

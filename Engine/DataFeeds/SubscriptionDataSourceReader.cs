@@ -35,7 +35,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="date">The date to be processed</param>
         /// <param name="isLiveMode">True for live mode, false otherwise</param>
         /// <returns>A new <see cref="ISubscriptionDataSourceReader"/> that can read the specified <paramref name="source"/></returns>
-        public static ISubscriptionDataSourceReader ForSource(SubscriptionDataSource source, IDataFileProvider dataFileProvider, DataFileCacheProvider dataFileCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public static ISubscriptionDataSourceReader ForSource(SubscriptionDataSource source, IDataFileProvider dataFileProvider, IDataFileCacheProvider dataFileCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             switch (source.Format)
             {
