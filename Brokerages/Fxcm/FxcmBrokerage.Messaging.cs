@@ -49,6 +49,7 @@ namespace QuantConnect.Brokerages.Fxcm
         private readonly Dictionary<string, MarketDataSnapshot> _rates = new Dictionary<string, MarketDataSnapshot>();
 
         private readonly Dictionary<string, ExecutionReport> _openOrders = new Dictionary<string, ExecutionReport>();
+        // Map key: fxcmPositionId (can have multiple positions for the same symbol)
         private readonly Dictionary<string, PositionReport> _openPositions = new Dictionary<string, PositionReport>();
 
         private readonly Dictionary<string, Order> _mapRequestsToOrders = new Dictionary<string, Order>();
@@ -458,14 +459,14 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             if (message.getAccount() == _accountId)
             {
-                var fxcmSymbol = message.getInstrument().getSymbol();
-                if (_openPositions.ContainsKey(fxcmSymbol) && message is ClosedPositionReport)
+                var fxcmPositionId = message.getFXCMPosID();
+                if (_openPositions.ContainsKey(fxcmPositionId) && message is ClosedPositionReport)
                 {
-                    _openPositions.Remove(fxcmSymbol);
+                    _openPositions.Remove(fxcmPositionId);
                 }
                 else
                 {
-                    _openPositions[fxcmSymbol] = message;
+                    _openPositions[fxcmPositionId] = message;
                 }
             }
 
