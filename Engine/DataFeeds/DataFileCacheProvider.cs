@@ -21,6 +21,7 @@ using System.Collections.Concurrent;
 using QuantConnect.Logging;
 using System.Linq;
 using Ionic.Zip;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -30,7 +31,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <summary>
     /// File provider implements optimized zip archives caching facility. Cache is thread safe.
     /// </summary>
-    public class DataFileCacheProvider : IDisposable
+    public class DataFileCacheProvider : IDataFileCacheProvider
     {
         private const int CachePeriodBars = 10;
 
@@ -109,6 +110,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // handles text files
                 return new LocalFileSubscriptionStreamReader(filename, entryName);
             }
+        }
+
+        /// <summary>
+        /// Store the data in the cache. Not implementated in this instance of the IDataFileCacheProvider
+        /// </summary>
+        /// <param name="source">The source of the data, used as a key to retrieve data in the cache</param>
+        /// <param name="data">The data as a byte array</param>
+        public void Store(string source, byte[] data)
+        {
+            //
         }
 
         /// <summary>
