@@ -137,6 +137,11 @@ namespace QuantConnect.Scheduling
         /// <returns>A time rule that fires the specified number of minutes after the symbol's market open</returns>
         public ITimeRule AfterMarketOpen(Symbol symbol, double minutesAfterOpen = 0, bool extendedMarketOpen = false)
         {
+            if (minutesAfterOpen < 0)
+            {
+                throw new ArgumentException("The time after market open is negative. Please make sure it is a non-negative value", "minutesAfterOpen");
+            }
+
             var security = GetSecurity(symbol);
 
             var type = extendedMarketOpen ? "ExtendedMarketOpen" : "MarketOpen";
@@ -163,6 +168,11 @@ namespace QuantConnect.Scheduling
         /// <returns>A time rule that fires the specified number of minutes before the symbol's market close</returns>
         public ITimeRule BeforeMarketClose(Symbol symbol, double minutesBeforeClose = 0, bool extendedMarketClose = false)
         {
+            if (minutesBeforeClose < 0)
+            {
+                throw new ArgumentException("The time before market close is negative. Please make sure it is a non-negative value", "minutesBeforeClose");
+            }
+
             var security = GetSecurity(symbol);
 
             var type = extendedMarketClose ? "ExtendedMarketClose" : "MarketClose";
