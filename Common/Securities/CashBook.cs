@@ -21,6 +21,7 @@ using System.Linq;
 using System.Text;
 using QuantConnect.Data;
 using System.Collections.Concurrent;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Securities
 {
@@ -29,7 +30,6 @@ namespace QuantConnect.Securities
     /// </summary>
     public class CashBook : IDictionary<string, Cash>
     {
-
         /// <summary>
         /// Gets the base currency used
         /// </summary>
@@ -65,6 +65,7 @@ namespace QuantConnect.Securities
         {
             var cash = new Cash(symbol, quantity, conversionRate);
             _currencies.AddOrUpdate(symbol, cash);
+            Log.Trace(string.Format("CashBook.Add(): Cash book record has been updated - {0}", cash.ToString()));
         }
 
         /// <summary>
@@ -167,6 +168,7 @@ namespace QuantConnect.Securities
         public void Add(KeyValuePair<string, Cash> item)
         {
             _currencies.AddOrUpdate(item.Key, item.Value);
+            Log.Trace(string.Format("CashBook.Add(): Cash book record has been updated - {0}", item.Value.ToString()));
         }
 
         /// <summary>
@@ -177,6 +179,7 @@ namespace QuantConnect.Securities
         public void Add(string symbol, Cash value)
         {
             _currencies.AddOrUpdate(symbol, value);
+            Log.Trace(string.Format("CashBook.Add(): Cash book record has been updated - {0}", value.ToString()));
         }
 
         /// <summary>
@@ -193,8 +196,10 @@ namespace QuantConnect.Securities
         /// <param name="symbol">The symbolto be removed</param>
         public bool Remove(string symbol)
         {
-            Cash value;
-            return _currencies.TryRemove (symbol, out value);
+            Cash cash = null;
+            var removed = _currencies.TryRemove (symbol, out cash);
+            Log.Trace(string.Format("CashBook.Remove(): Cash book record has been removed for symbol {0} - {1}", symbol, cash != null ? cash.ToString() : "(failed to remove)"));
+            return removed;
         }
 
         /// <summary>
@@ -203,8 +208,10 @@ namespace QuantConnect.Securities
         /// <param name="item">Item.</param>
         public bool Remove(KeyValuePair<string, Cash> item)
         {
-            Cash value;
-            return _currencies.TryRemove(item.Key, out value);
+            Cash cash = null;
+            var removed = _currencies.TryRemove(item.Key, out cash);
+            Log.Trace(string.Format("CashBook.Remove(): Cash book record has been removed for symbol {0} - {1}", item.Key, cash != null ? cash.ToString() : "(failed to remove)"));
+            return removed;
         }
 
         /// <summary>
@@ -263,7 +270,11 @@ namespace QuantConnect.Securities
                 }
                 return cash;
             }
-            set { _currencies[symbol] = value; }
+            set
+            {
+                _currencies[symbol] = value;
+                Log.Trace(string.Format("CashBook.this[]: Cash book record has been updated - {0}", value.ToString()));
+            }
         }
 
         /// <summary>
