@@ -30,8 +30,8 @@ def AddUniverse(self, *args):
     addUniverse = super(self.__class__, self).AddUniverse
     
     if isinstance(args[0], str):
-        selector = Func[DateTime, IEnumerable[String]](args[1])
-        addUniverse(args[0], selector)
+        selector = Func[DateTime, IEnumerable[String]](args[2])
+        addUniverse(args[0], args[1], selector)
         return
 
     for arg in args:

@@ -19,12 +19,12 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using ImpromptuInterface;
-using Python.Runtime;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
-using QuantConnect.Algorithm.PythonWrappers;
+using Python.Runtime;
+using QuantConnect.Python.Wrappers;
+using QuantConnect.Util;
 
 namespace QuantConnect.AlgorithmFactory
 {
@@ -131,7 +131,6 @@ namespace QuantConnect.AlgorithmFactory
             return algorithmInstance != null;
         }
 
-
         /// <summary>
         /// Create a new instance of a python algorithm
         /// </summary>
@@ -142,25 +141,24 @@ namespace QuantConnect.AlgorithmFactory
         private bool TryCreatePythonAlgorithm(string assemblyPath, out IAlgorithm algorithmInstance, out string errorMessage)
         {
             algorithmInstance = null;
-            errorMessage = "";
+            errorMessage = string.Empty;
 
-            var algorithmName = Config.Get("algorithm-type-name", "main");
-            var algorithmPath = Config.Get("algorithm-path-python", "../../../Algorithm.Python/");
-            
+            var name = Config.Get("algorithm-type-name", "main");
+            var path = Config.Get("algorithm-path-python", "../../../Algorithm.Python/");
+            Environment.SetEnvironmentVariable("PYTHONPATH", Environment.CurrentDirectory);
+
             // Copies file to execution location
-            foreach (var file in new DirectoryInfo(algorithmPath).GetFiles("*.py"))
+            foreach (var file in new DirectoryInfo(path).GetFiles("*.py"))
             {
                 file.CopyTo(file.FullName.Replace(file.DirectoryName, Environment.CurrentDirectory), true);
             }
 
-            if (!File.Exists(algorithmName + ".py"))
+            if (!File.Exists(name + ".py"))
             {
-                errorMessage = "Loader.TryCreatePythonAlgorithm(): Unable to find py file: " + algorithmName + ".py";
+                errorMessage = "Loader.TryCreatePythonAlgorithm(): Unable to find py file: " + name + ".py";
                 return false;
             }
-            
-            Environment.SetEnvironmentVariable("PYTHONPATH", Environment.CurrentDirectory);
-            
+
             try
             {
                 // Initialize Python Engine
@@ -169,58 +167,32 @@ namespace QuantConnect.AlgorithmFactory
                     PythonEngine.Initialize();
                     PythonEngine.BeginAllowThreads();
                 }
-                
+
+                // Import Python module
                 using (Py.GIL())
                 {
-                    Log.Trace("Loader.TryCreatePythonAlgorithm(): Importing python module " + algorithmName);
+                    Log.Trace("Loader.TryCreatePythonAlgorithm(): Importing python module " + name);
+                    var module = Py.Import(name);
 
-                    var scope = Py.Import(algorithmName);
-                    if (scope == null)
+                    if (module == null)
                     {
-                        errorMessage = "Loader.TryCreatePythonAlgorithm(): Unable to import python module. Check for errors in the py file.";
-                        return false;
-                    }
-
-                    var baseClass = scope.GetAttr("QCAlgorithm");
-                    if (baseClass == null)
-                    {
-                        errorMessage = "Loader.TryCreatePythonAlgorithm(): Unable to find QCAlgorithm class in module.";
+                        errorMessage = "Loader.TryCreatePythonAlgorithm(): Unable to import python module " + name + ". Check for errors in the python scripts.";
                         return false;
                     }
 
                     Log.Trace("Loader.TryCreatePythonAlgorithm(): Creating IAlgorithm instance.");
-                    
-                    foreach (var name in scope.Dir())
-                    {
-                        var attr = scope.GetAttr(name.ToString());
 
-                        if (attr.IsSubclass(baseClass) && attr.Repr().Contains(algorithmName))
-                        {
-                            var addUniverse = Py.Import("qc_algorithm_helper").GetAttr("AddUniverse");
-                            attr.SetAttr("Add_Universe", addUniverse);
-
-                            algorithmInstance = Impromptu.ActLike<IAlgorithm>(attr.Invoke());
-                            break;
-                        }
-                    }
+                    algorithmInstance = new AlgorithmPythonWrapper(module);
+                    ObjectActivator.SetPythonModule(module);
                 }
-
-                if (algorithmInstance == null)
-                {
-                    errorMessage = "Loader.TryCreatePythonAlgorithm(): Unable to create IAlgorithm instance. ";
-                    return false;
-                }
-
-                // Wraps algorithm to prevent access violation
-                // All calls to python should be inside a "using (Py.GIL()) {/* Your code here */}" block.
-                algorithmInstance = new AlgorithmPythonWrapper(algorithmInstance);
             }
-            catch (Exception err)
+            catch (Exception e)
             {
-                Log.Error(err);
-                errorMessage = err.Message;
+                Log.Error(e);
+                errorMessage = "Loader.TryCreatePythonAlgorithm(): Unable to import python module " + name + ". " + e.Message;
             }
 
+            //Successful load.
             return algorithmInstance != null;
         }
 

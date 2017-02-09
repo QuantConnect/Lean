@@ -100,10 +100,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QCAlgorithm.Universe.cs" />
     <Compile Include="UniverseDefinitions.cs" />
-    <Compile Include="PythonWrappers\AlgorithmPythonWrapper.cs" />
-    <Compile Include="PythonWrappers\BenchmarkPythonWrapper.cs" />
-    <Compile Include="PythonWrappers\BrokerageModelPythonWrapper.cs" />
-    <Compile Include="PythonWrappers\HistoryProviderPythonWrapper.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Indicators\QuantConnect.Indicators.csproj">
