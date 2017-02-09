@@ -56,8 +56,11 @@ sed -i -e 's/4.5/4.0/' Algorithm.VisualBasic/QuantConnect.Algorithm.VisualBasic.
 
 On OSX, you will need to change the location from where projects look for pythonnet libraries:
 ```
+sed -i -e 's/UCS2/UCS4/' Common/QuantConnect.csproj
 sed -i -e 's/UCS2/UCS4/' Algorithm/QuantConnect.Algorithm.csproj
+sed -i -e 's/UCS2/UCS4/' Algorithm.Charp/QuantConnect.Algorithm.CSharp.csproj
 sed -i -e 's/UCS2/UCS4/' AlgorithmFactory/QuantConnect.AlgorithmFactory.csproj
+sed -i -e 's/UCS2/UCS4/' Tests/QuantConnect.Tests.csproj
 ```
 
 Open the project in Xamarin Studio, then in the menu bar, click `Project > Update NuGet Packages`. You should also run `nuget install MathNet.Filtering -pre` to install the MathNet library. 
@@ -101,8 +104,11 @@ sed -i 's/4.5/4.0/' Algorithm.VisualBasic/QuantConnect.Algorithm.VisualBasic.vbp
 
 Like OSX, on Linux, you will need to change the location from where projects look for pythonnet libraries:
 ```
+sed -i -e 's/UCS2/UCS4/' Common/QuantConnect.csproj
 sed -i -e 's/UCS2/UCS4/' Algorithm/QuantConnect.Algorithm.csproj
+sed -i -e 's/UCS2/UCS4/' Algorithm.Charp/QuantConnect.Algorithm.CSharp.csproj
 sed -i -e 's/UCS2/UCS4/' AlgorithmFactory/QuantConnect.AlgorithmFactory.csproj
+sed -i -e 's/UCS2/UCS4/' Tests/QuantConnect.Tests.csproj
 ```
 
 Restore NuGet packages then compile:

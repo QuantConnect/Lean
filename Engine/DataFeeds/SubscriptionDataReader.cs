@@ -163,7 +163,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             //Create an instance of the "Type":
-            var userObj = objectActivator.Invoke(new object[] {});
+            var userObj = objectActivator.Invoke(new object[] { config.Type });
             _dataFactory = userObj as BaseData;
 
             //If its quandl set the access token in data factory:
