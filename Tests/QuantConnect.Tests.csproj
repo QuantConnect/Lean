@@ -233,6 +233,7 @@
     <Compile Include="Engine\DataFeeds\TimeSliceTests.cs" />
     <Compile Include="Engine\DataFeeds\Transport\LocalFileSubscriptionStreamReaderTests.cs" />
     <Compile Include="Engine\DataFeeds\ZipEntryNameSubsciptionFactoryTests.cs" />
+    <Compile Include="Engine\DataProviders\DefaultDataProviderTests.cs" />
     <Compile Include="Engine\DefaultBrokerageMessageHandler.cs" />
     <Compile Include="Engine\FactorFileTests.cs" />
     <Compile Include="Engine\RealTime\ScheduledEventTests.cs" />
@@ -369,6 +370,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Adapters\" />
+    <Folder Include="Engine\DataCacheProviders\" />
     <Folder Include="Tasks\" />
     <Folder Include="UserInterface\" />
   </ItemGroup>

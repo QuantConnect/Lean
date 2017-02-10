@@ -36,7 +36,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly DateTime _date;
         private readonly SubscriptionDataConfig _config;
         private readonly IDataCacheProvider _dataCacheProvider;
-        private readonly IDataFileProvider _dataFileProvider;
+        private readonly IDataProvider _dataProvider;
 
         /// <summary>
         /// Event fired when the specified source is considered invalid, this may
@@ -60,14 +60,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes a new instance of the <see cref="TextSubscriptionDataSourceReader"/> class
         /// </summary>
-        /// <param name="dataFileProvider">Attempts to fetch remote file provider</param>
+        /// <param name="dataProvider">Attempts to fetch remote file provider</param>
         /// <param name="dataCacheProvider">This provider caches files if needed</param>
         /// <param name="config">The subscription's configuration</param>
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
-        public TextSubscriptionDataSourceReader(IDataFileProvider dataFileProvider, IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public TextSubscriptionDataSourceReader(IDataProvider dataProvider, IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            _dataFileProvider = dataFileProvider;
+            _dataProvider = dataProvider;
             _dataCacheProvider = dataCacheProvider;
             _date = date;
             _config = config;
@@ -180,23 +180,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         private IStreamReader HandleLocalFileSource(SubscriptionDataSource source)
         {
-            string entryName = null; // default to all entries
-            var file = source.Source;
-            var hashIndex = source.Source.LastIndexOf("#", StringComparison.Ordinal);
-            if (hashIndex != -1)
-            {
-                entryName = source.Source.Substring(hashIndex + 1);
-                file = source.Source.Substring(0, hashIndex);
-            }
-
-            if (!File.Exists(file) && !_dataFileProvider.Fetch(_config.Symbol, _date, _config.Resolution, _config.TickType))
-            {
-                OnInvalidSource(source, new FileNotFoundException("The specified file was not found", file));
-                return null;
-            }
-
             // handles zip or text files
-            return new LocalFileSubscriptionStreamReader(_dataCacheProvider, file, entryName);
+            return new LocalFileSubscriptionStreamReader(_dataCacheProvider, source.Source);
         }
 
         /// <summary>

@@ -14,25 +14,35 @@
 */
 
 using System;
-using System.ComponentModel.Composition;
+using System.IO;
+using Ionic.Zip;
+using QuantConnect.Interfaces;
 
-namespace QuantConnect.Interfaces
+namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// Fetches a remote file for a security.
-    /// Must save the file to Globals.DataFolder.
+    /// Default file provider functionality that does not attempt to retrieve any data
     /// </summary>
-    [InheritedExport(typeof(IDataFileProvider))]
-    public interface IDataFileProvider
+    public class DefaultDataProvider : IDataProvider, IDisposable
     {
         /// <summary>
-        /// Gets and downloads the remote file
+        /// Retrieves data from disc to be used in an algorithm
         /// </summary>
-        /// <param name="symbol"><see cref="Symbol"/> of the security</param>
-        /// <param name="resolution"><see cref="Resolution"/> of the data requested</param>
-        /// <param name="date">DateTime of the data requested</param>
-        /// <param name="tickType"><see cref="TickType"/> of the security</param>
-        /// <returns>Bool indicating whether the remote file was fetched correctly</returns>
-        bool Fetch(Symbol symbol, DateTime date, Resolution resolution, TickType tickType);
+        /// <param name="key">A string representing where the data is stored</param>
+        /// <returns>A <see cref="Stream"/> of the data requested</returns>
+        public Stream Fetch(string key)
+        {
+            if (!File.Exists(key))
+            {
+                return null;
+            }
+
+            return new FileStream(key, FileMode.Open, FileAccess.Read);
+        }
+
+        public void Dispose()
+        {
+            //
+        }
     }
 }

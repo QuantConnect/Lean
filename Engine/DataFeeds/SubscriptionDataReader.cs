@@ -92,7 +92,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         // used when emitting aux data from within while loop
         private bool _emittedAuxilliaryData;
         private BaseData _lastInstanceBeforeAuxilliaryData;
-        private readonly IDataFileProvider _dataFileProvider;
+        private readonly IDataProvider _dataProvider;
         private readonly IDataCacheProvider _dataCacheProvider;
 
         /// <summary>
@@ -121,7 +121,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="resultHandler">Result handler used to push error messages and perform sampling on skipped days</param>
         /// <param name="mapFileResolver">Used for resolving the correct map files</param>
         /// <param name="factorFileProvider">Used for getting factor files</param>
-        /// <param name="dataFileProvider">Used for getting files not present on disk</param>
+        /// <param name="dataProvider">Used for getting files not present on disk</param>
         /// <param name="dataCacheProvider">Used for caching files</param>
         /// <param name="tradeableDates">Defines the dates for which we'll request data, in order, in the security's exchange time zone</param>
         /// <param name="isLiveMode">True if we're in live mode, false otherwise</param>
@@ -132,7 +132,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IResultHandler resultHandler,
             MapFileResolver mapFileResolver,
             IFactorFileProvider factorFileProvider,
-            IDataFileProvider dataFileProvider,
+            IDataProvider dataProvider,
             IEnumerable<DateTime> tradeableDates,
             bool isLiveMode,
             IDataCacheProvider dataCacheProvider = null,
@@ -146,7 +146,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             //Save Start and End Dates:
             _periodStart = periodStart;
             _periodFinish = periodFinish;
-            _dataFileProvider = dataFileProvider;
+            _dataProvider = dataProvider;
             _dataCacheProvider = dataCacheProvider;
 
             //Save access to securities
@@ -427,7 +427,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private ISubscriptionDataSourceReader CreateSubscriptionFactory(SubscriptionDataSource source)
         {
-            var factory = SubscriptionDataSourceReader.ForSource(source, _dataFileProvider, _dataCacheProvider, _config, _tradeableDates.Current, _isLiveMode);
+            var factory = SubscriptionDataSourceReader.ForSource(source, _dataProvider, _dataCacheProvider, _config, _tradeableDates.Current, _isLiveMode);
             AttachEventHandlers(factory, source);
             return factory;
         }

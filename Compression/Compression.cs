@@ -528,57 +528,6 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Streams a local zip file using a streamreader.
-        /// Important: the caller must call Dispose() on the returned ZipFile instance.
-        /// </summary>
-        /// <param name="filename">Location of the original zip file</param>
-        /// <param name="zipEntryName">The zip entry name to open a reader for. Specify null to access the first entry</param>
-        /// <param name="zip">The ZipFile instance to be returned to the caller</param>
-        /// <returns>Stream reader of the first file contents in the zip file</returns>
-        public static Stream UnzipBaseStream(string filename, string zipEntryName, out ZipFile zip)
-        {
-            Stream stream = null;
-            zip = null;
-
-            try
-            {
-                if (File.Exists(filename))
-                {
-                    try
-                    {
-                        zip = new ZipFile(filename);
-                        var entry = zip.FirstOrDefault(x => zipEntryName == null || string.Compare(x.FileName, zipEntryName, StringComparison.OrdinalIgnoreCase) == 0);
-                        if (entry == null)
-                        {
-                            // Unable to locate zip entry 
-                            return null;
-                        }
-
-                        stream = entry.OpenReader();
-                    }
-                    catch (Exception err)
-                    {
-                        Log.Error(err, "Inner try/catch");
-                        if (zip != null) zip.Dispose();
-                        if (stream != null) stream.Close();
-                    }
-                }
-                else
-                {
-                    Log.Error("Data.UnZip(2): File doesn't exist: " + filename);
-                }
-            }
-            catch (Exception err)
-            {
-                Log.Error(err, "File: " + filename);
-            }
-
-            return stream;
-        }
-
-
-
-        /// <summary>
         /// Streams the unzipped file as key value pairs of file name to file contents.
         /// NOTE: When the returned enumerable finishes enumerating, the zip stream will be
         /// closed rendering all key value pair Value properties unaccessible. Ideally this
@@ -680,7 +629,7 @@ namespace QuantConnect
         /// <summary>
         /// Unzip a local file and return its contents via streamreader:
         /// </summary>
-        public static StreamReader UnzipStream(Stream zipstream)
+        public static StreamReader UnzipStreamToStreamReader(Stream zipstream)
         {
             StreamReader reader = null;
             try
@@ -709,6 +658,33 @@ namespace QuantConnect
             }
 
             return reader;
+        } // End UnZip
+
+        /// <summary>
+        /// Unzip a local file and return its contents via streamreader:
+        /// </summary>
+        public static Stream UnzipStream(Stream zipstream)
+        {
+            try
+            {
+                //If file exists, open a zip stream for it.
+                using (var zipStream = new ZipInputStream(zipstream))
+                {
+                    //Read the file entry into buffer:
+                    var entry = zipStream.GetNextEntry();
+                    var buffer = new byte[entry.Size];
+                    zipStream.Read(buffer, 0, (int)entry.Size);
+
+                    //return a memory stream.
+                    return new MemoryStream(buffer);
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+
+            return null;
         } // End UnZip
 
         /// <summary>

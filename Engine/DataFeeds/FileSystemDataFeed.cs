@@ -46,7 +46,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private Ref<TimeSpan> _fillForwardResolution;
         private IMapFileProvider _mapFileProvider;
         private IFactorFileProvider _factorFileProvider;
-        private IDataFileProvider _dataFileProvider;
+        private IDataProvider _dataProvider;
         private SubscriptionCollection _subscriptions;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private UniverseSelection _universeSelection;
@@ -69,17 +69,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes the data feed for the specified job and algorithm
         /// </summary>
-        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, IDataFileProvider dataFileProvider)
+        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, IDataProvider dataProvider)
         {
             _algorithm = algorithm;
             _resultHandler = resultHandler;
             _mapFileProvider = mapFileProvider;
             _factorFileProvider = factorFileProvider;
-            _dataFileProvider = dataFileProvider;
+            _dataProvider = dataProvider;
             _subscriptions = new SubscriptionCollection();
             _universeSelection = new UniverseSelection(this, algorithm, job.Controls);
             _cancellationTokenSource = new CancellationTokenSource();
-            _subscriptionfactory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(_resultHandler, _mapFileProvider, _factorFileProvider, _dataFileProvider, false, true);
+            _subscriptionfactory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(_resultHandler, _mapFileProvider, _factorFileProvider, _dataProvider, false, true);
 
             IsActive = true;
             var threadCount = Math.Max(1, Math.Min(4, Environment.ProcessorCount - 3));
@@ -139,7 +139,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // ReSharper disable once PossibleMultipleEnumeration
             var enumeratorFactory = GetEnumeratorFactory(request);
-            var enumerator = enumeratorFactory.CreateEnumerator(request, _dataFileProvider);
+            var enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
             enumerator = ConfigureEnumerator(request, false, enumerator);
 
             var enqueueable = new EnqueueableEnumerator<BaseData>(true);
@@ -322,7 +322,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var config = request.Configuration;
 
             // define our data enumerator
-            var enumerator = GetEnumeratorFactory(request).CreateEnumerator(request, _dataFileProvider);
+            var enumerator = GetEnumeratorFactory(request).CreateEnumerator(request, _dataProvider);
 
             var firstLoopCount = 5;
             var lowerThreshold = GetLowerThreshold(config.Resolution);

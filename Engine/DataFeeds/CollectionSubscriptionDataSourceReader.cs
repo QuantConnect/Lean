@@ -33,7 +33,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly bool _isLiveMode;
         private readonly BaseData _factory;
         private readonly SubscriptionDataConfig _config;
-        private IDataFileProvider _dataFileProvider;
+        private IDataProvider _dataProvider;
         private IDataCacheProvider _dataCacheProvider;
 
         /// <summary>
@@ -42,9 +42,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="config">The subscription's configuration</param>
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
-        public CollectionSubscriptionDataSourceReader(IDataFileProvider dataFileProvider, IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public CollectionSubscriptionDataSourceReader(IDataProvider dataProvider, IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            _dataFileProvider = dataFileProvider;
+            _dataProvider = dataProvider;
             _dataCacheProvider = dataCacheProvider;
             _date = date;
             _config = config;

@@ -14,21 +14,23 @@
 */
 
 using System;
-using QuantConnect.Interfaces;
+using System.ComponentModel.Composition;
+using System.IO;
 
-namespace QuantConnect.Lean.Engine.DataFeeds
+namespace QuantConnect.Interfaces
 {
     /// <summary>
-    /// Default file provider functionality that does not attempt to retrieve any data
+    /// Fetches a remote file for a security.
+    /// Must save the file to Globals.DataFolder.
     /// </summary>
-    public class DefaultDataFileProvider : IDataFileProvider
+    [InheritedExport(typeof(IDataProvider))]
+    public interface IDataProvider
     {
         /// <summary>
-        /// Does not attempt to retrieve any data
+        /// Retrieves data to be used in an algorithm
         /// </summary>
-        public bool Fetch(Symbol symbol, DateTime date, Resolution resolution, TickType tickType)
-        {
-            return false;
-        }
+        /// <param name="key">A string representing where the data is stored</param>
+        /// <returns>A <see cref="Stream"/> of the data requested</returns>
+        Stream Fetch(string key);
     }
 }

@@ -14,9 +14,7 @@
 */
 
 using System;
-using QuantConnect.Data;
 using System.IO;
-using QuantConnect.Lean.Engine.DataFeeds.Transport;
 using System.Collections.Concurrent;
 using QuantConnect.Logging;
 using System.Linq;
@@ -31,29 +29,39 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <summary>
     /// File provider implements optimized zip archives caching facility. Cache is thread safe.
     /// </summary>
-    public class DataCacheProvider : IDataCacheProvider
+    public class ZipDataCacheProvider : IDataCacheProvider
     {
         private const int CachePeriodBars = 10;
 
         // ZipArchive cache used by the class
         private readonly ConcurrentDictionary<string, Lazy<CacheEntry>> _zipFileCache = new ConcurrentDictionary<string, Lazy<CacheEntry>>();
         private DateTime _lastDate = DateTime.MinValue;
+        private readonly IDataProvider _dataProvider;
+
+        /// <summary>
+        /// Constructor that sets the <see cref="IDataProvider"/> used to retrieve data
+        /// </summary>
+        public ZipDataCacheProvider(IDataProvider dataProvider)
+        {
+            _dataProvider = dataProvider;
+        }
 
         /// <summary>
         /// Does not attempt to retrieve any data
         /// </summary>
-        public Stream Fetch(string source, string entryName)
+        public Stream Fetch(string key)
         {
-            //entryName = null; // default to all entries
-            var filename = source;
-            var hashIndex = source.LastIndexOf("#", StringComparison.Ordinal);
+            string entryName = null; // default to all entries
+            var filename = key;
+            var hashIndex = key.LastIndexOf("#", StringComparison.Ordinal);
             if (hashIndex != -1)
             {
-                entryName = source.Substring(hashIndex + 1);
-                filename = source.Substring(0, hashIndex);
+                entryName = key.Substring(hashIndex + 1);
+                filename = key.Substring(0, hashIndex);
             }
 
-            if (!File.Exists(filename))
+            var dataStream = _dataProvider.Fetch(filename);
+            if (dataStream == null)
             {
                 return null;
             }
@@ -61,64 +69,50 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // handles zip files
             if (filename.GetExtension() == ".zip")
             {
-                Stream reader = null;
+                Stream stream = null;
 
                 var date = DateTime.Now.Date.AddSeconds(-CachePeriodBars);
-                //// cleaning the outdated cache items
-                if (_lastDate == DateTime.MinValue || _lastDate < date)
-                {
-                    // clean all items that that are older than _cachePeriodBars bars than the current date
-                    foreach (var zip in _zipFileCache.Where(x => x.Value.Value.Item1 < date))
-                    {
-                        // removing it from the cache
-                        Lazy<CacheEntry> removed;
-                        if (_zipFileCache.TryRemove(zip.Key, out removed))
-                        {
-                            // disposing zip archive
-                            removed.Value.Item2.Dispose();
-                        }
-                    }
 
-                    _lastDate = date.Date;
-                }
+                CleanCache(date);
 
                 try
                 {
                     _zipFileCache.AddOrUpdate(filename,
                         x =>
                         {
-                            var newItem = Tuple.Create(date.Date, new ZipFile(filename));
-                            reader = CreateStream(newItem.Item2, entryName);
+                            var zipFile = ZipFile.Read(dataStream);
+                            var newItem = Tuple.Create(date.Date, zipFile);
+                            stream = CreateStream(newItem.Item2, entryName);
                             return newItem;
                         },
                         (x, existingEntry) =>
                         {
-                            reader = CreateStream(existingEntry.Item2, entryName);
+                            stream = CreateStream(existingEntry.Item2, entryName);
                             return existingEntry;
                         });
 
-                    return reader;
+                    return stream;
                 }
                 catch (Exception err)
                 {
                     Log.Error(err, "Inner try/catch");
-                    if (reader != null) reader.Dispose();
+                    if (stream != null) stream.Dispose();
                     return null;
                 }
             }
             else
             {
                 // handles text files
-                return new FileStream(source, FileMode.Open, FileAccess.Read);
+                return dataStream;
             }
         }
 
         /// <summary>
-        /// Store the data in the cache. Not implementated in this instance of the IDataCacheProvider
+        /// Store the data in the cache. Not implemented in this instance of the IDataCacheProvider
         /// </summary>
-        /// <param name="source">The source of the data, used as a key to retrieve data in the cache</param>
+        /// <param name="key">The source of the data, used as a key to retrieve data in the cache</param>
         /// <param name="data">The data as a byte array</param>
-        public void Store(string source, byte[] data)
+        public void Store(string key, byte[] data)
         {
             //
         }
@@ -137,6 +131,37 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _zipFileCache.Clear();
         }
 
+        /// <summary>
+        /// Remove items in the cache that are older than the cutoff date
+        /// </summary>
+        /// <param name="date">The cutoff date</param>
+        private void CleanCache(DateTime date)
+        {
+            // cleaning the outdated cache items
+            if (_lastDate == DateTime.MinValue || _lastDate < date)
+            {
+                // clean all items that that are older than _cachePeriodBars bars than the current date
+                foreach (var zip in _zipFileCache.Where(x => x.Value.Value.Item1 < date))
+                {
+                    // removing it from the cache
+                    Lazy<CacheEntry> removed;
+                    if (_zipFileCache.TryRemove(zip.Key, out removed))
+                    {
+                        // disposing zip archive
+                        removed.Value.Item2.Dispose();
+                    }
+                }
+
+                _lastDate = date.Date;
+            }
+        }
+
+        /// <summary>
+        /// Create a stream of a specific ZipEntry
+        /// </summary>
+        /// <param name="zipFile">The zipFile containing the zipEntry</param>
+        /// <param name="entryName">The name of the entry</param>
+        /// <returns>A <see cref="Stream"/> of the appropriate zip entry</returns>
         private Stream CreateStream(ZipFile zipFile, string entryName)
         {
             var entry = zipFile.Entries.FirstOrDefault(x => entryName == null || string.Compare(x.FileName, entryName, StringComparison.OrdinalIgnoreCase) == 0);
@@ -152,21 +177,3 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
     }
 }
-
-//// cleaning the outdated cache items
-//if (_lastDate == DateTime.MinValue || _lastDate < date.Date)
-//{
-//    // clean all items that that are older than _cachePeriodBars bars than the current date
-//    foreach (var zip in _zipFileCache.Where(x => x.Value.Value.Item1 < date.Date.AddDays(-CachePeriodBars)))
-//    {
-//        // removing it from the cache
-//        Lazy<CacheEntry> removed;
-//        if (_zipFileCache.TryRemove(zip.Key, out removed))
-//        {
-//            // disposing zip archive
-//            removed.Value.Item2.Dispose();
-//        }
-//    }
-
-//    _lastDate = date.Date;
-//}

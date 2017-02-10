@@ -28,16 +28,15 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Fetch data from the cache
         /// </summary>
-        /// <param name="source">The <see cref="SubscriptionDataSource"/> of the requested data</param>
-        /// <param name="date"></param>
-        /// <returns>An <see cref="IStreamReader"/> that has the data from the cache preloaded</returns>
-        Stream Fetch(string source, string entryName);
+        /// <param name="key">A string representing the key of the cached data</param>
+        /// <returns>An <see cref="Stream"/> of the cached data</returns>
+        Stream Fetch(string key);
 
         /// <summary>
         /// Store the data in the cache
         /// </summary>
-        /// <param name="source">The source of the data, used as a key to retrieve data in the cache</param>
-        /// <param name="data">The data as a byte array</param>
-        void Store(string source, byte[] data);
+        /// <param name="key">The source of the data, used as a key to retrieve data in the cache</param>
+        /// <param name="data">The data to cache as a byte array</param>
+        void Store(string key, byte[] data);
     }
 }
