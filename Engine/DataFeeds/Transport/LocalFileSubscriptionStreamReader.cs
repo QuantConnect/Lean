@@ -31,7 +31,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
     {
         private StreamReader _streamReader;
         private readonly ZipFile _zipFile;
-        private IDataFileCacheProvider _dataFileCacheProvider;
+        private IDataCacheProvider _dataCacheProvider;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LocalFileSubscriptionStreamReader"/> class.
@@ -39,15 +39,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// <param name="source">The local file to be read</param>
         /// <param name="entryName">Specifies the zip entry to be opened. Leave null if not applicable,
         /// or to open the first zip entry found regardless of name</param>
-        public LocalFileSubscriptionStreamReader(IDataFileCacheProvider dataFileCacheProvider, string source, DateTime date, string entryName = null)
+        public LocalFileSubscriptionStreamReader(IDataCacheProvider dataCacheProvider, string source, string entryName = null)
         {
-            // unzip if necessary
-            //var stream = source.GetExtension() == ".zip"
-            //    ? Compression.UnzipBaseStream(source, entryName)
-            //    : new FileStream(source, FileMode.Open, FileAccess.Read);
-            //_streamReader = new StreamReader(stream);
+            var stream = dataCacheProvider.Fetch(source, entryName);
 
-            _streamReader = new StreamReader(dataFileCacheProvider.Fetch(source, date, entryName));
+            if (stream != null)
+            {
+                _streamReader = new StreamReader(stream);
+            }
         }
 
         /// <summary>
@@ -57,20 +56,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// <param name="entryName">Specifies the zip entry to be opened. Leave null if not applicable,
         /// <param name="startingPosition">The starting position in the local file to be read</param>
         /// or to open the first zip entry found regardless of name</param>
-        public LocalFileSubscriptionStreamReader(IDataFileCacheProvider dataFileCacheProvider, string source, string entryName, DateTime date, long startingPosition)
+        public LocalFileSubscriptionStreamReader(IDataCacheProvider dataCacheProvider, string source, string entryName, long startingPosition)
         {
-            _dataFileCacheProvider = dataFileCacheProvider;
+            var stream = dataCacheProvider.Fetch(source, entryName);
 
-            // unzip if necessary
-            _streamReader = source.GetExtension() == ".zip"
-                ? Compression.Unzip(source, entryName, out _zipFile)
-                : new StreamReader(source);
-
-            if (startingPosition != 0)
+            if (stream != null)
             {
-                _streamReader.BaseStream.Seek(startingPosition, SeekOrigin.Begin);
-            }
+                _streamReader = new StreamReader(stream);
 
+                if (startingPosition != 0)
+                {
+                    _streamReader.BaseStream.Seek(startingPosition, SeekOrigin.Begin);
+                }
+            }
         }
 
         /// <summary>

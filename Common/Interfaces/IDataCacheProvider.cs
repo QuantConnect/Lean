@@ -23,18 +23,15 @@ namespace QuantConnect.Interfaces
     /// <summary>
     /// Defines a cache for data
     /// </summary>
-    public interface IDataFileCacheProvider : IDisposable
+    public interface IDataCacheProvider : IDisposable
     {
         /// <summary>
         /// Fetch data from the cache
         /// </summary>
-        /// <param name="symbol">The Symbol of the requested data</param>
         /// <param name="source">The <see cref="SubscriptionDataSource"/> of the requested data</param>
         /// <param name="date"></param>
-        /// <param name="resolution">The resolution of the data requested</param>
-        /// <param name="tickType">The <see cref="TickType"/> of the data requested from the cache</param>
         /// <returns>An <see cref="IStreamReader"/> that has the data from the cache preloaded</returns>
-        Stream Fetch(string source, DateTime date, string entryName);
+        Stream Fetch(string source, string entryName);
 
         /// <summary>
         /// Store the data in the cache

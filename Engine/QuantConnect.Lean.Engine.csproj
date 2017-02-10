@@ -175,7 +175,7 @@
     </Compile>
     <Compile Include="AlgorithmManager.cs" />
     <Compile Include="DataFeeds\ApiDataFileProvider.cs" />
-    <Compile Include="DataFeeds\DefaultDataFileCacheProvider.cs" />
+    <Compile Include="DataFeeds\DefaultDataCacheProvider.cs" />
     <Compile Include="DataFeeds\Enumerators\BaseDataCollectionAggregatorEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\EnqueueableEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\BaseDataCollectionSubscriptionEnumeratorFactory.cs" />
@@ -229,7 +229,7 @@
     <Compile Include="DataFeeds\Transport\RestSubscriptionStreamReader.cs" />
     <Compile Include="DataFeeds\UniverseSelection.cs" />
     <Compile Include="DataFeeds\UpdateData.cs" />
-    <Compile Include="DataFeeds\DataFileCacheProvider.cs" />
+    <Compile Include="DataFeeds\DataCacheProvider.cs" />
     <Compile Include="DataFeeds\ZipEntryNameSubscriptionDataSourceReader.cs" />
     <Compile Include="HistoricalData\SubscriptionDataReaderHistoryProvider.cs" />
     <Compile Include="LeanEngineAlgorithmHandlers.cs" />

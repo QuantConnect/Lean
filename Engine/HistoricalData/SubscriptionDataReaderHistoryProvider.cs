@@ -48,7 +48,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         private IMapFileProvider _mapFileProvider;
         private IFactorFileProvider _factorFileProvider;
         private IDataFileProvider _dataFileProvider;
-        private IDataFileCacheProvider _dataFileCacheProvider;
+        private IDataCacheProvider _dataCacheProvider;
 
         /// <summary>
         /// Gets the total number of data points emitted by this history provider
@@ -66,13 +66,13 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <param name="factorFileProvider">Provider used to get factor files to handle equity price scaling</param>
         /// <param name="dataFileProvider">Provider used to get data when it is not present on disk</param>
         /// <param name="statusUpdate">Function used to send status updates</param>
-        /// <param name="dataFileCacheProvider">Provider used to cache history data files</param>
-        public void Initialize(AlgorithmNodePacket job, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, IDataFileProvider dataFileProvider, Action<int> statusUpdate, IDataFileCacheProvider dataFileCacheProvider = null)
+        /// <param name="dataCacheProvider">Provider used to cache history data files</param>
+        public void Initialize(AlgorithmNodePacket job, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, IDataFileProvider dataFileProvider, Action<int> statusUpdate, IDataCacheProvider dataCacheProvider = null)
         {
             _mapFileProvider = mapFileProvider;
             _factorFileProvider = factorFileProvider;
             _dataFileProvider = dataFileProvider;
-            _dataFileCacheProvider = dataFileCacheProvider;
+            _dataCacheProvider = dataCacheProvider;
         }
 
         /// <summary>
@@ -129,7 +129,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 _dataFileProvider,
                 Time.EachTradeableDay(request.ExchangeHours, start, end), 
                 false,
-                _dataFileCacheProvider,
+                _dataCacheProvider,
                 false
                 );
 

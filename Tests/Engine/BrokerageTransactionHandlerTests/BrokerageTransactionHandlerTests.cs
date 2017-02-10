@@ -44,7 +44,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         public void Initialize(AlgorithmNodePacket job, IMapFileProvider mapFileProvider,
             IFactorFileProvider factorFileProvider,
             IDataFileProvider dataFileProvider, Action<int> statusUpdate,
-            IDataFileCacheProvider dataFileCacheProvider = null)
+            IDataCacheProvider dataCacheProvider = null)
         {
         }
 

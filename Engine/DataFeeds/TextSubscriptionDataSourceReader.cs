@@ -35,7 +35,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly BaseData _factory;
         private readonly DateTime _date;
         private readonly SubscriptionDataConfig _config;
-        private readonly IDataFileCacheProvider _dataFileCacheProvider;
+        private readonly IDataCacheProvider _dataCacheProvider;
         private readonly IDataFileProvider _dataFileProvider;
 
         /// <summary>
@@ -61,14 +61,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Initializes a new instance of the <see cref="TextSubscriptionDataSourceReader"/> class
         /// </summary>
         /// <param name="dataFileProvider">Attempts to fetch remote file provider</param>
-        /// <param name="dataFileCacheProvider">This provider caches files if needed</param>
+        /// <param name="dataCacheProvider">This provider caches files if needed</param>
         /// <param name="config">The subscription's configuration</param>
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
-        public TextSubscriptionDataSourceReader(IDataFileProvider dataFileProvider, IDataFileCacheProvider dataFileCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public TextSubscriptionDataSourceReader(IDataFileProvider dataFileProvider, IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             _dataFileProvider = dataFileProvider;
-            _dataFileCacheProvider = dataFileCacheProvider;
+            _dataCacheProvider = dataCacheProvider;
             _date = date;
             _config = config;
             _isLiveMode = isLiveMode;
@@ -196,7 +196,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // handles zip or text files
-            return new LocalFileSubscriptionStreamReader(_dataFileCacheProvider, file, _date, entryName);
+            return new LocalFileSubscriptionStreamReader(_dataCacheProvider, file, entryName);
         }
 
         /// <summary>
@@ -214,7 +214,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             try
             {
                 // this will fire up a web client in order to download the 'source' file to the cache
-                return new RemoteFileSubscriptionStreamReader(_dataFileCacheProvider, source.Source, Globals.Cache, _date);
+                return new RemoteFileSubscriptionStreamReader(_dataCacheProvider, source.Source, Globals.Cache, _date);
             }
             catch (Exception err)
             {

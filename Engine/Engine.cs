@@ -23,6 +23,7 @@ using System.Threading;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
@@ -132,7 +133,8 @@ namespace QuantConnect.Lean.Engine
                             _algorithmHandlers.Results.SendStatusUpdate(AlgorithmStatus.History, 
                                 string.Format("Processing history {0}%...", progress));
                         }
-                    });
+                    }, new DefaultDataCacheProvider());
+
                     algorithm.HistoryProvider = historyProvider;
 
                     // initialize the default brokerage message handler

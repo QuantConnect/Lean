@@ -257,7 +257,7 @@
     <Compile Include="Interfaces\IApi.cs" />
     <Compile Include="Interfaces\IBrokerage.cs" />
     <Compile Include="Interfaces\IBrokerageFactory.cs" />
-    <Compile Include="Interfaces\IDataFileCacheProvider.cs" />
+    <Compile Include="Interfaces\IDataCacheProvider.cs" />
     <Compile Include="Interfaces\IDataQueueUniverseProvider.cs" />
     <Compile Include="Interfaces\ICommandQueueHandler.cs" />
     <Compile Include="Interfaces\IDataQueueHandler.cs" />

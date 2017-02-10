@@ -30,7 +30,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     /// </summary>
     public class BaseDataSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory
     {
-        private readonly DefaultDataFileCacheProvider _dataFileCacheProvider = new DefaultDataFileCacheProvider();
+        private readonly DefaultDataCacheProvider _dataCacheProvider = new DefaultDataCacheProvider();
 
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
         private readonly MapFileResolver _mapFileResolver;
@@ -74,7 +74,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 request.Configuration.MappedSymbol = GetMappedSymbol(request, date);
                 var source = sourceFactory.GetSource(request.Configuration, date, false);
                 request.Configuration.MappedSymbol = currentSymbol;
-                var factory = SubscriptionDataSourceReader.ForSource(source, dataFileProvider, _dataFileCacheProvider, request.Configuration, date, false);
+                var factory = SubscriptionDataSourceReader.ForSource(source, dataFileProvider, _dataCacheProvider, request.Configuration, date, false);
                 var entriesForDate = factory.Read(source);
                 foreach(var entry in entriesForDate)
                 {

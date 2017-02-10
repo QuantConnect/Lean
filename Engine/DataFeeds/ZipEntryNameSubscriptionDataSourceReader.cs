@@ -32,7 +32,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly bool _isLiveMode;
         private readonly BaseData _factory;
         private readonly IDataFileProvider _dataFileProvider;
-        private IDataFileCacheProvider _dataFileCacheProvider;
+        private IDataCacheProvider _dataCacheProvider;
 
         /// <summary>
         /// Event fired when the specified source is considered invalid, this may
@@ -47,10 +47,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="config">The subscription's configuration</param>
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
-        public ZipEntryNameSubscriptionDataSourceReader(IDataFileProvider dataFileProvider, IDataFileCacheProvider dataFileCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public ZipEntryNameSubscriptionDataSourceReader(IDataFileProvider dataFileProvider, IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             _dataFileProvider = dataFileProvider;
-            _dataFileCacheProvider = dataFileCacheProvider;
+            _dataCacheProvider = dataCacheProvider;
             _config = config;
             _date = date;
             _isLiveMode = isLiveMode;

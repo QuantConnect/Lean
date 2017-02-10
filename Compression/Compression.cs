@@ -535,10 +535,10 @@ namespace QuantConnect
         /// <param name="zipEntryName">The zip entry name to open a reader for. Specify null to access the first entry</param>
         /// <param name="zip">The ZipFile instance to be returned to the caller</param>
         /// <returns>Stream reader of the first file contents in the zip file</returns>
-        public static Stream UnzipBaseStream(string filename, string zipEntryName)
+        public static Stream UnzipBaseStream(string filename, string zipEntryName, out ZipFile zip)
         {
             Stream stream = null;
-            ZipFile zip = null;
+            zip = null;
 
             try
             {

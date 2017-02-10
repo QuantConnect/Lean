@@ -33,7 +33,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     /// </summary>
     public class FineFundamentalSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory
     {
-        private readonly DefaultDataFileCacheProvider _dataFileCacheProvider = new DefaultDataFileCacheProvider();
+        private readonly DefaultDataCacheProvider _dataCacheProvider = new DefaultDataCacheProvider();
 
         private readonly bool _isLiveMode;
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
@@ -68,7 +68,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 from date in tradableDays
 
                 let fineFundamentalSource = GetSource(fineFundamental, fineFundamentalConfiguration, date)
-                let fineFundamentalFactory = SubscriptionDataSourceReader.ForSource(fineFundamentalSource, dataFileProvider, _dataFileCacheProvider, fineFundamentalConfiguration, date, _isLiveMode)
+                let fineFundamentalFactory = SubscriptionDataSourceReader.ForSource(fineFundamentalSource, dataFileProvider, _dataCacheProvider, fineFundamentalConfiguration, date, _isLiveMode)
                 let fineFundamentalForDate = (FineFundamental)fineFundamentalFactory.Read(fineFundamentalSource).FirstOrDefault()
 
                 select new FineFundamental

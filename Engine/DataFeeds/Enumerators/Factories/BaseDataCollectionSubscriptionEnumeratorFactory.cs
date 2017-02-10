@@ -30,7 +30,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     /// </summary>
     public class BaseDataCollectionSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory
     {
-        private readonly DefaultDataFileCacheProvider _dataFileCacheProvider = new DefaultDataFileCacheProvider();
+        private readonly DefaultDataCacheProvider _dataCacheProvider = new DefaultDataCacheProvider();
 
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
         
@@ -59,7 +59,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             return (
                 from date in tradableDays
                 let source = sourceFactory.GetSource(configuration, date, false)
-                let factory = SubscriptionDataSourceReader.ForSource(source, dataFileProvider, _dataFileCacheProvider, configuration, date, false)
+                let factory = SubscriptionDataSourceReader.ForSource(source, dataFileProvider, _dataCacheProvider, configuration, date, false)
                 let coarseFundamentalForDate = factory.Read(source)
                 select new BaseDataCollection(date.AddDays(1), configuration.Symbol, coarseFundamentalForDate)
                 ).GetEnumerator();

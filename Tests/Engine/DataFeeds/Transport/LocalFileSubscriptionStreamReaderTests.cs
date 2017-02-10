@@ -30,7 +30,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
         {
             var source = Path.Combine("TestData", "multizip.zip");
             const string entryName = "multizip/three.txt";
-            using (var reader = new LocalFileSubscriptionStreamReader(new DefaultDataFileCacheProvider(), source, DateTime.MinValue, entryName))
+            using (var reader = new LocalFileSubscriptionStreamReader(new DefaultDataCacheProvider(), source, entryName))
             {
                 var line = reader.ReadLine();
                 Assert.AreEqual("3", line);

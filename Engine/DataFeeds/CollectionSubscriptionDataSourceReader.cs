@@ -34,7 +34,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly BaseData _factory;
         private readonly SubscriptionDataConfig _config;
         private IDataFileProvider _dataFileProvider;
-        private IDataFileCacheProvider _dataFileCacheProvider;
+        private IDataCacheProvider _dataCacheProvider;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CollectionSubscriptionDataSourceReader"/> class
@@ -42,10 +42,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="config">The subscription's configuration</param>
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
-        public CollectionSubscriptionDataSourceReader(IDataFileProvider dataFileProvider, IDataFileCacheProvider dataFileCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public CollectionSubscriptionDataSourceReader(IDataFileProvider dataFileProvider, IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             _dataFileProvider = dataFileProvider;
-            _dataFileCacheProvider = dataFileCacheProvider;
+            _dataCacheProvider = dataCacheProvider;
             _date = date;
             _config = config;
             _isLiveMode = isLiveMode;
@@ -82,10 +82,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         reader = new RestSubscriptionStreamReader(source.Source);
                         break;
                     case SubscriptionTransportMedium.LocalFile:
-                        reader = new LocalFileSubscriptionStreamReader(_dataFileCacheProvider, source.Source, _date);
+                        reader = new LocalFileSubscriptionStreamReader(_dataCacheProvider, source.Source);
                         break;
                     case SubscriptionTransportMedium.RemoteFile:
-                        reader = new RemoteFileSubscriptionStreamReader(_dataFileCacheProvider, source.Source, Globals.Cache, _date);
+                        reader = new RemoteFileSubscriptionStreamReader(_dataCacheProvider, source.Source, Globals.Cache, _date);
                         break;
                 }
 
