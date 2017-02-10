@@ -125,13 +125,6 @@ namespace QuantConnect.Tests.Common.Scheduling
         }
 
         [Test]
-        public void RegularMarketOpenWithNegativeDelta()
-        {
-            var rules = GetTimeRules(TimeZones.Utc);
-            Assert.Throws<ArgumentException>(() => rules.AfterMarketOpen(Symbols.SPY, -30));
-        }
-
-        [Test]
         public void RegularMarketCloseNoDelta()
         {
             var rules = GetTimeRules(TimeZones.Utc);
@@ -161,13 +154,6 @@ namespace QuantConnect.Tests.Common.Scheduling
                 Assert.AreEqual(TimeSpan.FromHours(16 + 5 - .5), time.TimeOfDay);
             }
             Assert.AreEqual(1, count);
-        }
-
-        [Test]
-        public void RegularMarketCloseWithNegativeDelta()
-        {
-            var rules = GetTimeRules(TimeZones.Utc);
-            Assert.Throws<ArgumentException>(() => rules.BeforeMarketClose(Symbols.SPY, -30));
         }
 
         [Test]

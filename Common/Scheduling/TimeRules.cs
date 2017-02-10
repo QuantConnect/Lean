@@ -164,11 +164,6 @@ namespace QuantConnect.Scheduling
         /// <returns>A time rule that fires the specified number of minutes before the symbol's market close</returns>
         public ITimeRule BeforeMarketClose(Symbol symbol, double minutesBeforeClose = 0, bool extendedMarketClose = false)
         {
-            if (minutesBeforeClose < 0)
-            {
-                throw new ArgumentException("The time before market close is negative. Please make sure it is a non-negative value", "minutesBeforeClose");
-            }
-
             var security = GetSecurity(symbol);
 
             var type = extendedMarketClose ? "ExtendedMarketClose" : "MarketClose";
