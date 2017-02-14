@@ -442,12 +442,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     case SubscriptionTransportMedium.LocalFile:
                         // the local uri doesn't exist, write an error and return null so we we don't try to get data for today
                         // Log.Trace(string.Format("SubscriptionDataReader.GetReader(): Could not find QC Data, skipped: {0}", source));
-                        _resultHandler.SamplePerformance(_tradeableDates.Current, 0);
                         break;
 
                     case SubscriptionTransportMedium.RemoteFile:
                         _resultHandler.ErrorMessage(string.Format("Error downloading custom data source file, skipped: {0} Error: {1}", source, args.Exception.Message), args.Exception.StackTrace);
-                        _resultHandler.SamplePerformance(_tradeableDates.Current.Date, 0);
                         break;
 
                     case SubscriptionTransportMedium.Rest:
