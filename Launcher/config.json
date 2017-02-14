@@ -246,7 +246,7 @@
       "messaging-handler": "QuantConnect.Messaging.StreamingMessageHandler",
       "log-handler": "QuantConnect.Logging.QueueLogHandler",
       "desktop-http-port": "1234",
-      "desktop-exe": "../../../UserInterface/bin/Release/QuantConnect.Views.exe"
+      "desktop-exe": "../../../UserInterface/bin/Debug/QuantConnect.Views.exe"
     }
   }
 }
