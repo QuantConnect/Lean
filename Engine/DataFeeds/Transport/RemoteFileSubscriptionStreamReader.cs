@@ -34,7 +34,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// </summary>
         /// <param name="source">The remote url to be downloaded via web client</param>
         /// <param name="downloadDirectory">The local directory and destination of the download</param>
-        public RemoteFileSubscriptionStreamReader(IDataCacheProvider dataCacheProvider, string source, string downloadDirectory, DateTime date)
+        public RemoteFileSubscriptionStreamReader(IDataCacheProvider dataCacheProvider, string source, string downloadDirectory)
         {
             // create a hash for a new filename
             var filename = Guid.NewGuid() + source.GetExtension();

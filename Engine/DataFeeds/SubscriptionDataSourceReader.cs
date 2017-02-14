@@ -29,24 +29,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Creates a new <see cref="ISubscriptionDataSourceReader"/> capable of handling the specified <paramref name="source"/>
         /// </summary>
         /// <param name="source">The subscription data source to create a factory for</param>
-        /// <param name="dataProvider">Retrieves files if not found on disk</param>
-        /// <param name="dataCacheProvider">Caches files</param>
+        /// <param name="dataCacheProvider">Used to cache data</param>
         /// <param name="config">The configuration of the subscription</param>
         /// <param name="date">The date to be processed</param>
         /// <param name="isLiveMode">True for live mode, false otherwise</param>
         /// <returns>A new <see cref="ISubscriptionDataSourceReader"/> that can read the specified <paramref name="source"/></returns>
-        public static ISubscriptionDataSourceReader ForSource(SubscriptionDataSource source, IDataProvider dataProvider, IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public static ISubscriptionDataSourceReader ForSource(SubscriptionDataSource source, IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             switch (source.Format)
             {
                 case FileFormat.Csv:
-                    return new TextSubscriptionDataSourceReader(dataProvider, dataCacheProvider, config, date, isLiveMode);
+                    return new TextSubscriptionDataSourceReader(dataCacheProvider, config, date, isLiveMode);
 
                 case FileFormat.Collection:
-                    return new CollectionSubscriptionDataSourceReader(dataProvider, dataCacheProvider, config, date, isLiveMode);
+                    return new CollectionSubscriptionDataSourceReader(dataCacheProvider, config, date, isLiveMode);
 
                 case FileFormat.ZipEntryName:
-                    return new ZipEntryNameSubscriptionDataSourceReader(dataProvider, dataCacheProvider, config, date, isLiveMode);
+                    return new ZipEntryNameSubscriptionDataSourceReader(dataCacheProvider, config, date, isLiveMode);
 
                 default:
                     throw new NotImplementedException("SubscriptionFactory.ForSource(" + source + ") has not been implemented yet.");

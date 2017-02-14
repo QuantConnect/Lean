@@ -436,7 +436,7 @@ namespace QuantConnect.ToolBox.IQFeed
             var todayCsvFileName = "mktsymbols_v2.txt";
             var todayFullCsvName = Path.Combine(Globals.Cache, todayCsvFileName);
 
-            var reader = new LocalFileSubscriptionStreamReader(_dataCacheProvider, todayFullCsvName, null, placeholder.StartPosition);
+            var reader = new LocalFileSubscriptionStreamReader(_dataCacheProvider, todayFullCsvName, placeholder.StartPosition);
 
             Log.Trace("Loading data on demand for {0}...", placeholder.Symbol.Underlying.Value);
 

@@ -70,7 +70,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 from date in tradableDays
 
                 let fineFundamentalSource = GetSource(fineFundamental, fineFundamentalConfiguration, date)
-                let fineFundamentalFactory = SubscriptionDataSourceReader.ForSource(fineFundamentalSource, dataProvider, _dataCacheProvider, fineFundamentalConfiguration, date, _isLiveMode)
+                let fineFundamentalFactory = SubscriptionDataSourceReader.ForSource(fineFundamentalSource, _dataCacheProvider, fineFundamentalConfiguration, date, _isLiveMode)
                 let fineFundamentalForDate = (FineFundamental)fineFundamentalFactory.Read(fineFundamentalSource).FirstOrDefault()
 
                 select new FineFundamental

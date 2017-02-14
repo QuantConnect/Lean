@@ -31,11 +31,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
     {
         private StreamReader _streamReader;
         private readonly ZipFile _zipFile;
-        private IDataCacheProvider _dataCacheProvider;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LocalFileSubscriptionStreamReader"/> class.
         /// </summary>
+        /// <param name="dataCacheProvider">The <see cref="IDataCacheProvider"/> used to retrieve a stream of data</param>
         /// <param name="source">The local file to be read</param>
         /// <param name="entryName">Specifies the zip entry to be opened. Leave null if not applicable,
         /// or to open the first zip entry found regardless of name</param>
@@ -52,11 +52,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// <summary>
         /// Initializes a new instance of the <see cref="LocalFileSubscriptionStreamReader"/> class.
         /// </summary>
+        /// <param name="dataCacheProvider">The <see cref="IDataCacheProvider"/> used to retrieve a stream of data</param>
         /// <param name="source">The local file to be read</param>
         /// <param name="entryName">Specifies the zip entry to be opened. Leave null if not applicable,
         /// <param name="startingPosition">The starting position in the local file to be read</param>
         /// or to open the first zip entry found regardless of name</param>
-        public LocalFileSubscriptionStreamReader(IDataCacheProvider dataCacheProvider, string source, string entryName, long startingPosition)
+        /// <param name="startingPosition">The position in the stream from which to start reading</param>
+        public LocalFileSubscriptionStreamReader(IDataCacheProvider dataCacheProvider, string source, long startingPosition)
         {
             var stream = dataCacheProvider.Fetch(source);
 

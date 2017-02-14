@@ -1949,7 +1949,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="dataProvider">Provider used to get data when it is not present on disk</param>
         /// <param name="statusUpdate">Function used to send status updates</param>
         /// <param name="dataCacheProvider">Provider used to cache history data files</param>
-        public void Initialize(AlgorithmNodePacket job, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, IDataProvider dataProvider, Action<int> statusUpdate, IDataCacheProvider dataCacheProvider = null)
+        public void Initialize(AlgorithmNodePacket job, IDataProvider dataProvider, IDataCacheProvider dataCacheProvider, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, Action<int> statusUpdate)
         {
             Connect();
         }

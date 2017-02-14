@@ -31,7 +31,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly DateTime _date;
         private readonly bool _isLiveMode;
         private readonly BaseData _factory;
-        private readonly IDataProvider _dataProvider;
         private IDataCacheProvider _dataCacheProvider;
 
         /// <summary>
@@ -43,13 +42,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes a new instance of the <see cref="ZipEntryNameSubscriptionDataSourceReader"/> class
         /// </summary>
-        /// <param name="dataProvider">Attempts to fetch remote file</param>
+        /// <param name="dataCacheProvider">Used to cache data</param>
         /// <param name="config">The subscription's configuration</param>
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
-        public ZipEntryNameSubscriptionDataSourceReader(IDataProvider dataProvider, IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public ZipEntryNameSubscriptionDataSourceReader(IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            _dataProvider = dataProvider;
             _dataCacheProvider = dataCacheProvider;
             _config = config;
             _date = date;

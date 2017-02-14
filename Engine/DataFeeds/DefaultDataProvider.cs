@@ -17,6 +17,7 @@ using System;
 using System.IO;
 using Ionic.Zip;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -34,12 +35,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             if (!File.Exists(key))
             {
+                Log.Error("DefaultDataProvider.Fetch(): The specified file was not found: ", key);
                 return null;
             }
 
             return new FileStream(key, FileMode.Open, FileAccess.Read);
         }
 
+        /// <summary>
+        /// The stream created by this type is passed up the stack to the IStreamReader
+        /// The stream is closed when the StreamReader that wraps this stream is disposed</summary>
         public void Dispose()
         {
             //

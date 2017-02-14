@@ -31,7 +31,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class ZipDataCacheProvider : IDataCacheProvider
     {
-        private const int CachePeriodBars = 10;
+        private const int CacheSeconds = 10;
 
         // ZipArchive cache used by the class
         private readonly ConcurrentDictionary<string, Lazy<CacheEntry>> _zipFileCache = new ConcurrentDictionary<string, Lazy<CacheEntry>>();
@@ -60,36 +60,34 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 filename = key.Substring(0, hashIndex);
             }
 
-            var dataStream = _dataProvider.Fetch(filename);
-            if (dataStream == null)
-            {
-                return null;
-            }
-
             // handles zip files
             if (filename.GetExtension() == ".zip")
             {
                 Stream stream = null;
 
-                var date = DateTime.Now.Date.AddSeconds(-CachePeriodBars);
+                var date = DateTime.Now.Date.AddSeconds(-CacheSeconds);
 
                 CleanCache(date);
 
                 try
                 {
-                    _zipFileCache.AddOrUpdate(filename,
-                        x =>
+                    if (_zipFileCache.ContainsKey(filename))
+                    {
+                        Lazy<CacheEntry> existingEntry;
+                        _zipFileCache.TryGetValue(filename, out existingEntry);
+                        stream = CreateStream(existingEntry.Value.Item2, entryName);
+                    }
+                    else
+                    {
+                        var dataStream = _dataProvider.Fetch(filename);
+                        if (dataStream == null)
                         {
-                            var zipFile = ZipFile.Read(dataStream);
-                            var newItem = Tuple.Create(date.Date, zipFile);
-                            stream = CreateStream(newItem.Item2, entryName);
-                            return newItem;
-                        },
-                        (x, existingEntry) =>
-                        {
-                            stream = CreateStream(existingEntry.Item2, entryName);
-                            return existingEntry;
-                        });
+                            return null;
+                        }
+                        var zipFile = ZipFile.Read(dataStream);
+                        var newItem = Tuple.Create(date.Date, zipFile);
+                        stream = CreateStream(newItem.Item2, entryName);
+                    }
 
                     return stream;
                 }
@@ -103,7 +101,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             else
             {
                 // handles text files
-                return dataStream;
+                return _dataProvider.Fetch(filename);
             }
         }
 

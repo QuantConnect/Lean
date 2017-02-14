@@ -635,7 +635,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var sourceProvider = (BaseData)Activator.CreateInstance(config.Type);
                     var dateInDataTimeZone = DateTime.UtcNow.ConvertFromUtc(config.DataTimeZone).Date;
                     var source = sourceProvider.GetSource(config, dateInDataTimeZone, true);
-                    var factory = SubscriptionDataSourceReader.ForSource(source, _dataProvider, _dataCacheProvider, config, dateInDataTimeZone, false);
+                    var factory = SubscriptionDataSourceReader.ForSource(source, _dataCacheProvider, config, dateInDataTimeZone, false);
                     var factorEnumerator = factory.Read(source).GetEnumerator();
                     var fastForward = new FastForwardEnumerator(factorEnumerator, _timeProvider, request.Security.Exchange.TimeZone, config.Increment);
                     var frontierAware = new FrontierAwareEnumerator(fastForward, _frontierTimeProvider, tzOffsetProvider);

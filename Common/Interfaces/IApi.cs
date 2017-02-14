@@ -201,8 +201,6 @@ namespace QuantConnect.Interfaces
         /// <returns>A bool indicating whether the data was successfully downloaded or not.</returns>
         bool DownloadData(Symbol symbol, Resolution resolution, DateTime date);
 
-        bool DownloadData(string source);
-
         /// <summary>
         /// Create a new live algorithm for a logged in user.
         /// </summary>

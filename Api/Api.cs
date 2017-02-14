@@ -595,12 +595,6 @@ namespace QuantConnect.Api
             return true;
         }
 
-
-        public bool DownloadData(string source)
-        {
-            return true;
-        }
-
         /// <summary>
         /// Get the algorithm status from the user with this algorithm id.
         /// </summary>

@@ -661,22 +661,20 @@ namespace QuantConnect
         } // End UnZip
 
         /// <summary>
-        /// Unzip a local file and return its contents via streamreader:
+        /// Unzip a stream that represents a zip file and return the first entry as a stream
         /// </summary>
-        public static Stream UnzipStream(Stream zipstream)
+        public static Stream UnzipStream(Stream zipstream, out ZipFile zipFile)
         {
+            zipFile = ZipFile.Read(zipstream);
+
             try
             {
-                //If file exists, open a zip stream for it.
-                using (var zipStream = new ZipInputStream(zipstream))
-                {
-                    //Read the file entry into buffer:
-                    var entry = zipStream.GetNextEntry();
-                    var buffer = new byte[entry.Size];
-                    zipStream.Read(buffer, 0, (int)entry.Size);
+                //Read the file entry into buffer:
+                var entry = zipFile.Entries.FirstOrDefault();
 
-                    //return a memory stream.
-                    return new MemoryStream(buffer);
+                if (entry != null)
+                {
+                    return entry.OpenReader();
                 }
             }
             catch (Exception err)

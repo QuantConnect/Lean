@@ -125,7 +125,8 @@ namespace QuantConnect.Lean.Engine
 
                     // set the history provider before setting up the algorithm
                     var historyProvider = GetHistoryProvider(job.HistoryProvider);
-                    historyProvider.Initialize(job, _algorithmHandlers.MapFileProvider, _algorithmHandlers.FactorFileProvider, _algorithmHandlers.DataProvider, progress =>
+                    var historyDataCacheProvider = new SingleEntryDataCacheProvider(_algorithmHandlers.DataProvider);
+                    historyProvider.Initialize(job, _algorithmHandlers.DataProvider, historyDataCacheProvider, _algorithmHandlers.MapFileProvider, _algorithmHandlers.FactorFileProvider, progress =>
                     {
                         // send progress updates to the result handler only during initialization
                         if (!algorithm.GetLocked() || algorithm.IsWarmingUp)
@@ -133,7 +134,7 @@ namespace QuantConnect.Lean.Engine
                             _algorithmHandlers.Results.SendStatusUpdate(AlgorithmStatus.History, 
                                 string.Format("Processing history {0}%...", progress));
                         }
-                    }, new SingleEntryDataCacheProvider(_algorithmHandlers.DataProvider));
+                    });
 
                     algorithm.HistoryProvider = historyProvider;
 

@@ -135,7 +135,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IDataProvider dataProvider,
             IEnumerable<DateTime> tradeableDates,
             bool isLiveMode,
-            IDataCacheProvider dataCacheProvider = null,
+            IDataCacheProvider dataCacheProvider,
             bool includeAuxilliaryData = true)
         {
             //Save configuration of data-subscription:
@@ -427,7 +427,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private ISubscriptionDataSourceReader CreateSubscriptionFactory(SubscriptionDataSource source)
         {
-            var factory = SubscriptionDataSourceReader.ForSource(source, _dataProvider, _dataCacheProvider, _config, _tradeableDates.Current, _isLiveMode);
+            var factory = SubscriptionDataSourceReader.ForSource(source, _dataCacheProvider, _config, _tradeableDates.Current, _isLiveMode);
             AttachEventHandlers(factory, source);
             return factory;
         }

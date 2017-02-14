@@ -36,7 +36,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly DateTime _date;
         private readonly SubscriptionDataConfig _config;
         private readonly IDataCacheProvider _dataCacheProvider;
-        private readonly IDataProvider _dataProvider;
 
         /// <summary>
         /// Event fired when the specified source is considered invalid, this may
@@ -60,14 +59,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes a new instance of the <see cref="TextSubscriptionDataSourceReader"/> class
         /// </summary>
-        /// <param name="dataProvider">Attempts to fetch remote file provider</param>
         /// <param name="dataCacheProvider">This provider caches files if needed</param>
         /// <param name="config">The subscription's configuration</param>
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
-        public TextSubscriptionDataSourceReader(IDataProvider dataProvider, IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public TextSubscriptionDataSourceReader(IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            _dataProvider = dataProvider;
             _dataCacheProvider = dataCacheProvider;
             _date = date;
             _config = config;
@@ -199,7 +196,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             try
             {
                 // this will fire up a web client in order to download the 'source' file to the cache
-                return new RemoteFileSubscriptionStreamReader(_dataCacheProvider, source.Source, Globals.Cache, _date);
+                return new RemoteFileSubscriptionStreamReader(_dataCacheProvider, source.Source, Globals.Cache);
             }
             catch (Exception err)
             {

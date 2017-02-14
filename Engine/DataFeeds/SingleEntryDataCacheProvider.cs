@@ -12,6 +12,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class SingleEntryDataCacheProvider : IDataCacheProvider
     {
         private readonly IDataProvider _dataProvider;
+        private ZipFile _zipFile;
 
         /// <summary>
         /// Constructor that takes the <see cref="IDataProvider"/> to be used to retrieve data
@@ -33,7 +34,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (key.EndsWith(".zip") && stream != null)
             {
                 // get the first entry from the zip file
-                return Compression.UnzipStream(stream);
+                return Compression.UnzipStream(stream, out _zipFile);
             }
 
             return stream;
@@ -51,7 +52,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         public void Dispose()
         {
-            //
+            if (_zipFile != null)
+            {
+                _zipFile.Dispose();
+            }
         }
     }
 }

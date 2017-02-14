@@ -60,7 +60,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             return (
                 from date in tradableDays
                 let source = sourceFactory.GetSource(configuration, date, false)
-                let factory = SubscriptionDataSourceReader.ForSource(source, dataProvider, _dataCacheProvider, configuration, date, false)
+                let factory = SubscriptionDataSourceReader.ForSource(source, _dataCacheProvider, configuration, date, false)
                 let coarseFundamentalForDate = factory.Read(source)
                 select new BaseDataCollection(date.AddDays(1), configuration.Symbol, coarseFundamentalForDate)
                 ).GetEnumerator();
