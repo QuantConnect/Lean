@@ -41,7 +41,10 @@ namespace QuantConnect.Lean.Launcher
                 mode = "DEBUG";
             #endif
 
-            Console.OutputEncoding = System.Text.Encoding.Unicode;
+            if (OS.IsWindows)
+            { 
+                Console.OutputEncoding = System.Text.Encoding.Unicode;
+            }
 
             var environment = Config.Get("environment");
             var liveMode = Config.GetBool("live-mode");
