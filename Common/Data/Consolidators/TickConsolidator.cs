@@ -74,6 +74,8 @@ namespace QuantConnect.Data.Consolidators
                     Value = data.Value,
                     Volume = data.Quantity
                 };
+
+                if (Period.HasValue) workingBar.Period = Period.Value;
             }
             else
             {
