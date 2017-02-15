@@ -192,7 +192,7 @@ namespace QuantConnect.Data
 
             if (!tickType.HasValue)
             {
-                TickType = LeanData.GetCommonTickTypeForCommonDataTypes(objectType);
+                TickType = LeanData.GetCommonTickTypeForCommonDataTypes(objectType, SecurityType);
             }
             else
             {
