@@ -559,8 +559,9 @@ namespace QuantConnect.Util
         /// If not a Lean common data type, return a TickType of Trade.
         /// </summary>
         /// <param name="type">A Type used to determine the TickType</param>
+        /// <param name="securityType">The SecurityType used to determine the TickType</param>
         /// <returns>A TickType corresponding to the type</returns>
-        public static TickType GetCommonTickTypeForCommonDataTypes(Type type)
+        public static TickType GetCommonTickTypeForCommonDataTypes(Type type, SecurityType securityType)
         {
             if (type == typeof(TradeBar))
             {
@@ -577,6 +578,13 @@ namespace QuantConnect.Util
             if (type == typeof(ZipEntryName))
             {
                 return TickType.Trade;
+            }
+            if (type == typeof(Tick))
+            {
+                if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
+                {
+                    return TickType.Quote;
+                }
             }
 
             return TickType.Trade;
