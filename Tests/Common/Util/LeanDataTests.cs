@@ -163,6 +163,12 @@ namespace QuantConnect.Tests.Common.Util
             Assert.IsFalse(LeanData.IsCommonLeanDataType(typeof(Bitcoin)));
         }
 
+        [Test]
+        public void LeanData_GetCommonTickTypeForCommonDataTypes_ReturnsCorrectDataForTickResolution()
+        {
+            Assert.AreEqual(LeanData.GetCommonTickTypeForCommonDataTypes(typeof(Tick), SecurityType.Cfd), TickType.Quote);
+            Assert.AreEqual(LeanData.GetCommonTickTypeForCommonDataTypes(typeof(Tick), SecurityType.Forex), TickType.Quote);
+        }
         private static void AssertBarsAreEqual(IBar expected, IBar actual)
         {
             if (expected == null && actual == null)
