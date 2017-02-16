@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using QuantConnect.Data;
+using System;
 
 namespace QuantConnect.Securities
 {
@@ -25,11 +26,10 @@ namespace QuantConnect.Securities
     public interface IDerivativeSecurityFilter
     {
         /// <summary>
-        /// Filters the input set of symbols using the underlying price data
+        /// Filters the input set of symbols represented by the universe 
         /// </summary>
-        /// <param name="symbols">The derivative symbols to be filtered</param>
-        /// <param name="underlying">The underlying price data</param>
+        /// <param name="universe">derivative symbols universe used in filtering</param>
         /// <returns>The filtered set of symbols</returns>
-        IEnumerable<Symbol> Filter(IEnumerable<Symbol> symbols, BaseData underlying);
+        IDerivativeSecurityFilterUniverse Filter(IDerivativeSecurityFilterUniverse universe);
     }
 }

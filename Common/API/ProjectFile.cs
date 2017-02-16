@@ -12,6 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Api
@@ -30,7 +33,25 @@ namespace QuantConnect.Api
         /// <summary>
         /// Contents of the project file
         /// </summary>
-        [JsonProperty(PropertyName = "code")]
+        [JsonProperty(PropertyName = "content")]
         public string Code;
+
+        /// <summary>
+        /// DateTime project file was modified
+        /// </summary>
+        [JsonProperty(PropertyName = "modified")]
+        public DateTime DateModified{ get; set; }
+    }
+
+    /// <summary>
+    /// Response received when reading all files of a project
+    /// </summary>
+    public class ProjectFilesResponse : RestResponse
+    {
+        /// <summary>
+        /// List of project file information
+        /// </summary>
+        [JsonProperty(PropertyName = "files")]
+        public List<ProjectFile> Files;
     }
 }

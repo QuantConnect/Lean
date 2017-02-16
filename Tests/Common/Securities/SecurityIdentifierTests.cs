@@ -23,14 +23,21 @@ namespace QuantConnect.Tests.Common.Securities
     [TestFixture]
     public class SecurityIdentifierTests
     {
-        private SecurityIdentifier SPY
+        private static SecurityIdentifier SPY
         {
             get { return SecurityIdentifier.GenerateEquity(new DateTime(1998, 01, 02), "SPY", Market.USA); }
         }
 
+        private static SecurityIdentifier ED
+        {
+            get { return SecurityIdentifier.GenerateBase("ED", Market.USA); }
+        }
+
 
         // this is really not european style, but I'd prefer to test a value of 1 vs a value of 0
-        private readonly SecurityIdentifier SPY_Put_19550 = SecurityIdentifier.GenerateOption(new DateTime(2015, 09, 18), "SPY", Market.USA, 195.50m, OptionRight.Put, OptionStyle.European);
+        private readonly SecurityIdentifier SPY_Put_19550 = SecurityIdentifier.GenerateOption(new DateTime(2015, 09, 18), SPY, Market.USA, 195.50m, OptionRight.Put, OptionStyle.European);
+        // this is euro-dollar futures contract (for tests)
+        private readonly SecurityIdentifier ED_Dec_2020 = SecurityIdentifier.GenerateFuture(new DateTime(2020, 12, 15), ED, Market.USA);
 
         [Test]
         public void GenerateEquityProperlyResolvesFirstDate()
@@ -61,6 +68,8 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(Market.USA, spyPut.Market); // market
             Assert.AreEqual(SecurityType.Option, spyPut.SecurityType); // security type
             Assert.AreEqual("SPY", spyPut.Symbol); // SPY in base36
+            Assert.IsTrue(spyPut.HasUnderlying);
+            Assert.AreEqual(SPY, spyPut.Underlying);
 
             Console.WriteLine(SPY_Put_19550);
         }
@@ -92,6 +101,17 @@ namespace QuantConnect.Tests.Common.Securities
 
             Console.WriteLine(eurusd);
         }
+        [Test]
+        public void FuturesSecurityIdReturnsProperties()
+        {
+            // verify various values
+            Assert.AreEqual(new DateTime(2020, 12, 15), ED_Dec_2020.Date);
+            Assert.AreEqual(Market.USA, ED_Dec_2020.Market);
+            Assert.AreEqual(SecurityType.Future, ED_Dec_2020.SecurityType);
+            Assert.AreEqual("ED", ED_Dec_2020.Symbol);
+
+            Console.WriteLine(ED_Dec_2020);
+        }
 
         [Test]
         public void Generates12Character()
@@ -111,6 +131,26 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void ToStringPipeDelimitsUnderlying()
+        {
+            var actual = SPY_Put_19550.ToString();
+            var parts = actual.Split('|');
+            var option = SecurityIdentifier.Parse(parts[0]);
+            // verify various values
+            Assert.AreEqual(OptionRight.Put, option.OptionRight); // put
+            Assert.AreEqual(new DateTime(2015, 09, 18), option.Date); // oa date 2015.09.18
+            Assert.AreEqual(OptionStyle.European, option.OptionStyle); // option style
+            Assert.AreEqual(195.5m, option.StrikePrice); // strike/scale
+            Assert.AreEqual(Market.USA, option.Market); // market
+            Assert.AreEqual(SecurityType.Option, option.SecurityType); // security type
+            Assert.AreEqual("SPY", option.Symbol); // SPY in base36
+            Assert.IsFalse(option.HasUnderlying);
+            Assert.Throws<InvalidOperationException>(() => { var x = option.Underlying; });
+            var equity = SecurityIdentifier.Parse(parts[1]);
+            Assert.AreEqual(SPY, equity);
+        }
+
+        [Test]
         public void ReturnsCorrectMarket()
         {
             Assert.AreEqual(Market.USA, SPY.Market);
@@ -119,7 +159,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void ReturnsCorrectMarketWhenNotFound()
         {
-            var sid = new SecurityIdentifier("some symbol", 0357960000000009901);
+            var sid = new SecurityIdentifier("some-symbol", 0357960000000009901);
             Assert.AreEqual("99", sid.Market);
         }
 
@@ -234,6 +274,13 @@ namespace QuantConnect.Tests.Common.Securities
             const string symbol = "~!@#$%^&*()_+¼»`ÆÜCⁿª▓G";
             var sid = new SecurityIdentifier(symbol, 0);
             Assert.AreEqual(sid.Symbol, symbol);
+        }
+
+        [Theory, TestCase("|"), TestCase(" ")]
+        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "must not contain the characters")]
+        public void ThrowsOnInvalidSymbolCharacters(string input)
+        {
+            new SecurityIdentifier(input, 0);
         }
 
         class Container

@@ -84,13 +84,15 @@ namespace QuantConnect.Data.Fundamental
 		/// <param name="previous">The previous instance</param>
 		public void UpdateValues(FineFundamental previous)
 		{
-			CompanyReference.UpdateValues(previous.CompanyReference);
-			SecurityReference.UpdateValues(previous.SecurityReference);
-			FinancialStatements.UpdateValues(previous.FinancialStatements);
-			EarningReports.UpdateValues(previous.EarningReports);
-			OperationRatios.UpdateValues(previous.OperationRatios);
-			EarningRatios.UpdateValues(previous.EarningRatios);
-			ValuationRatios.UpdateValues(previous.ValuationRatios);
+			if (previous == null) return;
+
+			if (CompanyReference != null) CompanyReference.UpdateValues(previous.CompanyReference);
+			if (SecurityReference != null) SecurityReference.UpdateValues(previous.SecurityReference);
+			if (FinancialStatements != null) FinancialStatements.UpdateValues(previous.FinancialStatements);
+			if (EarningReports != null) EarningReports.UpdateValues(previous.EarningReports);
+			if (OperationRatios != null) OperationRatios.UpdateValues(previous.OperationRatios);
+			if (EarningRatios != null) EarningRatios.UpdateValues(previous.EarningRatios);
+			if (ValuationRatios != null) ValuationRatios.UpdateValues(previous.ValuationRatios);
 		}
 	}
 }

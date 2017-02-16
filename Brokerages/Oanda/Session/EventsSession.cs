@@ -31,7 +31,7 @@ namespace QuantConnect.Brokerages.Oanda.Session
     {
         private readonly OandaBrokerage _brokerage;
 
-        public EventsSession(OandaBrokerage brokerage, int accountId)
+        public EventsSession(OandaBrokerage brokerage, string accountId)
             : base(accountId)
         {
             _brokerage = brokerage;
@@ -39,7 +39,7 @@ namespace QuantConnect.Brokerages.Oanda.Session
 
         protected override WebResponse GetSession()
         {
-            return _brokerage.StartEventsSession(new List<int> {_accountId});
+            return _brokerage.StartEventsSession(new List<string> {_accountId});
         }
     }
 #pragma warning restore 1591

@@ -23,10 +23,10 @@ namespace QuantConnect.Indicators
     /// The Ultimate Oscillator is calculated as explained here:
     /// http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:ultimate_oscillator
     /// </summary>
-    public class UltimateOscillator : TradeBarIndicator
+    public class UltimateOscillator : BarIndicator
     {
         private readonly int _period;
-        private TradeBar _previousInput;
+        private IBaseDataBar _previousInput;
         private readonly TrueRange _trueRange;
         private readonly Sum _sumBuyingPressure1;
         private readonly Sum _sumBuyingPressure2;
@@ -79,7 +79,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(TradeBar input)
+        protected override decimal ComputeNextValue(IBaseDataBar input)
         {
             _trueRange.Update(input);
 

@@ -74,6 +74,10 @@ namespace QuantConnect.Data
         /// Gets true if this is a custom data request, false for normal QC data
         /// </summary>
         public bool IsCustomData { get; set; }
+        /// <summary>
+        /// Gets the normalization mode used for this subscription
+        /// </summary>
+        public DataNormalizationMode DataNormalizationMode { get; set; }
 
         /// <summary>
         /// Initializes a new default instance of the <see cref="HistoryRequest"/> class
@@ -91,6 +95,7 @@ namespace QuantConnect.Data
             TimeZone = TimeZones.NewYork;
             Market = QuantConnect.Market.USA;
             IsCustomData = false;
+            DataNormalizationMode = DataNormalizationMode.Adjusted;
         }
 
         /// <summary>
@@ -107,6 +112,7 @@ namespace QuantConnect.Data
         /// <param name="fillForwardResolution">The requested fill forward resolution for this request</param>
         /// <param name="includeExtendedMarketHours">True to include data from pre/post market hours</param>
         /// <param name="isCustomData">True for custom user data, false for normal QC data</param>
+        /// <param name="dataNormalizationMode">Specifies normalization mode used for this subscription</param>
         public HistoryRequest(DateTime startTimeUtc, 
             DateTime endTimeUtc,
             Type dataType,
@@ -117,7 +123,8 @@ namespace QuantConnect.Data
             SecurityExchangeHours exchangeHours,
             Resolution? fillForwardResolution,
             bool includeExtendedMarketHours,
-            bool isCustomData
+            bool isCustomData,
+            DataNormalizationMode dataNormalizationMode
             )
         {
             StartTimeUtc = startTimeUtc;
@@ -131,6 +138,7 @@ namespace QuantConnect.Data
             SecurityType = securityType;
             Market = market;
             IsCustomData = isCustomData;
+            DataNormalizationMode = dataNormalizationMode;
             TimeZone = exchangeHours.TimeZone;
         }
 
@@ -154,6 +162,7 @@ namespace QuantConnect.Data
             SecurityType = config.SecurityType;
             Market = config.Market;
             IsCustomData = config.IsCustomData;
+            DataNormalizationMode = config.DataNormalizationMode;
             TimeZone = config.DataTimeZone;
         }
     }

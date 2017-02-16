@@ -30,7 +30,7 @@ namespace QuantConnect.Brokerages.Oanda.Session
         private readonly OandaBrokerage _brokerage;
         private readonly List<Instrument> _instruments;
 
-        public RatesSession(OandaBrokerage brokerage, int accountId, List<Instrument> instruments)
+        public RatesSession(OandaBrokerage brokerage, string accountId, List<Instrument> instruments)
             : base(accountId)
         {
             _brokerage = brokerage;

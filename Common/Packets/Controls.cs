@@ -42,6 +42,30 @@ namespace QuantConnect.Packets
         public int TickLimit;
 
         /// <summary>
+        /// Ram allocation for this backtest in MB
+        /// </summary>
+        [JsonProperty(PropertyName = "iRamAllocation")]
+        public int RamAllocation;
+
+        /// <summary>
+        /// The user backtesting log limit
+        /// </summary>
+        [JsonProperty(PropertyName = "iBacktestLogLimit")]
+        public int BacktestLogLimit;
+
+        /// <summary>
+        /// The daily log limit of a user
+        /// </summary>
+        [JsonProperty(PropertyName = "iDailyLogLimit")]
+        public int DailyLogLimit;
+
+        /// <summary>
+        /// The remaining log allowance for a user
+        /// </summary>
+        [JsonProperty(PropertyName = "iRemainingLogAllowance")]
+        public int RemainingLogAllowance;
+
+        /// <summary>
         /// Initializes a new default instance of the <see cref="Controls"/> class
         /// </summary>
         public Controls()
@@ -49,6 +73,10 @@ namespace QuantConnect.Packets
             MinuteLimit = 500;
             SecondLimit = 100;
             TickLimit = 30;
+            RamAllocation = 1024;
+            BacktestLogLimit = 10000;
+            DailyLogLimit = 3000000;
+            RemainingLogAllowance = 10000;
         }
     }
 }

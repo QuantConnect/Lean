@@ -47,7 +47,7 @@ namespace QuantConnect.Tests.Indicators
             TestHelper.TestIndicatorReset(indicator, "spy_natr.txt");
         }
 
-        private static void RunTestIndicator(TradeBarIndicator indicator)
+        private static void RunTestIndicator(BarIndicator indicator)
         {
             TestHelper.TestIndicator(indicator, "spy_natr.txt", "NATR_5", (ind, expected) => Assert.AreEqual(expected, (double)ind.Current.Value, 1e-3));
         }

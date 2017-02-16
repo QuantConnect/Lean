@@ -22,6 +22,7 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 {
@@ -32,16 +33,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     /// </summary>
     public class FineFundamentalSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory
     {
+        private readonly bool _isLiveMode;
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
         private string _lastUsedFileName;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FineFundamentalSubscriptionEnumeratorFactory"/> class.
         /// </summary>
+        /// <param name="isLiveMode">True for live mode, false otherwise</param>
         /// <param name="tradableDaysProvider">Function used to provide the tradable dates to the enumerator.
         /// Specify null to default to <see cref="SubscriptionRequest.TradableDays"/></param>
-        public FineFundamentalSubscriptionEnumeratorFactory(Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null)
+        public FineFundamentalSubscriptionEnumeratorFactory(bool isLiveMode, Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null)
         {
+            _isLiveMode = isLiveMode;
             _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
         }
 
@@ -49,8 +53,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// Creates an enumerator to read the specified request
         /// </summary>
         /// <param name="request">The subscription request to be read</param>
+        /// <param name="dataFileProvider">Provider used to get data when it is not present on disk</param>
         /// <returns>An enumerator reading the subscription request</returns>
-        public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request)
+        public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataFileProvider dataFileProvider)
         {
             var tradableDays = _tradableDaysProvider(request);
 
@@ -61,7 +66,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 from date in tradableDays
 
                 let fineFundamentalSource = GetSource(fineFundamental, fineFundamentalConfiguration, date)
-                let fineFundamentalFactory = SubscriptionDataSourceReader.ForSource(fineFundamentalSource, fineFundamentalConfiguration, date, false)
+                let fineFundamentalFactory = SubscriptionDataSourceReader.ForSource(fineFundamentalSource, dataFileProvider, fineFundamentalConfiguration, date, _isLiveMode)
                 let fineFundamentalForDate = (FineFundamental)fineFundamentalFactory.Read(fineFundamentalSource).FirstOrDefault()
 
                 select new FineFundamental
@@ -86,7 +91,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// </summary>
         private SubscriptionDataSource GetSource(FineFundamental fine, SubscriptionDataConfig config, DateTime date)
         {
-            var source = fine.GetSource(config, date, false);
+            var source = fine.GetSource(config, date, _isLiveMode);
 
             var fileName = date.ToString("yyyyMMdd");
 
@@ -116,7 +121,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                         date = date.AddDays(-1);
 
                         // get file name for this date
-                        source = fine.GetSource(config, date, false);
+                        source = fine.GetSource(config, date, _isLiveMode);
                         fileName = Path.GetFileNameWithoutExtension(source.Source);
 
                         if (!File.Exists(source.Source))
@@ -132,7 +137,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 {
                     // return source for last existing file date
                     date = DateTime.ParseExact(_lastUsedFileName, "yyyyMMdd", CultureInfo.InvariantCulture);
-                    source = fine.GetSource(config, date, false);
+                    source = fine.GetSource(config, date, _isLiveMode);
                 }
             }
             else

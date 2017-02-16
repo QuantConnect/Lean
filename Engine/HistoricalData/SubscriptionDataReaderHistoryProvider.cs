@@ -47,6 +47,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         private int _dataPointCount;
         private IMapFileProvider _mapFileProvider;
         private IFactorFileProvider _factorFileProvider;
+        private IDataFileProvider _dataFileProvider;
 
         /// <summary>
         /// Gets the total number of data points emitted by this history provider
@@ -62,11 +63,13 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <param name="job">The job</param>
         /// <param name="mapFileProvider">Provider used to get a map file resolver to handle equity mapping</param>
         /// <param name="factorFileProvider">Provider used to get factor files to handle equity price scaling</param>
+        /// <param name="dataFileProvider">Provider used to get data when it is not present on disk</param>
         /// <param name="statusUpdate">Function used to send status updates</param>
-        public void Initialize(AlgorithmNodePacket job, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, Action<int> statusUpdate)
+        public void Initialize(AlgorithmNodePacket job, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, IDataFileProvider dataFileProvider, Action<int> statusUpdate)
         {
             _mapFileProvider = mapFileProvider;
             _factorFileProvider = factorFileProvider;
+            _dataFileProvider = dataFileProvider;
         }
 
         /// <summary>
@@ -106,7 +109,10 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 request.FillForwardResolution.HasValue, 
                 request.IncludeExtendedMarketHours, 
                 false, 
-                request.IsCustomData
+                request.IsCustomData,
+                null,
+                true,
+                request.DataNormalizationMode
                 );
 
             var security = new Security(request.ExchangeHours, config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
@@ -117,6 +123,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 ResultHandlerStub.Instance,
                 config.SecurityType == SecurityType.Equity ? _mapFileProvider.Get(config.Market) : MapFileResolver.Empty, 
                 _factorFileProvider,
+                _dataFileProvider,
                 Time.EachTradeableDay(request.ExchangeHours, start, end), 
                 false,
                 includeAuxilliaryData: false

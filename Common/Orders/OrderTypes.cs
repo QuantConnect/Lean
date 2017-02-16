@@ -48,7 +48,12 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Market on close type - executed on exchange close
         /// </summary>
-        MarketOnClose
+        MarketOnClose,
+
+        /// <summary>
+        /// Option Exercise Order Type
+        /// </summary>
+        OptionExercise
     }
 
 
@@ -141,7 +146,12 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Order invalidated before it hit the market (e.g. insufficient capital)..
         /// </summary>
-        Invalid = 7
+        Invalid = 7,
+
+        /// <summary>
+        /// Order waiting for confirmation of cancellation
+        /// </summary>
+        CancelPending = 8
     }
 
 } // End QC Namespace:

@@ -28,7 +28,7 @@ namespace QuantConnect.Logging
         /// Initializes a new instance of the <see cref="CompositeLogHandler"/> that pipes log messages to the console and log.txt
         /// </summary>
         public CompositeLogHandler()
-            : this(new ILogHandler[] {new ConsoleLogHandler(), new FileLogHandler()})
+            : this(new ConsoleLogHandler(), new FileLogHandler())
         {
         }
 
@@ -36,7 +36,7 @@ namespace QuantConnect.Logging
         /// Initializes a new instance of the <see cref="CompositeLogHandler"/> class from the specified handlers
         /// </summary>
         /// <param name="handlers">The implementations to compose</param>
-        public CompositeLogHandler(ILogHandler[] handlers)
+        public CompositeLogHandler(params ILogHandler[] handlers)
         {
             if (handlers == null || handlers.Length == 0)
             {

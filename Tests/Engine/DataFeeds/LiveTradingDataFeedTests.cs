@@ -46,6 +46,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var job = new LiveNodePacket();
             // result handler is used due to dependency in SubscriptionDataReader
             var resultHandler = new BacktestingResultHandler();
+            var dataFileProvider = new DefaultDataFileProvider();
 
             var lastTime = DateTime.MinValue;
             var timeProvider = new RealTimeProvider();
@@ -59,7 +60,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var feed = new TestableLiveTradingDataFeed(dataQueueHandler, timeProvider);
             var mapFileProvider = new LocalDiskMapFileProvider();
-            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider));
+            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), dataFileProvider);
 
             var feedThreadStarted = new ManualResetEvent(false);
             Task.Factory.StartNew(() =>
@@ -417,7 +418,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var feed = new TestableLiveTradingDataFeed(dataQueueHandler, timeProvider);
             var mapFileProvider = new LocalDiskMapFileProvider();
-            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider));
+            var fileProvider = new DefaultDataFileProvider();
+            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), fileProvider);
 
             var feedThreadStarted = new ManualResetEvent(false);
             Task.Factory.StartNew(() =>

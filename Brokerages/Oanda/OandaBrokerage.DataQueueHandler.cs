@@ -70,7 +70,7 @@ namespace QuantConnect.Brokerages.Oanda
             lock (_lockerSubscriptions)
             {
                 var symbolsToSubscribe = (from symbol in symbols
-                                          where !_subscribedSymbols.Contains(symbol)
+                                          where !_subscribedSymbols.Contains(symbol) && CanSubscribe(symbol)
                                           select symbol).ToList();
                 if (symbolsToSubscribe.Count == 0)
                     return;
@@ -159,6 +159,19 @@ namespace QuantConnect.Brokerages.Oanda
         }
 
         /// <summary>
+        /// Returns true if this brokerage supports the specified symbol
+        /// </summary>
+        private static bool CanSubscribe(Symbol symbol)
+        {
+            // ignore unsupported security types
+            if (symbol.ID.SecurityType != SecurityType.Forex && symbol.ID.SecurityType != SecurityType.Cfd)
+                return false;
+
+            // ignore universe symbols
+            return !symbol.Value.Contains("-UNIVERSE-");
+        }
+
+        /// <summary>
         /// Subscribes to the requested symbols (using a single streaming session)
         /// </summary>
         /// <param name="symbolsToSubscribe">The list of symbols to subscribe</param>
@@ -186,7 +199,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// Returns a DateTime from an RFC3339 string (with microsecond resolution)
         /// </summary>
         /// <param name="time">The time string</param>
-        private static DateTime GetDateTimeFromString(string time)
+        public static DateTime GetDateTimeFromString(string time)
         {
             return DateTime.ParseExact(time, "yyyy-MM-dd'T'HH:mm:ss.ffffff'Z'", CultureInfo.InvariantCulture);
         }

@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using NodaTime;
-using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
 
@@ -99,7 +98,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // so we don't interfere with the enumerator's internal logic
                         var clone = subscription.Current.Clone(subscription.Current.IsFillForward);
                         clone.Time = clone.Time.ExchangeRoundDown(configuration.Increment, subscription.Security.Exchange.Hours, configuration.ExtendedMarketHours);
+
                         packet.Add(clone);
+
                         if (!subscription.MoveNext())
                         {
                             OnSubscriptionFinished(subscription);
@@ -125,6 +126,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 var current = subscription.Current as OptionChainUniverseDataCollection;
                                 var underlying = current != null ? current.Underlying : null;
                                 collection = new OptionChainUniverseDataCollection(frontier, subscription.Configuration.Symbol, packetData, underlying);
+                            }
+                            else if (packetBaseDataCollection is FuturesChainUniverseDataCollection)
+                            {
+                                var current = subscription.Current as FuturesChainUniverseDataCollection;
+                                collection = new FuturesChainUniverseDataCollection(frontier, subscription.Configuration.Symbol, packetData);
                             }
                             else
                             {

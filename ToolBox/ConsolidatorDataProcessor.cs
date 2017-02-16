@@ -28,7 +28,7 @@ namespace QuantConnect.ToolBox
     {
         private DateTime _frontier;
         private readonly IDataProcessor _destination;
-        private readonly Func<BaseData, IDataConsolidator> _createConsolidator;
+        private readonly Func<IBaseData, IDataConsolidator> _createConsolidator;
         private readonly Dictionary<Symbol, IDataConsolidator> _consolidators;
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace QuantConnect.ToolBox
         /// </summary>
         /// <param name="destination">The receiver of the consolidated data</param>
         /// <param name="createConsolidator">Function used to create consolidators</param>
-        public ConsolidatorDataProcessor(IDataProcessor destination, Func<BaseData, IDataConsolidator> createConsolidator)
+        public ConsolidatorDataProcessor(IDataProcessor destination, Func<IBaseData, IDataConsolidator> createConsolidator)
         {
             _destination = destination;
             _createConsolidator = createConsolidator;
@@ -47,7 +47,7 @@ namespace QuantConnect.ToolBox
         /// Invoked for each piece of data from the source file
         /// </summary>
         /// <param name="data">The data to be processed</param>
-        public void Process(BaseData data)
+        public void Process(IBaseData data)
         {
             // grab the correct consolidator for this symbol
             IDataConsolidator consolidator;
@@ -81,7 +81,7 @@ namespace QuantConnect.ToolBox
         /// <summary>
         /// Handles the <see cref="IDataConsolidator.DataConsolidated"/> event
         /// </summary>
-        private void OnDataConsolidated(object sender, BaseData args)
+        private void OnDataConsolidated(object sender, IBaseData args)
         {
             _destination.Process(args);
 

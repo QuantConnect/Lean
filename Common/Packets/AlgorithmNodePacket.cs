@@ -119,7 +119,9 @@ namespace QuantConnect.Packets
         /// The maximum amount of RAM (in MB) this algorithm is allowed to utilize
         /// </summary>
         [JsonProperty(PropertyName = "iMaxRamAllocation")]
-        public int RamAllocation;
+        public int RamAllocation {
+            get { return Controls.RamAllocation; }
+        }
 
         /// <summary>
         /// Specifies values to control algorithm limits
@@ -132,6 +134,13 @@ namespace QuantConnect.Packets
         /// </summary>
         [JsonProperty(PropertyName = "aParameters")]
         public Dictionary<string, string> Parameters = new Dictionary<string, string>();
+
+        /// <summary>
+        /// String name of the HistoryProvider we're running with
+        /// </summary>
+        [JsonProperty(PropertyName = "sHistoryProvider")]
+        public string HistoryProvider = "";
+
     } // End Node Packet:
 
 } // End of Namespace:

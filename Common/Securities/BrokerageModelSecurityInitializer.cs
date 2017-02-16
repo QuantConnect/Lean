@@ -15,6 +15,8 @@
 */
 
 using QuantConnect.Brokerages;
+using QuantConnect.Data;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Securities
 {
@@ -26,15 +28,18 @@ namespace QuantConnect.Securities
     public class BrokerageModelSecurityInitializer : ISecurityInitializer
     {
         private readonly IBrokerageModel _brokerageModel;
+        private readonly ISecuritySeeder _securitySeeder;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BrokerageModelSecurityInitializer"/> class
         /// for the specified algorithm
         /// </summary>
         /// <param name="brokerageModel">The brokerage model used to initialize the security models</param>
-        public BrokerageModelSecurityInitializer(IBrokerageModel brokerageModel)
+        /// <param name="securitySeeder">An <see cref="ISecuritySeeder"/> used to seed the initial price of the security</param>
+        public BrokerageModelSecurityInitializer(IBrokerageModel brokerageModel, ISecuritySeeder securitySeeder)
         {
             _brokerageModel = brokerageModel;
+            _securitySeeder = securitySeeder;
         }
 
         /// <summary>
@@ -49,6 +54,17 @@ namespace QuantConnect.Securities
             security.FeeModel = _brokerageModel.GetFeeModel(security);
             security.SlippageModel = _brokerageModel.GetSlippageModel(security);
             security.SettlementModel = _brokerageModel.GetSettlementModel(security, _brokerageModel.AccountType);
+
+            BaseData seedData = _securitySeeder.GetSeedData(security);
+            if (seedData != null)
+            {
+                security.SetMarketPrice(seedData);
+                Log.Trace("BrokerageModelSecurityInitializer.Initialize(): Seeded security: " + seedData.Symbol.Value + ": " + seedData.Value);
+            }
+            else
+            {
+                Log.Trace("BrokerageModelSecurityInitializer.Initialize(): Unable to seed security: " + security.Symbol.Value);
+            }
         }
     }
 }

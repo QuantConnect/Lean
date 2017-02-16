@@ -34,6 +34,16 @@ namespace QuantConnect.Indicators
         private readonly double[] t;
 
         /// <summary>
+        /// The point where the regression line crosses the y-axis (price-axis)
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> Intercept { get; private set; }
+        
+        /// <summary>
+        /// The regression line slope
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> Slope { get; private set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="LeastSquaresMovingAverage"/> class.
         /// </summary>
         /// <param name="name">The name of this indicator</param>
@@ -42,6 +52,8 @@ namespace QuantConnect.Indicators
             : base(name, period)
         {
             t = Vector<double>.Build.Dense(period, i => i + 1).ToArray();
+            Intercept = new Identity(name + "_Intercept");
+            Slope = new Identity(name + "_Slope");
         }
 
         /// <summary>
@@ -63,23 +75,31 @@ namespace QuantConnect.Indicators
         /// </returns>
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
-            // Until the windows is ready, the indicator returns the input value.
-            decimal output = input;
-            if (IsReady)
-            {
-                // Sort the windows by time, convert the observations ton double and transform it to a double array
-                double[] series = window
-                    .OrderBy(i => i.Time)
-                    .Select(i => Convert.ToDouble(i.Value))
-                    .ToArray<double>();
-                // Fit OLS
-                Tuple<double, double> ols = Fit.Line(x: t, y: series);
-                var alfa = (decimal)ols.Item1;
-                var beta = (decimal)ols.Item2;
-                // Make the projection.
-                output = alfa + beta * (Period);
-            }
-            return output;
+            // Until the window is ready, the indicator returns the input value.
+            if (window.Samples <= window.Size) return input;
+
+            // Sort the window by time, convert the observations to double and transform it to an array
+            var series = window
+                .OrderBy(i => i.Time)
+                .Select(i => Convert.ToDouble(i.Value))
+                .ToArray();
+            // Fit OLS
+            var ols = Fit.Line(x: t, y: series);
+            Intercept.Update(input.Time, (decimal)ols.Item1);
+            Slope.Update(input.Time, (decimal)ols.Item2);
+
+            // Calculate the fitted value corresponding to the input
+            return Intercept + Slope * Period;
+        }
+
+        /// <summary>
+        /// Resets this indicator and all sub-indicators (Intercept, Slope)
+        /// </summary>
+        public override void Reset()
+        {
+            Intercept.Reset();
+            Slope.Reset();
+            base.Reset();
         }
     }
 }

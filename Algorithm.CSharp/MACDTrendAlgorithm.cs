@@ -33,10 +33,10 @@ namespace QuantConnect.Algorithm.Examples
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2009, 01, 01);
+            SetStartDate(2004, 01, 01);
             SetEndDate(2015, 01, 01);
 
-            AddSecurity(SecurityType.Equity, Symbol);
+            AddSecurity(SecurityType.Equity, Symbol, Resolution.Daily);
 
             // define our daily macd(12,26) with a 9 day signal
             macd = MACD(Symbol, 9, 26, 9, MovingAverageType.Exponential, Resolution.Daily);

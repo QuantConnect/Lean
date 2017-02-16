@@ -31,6 +31,7 @@ using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
+using System.Diagnostics;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -583,7 +584,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void RuntimeError(string message, string stacktrace = "") 
         {
             PurgeQueue();
-            Messages.Enqueue(new RuntimeErrorPacket(_backtestId, message, stacktrace));
+            Messages.Enqueue(new RuntimeErrorPacket(_job.UserId, _backtestId, message, stacktrace));
             _errorMessage = message;
         }
 
@@ -690,13 +691,12 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Terminate the result thread and apply any required exit proceedures.
+        /// Terminate the result thread and apply any required exit procedures.
         /// </summary>
         public void Exit() 
         {
-            //Process all the log messages and send them to the S3:
-            var logURL = ProcessLogMessages(_job);
-            if (logURL != "") DebugMessage("Your log was successfully created and can be downloaded from: " + logURL);
+            var logLocation = ProcessLogMessages(_job);
+            DebugMessage("Your log was successfully created and can be retrieved from: " + logLocation);
 
             //Set exit flag, and wait for the messages to send:
             _exitTriggered = true;
@@ -758,76 +758,13 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Process log messages to ensure the meet the user caps and send them to storage.
+        /// Process log messages and return a string indicating the location of the logs
         /// </summary>
         /// <param name="job">Algorithm job/task packet</param>
         /// <returns>String URL of log</returns>
         private string ProcessLogMessages(AlgorithmNodePacket job)
         {
-            var remoteUrl = @"http://data.quantconnect.com/";
-            var logLength = 0;
-
-            try
-            {
-                //Return nothing if there's no log messages to procesS:
-                if (!_log.Any()) return "";
-
-                //Get the max length allowed for the algorithm:
-                var allowance = _api.ReadLogAllowance(job.UserId, job.Channel);
-                var logBacktestMax = allowance[0];
-                var logDailyMax = allowance[1];
-                var logRemaining = Math.Min(logBacktestMax, allowance[2]); //Minimum of maxium backtest or remaining allowance.
-                var hitLimit = false;
-                var serialized = new StringBuilder();
-
-                var key = "backtests/" + job.UserId + "/" + job.ProjectId + "/" + job.AlgorithmId + "-log.txt";
-                remoteUrl += key;
-
-                foreach (var line in _log)
-                {
-                    if ((logLength + line.Length) < logRemaining)
-                    {
-                        serialized.Append(line + "\r\n");
-                        logLength += line.Length;
-                    }
-                    else
-                    {
-                        var btMax = Math.Round((double)logBacktestMax / 1024, 0) + "kb";
-                        var dyMax = Math.Round((double)logDailyMax / 1024, 0) + "kb";
-
-                        //Same cap notice for both free & subscribers
-                        var requestMore = "";
-                        var capNotice = "You currently have a maximum of " + btMax + " of log data per backtest, and " + dyMax + " total max per day.";
-                        DebugMessage("You currently have a maximum of " + btMax + " of log data per backtest remaining, and " + dyMax + " total max per day.");
-                        
-                        //Data providers set max log limits and require email requests for extensions
-                        if (job.UserPlan == UserPlan.Free)
-                        {
-                            requestMore ="Please upgrade your account and contact us to request more allocation here: https://www.quantconnect.com/contact"; 
-                        }
-                        else
-                        {
-                            requestMore = "If you require more please briefly explain request for more allocation here: https://www.quantconnect.com/contact";
-                        }
-                        DebugMessage(requestMore);
-                        serialized.Append(capNotice);
-                        serialized.Append(requestMore);
-                        hitLimit = true;
-                        break;
-                    }
-                }
-
-                //Save the log: Upload this file to S3:
-                _api.Store(serialized.ToString(), key, StoragePermissions.Public);
-                //Record the data usage:
-                _api.UpdateDailyLogUsed(job.UserId, job.AlgorithmId, remoteUrl, logLength, job.Channel, hitLimit);
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
-            }
-            Log.Trace("BacktestingResultHandler.ProcessLogMessages(): Ready: " + remoteUrl);
-            return remoteUrl;
+            return _api.StoreLogs(_log, job, StoragePermissions.Public, false);
         }
 
         /// <summary>
@@ -866,16 +803,37 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             //Send out the debug messages:
-            _algorithm.DebugMessages.ForEach(x => DebugMessage(x));
-            _algorithm.DebugMessages.Clear();
+            var debugStopWatch = Stopwatch.StartNew();
+            while (_algorithm.DebugMessages.Count > 0 && debugStopWatch.ElapsedMilliseconds < 250)
+            {
+                string message;
+                if (_algorithm.DebugMessages.TryDequeue(out message))
+                {
+                    DebugMessage(message);
+                }
+            }
 
             //Send out the error messages:
-            _algorithm.ErrorMessages.ForEach(x => ErrorMessage(x));
-            _algorithm.ErrorMessages.Clear();
+            var errorStopWatch = Stopwatch.StartNew();
+            while (_algorithm.ErrorMessages.Count > 0 && errorStopWatch.ElapsedMilliseconds < 250)
+            {
+                string message;
+                if (_algorithm.ErrorMessages.TryDequeue(out message))
+                {
+                    ErrorMessage(message);
+                }
+            }
 
             //Send out the log messages:
-            _algorithm.LogMessages.ForEach(x => LogMessage(x));
-            _algorithm.LogMessages.Clear();
+            var logStopWatch = Stopwatch.StartNew();
+            while (_algorithm.LogMessages.Count > 0 && logStopWatch.ElapsedMilliseconds < 250)
+            {
+                string message;
+                if (_algorithm.LogMessages.TryDequeue(out message))
+                {
+                    LogMessage(message);
+                }
+            }
 
             //Set the running statistics:
             foreach (var pair in _algorithm.RuntimeStatistics)

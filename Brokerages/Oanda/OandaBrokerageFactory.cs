@@ -83,7 +83,7 @@ namespace QuantConnect.Brokerages.Oanda
             // read values from the brokerage data
             var environment = Read<Environment>(job.BrokerageData, "oanda-environment", errors);
             var accessToken = Read<string>(job.BrokerageData, "oanda-access-token", errors);
-            var accountId = Read<int>(job.BrokerageData, "oanda-account-id", errors);
+            var accountId = Read<string>(job.BrokerageData, "oanda-account-id", errors);
 
             if (errors.Count != 0)
             {
@@ -93,7 +93,7 @@ namespace QuantConnect.Brokerages.Oanda
 
             var brokerage = new OandaBrokerage(algorithm.Transactions, algorithm.Portfolio, environment, accessToken, accountId);
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
-
+            Composer.Instance.AddPart<IHistoryProvider>(brokerage);
             return brokerage;
         }
 

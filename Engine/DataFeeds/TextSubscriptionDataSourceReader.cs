@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using QuantConnect.Data;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Transport;
 using QuantConnect.Util;
 
@@ -34,6 +35,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly BaseData _factory;
         private readonly DateTime _date;
         private readonly SubscriptionDataConfig _config;
+        private readonly DataFileCacheProvider _dataFileCacheProvider;
+        private readonly IDataFileProvider _dataFileProvider;
 
         /// <summary>
         /// Event fired when the specified source is considered invalid, this may
@@ -53,18 +56,35 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public event EventHandler<CreateStreamReaderErrorEventArgs> CreateStreamReaderError;
 
+
         /// <summary>
         /// Initializes a new instance of the <see cref="TextSubscriptionDataSourceReader"/> class
         /// </summary>
+        /// <param name="dataFileProvider">Attempts to fetch remote file provider</param>
+        /// <param name="dataFileCacheProvider">This provider caches files if needed</param>
         /// <param name="config">The subscription's configuration</param>
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
-        public TextSubscriptionDataSourceReader(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public TextSubscriptionDataSourceReader(IDataFileProvider dataFileProvider, DataFileCacheProvider dataFileCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
+            _dataFileProvider = dataFileProvider;
+            _dataFileCacheProvider = dataFileCacheProvider;
             _date = date;
             _config = config;
             _isLiveMode = isLiveMode;
-            _factory = (BaseData) ObjectActivator.GetActivator(config.Type).Invoke(new object[0]);
+            _factory = (BaseData)ObjectActivator.GetActivator(config.Type).Invoke(new object[0]);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TextSubscriptionDataSourceReader"/> class
+        /// </summary>
+        /// <param name="dataFileProvider">Attempts to fetch remote file provider</param>
+        /// <param name="config">The subscription's configuration</param>
+        /// <param name="date">The date this factory was produced to read data for</param>
+        /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
+        public TextSubscriptionDataSourceReader(IDataFileProvider dataFileProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            : this(dataFileProvider, null, config, date, isLiveMode)
+        {
         }
 
         /// <summary>
@@ -91,7 +111,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     BaseData instance = null;
                     try
                     {
-                        instance  = _factory.Reader(_config, line, _date, _isLiveMode);
+                        instance = _factory.Reader(_config, line, _date, _isLiveMode);
                     }
                     catch (Exception err)
                     {
@@ -181,14 +201,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 file = source.Source.Substring(0, hashIndex);
             }
 
-            if (!File.Exists(file))
+            if (!File.Exists(file) && !_dataFileProvider.Fetch(_config.Symbol, _date, _config.Resolution, _config.TickType))
             {
                 OnInvalidSource(source, new FileNotFoundException("The specified file was not found", file));
                 return null;
             }
 
             // handles zip or text files
-            return new LocalFileSubscriptionStreamReader(file, entryName);
+            return _dataFileCacheProvider != null ? 
+                    _dataFileCacheProvider.Fetch(_config.Symbol, source, _date, _config.Resolution, _config.TickType):
+                    new LocalFileSubscriptionStreamReader(file, entryName);
         }
 
         /// <summary>

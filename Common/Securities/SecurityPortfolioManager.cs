@@ -67,7 +67,7 @@ namespace QuantConnect.Securities
         {
             Securities = securityManager;
             Transactions = transactions;
-            MarginCallModel = new MarginCallModel(this);
+            MarginCallModel = new DefaultMarginCallModel(this);
 
             CashBook = new CashBook();
             UnsettledCashBook = new CashBook();
@@ -361,14 +361,19 @@ namespace QuantConnect.Securities
             get
             {
                 // we can't include forex in this calculation since we would be double accounting with respect to the cash book
+                // we exclude futures as they are calculated separately
                 decimal totalHoldingsValueWithoutForex = 0;
                 foreach (var kvp in Securities)
                 {
                     var position = kvp.Value;
-                    if (position.Type != SecurityType.Forex) totalHoldingsValueWithoutForex += position.Holdings.HoldingsValue;
+                    if (position.Type != SecurityType.Forex &&
+                        position.Type != SecurityType.Future) totalHoldingsValueWithoutForex += position.Holdings.HoldingsValue;
                 }
 
-                return CashBook.TotalValueInAccountCurrency + UnsettledCashBook.TotalValueInAccountCurrency + totalHoldingsValueWithoutForex;
+                var totalFuturesHoldingsValue = Securities.Where(x => x.Value.Type == SecurityType.Future)
+                                                           .Sum(x => x.Value.Holdings.UnrealizedProfit);
+
+                return CashBook.TotalValueInAccountCurrency + UnsettledCashBook.TotalValueInAccountCurrency + totalHoldingsValueWithoutForex + totalFuturesHoldingsValue;
             }
         }
 
@@ -437,7 +442,7 @@ namespace QuantConnect.Securities
         /// Gets or sets the <see cref="MarginCallModel"/> for the portfolio. This
         /// is used to executed margin call orders.
         /// </summary>
-        public MarginCallModel MarginCallModel { get; set; }
+        public IMarginCallModel MarginCallModel { get; set; }
 
         /// <summary>
         /// Indexer for the PortfolioManager class to access the underlying security holdings objects.
@@ -562,23 +567,23 @@ namespace QuantConnect.Securities
                 issueMarginCallWarning = true;
             }
 
-            // if we still have margin remaining then there's no need for a margin call
-            if (marginRemaining > 0)
-            {
-                return new List<SubmitOrderRequest>();
-            }
-
             // generate a listing of margin call orders
             var marginCallOrders = new List<SubmitOrderRequest>();
 
-            // skip securities that have no price data or no holdings, we can't liquidate nothingness
-            foreach (var security in Securities.Values.Where(x => x.Holdings.Quantity != 0 && x.Price != 0))
+            // if we still have margin remaining then there's no need for a margin call
+            if (marginRemaining <= 0)
             {
-                var marginCallOrder = security.MarginModel.GenerateMarginCallOrder(security, totalPortfolioValue, totalMarginUsed);
-                if (marginCallOrder != null && marginCallOrder.Quantity != 0)
+                // skip securities that have no price data or no holdings, we can't liquidate nothingness
+                foreach (var security in Securities.Values.Where(x => x.Holdings.Quantity != 0 && x.Price != 0))
                 {
-                    marginCallOrders.Add(marginCallOrder);
+                    var maintenanceMarginRequirement = security.MarginModel.GetMaintenanceMarginRequirement(security);
+                    var marginCallOrder = MarginCallModel.GenerateMarginCallOrder(security, totalPortfolioValue, totalMarginUsed, maintenanceMarginRequirement);
+                    if (marginCallOrder != null && marginCallOrder.Quantity != 0)
+                    {
+                        marginCallOrders.Add(marginCallOrder);
+                    }
                 }
+                issueMarginCallWarning = marginCallOrders.Count > 0;
             }
 
             return marginCallOrders;
@@ -610,7 +615,23 @@ namespace QuantConnect.Securities
         /// <param name="split">The split to be applied</param>
         public void ApplySplit(Split split)
         {
+            ApplySplitToEquities(split);
+            ApplySplitToOptions(split);
+        }
+
+        /// <summary>
+        /// Applies a split to the portfolio equity positions
+        /// </summary>
+        /// <param name="split">The split to be applied</param>
+        private void ApplySplitToEquities(Split split)
+        {
             var security = Securities[split.Symbol];
+
+            // only apply splits to equities
+            if (security.Type != SecurityType.Equity)
+            {
+                return;
+            }
 
             // only apply splits in raw data mode, 
             var mode = security.DataNormalizationMode;
@@ -620,15 +641,15 @@ namespace QuantConnect.Securities
             }
 
             // we need to modify our holdings in lght of the split factor
-            var quantity = security.Holdings.Quantity/split.SplitFactor;
-            var avgPrice = security.Holdings.AveragePrice*split.SplitFactor;
+            var quantity = security.Holdings.Quantity / split.SplitFactor;
+            var avgPrice = security.Holdings.AveragePrice * split.SplitFactor;
 
             // we'll model this as a cash adjustment
-            var leftOver = quantity - (int) quantity;
-            var extraCash = leftOver*split.ReferencePrice;
+            var leftOver = quantity - (int)quantity;
+            var extraCash = leftOver * split.ReferencePrice;
             _baseCurrencyCash.AddAmount(extraCash);
 
-            security.Holdings.SetHoldings(avgPrice, (int) quantity);
+            security.Holdings.SetHoldings(avgPrice, (int)quantity);
 
             // build a 'next' value to update the market prices in light of the split factor
             var next = security.GetLastData();
@@ -650,7 +671,7 @@ namespace QuantConnect.Securities
                 tradeBar.High *= split.SplitFactor;
                 tradeBar.Low *= split.SplitFactor;
             }
-            
+
             // make sure to modify bid/ask as well for tradebar data types
             var tick = next as Tick;
             if (tick != null)
@@ -661,7 +682,94 @@ namespace QuantConnect.Securities
 
             security.SetMarketPrice(next);
         }
+        /// <summary>
+        /// Applies a split to the portfolio equity options positions
+        /// </summary>
+        /// <param name="split">The split to be applied</param>
+        private void ApplySplitToOptions(Split split)
+        {
+            // only apply to the option positions that have correct underlying symbol
+            var optionSecurities = Securities
+                                   .Where(x => x.Value.Type == SecurityType.Option && split.Symbol == x.Key.Underlying && x.Value.Holdings.Invested)
+                                   .ToList();
 
+            foreach (var securityKV in optionSecurities)
+            {
+                var symbol = securityKV.Key;
+                var security = securityKV.Value;
+
+                // only apply splits in raw data mode, 
+                var mode = security.DataNormalizationMode;
+                if (mode != DataNormalizationMode.Raw)
+                {
+                    continue;
+                }
+
+                var splitFactor = split.SplitFactor;
+                var newSymbol = GetSplitAdjustedSymbol(symbol, splitFactor);
+
+                if (newSymbol != null)
+                {
+                    Securities.Remove(symbol);
+                    var optionHoldings = new Option.OptionHolding(Securities[newSymbol], (Option.OptionHolding)security.Holdings);
+                    optionHoldings.SplitUnderlying(splitFactor);
+                    Securities[newSymbol].Holdings = optionHoldings;
+                }
+                else
+                {
+                    var optionHoldings = (Option.OptionHolding)security.Holdings;
+                    optionHoldings.SplitUnderlying(splitFactor);
+                }
+            }
+        }
+
+        private Symbol GetSplitAdjustedSymbol(Symbol symbol, decimal splitFactor)
+        {
+            var inverseFactor = 1.0m / splitFactor;
+
+            decimal newStrike = 0.0m;
+            string newRootSymbol = null;
+
+            Func<Symbol, bool> symbolIsFound = x => 
+            {
+                var rootSymbol = newRootSymbol ?? symbol.Underlying.Value;
+                var strike = newStrike != 0.0m ? newStrike : symbol.ID.StrikePrice;
+
+                return x.HasUnderlying == true &&
+                        x.Underlying.Value == rootSymbol &&
+                        x.ID.Date == symbol.ID.Date &&
+                        x.ID.OptionRight == symbol.ID.OptionRight &&
+                        x.ID.Market == symbol.ID.Market &&
+                        x.ID.OptionStyle == symbol.ID.OptionStyle &&
+                        x.ID.StrikePrice == strike;
+            };
+
+            // detect forward (even and odd) and reverse splits
+            if (splitFactor > 1.0m)
+            {
+                // reverse split
+                newRootSymbol = symbol.Underlying.Value + "1";
+            }
+
+            // check if the split is even or odd
+            if (inverseFactor.RoundToSignificantDigits(5) % 1 == 0)
+            {
+                // even split (e.g. 2 for 1)
+                newStrike = Math.Round(symbol.ID.StrikePrice / inverseFactor, 2);
+            }
+            else
+            {
+                // odd split (e.g. 3 for 2)
+                newStrike = Math.Round(symbol.ID.StrikePrice / inverseFactor, 2);
+                newRootSymbol = symbol.Underlying.Value + "1";
+            }
+
+            return Securities
+                    .Select(x => x.Key)
+                    .Where(symbolIsFound)
+                    .FirstOrDefault();
+        }
+        
         /// <summary>
         /// Record the transaction value and time in a list to later be processed for statistics creation.
         /// </summary>
@@ -689,10 +797,12 @@ namespace QuantConnect.Securities
         Security ISecurityProvider.GetSecurity(Symbol symbol)
         {
             Security security;
+
             if (Securities.TryGetValue(symbol, out security))
             {
                 return security;
             }
+
             return null;
         }
 

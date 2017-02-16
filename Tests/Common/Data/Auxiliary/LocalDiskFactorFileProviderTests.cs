@@ -14,6 +14,8 @@
  *
 */
 
+using System;
+using System.IO;
 using NUnit.Framework;
 using QuantConnect.Data.Auxiliary;
 
@@ -43,8 +45,30 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         public void ReturnsNullForNotFound()
         {
             var provider = new LocalDiskFactorFileProvider();
-            var factorFile = provider.Get(Symbol.Create("not - a - ticker", SecurityType.Equity, QuantConnect.Market.USA));
+            var factorFile = provider.Get(Symbol.Create("not-a-ticker", SecurityType.Equity, QuantConnect.Market.USA));
             Assert.IsNull(factorFile);
+        }
+
+        [Test, Ignore("This test is meant to be run manually")]
+        public void FindsFactorFilesWithErrors()
+        {
+            var provider = new LocalDiskFactorFileProvider();
+            var factorFileFolder = Path.Combine(Globals.DataFolder, "equity", QuantConnect.Market.USA, "factor_files");
+
+            foreach (var fileName in Directory.EnumerateFiles(factorFileFolder))
+            {
+                var ticker = Path.GetFileNameWithoutExtension(fileName).ToUpper();
+                var symbol = Symbol.Create(ticker, SecurityType.Equity, QuantConnect.Market.USA);
+
+                try
+                {
+                    provider.Get(symbol);
+                }
+                catch (Exception exception)
+                {
+                    Console.WriteLine(ticker + ": " + exception.Message);
+                }
+            }
         }
     }
 }

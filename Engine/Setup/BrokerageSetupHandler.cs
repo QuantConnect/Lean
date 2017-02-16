@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
@@ -26,7 +27,9 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 using QuantConnect.Util;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.Setup
 {
@@ -184,8 +187,11 @@ namespace QuantConnect.Lean.Engine.Setup
                     {
                         //Set the default brokerage model before initialize
                         algorithm.SetBrokerageModel(_factory.BrokerageModel);
+                        //Margin calls are disabled by default in live mode
+                        algorithm.Portfolio.MarginCallModel = MarginCallModel.Null;
                         //Set our parameters
                         algorithm.SetParameters(job.Parameters);
+                        algorithm.SetAvailableDataTypes(GetConfiguredDataFeeds());
                         //Algorithm is live, not backtesting:
                         algorithm.SetLiveMode(true);
                         //Initialize the algorithm's starting date
@@ -221,7 +227,6 @@ namespace QuantConnect.Lean.Engine.Setup
                 brokerage.Message += brokerageOnMessage;
 
                 algorithm.Transactions.SetOrderProcessor(transactionHandler);
-                algorithm.PostInitialize();
 
                 Log.Trace("BrokerageSetupHandler.Setup(): Connecting to brokerage...");
                 try
@@ -287,7 +292,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 {
                     // populate the algorithm with the account's current holdings
                     var holdings = brokerage.GetAccountHoldings();
-                    var supportedSecurityTypes = new HashSet<SecurityType> { SecurityType.Equity, SecurityType.Forex, SecurityType.Cfd };
+                    var supportedSecurityTypes = new HashSet<SecurityType> { SecurityType.Equity, SecurityType.Forex, SecurityType.Cfd, SecurityType.Option, SecurityType.Future };
                     var minResolution = new Lazy<Resolution>(() => algorithm.Securities.Select(x => x.Value.Resolution).DefaultIfEmpty(Resolution.Second).Min());
                     foreach (var holding in holdings)
                     {
@@ -307,9 +312,43 @@ namespace QuantConnect.Lean.Engine.Setup
                         if (!algorithm.Portfolio.ContainsKey(holding.Symbol))
                         {
                             Log.Trace("BrokerageSetupHandler.Setup(): Adding unrequested security: " + holding.Symbol.ToString());
-                            // for items not directly requested set leverage to 1 and at the min resolution
-                            algorithm.AddSecurity(holding.Type, holding.Symbol.Value, minResolution.Value, null, true, 1.0m, false);
+
+                            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+                            var symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
+
+                            // if we adding option, we have to add the option universe, so we take underlying symbol
+                            // Implemented solution is temporary. We will remove this code once it is the idea on how to refactor IAlgorithm is matured. 
+                            if (holding.Type == SecurityType.Option)
+                            {
+                                var underlying = holding.Symbol.Underlying.Value;
+
+                                // adding entire option universe to the system
+                                var canonicalOption = algorithm.AddSecurity(holding.Type, underlying, minResolution.Value, null, true, 1.0m, false);
+                                var universe = algorithm.UniverseManager.Where(x => x.Key == canonicalOption.Symbol).First().Value;
+
+                                // adding current option contract to the system
+                                var option = universe.CreateSecurity(holding.Symbol, algorithm, marketHoursDatabase, symbolPropertiesDatabase);
+                                algorithm.Securities.Add(holding.Symbol, option);
+                            }
+                            else if (holding.Type == SecurityType.Future)
+                            {
+                                var underlying = holding.Symbol.Underlying.Value;
+
+                                // adding entire future universe to the system
+                                var canonicalFuture = algorithm.AddSecurity(holding.Type, underlying, minResolution.Value, null, true, 1.0m, false);
+                                var universe = algorithm.UniverseManager.Where(x => x.Key == canonicalFuture.Symbol).First().Value;
+
+                                // adding current future contract to the system
+                                var future = universe.CreateSecurity(holding.Symbol, algorithm, marketHoursDatabase, symbolPropertiesDatabase);
+                                algorithm.Securities.Add(holding.Symbol, future);
+                            }
+                            else
+                            {
+                                // for items not directly requested set leverage to 1 and at the min resolution
+                                algorithm.AddSecurity(holding.Type, holding.Symbol.Value, minResolution.Value, null, true, 1.0m, false);
+                            }
                         }
+
                         algorithm.Portfolio[holding.Symbol].SetHoldings(holding.AveragePrice, (int) holding.Quantity);
                         algorithm.Securities[holding.Symbol].SetMarketPrice(new TradeBar
                         {
@@ -331,6 +370,8 @@ namespace QuantConnect.Lean.Engine.Setup
                     return false;
                 }
 
+                algorithm.PostInitialize();
+
                 //Set the starting portfolio value for the strategy to calculate performance:
                 StartingPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;
                 StartingDate = DateTime.Now;
@@ -349,6 +390,24 @@ namespace QuantConnect.Lean.Engine.Setup
 
             return Errors.Count == 0;
         }
+
+        /// <summary>
+        /// Get the available data feeds from config.json,
+        /// If none available, throw an error
+        /// </summary>
+        private static Dictionary<SecurityType, List<TickType>> GetConfiguredDataFeeds()
+        {
+            var dataFeedsConfigString = Config.Get("security-data-feeds");
+
+            Dictionary<SecurityType, List<TickType>> dataFeeds = new Dictionary<SecurityType, List<TickType>>();
+            if (dataFeedsConfigString != string.Empty)
+            {
+                dataFeeds = JsonConvert.DeserializeObject<Dictionary<SecurityType, List<TickType>>>(dataFeedsConfigString);
+            }
+
+            return dataFeeds;
+        }
+
 
         /// <summary>
         /// Adds initializaion error to the Errors list

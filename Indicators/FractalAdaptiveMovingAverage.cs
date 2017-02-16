@@ -23,7 +23,7 @@ namespace QuantConnect.Indicators
     /// <summary>
     /// The Fractal Adaptive Moving Average (FRAMA) by John Ehlers
     /// </summary>
-    public class FractalAdaptiveMovingAverage : TradeBarIndicator
+    public class FractalAdaptiveMovingAverage : BarIndicator
     {
 
         double _filt;
@@ -67,14 +67,14 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The data for the calculation</param>
         /// <returns>The average value</returns>
-        protected override decimal ComputeNextValue(TradeBar input)
+        protected override decimal ComputeNextValue(IBaseDataBar input)
         {
             var price = (double)(input.High + input.Low) / 2;
             _high.Add((double)input.High);
             _low.Add((double)input.Low);
 
             // our first data point just return identity
-            if (!_high.IsReady)
+            if (_high.Samples <= _high.Size)
             {
                 _filt = price;
             }

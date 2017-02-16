@@ -313,6 +313,32 @@ namespace QuantConnect.Securities
                 return false;
             }
 
+            if (order.Type == OrderType.OptionExercise)
+            {
+                // for option assignment and exercise orders we look into the requirements to process the underlying security transaction
+                var option = (Option.Option)security;
+                var underlying = option.Underlying;
+
+                if (option.IsAutoExercised(underlying.Close))
+                {
+                    var quantity = option.GetExerciseQuantity(order.Quantity);
+
+                    var newOrder = new LimitOrder
+                    {
+                        Id = order.Id,
+                        Time = order.Time,
+                        LimitPrice = option.StrikePrice,
+                        Symbol = underlying.Symbol,
+                        Quantity = option.Symbol.ID.OptionRight == OptionRight.Call ? quantity : -quantity
+                    };
+
+                    // we continue with this call for underlying 
+                    return GetSufficientCapitalForOrder(portfolio, newOrder);
+                }
+
+                return true;
+            }
+
             // When order only reduces or closes a security position, capital is always sufficient
             if (security.Holdings.Quantity * order.Quantity < 0 && Math.Abs(security.Holdings.Quantity) >= Math.Abs(order.Quantity)) return true;
 

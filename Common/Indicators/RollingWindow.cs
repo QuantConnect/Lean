@@ -122,7 +122,7 @@ namespace QuantConnect.Indicators
                 {
                     _listLock.EnterReadLock();
 
-                    if (!IsReady)
+                    if (Samples <= Size)
                     {
                         throw new InvalidOperationException("No items have been removed yet!");
                     }
@@ -150,9 +150,9 @@ namespace QuantConnect.Indicators
                 {
                     _listLock.EnterReadLock();
 
-                    if (i >= Count)
+                    if (i < 0 || i > Count - 1)
                     {
-                        throw new ArgumentOutOfRangeException("i", i, string.Format("Must be between 0 and Count {0}", Count));
+                        throw new ArgumentOutOfRangeException("i", i, string.Format("Must be between 0 and {0}", Count - 1));
                     }
                     return _list[(Count + _tail - i - 1) % Count];
                 }
@@ -167,9 +167,9 @@ namespace QuantConnect.Indicators
                 {
                     _listLock.EnterWriteLock();
 
-                    if (i >= Count)
+                    if (i < 0 || i > Count - 1)
                     {
-                        throw new ArgumentOutOfRangeException("i", i, string.Format("Must be between 0 and Count {0}", Count));
+                        throw new ArgumentOutOfRangeException("i", i, string.Format("Must be between 0 and {0}", Count - 1));
                     }
                     _list[(Count + _tail - i - 1) % Count] = value;
                 }
@@ -182,7 +182,7 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         ///     Gets a value indicating whether or not this window is ready, i.e,
-        ///     it has been filled to its capacity and one has fallen off the back
+        ///     it has been filled to its capacity
         /// </summary>
         public bool IsReady
         {
@@ -191,7 +191,7 @@ namespace QuantConnect.Indicators
                 try
                 {
                     _listLock.EnterReadLock();
-                    return Samples > Size;
+                    return Samples >= Size;
                 }
                 finally
                 {

@@ -127,12 +127,13 @@ namespace QuantConnect.Scheduling
             Func<IEnumerable<DateTime>, IEnumerable<DateTime>> applicator = dates => EveryIntervalIterator(dates, interval);
             return new FuncTimeRule(name, applicator);
         }
+        
 
         /// <summary>
         /// Specifies an event should fire at market open +- <paramref name="minutesAfterOpen"/>
         /// </summary>
         /// <param name="symbol">The symbol whose market open we want an event for</param>
-        /// <param name="minutesAfterOpen">The time after market open that the event should fire</param>
+        /// <param name="minutesAfterOpen">The minutes after market open that the event should fire</param>
         /// <param name="extendedMarketOpen">True to use extended market open, false to use regular market open</param>
         /// <returns>A time rule that fires the specified number of minutes after the symbol's market open</returns>
         public ITimeRule AfterMarketOpen(Symbol symbol, double minutesAfterOpen = 0, bool extendedMarketOpen = false)

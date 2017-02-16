@@ -67,8 +67,16 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// Initializes a new instance of the <see cref="MorningDojiStar"/> class.
         /// </summary>
         /// <param name="penetration">Percentage of penetration of a candle within another candle</param>
-        public MorningDojiStar(decimal penetration = 0.3m)
+        public MorningDojiStar(decimal penetration)
             : this("MORNINGDOJISTAR", penetration)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MorningDojiStar"/> class.
+        /// </summary>
+        public MorningDojiStar()
+            : this("MORNINGDOJISTAR")
         {
         }
 
@@ -86,7 +94,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// <param name="window">The window of data held in this indicator</param>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<TradeBar> window, TradeBar input)
+        protected override decimal ComputeNextValue(IReadOnlyWindow<IBaseDataBar> window, IBaseDataBar input)
         {
             if (!IsReady)
             {

@@ -24,9 +24,9 @@ namespace QuantConnect.Indicators
     /// The primary output value of the indicator is the mean of the upper and lower band for 
     /// the given timeframe.
     /// </summary>
-    public class DonchianChannel : TradeBarIndicator
+    public class DonchianChannel : BarIndicator
     {
-        private TradeBar _previousInput;
+        private IBaseDataBar _previousInput;
         /// <summary>
         /// Gets the upper band of the Donchian Channel.
         /// </summary>
@@ -73,7 +73,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator, which by convention is the mean value of the upper band and lower band.</returns>
-        protected override decimal ComputeNextValue(TradeBar input)
+        protected override decimal ComputeNextValue(IBaseDataBar input)
         {
             if (_previousInput != null)
             {

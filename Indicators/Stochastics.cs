@@ -23,7 +23,7 @@ namespace QuantConnect.Indicators
     /// multiplied by 100. Once the Fast Stochastics %K is calculated the Slow Stochastic %K is calculated by the average/smoothed price of
     /// of the Fast %K with the given period. The Slow Stochastics %D is then derived from the Slow Stochastics %K with the given period.
     /// </summary>
-    public class Stochastic : TradeBarIndicator
+    public class Stochastic : BarIndicator
     {
         private readonly IndicatorBase<IndicatorDataPoint> _maximum;
         private readonly IndicatorBase<IndicatorDataPoint> _mininum;
@@ -33,17 +33,17 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets the value of the Fast Stochastics %K given Period.
         /// </summary>
-        public IndicatorBase<TradeBar> FastStoch { get; private set; }
+        public IndicatorBase<IBaseDataBar> FastStoch { get; private set; }
 
         /// <summary>
         /// Gets the value of the Slow Stochastics given Period K.
         /// </summary>
-        public IndicatorBase<TradeBar> StochK { get; private set; }
+        public IndicatorBase<IBaseDataBar> StochK { get; private set; }
 
         /// <summary>
         /// Gets the value of the Slow Stochastics given Period D.
         /// </summary>
-        public IndicatorBase<TradeBar> StochD { get; private set; }
+        public IndicatorBase<IBaseDataBar> StochD { get; private set; }
 
         /// <summary>
         /// Creates a new Stochastics Indicator from the specified periods.
@@ -60,19 +60,19 @@ namespace QuantConnect.Indicators
             _sumFastK = new Sum(name + "_SumFastK", kPeriod);
             _sumSlowK = new Sum(name + "_SumD", dPeriod);
 
-            FastStoch = new FunctionalIndicator<TradeBar>(name + "_FastStoch",
+            FastStoch = new FunctionalIndicator<IBaseDataBar>(name + "_FastStoch",
                 input => ComputeFastStoch(period, input),
                 fastStoch => _maximum.IsReady,
                 () => _maximum.Reset()
                 );
 
-            StochK = new FunctionalIndicator<TradeBar>(name + "_StochK",
+            StochK = new FunctionalIndicator<IBaseDataBar>(name + "_StochK",
                 input => ComputeStochK(period, kPeriod, input),
                 stochK => _maximum.IsReady,
                 () => _maximum.Reset()
                 );
 
-            StochD = new FunctionalIndicator<TradeBar>(name + "_StochD",
+            StochD = new FunctionalIndicator<IBaseDataBar>(name + "_StochD",
                 input => ComputeStochD(period, kPeriod, dPeriod),
                 stochD => _maximum.IsReady,
                 () => _maximum.Reset()
@@ -101,7 +101,7 @@ namespace QuantConnect.Indicators
         /// Computes the next value of this indicator from the given state
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
-        protected override decimal ComputeNextValue(TradeBar input)
+        protected override decimal ComputeNextValue(IBaseDataBar input)
         {
             _maximum.Update(input.Time, input.High);
             _mininum.Update(input.Time, input.Low);
@@ -117,7 +117,7 @@ namespace QuantConnect.Indicators
         /// <param name="period">The period.</param>
         /// <param name="input">The input.</param>
         /// <returns>The Fast Stochastics %K value.</returns>
-        private decimal ComputeFastStoch(int period, TradeBar input)
+        private decimal ComputeFastStoch(int period, IBaseDataBar input)
         {
             var denominator = (_maximum - _mininum);
             var numerator = (input.Close - _mininum);
@@ -142,7 +142,7 @@ namespace QuantConnect.Indicators
         /// <param name="constantK">The constant k.</param>
         /// <param name="input">The input.</param>
         /// <returns>The Slow Stochastics %K value.</returns>
-        private decimal ComputeStochK(int period, int constantK, TradeBar input)
+        private decimal ComputeStochK(int period, int constantK, IBaseDataBar input)
         {
             var stochK = _maximum.Samples >= (period + constantK - 1) ? _sumFastK / constantK : new decimal(0.0);
             _sumSlowK.Update(input.Time, stochK);

@@ -31,7 +31,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class HistoryAlgorithm : QCAlgorithm
     {
         public SimpleMovingAverage spyDailySma;
-
+        private int _count = 0;
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -195,6 +195,13 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
+            _count++;
+
+            if (_count > 5)
+            {
+                throw new Exception("Invalid number of bars arrived. Expected exactly 5");
+            }
+
             if (!Portfolio.Invested)
             {
                 SetHoldings("SPY", 1);

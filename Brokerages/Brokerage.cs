@@ -33,6 +33,11 @@ namespace QuantConnect.Brokerages
         public event EventHandler<OrderEvent> OrderStatusChanged;
 
         /// <summary>
+        /// Event that fires each time a short option position is assigned
+        /// </summary>
+        public event EventHandler<OrderEvent> OptionPositionAssigned;
+
+        /// <summary>
         /// Event that fires each time a user's brokerage account is changed
         /// </summary>
         public event EventHandler<AccountEvent> AccountChanged;
@@ -103,6 +108,25 @@ namespace QuantConnect.Brokerages
                 Log.Debug("Brokerage.OnOrderEvent(): " + e);
 
                 var handler = OrderStatusChanged;
+                if (handler != null) handler(this, e);
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+        }
+
+        /// <summary>
+        /// Event invocator for the OptionPositionAssigned event
+        /// </summary>
+        /// <param name="e">The OrderEvent</param>
+        protected virtual void OnOptionPositionAssigned(OrderEvent e)
+        {
+            try
+            {
+                Log.Debug("Brokerage.OptionPositionAssigned(): " + e);
+
+                var handler = OptionPositionAssigned;
                 if (handler != null) handler(this, e);
             }
             catch (Exception err)

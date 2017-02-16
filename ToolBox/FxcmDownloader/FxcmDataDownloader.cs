@@ -84,27 +84,6 @@ namespace QuantConnect.ToolBox.FxcmDownloader
         }
 
         /// <summary>
-        /// Converts a Java Date value to a UTC DateTime value
-        /// </summary>
-        /// <param name="utcDateTime">The UTC DateTime value</param>
-        /// <returns>A UTC Java Date value</returns>
-        private static Date ToJavaDateUtc(DateTime utcDateTime)
-        {
-            var cal = Calendar.getInstance();
-            cal.setTimeZone(TimeZone.getTimeZone("UTC"));
-
-            cal.set(Calendar.YEAR, utcDateTime.Year);
-            cal.set(Calendar.MONTH, utcDateTime.Month - 1);
-            cal.set(Calendar.DAY_OF_MONTH, utcDateTime.Day);
-            cal.set(Calendar.HOUR_OF_DAY, utcDateTime.Hour);
-            cal.set(Calendar.MINUTE, utcDateTime.Minute);
-            cal.set(Calendar.SECOND, utcDateTime.Second);
-            cal.set(Calendar.MILLISECOND, utcDateTime.Millisecond);
-
-            return cal.getTime();
-        }
-
-        /// <summary>
         /// Checks if downloader can get the data for the Lean symbol
         /// </summary>
         /// <param name="symbol">The Lean symbol</param>
@@ -163,8 +142,8 @@ namespace QuantConnect.ToolBox.FxcmDownloader
 
             Console.WriteLine("Downloading {0} data from {1} to {2}...", resolution, startUtc.ToString("yyyyMMdd HH:mm:ss"), endUtc.ToString("yyyyMMdd HH:mm:ss"));
 
-            //Find best FXCM  paramrs
-            IFXCMTimingInterval interval = ToFXCMInterval(resolution);
+            // Find best FXCM parameters
+            var interval = FxcmBrokerage.ToFxcmInterval(resolution);
 
             var totalTicks = (endUtc - startUtc).Ticks;
 
@@ -185,10 +164,10 @@ namespace QuantConnect.ToolBox.FxcmDownloader
                 mdr.setFXCMTimingInterval(interval);
                 mdr.setMDEntryTypeSet(MarketDataRequest.MDENTRYTYPESET_ALL);
 
-                mdr.setFXCMStartDate(new UTCDate(ToJavaDateUtc(startUtc)));
-                mdr.setFXCMStartTime(new UTCTimeOnly(ToJavaDateUtc(startUtc)));
-                mdr.setFXCMEndDate(new UTCDate(ToJavaDateUtc(end)));
-                mdr.setFXCMEndTime(new UTCTimeOnly(ToJavaDateUtc(end)));
+                mdr.setFXCMStartDate(new UTCDate(FxcmBrokerage.ToJavaDateUtc(startUtc)));
+                mdr.setFXCMStartTime(new UTCTimeOnly(FxcmBrokerage.ToJavaDateUtc(startUtc)));
+                mdr.setFXCMEndDate(new UTCDate(FxcmBrokerage.ToJavaDateUtc(end)));
+                mdr.setFXCMEndTime(new UTCTimeOnly(FxcmBrokerage.ToJavaDateUtc(end)));
                 mdr.addRelatedSymbol(_fxcmInstruments[_symbolMapper.GetBrokerageSymbol(symbol)]);
 
 
@@ -234,37 +213,6 @@ namespace QuantConnect.ToolBox.FxcmDownloader
 
             return totalBaseData.ToList();
 
-        }
-
-        private IFXCMTimingInterval ToFXCMInterval(Resolution resolution)
-        {
-            IFXCMTimingInterval interval = null;
-            
-            switch (resolution)
-            {
-                case Resolution.Tick:
-                    interval = FXCMTimingIntervalFactory.TICK;
-                 
-                    break;
-                case Resolution.Second:
-                    interval = FXCMTimingIntervalFactory.SEC10;
-                   
-                    break;
-                case Resolution.Minute:
-                    interval = FXCMTimingIntervalFactory.MIN1;
-                    
-                    break;
-                case Resolution.Hour:
-                    interval = FXCMTimingIntervalFactory.HOUR1;
-                    
-                    break;
-                case Resolution.Daily:
-                    interval = FXCMTimingIntervalFactory.DAY1;
-                  
-                    break;
-            }
-
-            return interval;
         }
 
         private void RequestTradingSessionStatus()

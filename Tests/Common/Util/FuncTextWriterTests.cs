@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.IO;
 using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Util;
@@ -23,6 +24,15 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class FuncTextWriterTests
     {
+        [SetUp]
+        public void Setup()
+        {
+            // clear any existing output
+            var standardOut = new StreamWriter(Console.OpenStandardError()) { AutoFlush = true };
+            Console.SetError(standardOut);
+            Console.SetOut(standardOut);
+        }
+        
         [Test]
         public void RedirectsWriteAndWriteLine()
         {

@@ -22,7 +22,7 @@ namespace QuantConnect.Indicators
     /// The MidPrice is calculated using the following formula:
     /// MIDPRICE = (Highest High + Lowest Low) / 2
     /// </summary>
-    public class MidPrice : TradeBarIndicator
+    public class MidPrice : BarIndicator
     {
         private readonly decimal _period;
         private readonly Maximum _maximum;
@@ -63,7 +63,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(TradeBar input)
+        protected override decimal ComputeNextValue(IBaseDataBar input)
         {
             _maximum.Update(new IndicatorDataPoint { Value = input.High });
             _minimum.Update(new IndicatorDataPoint { Value = input.Low });

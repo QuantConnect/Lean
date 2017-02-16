@@ -33,6 +33,8 @@ namespace QuantConnect.Queues
         // The type name of the QuantConnect.Brokerages.Paper.PaperBrokerage
         private static readonly TextWriter Console = System.Console.Out;
         private const string PaperBrokerageTypeName = "PaperBrokerage";
+        private const string DefaultHistoryProvider = "SubscriptionDataReaderHistoryProvider";
+        private const string DefaultDataQueueHandler = "LiveDataQueue";
         private bool _liveMode = Config.GetBool("live-mode");
         private static readonly string AccessToken = Config.Get("api-access-token");
         private static readonly int UserId = Config.GetInt("job-user-id", 0);
@@ -70,12 +72,21 @@ namespace QuantConnect.Queues
             Log.Trace("JobQueue.NextJob(): Selected " + location);
 
             // check for parameters in the config
-            var parameters = new Dictionary<string, string>();
+            var parameters = new Dictionary<string, string>();            
+
             var parametersConfigString = Config.Get("parameters");
             if (parametersConfigString != string.Empty)
             {
                 parameters = JsonConvert.DeserializeObject<Dictionary<string, string>>(parametersConfigString);
             }
+
+            var controls = new Controls()
+            {
+                MinuteLimit = Config.GetInt("symbol-minute-limit", 10000),
+                SecondLimit = Config.GetInt("symbol-second-limit", 10000),
+                TickLimit = Config.GetInt("symbol-tick-limit", 10000),
+                RamAllocation = int.MaxValue
+            };
 
             //If this isn't a backtesting mode/request, attempt a live job.
             if (_liveMode)
@@ -85,14 +96,16 @@ namespace QuantConnect.Queues
                     Type = PacketType.LiveNode,
                     Algorithm = File.ReadAllBytes(AlgorithmLocation),
                     Brokerage = Config.Get("live-mode-brokerage", PaperBrokerageTypeName),
+                    HistoryProvider = Config.Get("history-provider", DefaultHistoryProvider),
+                    DataQueueHandler = Config.Get("data-queue-handler", DefaultDataQueueHandler),
                     Channel = AccessToken,
                     UserId = UserId,
                     ProjectId = ProjectId,
                     Version = Globals.Version,
                     DeployId = AlgorithmTypeName,
-                    RamAllocation = int.MaxValue,
                     Parameters = parameters,
                     Language = Language,
+                    Controls = controls
                 };
 
                 try
@@ -114,14 +127,15 @@ namespace QuantConnect.Queues
             {
                 Type = PacketType.BacktestNode,
                 Algorithm = File.ReadAllBytes(AlgorithmLocation),
+                HistoryProvider = Config.Get("history-provider", DefaultHistoryProvider),
                 Channel = AccessToken,
                 UserId = UserId,
                 ProjectId = ProjectId,
                 Version = Globals.Version,
                 BacktestId = AlgorithmTypeName,
-                RamAllocation = int.MaxValue,
                 Language = Language,
-                Parameters = parameters
+                Parameters = parameters,
+                Controls = controls
             };
 
             return backtestJob;

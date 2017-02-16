@@ -32,7 +32,7 @@ namespace QuantConnect.ToolBox.GoogleDownloader
             {
                 Console.WriteLine("Usage: GoogleDownloader SYMBOLS RESOLUTION FROMDATE TODATE");
                 Console.WriteLine("SYMBOLS = eg SPY,AAPL");
-                Console.WriteLine("RESOLUTION = Minute/Hour");
+                Console.WriteLine("RESOLUTION = Minute/Hour/Daily");
                 Console.WriteLine("FROMDATE = yyyymmdd");
                 Console.WriteLine("TODATE = yyyymmdd");
                 Environment.Exit(1);

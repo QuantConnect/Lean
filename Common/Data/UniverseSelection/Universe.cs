@@ -176,7 +176,7 @@ namespace QuantConnect.Data.UniverseSelection
             // by default invoke the create security method to handle security initialization
             return SecurityManager.CreateSecurity(algorithm.Portfolio, algorithm.SubscriptionManager, marketHoursDatabase, symbolPropertiesDatabase,
                 SecurityInitializer, symbol, UniverseSettings.Resolution, UniverseSettings.FillForward, UniverseSettings.Leverage,
-                UniverseSettings.ExtendedMarketHours, false, false, symbol.ID.SecurityType == SecurityType.Option);
+                UniverseSettings.ExtendedMarketHours, false, false, algorithm.LiveMode, symbol.ID.SecurityType == SecurityType.Option);
         }
 
         /// <summary>
@@ -217,7 +217,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="security">The security to be added</param>
         /// <returns>True if the security was successfully added,
         /// false if the security was already in the universe</returns>
-        internal bool AddMember(DateTime utcTime, Security security)
+        internal virtual bool AddMember(DateTime utcTime, Security security)
         {
             if (Securities.ContainsKey(security.Symbol))
             {
@@ -235,7 +235,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="security">The security to be removed</param>
         /// <returns>True if the security was successfully removed, false if
         /// we're not allowed to remove or if the security didn't exist</returns>
-        internal bool RemoveMember(DateTime utcTime, Security security)
+        internal virtual bool RemoveMember(DateTime utcTime, Security security)
         {
             if (CanRemoveMember(utcTime, security))
             {

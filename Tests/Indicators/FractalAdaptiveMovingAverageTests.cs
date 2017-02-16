@@ -50,7 +50,7 @@ namespace QuantConnect.Tests.Indicators
             RunTestIndicator(indicator);
         }
 
-        private static void RunTestIndicator(TradeBarIndicator indicator)
+        private static void RunTestIndicator(BarIndicator indicator)
         {
             TestHelper.TestIndicator(indicator, "frama.txt", "Filt", (actual, expected) => {AssertResult(expected, actual.Current.Value);});
         }

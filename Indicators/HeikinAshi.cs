@@ -49,11 +49,16 @@ namespace QuantConnect.Indicators
         public IndicatorBase<IndicatorDataPoint> Close { get; private set; }
 
         /// <summary>
+        /// Gets the Heikin-Ashi Volume
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> Volume { get; private set; }
+
+        /// <summary>
         /// Gets the Heikin-Ashi current TradeBar
         /// </summary>
         public TradeBar CurrentBar
         {
-            get {  return new TradeBar(Open.Current.Time, Symbol.Empty, Open, High, Low, Close, 0);}
+            get { return new TradeBar(Open.Current.Time, Symbol.Empty, Open, High, Low, Close, Convert.ToInt64(Volume.Current.Value)); }
         }
 
         /// <summary>
@@ -67,6 +72,7 @@ namespace QuantConnect.Indicators
             High = new Identity(name + "_High");
             Low = new Identity(name + "_Low");
             Close = new Identity(name + "_Close");
+            Volume = new Identity(name + "_Volume");
         }
 
         /// <summary>
@@ -107,6 +113,8 @@ namespace QuantConnect.Indicators
                 Low.Update(new IndicatorDataPoint(input.Time, Math.Min(input.Low, Math.Min(Open, Close))));
             }
 
+            Volume.Update(new IndicatorDataPoint(input.Time, input.Volume));
+
             return Close;
         }
 
@@ -119,6 +127,7 @@ namespace QuantConnect.Indicators
             High.Reset();
             Low.Reset();
             Close.Reset();
+            Volume.Reset();
             base.Reset();
         }
     }
