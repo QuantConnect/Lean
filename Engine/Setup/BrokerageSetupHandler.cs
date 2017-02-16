@@ -29,7 +29,6 @@ using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.Setup
 {
@@ -103,7 +102,7 @@ namespace QuantConnect.Lean.Engine.Setup
             });
 
             var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, out algorithm, out error);
-            if (!complete) throw new Exception(error + " Try re-building algorithm.");
+            if (!complete) throw new Exception(error + " Try re-building algorithm and remove duplicate QCAlgorithm base classes.");
 
             return algorithm;
         }
@@ -213,7 +212,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     {
                         AddInitializationError(err.Message);
                     }
-                });
+                }, controls.RamAllocation);
 
                 if (!initializeComplete)
                 {
