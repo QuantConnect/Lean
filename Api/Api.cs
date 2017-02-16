@@ -604,7 +604,10 @@ namespace QuantConnect.Api
         
         public virtual AlgorithmControl GetAlgorithmStatus(string algorithmId, int userId)
         {
-            return new AlgorithmControl();
+            return new AlgorithmControl()
+            {
+                ChartSubscription = "*"
+            };
         }
 
         /// <summary>
