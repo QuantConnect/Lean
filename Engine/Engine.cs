@@ -262,22 +262,13 @@ namespace QuantConnect.Lean.Engine
                         // Algorithm runtime error:
                         if (algorithm.RunTimeError != null)
                         {
-                            throw algorithm.RunTimeError;
+                            HandleAlgorithmError(job, algorithm.RunTimeError);
                         }
                     }
                     catch (Exception err)
                     {
                         //Error running the user algorithm: purge datafeed, send error messages, set algorithm status to failed.
-                        Log.Error(err, "Breaking out of parent try catch:");
-                        if (_algorithmHandlers.DataFeed != null) _algorithmHandlers.DataFeed.Exit();
-                        if (_algorithmHandlers.Results != null)
-                        {
-                            var message = "Runtime Error: " + err;
-                            Log.Trace("Engine.Run(): Sending runtime error to user...");
-                            _algorithmHandlers.Results.LogMessage(message);
-                            _algorithmHandlers.Results.RuntimeError(message, err.StackTrace);
-                            _systemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, message + " Stack Trace: " + err);
-                        }
+                        HandleAlgorithmError(job, err);
                     }
 
                     try
@@ -406,7 +397,29 @@ namespace QuantConnect.Lean.Engine
                 _algorithmHandlers.RealTime.Exit();
             }
         }
-        
+
+        /// <summary>
+        /// Handle an error in the algorithm.Run method.
+        /// </summary>
+        /// <param name="job">Job we're processing</param>
+        /// <param name="err">Error from algorithm stack</param>
+        private void HandleAlgorithmError(AlgorithmNodePacket job, Exception err)
+        {
+            Log.Error(err, "Breaking out of parent try catch:");
+            if (_algorithmHandlers.DataFeed != null) _algorithmHandlers.DataFeed.Exit();
+            if (_algorithmHandlers.Results != null)
+            {
+                var message = "Runtime Error: " + err;
+                Log.Trace("Engine.Run(): Sending runtime error to user...");
+                _algorithmHandlers.Results.LogMessage(message);
+                _algorithmHandlers.Results.RuntimeError(message, err.StackTrace);
+                _systemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, message + " Stack Trace: " + err);
+            }
+        }
+
+        /// <summary>
+        /// Load the history provider from the Composer
+        /// </summary>
         private IHistoryProvider GetHistoryProvider(string historyProvider)
         {
             if (historyProvider.IsNullOrEmpty())
@@ -415,6 +428,12 @@ namespace QuantConnect.Lean.Engine
             }
             return Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>(historyProvider);
         }
+
+        /// <summary>
+        /// Save a list of trades to disk for a given path
+        /// </summary>
+        /// <param name="transactions">Transactions list via an OrderProvider</param>
+        /// <param name="csvFileName">File path to create</param>
         private static void SaveListOfTrades(IOrderProvider transactions, string csvFileName)
         {
             var orders = transactions.GetOrders(x => x.Status.IsFill());
