@@ -187,7 +187,7 @@ namespace QuantConnect.Algorithm
             var thisSeries = thisChart.Series[series];
             if (thisSeries.Values.Count < 4000 || _liveMode)
             {
-                thisSeries.AddPoint(Time, value, _liveMode);
+                thisSeries.AddPoint(UtcTime, value, _liveMode);
             }
             else 
             {
