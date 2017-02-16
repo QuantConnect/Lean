@@ -376,7 +376,7 @@ namespace QuantConnect.AlgorithmFactory
             var complete = isolator.ExecuteWithTimeLimit(_loaderTimeLimit, () =>
             {
                 success = TryCreateAlgorithmInstance(assemblyPath, out instance, out error);
-            });
+            }, 1024); // Shouldnt use more than 10mb for creating an instance of the algorithm, but lets put a wide safety margin.
 
             algorithmInstance = instance;
             errorMessage = error;
