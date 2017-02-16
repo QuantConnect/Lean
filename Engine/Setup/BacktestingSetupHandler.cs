@@ -198,7 +198,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     Log.Error(err);
                     Errors.Add("Failed to initialize algorithm: Initialize(): " + err);
                 }
-            });
+            }, controls.RamAllocation);
 
             //Before continuing, detect if this is ready:
             if (!initializeComplete) return false;
