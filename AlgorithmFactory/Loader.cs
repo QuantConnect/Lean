@@ -363,10 +363,11 @@ namespace QuantConnect.AlgorithmFactory
         /// Creates a new instance of the class in the library, safely.
         /// </summary>
         /// <param name="assemblyPath">Location of the DLL</param>
+        /// <param name="ramLimit">Limit of the RAM for this process</param>
         /// <param name="algorithmInstance">Output algorithm instance</param>
         /// <param name="errorMessage">Output error message on failure</param>
         /// <returns>bool success</returns>     
-        public bool TryCreateAlgorithmInstanceWithIsolator(string assemblyPath, out IAlgorithm algorithmInstance, out string errorMessage)
+        public bool TryCreateAlgorithmInstanceWithIsolator(string assemblyPath, int ramLimit, out IAlgorithm algorithmInstance, out string errorMessage)
         {
             IAlgorithm instance = null;
             var error = string.Empty;
@@ -376,7 +377,7 @@ namespace QuantConnect.AlgorithmFactory
             var complete = isolator.ExecuteWithTimeLimit(_loaderTimeLimit, () =>
             {
                 success = TryCreateAlgorithmInstance(assemblyPath, out instance, out error);
-            }, 1024); // Shouldnt use more than 10mb for creating an instance of the algorithm, but lets put a wide safety margin.
+            }, ramLimit); 
 
             algorithmInstance = instance;
             errorMessage = error;

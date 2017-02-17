@@ -76,9 +76,9 @@ namespace QuantConnect.Lean.Engine.Setup
         /// Create a new instance of an algorithm from a physical dll path.
         /// </summary>
         /// <param name="assemblyPath">The path to the assembly's location</param>
-        /// <param name="language">Language of the assembly.</param>
+        /// <param name="algorithmNodePacket">Details of the task required</param>
         /// <returns>A new instance of IAlgorithm, or throws an exception if there was an error</returns>
-        IAlgorithm CreateAlgorithmInstance(string assemblyPath, Language language);
+        IAlgorithm CreateAlgorithmInstance(AlgorithmNodePacket algorithmNodePacket, string assemblyPath);
 
         /// <summary>
         /// Creates the brokerage as specified by the job packet
