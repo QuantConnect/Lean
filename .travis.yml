@@ -3,7 +3,7 @@ dist: trusty
 sudo: false
 
 mono:
-     - latest
+ - latest
 	 
 solution: QuantConnect.Lean.sln
 
