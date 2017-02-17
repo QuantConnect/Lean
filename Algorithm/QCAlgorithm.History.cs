@@ -414,6 +414,7 @@ namespace QuantConnect.Algorithm
         /// <returns>A single <see cref="BaseData"/> object with the last known price</returns>
         public BaseData GetLastKnownPrice(Security security)
         {
+            
             if (security.Symbol.IsCanonical())
             {
                 return null;
@@ -425,24 +426,29 @@ namespace QuantConnect.Algorithm
             var startTime = GetStartTimeAlgoTzForSecurity(security, 1, resolution);
             var endTime   = Time.RoundDown(resolution.ToTimeSpan());
 
-            var request = new HistoryRequest()
+            // Options and futures are the only securities that by default have multiple subscriptions
+            // Most security types have one subscription therefore this loop will fire once
+            foreach (var subscriptionDataConfig in security.Subscriptions)
             {
-                StartTimeUtc = startTime.ConvertToUtc(_localTimeKeeper.TimeZone),
-                EndTimeUtc = endTime.ConvertToUtc(_localTimeKeeper.TimeZone),
-                DataType = typeof(TradeBar),
-                Resolution = resolution,
-                FillForwardResolution = resolution,
-                Symbol = security.Symbol,
-                Market = security.Symbol.ID.Market,
-                ExchangeHours = security.Exchange.Hours,
-                SecurityType = security.Type
-            };
+                var request = new HistoryRequest()
+                {
+                    StartTimeUtc = startTime.ConvertToUtc(_localTimeKeeper.TimeZone),
+                    EndTimeUtc = endTime.ConvertToUtc(_localTimeKeeper.TimeZone),
+                    DataType = subscriptionDataConfig.Type,
+                    Resolution = resolution,
+                    FillForwardResolution = resolution,
+                    Symbol = security.Symbol,
+                    Market = security.Symbol.ID.Market,
+                    ExchangeHours = security.Exchange.Hours,
+                    SecurityType = security.Type
+                };
 
-            var history = History(new List<HistoryRequest> { request });
+                var history = History(new List<HistoryRequest> { request });
 
-            if (history.Any() && history.First().Values.Any())
-            {
-                return history.First().Values.First();
+                if (history.Any() && history.First().Values.Any())
+                {
+                    return history.First().Values.First();
+                }
             }
 
             return null;
