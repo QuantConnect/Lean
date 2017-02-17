@@ -77,13 +77,12 @@ namespace QuantConnect.Lean.Engine.Setup
         }
 
         /// <summary>
-        /// Creates a new algorithm instance. Checks configuration for a specific type name, and if present will
-        /// force it to find that one
+        /// Create a new instance of an algorithm from a physical dll path.
         /// </summary>
-        /// <param name="assemblyPath">Physical path of the algorithm dll.</param>
-        /// <param name="language">Language of the assembly.</param>
-        /// <returns>Algorithm instance</returns>
-        public IAlgorithm CreateAlgorithmInstance(string assemblyPath, Language language)
+        /// <param name="assemblyPath">The path to the assembly's location</param>
+        /// <param name="algorithmNodePacket">Details of the task required</param>
+        /// <returns>A new instance of IAlgorithm, or throws an exception if there was an error</returns>
+        public IAlgorithm CreateAlgorithmInstance(AlgorithmNodePacket algorithmNodePacket, string assemblyPath)
         {
             string error;
             IAlgorithm algorithm;
@@ -91,8 +90,8 @@ namespace QuantConnect.Lean.Engine.Setup
 
             // don't force load times to be fast here since we're running locally, this allows us to debug
             // and step through some code that may take us longer than the default 10 seconds
-            var loader = new Loader(language, TimeSpan.FromHours(1), names => names.SingleOrDefault(name => MatchTypeName(name, algorithmName)));
-            var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, out algorithm, out error);
+            var loader = new Loader(algorithmNodePacket.Language, TimeSpan.FromHours(1), names => names.SingleOrDefault(name => MatchTypeName(name, algorithmName)));
+            var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, algorithmNodePacket.RamAllocation, out algorithm, out error);
             if (!complete) throw new Exception(error + ": try re-building algorithm.");
 
             return algorithm;

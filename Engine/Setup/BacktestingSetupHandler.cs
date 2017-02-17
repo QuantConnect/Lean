@@ -111,20 +111,19 @@ namespace QuantConnect.Lean.Engine.Setup
         }
 
         /// <summary>
-        /// Creates a new algorithm instance. Verified there's only one defined in the assembly and requires
-        /// instantiation to take less than 10 seconds
+        /// Create a new instance of an algorithm from a physical dll path.
         /// </summary>
-        /// <param name="assemblyPath">Physical location of the assembly.</param>
-        /// <param name="language">Language of the DLL</param>
-        /// <returns>Algorithm instance.</returns>
-        public IAlgorithm CreateAlgorithmInstance(string assemblyPath, Language language)
+        /// <param name="assemblyPath">The path to the assembly's location</param>
+        /// <param name="algorithmNodePacket">Details of the task required</param>
+        /// <returns>A new instance of IAlgorithm, or throws an exception if there was an error</returns>
+        public IAlgorithm CreateAlgorithmInstance(AlgorithmNodePacket algorithmNodePacket, string assemblyPath)
         {
             string error;
             IAlgorithm algorithm;
 
             // limit load times to 60 seconds and force the assembly to have exactly one derived type
-            var loader = new Loader(language, TimeSpan.FromSeconds(60), names => names.SingleOrDefault());
-            var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, out algorithm, out error);
+            var loader = new Loader(algorithmNodePacket.Language, TimeSpan.FromSeconds(60), names => names.SingleOrDefault());
+            var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, algorithmNodePacket.RamAllocation, out algorithm, out error);
             if (!complete) throw new Exception(error + " Try re-building algorithm.");
 
             return algorithm;
@@ -198,7 +197,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     Log.Error(err);
                     Errors.Add("Failed to initialize algorithm: Initialize(): " + err);
                 }
-            });
+            }, controls.RamAllocation);
 
             //Before continuing, detect if this is ready:
             if (!initializeComplete) return false;

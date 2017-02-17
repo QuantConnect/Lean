@@ -110,7 +110,7 @@ namespace QuantConnect.Lean.Engine
                 try
                 {
                     // Save algorithm to cache, load algorithm instance:
-                    algorithm = _algorithmHandlers.Setup.CreateAlgorithmInstance(assemblyPath, job.Language);
+                    algorithm = _algorithmHandlers.Setup.CreateAlgorithmInstance(job, assemblyPath);
 
                     // Initialize the brokerage
                     IBrokerageFactory factory;
