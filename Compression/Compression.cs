@@ -527,8 +527,6 @@ namespace QuantConnect
             return reader;
         }
 
-
-
         /// <summary>
         /// Streams the unzipped file as key value pairs of file name to file contents.
         /// NOTE: When the returned enumerable finishes enumerating, the zip stream will be
@@ -631,7 +629,7 @@ namespace QuantConnect
         /// <summary>
         /// Unzip a local file and return its contents via streamreader:
         /// </summary>
-        public static StreamReader UnzipStream(Stream zipstream)
+        public static StreamReader UnzipStreamToStreamReader(Stream zipstream)
         {
             StreamReader reader = null;
             try
@@ -660,6 +658,31 @@ namespace QuantConnect
             }
 
             return reader;
+        } // End UnZip
+
+        /// <summary>
+        /// Unzip a stream that represents a zip file and return the first entry as a stream
+        /// </summary>
+        public static Stream UnzipStream(Stream zipstream, out ZipFile zipFile)
+        {
+            zipFile = ZipFile.Read(zipstream);
+
+            try
+            {
+                //Read the file entry into buffer:
+                var entry = zipFile.Entries.FirstOrDefault();
+
+                if (entry != null)
+                {
+                    return entry.OpenReader();
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+
+            return null;
         } // End UnZip
 
         /// <summary>

@@ -40,7 +40,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             var config = new SubscriptionDataConfig(typeof(FineFundamental), parameters.Symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, TickType.Trade, false);
             var security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), config, new Cash(CashBook.AccountCurrency, 0, 1), SymbolProperties.GetDefault(CashBook.AccountCurrency));
             var request = new SubscriptionRequest(false, null, security, config, parameters.StartDate, parameters.EndDate);
-            var fileProvider = new DefaultDataFileProvider();
+            var fileProvider = new DefaultDataProvider();
 
             var factory = new FineFundamentalSubscriptionEnumeratorFactory(false);
             var enumerator = factory.CreateEnumerator(request, fileProvider);

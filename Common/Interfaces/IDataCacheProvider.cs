@@ -15,27 +15,28 @@
 */
 
 using System;
+using System.IO;
+using QuantConnect.Data;
 
-namespace QuantConnect.Lean.Engine.DataFeeds.Transport
+namespace QuantConnect.Interfaces
 {
     /// <summary>
-    /// Defines a transport mechanism for data from its source into various reader methods
+    /// Defines a cache for data
     /// </summary>
-    public interface IStreamReader : IDisposable
+    public interface IDataCacheProvider : IDisposable
     {
         /// <summary>
-        /// Gets the transport medium of this stream reader
+        /// Fetch data from the cache
         /// </summary>
-        SubscriptionTransportMedium TransportMedium { get; }
+        /// <param name="key">A string representing the key of the cached data</param>
+        /// <returns>An <see cref="Stream"/> of the cached data</returns>
+        Stream Fetch(string key);
 
         /// <summary>
-        /// Gets whether or not there's more data to be read in the stream
+        /// Store the data in the cache
         /// </summary>
-        bool EndOfStream { get; }
-        
-        /// <summary>
-        /// Gets the next line/batch of content from the stream 
-        /// </summary>
-        string ReadLine();
+        /// <param name="key">The source of the data, used as a key to retrieve data in the cache</param>
+        /// <param name="data">The data to cache as a byte array</param>
+        void Store(string key, byte[] data);
     }
 }

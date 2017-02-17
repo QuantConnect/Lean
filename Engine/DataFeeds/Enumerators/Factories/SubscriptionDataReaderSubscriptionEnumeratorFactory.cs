@@ -34,8 +34,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         private readonly bool _includeAuxiliaryData;
         private readonly IResultHandler _resultHandler;
         private readonly IFactorFileProvider _factorFileProvider;
-        private readonly IDataFileProvider _dataFileProvider;
-        private readonly DataFileCacheProvider _dataFileCacheProvider;
+        private readonly IDataProvider _dataProvider;
+        private ZipDataCacheProvider _zipDataCacheProvider;
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
         private readonly IMapFileProvider _mapFileProvider;
 
@@ -45,7 +45,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="resultHandler">The result handler for the algorithm</param>
         /// <param name="mapFileProvider">The map file provider</param>
         /// <param name="factorFileProvider">The factor file provider</param>
-        /// <param name="dataFileProvider">Provider used to get data when it is not present on disk</param>
+        /// <param name="dataProvider">Provider used to get data when it is not present on disk</param>
         /// <param name="isLiveMode">True if runnig live algorithm, false otherwise</param>
         /// <param name="includeAuxiliaryData">True to check for auxiliary data, false otherwise</param>
         /// <param name="tradableDaysProvider">Function used to provide the tradable dates to be enumerator.
@@ -53,17 +53,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         public SubscriptionDataReaderSubscriptionEnumeratorFactory(IResultHandler resultHandler,
             IMapFileProvider mapFileProvider,
             IFactorFileProvider factorFileProvider,
-            IDataFileProvider dataFileProvider,
+            IDataProvider dataProvider,
             bool isLiveMode,
             bool includeAuxiliaryData,
             Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null
             )
         {
-            _dataFileCacheProvider = new DataFileCacheProvider();
             _resultHandler = resultHandler;
             _mapFileProvider = mapFileProvider;
             _factorFileProvider = factorFileProvider;
-            _dataFileProvider = dataFileProvider;
+            _dataProvider = dataProvider;
+            _zipDataCacheProvider = new ZipDataCacheProvider(dataProvider);
             _isLiveMode = isLiveMode;
             _includeAuxiliaryData = includeAuxiliaryData;
             _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
@@ -73,9 +73,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// Creates a <see cref="SubscriptionDataReader"/> to read the specified request
         /// </summary>
         /// <param name="request">The subscription request to be read</param>
-        /// <param name="dataFileProvider">Provider used to get data when it is not present on disk</param>
+        /// <param name="dataProvider">Provider used to get data when it is not present on disk</param>
         /// <returns>An enumerator reading the subscription request</returns>
-        public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataFileProvider dataFileProvider)
+        public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataProvider dataProvider)
         {
             var mapFileResolver = request.Configuration.SecurityType == SecurityType.Equity || 
                                   request.Configuration.SecurityType == SecurityType.Option
@@ -88,10 +88,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 _resultHandler,
                 mapFileResolver,
                 _factorFileProvider,
-                _dataFileProvider,
+                _dataProvider,
                 _tradableDaysProvider(request),
                 _isLiveMode,
-                 _dataFileCacheProvider,
+                 _zipDataCacheProvider,
                 _includeAuxiliaryData
                 );
         }
@@ -102,8 +102,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-            if (_dataFileCacheProvider != null)
-                _dataFileCacheProvider.Dispose();
+            if (_zipDataCacheProvider != null)
+                _zipDataCacheProvider.Dispose();
         }
     }
 }

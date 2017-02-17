@@ -11,28 +11,31 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
 */
 
 using System;
-using System.ComponentModel.Composition;
 
 namespace QuantConnect.Interfaces
 {
     /// <summary>
-    /// Fetches a remote file for a security.
-    /// Must save the file to Globals.DataFolder.
+    /// Defines a transport mechanism for data from its source into various reader methods
     /// </summary>
-    [InheritedExport(typeof(IDataFileProvider))]
-    public interface IDataFileProvider
+    public interface IStreamReader : IDisposable
     {
         /// <summary>
-        /// Gets and downloads the remote file
+        /// Gets the transport medium of this stream reader
         /// </summary>
-        /// <param name="symbol"><see cref="Symbol"/> of the security</param>
-        /// <param name="resolution"><see cref="Resolution"/> of the data requested</param>
-        /// <param name="date">DateTime of the data requested</param>
-        /// <param name="tickType"><see cref="TickType"/> of the security</param>
-        /// <returns>Bool indicating whether the remote file was fetched correctly</returns>
-        bool Fetch(Symbol symbol, DateTime date, Resolution resolution, TickType tickType);
+        SubscriptionTransportMedium TransportMedium { get; }
+
+        /// <summary>
+        /// Gets whether or not there's more data to be read in the stream
+        /// </summary>
+        bool EndOfStream { get; }
+
+        /// <summary>
+        /// Gets the next line/batch of content from the stream 
+        /// </summary>
+        string ReadLine();
     }
 }

@@ -44,7 +44,7 @@ namespace QuantConnect.Tests.Compression
             var zippedBytes = QuantConnect.Compression.ZipBytes(fileBytes, "entry");
             File.WriteAllBytes("entry.zip", zippedBytes);
 
-            using (var streamReader = QuantConnect.Compression.UnzipStream(File.OpenRead("entry.zip")))
+            using (var streamReader = QuantConnect.Compression.UnzipStreamToStreamReader(File.OpenRead("entry.zip")))
             {
                 var contents = streamReader.ReadToEnd();
                 Assert.AreEqual(fileContents, contents);

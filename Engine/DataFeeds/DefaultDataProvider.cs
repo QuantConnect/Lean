@@ -14,21 +14,40 @@
 */
 
 using System;
+using System.IO;
+using Ionic.Zip;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
     /// Default file provider functionality that does not attempt to retrieve any data
     /// </summary>
-    public class DefaultDataFileProvider : IDataFileProvider
+    public class DefaultDataProvider : IDataProvider, IDisposable
     {
         /// <summary>
-        /// Does not attempt to retrieve any data
+        /// Retrieves data from disc to be used in an algorithm
         /// </summary>
-        public bool Fetch(Symbol symbol, DateTime date, Resolution resolution, TickType tickType)
+        /// <param name="key">A string representing where the data is stored</param>
+        /// <returns>A <see cref="Stream"/> of the data requested</returns>
+        public Stream Fetch(string key)
         {
-            return false;
+            if (!File.Exists(key))
+            {
+                Log.Error("DefaultDataProvider.Fetch(): The specified file was not found: {0}", key);
+                return null;
+            }
+
+            return new FileStream(key, FileMode.Open, FileAccess.Read);
+        }
+
+        /// <summary>
+        /// The stream created by this type is passed up the stack to the IStreamReader
+        /// The stream is closed when the StreamReader that wraps this stream is disposed</summary>
+        public void Dispose()
+        {
+            //
         }
     }
 }

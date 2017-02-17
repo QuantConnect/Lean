@@ -11,28 +11,26 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
 */
 
+using System;
+using System.ComponentModel.Composition;
 using System.IO;
-using NUnit.Framework;
-using QuantConnect.Lean.Engine.DataFeeds.Transport;
 
-namespace QuantConnect.Tests.Engine.DataFeeds.Transport
+namespace QuantConnect.Interfaces
 {
-    [TestFixture]
-    public class LocalFileSubscriptionStreamReaderTests
+    /// <summary>
+    /// Fetches a remote file for a security.
+    /// Must save the file to Globals.DataFolder.
+    /// </summary>
+    [InheritedExport(typeof(IDataProvider))]
+    public interface IDataProvider
     {
-        [Test]
-        public void ReadsFromSpecificZipEntry()
-        {
-            var source = Path.Combine("TestData", "multizip.zip");
-            const string entryName = "multizip/three.txt";
-            using (var reader = new LocalFileSubscriptionStreamReader(source, entryName))
-            {
-                var line = reader.ReadLine();
-                Assert.AreEqual("3", line);
-            }
-        }
+        /// <summary>
+        /// Retrieves data to be used in an algorithm
+        /// </summary>
+        /// <param name="key">A string representing where the data is stored</param>
+        /// <returns>A <see cref="Stream"/> of the data requested</returns>
+        Stream Fetch(string key);
     }
 }

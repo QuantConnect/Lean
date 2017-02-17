@@ -31,7 +31,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly DateTime _date;
         private readonly bool _isLiveMode;
         private readonly BaseData _factory;
-        private readonly IDataFileProvider _dataFileProvider;
+        private IDataCacheProvider _dataCacheProvider;
 
         /// <summary>
         /// Event fired when the specified source is considered invalid, this may
@@ -42,13 +42,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes a new instance of the <see cref="ZipEntryNameSubscriptionDataSourceReader"/> class
         /// </summary>
-        /// <param name="dataFileProvider">Attempts to fetch remote file</param>
+        /// <param name="dataCacheProvider">Used to cache data</param>
         /// <param name="config">The subscription's configuration</param>
         /// <param name="date">The date this factory was produced to read data for</param>
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
-        public ZipEntryNameSubscriptionDataSourceReader(IDataFileProvider dataFileProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public ZipEntryNameSubscriptionDataSourceReader(IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            _dataFileProvider = dataFileProvider;
+            _dataCacheProvider = dataCacheProvider;
             _config = config;
             _date = date;
             _isLiveMode = isLiveMode;
@@ -62,11 +62,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>An <see cref="IEnumerable{BaseData}"/> that contains the data in the source</returns>
         public IEnumerable<BaseData> Read(SubscriptionDataSource source)
         {
-            if (!File.Exists(source.Source) && !_dataFileProvider.Fetch(_config.Symbol, _date, _config.Resolution, _config.TickType))
-            {
-                OnInvalidSource(source, new FileNotFoundException("The specified file was not found", source.Source));
-            }
-
             ZipFile zip;
             try
             {
