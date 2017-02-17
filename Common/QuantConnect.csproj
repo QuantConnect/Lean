@@ -257,6 +257,7 @@
     <Compile Include="Interfaces\IApi.cs" />
     <Compile Include="Interfaces\IBrokerage.cs" />
     <Compile Include="Interfaces\IBrokerageFactory.cs" />
+    <Compile Include="Interfaces\IDataFileCacheProvider.cs" />
     <Compile Include="Interfaces\IDataQueueUniverseProvider.cs" />
     <Compile Include="Interfaces\ICommandQueueHandler.cs" />
     <Compile Include="Interfaces\IDataQueueHandler.cs" />
@@ -266,6 +267,7 @@
     <Compile Include="Interfaces\IJobQueueHandler.cs" />
     <Compile Include="Interfaces\IMapFileProvider.cs" />
     <Compile Include="Interfaces\IMessagingHandler.cs" />
+    <Compile Include="Interfaces\IStreamReader.cs" />
     <Compile Include="LocalTimeKeeper.cs" />
     <Compile Include="Market.cs" />
     <Compile Include="Notifications\Notification.cs" />
