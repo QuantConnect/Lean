@@ -35,7 +35,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             if (!File.Exists(key))
             {
-                Log.Error("DefaultDataProvider.Fetch(): The specified file was not found: ", key);
+                Log.Error("DefaultDataProvider.Fetch(): The specified file was not found: {0}", key);
                 return null;
             }
 
