@@ -29,7 +29,22 @@ namespace QuantConnect.Data.Auxiliary
     /// </summary>
     public class FactorFile
     {
+        /// <summary>
+        /// The factor file data rows sorted by date
+        /// </summary>
         public SortedList<DateTime, FactorFileRow> SortedFactorFileData { get; set; }
+
+        /// <summary>
+        /// The minimum tradeable date for the symbol
+        /// </summary>
+        /// <remarks>
+        /// Some factor files have INF split values, indicating that the stock has so many splits
+        /// that prices can't be calculated with correct numerical precision.
+        /// To allow backtesting these symbols, we need to move the starting date
+        /// forward when reading the data.
+        /// Known symbols: GBSN, JUNI, NEWL
+        /// </remarks>
+        public DateTime? FactorFileMinimumDate { get; set; }
 
         /// <summary>
         /// Gets the symbol this factor file represents
@@ -39,10 +54,11 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Initializes a new instance of the <see cref="FactorFile"/> class.
         /// </summary>
-        public FactorFile(string permtick, IEnumerable<FactorFileRow> data)
+        public FactorFile(string permtick, IEnumerable<FactorFileRow> data, DateTime? factorFileMinimumDate = null)
         {
             Permtick = permtick.ToUpper();
             SortedFactorFileData = new SortedList<DateTime, FactorFileRow>(data.ToDictionary(x => x.Date));
+            FactorFileMinimumDate = factorFileMinimumDate;
         }
 
         /// <summary>
@@ -50,7 +66,8 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public static FactorFile Read(string permtick, string market)
         {
-            return new FactorFile(permtick, FactorFileRow.Read(permtick, market));
+            DateTime? factorFileMinimumDate;
+            return new FactorFile(permtick, FactorFileRow.Read(permtick, market, out factorFileMinimumDate), factorFileMinimumDate);
         }
 
         /// <summary>

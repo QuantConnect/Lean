@@ -22,7 +22,6 @@ using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom;
-using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
@@ -199,6 +198,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (_hasScaleFactors)
                     {
                         _factorFile = factorFile;
+
+                        // if factor file has minimum date, update start period if before minimum date
+                        if (!_isLiveMode && _factorFile != null && _factorFile.FactorFileMinimumDate.HasValue)
+                        {
+                            if (_periodStart < _factorFile.FactorFileMinimumDate.Value)
+                            {
+                                _periodStart = _factorFile.FactorFileMinimumDate.Value;
+
+                                _resultHandler.DebugMessage(
+                                    string.Format("Data for symbol {0} has been limited due to numerical precision issues in the factor file. The starting date has been set to {1}.",
+                                    config.Symbol.Value, 
+                                    _factorFile.FactorFileMinimumDate.Value.ToShortDateString()));
+                            }
+                        }
                     }
                 }
                 catch (Exception err)

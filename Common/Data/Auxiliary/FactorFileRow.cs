@@ -63,10 +63,38 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Reads in the factor file for the specified equity symbol
         /// </summary>
-        public static IEnumerable<FactorFileRow> Read(string permtick, string market)
+        public static IEnumerable<FactorFileRow> Read(string permtick, string market, out DateTime? factorFileMinimumDate)
         {
-            string path = Path.Combine(Globals.DataFolder, "equity", market, "factor_files", permtick.ToLower() + ".csv");
-            return File.ReadAllLines(path).Where(l => !string.IsNullOrWhiteSpace(l)).Select(Parse);
+            factorFileMinimumDate = null;
+
+            var path = Path.Combine(Globals.DataFolder, "equity", market, "factor_files", permtick.ToLower() + ".csv");
+            var lines = File.ReadAllLines(path).Where(l => !string.IsNullOrWhiteSpace(l));
+
+            var hasInfEntry = false;
+            var rows = new List<FactorFileRow>();
+
+            // parse factor file lines
+            foreach (var line in lines)
+            {
+                if (line.Contains("inf"))
+                {
+                    hasInfEntry = true;
+                    continue;
+                }
+
+                var row = Parse(line);
+
+                if (hasInfEntry && rows.Count == 0)
+                {
+                    // special handling for INF values: set minimum date
+                    factorFileMinimumDate = row.Date.AddDays(1);
+                    row = new FactorFileRow(row.Date.AddDays(-1), row.PriceFactor, row.SplitFactor);
+                }
+
+                rows.Add(row);
+            }
+
+            return rows;
         }
 
         /// <summary>
