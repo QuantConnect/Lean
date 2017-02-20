@@ -426,30 +426,29 @@ namespace QuantConnect.Algorithm
             var startTime = GetStartTimeAlgoTzForSecurity(security, 1, resolution);
             var endTime   = Time.RoundDown(resolution.ToTimeSpan());
 
-            // Options and futures are the only securities that by default have multiple subscriptions
-            // Most security types have one subscription therefore this loop will fire once
-            foreach (var subscriptionDataConfig in security.Subscriptions)
+            // Get the config with the largest resolution
+            var subscriptionDataConfig = GetMatchingSubscription(security, typeof(BaseData));
+
+            var request = new HistoryRequest()
             {
-                var request = new HistoryRequest()
-                {
-                    StartTimeUtc = startTime.ConvertToUtc(_localTimeKeeper.TimeZone),
-                    EndTimeUtc = endTime.ConvertToUtc(_localTimeKeeper.TimeZone),
-                    DataType = subscriptionDataConfig.Type,
-                    Resolution = resolution,
-                    FillForwardResolution = resolution,
-                    Symbol = security.Symbol,
-                    Market = security.Symbol.ID.Market,
-                    ExchangeHours = security.Exchange.Hours,
-                    SecurityType = security.Type
-                };
+                StartTimeUtc = startTime.ConvertToUtc(_localTimeKeeper.TimeZone),
+                EndTimeUtc = endTime.ConvertToUtc(_localTimeKeeper.TimeZone),
+                DataType = subscriptionDataConfig != null ? subscriptionDataConfig.Type :  typeof(TradeBar),
+                Resolution = resolution,
+                FillForwardResolution = resolution,
+                Symbol = security.Symbol,
+                Market = security.Symbol.ID.Market,
+                ExchangeHours = security.Exchange.Hours,
+                SecurityType = security.Type
+            };
 
-                var history = History(new List<HistoryRequest> { request });
+            var history = History(new List<HistoryRequest> { request });
 
-                if (history.Any() && history.First().Values.Any())
-                {
-                    return history.First().Values.First();
-                }
+            if (history.Any() && history.First().Values.Any())
+            {
+                return history.First().Values.First();
             }
+            
 
             return null;
         }
