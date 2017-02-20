@@ -53,6 +53,7 @@ namespace QuantConnect.Data
         /// <param name="slices">The enumerable of slice</param>
         /// <param name="symbol">The symbol to retrieve</param>
         /// <returns>An enumerable of TradeBar for the matching symbol, of no TradeBar found for symbol, empty enumerable is returned</returns>
+        [Obsolete("This method has been made obsolete, please use the generic version with TradeBar or QuoteBar type arguments instead. Calls to this method for a Forex or CFD security will return an empty result.")]
         public static IEnumerable<TradeBar> Get(this IEnumerable<Slice> slices, Symbol symbol)
         {
             return slices.TradeBars().Where(x => x.ContainsKey(symbol)).Select(x => x[symbol]);
