@@ -414,6 +414,7 @@ namespace QuantConnect.Algorithm
         /// <returns>A single <see cref="BaseData"/> object with the last known price</returns>
         public BaseData GetLastKnownPrice(Security security)
         {
+            
             if (security.Symbol.IsCanonical())
             {
                 return null;
@@ -425,11 +426,14 @@ namespace QuantConnect.Algorithm
             var startTime = GetStartTimeAlgoTzForSecurity(security, 1, resolution);
             var endTime   = Time.RoundDown(resolution.ToTimeSpan());
 
+            // Get the config with the largest resolution
+            var subscriptionDataConfig = GetMatchingSubscription(security, typeof(BaseData));
+
             var request = new HistoryRequest()
             {
                 StartTimeUtc = startTime.ConvertToUtc(_localTimeKeeper.TimeZone),
                 EndTimeUtc = endTime.ConvertToUtc(_localTimeKeeper.TimeZone),
-                DataType = typeof(TradeBar),
+                DataType = subscriptionDataConfig != null ? subscriptionDataConfig.Type :  typeof(TradeBar),
                 Resolution = resolution,
                 FillForwardResolution = resolution,
                 Symbol = security.Symbol,
@@ -444,6 +448,7 @@ namespace QuantConnect.Algorithm
             {
                 return history.First().Values.First();
             }
+            
 
             return null;
         }
