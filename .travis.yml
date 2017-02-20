@@ -1,6 +1,4 @@
 language: csharp
-dist: trusty
-sudo: false
 mono:
   - latest
 solution: QuantConnect.Lean.sln
