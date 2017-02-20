@@ -528,7 +528,7 @@ namespace QuantConnect.Algorithm
             resolution = resolution ?? security.Resolution;
             var request = new HistoryRequest(subscription, security.Exchange.Hours, startAlgoTz.ConvertToUtc(TimeZone), endAlgoTz.ConvertToUtc(TimeZone))
             {
-                DataType = subscription.IsCustomData ? subscription.Type : resolution == Resolution.Tick ? typeof(Tick) : typeof(TradeBar),
+                DataType = subscription.IsCustomData || resolution != Resolution.Tick ? subscription.Type : typeof(Tick),
                 Resolution = resolution.Value,
                 FillForwardResolution = subscription.FillDataForward ? resolution : null
             };
