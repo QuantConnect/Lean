@@ -613,7 +613,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private string GetPrimaryExchange(Contract contract)
         {
             ContractDetails details;
-            if (_contractDetails.TryGetValue(contract.Symbol, out details))
+            if (_contractDetails.TryGetValue(contract.ToString(), out details))
             {
                 return details.Summary.PrimaryExch;
             }
@@ -631,7 +631,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private string GetTradingClass(Contract contract)
         {
             ContractDetails details;
-            if (_contractDetails.TryGetValue(contract.Symbol, out details))
+            if (_contractDetails.TryGetValue(contract.ToString(), out details))
             {
                 return details.Summary.TradingClass;
             }
@@ -649,7 +649,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private decimal GetMinTick(Contract contract)
         {
             ContractDetails details;
-            if (_contractDetails.TryGetValue(contract.Symbol, out details))
+            if (_contractDetails.TryGetValue(contract.ToString(), out details))
             {
                 return (decimal) details.MinTick;
             }
@@ -679,7 +679,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // ignore other requests
                 if (args.RequestId != requestId) return;
                 details = args.ContractDetails;
-                _contractDetails.TryAdd(contract.Symbol, details);
+                _contractDetails.TryAdd(contract.ToString(), details);
                 manualResetEvent.Set();
                 Log.Trace("InteractiveBrokersBrokerage.GetContractDetails(): clientOnContractDetails event: " + contract.Symbol);
             };
