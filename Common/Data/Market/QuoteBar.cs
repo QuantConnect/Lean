@@ -278,7 +278,7 @@ namespace QuantConnect.Data.Market
             {
                 // "Scaffold" code - simple check to see how the data is formatted and decide how to parse appropriately
                 // TODO: Once all FX is reprocessed to QuoteBars, remove this check
-                if (csvLength > 5)
+                if (csvLength > 6)
                 {
                     // Parse as quote
                     return ParseQuoteAsQuoteBar(config, date, line);
