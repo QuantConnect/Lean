@@ -245,11 +245,17 @@ namespace QuantConnect.Algorithm
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
-        [Obsolete("This History method has been made obsolete, please use the generic version with TradeBar or QuoteBar type arguments instead. Calls to this method for a Forex or CFD security will return an empty result.")]
         public IEnumerable<TradeBar> History(Symbol symbol, int periods, Resolution? resolution = null)
         {
             var security = Securities[symbol];
             var start = GetStartTimeAlgoTz(symbol, periods, resolution);
+
+            var securityType = symbol.ID.SecurityType;
+            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
+            {
+                Error("Calling this method on a Forex or CFD security will return an empty result. Please use the generic version with QuoteBar type parameter.");
+            }
+
             return History(new[] {symbol}, start, Time.RoundDown((resolution ?? security.Resolution).ToTimeSpan()), resolution).Get(symbol).Memoize();
         }
 
@@ -312,9 +318,14 @@ namespace QuantConnect.Algorithm
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
-        [Obsolete("This History method has been made obsolete, please use the generic version with TradeBar or QuoteBar type arguments instead. Calls to this method for a Forex or CFD security will return an empty result.")]
         public IEnumerable<TradeBar> History(Symbol symbol, TimeSpan span, Resolution? resolution = null)
         {
+            var securityType = symbol.ID.SecurityType;
+            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
+            {
+                Error("Calling this method on a Forex or CFD security will return an empty result. Please use the generic version with QuoteBar type parameter.");
+            }
+
             return History(new[] {symbol}, span, resolution).Get(symbol).Memoize();
         }
 
@@ -326,9 +337,14 @@ namespace QuantConnect.Algorithm
         /// <param name="end">The end time in the algorithm's time zone</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
-        [Obsolete("This History method has been made obsolete, please use the generic version with TradeBar or QuoteBar type arguments instead. Calls to this method for a Forex or CFD security will return an empty result.")]
         public IEnumerable<TradeBar> History(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null)
         {
+            var securityType = symbol.ID.SecurityType;
+            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
+            {
+                Error("Calling this method on a Forex or CFD security will return an empty result. Please use the generic version with QuoteBar type parameter.");
+            }
+
             return History(new[] {symbol}, start, end, resolution).Get(symbol).Memoize();
         }
 
