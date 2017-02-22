@@ -532,7 +532,6 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Message we'd like shown in console.</param>
         public void DebugMessage(string message) 
         {
-            if (Messages.Count > 500) return;
             Messages.Enqueue(new DebugPacket(_job.ProjectId, _backtestId, _compileId, message));
 
             //Save last message sent:
