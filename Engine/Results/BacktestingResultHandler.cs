@@ -532,11 +532,13 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Message we'd like shown in console.</param>
         public void DebugMessage(string message) 
         {
-            if (Messages.Count > 500) return;
             Messages.Enqueue(new DebugPacket(_job.ProjectId, _backtestId, _compileId, message));
 
             //Save last message sent:
-            _log.Add(_algorithm.Time.ToString(DateFormat.UI) + " " + message);
+            if (_algorithm != null)
+            {
+                _log.Add(_algorithm.Time.ToString(DateFormat.UI) + " " + message);
+            }
             _debugMessage = message;
         }
 
@@ -546,9 +548,12 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Message we'd in the log.</param>
         public void LogMessage(string message)
         {
-            Messages.Enqueue(new LogPacket(_backtestId, message)); 
+            Messages.Enqueue(new LogPacket(_backtestId, message));
 
-            _log.Add(_algorithm.Time.ToString(DateFormat.UI) + " " + message);
+            if (_algorithm != null)
+            {
+                _log.Add(_algorithm.Time.ToString(DateFormat.UI) + " " + message);
+            }
         }
 
         /// <summary>
