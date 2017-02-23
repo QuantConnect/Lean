@@ -668,11 +668,12 @@ namespace QuantConnect.Api
         /// <param name="job">The <see cref="AlgorithmNodePacket"/> used to generate the url to the logs</param>
         /// <param name="permissions">The <see cref="StoragePermissions"/> for the file</param>
         /// <param name="async">Bool indicating whether the method to <see cref="Store"/> should be async</param>
+        /// <param name="isLiveMode">Bool to indicate whether the algorithm is in love mode or not</param>
         /// <returns>The location where the logs can be accessed</returns>
         /// <remarks>Since the logs are stored on disc during local backtest, this method simply returns the location of those logs
         /// TODO: Get the filename of the logs instead of hard coding it.
         ///  </remarks>
-        public virtual string StoreLogs(List<string> logs, AlgorithmNodePacket job, StoragePermissions permissions, bool async = false)
+        public virtual string StoreLogs(List<string> logs, AlgorithmNodePacket job, StoragePermissions permissions, bool isLiveMode = false, bool async = false)
         {
             return Path.Combine(Directory.GetCurrentDirectory(), "log.txt");
         }
