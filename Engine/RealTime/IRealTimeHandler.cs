@@ -54,6 +54,12 @@ namespace QuantConnect.Lean.Engine.RealTime
         void SetTime(DateTime time);
 
         /// <summary>
+        /// Scan for past events that didn't fire because there was no data at the scheduled time.
+        /// </summary>
+        /// <param name="time">Current time.</param>
+        void ScanPastEvents(DateTime time);
+
+        /// <summary>
         /// Trigger and exit signal to terminate real time event scanner.
         /// </summary>
         void Exit();
