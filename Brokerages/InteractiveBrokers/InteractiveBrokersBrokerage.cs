@@ -610,10 +610,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
         }
 
+        private string GetUniqueKey(Contract contract)
+        {
+            return string.Format("{0} {1} {2} {3}", contract.ToString(), contract.LastTradeDateOrContractMonth, contract.Strike, contract.Right);
+        }
+
         private string GetPrimaryExchange(Contract contract)
         {
             ContractDetails details;
-            if (_contractDetails.TryGetValue(contract.Symbol, out details))
+            if (_contractDetails.TryGetValue(GetUniqueKey(contract), out details))
             {
                 return details.Summary.PrimaryExch;
             }
@@ -631,7 +636,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private string GetTradingClass(Contract contract)
         {
             ContractDetails details;
-            if (_contractDetails.TryGetValue(contract.Symbol, out details))
+            if (_contractDetails.TryGetValue(GetUniqueKey(contract), out details))
             {
                 return details.Summary.TradingClass;
             }
@@ -649,7 +654,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private decimal GetMinTick(Contract contract)
         {
             ContractDetails details;
-            if (_contractDetails.TryGetValue(contract.Symbol, out details))
+            if (_contractDetails.TryGetValue(GetUniqueKey(contract), out details))
             {
                 return (decimal) details.MinTick;
             }
@@ -679,7 +684,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // ignore other requests
                 if (args.RequestId != requestId) return;
                 details = args.ContractDetails;
-                _contractDetails.TryAdd(contract.Symbol, details);
+                _contractDetails.TryAdd(GetUniqueKey(contract), details);
                 manualResetEvent.Set();
                 Log.Trace("InteractiveBrokersBrokerage.GetContractDetails(): clientOnContractDetails event: " + contract.Symbol);
             };
