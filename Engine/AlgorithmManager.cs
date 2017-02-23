@@ -272,6 +272,14 @@ namespace QuantConnect.Lean.Engine
 
                 //Update algorithm state after capturing performance from previous day
 
+                // If backtesting, we need to check if there are realtime events in the past 
+                // which didn't fire because at the scheduled times there was no data (i.e. markets closed)
+                // and fire them with the correct date/time.
+                if (backtestMode)
+                {
+                    realtime.ScanPastEvents(time);
+                }
+
                 //Set the algorithm and real time handler's time
                 algorithm.SetDateTime(time);
 

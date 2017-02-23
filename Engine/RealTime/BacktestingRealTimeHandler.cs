@@ -123,6 +123,22 @@ namespace QuantConnect.Lean.Engine.RealTime
         }
 
         /// <summary>
+        /// Scan for past events that didn't fire because there was no data at the scheduled time.
+        /// </summary>
+        /// <param name="time">Current time.</param>
+        public void ScanPastEvents(DateTime time)
+        {
+            foreach (var scheduledEvent in _scheduledEvents)
+            {
+                while (scheduledEvent.Value.NextEventUtcTime < time)
+                {
+                    _algorithm.SetDateTime(scheduledEvent.Value.NextEventUtcTime);
+                    scheduledEvent.Value.Scan(scheduledEvent.Value.NextEventUtcTime);
+                }
+            }
+        }
+
+        /// <summary>
         /// Stop the real time thread
         /// </summary>
         public void Exit()
