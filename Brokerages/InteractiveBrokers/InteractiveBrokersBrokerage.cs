@@ -35,6 +35,7 @@ using IB = QuantConnect.Brokerages.InteractiveBrokers.Client;
 using IBApi;
 using NodaTime;
 using System.Text;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
@@ -1967,12 +1968,26 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
         public IEnumerable<Slice> GetHistory(IEnumerable<Data.HistoryRequest> requests, DateTimeZone sliceTimeZone)
         {
-            foreach (var request in requests)
+            // Performance: May be able to run these requests concurrently to enable better response times
+            var enumerators = requests.Select(r => GetHistory(r)
+                    .GroupAdjacentBy((left, right) => left.EndTime == right.EndTime)
+                    .Select(bars =>
+                    {
+                        // we'll store everything into collections marked in the slice time zone
+                        var nativeTime = bars.First().EndTime;
+                        var sliceTime = nativeTime.ConvertTo(r.TimeZone, sliceTimeZone);
+                        return new BaseDataCollection(sliceTime, Symbol.Empty, bars);
+                    })
+                    .GetEnumerator()
+            );
+            
+            // now that we have collections in a single time zone we can synchronize and collate into slice instances
+            var synchronizer = new SynchronizingEnumerator(enumerators);
+            foreach (var grouping in synchronizer.GroupAdjacentBy((left, right) => left.EndTime == right.EndTime))
             {
-                foreach (var history in GetHistory(request, sliceTimeZone))
-                {
-                    yield return history;
-                }
+                // ALWAYS use end time for synchronizing, since this is the emit time
+                var groupingTimeInSlizeTimeZone = grouping.First().EndTime;
+                yield return new Slice(groupingTimeInSlizeTimeZone, grouping);
             }
         }
 
@@ -1980,10 +1995,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// Private method gets the history for the requested security
         /// </summary>
         /// <param name="request">The historical data request</param>
-        /// <param name="sliceTimeZone">The time zone used when time stamping the slice instances</param>
         /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
         /// <remarks>For IB history limitations see https://www.interactivebrokers.com/en/software/api/apiguide/tables/historical_data_limitations.htm </remarks>
-        private IEnumerable<Slice> GetHistory(Data.HistoryRequest request, DateTimeZone sliceTimeZone)
+        private IEnumerable<TradeBar> GetHistory(Data.HistoryRequest request)
         {
             const int timeOut = 60; // seconds timeout
 
@@ -1992,9 +2006,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var dataDownloaded = new ManualResetEvent(false);
 
             // skipping universe and canonical symbols 
-            if (!CanSubscribe(request.Symbol) ||
-                (request.Symbol.ID.SecurityType == SecurityType.Option && request.Symbol.IsCanonical()) ||
-                (request.Symbol.ID.SecurityType == SecurityType.Future && request.Symbol.IsCanonical()))
+            if (!CanSubscribe(request.Symbol) || request.Symbol.IsCanonical())
             {
                 yield break;
             }
@@ -2019,20 +2031,30 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // making multiple requests if needed in order to download the history
             while (endTime >= startTime)
             {
-                var historyPiece = new List<TradeBar>();
+                var startingHistoryCount = history.Count;
                 int historicalTicker = GetNextTickerId();
 
+                var receiveSync = new object();
                 EventHandler<IB.HistoricalDataEventArgs> clientOnHistoricalData = (sender, args) =>
                 {
                     if (args.RequestId == historicalTicker)
                     {
                         var bar = ConvertTradeBar(request.Symbol, request.Resolution, args);
+                        lock (receiveSync)
+                        {
+                            // want to make we synchronize the reads/writes here lest concurrency can kick us
+                            // moving endTime to the new position to proceed with next request (if needed) 
+                            endTime = new DateTime(Math.Min(bar.Time.Ticks, endTime.Ticks));
+                        }
 
-                        bar.Time = request.Resolution == Resolution.Daily ?
-                            bar.Time.ConvertTo(request.ExchangeHours.TimeZone, sliceTimeZone) :
-                            bar.Time.ConvertTo(DateTimeZoneProviders.Bcl.GetSystemDefault(), sliceTimeZone);
+                        // REVIEW: Does the IB api really send info back in your system time zone for all non-daily requests???
+                        if (request.Resolution != Resolution.Daily)
+                        {
+                            // force everything into the request time zone
+                            bar.Time = bar.Time.ConvertTo(DateTimeZoneProviders.Bcl.GetSystemDefault(), request.TimeZone);
+                        }
 
-                        historyPiece.Add(bar);
+                        history.Add(bar);
                         dataDownloading.Set();
                     }
                 };
@@ -2090,33 +2112,31 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 }
 
                 // if no data has been received this time, we exit
-                if (!historyPiece.Any())
+                if (history.Count == startingHistoryCount)
                 {
                     break;
                 }
-
-                var filteredPiece = historyPiece.OrderBy(x => x.Time);
-
-                history.AddRange(filteredPiece);
-
-                // moving endTime to the new position to proceed with next request (if needed) 
-                endTime = filteredPiece.First().Time;
             }
 
             // cleaning the data before returning it back to user
-            var sliceStartTime = request.StartTimeUtc.ConvertFromUtc(sliceTimeZone);
-            var sliceEndTime = request.EndTimeUtc.ConvertFromUtc(sliceTimeZone);
+            var startTimeRequestTimeZone = request.StartTimeUtc.ConvertFromUtc(request.TimeZone);
+            var endTimeRequestTimeZone = request.EndTimeUtc.ConvertFromUtc(request.TimeZone);
             var filteredHistory =
                         history
-                        .Where(bar => bar.Time >= sliceStartTime && bar.EndTime <= sliceEndTime)
-                        .GroupBy(bar => bar.Time)
+                        .Where(bar => bar.EndTime > startTimeRequestTimeZone && bar.EndTime <= endTimeRequestTimeZone)
+                        // REVIEW : This groupby appears to be an attempt to remove duplicate entries.
+                        //          I suspect that the algorithm above may have edge cases that
+                        //          introduce overlap when making multiple calls for a single req
+                        //          Ideally we wouldn't need this here and we could just return the
+                        //          sorted set of trade bars
+                        .GroupBy(bar => bar.EndTime)
                         .Select(group => group.First())
-                        .OrderBy(x => x.Time);
+                        .OrderBy(x => x.EndTime);
 
             foreach (var bar in filteredHistory)
             {
                 DataPointCount++;
-                yield return new Slice(bar.EndTime, new[] { bar });
+                yield return bar;
             }
 
             Log.Trace("InteractiveBrokersBrokerage::GetHistory() Download completed");
