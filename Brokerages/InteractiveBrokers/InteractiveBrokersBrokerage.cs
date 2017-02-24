@@ -2010,7 +2010,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var endTime = request.Resolution == Resolution.Daily ?
                             request.EndTimeUtc.ConvertFromUtc(request.ExchangeHours.TimeZone) :
                             request.EndTimeUtc.ConvertFromUtc(DateTimeZoneProviders.Bcl.GetSystemDefault());
-            var pacing = false;
             var dataType = request.Symbol.ID.SecurityType == SecurityType.Forex? HistoricalDataType.BidAsk : HistoricalDataType.Trades;
 
             Log.Trace("InteractiveBrokersBrokerage::GetHistory(): Submitting request: {0}({1}): {2} {3}->{4}", request.Symbol.Value, contract, request.Resolution, startTime, endTime);
@@ -2019,6 +2018,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // making multiple requests if needed in order to download the history
             while (endTime >= startTime)
             {
+                var pacing = false;
                 var historyPiece = new List<TradeBar>();
                 int historicalTicker = GetNextTickerId();
 
