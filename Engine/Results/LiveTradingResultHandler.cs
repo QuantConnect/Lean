@@ -935,11 +935,20 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Terminate the result thread and apply any required exit proceedures.
+        /// Terminate the result thread and apply any required exit procedures.
         /// </summary>
         public void Exit()
         {
+            // If the algorithm was not successfully initialized, be sure to store the logs
+            // Update() will be unable to store the logs if the algorithm never full initialized
+            if (!_exitTriggered && _algorithm != null && !_algorithm.GetLocked())
+            {
+                ProcessSynchronousEvents(true);
+                StoreLog(_logStore);
+            }
+
             _exitTriggered = true;
+
             Update();
         }
 
