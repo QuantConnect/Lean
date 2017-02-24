@@ -38,6 +38,10 @@ namespace QuantConnect.Packets
         [JsonProperty(PropertyName = "iUserID")]
         public int UserId = 0;
 
+        /// User API Token
+        [JsonProperty(PropertyName = "sUserToken")]
+        public string UserToken = "";
+
         /// <summary>
         /// Project Id of the request
         /// </summary>
