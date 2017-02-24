@@ -18,9 +18,9 @@ using System;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
-using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Util;
 
-namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
+namespace QuantConnect.Tests.Common.Util
 {
     [TestFixture]
     public class SynchronizingEnumeratorTests

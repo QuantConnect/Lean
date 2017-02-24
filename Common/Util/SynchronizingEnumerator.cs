@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 
-namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
+namespace QuantConnect.Util
 {
     /// <summary>
     /// Represents an enumerator capable of synchronizing other base data enumerators in time.
