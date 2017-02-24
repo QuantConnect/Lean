@@ -269,7 +269,7 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// Groups adjacent elements of the enumerale using the specified grouper function
+        /// Groups adjacent elements of the enumerable using the specified grouper function
         /// </summary>
         /// <typeparam name="T">The enumerable item type</typeparam>
         /// <param name="enumerable">The source enumerable to be grouped</param>
@@ -277,26 +277,40 @@ namespace QuantConnect.Util
         /// true if the next value belongs in the same group as the previous value, otherwise returns false</param>
         /// <returns>A new enumerable of the groups defined by grouper. These groups don't have a key
         /// and are only grouped by being emitted separately from this enumerable</returns>
-        public static IEnumerable<IEnumerable<T>> GroupAdjacentBy<T>(this IEnumerable<T> enumerable, Func<T, T, bool> grouper)
+        public static IEnumerable<IList<T>> GroupAdjacentBy<T>(this IEnumerable<T> enumerable, Func<T, T, bool> grouper)
         {
-            using (var e = enumerable.GetEnumerator())
+            return enumerable.GetEnumerator().GroupAdjacentBy(grouper);
+        }
+
+        /// <summary>
+        /// Groups adjacent elements of the enumerator using the specified grouper function
+        /// </summary>
+        /// <typeparam name="T">The enumerator item type</typeparam>
+        /// <param name="enumerator">The source enumerator to be grouped</param>
+        /// <param name="grouper">A function that accepts the previous value and the next value and returns
+        /// true if the next value belongs in the same group as the previous value, otherwise returns false</param>
+        /// <returns>A new enumerable of the groups defined by grouper. These groups don't have a key
+        /// and are only grouped by being emitted separately from this enumerator</returns>
+        public static IEnumerable<IList<T>> GroupAdjacentBy<T>(this IEnumerator<T> enumerator, Func<T, T, bool> grouper)
+        {
+            using (enumerator)
             {
-                if (e.MoveNext())
+                if (enumerator.MoveNext())
                 {
-                    var list = new List<T> {e.Current};
-                    var pred = e.Current;
-                    while (e.MoveNext())
+                    var list = new List<T> { enumerator.Current };
+                    var pred = enumerator.Current;
+                    while (enumerator.MoveNext())
                     {
-                        if (grouper(pred, e.Current))
+                        if (grouper(pred, enumerator.Current))
                         {
-                            list.Add(e.Current);
+                            list.Add(enumerator.Current);
                         }
                         else
                         {
                             yield return list;
-                            list = new List<T> {e.Current};
+                            list = new List<T> { enumerator.Current };
                         }
-                        pred = e.Current;
+                        pred = enumerator.Current;
                     }
                     yield return list;
                 }
