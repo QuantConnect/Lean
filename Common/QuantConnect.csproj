@@ -308,6 +308,7 @@
     <Compile Include="Packets\Controls.cs" />
     <Compile Include="Packets\HandledErrorPacket.cs" />
     <Compile Include="Packets\HistoryPacket.cs" />
+    <Compile Include="Packets\SystemDebugPacket.cs" />
     <Compile Include="Parameters\ParameterAttribute.cs" />
     <Compile Include="Properties\SharedAssemblyInfo.cs" />
     <Compile Include="Scheduling\CompositeTimeRule.cs" />

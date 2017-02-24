@@ -510,6 +510,19 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
+        /// Send a live trading system debug message to the live console.
+        /// </summary>
+        /// <param name="message">Message we'd like shown in console.</param>
+        /// <remarks>When there are already 500 messages in the queue it stops adding new messages.</remarks>
+        public void SystemDebugMessage(string message)
+        {
+            if (Messages.Count > 1000) return; // if too many in the queue already skip the logging.
+            Messages.Enqueue(new SystemDebugPacket(_job.ProjectId, _deployId, _compileId, message));
+            AddToLogStore(message);
+        }
+
+
+        /// <summary>
         /// Log string messages and send them to the console.
         /// </summary>
         /// <param name="message">String message wed like logged.</param>
