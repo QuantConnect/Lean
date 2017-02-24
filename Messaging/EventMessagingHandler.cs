@@ -68,6 +68,9 @@ namespace QuantConnect.Messaging
         public delegate void DebugEventRaised(DebugPacket packet);
         public event DebugEventRaised DebugEvent;
 
+        public delegate void SystemDebugEventRaised(SystemDebugPacket packet);
+        public event SystemDebugEventRaised SystemDebugEvent;
+
         public delegate void LogEventRaised(LogPacket packet);
         public event LogEventRaised LogEvent;
 
@@ -144,6 +147,11 @@ namespace QuantConnect.Messaging
                     OnDebugEvent(debug);
                     break;
 
+                case PacketType.SystemDebug:
+                    var systemDebug = (SystemDebugPacket)packet;
+                    OnSystemDebugEvent(systemDebug);
+                    break;
+
                 case PacketType.Log:
                     var log = (LogPacket)packet;
                     OnLogEvent(log);
@@ -183,6 +191,21 @@ namespace QuantConnect.Messaging
                 handler(packet);
             }
         }
+
+
+        /// <summary>
+        /// Raise a system debug event safely
+        /// </summary>
+        protected virtual void OnSystemDebugEvent(SystemDebugPacket packet)
+        {
+            var handler = DebugEvent;
+
+            if (handler != null)
+            {
+                handler(packet);
+            }
+        }
+
 
         /// <summary>
         /// Handler for consumer ready code.
