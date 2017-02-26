@@ -50,8 +50,11 @@ namespace QuantConnect.VisualStudioPlugin
             if (commandService != null)
             {
                 var menuCommandID = new CommandID(CommandSet, CommandId);
-                var menuItem = new MenuCommand(this.MenuItemCallback, menuCommandID);
-                commandService.AddCommand(menuItem);
+                // var menuItem = new MenuCommand(this.MenuItemCallback, menuCommandID);
+                // commandService.AddCommand(menuItem);
+                OleMenuCommand oleMenuItem = new OleMenuCommand(new EventHandler(MenuItemCallback), menuCommandID);
+                // oleMenuItem.BeforeQueryStatus += new EventHandler(OnBeforeQueryStatus);
+                commandService.AddCommand(oleMenuItem);
             }
         }
 
