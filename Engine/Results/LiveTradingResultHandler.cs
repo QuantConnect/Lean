@@ -510,6 +510,17 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
+        /// Send a live trading system debug message to the live console.
+        /// </summary>
+        /// <param name="message">Message we'd like shown in console.</param>
+        public void SystemDebugMessage(string message)
+        {
+            Messages.Enqueue(new SystemDebugPacket(_job.ProjectId, _deployId, _compileId, message));
+            AddToLogStore(message);
+        }
+
+
+        /// <summary>
         /// Log string messages and send them to the console.
         /// </summary>
         /// <param name="message">String message wed like logged.</param>

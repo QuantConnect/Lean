@@ -543,6 +543,22 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
+        /// Send a system debug message back to the browser console.
+        /// </summary>
+        /// <param name="message">Message we'd like shown in console.</param>
+        public void SystemDebugMessage(string message)
+        {
+            Messages.Enqueue(new SystemDebugPacket(_job.ProjectId, _backtestId, _compileId, message));
+
+            //Save last message sent:
+            if (_algorithm != null)
+            {
+                _log.Add(_algorithm.Time.ToString(DateFormat.UI) + " " + message);
+            }
+            _debugMessage = message;
+        }
+
+        /// <summary>
         /// Send a logging message to the log list for storage.
         /// </summary>
         /// <param name="message">Message we'd in the log.</param>
@@ -701,7 +717,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void Exit() 
         {
             var logLocation = ProcessLogMessages(_job);
-            DebugMessage("Your log was successfully created and can be retrieved from: " + logLocation);
+            SystemDebugMessage("Your log was successfully created and can be retrieved from: " + logLocation);
 
             //Set exit flag, and wait for the messages to send:
             _exitTriggered = true;

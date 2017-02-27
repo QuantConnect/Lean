@@ -94,6 +94,12 @@ namespace QuantConnect.Tests.Engine
             Messages.Enqueue(new DebugPacket(_job.ProjectId, _job.AlgorithmId, _job.CompileId, message));
         }
 
+        public void SystemDebugMessage(string message)
+        {
+            Messages.Enqueue(new SystemDebugPacket(_job.ProjectId, _job.AlgorithmId, _job.CompileId, message));
+        }
+
+
         public void SecurityType(List<SecurityType> types)
         {
         }

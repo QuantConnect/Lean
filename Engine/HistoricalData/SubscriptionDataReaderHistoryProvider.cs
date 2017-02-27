@@ -248,6 +248,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 ITransactionHandler transactionHandler) { }
             public void Run() { }
             public void DebugMessage(string message) { }
+            public void SystemDebugMessage(string message) { }
             public void SecurityType(List<SecurityType> types) { }
             public void LogMessage(string message) { }
             public void ErrorMessage(string error, string stacktrace = "") { }
