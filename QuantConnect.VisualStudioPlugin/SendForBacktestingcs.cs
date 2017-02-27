@@ -9,6 +9,8 @@ using System.ComponentModel.Design;
 using System.Globalization;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using EnvDTE80;
+using System.Collections.Generic;
 
 namespace QuantConnect.VisualStudioPlugin
 {
@@ -32,6 +34,7 @@ namespace QuantConnect.VisualStudioPlugin
         /// VS Package that provides this command, not null.
         /// </summary>
         private readonly Package package;
+        private DTE2 dte2;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SendForBacktestingcs"/> class.
@@ -45,7 +48,9 @@ namespace QuantConnect.VisualStudioPlugin
                 throw new ArgumentNullException("package");
             }
 
+            
             this.package = package;
+            this.dte2 = ServiceProvider.GetService(typeof(SDTE)) as DTE2;
 
             OleMenuCommandService commandService = this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (commandService != null)
@@ -58,20 +63,14 @@ namespace QuantConnect.VisualStudioPlugin
         private void RegisterSendForBacktesting(OleMenuCommandService commandService)
         {
             var menuCommandID = new CommandID(CommandSet, SendForBacktestingCommandId);
-            // var menuItem = new MenuCommand(this.MenuItemCallback, menuCommandID);
-            // commandService.AddCommand(menuItem);
             OleMenuCommand oleMenuItem = new OleMenuCommand(new EventHandler(SendForBacktestingCallback), menuCommandID);
-            // oleMenuItem.BeforeQueryStatus += new EventHandler(OnBeforeQueryStatus);
             commandService.AddCommand(oleMenuItem);
         }
 
         private void RegisterSaveToQuantConnect(OleMenuCommandService commandService)
         {
             var menuCommandID = new CommandID(CommandSet, SaveToQuantConnectCommandId);
-            // var menuItem = new MenuCommand(this.MenuItemCallback, menuCommandID);
-            // commandService.AddCommand(menuItem);
             OleMenuCommand oleMenuItem = new OleMenuCommand(new EventHandler(SaveToQuantConnectCallback), menuCommandID);
-            // oleMenuItem.BeforeQueryStatus += new EventHandler(OnBeforeQueryStatus);
             commandService.AddCommand(oleMenuItem);
         }
 
@@ -113,7 +112,8 @@ namespace QuantConnect.VisualStudioPlugin
         /// <param name="e">Event args.</param>
         private void SendForBacktestingCallback(object sender, EventArgs e)
         {
-            string message = string.Format(CultureInfo.CurrentCulture, "Inside {0}.MenuItemCallback()", this.GetType().FullName);
+            List<string> files = GetSelectedFiles(sender);
+            string message = string.Format(CultureInfo.CurrentCulture, "Send for backtesting {0}", string.Join(" ", files));
             string title = "SendToBacktesting";
 
             // Show a message box to prove we were here
@@ -128,7 +128,8 @@ namespace QuantConnect.VisualStudioPlugin
 
         private void SaveToQuantConnectCallback(object sender, EventArgs e)
         {
-            string message = string.Format(CultureInfo.CurrentCulture, "Inside {0}.MenuItemCallback()", this.GetType().FullName);
+            List<string> files = GetSelectedFiles(sender);
+            string message = string.Format(CultureInfo.CurrentCulture, "Save {0}", string.Join(" ", files));
             string title = "SaveToQuantConnect";
 
             // Show a message box to prove we were here
@@ -139,6 +140,23 @@ namespace QuantConnect.VisualStudioPlugin
                 OLEMSGICON.OLEMSGICON_INFO,
                 OLEMSGBUTTON.OLEMSGBUTTON_OK,
                 OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+        }
+
+        private List<string> GetSelectedFiles(object sender)
+        {
+            var myCommand = sender as OleMenuCommand;
+
+            List<string> selectedFiles = new List<string>();
+            object[] selectedItems = (object[]) dte2.ToolWindows.SolutionExplorer.SelectedItems;
+            foreach (EnvDTE.UIHierarchyItem selectedUIHierarchyItem in selectedItems)
+            {
+                if (selectedUIHierarchyItem.Object is EnvDTE.ProjectItem)
+                {
+                    EnvDTE.ProjectItem item = selectedUIHierarchyItem.Object as EnvDTE.ProjectItem;
+                    selectedFiles.Add(item.Name);
+                }
+            }
+            return selectedFiles;
         }
     }
 }
