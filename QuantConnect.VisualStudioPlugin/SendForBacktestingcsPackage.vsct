@@ -41,6 +41,13 @@
           <ButtonText>Send for backtesting</ButtonText>
         </Strings>
       </Button>
+      <Button guid="guidSendForBacktestingcsPackageCmdSet" id="SaveToQuantConnectId" priority="0x0101" type="Button">
+        <Parent guid="guidSendForBacktestingcsPackageCmdSet" id="MyMenuGroup" />
+        <Icon guid="guidImages" id="bmpPic1" />
+        <Strings>
+          <ButtonText>Save to QuantConnect</ButtonText>
+        </Strings>
+      </Button>
     </Buttons>
 
 
@@ -67,6 +74,7 @@
     <!-- This is the guid used to group the menu commands together -->
     <GuidSymbol name="guidSendForBacktestingcsPackageCmdSet" value="{00ce2ccb-74c7-42f4-bf63-52c573fc1532}">
       <IDSymbol name="MyMenuGroup" value="0x1020" />
+      <IDSymbol name="SaveToQuantConnectId" value="0x0110" />
       <IDSymbol name="SendForBacktestingcsId" value="0x0100" />
     </GuidSymbol>
 

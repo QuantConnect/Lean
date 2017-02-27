@@ -20,7 +20,8 @@ namespace QuantConnect.VisualStudioPlugin
         /// <summary>
         /// Command ID.
         /// </summary>
-        public const int CommandId = 0x0100;
+        public const int SendForBacktestingCommandId = 0x0100;
+        public const int SaveToQuantConnectCommandId = 0x0110;
 
         /// <summary>
         /// Command menu group (command set GUID).
@@ -49,13 +50,29 @@ namespace QuantConnect.VisualStudioPlugin
             OleMenuCommandService commandService = this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (commandService != null)
             {
-                var menuCommandID = new CommandID(CommandSet, CommandId);
-                // var menuItem = new MenuCommand(this.MenuItemCallback, menuCommandID);
-                // commandService.AddCommand(menuItem);
-                OleMenuCommand oleMenuItem = new OleMenuCommand(new EventHandler(MenuItemCallback), menuCommandID);
-                // oleMenuItem.BeforeQueryStatus += new EventHandler(OnBeforeQueryStatus);
-                commandService.AddCommand(oleMenuItem);
+                RegisterSendForBacktesting(commandService);
+                RegisterSaveToQuantConnect(commandService);
             }
+        }
+
+        private void RegisterSendForBacktesting(OleMenuCommandService commandService)
+        {
+            var menuCommandID = new CommandID(CommandSet, SendForBacktestingCommandId);
+            // var menuItem = new MenuCommand(this.MenuItemCallback, menuCommandID);
+            // commandService.AddCommand(menuItem);
+            OleMenuCommand oleMenuItem = new OleMenuCommand(new EventHandler(SendForBacktestingCallback), menuCommandID);
+            // oleMenuItem.BeforeQueryStatus += new EventHandler(OnBeforeQueryStatus);
+            commandService.AddCommand(oleMenuItem);
+        }
+
+        private void RegisterSaveToQuantConnect(OleMenuCommandService commandService)
+        {
+            var menuCommandID = new CommandID(CommandSet, SaveToQuantConnectCommandId);
+            // var menuItem = new MenuCommand(this.MenuItemCallback, menuCommandID);
+            // commandService.AddCommand(menuItem);
+            OleMenuCommand oleMenuItem = new OleMenuCommand(new EventHandler(SaveToQuantConnectCallback), menuCommandID);
+            // oleMenuItem.BeforeQueryStatus += new EventHandler(OnBeforeQueryStatus);
+            commandService.AddCommand(oleMenuItem);
         }
 
         /// <summary>
@@ -94,10 +111,25 @@ namespace QuantConnect.VisualStudioPlugin
         /// </summary>
         /// <param name="sender">Event sender.</param>
         /// <param name="e">Event args.</param>
-        private void MenuItemCallback(object sender, EventArgs e)
+        private void SendForBacktestingCallback(object sender, EventArgs e)
         {
             string message = string.Format(CultureInfo.CurrentCulture, "Inside {0}.MenuItemCallback()", this.GetType().FullName);
-            string title = "SendForBacktestingcs";
+            string title = "SendToBacktesting";
+
+            // Show a message box to prove we were here
+            VsShellUtilities.ShowMessageBox(
+                this.ServiceProvider,
+                message,
+                title,
+                OLEMSGICON.OLEMSGICON_INFO,
+                OLEMSGBUTTON.OLEMSGBUTTON_OK,
+                OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+        }
+
+        private void SaveToQuantConnectCallback(object sender, EventArgs e)
+        {
+            string message = string.Format(CultureInfo.CurrentCulture, "Inside {0}.MenuItemCallback()", this.GetType().FullName);
+            string title = "SaveToQuantConnect";
 
             // Show a message box to prove we were here
             VsShellUtilities.ShowMessageBox(
