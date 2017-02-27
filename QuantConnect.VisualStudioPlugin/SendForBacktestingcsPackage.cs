@@ -68,6 +68,7 @@ namespace QuantConnect.VisualStudioPlugin
         {
             SendForBacktestingcs.Initialize(this);
             base.Initialize();
+            QuantConnect.VisualStudioPlugin.ToolMenuCommand.Initialize(this);
         }
 
         #endregion

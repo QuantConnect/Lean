@@ -56,6 +56,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SendForBacktestingcs.cs" />
     <Compile Include="SendForBacktestingcsPackage.cs" />
+    <Compile Include="ToolMenuCommand.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Key.snk" />
@@ -68,9 +69,11 @@
     <Content Include="index.html" />
     <VSCTCompile Include="SendForBacktestingcsPackage.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
+      <SubType>Designer</SubType>
     </VSCTCompile>
     <Content Include="Resources\SendForBacktestingcs.png" />
     <Content Include="Resources\SendForBacktestingcsPackage.ico" />
+    <Content Include="Resources\ToolMenuCommand.png" />
     <Content Include="stylesheet.css" />
   </ItemGroup>
   <ItemGroup>

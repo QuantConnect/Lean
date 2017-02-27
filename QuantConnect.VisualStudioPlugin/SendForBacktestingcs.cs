@@ -103,13 +103,6 @@ namespace QuantConnect.VisualStudioPlugin
             Instance = new SendForBacktestingcs(package);
         }
 
-        /// <summary>
-        /// This function is the callback used to execute the command when the menu item is clicked.
-        /// See the constructor to see how the menu item is associated with this function using
-        /// OleMenuCommandService service and MenuCommand class.
-        /// </summary>
-        /// <param name="sender">Event sender.</param>
-        /// <param name="e">Event args.</param>
         private void SendForBacktestingCallback(object sender, EventArgs e)
         {
             List<string> files = GetSelectedFiles(sender);

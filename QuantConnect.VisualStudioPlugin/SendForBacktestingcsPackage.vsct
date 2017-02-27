@@ -2,10 +2,10 @@
 <CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
   <!--This is the file that defines the IDs for all the commands exposed by VisualStudio. -->
-  <Extern href="stdidcmd.h"/>
+  <Extern href="stdidcmd.h" />
 
   <!--This header contains the command ids for the menus provided by the shell. -->
-  <Extern href="vsshlids.h"/>
+  <Extern href="vsshlids.h" />
 
   
 
@@ -16,12 +16,26 @@
     group; your package should define its own command set in order to avoid collisions
     with command ids defined by other packages. -->
 
-    
 
+    <Menus>
+      <Menu guid="guidSendForBacktestingcsPackageCmdSet1" id="SubMenu" priority="0x0100" type="Menu">  
+        <Parent guid="guidSendForBacktestingcsPackageCmdSet1" id="MyMenuGroup"/>  
+        <Strings>  
+          <ButtonText>QuantConnect</ButtonText>  
+          <CommandName>QuantConnect</CommandName>  
+        </Strings>  
+      </Menu>   
+    </Menus>
 
     <Groups>
       <Group guid="guidSendForBacktestingcsPackageCmdSet" id="MyMenuGroup" priority="0x0600">
-        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE"/>
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE" />
+      </Group>
+      <Group guid="guidSendForBacktestingcsPackageCmdSet1" id="MyMenuGroup" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_TOOLS" />
+      </Group>
+      <Group guid="guidSendForBacktestingcsPackageCmdSet1" id="SubMenuGroup" priority="0x0600">
+        <Parent guid="guidSendForBacktestingcsPackageCmdSet1" id="SubMenu" />
       </Group>
     </Groups>
 
@@ -48,6 +62,20 @@
           <ButtonText>Save to QuantConnect</ButtonText>
         </Strings>
       </Button>
+      <Button guid="guidSendForBacktestingcsPackageCmdSet1" id="LogInCommand" priority="0x0100" type="Button">
+        <Parent guid="guidSendForBacktestingcsPackageCmdSet1" id="SubMenuGroup" />
+        <Icon guid="guidImages1" id="bmpPic1" />
+        <Strings>
+          <ButtonText>Log in</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidSendForBacktestingcsPackageCmdSet1" id="LogOutCommand" priority="0x0100" type="Button">
+        <Parent guid="guidSendForBacktestingcsPackageCmdSet1" id="SubMenuGroup" />
+        <Icon guid="guidImages1" id="bmpPic1" />
+        <Strings>
+          <ButtonText>Log out</ButtonText>
+        </Strings>
+      </Button>
     </Buttons>
 
 
@@ -57,12 +85,13 @@
             bitmap strip containing the bitmaps and then there are the numeric ids of the elements used
             inside a button definition. An important aspect of this declaration is that the element id
             must be the actual index (1-based) of the bitmap inside the bitmap strip. -->
-      <Bitmap guid="guidImages" href="Resources\SendForBacktestingcs.png" usedList="bmpPic1, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows, bmpPicStrikethrough"/>
+      <Bitmap guid="guidImages" href="Resources\SendForBacktestingcs.png" usedList="bmpPic1, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows, bmpPicStrikethrough" />
+      <Bitmap guid="guidImages1" href="Resources\ToolMenuCommand.png" usedList="bmpPic1, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows, bmpPicStrikethrough" />
     </Bitmaps>
   </Commands>
 
   <CommandPlacements>
-    <CommandPlacement guid="guidSendForBacktestingcsPackageCmdSet" id="MyMenuGroup"  priority="0x0600">
+    <CommandPlacement guid="guidSendForBacktestingcsPackageCmdSet" id="MyMenuGroup" priority="0x0600">
       <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_FOLDERNODE" />
     </CommandPlacement>
   </CommandPlacements>
@@ -78,7 +107,24 @@
       <IDSymbol name="SendForBacktestingcsId" value="0x0100" />
     </GuidSymbol>
 
-    <GuidSymbol name="guidImages" value="{d56082f1-cd48-41ec-a8df-0f5b9b3bfd4f}" >
+    <GuidSymbol name="guidImages" value="{d56082f1-cd48-41ec-a8df-0f5b9b3bfd4f}">
+      <IDSymbol name="bmpPic1" value="1" />
+      <IDSymbol name="bmpPic2" value="2" />
+      <IDSymbol name="bmpPicSearch" value="3" />
+      <IDSymbol name="bmpPicX" value="4" />
+      <IDSymbol name="bmpPicArrows" value="5" />
+      <IDSymbol name="bmpPicStrikethrough" value="6" />
+    </GuidSymbol>
+  
+    <GuidSymbol value="{fefaf282-a478-45f4-b89a-a8f15dd8aaff}" name="guidSendForBacktestingcsPackageCmdSet1">
+      <IDSymbol value="4128" name="MyMenuGroup" />
+      <IDSymbol value="2048" name="SubMenuGroup" />
+      <IDSymbol value="1024" name="SubMenu" />
+      <IDSymbol value="512" name="LogOutCommand" />
+      <IDSymbol value="256" name="LogInCommand" />
+    </GuidSymbol>
+  
+    <GuidSymbol value="{a83a3e3f-83ce-4967-a1b6-0ef707b1830b}" name="guidImages1">
       <IDSymbol name="bmpPic1" value="1" />
       <IDSymbol name="bmpPic2" value="2" />
       <IDSymbol name="bmpPicSearch" value="3" />
