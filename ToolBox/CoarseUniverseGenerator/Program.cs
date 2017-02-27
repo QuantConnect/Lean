@@ -50,6 +50,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
             var ignoreMaplessSymbols = false;
             var updateMode = false;
             var updateTime = TimeSpan.Zero;
+            DateTime? startDate = null;
             if (config.TryGetValue("update-mode", out jtoken))
             {
                 updateMode = jtoken.Value<bool>();
@@ -72,9 +73,16 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                 ignoreMaplessSymbols = jtoken.Value<bool>();
             }
 
+            if (config.TryGetValue("coarse-universe-generator-start-date", out jtoken))
+            {
+                string startDateStr = jtoken.Value<string>();
+                startDate = DateTime.ParseExact(startDateStr, "yyyyMMdd", null);
+                Log.Trace("Generating coarse data from {0}", startDate);
+            }
+
             do
             {
-                ProcessEquityDirectories(dataDirectory, ignoreMaplessSymbols);
+                ProcessEquityDirectories(dataDirectory, ignoreMaplessSymbols, startDate);
             }
             while (WaitUntilTimeInUpdateMode(updateMode, updateTime));
         }
@@ -100,7 +108,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         /// </summary>
         /// <param name="dataDirectory">The Lean /Data directory</param>
         /// <param name="ignoreMaplessSymbols">Ignore symbols without a QuantQuote map file.</param>
-        public static void ProcessEquityDirectories(string dataDirectory, bool ignoreMaplessSymbols)
+        public static void ProcessEquityDirectories(string dataDirectory, bool ignoreMaplessSymbols, DateTime? startDate)
         {
             var exclusions = ReadExclusionsFile(ExclusionsFile);
 
@@ -115,7 +123,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                     Directory.CreateDirectory(coarseFolder);
                 }
 
-                var lastProcessedDate = GetStartDate(coarseFolder);
+                var lastProcessedDate = startDate ?? GetLastProcessedDate(coarseFolder);
                 ProcessDailyFolder(dailyFolder, coarseFolder, MapFileResolver.Create(mapFileFolder), exclusions, ignoreMaplessSymbols, lastProcessedDate);
             }
         }
@@ -332,7 +340,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         /// </summary>
         /// <param name="coarseDirectory">The directory containing the coarse files</param>
         /// <returns>The last coarse file date plus one day if exists, else DateTime.MinValue</returns>
-        public static DateTime GetStartDate(string coarseDirectory)
+        public static DateTime GetLastProcessedDate(string coarseDirectory)
         {
             var lastProcessedDate = (
                 from coarseFile in Directory.EnumerateFiles(coarseDirectory)
