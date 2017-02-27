@@ -7,12 +7,16 @@
   <!--This header contains the command ids for the menus provided by the shell. -->
   <Extern href="vsshlids.h"/>
 
+  
+
   <Commands package="guidSendForBacktestingcsPackage">
     <!--  Each element is identified by a command id that
     is a unique pair of guid and numeric identifier; the guid part of the identifier is usually
     called "command set" and is used to group different command inside a logically related
     group; your package should define its own command set in order to avoid collisions
     with command ids defined by other packages. -->
+
+    
 
 
     <Groups>
@@ -49,6 +53,12 @@
       <Bitmap guid="guidImages" href="Resources\SendForBacktestingcs.png" usedList="bmpPic1, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows, bmpPicStrikethrough"/>
     </Bitmaps>
   </Commands>
+
+  <CommandPlacements>
+    <CommandPlacement guid="guidSendForBacktestingcsPackageCmdSet" id="MyMenuGroup"  priority="0x0600">
+      <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_FOLDERNODE" />
+    </CommandPlacement>
+  </CommandPlacements>
 
   <Symbols>
     <!-- This is the package guid. -->
