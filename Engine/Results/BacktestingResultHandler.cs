@@ -716,8 +716,12 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         public void Exit() 
         {
-            var logLocation = ProcessLogMessages(_job);
-            SystemDebugMessage("Your log was successfully created and can be retrieved from: " + logLocation);
+            // Only process the logs once
+            if (!_exitTriggered)
+            {
+                var logLocation = ProcessLogMessages(_job);
+                SystemDebugMessage("Your log was successfully created and can be retrieved from: " + logLocation);
+            }
 
             //Set exit flag, and wait for the messages to send:
             _exitTriggered = true;
