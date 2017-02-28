@@ -58,7 +58,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{93A63A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.ToolBox", "ToolBox\QuantConnect.ToolBox.csproj", "{AC9A142C-B485-44D7-91FF-015C22C43D05}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.VisualStudioPlugin", "QuantConnect.VisualStudioPlugin\QuantConnect.VisualStudioPlugin.csproj", "{5326A9FB-0270-4647-8C43-20C5607DB529}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.VisualStudioPlugin", "VisualStudioPlugin\QuantConnect.VisualStudioPlugin.csproj", "{5326A9FB-0270-4647-8C43-20C5607DB529}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
