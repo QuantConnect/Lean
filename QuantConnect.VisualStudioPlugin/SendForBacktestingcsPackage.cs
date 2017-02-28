@@ -48,7 +48,7 @@ namespace QuantConnect.VisualStudioPlugin
         public const string PackageGuidString = "2c9c2f3d-2cc2-437f-928c-0ef5fdfcfed3";
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SendForBacktestingcs"/> class.
+        /// Initializes a new instance of the <see cref="SolutionExplorerMenuCommand"/> class.
         /// </summary>
         public SendForBacktestingcsPackage()
         {
@@ -66,7 +66,7 @@ namespace QuantConnect.VisualStudioPlugin
         /// </summary>
         protected override void Initialize()
         {
-            SendForBacktestingcs.Initialize(this);
+            SolutionExplorerMenuCommand.Initialize(this);
             base.Initialize();
             QuantConnect.VisualStudioPlugin.ToolMenuCommand.Initialize(this);
         }

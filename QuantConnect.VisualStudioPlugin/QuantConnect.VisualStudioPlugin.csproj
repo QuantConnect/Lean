@@ -54,7 +54,7 @@
     <Compile Include="AuthorizationManager.cs" />
     <Compile Include="NotAuthenticatedException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SendForBacktestingcs.cs" />
+    <Compile Include="SolutionExplorerMenuCommand.cs" />
     <Compile Include="SendForBacktestingcsPackage.cs" />
     <Compile Include="ToolMenuCommand.cs" />
   </ItemGroup>

@@ -17,7 +17,7 @@ namespace QuantConnect.VisualStudioPlugin
     /// <summary>
     /// Command handler
     /// </summary>
-    internal sealed class SendForBacktestingcs
+    internal sealed class SolutionExplorerMenuCommand
     {
         /// <summary>
         /// Command ID.
@@ -37,11 +37,11 @@ namespace QuantConnect.VisualStudioPlugin
         private DTE2 dte2;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SendForBacktestingcs"/> class.
+        /// Initializes a new instance of the <see cref="SolutionExplorerMenuCommand"/> class.
         /// Adds our command handlers for menu (commands must exist in the command table file)
         /// </summary>
         /// <param name="package">Owner package, not null.</param>
-        private SendForBacktestingcs(Package package)
+        private SolutionExplorerMenuCommand(Package package)
         {
             if (package == null)
             {
@@ -77,7 +77,7 @@ namespace QuantConnect.VisualStudioPlugin
         /// <summary>
         /// Gets the instance of the command.
         /// </summary>
-        public static SendForBacktestingcs Instance
+        public static SolutionExplorerMenuCommand Instance
         {
             get;
             private set;
@@ -100,7 +100,7 @@ namespace QuantConnect.VisualStudioPlugin
         /// <param name="package">Owner package, not null.</param>
         public static void Initialize(Package package)
         {
-            Instance = new SendForBacktestingcs(package);
+            Instance = new SolutionExplorerMenuCommand(package);
         }
 
         private void SendForBacktestingCallback(object sender, EventArgs e)
