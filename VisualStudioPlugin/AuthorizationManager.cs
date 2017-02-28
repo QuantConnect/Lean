@@ -25,7 +25,7 @@ namespace QuantConnect.VisualStudioPlugin
     /// <summary>
     /// Singleton that stores a reference to an authenticated Api instance
     /// </summary>
-    class AuthorizationManager
+    public class AuthorizationManager
     {
         private static AuthorizationManager _authorizationManager = new AuthorizationManager();
         private Api.Api _api;
@@ -66,7 +66,18 @@ namespace QuantConnect.VisualStudioPlugin
         /// <returns>true if successfully authenticated API, false otherwise</returns>
         public bool LogIn(string userId, string accessToken)
         {
-            return false;
+            Api.Api api = new Api.Api();
+            api.Initialize(int.Parse(userId), accessToken, ".");
+            if (api.Connected)
+            {
+                _api = api;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+
         }
 
         /// <summary>

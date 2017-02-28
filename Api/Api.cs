@@ -62,6 +62,17 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
+        /// Check if Api is successfully connected with correct credentials
+        /// </summary>
+        public bool Connected
+        {
+            get
+            {
+                return _connection.Connected;
+            }
+        }
+
+        /// <summary>
         /// Create a project with the specified name and language via QuantConnect.com API
         /// </summary>
         /// <param name="name">Project name</param>

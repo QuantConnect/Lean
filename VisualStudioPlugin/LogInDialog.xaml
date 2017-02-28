@@ -21,9 +21,15 @@
              xmlns:local="clr-namespace:QuantConnect.VisualStudioPlugin"
              xmlns:platformUi="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
              mc:Ignorable="d" 
-                         WindowStartupLocation="CenterScreen"
-        Title="MainWindow" Height="350" Width="525">
-  <Grid>
+             WindowStartupLocation="CenterScreen"
+        Title="Log in to QuantConnect" Height="238.493" Width="412.196" ResizeMode="NoResize">
+    <Grid>
+        <PasswordBox x:Name="accessTokenBox" HorizontalAlignment="Left" VerticalAlignment="Top" Width="265" Margin="22,119,0,0" Height="22"/>
+        <ComboBox x:Name="userIdBox" HorizontalAlignment="Left" VerticalAlignment="Top" Width="265" Margin="22,61,0,0" IsEditable="True"/>
+        <Label x:Name="userIdLabel" Content="User id" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="22,30,0,0"/>
+        <Label x:Name="accessTokenLabel" Content="Access token" HorizontalAlignment="Left" Margin="22,88,0,0" VerticalAlignment="Top"/>
+        <Button x:Name="logInButton" Content="Log in" HorizontalAlignment="Left" VerticalAlignment="Top" Width="74" Margin="22,162,0,0" Height="24" Click="LogIn_Click"/>
+        <Button x:Name="logOutButton" Content="Cancel" HorizontalAlignment="Left" VerticalAlignment="Top" Width="74" Margin="155,162,0,0" Height="24" Click="LogOut_Click"/>
 
-  </Grid>
+    </Grid>
 </platformUi:DialogWindow>

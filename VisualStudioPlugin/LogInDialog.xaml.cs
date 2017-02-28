@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace QuantConnect.VisualStudioPlugin
 {
@@ -27,9 +28,49 @@ namespace QuantConnect.VisualStudioPlugin
     /// </summary>
     public partial class LogInDialog : DialogWindow
     {
-        public LogInDialog()
+        private AuthorizationManager authorizationManager;
+        private Credentials? _credentials;
+
+        public LogInDialog(AuthorizationManager authorizationManager)
         {
             InitializeComponent();
+            this.authorizationManager = authorizationManager;
+        }
+
+        private void LogIn_Click(object sender, RoutedEventArgs e)
+        {
+            logInButton.IsEnabled = false;
+            string userId = userIdBox.Text;
+            string accessToken = accessTokenBox.Password;
+
+            if (authorizationManager.LogIn(userId, accessToken))
+            {
+                _credentials = new Credentials(userId, accessToken);
+                this.Close();
+            }
+            else
+            {
+                userIdBox.BorderBrush = System.Windows.Media.Brushes.Red;
+                accessTokenBox.BorderBrush = System.Windows.Media.Brushes.Red;
+            }
+            logInButton.IsEnabled = true;
+        }
+
+        private void LogOut_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
+        private bool TryLogIn(string userId, string accessKey)
+        {
+            authorizationManager.LogIn(userId, accessKey);
+            return authorizationManager.IsLoggedIn();
+        }
+
+        public Credentials? GetCredentials()
+        {
+            return _credentials;
         }
     }
+
 }

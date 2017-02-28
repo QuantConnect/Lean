@@ -18,7 +18,6 @@ using System.ComponentModel.Design;
 using System.Globalization;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.Internal.VisualStudio.PlatformUI;
 
 namespace QuantConnect.VisualStudioPlugin
 {
@@ -44,6 +43,8 @@ namespace QuantConnect.VisualStudioPlugin
         /// </summary>
         private readonly Package package;
 
+        private IVsStatusbar bar;
+        
         /// <summary>
         /// Initializes a new instance of the <see cref="ToolMenuCommand"/> class.
         /// Adds our command handlers for menu (commands must exist in the command table file)
@@ -118,56 +119,47 @@ namespace QuantConnect.VisualStudioPlugin
         /// <param name="e">Event args.</param>
         private void LogInCallback(object sender, EventArgs e)
         {
-            /* IVsUIShell uiShell = (IVsUIShell)ServiceProvider.GetService(typeof(SVsUIShell));
-            var xamlDialog = new LogInDialog();
-            xamlDialog.HasMinimizeButton = false;
-            xamlDialog.HasMaximizeButton = false;
-            xamlDialog.ShowModal();
-            //get the owner of this dialog
-            IntPtr hwnd;
-            uiShell.GetDialogOwnerHwnd(out hwnd);
-            xamlDialog.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterOwner;
-            uiShell.EnableModeless(0);
-            try
+            var logInDialog = new LogInDialog(AuthorizationManager.GetInstance());
+            logInDialog.HasMinimizeButton = false;
+            logInDialog.HasMaximizeButton = false;
+            logInDialog.ShowModal();
+
+            Credentials? credentials = logInDialog.GetCredentials();
+
+            if (credentials.HasValue)
             {
-                WindowHelper.ShowModal(xamlDialog, hwnd);
+                DisplayInStatusBar("Logged into QuantConnect");
             }
-            finally
-            {
-                // This will take place after the window is closed.
-                uiShell.EnableModeless(1);
-            } */
-            var xamlDialog = new LogInDialog();
-            xamlDialog.HasMinimizeButton = false;
-            xamlDialog.HasMaximizeButton = false;
-            xamlDialog.ShowModal();
-
-            string message = string.Format(CultureInfo.CurrentCulture, "Inside {0}.MenuItemCallback()", this.GetType().FullName);
-            string title = "LogInCommand";
-
-            // Show a message box to prove we were here
-            VsShellUtilities.ShowMessageBox(
-                this.ServiceProvider,
-                message,
-                title,
-                OLEMSGICON.OLEMSGICON_INFO,
-                OLEMSGBUTTON.OLEMSGBUTTON_OK,
-                OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
         }
 
         private void LogOutCallback(object sender, EventArgs e)
         {
-            string message = string.Format(CultureInfo.CurrentCulture, "Inside {0}.MenuItemCallback()", this.GetType().FullName);
-            string title = "LogOutCommand";
-
-            // Show a message box to prove we were here
-            VsShellUtilities.ShowMessageBox(
-                this.ServiceProvider,
-                message,
-                title,
-                OLEMSGICON.OLEMSGICON_INFO,
-                OLEMSGBUTTON.OLEMSGBUTTON_OK,
-                OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+            AuthorizationManager.GetInstance().LogOut();
+            DisplayInStatusBar("Logged out of QuantConnect");
         }
+
+        private void DisplayInStatusBar(string msg)
+        {
+            int frozen;
+            StatusBar.IsFrozen(out frozen);
+            if (frozen == 0)
+            {
+                StatusBar.SetText(msg);
+            }
+        }
+
+        private IVsStatusbar StatusBar
+        {
+            get
+            {
+                if (bar == null)
+                {
+                    bar = ServiceProvider.GetService(typeof(SVsStatusbar)) as IVsStatusbar;
+                }
+
+                return bar;
+            }
+        }
+
     }
 }
