@@ -18,6 +18,7 @@ using System.ComponentModel.Design;
 using System.Globalization;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.Internal.VisualStudio.PlatformUI;
 
 namespace QuantConnect.VisualStudioPlugin
 {
@@ -117,6 +118,30 @@ namespace QuantConnect.VisualStudioPlugin
         /// <param name="e">Event args.</param>
         private void LogInCallback(object sender, EventArgs e)
         {
+            /* IVsUIShell uiShell = (IVsUIShell)ServiceProvider.GetService(typeof(SVsUIShell));
+            var xamlDialog = new LogInDialog();
+            xamlDialog.HasMinimizeButton = false;
+            xamlDialog.HasMaximizeButton = false;
+            xamlDialog.ShowModal();
+            //get the owner of this dialog
+            IntPtr hwnd;
+            uiShell.GetDialogOwnerHwnd(out hwnd);
+            xamlDialog.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterOwner;
+            uiShell.EnableModeless(0);
+            try
+            {
+                WindowHelper.ShowModal(xamlDialog, hwnd);
+            }
+            finally
+            {
+                // This will take place after the window is closed.
+                uiShell.EnableModeless(1);
+            } */
+            var xamlDialog = new LogInDialog();
+            xamlDialog.HasMinimizeButton = false;
+            xamlDialog.HasMaximizeButton = false;
+            xamlDialog.ShowModal();
+
             string message = string.Format(CultureInfo.CurrentCulture, "Inside {0}.MenuItemCallback()", this.GetType().FullName);
             string title = "LogInCommand";
 
