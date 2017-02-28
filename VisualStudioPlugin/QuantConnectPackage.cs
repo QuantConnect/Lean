@@ -1,8 +1,18 @@
-﻿//------------------------------------------------------------------------------
-// <copyright file="SendForBacktestingcsPackage.cs" company="Company">
-//     Copyright (c) Company.  All rights reserved.
-// </copyright>
-//------------------------------------------------------------------------------
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 
 using System;
 using System.ComponentModel.Design;
@@ -38,9 +48,9 @@ namespace QuantConnect.VisualStudioPlugin
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)] // Info on this package for Help/About
     [ProvideMenuResource("Menus.ctmenu", 1)]
-    [Guid(SendForBacktestingcsPackage.PackageGuidString)]
+    [Guid(QuantConnectPackage.PackageGuidString)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
-    public sealed class SendForBacktestingcsPackage : Package
+    public sealed class QuantConnectPackage : Package
     {
         /// <summary>
         /// SendForBacktestingcsPackage GUID string.
@@ -50,7 +60,7 @@ namespace QuantConnect.VisualStudioPlugin
         /// <summary>
         /// Initializes a new instance of the <see cref="SolutionExplorerMenuCommand"/> class.
         /// </summary>
-        public SendForBacktestingcsPackage()
+        public QuantConnectPackage()
         {
             // Inside this method you can place any initialization code that does not require
             // any Visual Studio service because at this point the package object is created but
