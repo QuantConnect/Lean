@@ -66,14 +66,12 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="index.html" />
     <VSCTCompile Include="QuantConnectPackage.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
       <SubType>Designer</SubType>
     </VSCTCompile>
     <Content Include="Resources\QuantConnectPackage.ico" />
     <Content Include="Resources\ToolMenuCommand.png" />
-    <Content Include="stylesheet.css" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="EnvDTE, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
