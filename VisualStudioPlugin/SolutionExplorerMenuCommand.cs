@@ -20,6 +20,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using EnvDTE80;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.VisualStudioPlugin
 {
@@ -114,10 +115,10 @@ namespace QuantConnect.VisualStudioPlugin
 
         private void SendForBacktestingCallback(object sender, EventArgs e)
         {
-            if (LogInCommand.DoLogIn(this.ServiceProvider))
+            ExecuteOnProject((selectedProjectName) =>
             {
                 List<string> files = GetSelectedFiles(sender);
-                string message = string.Format(CultureInfo.CurrentCulture, "Send for backtesting {0}", string.Join(" ", files));
+                string message = string.Format(CultureInfo.CurrentCulture, "Send for backtesting to project {0}, files: {1}", selectedProjectName, string.Join(" ", files));
                 string title = "SendToBacktesting";
 
                 // Show a message box to prove we were here
@@ -128,15 +129,15 @@ namespace QuantConnect.VisualStudioPlugin
                     OLEMSGICON.OLEMSGICON_INFO,
                     OLEMSGBUTTON.OLEMSGBUTTON_OK,
                     OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
-            }
+            });
         }
 
         private void SaveToQuantConnectCallback(object sender, EventArgs e)
         {
-            if (LogInCommand.DoLogIn(this.ServiceProvider))
+            ExecuteOnProject((selectedProjectName) =>
             {
                 List<string> files = GetSelectedFiles(sender);
-                string message = string.Format(CultureInfo.CurrentCulture, "Save {0}", string.Join(" ", files));
+                string message = string.Format(CultureInfo.CurrentCulture, "Save to project {0}, files {1}", selectedProjectName, string.Join(" ", files));
                 string title = "SaveToQuantConnect";
 
                 // Show a message box to prove we were here
@@ -147,6 +148,27 @@ namespace QuantConnect.VisualStudioPlugin
                     OLEMSGICON.OLEMSGICON_INFO,
                     OLEMSGBUTTON.OLEMSGBUTTON_OK,
                     OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+            });
+        }
+
+        private void ExecuteOnProject(Action<string> onProject)
+        {
+            if (LogInCommand.DoLogIn(this.ServiceProvider))
+            {
+                var api = AuthorizationManager.GetInstance().GetApi();
+                var projects = api.ListProjects().Projects;
+                var projectNames = projects.Select(p => p.Name).ToList();
+                var projectNameDialog = new ProjectNameDialog(projectNames);
+                projectNameDialog.HasMinimizeButton = false;
+                projectNameDialog.HasMaximizeButton = false;
+                projectNameDialog.ShowModal();
+
+                if (projectNameDialog.ProjectNameProvided())
+                {
+                    var selectedProjectName = projectNameDialog.GetSelectedProjectName();
+
+                    onProject.Invoke(selectedProjectName);
+                }
             }
         }
 

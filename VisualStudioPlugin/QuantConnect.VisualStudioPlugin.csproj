@@ -57,6 +57,7 @@
     <Compile Include="LogInCommand.cs" />
     <Compile Include="LogInDialog.xaml.cs" />
     <Compile Include="NotAuthenticatedException.cs" />
+    <Compile Include="ProjectNameDialog.xaml.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SolutionExplorerMenuCommand.cs" />
     <Compile Include="QuantConnectPackage.cs" />
@@ -71,6 +72,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Page Include="ProjectNameDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <VSCTCompile Include="QuantConnectPackage.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
       <SubType>Designer</SubType>
@@ -199,6 +204,10 @@
     <ProjectReference Include="..\Api\QuantConnect.Api.csproj">
       <Project>{c5d44209-49a0-4505-a870-043c5ef5fddf}</Project>
       <Name>QuantConnect.Api</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Common\QuantConnect.csproj">
+      <Project>{2545C0B4-FABB-49C9-8DD1-9AD7EE23F86B}</Project>
+      <Name>QuantConnect</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
