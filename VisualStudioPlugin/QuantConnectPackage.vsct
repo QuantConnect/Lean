@@ -72,6 +72,8 @@
       <Button guid="guidQuantConnectToolsSet" id="LogOutCommand" priority="0x0100" type="Button">
         <Parent guid="guidQuantConnectToolsSet" id="ToolsSubMenuGroup" />
         <Icon guid="quantConnectImages" id="bmpPic1" />
+        <!-- A user need to log in first to enable log out button -->
+        <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Log out</ButtonText>
         </Strings>

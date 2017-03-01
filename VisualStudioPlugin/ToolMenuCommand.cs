@@ -44,7 +44,7 @@ namespace QuantConnect.VisualStudioPlugin
         private readonly Package package;
 
         private IVsStatusbar bar;
-        
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ToolMenuCommand"/> class.
         /// Adds our command handlers for menu (commands must exist in the command table file)
@@ -70,16 +70,26 @@ namespace QuantConnect.VisualStudioPlugin
         private void RegisterLogInCommand(OleMenuCommandService commandService)
         {
             var menuCommandID = new CommandID(CommandSet, LogInCommandId);
-            var menuItem = new MenuCommand(this.LogInCallback, menuCommandID);
-            commandService.AddCommand(menuItem);
+            var logInMenuItem = new OleMenuCommand(this.LogInCallback, menuCommandID);
+            logInMenuItem.BeforeQueryStatus += (sender, evt) =>
+            {
+                logInMenuItem.Enabled = !AuthorizationManager.GetInstance().IsLoggedIn();
+            };
+
+            commandService.AddCommand(logInMenuItem);
         }
 
         private void RegisterLogOutCommand(OleMenuCommandService commandService)
         {
             var menuCommandID = new CommandID(CommandSet, LogOutCommandId);
-            var menuItem = new MenuCommand(this.LogOutCallback, menuCommandID);
-            commandService.AddCommand(menuItem);
+            var logOutMenuItem = new OleMenuCommand(this.LogOutCallback, menuCommandID);
+            logOutMenuItem.BeforeQueryStatus += (sender, evt) =>
+            {
+                logOutMenuItem.Enabled = AuthorizationManager.GetInstance().IsLoggedIn();
+            };
+            commandService.AddCommand(logOutMenuItem);
         }
+
 
         /// <summary>
         /// Gets the instance of the command.

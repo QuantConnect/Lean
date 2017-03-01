@@ -55,7 +55,7 @@ namespace QuantConnect.VisualStudioPlugin
         /// <returns>true if API is authenticated, false otherwise</returns>
         public bool IsLoggedIn()
         {
-            return false;
+            return _api != null;
         }
 
         /// <summary>
