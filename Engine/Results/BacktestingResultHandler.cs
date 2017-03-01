@@ -624,19 +624,26 @@ namespace QuantConnect.Lean.Engine.Results
             lock (_chartLock)
             {
                 //Add a copy locally:
-                if (!Charts.ContainsKey(chartName))
+                Chart chart;
+                if (!Charts.TryGetValue(chartName, out chart))
                 {
-                    Charts.AddOrUpdate(chartName, new Chart(chartName));
+                    chart = new Chart(chartName);
+                    Charts.AddOrUpdate(chartName, chart);
                 }
 
                 //Add the sample to our chart:
-                if (!Charts[chartName].Series.ContainsKey(seriesName)) 
+                Series series;
+                if (!chart.Series.TryGetValue(seriesName, out series))
                 {
-                    Charts[chartName].Series.Add(seriesName, new Series(seriesName, seriesType, seriesIndex, unit));
+                    series = new Series(seriesName, seriesType, seriesIndex, unit);
+                    chart.Series.Add(seriesName, series);
                 }
 
                 //Add our value:
-                Charts[chartName].Series[seriesName].Values.Add(new ChartPoint(time, value));
+                if (series.Values.Count == 0 || time > Time.UnixTimeStampToDateTime(series.Values[series.Values.Count - 1].x))
+                {
+                    series.Values.Add(new ChartPoint(time, value));
+                }
             }
         }
 
