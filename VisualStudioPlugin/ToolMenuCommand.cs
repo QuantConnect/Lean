@@ -129,46 +129,13 @@ namespace QuantConnect.VisualStudioPlugin
         /// <param name="e">Event args.</param>
         private void LogInCallback(object sender, EventArgs e)
         {
-            var logInDialog = new LogInDialog(AuthorizationManager.GetInstance());
-            logInDialog.HasMinimizeButton = false;
-            logInDialog.HasMaximizeButton = false;
-            logInDialog.ShowModal();
-
-            Credentials? credentials = logInDialog.GetCredentials();
-
-            if (credentials.HasValue)
-            {
-                DisplayInStatusBar("Logged into QuantConnect");
-            }
+            LogInCommand.DoLogIn(this.ServiceProvider);
         }
 
         private void LogOutCallback(object sender, EventArgs e)
         {
             AuthorizationManager.GetInstance().LogOut();
-            DisplayInStatusBar("Logged out of QuantConnect");
-        }
-
-        private void DisplayInStatusBar(string msg)
-        {
-            int frozen;
-            StatusBar.IsFrozen(out frozen);
-            if (frozen == 0)
-            {
-                StatusBar.SetText(msg);
-            }
-        }
-
-        private IVsStatusbar StatusBar
-        {
-            get
-            {
-                if (bar == null)
-                {
-                    bar = ServiceProvider.GetService(typeof(SVsStatusbar)) as IVsStatusbar;
-                }
-
-                return bar;
-            }
+            VsUtils.DisplayInStatusBar(this.ServiceProvider, "Logged out of QuantConnect");
         }
 
     }

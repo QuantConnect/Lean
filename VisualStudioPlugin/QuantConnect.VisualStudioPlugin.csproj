@@ -54,12 +54,14 @@
   <ItemGroup>
     <Compile Include="AuthorizationManager.cs" />
     <Compile Include="Credentials.cs" />
+    <Compile Include="LogInCommand.cs" />
     <Compile Include="LogInDialog.xaml.cs" />
     <Compile Include="NotAuthenticatedException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SolutionExplorerMenuCommand.cs" />
     <Compile Include="QuantConnectPackage.cs" />
     <Compile Include="ToolMenuCommand.cs" />
+    <Compile Include="VsUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Key.snk" />

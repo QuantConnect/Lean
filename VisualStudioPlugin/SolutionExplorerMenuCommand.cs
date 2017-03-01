@@ -114,34 +114,40 @@ namespace QuantConnect.VisualStudioPlugin
 
         private void SendForBacktestingCallback(object sender, EventArgs e)
         {
-            List<string> files = GetSelectedFiles(sender);
-            string message = string.Format(CultureInfo.CurrentCulture, "Send for backtesting {0}", string.Join(" ", files));
-            string title = "SendToBacktesting";
+            if (LogInCommand.DoLogIn(this.ServiceProvider))
+            {
+                List<string> files = GetSelectedFiles(sender);
+                string message = string.Format(CultureInfo.CurrentCulture, "Send for backtesting {0}", string.Join(" ", files));
+                string title = "SendToBacktesting";
 
-            // Show a message box to prove we were here
-            VsShellUtilities.ShowMessageBox(
-                this.ServiceProvider,
-                message,
-                title,
-                OLEMSGICON.OLEMSGICON_INFO,
-                OLEMSGBUTTON.OLEMSGBUTTON_OK,
-                OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+                // Show a message box to prove we were here
+                VsShellUtilities.ShowMessageBox(
+                    this.ServiceProvider,
+                    message,
+                    title,
+                    OLEMSGICON.OLEMSGICON_INFO,
+                    OLEMSGBUTTON.OLEMSGBUTTON_OK,
+                    OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+            }
         }
 
         private void SaveToQuantConnectCallback(object sender, EventArgs e)
         {
-            List<string> files = GetSelectedFiles(sender);
-            string message = string.Format(CultureInfo.CurrentCulture, "Save {0}", string.Join(" ", files));
-            string title = "SaveToQuantConnect";
+            if (LogInCommand.DoLogIn(this.ServiceProvider))
+            {
+                List<string> files = GetSelectedFiles(sender);
+                string message = string.Format(CultureInfo.CurrentCulture, "Save {0}", string.Join(" ", files));
+                string title = "SaveToQuantConnect";
 
-            // Show a message box to prove we were here
-            VsShellUtilities.ShowMessageBox(
-                this.ServiceProvider,
-                message,
-                title,
-                OLEMSGICON.OLEMSGICON_INFO,
-                OLEMSGBUTTON.OLEMSGBUTTON_OK,
-                OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+                // Show a message box to prove we were here
+                VsShellUtilities.ShowMessageBox(
+                    this.ServiceProvider,
+                    message,
+                    title,
+                    OLEMSGICON.OLEMSGICON_INFO,
+                    OLEMSGBUTTON.OLEMSGBUTTON_OK,
+                    OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+            }
         }
 
         private List<string> GetSelectedFiles(object sender)
