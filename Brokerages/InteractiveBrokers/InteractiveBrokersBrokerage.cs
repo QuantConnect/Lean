@@ -1129,32 +1129,34 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             Order order;
             var mappedSymbol = MapSymbol(contract);
+            var direction = ConvertOrderDirection(ibOrder.Action);
+            var quantitySign = direction == OrderDirection.Sell ? -1 : 1;
             var orderType = ConvertOrderType(ibOrder);
             switch (orderType)
             {
                 case OrderType.Market:
                     order = new MarketOrder(mappedSymbol,
-                        Convert.ToInt32(ibOrder.TotalQuantity),
+                        Convert.ToInt32(ibOrder.TotalQuantity) * quantitySign,
                         new DateTime() // not sure how to get this data
                         );
                     break;
 
                 case OrderType.MarketOnOpen:
                     order = new MarketOnOpenOrder(mappedSymbol,
-                        Convert.ToInt32(ibOrder.TotalQuantity),
+                        Convert.ToInt32(ibOrder.TotalQuantity) * quantitySign,
                         new DateTime());
                     break;
 
                 case OrderType.MarketOnClose:
                     order = new MarketOnCloseOrder(mappedSymbol,
-                        Convert.ToInt32(ibOrder.TotalQuantity),
+                        Convert.ToInt32(ibOrder.TotalQuantity) * quantitySign,
                         new DateTime()
                         );
                     break;
 
                 case OrderType.Limit:
                     order = new LimitOrder(mappedSymbol,
-                        Convert.ToInt32(ibOrder.TotalQuantity),
+                        Convert.ToInt32(ibOrder.TotalQuantity) * quantitySign,
                         Convert.ToDecimal(ibOrder.LmtPrice),
                         new DateTime()
                         );
@@ -1162,7 +1164,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 case OrderType.StopMarket:
                     order = new StopMarketOrder(mappedSymbol,
-                        Convert.ToInt32(ibOrder.TotalQuantity),
+                        Convert.ToInt32(ibOrder.TotalQuantity) * quantitySign,
                         Convert.ToDecimal(ibOrder.AuxPrice),
                         new DateTime()
                         );
@@ -1170,7 +1172,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 case OrderType.StopLimit:
                     order = new StopLimitOrder(mappedSymbol,
-                        Convert.ToInt32(ibOrder.TotalQuantity),
+                        Convert.ToInt32(ibOrder.TotalQuantity) * quantitySign,
                         Convert.ToDecimal(ibOrder.AuxPrice),
                         Convert.ToDecimal(ibOrder.LmtPrice),
                         new DateTime()
@@ -1248,6 +1250,21 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             return contract;
+        }
+
+        /// <summary>
+        /// Maps OrderDirection enumeration
+        /// </summary>
+        private OrderDirection ConvertOrderDirection(string direction)
+        {
+            switch (direction)
+            {
+                case IB.ActionSide.Buy: return OrderDirection.Buy;
+                case IB.ActionSide.Sell: return OrderDirection.Sell;
+                case IB.ActionSide.Undefined: return OrderDirection.Hold;
+                default:
+                    throw new ArgumentException(direction, "direction");
+            }
         }
 
         /// <summary>
