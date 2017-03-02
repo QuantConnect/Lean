@@ -34,7 +34,6 @@ using Order = QuantConnect.Orders.Order;
 using IB = QuantConnect.Brokerages.InteractiveBrokers.Client;
 using IBApi;
 using NodaTime;
-using System.Text;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
@@ -408,7 +407,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _accountProperties.Clear();
 
             var attempt = 1;
-            const int maxAttempts = 65;
+            const int maxAttempts = 5;
             while (true)
             {
                 try
@@ -455,7 +454,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         _client.ClientSocket.eDisconnect();
                         messageProcessingThread.Join();
 
-                        // max out at 65 attempts to connect ~1 minute
+                        // max out at 5 attempts to connect ~1 minute
                         if (attempt++ < maxAttempts)
                         {
                             Thread.Sleep(1000);
@@ -472,7 +471,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 }
                 catch (Exception err)
                 {
-                    // max out at 65 attempts to connect ~1 minute
+                    // max out at 5 attempts to connect ~1 minute
                     if (attempt++ < maxAttempts)
                     {
                         Thread.Sleep(1000);
