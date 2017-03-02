@@ -176,7 +176,10 @@ namespace QuantConnect.Lean.Engine
                 Log.Trace("         Results:      " + _algorithmHandlers.Results.GetType().FullName);
                 Log.Trace("         Transactions: " + _algorithmHandlers.Transactions.GetType().FullName);
                 Log.Trace("         Commands:     " + _algorithmHandlers.CommandQueue.GetType().FullName);
-                Log.Trace("         History Provider:     " + algorithm.HistoryProvider.GetType().FullName);
+                if (algorithm != null && algorithm.HistoryProvider != null)
+                {
+                    Log.Trace("         History Provider:     " + algorithm.HistoryProvider.GetType().FullName);
+                }
                 if (job is LiveNodePacket) Log.Trace("         Brokerage:      " + brokerage.GetType().FullName);
 
                 //-> Using the job + initialization: load the designated handlers:
