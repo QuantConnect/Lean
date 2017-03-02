@@ -46,6 +46,8 @@ namespace QuantConnect.VisualStudioPlugin
         private readonly Package package;
         private DTE2 dte2;
 
+        private ProjectFinder _projectFinder = new ProjectFinder();
+
         /// <summary>
         /// Initializes a new instance of the <see cref="SolutionExplorerMenuCommand"/> class.
         /// Adds our command handlers for menu (commands must exist in the command table file)
@@ -115,9 +117,8 @@ namespace QuantConnect.VisualStudioPlugin
 
         private void SendForBacktestingCallback(object sender, EventArgs e)
         {
-            ExecuteOnProject((selectedProjectName) =>
+            ExecuteOnProject(sender, (selectedProjectName, files) =>
             {
-                List<string> files = GetSelectedFiles(sender);
                 string message = string.Format(CultureInfo.CurrentCulture, "Send for backtesting to project {0}, files: {1}", selectedProjectName, string.Join(" ", files));
                 string title = "SendToBacktesting";
 
@@ -134,9 +135,8 @@ namespace QuantConnect.VisualStudioPlugin
 
         private void SaveToQuantConnectCallback(object sender, EventArgs e)
         {
-            ExecuteOnProject((selectedProjectName) =>
+            ExecuteOnProject(sender, (selectedProjectName, files) =>
             {
-                List<string> files = GetSelectedFiles(sender);
                 string message = string.Format(CultureInfo.CurrentCulture, "Save to project {0}, files {1}", selectedProjectName, string.Join(" ", files));
                 string title = "SaveToQuantConnect";
 
@@ -151,14 +151,17 @@ namespace QuantConnect.VisualStudioPlugin
             });
         }
 
-        private void ExecuteOnProject(Action<string> onProject)
+        private void ExecuteOnProject(object sender, Action<string, List<string>> onProject)
         {
             if (LogInCommand.DoLogIn(this.ServiceProvider))
             {
                 var api = AuthorizationManager.GetInstance().GetApi();
                 var projects = api.ListProjects().Projects;
                 var projectNames = projects.Select(p => p.Name).ToList();
-                var projectNameDialog = new ProjectNameDialog(projectNames);
+
+                List<string> files = GetSelectedFiles(sender);
+                var suggestedProjectName = _projectFinder.ProjectNameForFiles(files);
+                var projectNameDialog = new ProjectNameDialog(projectNames, suggestedProjectName);
                 projectNameDialog.HasMinimizeButton = false;
                 projectNameDialog.HasMaximizeButton = false;
                 projectNameDialog.ShowModal();
@@ -166,8 +169,9 @@ namespace QuantConnect.VisualStudioPlugin
                 if (projectNameDialog.ProjectNameProvided())
                 {
                     var selectedProjectName = projectNameDialog.GetSelectedProjectName();
+                    _projectFinder.AssociateProjectWith(selectedProjectName, files);
 
-                    onProject.Invoke(selectedProjectName);
+                    onProject.Invoke(selectedProjectName, files);
                 }
             }
         }

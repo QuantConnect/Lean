@@ -10,10 +10,11 @@ namespace QuantConnect.VisualStudioPlugin
         private bool _projectNameProvided = false;
         private string _selectedProjectName = null;
 
-        public ProjectNameDialog(List<string> projectNames)
+        public ProjectNameDialog(List<string> projectNames, string suggestedProjectName)
         {
             InitializeComponent();
             projectNames.ForEach(p => projectNameBox.Items.Add(p));
+            projectNameBox.Text = suggestedProjectName;
         }
 
         private void SelectButton_Click(object sender, System.Windows.RoutedEventArgs e)
