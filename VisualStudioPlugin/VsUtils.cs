@@ -14,6 +14,7 @@
 */
 
 
+using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.VisualStudio.Shell.Interop;
 using System;
 
@@ -43,6 +44,13 @@ namespace QuantConnect.VisualStudioPlugin
         private static IVsStatusbar GetStatusBar(IServiceProvider serviceProvider)
         {
             return serviceProvider.GetService(typeof(SVsStatusbar)) as IVsStatusbar;
+        }
+
+        public static void DisplayDialogWindow(DialogWindow dialogWindow)
+        {
+            dialogWindow.HasMinimizeButton = false;
+            dialogWindow.HasMaximizeButton = false;
+            dialogWindow.ShowModal();
         }
     }
 }

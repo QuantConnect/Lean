@@ -163,9 +163,7 @@ namespace QuantConnect.VisualStudioPlugin
                 List<string> fileNames = files.Select(tuple => tuple.Item1).ToList();
                 var suggestedProjectName = _projectFinder.ProjectNameForFiles(fileNames);
                 var projectNameDialog = new ProjectNameDialog(projectNames, suggestedProjectName);
-                projectNameDialog.HasMinimizeButton = false;
-                projectNameDialog.HasMaximizeButton = false;
-                projectNameDialog.ShowModal();
+                VsUtils.DisplayDialogWindow(projectNameDialog);
 
                 if (projectNameDialog.ProjectNameProvided())
                 {
