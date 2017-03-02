@@ -54,6 +54,7 @@
   <ItemGroup>
     <Compile Include="AuthorizationManager.cs" />
     <Compile Include="Credentials.cs" />
+    <Compile Include="CredentialsManager.cs" />
     <Compile Include="LogInCommand.cs" />
     <Compile Include="LogInDialog.xaml.cs" />
     <Compile Include="NotAuthenticatedException.cs" />
@@ -66,6 +67,7 @@
     <Compile Include="VsUtils.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="Key.snk" />
     <None Include="packages.config" />
     <None Include="source.extension.vsixmanifest">
@@ -89,6 +91,10 @@
     <Content Include="Resources\ToolMenuCommand.png" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="CredentialManagement, Version=1.0.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\CredentialManagement.1.0.2\lib\net35\CredentialManagement.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="EnvDTE, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
