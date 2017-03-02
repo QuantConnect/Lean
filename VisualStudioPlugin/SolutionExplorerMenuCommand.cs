@@ -159,8 +159,9 @@ namespace QuantConnect.VisualStudioPlugin
                 var projects = api.ListProjects().Projects;
                 var projectNames = projects.Select(p => p.Name).ToList();
 
-                List<string> files = GetSelectedFiles(sender);
-                var suggestedProjectName = _projectFinder.ProjectNameForFiles(files);
+                List<Tuple<string, string>> files = GetSelectedFiles(sender);
+                List<string> fileNames = files.Select(tuple => tuple.Item1).ToList();
+                var suggestedProjectName = _projectFinder.ProjectNameForFiles(fileNames);
                 var projectNameDialog = new ProjectNameDialog(projectNames, suggestedProjectName);
                 projectNameDialog.HasMinimizeButton = false;
                 projectNameDialog.HasMaximizeButton = false;
@@ -169,25 +170,27 @@ namespace QuantConnect.VisualStudioPlugin
                 if (projectNameDialog.ProjectNameProvided())
                 {
                     var selectedProjectName = projectNameDialog.GetSelectedProjectName();
-                    _projectFinder.AssociateProjectWith(selectedProjectName, files);
+                    _projectFinder.AssociateProjectWith(selectedProjectName, fileNames);
 
-                    onProject.Invoke(selectedProjectName, files);
+                    onProject.Invoke(selectedProjectName, fileNames);
                 }
             }
         }
 
-        private List<string> GetSelectedFiles(object sender)
+        private List<Tuple<string, string>> GetSelectedFiles(object sender)
         {
             var myCommand = sender as OleMenuCommand;
 
-            List<string> selectedFiles = new List<string>();
-            object[] selectedItems = (object[]) dte2.ToolWindows.SolutionExplorer.SelectedItems;
+            List<Tuple<string, string>> selectedFiles = new List<Tuple<string, string>>();
+            object[] selectedItems = (object[])dte2.ToolWindows.SolutionExplorer.SelectedItems;
             foreach (EnvDTE.UIHierarchyItem selectedUIHierarchyItem in selectedItems)
             {
                 if (selectedUIHierarchyItem.Object is EnvDTE.ProjectItem)
                 {
                     EnvDTE.ProjectItem item = selectedUIHierarchyItem.Object as EnvDTE.ProjectItem;
-                    selectedFiles.Add(item.Name);
+                    string filePath = item.Properties.Item("FullPath").Value.ToString();
+                    Tuple<string, string> fileAndItsPath = new Tuple<string, string>(item.Name, filePath);
+                    selectedFiles.Add(fileAndItsPath);
                 }
             }
             return selectedFiles;
