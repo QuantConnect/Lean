@@ -85,7 +85,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void BrokerageModelSecurityInitializer_CanSetPrice_ForTradeBar()
         {
             // Arrange
-            var dateForWhichDataExist = DateTime.Parse("10/10/2013 12:00PM");
+            var dateForWhichDataExist = new DateTime(2013, 10, 10, 12, 0, 0);
             _algo.SetDateTime(dateForWhichDataExist);
             
             // Act
@@ -99,7 +99,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void BrokerageModelSecurityInitializer_CanSetPrice_ForQuoteBar()
         {
             // Arrange
-            var dateForWhichDataExist = DateTime.Parse("05/06/2014 12:00PM");
+            var dateForWhichDataExist = new DateTime(2014, 5, 6, 12, 0, 0);
             _algo.SetDateTime(dateForWhichDataExist);
 
             // Act
@@ -113,7 +113,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void BrokerageModelSecurityInitializer_CannotSetPrice_ForNonExistentHistory()
         {
             // Arrange
-            var dateForWhichDataDoesNotExist = DateTime.Parse("10/10/2050 12:00PM");
+            var dateForWhichDataDoesNotExist = new DateTime(2050, 10, 10, 12, 0, 0);
             _algo.SetDateTime(dateForWhichDataDoesNotExist);
 
             // Act
