@@ -66,7 +66,7 @@ namespace QuantConnect.VisualStudioPlugin
         /// <returns>true if successfully authenticated API, false otherwise</returns>
         public bool LogIn(string userId, string accessToken)
         {
-            Api.Api api = new Api.Api();
+            var api = new Api.Api();
             api.Initialize(int.Parse(userId), accessToken, ".");
             if (api.Connected)
             {

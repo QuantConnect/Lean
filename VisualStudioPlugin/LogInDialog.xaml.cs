@@ -35,8 +35,8 @@ namespace QuantConnect.VisualStudioPlugin
         private void LogIn_Click(object sender, RoutedEventArgs e)
         {
             logInButton.IsEnabled = false;
-            string userId = userIdBox.Text;
-            string accessToken = accessTokenBox.Password;
+            var userId = userIdBox.Text;
+            var accessToken = accessTokenBox.Password;
 
             if (authorizationManager.LogIn(userId, accessToken))
             {

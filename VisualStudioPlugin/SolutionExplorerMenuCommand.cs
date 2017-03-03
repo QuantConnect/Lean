@@ -64,7 +64,7 @@ namespace QuantConnect.VisualStudioPlugin
             this.package = package;
             this.dte2 = ServiceProvider.GetService(typeof(SDTE)) as DTE2;
 
-            OleMenuCommandService commandService = this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+            var commandService = this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (commandService != null)
             {
                 RegisterSendForBacktesting(commandService);
@@ -75,14 +75,14 @@ namespace QuantConnect.VisualStudioPlugin
         private void RegisterSendForBacktesting(OleMenuCommandService commandService)
         {
             var menuCommandID = new CommandID(CommandSet, SendForBacktestingCommandId);
-            OleMenuCommand oleMenuItem = new OleMenuCommand(new EventHandler(SendForBacktestingCallback), menuCommandID);
+            var oleMenuItem = new OleMenuCommand(new EventHandler(SendForBacktestingCallback), menuCommandID);
             commandService.AddCommand(oleMenuItem);
         }
 
         private void RegisterSaveToQuantConnect(OleMenuCommandService commandService)
         {
             var menuCommandID = new CommandID(CommandSet, SaveToQuantConnectCommandId);
-            OleMenuCommand oleMenuItem = new OleMenuCommand(new EventHandler(SaveToQuantConnectCallback), menuCommandID);
+            var oleMenuItem = new OleMenuCommand(new EventHandler(SaveToQuantConnectCallback), menuCommandID);
             commandService.AddCommand(oleMenuItem);
         }
 
@@ -119,8 +119,8 @@ namespace QuantConnect.VisualStudioPlugin
         {
             ExecuteOnProject(sender, (selectedProjectName, files) =>
             {
-                string message = string.Format(CultureInfo.CurrentCulture, "Send for backtesting to project {0}, files: {1}", selectedProjectName, string.Join(" ", files));
-                string title = "SendToBacktesting";
+                var message = string.Format(CultureInfo.CurrentCulture, "Send for backtesting to project {0}, files: {1}", selectedProjectName, string.Join(" ", files));
+                var title = "SendToBacktesting";
 
                 // Show a message box to prove we were here
                 VsShellUtilities.ShowMessageBox(
@@ -137,8 +137,8 @@ namespace QuantConnect.VisualStudioPlugin
         {
             ExecuteOnProject(sender, (selectedProjectName, files) =>
             {
-                string message = string.Format(CultureInfo.CurrentCulture, "Save to project {0}, files {1}", selectedProjectName, string.Join(" ", files));
-                string title = "SaveToQuantConnect";
+                var message = string.Format(CultureInfo.CurrentCulture, "Save to project {0}, files {1}", selectedProjectName, string.Join(" ", files));
+                var title = "SaveToQuantConnect";
 
                 // Show a message box to prove we were here
                 VsShellUtilities.ShowMessageBox(
@@ -159,8 +159,8 @@ namespace QuantConnect.VisualStudioPlugin
                 var projects = api.ListProjects().Projects;
                 var projectNames = projects.Select(p => p.Name).ToList();
 
-                List<Tuple<string, string>> files = GetSelectedFiles(sender);
-                List<string> fileNames = files.Select(tuple => tuple.Item1).ToList();
+                var files = GetSelectedFiles(sender);
+                var fileNames = files.Select(tuple => tuple.Item1).ToList();
                 var suggestedProjectName = _projectFinder.ProjectNameForFiles(fileNames);
                 var projectNameDialog = new ProjectNameDialog(projectNames, suggestedProjectName);
                 VsUtils.DisplayDialogWindow(projectNameDialog);
@@ -179,15 +179,15 @@ namespace QuantConnect.VisualStudioPlugin
         {
             var myCommand = sender as OleMenuCommand;
 
-            List<Tuple<string, string>> selectedFiles = new List<Tuple<string, string>>();
-            object[] selectedItems = (object[])dte2.ToolWindows.SolutionExplorer.SelectedItems;
+            var selectedFiles = new List<Tuple<string, string>>();
+            var selectedItems = (object[])dte2.ToolWindows.SolutionExplorer.SelectedItems;
             foreach (EnvDTE.UIHierarchyItem selectedUIHierarchyItem in selectedItems)
             {
                 if (selectedUIHierarchyItem.Object is EnvDTE.ProjectItem)
                 {
-                    EnvDTE.ProjectItem item = selectedUIHierarchyItem.Object as EnvDTE.ProjectItem;
-                    string filePath = item.Properties.Item("FullPath").Value.ToString();
-                    Tuple<string, string> fileAndItsPath = new Tuple<string, string>(item.Name, filePath);
+                    var item = selectedUIHierarchyItem.Object as EnvDTE.ProjectItem;
+                    var filePath = item.Properties.Item("FullPath").Value.ToString();
+                    var fileAndItsPath = new Tuple<string, string>(item.Name, filePath);
                     selectedFiles.Add(fileAndItsPath);
                 }
             }

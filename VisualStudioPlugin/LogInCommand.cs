@@ -47,7 +47,7 @@ namespace QuantConnect.VisualStudioPlugin
             var logInDialog = new LogInDialog(authorizationManager);
             VsUtils.DisplayDialogWindow(logInDialog);
 
-            Credentials? credentials = logInDialog.GetCredentials();
+            var credentials = logInDialog.GetCredentials();
 
             if (credentials.HasValue)
             {
