@@ -18,6 +18,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -34,7 +35,6 @@ using Order = QuantConnect.Orders.Order;
 using IB = QuantConnect.Brokerages.InteractiveBrokers.Client;
 using IBApi;
 using NodaTime;
-using System.Text;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
@@ -408,7 +408,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _accountProperties.Clear();
 
             var attempt = 1;
-            const int maxAttempts = 65;
+            const int maxAttempts = 5;
+            var existingSessionDetected = false;
             while (true)
             {
                 try
@@ -455,7 +456,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         _client.ClientSocket.eDisconnect();
                         messageProcessingThread.Join();
 
-                        // max out at 65 attempts to connect ~1 minute
+                        // if existing session detected from IBController log file, log error and throw exception
+                        if (ExistingSessionDetected())
+                        {
+                            existingSessionDetected = true;
+                            throw new Exception("InteractiveBrokersBrokerage.Connect(): An existing session was detected and will not be automatically disconnected. Please close the existing session manually.");
+                        }
+
+                        // max out at 5 attempts to connect ~1 minute
                         if (attempt++ < maxAttempts)
                         {
                             Thread.Sleep(1000);
@@ -472,7 +480,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 }
                 catch (Exception err)
                 {
-                    // max out at 65 attempts to connect ~1 minute
+                    // if existing session detected from IBController log file, log error and throw exception
+                    if (existingSessionDetected)
+                    {
+                        Log.Error(err);
+                        throw;
+                    }
+
+                    // max out at 5 attempts to connect ~1 minute
                     if (attempt++ < maxAttempts)
                     {
                         Thread.Sleep(1000);
@@ -2137,6 +2152,43 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             Log.Trace("InteractiveBrokersBrokerage::GetHistory() Download completed");
+        }
+
+        /// <summary>
+        /// Returns true if an existing session was detected and IBController clicked the "Exit Application" button
+        /// </summary>
+        /// <remarks>
+        /// For this method to work, the following setting is required in the IBController.ini file:
+        /// ExistingSessionDetectedAction=secondary
+        /// </remarks>
+        private static bool ExistingSessionDetected()
+        {
+            // find the current IBController log file name
+            var ibControllerLogPath = Path.Combine(Config.Get("ib-controller-dir"), "Logs");
+            var files = Directory.GetFiles(ibControllerLogPath, "ibc-*.txt");
+            var lastLogUpdateTime = DateTime.MinValue;
+            var ibControllerLogFileName = string.Empty;
+            foreach (var file in files)
+            {
+                var time = File.GetLastWriteTimeUtc(file);
+                if (time > lastLogUpdateTime)
+                {
+                    lastLogUpdateTime = time;
+                    ibControllerLogFileName = file;
+                }
+            }
+
+            if (ibControllerLogFileName.IsNullOrEmpty())
+            {
+                return false;
+            }
+
+            // read the lines and find the message indicating the choice to leave the existing session running
+            var lines = File.ReadAllLines(ibControllerLogFileName).ToList();
+            var separatorLine = new string('-', 60);
+            var index = lines.FindLastIndex(x => x.Contains(separatorLine));
+
+            return index >= 0 && lines.Skip(index + 1).Any(line => line.Contains("End this session and let the other session proceed"));
         }
 
         private readonly ConcurrentDictionary<Symbol, int> _subscribedSymbols = new ConcurrentDictionary<Symbol, int>();
