@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-
 using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.VisualStudio.Shell.Interop;
 using System;

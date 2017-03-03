@@ -44,9 +44,12 @@ namespace QuantConnect.VisualStudioPlugin
         /// VS Package that provides this command, not null.
         /// </summary>
         private readonly Package package;
+
         private DTE2 dte2;
 
         private ProjectFinder _projectFinder = new ProjectFinder();
+
+        private LogInCommand _logInCommand = new LogInCommand();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SolutionExplorerMenuCommand"/> class.
@@ -153,7 +156,7 @@ namespace QuantConnect.VisualStudioPlugin
 
         private void ExecuteOnProject(object sender, Action<string, List<string>> onProject)
         {
-            if (LogInCommand.DoLogIn(this.ServiceProvider))
+            if (_logInCommand.DoLogIn(this.ServiceProvider))
             {
                 var api = AuthorizationManager.GetInstance().GetApi();
                 var projects = api.ListProjects().Projects;

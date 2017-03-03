@@ -24,13 +24,13 @@ namespace QuantConnect.VisualStudioPlugin
     class LogInCommand
     {
 
-        private static CredentialsManager _credentialsManager = new CredentialsManager();
+        private CredentialsManager _credentialsManager = new CredentialsManager();
         /// <summary>
         /// Perform QuantConnect authentication
         /// </summary>
         /// <param name="serviceProvider">Visual Studio services provider</param>
         /// <returns>true if user logged into QuantConnect, false otherwise</returns>
-        public static bool DoLogIn(IServiceProvider serviceProvider)
+        public bool DoLogIn(IServiceProvider serviceProvider)
         {
             
             var authorizationManager = AuthorizationManager.GetInstance();
@@ -61,7 +61,7 @@ namespace QuantConnect.VisualStudioPlugin
             }
         }
 
-        private static bool LoggedInWithLastStorredPassword()
+        private bool LoggedInWithLastStorredPassword()
         {
             var nullableCredentials =_credentialsManager.GetLastCredential(); 
             if (!nullableCredentials.HasValue)

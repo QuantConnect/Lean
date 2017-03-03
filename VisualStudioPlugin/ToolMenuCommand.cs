@@ -43,7 +43,7 @@ namespace QuantConnect.VisualStudioPlugin
         /// </summary>
         private readonly Package package;
 
-        private IVsStatusbar bar;
+        private LogInCommand _logInCommand = new LogInCommand();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ToolMenuCommand"/> class.
@@ -129,7 +129,7 @@ namespace QuantConnect.VisualStudioPlugin
         /// <param name="e">Event args.</param>
         private void LogInCallback(object sender, EventArgs e)
         {
-            LogInCommand.DoLogIn(this.ServiceProvider);
+            _logInCommand.DoLogIn(this.ServiceProvider);
         }
 
         private void LogOutCallback(object sender, EventArgs e)
