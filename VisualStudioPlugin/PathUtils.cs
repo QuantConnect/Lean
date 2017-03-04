@@ -11,10 +11,8 @@ namespace QuantConnect.VisualStudioPlugin
     /// <summary>
     /// Collections of util methods to work with directories
     /// </summary>
-    class PathUtils
+    static class PathUtils
     {
-
-        private PathUtils() { }
 
         public static string GetSolutionFolder(DTE2 dte2)
         {
