@@ -15,6 +15,7 @@
 
 using Microsoft.VisualStudio.PlatformUI;
 using System.Windows;
+using System.Windows.Media;
 
 namespace QuantConnect.VisualStudioPlugin
 {
@@ -26,10 +27,15 @@ namespace QuantConnect.VisualStudioPlugin
         private AuthorizationManager authorizationManager;
         private Credentials? _credentials;
 
+        private Brush userIdNormalBrush;
+        private Brush accessTokenNormalBrush;
+
         public LogInDialog(AuthorizationManager authorizationManager)
         {
             InitializeComponent();
             this.authorizationManager = authorizationManager;
+            userIdNormalBrush = userIdBox.BorderBrush;
+            accessTokenNormalBrush = userIdBox.BorderBrush;
         }
 
         private void LogIn_Click(object sender, RoutedEventArgs e)
@@ -45,8 +51,8 @@ namespace QuantConnect.VisualStudioPlugin
             }
             else
             {
-                userIdBox.BorderBrush = System.Windows.Media.Brushes.Red;
-                accessTokenBox.BorderBrush = System.Windows.Media.Brushes.Red;
+                userIdBox.BorderBrush = Brushes.Red;
+                accessTokenBox.BorderBrush = Brushes.Red;
             }
             logInButton.IsEnabled = true;
         }
@@ -65,6 +71,12 @@ namespace QuantConnect.VisualStudioPlugin
         public Credentials? GetCredentials()
         {
             return _credentials;
+        }
+
+        private void inputField_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            userIdBox.BorderBrush = userIdNormalBrush;
+            accessTokenBox.BorderBrush = accessTokenNormalBrush;
         }
     }
 
