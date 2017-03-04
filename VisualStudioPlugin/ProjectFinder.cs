@@ -27,11 +27,13 @@ namespace QuantConnect.VisualStudioPlugin
     class ProjectFinder
     {
         private const string PROJECT_ASSOCIATIONS_FILE = "QuantConnectProjects.xml";
+        private string _projectsFilePath;
         private IDictionary<HashSet<string>, string> _projectForFiles 
             = new Dictionary<HashSet<string>, string>(HashSet<string>.CreateSetComparer());
 
-        public ProjectFinder()
+        public ProjectFinder(string solutionDirectory)
         {
+            _projectsFilePath = Path.Combine(solutionDirectory, PROJECT_ASSOCIATIONS_FILE);
             ReadProjectAssociations();
         }
 
@@ -56,10 +58,10 @@ namespace QuantConnect.VisualStudioPlugin
             }
         }
 
-        private static ProjectAssociations ParseAssociationFile()
+        private ProjectAssociations ParseAssociationFile()
         {
             ProjectAssociations projectAssociations;
-            using (var stream = new StreamReader(PROJECT_ASSOCIATIONS_FILE))
+            using (var stream = new StreamReader(_projectsFilePath))
             using (var reader = new XmlTextReader(stream))
             {
                 var dataContractSerializer = new DataContractSerializer(typeof(ProjectAssociations));
@@ -114,9 +116,9 @@ namespace QuantConnect.VisualStudioPlugin
             SerializeProjectAssociations(projectAssociations);
         }
 
-        private static void SerializeProjectAssociations(ProjectAssociations projectAssociations)
+        private void SerializeProjectAssociations(ProjectAssociations projectAssociations)
         {
-            using (var output = new StreamWriter(PROJECT_ASSOCIATIONS_FILE, false))
+            using (var output = new StreamWriter(_projectsFilePath, false))
             using (var writer = new XmlTextWriter(output) { Formatting = Formatting.Indented })
             {
                 var dataContractSerializer = new DataContractSerializer(typeof(ProjectAssociations));
@@ -147,7 +149,7 @@ namespace QuantConnect.VisualStudioPlugin
     /// <summary>
     /// A pair that represent a project and list of files associated with it
     /// </summary>
-    [DataContract(Name = "projectAssociation")]
+    [DataContract(Name = "ProjectAssociation")]
     class ProjectAssociation
     {
         [DataMember(Name = "ProjectName")]

@@ -47,7 +47,7 @@ namespace QuantConnect.VisualStudioPlugin
 
         private DTE2 dte2;
 
-        private ProjectFinder _projectFinder = new ProjectFinder();
+        private ProjectFinder _projectFinder;
 
         private LogInCommand _logInCommand = new LogInCommand();
 
@@ -63,9 +63,10 @@ namespace QuantConnect.VisualStudioPlugin
                 throw new ArgumentNullException("package");
             }
 
-            
+
             this.package = package;
             this.dte2 = ServiceProvider.GetService(typeof(SDTE)) as DTE2;
+            _projectFinder = CreateProjectFinder();
 
             var commandService = this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (commandService != null)
@@ -73,6 +74,11 @@ namespace QuantConnect.VisualStudioPlugin
                 RegisterSendForBacktesting(commandService);
                 RegisterSaveToQuantConnect(commandService);
             }
+        }
+
+        private ProjectFinder CreateProjectFinder()
+        {
+            return new ProjectFinder(System.IO.Path.GetDirectoryName(dte2.Solution.FullName));
         }
 
         private void RegisterSendForBacktesting(OleMenuCommandService commandService)
