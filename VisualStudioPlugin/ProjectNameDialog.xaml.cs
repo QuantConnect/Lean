@@ -15,6 +15,7 @@
 
 using Microsoft.VisualStudio.PlatformUI;
 using System.Collections.Generic;
+using System;
 
 namespace QuantConnect.VisualStudioPlugin
 {
@@ -22,17 +23,21 @@ namespace QuantConnect.VisualStudioPlugin
     {
         private bool _projectNameProvided = false;
         private string _selectedProjectName = null;
+        private int _selectedProjectId = 0;
 
-        public ProjectNameDialog(List<string> projectNames, string suggestedProjectName)
+        public ProjectNameDialog(List<Tuple<int, string>> projectNames, string suggestedProjectName)
         {
             InitializeComponent();
-            projectNames.ForEach(p => projectNameBox.Items.Add(p));
+            projectNames.ForEach(p => projectNameBox.Items.Add(new ComboboxItem(p.Item1.ToString(), p.Item2)));
             projectNameBox.Text = suggestedProjectName;
         }
 
         private void SelectButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            var projectName = projectNameBox.Text;
+            ComboboxItem selectedItem = projectNameBox.SelectedItem as ComboboxItem;
+            int projectId = Int32.Parse(selectedItem.Value);
+            var projectName = selectedItem.DisplayText;
+
             if (projectName.Length == 0)
             {
                 projectNameBox.BorderBrush = System.Windows.Media.Brushes.Red;
@@ -42,6 +47,7 @@ namespace QuantConnect.VisualStudioPlugin
             {
                 _projectNameProvided = true;
                 _selectedProjectName = projectName;
+                _selectedProjectId = projectId;
                 this.Close();
             }
         }
@@ -59,6 +65,27 @@ namespace QuantConnect.VisualStudioPlugin
         public string GetSelectedProjectName()
         {
             return _selectedProjectName;
+        }
+
+        public int GetSelectedProjectId()
+        {
+            return _selectedProjectId;
+        }
+
+        private class ComboboxItem {
+            public string Value { get; }
+            public string DisplayText { get; }
+
+            public ComboboxItem(string Value, string DisplayText)
+            {
+                this.Value = Value;
+                this.DisplayText = DisplayText;
+            }
+
+            public override string ToString()
+            {
+                return this.DisplayText;
+            }
         }
     }
 }
