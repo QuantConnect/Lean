@@ -13,15 +13,21 @@
  * limitations under the License.
 */
 
-using System;
 using CredentialManagement;
 
 namespace QuantConnect.VisualStudioPlugin
 {
+    /// <summary>
+    /// Class for storring and retrieving credentils from local Windows credentials store
+    /// </summary>
     class CredentialsManager
     {
         private const string CREDENTIAL_TARGET = "QuantConnectPlugin";
 
+        /// <summary>
+        /// Get latest storred QuantConnect credentials.
+        /// </summary>
+        /// <returns>Latest storred credentials if they exist, null otherwise</returns>
         public Credentials? GetLastCredential()
         {
             var credential = new Credential { Target = CREDENTIAL_TARGET };
@@ -33,7 +39,11 @@ namespace QuantConnect.VisualStudioPlugin
             return new Credentials(credential.Username, credential.Password);
         }
 
-        public void SetCredentials(Credentials credentials)
+        /// <summary>
+        /// Store latests credentials. Overwrites last storred credentials.
+        /// </summary>
+        /// <param name="credentials">Credentials to store</param>
+        public void StoreCredentials(Credentials credentials)
         {
             var credential = new Credential
             {
@@ -46,6 +56,9 @@ namespace QuantConnect.VisualStudioPlugin
             credential.Save();
         }
 
+        /// <summary>
+        /// Remove last storred credentials. After this GetLastCredential will return null.
+        /// </summary>
         public void ForgetCredentials()
         {
             var credential = new Credential { Target = CREDENTIAL_TARGET };

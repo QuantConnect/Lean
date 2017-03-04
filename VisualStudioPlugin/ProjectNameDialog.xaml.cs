@@ -18,15 +18,34 @@ using System.Collections.Generic;
 
 namespace QuantConnect.VisualStudioPlugin
 {
+    /// <summary>
+    /// Dialog window to select a project in QuantConnect that will be
+    /// used to save selected files to
+    /// </summary>
     public partial class ProjectNameDialog : DialogWindow
     {
         private bool _projectNameProvided = false;
         private string _selectedProjectName = null;
 
+        /// <summary>
+        /// Create ProjectNameDialog
+        /// </summary>
+        /// <param name="projectNames">List of project names for a user to select from</param>
+        /// <param name="suggestedProjectName"></param>
         public ProjectNameDialog(List<string> projectNames, string suggestedProjectName)
         {
             InitializeComponent();
+            SetProjectNames(projectNames);
+            SetSuggestedProjectName(suggestedProjectName);
+        }
+
+        private void SetProjectNames(List<string> projectNames)
+        {
             projectNames.ForEach(p => projectNameBox.Items.Add(p));
+        }
+
+        private void SetSuggestedProjectName(string suggestedProjectName)
+        {
             projectNameBox.Text = suggestedProjectName;
         }
 
@@ -35,20 +54,30 @@ namespace QuantConnect.VisualStudioPlugin
             var projectName = projectNameBox.Text;
             if (projectName.Length == 0)
             {
-                projectNameBox.BorderBrush = System.Windows.Media.Brushes.Red;
-                projectNameBox.ToolTip = "Error occurred with the data of the control.";
+                DisplayProjectNameError();
             }
             else
             {
-                _projectNameProvided = true;
-                _selectedProjectName = projectName;
-                this.Close();
+                SaveSelectedProjectName(projectName);
+                Close();
             }
+        }
+
+        private void DisplayProjectNameError()
+        {
+            projectNameBox.BorderBrush = System.Windows.Media.Brushes.Red;
+            projectNameBox.ToolTip = "Error occurred with the data of the control.";
+        }
+
+        private void SaveSelectedProjectName(string projectName)
+        {
+            _projectNameProvided = true;
+            _selectedProjectName = projectName;
         }
 
         private void CancelButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            this.Close();
+            Close();
         }
 
         public bool ProjectNameProvided()

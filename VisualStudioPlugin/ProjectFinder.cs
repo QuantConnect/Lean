@@ -31,6 +31,10 @@ namespace QuantConnect.VisualStudioPlugin
         private IDictionary<HashSet<string>, string> _projectForFiles 
             = new Dictionary<HashSet<string>, string>(HashSet<string>.CreateSetComparer());
 
+        /// <summary>
+        /// Create ProjectFinder
+        /// </summary>
+        /// <param name="solutionDirectory">Path to current solution's folder</param>
         public ProjectFinder(string solutionDirectory)
         {
             _projectsFilePath = Path.Combine(solutionDirectory, PROJECT_ASSOCIATIONS_FILE);

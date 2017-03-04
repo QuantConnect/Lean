@@ -25,12 +25,12 @@ using System.Linq;
 namespace QuantConnect.VisualStudioPlugin
 {
     /// <summary>
-    /// Command handler
+    /// Command handler for QuantConnect Solution Explorer menu buttons
     /// </summary>
     internal sealed class SolutionExplorerMenuCommand
     {
         /// <summary>
-        /// Command ID.
+        /// Command IDs for Solution Explorer menu buttons
         /// </summary>
         public const int SendForBacktestingCommandId = 0x0100;
         public const int SaveToQuantConnectCommandId = 0x0110;
@@ -62,7 +62,6 @@ namespace QuantConnect.VisualStudioPlugin
             {
                 throw new ArgumentNullException("package");
             }
-
 
             _package = package;
             _dte2 = ServiceProvider.GetService(typeof(SDTE)) as DTE2;

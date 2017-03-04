@@ -31,8 +31,8 @@ namespace QuantConnect.VisualStudioPlugin
         /// <param name="msg">Message to display</param>
         public static void DisplayInStatusBar(IServiceProvider serviceProvider, string msg)
         {
-            int frozen;
             var statusBar = GetStatusBar(serviceProvider);
+            int frozen;
             statusBar.IsFrozen(out frozen);
             if (frozen == 0)
             {

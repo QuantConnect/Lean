@@ -17,6 +17,9 @@ using System;
 
 namespace QuantConnect.VisualStudioPlugin
 {
+    /// <summary>
+    /// Exception that is thrown if API is accessed without beign authenticated first
+    /// </summary>
     class NotAuthenticatedException : Exception
     {
         public NotAuthenticatedException()

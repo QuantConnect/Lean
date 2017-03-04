@@ -15,11 +15,19 @@
 
 namespace QuantConnect.VisualStudioPlugin
 {
+    /// <summary>
+    /// Credentials to use QuantConnect API. Consists of a user id and an access token
+    /// </summary>
     public struct Credentials
     {
         private string _userId;
         private string _accessToken;
 
+        /// <summary>
+        /// Create Credentials
+        /// </summary>
+        /// <param name="userId">User id</param>
+        /// <param name="accessToken">Access token</param>
         public Credentials(string userId, string accessToken)
         {
             _userId = userId;

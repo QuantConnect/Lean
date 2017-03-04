@@ -15,7 +15,6 @@
 
 using System;
 using System.ComponentModel.Design;
-using System.Globalization;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using EnvDTE80;
@@ -23,12 +22,12 @@ using EnvDTE80;
 namespace QuantConnect.VisualStudioPlugin
 {
     /// <summary>
-    /// Command handler
+    /// Command handler for QuantConnect menus in the "Tools" section.
     /// </summary>
     internal sealed class ToolMenuCommand
     {
         /// <summary>
-        /// Command ID.
+        /// Command IDs for buttons in the "Tools" section
         /// </summary>
         public const int LogInCommandId = 256;
 

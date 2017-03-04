@@ -31,6 +31,11 @@ namespace QuantConnect.VisualStudioPlugin
         private Brush _userIdNormalBrush;
         private Brush _accessTokenNormalBrush;
 
+        /// <summary>
+        /// Create LogInDialog
+        /// </summary>
+        /// <param name="authorizationManager">Authorization manager</param>
+        /// <param name="solutionFolder">Path to the folder with opened solution</param>
         public LogInDialog(AuthorizationManager authorizationManager, string solutionFolder)
         {
             InitializeComponent();
@@ -66,14 +71,10 @@ namespace QuantConnect.VisualStudioPlugin
             this.Close();
         }
 
-        /*
-        private bool TryLogIn(Credentials credentials)
-        {
-            _authorizationManager.LogIn(credentials, _dataFolder);
-            return _authorizationManager.IsLoggedIn();
-        }
-        */
-
+        /// <summary>
+        /// Get credentials that were used to log in into QuantConnect
+        /// </summary>
+        /// <returns>Credentials if a user was authenticated, null if correct credentials were not provided</returns>
         public Credentials? GetCredentials()
         {
             return _credentials;
