@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using CredentialManagement;
 
 namespace QuantConnect.VisualStudioPlugin
@@ -23,13 +24,13 @@ namespace QuantConnect.VisualStudioPlugin
 
         public Credentials? GetLastCredential()
         {
-            var cm = new Credential { Target = CREDENTIAL_TARGET };
-            if (!cm.Load())
+            var credential = new Credential { Target = CREDENTIAL_TARGET };
+            if (!credential.Load())
             {
                 return null;
             }
 
-            return new Credentials(cm.Username, cm.Password);
+            return new Credentials(credential.Username, credential.Password);
         }
 
         public void SetCredentials(Credentials credentials)
@@ -43,6 +44,12 @@ namespace QuantConnect.VisualStudioPlugin
             };
             
             credential.Save();
+        }
+
+        public void ForgetCredentials()
+        {
+            var credential = new Credential { Target = CREDENTIAL_TARGET };
+            credential.Delete();
         }
     }
 }

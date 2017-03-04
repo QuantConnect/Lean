@@ -72,5 +72,12 @@ namespace QuantConnect.VisualStudioPlugin
             var credentials = nullableCredentials.Value;
             return AuthorizationManager.GetInstance().LogIn(credentials.UserId, credentials.AccessToken);
         }
+
+        public void DoLogOut(IServiceProvider serviceProvider)
+        {
+            _credentialsManager.ForgetCredentials();
+            AuthorizationManager.GetInstance().LogOut();
+            VsUtils.DisplayInStatusBar(serviceProvider, "Logged out of QuantConnect");
+        }
     }
 }

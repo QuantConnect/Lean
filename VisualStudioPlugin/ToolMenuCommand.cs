@@ -134,8 +134,7 @@ namespace QuantConnect.VisualStudioPlugin
 
         private void LogOutCallback(object sender, EventArgs e)
         {
-            AuthorizationManager.GetInstance().LogOut();
-            VsUtils.DisplayInStatusBar(this.ServiceProvider, "Logged out of QuantConnect");
+            _logInCommand.DoLogOut(this.ServiceProvider);
         }
 
     }
