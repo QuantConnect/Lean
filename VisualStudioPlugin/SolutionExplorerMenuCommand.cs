@@ -142,9 +142,9 @@ namespace QuantConnect.VisualStudioPlugin
 
         private void SendForBacktestingCallback(object sender, EventArgs e)
         {
-            ExecuteOnProject(sender, (selectedProjectName, files) =>
+            ExecuteOnProject(sender, (selectedProjectId, selectedProjectName, files) =>
             {
-                var message = string.Format(CultureInfo.CurrentCulture, "Send for backtesting to project {0}, files: {1}", selectedProjectName, string.Join(" ", files));
+                var message = string.Format(CultureInfo.CurrentCulture, "Send for backtesting to project {0}, files: {1}", selectedProjectId + " : " + selectedProjectName, string.Join(" ", files));
                 var title = "SendToBacktesting";
 
                 // Show a message box to prove we were here
@@ -160,9 +160,12 @@ namespace QuantConnect.VisualStudioPlugin
 
         private void SaveToQuantConnectCallback(object sender, EventArgs e)
         {
-            ExecuteOnProject(sender, (selectedProjectName, files) =>
+            ExecuteOnProject(sender, (selectedProjectId, selectedProjectName, files) =>
             {
-                var message = string.Format(CultureInfo.CurrentCulture, "Save to project {0}, files {1}", selectedProjectName, string.Join(" ", files));
+                var api = AuthorizationManager.GetInstance().GetApi();
+                //Api.ProjectResponse r = api.CreateProject("My first C# project", Language.CSharp);
+
+                var message = string.Format(CultureInfo.CurrentCulture, "Save to project {0}, files {1}", selectedProjectId + " : " + selectedProjectName , string.Join(" ", files));
                 var title = "SaveToQuantConnect";
 
                 // Show a message box to prove we were here
@@ -176,13 +179,13 @@ namespace QuantConnect.VisualStudioPlugin
             });
         }
 
-        private void ExecuteOnProject(object sender, Action<string, List<string>> onProject)
+        private void ExecuteOnProject(object sender, Action<int, string, List<string>> onProject)
         {
             if (_logInCommand.DoLogIn(this.ServiceProvider, explicitLogin: false))
             {
                 var api = AuthorizationManager.GetInstance().GetApi();
                 var projects = api.ListProjects().Projects;
-                var projectNames = projects.Select(p => p.Name).ToList();
+                var projectNames = projects.Select(p => Tuple.Create(p.ProjectId, p.Name)).ToList();
 
                 var files = GetSelectedFiles(sender);
                 var fileNames = files.Select(tuple => tuple.Item1).ToList();
@@ -193,9 +196,10 @@ namespace QuantConnect.VisualStudioPlugin
                 if (projectNameDialog.ProjectNameProvided())
                 {
                     var selectedProjectName = projectNameDialog.GetSelectedProjectName();
+                    var selectedProjectId = projectNameDialog.GetSelectedProjectId();
                     ProjectFinder.AssociateProjectWith(selectedProjectName, fileNames);
 
-                    onProject.Invoke(selectedProjectName, fileNames);
+                    onProject.Invoke(selectedProjectId, selectedProjectName, fileNames);
                 }
             }
         }
