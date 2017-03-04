@@ -132,7 +132,7 @@ namespace QuantConnect.VisualStudioPlugin
         /// <param name="e">Event args.</param>
         private void LogInCallback(object sender, EventArgs e)
         {
-            _logInCommand.DoLogIn(this.ServiceProvider);
+            _logInCommand.DoLogIn(this.ServiceProvider, explicitLogin: true);
         }
 
         private void LogOutCallback(object sender, EventArgs e)

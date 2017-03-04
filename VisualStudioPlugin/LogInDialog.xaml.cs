@@ -36,12 +36,17 @@ namespace QuantConnect.VisualStudioPlugin
         /// </summary>
         /// <param name="authorizationManager">Authorization manager</param>
         /// <param name="solutionFolder">Path to the folder with opened solution</param>
-        public LogInDialog(AuthorizationManager authorizationManager, string dataFolder)
+        public LogInDialog(AuthorizationManager authorizationManager, Credentials? previousCredentials, string dataFolder)
         {
             InitializeComponent();
             _authorizationManager = authorizationManager;
             _dataFolder = dataFolder;
 
+            if (previousCredentials.HasValue)
+            {
+                userIdBox.Text = previousCredentials.Value.UserId;
+                accessTokenBox.Password = previousCredentials.Value.AccessToken;
+            }
             _userIdNormalBrush = userIdBox.BorderBrush;
             _accessTokenNormalBrush = userIdBox.BorderBrush;
         }

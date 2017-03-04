@@ -65,7 +65,6 @@ namespace QuantConnect.VisualStudioPlugin
 
             _package = package as QuantConnectPackage;
             _dte2 = ServiceProvider.GetService(typeof(SDTE)) as DTE2;
-            _projectFinder = CreateProjectFinder();
             _logInCommand = CreateLogInCommand();
 
             var commandService = this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
@@ -120,6 +119,18 @@ namespace QuantConnect.VisualStudioPlugin
             }
         }
 
+        // Lazily create ProjectFinder only when we have an opened solution
+        private ProjectFinder ProjectFinder
+        {
+            get {
+                if (_projectFinder == null)
+                {
+                    _projectFinder = CreateProjectFinder();
+                }
+                return _projectFinder;
+            }
+        }
+
         /// <summary>
         /// Initializes the singleton instance of the command.
         /// </summary>
@@ -167,7 +178,7 @@ namespace QuantConnect.VisualStudioPlugin
 
         private void ExecuteOnProject(object sender, Action<string, List<string>> onProject)
         {
-            if (_logInCommand.DoLogIn(this.ServiceProvider))
+            if (_logInCommand.DoLogIn(this.ServiceProvider, explicitLogin: false))
             {
                 var api = AuthorizationManager.GetInstance().GetApi();
                 var projects = api.ListProjects().Projects;
@@ -175,14 +186,14 @@ namespace QuantConnect.VisualStudioPlugin
 
                 var files = GetSelectedFiles(sender);
                 var fileNames = files.Select(tuple => tuple.Item1).ToList();
-                var suggestedProjectName = _projectFinder.ProjectNameForFiles(fileNames);
+                var suggestedProjectName = ProjectFinder.ProjectNameForFiles(fileNames);
                 var projectNameDialog = new ProjectNameDialog(projectNames, suggestedProjectName);
                 VsUtils.DisplayDialogWindow(projectNameDialog);
 
                 if (projectNameDialog.ProjectNameProvided())
                 {
                     var selectedProjectName = projectNameDialog.GetSelectedProjectName();
-                    _projectFinder.AssociateProjectWith(selectedProjectName, fileNames);
+                    ProjectFinder.AssociateProjectWith(selectedProjectName, fileNames);
 
                     onProject.Invoke(selectedProjectName, fileNames);
                 }

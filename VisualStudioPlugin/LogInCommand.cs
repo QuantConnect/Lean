@@ -40,22 +40,29 @@ namespace QuantConnect.VisualStudioPlugin
         /// Perform QuantConnect authentication
         /// </summary>
         /// <param name="serviceProvider">Visual Studio services provider</param>
+        /// <param name="explicitLogin">User explicitly clicked Log In button</param>
         /// <returns>true if user logged into QuantConnect, false otherwise</returns>
-        public bool DoLogIn(IServiceProvider serviceProvider)
+        public bool DoLogIn(IServiceProvider serviceProvider, bool explicitLogin)
         {
-            
+
             var authorizationManager = AuthorizationManager.GetInstance();
             if (authorizationManager.IsLoggedIn())
             {
                 return true;
             }
 
-            if (LoggedInWithLastStorredPassword())
+            var previousCredentials = _credentialsManager.GetLastCredential();
+            if (!explicitLogin && LoggedInWithLastStorredPassword(previousCredentials))
             {
                 return true;
             }
 
-            var logInDialog = new LogInDialog(authorizationManager, _dataFolderPath);
+            return LogInWithDialog(serviceProvider, previousCredentials);
+        }
+
+        private bool LogInWithDialog(IServiceProvider serviceProvider, Credentials? previousCredentials)
+        {
+            var logInDialog = new LogInDialog(AuthorizationManager.GetInstance(), previousCredentials, _dataFolderPath);
             VsUtils.DisplayDialogWindow(logInDialog);
 
             var credentials = logInDialog.GetCredentials();
@@ -72,15 +79,14 @@ namespace QuantConnect.VisualStudioPlugin
             }
         }
 
-        private bool LoggedInWithLastStorredPassword()
+        private bool LoggedInWithLastStorredPassword(Credentials? previousCredentials)
         {
-            var nullableCredentials =_credentialsManager.GetLastCredential(); 
-            if (!nullableCredentials.HasValue)
+            if (!previousCredentials.HasValue)
             {
                 return false;
             }
 
-            var credentials = nullableCredentials.Value;
+            var credentials = previousCredentials.Value;
             return AuthorizationManager.GetInstance().LogIn(credentials, _dataFolderPath);
         }
 
