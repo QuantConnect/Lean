@@ -13,12 +13,7 @@
  * limitations under the License.
 */
 
-using QuantConnect.Api;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QuantConnect.VisualStudioPlugin
 {
@@ -64,12 +59,12 @@ namespace QuantConnect.VisualStudioPlugin
         /// <param name="userId">User id to authenticate the API</param>
         /// <param name="accessToken">Access token to authenticate the API</param>
         /// <returns>true if successfully authenticated API, false otherwise</returns>
-        public bool LogIn(string userId, string accessToken)
+        public bool LogIn(Credentials credentials, string dataFolderPath)
         {
             try
             {
                 var api = new Api.Api();
-                api.Initialize(int.Parse(userId), accessToken, ".");
+                api.Initialize(int.Parse(credentials.UserId), credentials.AccessToken, dataFolderPath);
                 if (api.Connected)
                 {
                     _api = api;

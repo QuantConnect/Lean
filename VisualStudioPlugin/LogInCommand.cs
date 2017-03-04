@@ -15,6 +15,7 @@
 
 
 using System;
+using System.IO;
 
 namespace QuantConnect.VisualStudioPlugin
 {
@@ -25,6 +26,16 @@ namespace QuantConnect.VisualStudioPlugin
     {
 
         private CredentialsManager _credentialsManager = new CredentialsManager();
+
+        private string _solutionFolder;
+        private string _dataFolderPath;
+
+        public LogInCommand(string solutionFolder)
+        {
+            _solutionFolder = solutionFolder;
+            _dataFolderPath = PathUtils.GetDataFolder(solutionFolder);
+        }
+
         /// <summary>
         /// Perform QuantConnect authentication
         /// </summary>
@@ -44,7 +55,7 @@ namespace QuantConnect.VisualStudioPlugin
                 return true;
             }
 
-            var logInDialog = new LogInDialog(authorizationManager);
+            var logInDialog = new LogInDialog(authorizationManager, _solutionFolder);
             VsUtils.DisplayDialogWindow(logInDialog);
 
             var credentials = logInDialog.GetCredentials();
@@ -70,7 +81,7 @@ namespace QuantConnect.VisualStudioPlugin
             }
 
             var credentials = nullableCredentials.Value;
-            return AuthorizationManager.GetInstance().LogIn(credentials.UserId, credentials.AccessToken);
+            return AuthorizationManager.GetInstance().LogIn(credentials, _dataFolderPath);
         }
 
         public void DoLogOut(IServiceProvider serviceProvider)

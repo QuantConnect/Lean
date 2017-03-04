@@ -58,6 +58,7 @@
     <Compile Include="LogInCommand.cs" />
     <Compile Include="LogInDialog.xaml.cs" />
     <Compile Include="NotAuthenticatedException.cs" />
+    <Compile Include="PathUtils.cs" />
     <Compile Include="ProjectFinder.cs" />
     <Compile Include="ProjectNameDialog.xaml.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

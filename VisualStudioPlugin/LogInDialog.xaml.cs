@@ -24,18 +24,21 @@ namespace QuantConnect.VisualStudioPlugin
     /// </summary>
     public partial class LogInDialog : DialogWindow
     {
-        private AuthorizationManager authorizationManager;
+        private AuthorizationManager _authorizationManager;
         private Credentials? _credentials;
+        private string _dataFolder;
 
-        private Brush userIdNormalBrush;
-        private Brush accessTokenNormalBrush;
+        private Brush _userIdNormalBrush;
+        private Brush _accessTokenNormalBrush;
 
-        public LogInDialog(AuthorizationManager authorizationManager)
+        public LogInDialog(AuthorizationManager authorizationManager, string solutionFolder)
         {
             InitializeComponent();
-            this.authorizationManager = authorizationManager;
-            userIdNormalBrush = userIdBox.BorderBrush;
-            accessTokenNormalBrush = userIdBox.BorderBrush;
+            _authorizationManager = authorizationManager;
+            _dataFolder = PathUtils.GetDataFolder(solutionFolder);
+
+            _userIdNormalBrush = userIdBox.BorderBrush;
+            _accessTokenNormalBrush = userIdBox.BorderBrush;
         }
 
         private void LogIn_Click(object sender, RoutedEventArgs e)
@@ -43,8 +46,9 @@ namespace QuantConnect.VisualStudioPlugin
             logInButton.IsEnabled = false;
             var userId = userIdBox.Text;
             var accessToken = accessTokenBox.Password;
+            var credentials = new Credentials(userId, accessToken);
 
-            if (authorizationManager.LogIn(userId, accessToken))
+            if (_authorizationManager.LogIn(credentials, _dataFolder))
             {
                 _credentials = new Credentials(userId, accessToken);
                 this.Close();
@@ -62,11 +66,13 @@ namespace QuantConnect.VisualStudioPlugin
             this.Close();
         }
 
-        private bool TryLogIn(string userId, string accessKey)
+        /*
+        private bool TryLogIn(Credentials credentials)
         {
-            authorizationManager.LogIn(userId, accessKey);
-            return authorizationManager.IsLoggedIn();
+            _authorizationManager.LogIn(credentials, _dataFolder);
+            return _authorizationManager.IsLoggedIn();
         }
+        */
 
         public Credentials? GetCredentials()
         {
@@ -75,8 +81,8 @@ namespace QuantConnect.VisualStudioPlugin
 
         private void inputField_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            userIdBox.BorderBrush = userIdNormalBrush;
-            accessTokenBox.BorderBrush = accessTokenNormalBrush;
+            userIdBox.BorderBrush = _userIdNormalBrush;
+            accessTokenBox.BorderBrush = _accessTokenNormalBrush;
         }
     }
 

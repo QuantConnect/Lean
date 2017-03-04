@@ -18,6 +18,7 @@ using System.ComponentModel.Design;
 using System.Globalization;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using EnvDTE80;
 
 namespace QuantConnect.VisualStudioPlugin
 {
@@ -41,9 +42,10 @@ namespace QuantConnect.VisualStudioPlugin
         /// <summary>
         /// VS Package that provides this command, not null.
         /// </summary>
-        private readonly Package package;
+        private readonly Package _package;
 
-        private LogInCommand _logInCommand = new LogInCommand();
+        private LogInCommand _logInCommand;
+        private DTE2 _dte2;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ToolMenuCommand"/> class.
@@ -57,7 +59,9 @@ namespace QuantConnect.VisualStudioPlugin
                 throw new ArgumentNullException("package");
             }
 
-            this.package = package;
+            _package = package;
+            _dte2 = ServiceProvider.GetService(typeof(SDTE)) as DTE2;
+            _logInCommand = new LogInCommand(PathUtils.GetSolutionFolder(_dte2));
 
             var commandService = this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (commandService != null)
@@ -107,7 +111,7 @@ namespace QuantConnect.VisualStudioPlugin
         {
             get
             {
-                return this.package;
+                return _package;
             }
         }
 

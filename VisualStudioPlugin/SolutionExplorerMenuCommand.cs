@@ -43,13 +43,13 @@ namespace QuantConnect.VisualStudioPlugin
         /// <summary>
         /// VS Package that provides this command, not null.
         /// </summary>
-        private readonly Package package;
+        private readonly Package _package;
 
-        private DTE2 dte2;
+        private DTE2 _dte2;
 
         private ProjectFinder _projectFinder;
 
-        private LogInCommand _logInCommand = new LogInCommand();
+        private LogInCommand _logInCommand;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SolutionExplorerMenuCommand"/> class.
@@ -64,9 +64,10 @@ namespace QuantConnect.VisualStudioPlugin
             }
 
 
-            this.package = package;
-            this.dte2 = ServiceProvider.GetService(typeof(SDTE)) as DTE2;
+            _package = package;
+            _dte2 = ServiceProvider.GetService(typeof(SDTE)) as DTE2;
             _projectFinder = CreateProjectFinder();
+            _logInCommand = CreateLogInCommand();
 
             var commandService = this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (commandService != null)
@@ -78,7 +79,12 @@ namespace QuantConnect.VisualStudioPlugin
 
         private ProjectFinder CreateProjectFinder()
         {
-            return new ProjectFinder(System.IO.Path.GetDirectoryName(dte2.Solution.FullName));
+            return new ProjectFinder(PathUtils.GetSolutionFolder(_dte2));
+        }
+
+        private LogInCommand CreateLogInCommand()
+        {
+            return new LogInCommand(PathUtils.GetSolutionFolder(_dte2));
         }
 
         private void RegisterSendForBacktesting(OleMenuCommandService commandService)
@@ -111,7 +117,7 @@ namespace QuantConnect.VisualStudioPlugin
         {
             get
             {
-                return this.package;
+                return _package;
             }
         }
 
@@ -189,7 +195,7 @@ namespace QuantConnect.VisualStudioPlugin
             var myCommand = sender as OleMenuCommand;
 
             var selectedFiles = new List<Tuple<string, string>>();
-            var selectedItems = (object[])dte2.ToolWindows.SolutionExplorer.SelectedItems;
+            var selectedItems = (object[])_dte2.ToolWindows.SolutionExplorer.SelectedItems;
             foreach (EnvDTE.UIHierarchyItem selectedUIHierarchyItem in selectedItems)
             {
                 if (selectedUIHierarchyItem.Object is EnvDTE.ProjectItem)
