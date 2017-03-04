@@ -16,11 +16,6 @@ namespace QuantConnect.VisualStudioPlugin
 
         private PathUtils() { }
 
-        public static string GetDataFolder(string solutionFolder)
-        {
-            return Path.Combine(solutionFolder, "Data");
-        }
-
         public static string GetSolutionFolder(DTE2 dte2)
         {
             return Path.GetDirectoryName(dte2.Solution.FullName);

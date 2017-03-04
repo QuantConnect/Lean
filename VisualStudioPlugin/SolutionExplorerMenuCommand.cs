@@ -43,7 +43,7 @@ namespace QuantConnect.VisualStudioPlugin
         /// <summary>
         /// VS Package that provides this command, not null.
         /// </summary>
-        private readonly Package _package;
+        private readonly QuantConnectPackage _package;
 
         private DTE2 _dte2;
 
@@ -63,7 +63,7 @@ namespace QuantConnect.VisualStudioPlugin
                 throw new ArgumentNullException("package");
             }
 
-            _package = package;
+            _package = package as QuantConnectPackage;
             _dte2 = ServiceProvider.GetService(typeof(SDTE)) as DTE2;
             _projectFinder = CreateProjectFinder();
             _logInCommand = CreateLogInCommand();
@@ -83,7 +83,7 @@ namespace QuantConnect.VisualStudioPlugin
 
         private LogInCommand CreateLogInCommand()
         {
-            return new LogInCommand(PathUtils.GetSolutionFolder(_dte2));
+            return new LogInCommand(_package.DataPath);
         }
 
         private void RegisterSendForBacktesting(OleMenuCommandService commandService)

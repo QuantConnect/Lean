@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-
 using System;
 
 namespace QuantConnect.VisualStudioPlugin
@@ -26,17 +25,15 @@ namespace QuantConnect.VisualStudioPlugin
 
         private CredentialsManager _credentialsManager = new CredentialsManager();
 
-        private string _solutionFolder;
         private string _dataFolderPath;
 
         /// <summary>
         /// Create LogInCommand
         /// </summary>
         /// <param name="solutionFolder">Folder for currently opened solution</param>
-        public LogInCommand(string solutionFolder)
+        public LogInCommand(string dataFolderPath)
         {
-            _solutionFolder = solutionFolder;
-            _dataFolderPath = PathUtils.GetDataFolder(solutionFolder);
+            _dataFolderPath = dataFolderPath;
         }
 
         /// <summary>
@@ -58,7 +55,7 @@ namespace QuantConnect.VisualStudioPlugin
                 return true;
             }
 
-            var logInDialog = new LogInDialog(authorizationManager, _solutionFolder);
+            var logInDialog = new LogInDialog(authorizationManager, _dataFolderPath);
             VsUtils.DisplayDialogWindow(logInDialog);
 
             var credentials = logInDialog.GetCredentials();
