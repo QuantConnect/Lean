@@ -22,7 +22,7 @@ namespace QuantConnect.VisualStudioPlugin
     /// <summary>
     /// Collection of commonly used methods to work with VisualStudio UI
     /// </summary>
-    class VsUtils
+    static class VsUtils
     {
         /// <summary>
         /// Display message in VisualStudio status bar
