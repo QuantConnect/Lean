@@ -144,6 +144,48 @@ namespace QuantConnect.VisualStudioPlugin
         {
             ExecuteOnProject(sender, (selectedProjectId, selectedProjectName, files) =>
             {
+                var api = AuthorizationManager.GetInstance().GetApi();
+                foreach (Tuple<string, string> file in files)
+                {
+                    api.DeleteProjectFile(selectedProjectId, file.Item1);
+                    string fileContent = System.IO.File.ReadAllText(file.Item2);
+                    api.AddProjectFile(selectedProjectId, file.Item1, fileContent);
+                }
+
+                Api.Compile compileStatus = api.CreateCompile(selectedProjectId);
+                var compileId = compileStatus.CompileId;
+                while (compileStatus.State == Api.CompileState.InQueue)
+                {
+                    System.Threading.Thread.Sleep(5000);
+                    compileStatus = api.ReadCompile(selectedProjectId, compileId);
+                }
+
+                VsShellUtilities.ShowMessageBox(
+                    this.ServiceProvider,
+                    "Compilation result: " + compileStatus.State,
+                    "Compilation result",
+                    OLEMSGICON.OLEMSGICON_INFO,
+                    OLEMSGBUTTON.OLEMSGBUTTON_OK,
+                    OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+
+                Api.Backtest backtestStatus = api.CreateBacktest(selectedProjectId, compileId, "My New Backtest");
+                var backtestId = backtestStatus.BacktestId;
+                while (!backtestStatus.Completed)
+                {
+                    System.Threading.Thread.Sleep(5000);
+                    backtestStatus = api.ReadBacktest(selectedProjectId, backtestId);
+                }
+
+                VsShellUtilities.ShowMessageBox(
+                    this.ServiceProvider,
+                    "Backtest completed.",
+                    "Backtest result",
+                    OLEMSGICON.OLEMSGICON_INFO,
+                    OLEMSGBUTTON.OLEMSGBUTTON_OK,
+                    OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+
+
+
                 var fileNames = files.Select(f => f.Item1).ToList();
 
                 var message = string.Format(CultureInfo.CurrentCulture, "Send for backtesting to project {0}, files: {1}", selectedProjectId + " : " + selectedProjectName, string.Join(" ", fileNames));
