@@ -426,8 +426,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var enqueable = new EnqueueableEnumerator<BaseData>();
                     _customExchange.SetDataHandler(request.Configuration.Symbol, data =>
                     {
-                        enqueable.Enqueue(data);
-                        if (subscription != null) subscription.RealtimePrice = data.Value;
+                        // Only enqueue new data if there is none (LastEnqueued == null) or if newer 
+                        if (enqueable.LastEnqueued == null || data.EndTime > enqueable.LastEnqueued.EndTime)
+                        {
+                            enqueable.Enqueue(data);
+                            if (subscription != null) subscription.RealtimePrice = data.Value;
+                        }
                     });
                     enumerator = enqueable;
                 }
