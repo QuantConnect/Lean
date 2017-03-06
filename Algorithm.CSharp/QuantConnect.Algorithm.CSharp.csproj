@@ -80,6 +80,7 @@
     <Compile Include="BasicTemplateFuturesConsolidationAlgorithm.cs" />
     <Compile Include="BasicTemplateFuturesHistoryAlgorithm.cs" />
     <Compile Include="BasicTemplateMultiAssetAlgorithm.cs" />
+    <Compile Include="FilteredIdentityAlgorithm.cs" />
     <Compile Include="OptionExerciseAssignRegressionAlgorithm.cs" />
     <Compile Include="BasicTemplateOptionsFilterUniverseAlgorithm.cs" />
     <Compile Include="BasicTemplateOptionsHistoryAlgorithm.cs" />
