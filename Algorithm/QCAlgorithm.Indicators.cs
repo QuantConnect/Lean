@@ -234,7 +234,7 @@ namespace QuantConnect.Algorithm
         {
             return AROON(symbol, period, period, resolution, selector);
         }
-        
+
         /// <summary>
         /// Creates a new AroonOscillator indicator which will compute the AroonUp and AroonDown (as well as the delta)
         /// </summary>
@@ -1257,11 +1257,32 @@ namespace QuantConnect.Algorithm
                 return new TradeBarConsolidator(timeSpan.Value);
             }
 
-            // if our type can be used as a tick then we'll use the tick consolidator
+            // if our type can be used as a quote bar, then let's just make one of those
+            // we use IsAssignableFrom instead of IsSubclassOf so that we can account for types that are able to be cast to QuoteBar
+            if (typeof(QuoteBar).IsAssignableFrom(subscription.Type))
+            {
+                return new QuoteBarConsolidator(timeSpan.Value);
+            }
+
+            // if our type can be used as a tick then we'll use a consolidator that keeps the TickType 
             // we use IsAssignableFrom instead of IsSubclassOf so that we can account for types that are able to be cast to Tick
             if (typeof(Tick).IsAssignableFrom(subscription.Type))
             {
-                return new TickConsolidator(timeSpan.Value);
+                // Use IdentityDataConsolidator when ticks are not meant to consolidated into bars
+                if (timeSpan.Value.Ticks == 0)
+                {
+                    return new IdentityDataConsolidator<Tick>();
+                }
+
+                switch (subscription.TickType)
+                {
+                    case TickType.OpenInterest:
+                        return new OpenInterestConsolidator(timeSpan.Value);
+                    case TickType.Quote:
+                        return new TickQuoteBarConsolidator(timeSpan.Value);
+                    default:
+                        return new TickConsolidator(timeSpan.Value);
+                }
             }
 
             // if our type can be used as a DynamicData then we'll use the DynamicDataConsolidator
