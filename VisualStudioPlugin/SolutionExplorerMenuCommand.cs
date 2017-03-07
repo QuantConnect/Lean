@@ -144,47 +144,12 @@ namespace QuantConnect.VisualStudioPlugin
         {
             ExecuteOnProject(sender, (selectedProjectId, selectedProjectName, files) =>
             {
-                var api = AuthorizationManager.GetInstance().GetApi();
-                foreach (Tuple<string, string> file in files)
-                {
-                    api.DeleteProjectFile(selectedProjectId, file.Item1);
-                    string fileContent = System.IO.File.ReadAllText(file.Item2);
-                    api.AddProjectFile(selectedProjectId, file.Item1, fileContent);
-                }
-
-                Api.Compile compileStatus = api.CreateCompile(selectedProjectId);
-                var compileId = compileStatus.CompileId;
-                while (compileStatus.State == Api.CompileState.InQueue)
-                {
-                    System.Threading.Thread.Sleep(5000);
-                    compileStatus = api.ReadCompile(selectedProjectId, compileId);
-                }
-
-                VsShellUtilities.ShowMessageBox(
-                    this.ServiceProvider,
-                    "Compilation result: " + compileStatus.State,
-                    "Compilation result",
-                    OLEMSGICON.OLEMSGICON_INFO,
-                    OLEMSGBUTTON.OLEMSGBUTTON_OK,
-                    OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
-
-                Api.Backtest backtestStatus = api.CreateBacktest(selectedProjectId, compileId, "My New Backtest");
-                var backtestId = backtestStatus.BacktestId;
-                while (!backtestStatus.Completed)
-                {
-                    System.Threading.Thread.Sleep(5000);
-                    backtestStatus = api.ReadBacktest(selectedProjectId, backtestId);
-                }
-
-                VsShellUtilities.ShowMessageBox(
-                    this.ServiceProvider,
-                    "Backtest completed.",
-                    "Backtest result",
-                    OLEMSGICON.OLEMSGICON_INFO,
-                    OLEMSGBUTTON.OLEMSGBUTTON_OK,
-                    OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
-
-
+                uloadFilesToServer(selectedProjectId, files);
+                VsUtils.DisplayInStatusBar(this.ServiceProvider, "Compiling project ...");
+                var compileStatus = compileProjectOnServer(selectedProjectId);
+                VsUtils.DisplayInStatusBar(this.ServiceProvider, "Backtesting project ...");
+                backtestProjectOnServer(selectedProjectId, compileStatus.CompileId);
+                VsUtils.DisplayInStatusBar(this.ServiceProvider, "Backtest complete.");
 
                 var fileNames = files.Select(f => f.Item1).ToList();
 
@@ -206,13 +171,7 @@ namespace QuantConnect.VisualStudioPlugin
         {
             ExecuteOnProject(sender, (selectedProjectId, selectedProjectName, files) =>
             {
-                var api = AuthorizationManager.GetInstance().GetApi();
-                foreach (Tuple<string, string> file in files)
-                {
-                    api.DeleteProjectFile(selectedProjectId, file.Item1);
-                    string fileContent = System.IO.File.ReadAllText(file.Item2);
-                    api.AddProjectFile(selectedProjectId, file.Item1, fileContent);
-                }
+                uloadFilesToServer(selectedProjectId, files);
        
                 var fileNames = files.Select(f => f.Item1).ToList();      
 
@@ -228,6 +187,43 @@ namespace QuantConnect.VisualStudioPlugin
                     OLEMSGBUTTON.OLEMSGBUTTON_OK,
                     OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
             });
+        }
+
+        private void uloadFilesToServer(int selectedProjectId, List<Tuple<string, string>> files)
+        {
+            var api = AuthorizationManager.GetInstance().GetApi();
+            foreach (Tuple<string, string> file in files)
+            {
+                api.DeleteProjectFile(selectedProjectId, file.Item1);
+                string fileContent = System.IO.File.ReadAllText(file.Item2);
+                api.AddProjectFile(selectedProjectId, file.Item1, fileContent);
+            }
+        }
+
+        private Api.Compile compileProjectOnServer(int projectId)
+        {
+            var api = AuthorizationManager.GetInstance().GetApi();
+            Api.Compile compileStatus = api.CreateCompile(projectId);
+            var compileId = compileStatus.CompileId;
+            while (compileStatus.State == Api.CompileState.InQueue)
+            {
+                System.Threading.Thread.Sleep(5000);
+                compileStatus = api.ReadCompile(projectId, compileId);
+            }
+            return compileStatus;
+        }
+
+        private Api.Backtest backtestProjectOnServer(int projectId, string compileId)
+        {
+            var api = AuthorizationManager.GetInstance().GetApi();
+            Api.Backtest backtestStatus = api.CreateBacktest(projectId, compileId, "My New Backtest");
+            var backtestId = backtestStatus.BacktestId;
+            while (!backtestStatus.Completed)
+            {
+                System.Threading.Thread.Sleep(5000);
+                backtestStatus = api.ReadBacktest(projectId, backtestId);
+            }
+            return backtestStatus;
         }
 
         private void ExecuteOnProject(object sender, Action<int, string, List<Tuple<string, string>>> onProject)
