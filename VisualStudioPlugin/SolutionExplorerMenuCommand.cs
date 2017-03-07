@@ -144,26 +144,31 @@ namespace QuantConnect.VisualStudioPlugin
         {
             ExecuteOnProject(sender, (selectedProjectId, selectedProjectName, files) =>
             {
+                var fileNames = files.Select(f => f.Item1).ToList();
+                var message = string.Format(
+                    CultureInfo.CurrentCulture, 
+                    "Send for backtesting to project {0}, files: {1}", 
+                    selectedProjectId + " : " + selectedProjectName, 
+                    string.Join(" ", fileNames)
+                );
+                showMessageBox("Sending to backtest", message);
+
+                VsUtils.DisplayInStatusBar(this.ServiceProvider, "Uploading files to server ...");
                 uloadFilesToServer(selectedProjectId, files);
+
                 VsUtils.DisplayInStatusBar(this.ServiceProvider, "Compiling project ...");
                 var compileStatus = compileProjectOnServer(selectedProjectId);
+
                 VsUtils.DisplayInStatusBar(this.ServiceProvider, "Backtesting project ...");
                 backtestProjectOnServer(selectedProjectId, compileStatus.CompileId);
+
                 VsUtils.DisplayInStatusBar(this.ServiceProvider, "Backtest complete.");
-
-                var fileNames = files.Select(f => f.Item1).ToList();
-
-                var message = string.Format(CultureInfo.CurrentCulture, "Send for backtesting to project {0}, files: {1}", selectedProjectId + " : " + selectedProjectName, string.Join(" ", fileNames));
-                var title = "SendToBacktesting";
-
-                // Show a message box to prove we were here
-                VsShellUtilities.ShowMessageBox(
-                    this.ServiceProvider,
-                    message,
-                    title,
-                    OLEMSGICON.OLEMSGICON_INFO,
-                    OLEMSGBUTTON.OLEMSGBUTTON_OK,
-                    OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+                var projectUrl = string.Format(
+                    CultureInfo.CurrentCulture, 
+                    "https://www.quantconnect.com/terminal/#open/{0}", 
+                    selectedProjectId
+                );
+                System.Diagnostics.Process.Start(projectUrl);
             });
         }
 
@@ -171,22 +176,31 @@ namespace QuantConnect.VisualStudioPlugin
         {
             ExecuteOnProject(sender, (selectedProjectId, selectedProjectName, files) =>
             {
+                var fileNames = files.Select(f => f.Item1).ToList();
+                var message = string.Format(
+                    CultureInfo.CurrentCulture, 
+                    "Save to project {0}, files {1}", 
+                    selectedProjectId + " : " + selectedProjectName, 
+                    string.Join(" ", fileNames)
+                );
+                showMessageBox("Saving to project", message);
+
+                VsUtils.DisplayInStatusBar(this.ServiceProvider, "Uploading files to server ...");
                 uloadFilesToServer(selectedProjectId, files);
-       
-                var fileNames = files.Select(f => f.Item1).ToList();      
-
-                var message = string.Format(CultureInfo.CurrentCulture, "Save to project {0}, files {1}", selectedProjectId + " : " + selectedProjectName , string.Join(" ", fileNames));
-                var title = "SaveToQuantConnect";
-
-                // Show a message box to prove we were here
-                VsShellUtilities.ShowMessageBox(
-                    this.ServiceProvider,
-                    message,
-                    title,
-                    OLEMSGICON.OLEMSGICON_INFO,
-                    OLEMSGBUTTON.OLEMSGBUTTON_OK,
-                    OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+                VsUtils.DisplayInStatusBar(this.ServiceProvider, "Files upload complete.");
             });
+        }
+
+        private void showMessageBox(string title, string message)
+        {            
+            VsShellUtilities.ShowMessageBox(
+                this.ServiceProvider,
+                message,
+                title,
+                OLEMSGICON.OLEMSGICON_INFO,
+                OLEMSGBUTTON.OLEMSGBUTTON_OK,
+                OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST
+            );
         }
 
         private void uloadFilesToServer(int selectedProjectId, List<Tuple<string, string>> files)
