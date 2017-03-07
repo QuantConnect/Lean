@@ -151,16 +151,29 @@ namespace QuantConnect.VisualStudioPlugin
                     selectedProjectId + " : " + selectedProjectName, 
                     string.Join(" ", fileNames)
                 );
-                showMessageBox("Sending to backtest", message);
+                showMessageBox("Sending To Backtest", message);
 
                 VsUtils.DisplayInStatusBar(this.ServiceProvider, "Uploading files to server ...");
                 uloadFilesToServer(selectedProjectId, files);
 
                 VsUtils.DisplayInStatusBar(this.ServiceProvider, "Compiling project ...");
                 var compileStatus = compileProjectOnServer(selectedProjectId);
+                if (compileStatus.State == Api.CompileState.BuildError)
+                {
+                    VsUtils.DisplayInStatusBar(this.ServiceProvider, "Compile error.");
+                    showMessageBox("Compile Error", "Error when compiling project.");
+                    return;
+                }
 
                 VsUtils.DisplayInStatusBar(this.ServiceProvider, "Backtesting project ...");
-                backtestProjectOnServer(selectedProjectId, compileStatus.CompileId);
+                Api.Backtest backtest = backtestProjectOnServer(selectedProjectId, compileStatus.CompileId);
+                // Errors are not being transfered in response, so client can't tell if the backtest failed or not.
+                // This response error handling code will not work but should.
+                /* if (backtest.Errors.Count != 0) {
+                    VsUtils.DisplayInStatusBar(this.ServiceProvider, "Backtest error.");
+                    showMessageBox("Backtest Error", "Error when backtesting project.");
+                    return;
+                }*/
 
                 VsUtils.DisplayInStatusBar(this.ServiceProvider, "Backtest complete.");
                 var projectUrl = string.Format(
@@ -183,7 +196,7 @@ namespace QuantConnect.VisualStudioPlugin
                     selectedProjectId + " : " + selectedProjectName, 
                     string.Join(" ", fileNames)
                 );
-                showMessageBox("Saving to project", message);
+                showMessageBox("Saving To Project", message);
 
                 VsUtils.DisplayInStatusBar(this.ServiceProvider, "Uploading files to server ...");
                 uloadFilesToServer(selectedProjectId, files);
