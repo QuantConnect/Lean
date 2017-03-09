@@ -29,7 +29,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Retrieves data to be used in an algorithm
+        /// Retrieves data to be used in an algorithm.
         /// If file does not exist, an attempt is made to download them from the api
         /// </summary>
         /// <param name="key">A string representing where the data is stored</param>
