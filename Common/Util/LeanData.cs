@@ -599,12 +599,13 @@ namespace QuantConnect.Util
         /// Parses file name into a <see cref="Security"/> and DateTime
         /// </summary>
         /// <param name="fileName">File name to be parsed</param>
-        /// <param name="security">The security as parsed from the fileName</param>
+        /// <param name="symbol">The symbol as parsed from the fileName</param>
         /// <param name="date">Date of data in the file path. Only returned if the resolution is lower than Hourly</param>
-        /// <remarks>The security returned from this method ONLY represents the correct symbol, resolution, market and securityType</remarks>
-        public static bool TryParsePath(string fileName, out Security security, out DateTime date)
+        /// <param name="resolution">The resolution of the symbol as parsed from the filePath</param>
+        public static bool TryParsePath(string fileName, out Symbol symbol, out DateTime date, out Resolution resolution)
         {
-            security = null;
+            symbol = null;
+            resolution = Resolution.Daily;
             date = default(DateTime);
 
             var pathSeparators = new[] { '/', '\\'};
@@ -630,8 +631,13 @@ namespace QuantConnect.Util
                 // Gather components useed to create the security
                 var market = info[startIndex + 1];
                 var ticker = info[startIndex + 3];
-                var resolution = (Resolution)Enum.Parse(typeof(Resolution), info[startIndex + 2], true);
+                resolution = (Resolution)Enum.Parse(typeof(Resolution), info[startIndex + 2], true);
                 var securityType = (SecurityType)Enum.Parse(typeof(SecurityType), info[startIndex], true);
+
+                if (securityType == SecurityType.Option || securityType == SecurityType.Future)
+                {
+                    throw new ArgumentException("LeanData.TryParsePath(): Options and futures are not supported by this method.");
+                }
 
                 // If resolution is Daily or Hour, we do not need to set the date and tick type
                 if (resolution < Resolution.Hour)
@@ -639,35 +645,7 @@ namespace QuantConnect.Util
                     date = DateTime.ParseExact(info[startIndex + 4].Substring(0, 8), DateFormat.EightCharacter, null);
                 }
 
-                // Create the security identifier that will be used to create the security
-                SecurityIdentifier securityIdentifier;
-                switch (securityType)
-                {
-                    case SecurityType.Equity:
-                        securityIdentifier = SecurityIdentifier.GenerateEquity(date, ticker, market);
-                        break;
-                    case SecurityType.Forex:
-                        securityIdentifier = SecurityIdentifier.GenerateForex(ticker, market);
-                        break;
-                    case SecurityType.Cfd:
-                        securityIdentifier = SecurityIdentifier.GenerateCfd(ticker, market);
-                        break;
-                    case SecurityType.Future:
-                    case SecurityType.Option:
-                    default:
-                        throw new NotImplementedException("LeanData.TryParsePath() has not been implemented for the desired security.");
-                }
-
-                var symbol = new Symbol(securityIdentifier, ticker);
-
-                security = new Security(symbol, 
-                                        SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc), 
-                                        new Cash("USD", 0m, 0m), 
-                                        SymbolProperties.GetDefault("USD"));
-
-                var newSubscriptionDataConfig = new SubscriptionDataConfig(typeof(TradeBar), symbol, resolution, TimeZones.Utc, TimeZones.Utc, false, false, false);
-
-                security.AddData(newSubscriptionDataConfig);
+                symbol = Symbol.Create(ticker, securityType, market);
             }
             catch (Exception ex)
             {

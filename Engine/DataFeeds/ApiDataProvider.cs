@@ -42,23 +42,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // If the file cannot be found on disc, attempt to retrieve it from the API
-            Security security;
+            Symbol symbol;
             DateTime date;
+            Resolution resolution;
 
-            if (LeanData.TryParsePath(key, out security, out date))
+            if (LeanData.TryParsePath(key, out symbol, out date, out resolution))
             {
                 Log.Trace("ApiDataProvider.Fetch(): Attempting to get data from QuantConnect.com's data library for symbol({0}), resolution({1}) and date({2}).",
-                    security.Symbol.Value, 
-                    security.Resolution, 
+                    symbol.Value, 
+                    resolution, 
                     date.Date.ToShortDateString());
 
-                var downloadSuccessful = _api.DownloadData(security.Symbol, security.Resolution, date);
+                var downloadSuccessful = _api.DownloadData(symbol, resolution, date);
 
                 if (downloadSuccessful)
                 {
                     Log.Trace("ApiDataProvider.Fetch(): Successfully retrieved data for symbol({0}), resolution({1}) and date({2}).",
-                        security.Symbol.Value, 
-                        security.Resolution, 
+                        symbol.Value, 
+                        resolution, 
                         date.Date.ToShortDateString());
 
                     return new FileStream(key, FileMode.Open, FileAccess.Read);
