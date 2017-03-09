@@ -20,6 +20,7 @@ using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Util
@@ -169,6 +170,101 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(LeanData.GetCommonTickTypeForCommonDataTypes(typeof(Tick), SecurityType.Cfd), TickType.Quote);
             Assert.AreEqual(LeanData.GetCommonTickTypeForCommonDataTypes(typeof(Tick), SecurityType.Forex), TickType.Quote);
         }
+
+        [Test]
+        public void IncorrectPaths_CannotBeParsed()
+        {
+            DateTime date;
+            Security security;
+
+            var invalidPath = "forex/fxcm/eurusd/20160101_quote.zip";
+            Assert.IsFalse(LeanData.TryParsePath(invalidPath, out security, out date));
+
+            var nonExistantPath = "Data/f/fxcm/eurusd/20160101_quote.zip";
+            Assert.IsFalse(LeanData.TryParsePath(nonExistantPath, out security, out date));
+
+            var notAPath = "ooooooooooooooooooooooooooooooooooooooooooooooooooooooo";
+            Assert.IsFalse(LeanData.TryParsePath(notAPath, out security, out date));
+
+            var  emptyPath = "";
+            Assert.IsFalse(LeanData.TryParsePath(emptyPath, out security, out date));
+
+            string nullPath = null;
+            Assert.IsFalse(LeanData.TryParsePath(nullPath, out security, out date));
+
+            var optionsTradePath = "Data/option/usa/minute/aapl/20140606_trade_american.zip";
+            Assert.IsFalse(LeanData.TryParsePath(optionsTradePath, out security, out date));
+
+            var optionsOpenInterestPath = "Data/option/usa/minute/aapl/20140609_openinterest_american.zip";
+            Assert.IsFalse(LeanData.TryParsePath(optionsOpenInterestPath, out security, out date));
+
+            var optionsQuotePath = "Data/option/usa/minute/aapl/20140609_quote_american.zip";
+            Assert.IsFalse(LeanData.TryParsePath(optionsQuotePath, out security, out date));
+        }
+
+        [Test]
+        public void CorrectPaths_CanBeParsedCorrectly()
+        {
+            DateTime date;
+            Security security;
+
+            var customPath = "a/very/custom/path/forex/oanda/tick/eurusd/20170104_quote.zip";
+            Assert.IsTrue(LeanData.TryParsePath(customPath, out security, out date));
+            Assert.AreEqual(security.Symbol.SecurityType, SecurityType.Forex);
+            Assert.AreEqual(security.Symbol.ID.Market, Market.Oanda);
+            Assert.AreEqual(security.Resolution, Resolution.Tick);
+            Assert.AreEqual(security.Symbol.ID.Symbol.ToLower(), "eurusd");
+            Assert.AreEqual(date.Date, DateTime.Parse("01/04/2017").Date);
+
+            var mixedPathSeperators = @"Data//forex/fxcm\/minute//eurusd\\20160101_quote.zip";
+            Assert.IsTrue(LeanData.TryParsePath(mixedPathSeperators, out security, out date));
+            Assert.AreEqual(security.Symbol.SecurityType, SecurityType.Forex);
+            Assert.AreEqual(security.Symbol.ID.Market, Market.FXCM);
+            Assert.AreEqual(security.Resolution, Resolution.Minute);
+            Assert.AreEqual(security.Symbol.ID.Symbol.ToLower(), "eurusd");
+            Assert.AreEqual(date.Date, DateTime.Parse("01/01/2016").Date);
+
+            var longRelativePath = "../../../../../../../../../Data/forex/fxcm/hour/gbpusd.zip";
+            Assert.IsTrue(LeanData.TryParsePath(longRelativePath, out security, out date));
+            Assert.AreEqual(security.Symbol.SecurityType, SecurityType.Forex);
+            Assert.AreEqual(security.Symbol.ID.Market, Market.FXCM);
+            Assert.AreEqual(security.Resolution, Resolution.Hour);
+            Assert.AreEqual(security.Symbol.ID.Symbol.ToLower(), "gbpusd");
+            Assert.AreEqual(date.Date, DateTime.MinValue);
+
+            var shortRelativePath = "Data/forex/fxcm/minute/eurusd/20160102_quote.zip";
+            Assert.IsTrue(LeanData.TryParsePath(shortRelativePath, out security, out date));
+            Assert.AreEqual(security.Symbol.SecurityType, SecurityType.Forex);
+            Assert.AreEqual(security.Symbol.ID.Market, Market.FXCM);
+            Assert.AreEqual(security.Resolution, Resolution.Minute);
+            Assert.AreEqual(security.Symbol.ID.Symbol.ToLower(), "eurusd");
+            Assert.AreEqual(date.Date, DateTime.Parse("01/02/2016").Date);
+
+            var dailyEquitiesPath = "Data/equity/usa/daily/aapl.zip";
+            Assert.IsTrue(LeanData.TryParsePath(dailyEquitiesPath, out security, out date));
+            Assert.AreEqual(security.Symbol.SecurityType, SecurityType.Equity);
+            Assert.AreEqual(security.Symbol.ID.Market, Market.USA);
+            Assert.AreEqual(security.Resolution, Resolution.Daily);
+            Assert.AreEqual(security.Symbol.ID.Symbol.ToLower(), "aapl");
+            Assert.AreEqual(date.Date, DateTime.MinValue);
+
+            var minuteEquitiesPath = "Data/equity/usa/minute/googl/20070103_trade.zip";
+            Assert.IsTrue(LeanData.TryParsePath(minuteEquitiesPath, out security, out date));
+            Assert.AreEqual(security.Symbol.SecurityType, SecurityType.Equity);
+            Assert.AreEqual(security.Symbol.ID.Market, Market.USA);
+            Assert.AreEqual(security.Resolution, Resolution.Minute);
+            Assert.AreEqual(security.Symbol.ID.Symbol.ToLower(), "googl");
+            Assert.AreEqual(date.Date, DateTime.Parse("01/03/2007").Date);
+
+            var cfdPath = "Data/cfd/oanda/minute/bcousd/20160101_trade.zip";
+            Assert.IsTrue(LeanData.TryParsePath(cfdPath, out security, out date));
+            Assert.AreEqual(security.Symbol.SecurityType, SecurityType.Cfd);
+            Assert.AreEqual(security.Symbol.ID.Market, Market.Oanda);
+            Assert.AreEqual(security.Resolution, Resolution.Minute);
+            Assert.AreEqual(security.Symbol.ID.Symbol.ToLower(), "bcousd");
+            Assert.AreEqual(date.Date, DateTime.Parse("01/01/2016").Date);
+        }
+
         private static void AssertBarsAreEqual(IBar expected, IBar actual)
         {
             if (expected == null && actual == null)
