@@ -81,6 +81,12 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             foreach (var request in requests)
             {
+                if (!_symbolMapper.IsKnownLeanSymbol(request.Symbol))
+                {
+                    Log.Trace("FxcmBrokerage.HistoryProvider.GetHistory(): Invalid symbol: {0}, no history returned", request.Symbol.Value);
+                    continue;
+                }
+
                 var interval = ToFxcmInterval(request.Resolution);
 
                 // download data
