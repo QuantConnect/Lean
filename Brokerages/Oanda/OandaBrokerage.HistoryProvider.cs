@@ -20,6 +20,7 @@ using QuantConnect.Brokerages.Oanda.DataType.Communications.Requests;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Packets;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
@@ -67,7 +68,10 @@ namespace QuantConnect.Brokerages.Oanda
             foreach (var request in requests)
             {
                 if (!_symbolMapper.IsKnownLeanSymbol(request.Symbol))
+                {
+                    Log.Trace("OandaBrokerage.HistoryProvider.GetHistory(): Invalid symbol: {0}, no history returned", request.Symbol.Value);
                     continue;
+                }
 
                 var granularity = ToGranularity(request.Resolution);
 
