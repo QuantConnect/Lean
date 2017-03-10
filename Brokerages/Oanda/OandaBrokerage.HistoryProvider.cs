@@ -66,6 +66,9 @@ namespace QuantConnect.Brokerages.Oanda
         {
             foreach (var request in requests)
             {
+                if (!_symbolMapper.IsKnownLeanSymbol(request.Symbol))
+                    continue;
+
                 var granularity = ToGranularity(request.Resolution);
 
                 // Oanda only has 5-second bars, we return these for Resolution.Second

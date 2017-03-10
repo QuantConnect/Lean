@@ -81,6 +81,9 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             foreach (var request in requests)
             {
+                if (!_symbolMapper.IsKnownLeanSymbol(request.Symbol))
+                    continue;
+
                 var interval = ToFxcmInterval(request.Resolution);
 
                 // download data
