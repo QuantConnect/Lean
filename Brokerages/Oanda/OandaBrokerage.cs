@@ -20,6 +20,8 @@ using System.Threading;
 using QuantConnect.Brokerages.Oanda.DataType;
 using QuantConnect.Brokerages.Oanda.Framework;
 using QuantConnect.Brokerages.Oanda.Session;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -31,7 +33,7 @@ namespace QuantConnect.Brokerages.Oanda
     /// <summary>
     /// Oanda Brokerage - implementation of IBrokerage interface
     /// </summary>
-    public partial class OandaBrokerage : Brokerage, IDataQueueHandler, IHistoryProvider
+    public partial class OandaBrokerage : Brokerage, IDataQueueHandler
     {
         private readonly IOrderProvider _orderProvider;
         private readonly ISecurityProvider _securityProvider;
@@ -50,6 +52,11 @@ namespace QuantConnect.Brokerages.Oanda
         private readonly object _lockerConnectionMonitor = new object();
         private volatile bool _connectionLost;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+
+        /// <summary>
+        /// The maximum number of bars per historical data request
+        /// </summary>
+        public const int MaxBarsPerRequest = 5000;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OandaBrokerage"/> class.
@@ -419,6 +426,63 @@ namespace QuantConnect.Brokerages.Oanda
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Gets the history for the requested security
+        /// </summary>
+        /// <param name="request">The historical data request</param>
+        /// <returns>An enumerable of bars covering the span specified in the request</returns>
+        public override IEnumerable<BaseData> GetHistory(HistoryRequest request)
+        {
+            if (!_symbolMapper.IsKnownLeanSymbol(request.Symbol))
+            {
+                Log.Trace("OandaBrokerage.GetHistory(): Invalid symbol: {0}, no history returned", request.Symbol.Value);
+                yield break;
+            }
+
+            var granularity = ToGranularity(request.Resolution);
+
+            // Oanda only has 5-second bars, we return these for Resolution.Second
+            var period = request.Resolution == Resolution.Second ?
+                TimeSpan.FromSeconds(5) : request.Resolution.ToTimeSpan();
+
+            // set the starting date/time
+            var startDateTime = request.StartTimeUtc;
+
+            // loop until last date
+            while (startDateTime <= request.EndTimeUtc)
+            {
+                var start = startDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ");
+
+                // request blocks of bars at the requested resolution with a starting date/time
+                var oandaSymbol = _symbolMapper.GetBrokerageSymbol(request.Symbol);
+                var candles = DownloadBars(oandaSymbol, start, MaxBarsPerRequest, granularity);
+                if (candles.Count == 0)
+                    break;
+
+                foreach (var candle in candles)
+                {
+                    var time = GetDateTimeFromString(candle.time);
+                    if (time > request.EndTimeUtc)
+                        break;
+
+                    var tradeBar = new TradeBar(
+                        time,
+                        request.Symbol,
+                        Convert.ToDecimal(candle.openMid),
+                        Convert.ToDecimal(candle.highMid),
+                        Convert.ToDecimal(candle.lowMid),
+                        Convert.ToDecimal(candle.closeMid),
+                        0,
+                        period);
+
+                    yield return tradeBar;
+                }
+
+                // calculate the next request datetime
+                startDateTime = GetDateTimeFromString(candles[candles.Count - 1].time).Add(period);
+            }
         }
 
         #endregion

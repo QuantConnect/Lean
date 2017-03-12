@@ -15,6 +15,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -205,6 +207,16 @@ namespace QuantConnect.Brokerages
         public virtual bool AccountInstantlyUpdated
         {
             get { return false; }
+        }
+
+        /// <summary>
+        /// Gets the history for the requested security
+        /// </summary>
+        /// <param name="request">The historical data request</param>
+        /// <returns>An enumerable of bars covering the span specified in the request</returns>
+        public virtual IEnumerable<BaseData> GetHistory(HistoryRequest request)
+        {
+            return Enumerable.Empty<BaseData>();
         }
     }
 }

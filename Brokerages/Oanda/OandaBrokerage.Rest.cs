@@ -589,5 +589,39 @@ namespace QuantConnect.Brokerages.Oanda
             return candles;
         }
 
+        /// <summary>
+        /// Converts a LEAN Resolution to an EGranularity
+        /// </summary>
+        /// <param name="resolution">The resolution to convert</param>
+        /// <returns></returns>
+        private static EGranularity ToGranularity(Resolution resolution)
+        {
+            EGranularity interval;
+
+            switch (resolution)
+            {
+                case Resolution.Second:
+                    interval = EGranularity.S5;
+                    break;
+
+                case Resolution.Minute:
+                    interval = EGranularity.M1;
+                    break;
+
+                case Resolution.Hour:
+                    interval = EGranularity.H1;
+                    break;
+
+                case Resolution.Daily:
+                    interval = EGranularity.D;
+                    break;
+
+                default:
+                    throw new ArgumentException("Unsupported resolution: " + resolution);
+            }
+
+            return interval;
+        }
+
     }
 }

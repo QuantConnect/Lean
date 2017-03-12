@@ -24,6 +24,7 @@ using com.fxcm.external.api.util;
 using com.fxcm.fix;
 using com.fxcm.fix.pretrade;
 using com.fxcm.fix.trade;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -34,7 +35,7 @@ namespace QuantConnect.Brokerages.Fxcm
     /// <summary>
     /// FXCM brokerage - implementation of IBrokerage interface
     /// </summary>
-    public partial class FxcmBrokerage : Brokerage, IDataQueueHandler, IHistoryProvider, IGenericMessageListener, IStatusMessageListener
+    public partial class FxcmBrokerage : Brokerage, IDataQueueHandler, IGenericMessageListener, IStatusMessageListener
     {
         private readonly IOrderProvider _orderProvider;
         private readonly ISecurityProvider _securityProvider;
@@ -54,6 +55,24 @@ namespace QuantConnect.Brokerages.Fxcm
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private readonly ConcurrentQueue<OrderEvent> _orderEventQueue = new ConcurrentQueue<OrderEvent>();
         private readonly FxcmSymbolMapper _symbolMapper = new FxcmSymbolMapper();
+
+        private readonly IList<BaseData> _lastHistoryChunk = new List<BaseData>();
+
+        /// <summary>
+        /// Gets/sets a timeout for history requests (in milliseconds)
+        /// </summary>
+        public int HistoryResponseTimeout { get; set; }
+
+        /// <summary>
+        /// Gets/sets the maximum number of retries for a history request
+        /// </summary>
+        public int MaximumHistoryRetryAttempts { get; set; }
+
+        /// <summary>
+        /// Gets/sets a value to enable only history requests to this brokerage
+        /// Set to true in parallel downloaders to avoid loading accounts, orders, positions etc. at connect time
+        /// </summary>
+        public bool EnableOnlyHistoryRequests { get; set; }
 
         /// <summary>
         /// Creates a new instance of the <see cref="FxcmBrokerage"/> class
@@ -585,6 +604,117 @@ namespace QuantConnect.Brokerages.Fxcm
                 throw new TimeoutException(string.Format("FxcmBrokerage.CancelOrder(): Operation took longer than {0} seconds.", (decimal)ResponseTimeout / 1000));
 
             return !_isOrderUpdateOrCancelRejected;
+        }
+
+        /// <summary>
+        /// Gets the history for the requested security
+        /// </summary>
+        /// <param name="request">The historical data request</param>
+        /// <returns>An enumerable of bars covering the span specified in the request</returns>
+        public override IEnumerable<BaseData> GetHistory(HistoryRequest request)
+        {
+            if (!_symbolMapper.IsKnownLeanSymbol(request.Symbol))
+            {
+                Log.Trace("FxcmBrokerage.GetHistory(): Invalid symbol: {0}, no history returned", request.Symbol.Value);
+                yield break;
+            }
+
+            var interval = ToFxcmInterval(request.Resolution);
+
+            // download data
+            var history = new List<BaseData>();
+            var lastEndTime = DateTime.MinValue;
+
+            var end = request.EndTimeUtc;
+
+            var attempt = 1;
+            while (end > request.StartTimeUtc)
+            {
+                Log.Debug(string.Format("FxcmBrokerage.GetHistory(): Requesting {0:O} to {1:O}", end, request.StartTimeUtc));
+                _lastHistoryChunk.Clear();
+
+                var mdr = new MarketDataRequest();
+                mdr.setSubscriptionRequestType(SubscriptionRequestTypeFactory.SNAPSHOT);
+                mdr.setResponseFormat(IFixMsgTypeDefs.__Fields.MSGTYPE_FXCMRESPONSE);
+                mdr.setFXCMTimingInterval(interval);
+                mdr.setMDEntryTypeSet(MarketDataRequest.MDENTRYTYPESET_ALL);
+
+                mdr.setFXCMStartDate(new UTCDate(ToJavaDateUtc(request.StartTimeUtc)));
+                mdr.setFXCMStartTime(new UTCTimeOnly(ToJavaDateUtc(request.StartTimeUtc)));
+                mdr.setFXCMEndDate(new UTCDate(ToJavaDateUtc(end)));
+                mdr.setFXCMEndTime(new UTCTimeOnly(ToJavaDateUtc(end)));
+                mdr.addRelatedSymbol(_fxcmInstruments[_symbolMapper.GetBrokerageSymbol(request.Symbol)]);
+
+                AutoResetEvent autoResetEvent;
+                lock (_locker)
+                {
+                    _currentRequest = _gateway.sendMessage(mdr);
+                    autoResetEvent = new AutoResetEvent(false);
+                    _mapRequestsToAutoResetEvents[_currentRequest] = autoResetEvent;
+                    _pendingHistoryRequests.Add(_currentRequest);
+                }
+
+                if (!autoResetEvent.WaitOne(HistoryResponseTimeout))
+                {
+                    // No response can mean genuine timeout or the history data has ended.
+
+                    // 90% of the time no response because no data; widen the search net to 5m if we don't get a response:
+                    if (request.StartTimeUtc.AddSeconds(300) >= end)
+                    {
+                        break;
+                    }
+
+                    // 5% of the time its because the data ends at a specific, repeatible time not close to our desired endtime:
+                    if (end == lastEndTime)
+                    {
+                        Log.Trace("FxcmBrokerage.GetHistory(): Request for {0} ended at {1:O}", request.Symbol.Value, end);
+                        break;
+                    }
+
+                    // 5% of the time its because of an internet / time of day / api settings / timeout: throw if this is the *second* attempt.
+                    if (EnableOnlyHistoryRequests && lastEndTime != DateTime.MinValue)
+                    {
+                        throw new TimeoutException(string.Format("FxcmBrokerage.GetHistory(): History operation ending in {0:O} took longer than {1} seconds. This may be because there is no data, retrying...", end, (decimal)HistoryResponseTimeout / 1000));
+                    }
+
+                    // Assuming Timeout: If we've already retried quite a few times, lets bail.
+                    if (++attempt > MaximumHistoryRetryAttempts)
+                    {
+                        Log.Trace("FxcmBrokerage.GetHistory(): Maximum attempts reached for: " + request.Symbol.Value);
+                        break;
+                    }
+
+                    // Assuming Timeout: Save end time and if have the same endtime next time, break since its likely there's no data after that time.
+                    lastEndTime = end;
+                    Log.Trace("FxcmBrokerage.GetHistory(): Attempt " + attempt + " for: " + request.Symbol.Value + " ended at " + lastEndTime.ToString("O"));
+                    continue;
+                }
+
+                // Add data
+                lock (_locker)
+                {
+                    history.InsertRange(0, _lastHistoryChunk);
+                }
+
+                var firstDateUtc = _lastHistoryChunk[0].Time.ConvertToUtc(_configTimeZone);
+                if (end != firstDateUtc)
+                {
+                    // new end date = first datapoint date.
+                    end = request.Resolution == Resolution.Tick ? firstDateUtc.AddMilliseconds(-1) : firstDateUtc.AddSeconds(-1);
+
+                    if (request.StartTimeUtc.AddSeconds(10) >= end)
+                        break;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            foreach (var data in history)
+            {
+                yield return data;
+            }
         }
 
         #endregion

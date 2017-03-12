@@ -169,7 +169,6 @@
     <Compile Include="BrokerageException.cs" />
     <Compile Include="BrokerageFactory.cs" />
     <Compile Include="Fxcm\FxcmBrokerage.cs" />
-    <Compile Include="Fxcm\FxcmBrokerage.HistoryProvider.cs" />
     <Compile Include="Fxcm\FxcmBrokerage.DataQueueHandler.cs" />
     <Compile Include="Fxcm\FxcmBrokerage.Messaging.cs" />
     <Compile Include="Fxcm\FxcmBrokerage.Util.cs" />
@@ -265,7 +264,6 @@
     <Compile Include="Oanda\Framework\EndpointResolver.cs" />
     <Compile Include="Oanda\OandaBrokerage.cs" />
     <Compile Include="Oanda\OandaBrokerage.DataQueueHandler.cs" />
-    <Compile Include="Oanda\OandaBrokerage.HistoryProvider.cs" />
     <Compile Include="Oanda\OandaBrokerage.Rest.cs" />
     <Compile Include="Oanda\OandaBrokerageFactory.cs" />
     <Compile Include="Oanda\OandaSymbolMapper.cs" />
