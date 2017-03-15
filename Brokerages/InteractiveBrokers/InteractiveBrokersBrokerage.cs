@@ -90,6 +90,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             { Market.CBOE, "CFE" }
         };
 
+        // data time zones by symbol (required and only used for futures)
+        private readonly Dictionary<string, DateTimeZone> _dataTimeZones = new Dictionary<string, DateTimeZone>(); 
 
         /// <summary>
         /// Returns true if we're currently connected to the broker
@@ -1647,6 +1649,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             foreach (var tick in ticks)
             {
+                // if we have a cached data time zone for this symbol, perform the conversion 
+                DateTimeZone dataTimeZone;
+                if (_dataTimeZones.TryGetValue(tick.Symbol.Value, out dataTimeZone))
+                {
+                    tick.Time = tick.Time.ConvertTo(TimeZones.NewYork, dataTimeZone);
+                }
+
                 yield return tick;
 
                 if (_underlyings.ContainsKey(tick.Symbol))
@@ -1691,6 +1700,18 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                                 if (symbol.ID.SecurityType == SecurityType.Future && symbol.IsCanonical())
                                 {
                                     return;
+                                }
+
+                                // for futures, we need to cache data time zones per symbol, 
+                                // as we have multiple exchanges in different time zones
+                                if (symbol.ID.SecurityType == SecurityType.Future)
+                                {
+                                    if (!_dataTimeZones.ContainsKey(symbol.Value))
+                                    {
+                                        // read the data timezone from market-hours-database
+                                        var dataTimeZone = MarketHoursDatabase.FromDataFolder().GetDataTimeZone(symbol.ID.Market, symbol.Underlying, symbol.ID.SecurityType);
+                                        _dataTimeZones.Add(symbol.Value, dataTimeZone);
+                                    }
                                 }
 
                                 var id = GetNextTickerId();
