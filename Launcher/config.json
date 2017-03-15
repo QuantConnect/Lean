@@ -165,7 +165,7 @@
         "data-queue-handler": "QuantConnect.Brokerages.InteractiveBrokers.InteractiveBrokersBrokerage",
         "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
         "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
-        "history-provider" :  "QuantConnect.Brokerages.InteractiveBrokers.InteractiveBrokersBrokerage"
+        "history-provider": "BrokerageHistoryProvider"
     },
 
     // defines the 'live-interactive-iqfeed' environment
@@ -180,7 +180,7 @@
       "data-queue-handler": "QuantConnect.ToolBox.IQFeed.IQFeedDataQueueHandler",
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
-      "history-provider" :  "QuantConnect.ToolBox.IQFeed.IQFeedDataQueueHandler"
+      "history-provider": "QuantConnect.ToolBox.IQFeed.IQFeedDataQueueHandler"
     },
 
     // defines the 'live-fxcm' environment
@@ -195,7 +195,7 @@
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
-      "history-provider": "FxcmBrokerage"
+      "history-provider": "BrokerageHistoryProvider"
     },
 
     // defines the 'live-oanda' environment
@@ -210,7 +210,7 @@
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
-      "history-provider": "OandaBrokerage"
+      "history-provider": "BrokerageHistoryProvider"
     },
 
     // defines the 'backtesting-desktop' environment

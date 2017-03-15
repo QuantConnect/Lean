@@ -41,7 +41,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
     /// <summary>
     /// The Interactive Brokers brokerage
     /// </summary>
-    public sealed class InteractiveBrokersBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider, IHistoryProvider
+    public sealed class InteractiveBrokersBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider
     {
         // next valid order id for this client
         private int _nextValidId;
@@ -1992,52 +1992,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     
         }
 
-
         /// <summary>
-        /// Gets the total number of data points emitted by this history provider
-        /// </summary>
-        public int DataPointCount { get; private set; }
-
-        /// <summary>
-        /// Initializes this history provider to work for the specified job
-        /// </summary>
-        /// <param name="job">The job</param>
-        /// <param name="mapFileProvider">Provider used to get a map file resolver to handle equity mapping</param>
-        /// <param name="factorFileProvider">Provider used to get factor files to handle equity price scaling</param>
-        /// <param name="dataProvider">Provider used to get data when it is not present on disk</param>
-        /// <param name="statusUpdate">Function used to send status updates</param>
-        /// <param name="dataCacheProvider">Provider used to cache history data files</param>
-        public void Initialize(AlgorithmNodePacket job, IDataProvider dataProvider, IDataCacheProvider dataCacheProvider, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, Action<int> statusUpdate)
-        {
-            Connect();
-        }
-
-        /// <summary>
-        /// Gets the history for the requested securities
-        /// </summary>
-        /// <param name="requests">The historical data requests</param>
-        /// <param name="sliceTimeZone">The time zone used when time stamping the slice instances</param>
-        /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
-        public IEnumerable<Slice> GetHistory(IEnumerable<Data.HistoryRequest> requests, DateTimeZone sliceTimeZone)
-        {
-            foreach (var request in requests)
-            {
-                foreach (var history in GetHistory(request, sliceTimeZone))
-                {
-                    yield return history;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Private method gets the history for the requested security
+        /// Gets the history for the requested security
         /// </summary>
         /// <param name="request">The historical data request</param>
-        /// <param name="sliceTimeZone">The time zone used when time stamping the slice instances</param>
-        /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
+        /// <returns>An enumerable of bars covering the span specified in the request</returns>
         /// <remarks>For IB history limitations see https://www.interactivebrokers.com/en/software/api/apiguide/tables/historical_data_limitations.htm </remarks>
-        private IEnumerable<Slice> GetHistory(Data.HistoryRequest request, DateTimeZone sliceTimeZone)
+        public override IEnumerable<BaseData> GetHistory(Data.HistoryRequest request)
         {
+            var sliceTimeZone = request.TimeZone;
+
             const int timeOut = 60; // seconds timeout
 
             var history = new List<TradeBar>();
@@ -2057,16 +2021,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var resolution = ConvertResolution(request.Resolution);
             var duration = ConvertResolutionToDuration(request.Resolution);
             var useRTH = Convert.ToInt32(request.IncludeExtendedMarketHours);
-            var startTime = request.Resolution == Resolution.Daily ? 
+            var startTime = request.Resolution == Resolution.Daily ?
                             request.StartTimeUtc.ConvertFromUtc(request.ExchangeHours.TimeZone) :
-                            request.StartTimeUtc.ConvertFromUtc(DateTimeZoneProviders.Bcl.GetSystemDefault()); 
+                            request.StartTimeUtc.ConvertFromUtc(DateTimeZoneProviders.Bcl.GetSystemDefault());
             var endTime = request.Resolution == Resolution.Daily ?
                             request.EndTimeUtc.ConvertFromUtc(request.ExchangeHours.TimeZone) :
                             request.EndTimeUtc.ConvertFromUtc(DateTimeZoneProviders.Bcl.GetSystemDefault());
             var dataType = request.Symbol.ID.SecurityType == SecurityType.Forex? HistoricalDataType.BidAsk : HistoricalDataType.Trades;
 
             Log.Trace("InteractiveBrokersBrokerage::GetHistory(): Submitting request: {0}({1}): {2} {3}->{4}", request.Symbol.Value, contract, request.Resolution, startTime, endTime);
-
 
             // making multiple requests if needed in order to download the history
             while (endTime >= startTime)
@@ -2168,8 +2131,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             foreach (var bar in filteredHistory)
             {
-                DataPointCount++;
-                yield return new Slice(bar.EndTime, new[] { bar });
+                yield return bar;
             }
 
             Log.Trace("InteractiveBrokersBrokerage::GetHistory() Download completed");

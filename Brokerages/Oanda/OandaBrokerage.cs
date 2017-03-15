@@ -18,8 +18,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Brokerages.Oanda.DataType;
+using QuantConnect.Brokerages.Oanda.DataType.Communications.Requests;
 using QuantConnect.Brokerages.Oanda.Framework;
 using QuantConnect.Brokerages.Oanda.Session;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -31,7 +34,7 @@ namespace QuantConnect.Brokerages.Oanda
     /// <summary>
     /// Oanda Brokerage - implementation of IBrokerage interface
     /// </summary>
-    public partial class OandaBrokerage : Brokerage, IDataQueueHandler, IHistoryProvider
+    public partial class OandaBrokerage : Brokerage, IDataQueueHandler
     {
         private readonly IOrderProvider _orderProvider;
         private readonly ISecurityProvider _securityProvider;
@@ -40,7 +43,7 @@ namespace QuantConnect.Brokerages.Oanda
         private readonly string _accountId;
 
         private EventsSession _eventsSession;
-        private Dictionary<string, Instrument> _oandaInstruments; 
+        private Dictionary<string, Instrument> _oandaInstruments;
         private readonly OandaSymbolMapper _symbolMapper = new OandaSymbolMapper();
 
         private bool _isConnected;
@@ -50,6 +53,11 @@ namespace QuantConnect.Brokerages.Oanda
         private readonly object _lockerConnectionMonitor = new object();
         private volatile bool _connectionLost;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+
+        /// <summary>
+        /// The maximum number of bars per historical data request
+        /// </summary>
+        public const int MaxBarsPerRequest = 5000;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OandaBrokerage"/> class.
@@ -297,7 +305,7 @@ namespace QuantConnect.Brokerages.Oanda
             PopulateOrderRequestParameters(order, requestParams);
 
             var postOrderResponse = PostOrderAsync(requestParams);
-            if (postOrderResponse == null) 
+            if (postOrderResponse == null)
                 return false;
 
             // if market order, find fill quantity and price
@@ -375,14 +383,14 @@ namespace QuantConnect.Brokerages.Oanda
         public override bool UpdateOrder(Order order)
         {
             Log.Trace("OandaBrokerage.UpdateOrder(): " + order);
-            
+
             if (!order.BrokerId.Any())
             {
                 // we need the brokerage order id in order to perform an update
                 Log.Trace("OandaBrokerage.UpdateOrder(): Unable to update order without BrokerId.");
                 return false;
             }
-            
+
             var requestParams = new Dictionary<string, string>
             {
                 { "instrument", _symbolMapper.GetBrokerageSymbol(order.Symbol) },
@@ -405,7 +413,7 @@ namespace QuantConnect.Brokerages.Oanda
         public override bool CancelOrder(Order order)
         {
             Log.Trace("OandaBrokerage.CancelOrder(): " + order);
-            
+
             if (!order.BrokerId.Any())
             {
                 Log.Trace("OandaBrokerage.CancelOrder(): Unable to cancel order without BrokerId.");
@@ -419,6 +427,72 @@ namespace QuantConnect.Brokerages.Oanda
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Gets the history for the requested security
+        /// </summary>
+        /// <param name="request">The historical data request</param>
+        /// <returns>An enumerable of bars covering the span specified in the request</returns>
+        public override IEnumerable<BaseData> GetHistory(HistoryRequest request)
+        {
+            if (!_symbolMapper.IsKnownLeanSymbol(request.Symbol))
+            {
+                Log.Trace("OandaBrokerage.GetHistory(): Invalid symbol: {0}, no history returned", request.Symbol.Value);
+                yield break;
+            }
+
+            var granularity = ToGranularity(request.Resolution);
+
+            // Oanda only has 5-second bars, we return these for Resolution.Second
+            var period = request.Resolution == Resolution.Second ?
+                TimeSpan.FromSeconds(5) : request.Resolution.ToTimeSpan();
+
+            // set the starting date/time
+            var startDateTime = request.StartTimeUtc;
+
+            // loop until last date
+            while (startDateTime <= request.EndTimeUtc)
+            {
+                var start = startDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ");
+
+                // request blocks of bars at the requested resolution with a starting date/time
+                var oandaSymbol = _symbolMapper.GetBrokerageSymbol(request.Symbol);
+                var candles = DownloadBars(oandaSymbol, start, MaxBarsPerRequest, granularity, ECandleFormat.bidask);
+                if (candles.Count == 0)
+                    break;
+
+                foreach (var candle in candles)
+                {
+                    var time = GetDateTimeFromString(candle.time);
+                    if (time > request.EndTimeUtc)
+                        break;
+
+                    var quoteBar = new QuoteBar(
+                        time,
+                        request.Symbol,
+                        new Bar(
+                            Convert.ToDecimal(candle.openBid),
+                            Convert.ToDecimal(candle.highBid),
+                            Convert.ToDecimal(candle.lowBid),
+                            Convert.ToDecimal(candle.closeBid)
+                        ),
+                        0,
+                            new Bar(
+                            Convert.ToDecimal(candle.openAsk),
+                            Convert.ToDecimal(candle.highAsk),
+                            Convert.ToDecimal(candle.lowAsk),
+                            Convert.ToDecimal(candle.closeAsk)
+                        ),
+                        0,
+                        period);
+
+                    yield return quoteBar;
+                }
+
+                // calculate the next request datetime
+                startDateTime = GetDateTimeFromString(candles[candles.Count - 1].time).Add(period);
+            }
         }
 
         #endregion
