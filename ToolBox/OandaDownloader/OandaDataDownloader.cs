@@ -98,7 +98,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
 
                 // request blocks of 5-second bars with a starting date/time
                 var oandaSymbol = _symbolMapper.GetBrokerageSymbol(symbol);
-                var bars = _brokerage.DownloadBars(oandaSymbol, start, OandaBrokerage.MaxBarsPerRequest, EGranularity.S5);
+                var bars = _brokerage.DownloadBars(oandaSymbol, start, OandaBrokerage.MaxBarsPerRequest, EGranularity.S5, ECandleFormat.midpoint);
                 if (bars.Count == 0)
                     break;
 

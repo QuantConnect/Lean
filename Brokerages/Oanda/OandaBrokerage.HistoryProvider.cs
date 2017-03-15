@@ -89,7 +89,7 @@ namespace QuantConnect.Brokerages.Oanda
 
                     // request blocks of bars at the requested resolution with a starting date/time
                     var oandaSymbol = _symbolMapper.GetBrokerageSymbol(request.Symbol);
-                    var candles = DownloadBars(oandaSymbol, start, MaxBarsPerRequest, granularity);
+                    var candles = DownloadBars(oandaSymbol, start, MaxBarsPerRequest, granularity, ECandleFormat.bidask);
                     if (candles.Count == 0)
                         break;
 
@@ -99,19 +99,28 @@ namespace QuantConnect.Brokerages.Oanda
                         if (time > request.EndTimeUtc)
                             break;
 
-                        var tradeBar = new TradeBar(
+                        var quoteBar = new QuoteBar(
                             time, 
                             request.Symbol,
-                            Convert.ToDecimal(candle.openMid),
-                            Convert.ToDecimal(candle.highMid),
-                            Convert.ToDecimal(candle.lowMid),
-                            Convert.ToDecimal(candle.closeMid),
+                            new Bar(
+                                Convert.ToDecimal(candle.openBid), 
+                                Convert.ToDecimal(candle.highBid),
+                                Convert.ToDecimal(candle.lowBid),
+                                Convert.ToDecimal(candle.closeBid)
+                            ),
+                            0,
+                            new Bar(
+                                Convert.ToDecimal(candle.openAsk),
+                                Convert.ToDecimal(candle.highAsk),
+                                Convert.ToDecimal(candle.lowAsk),
+                                Convert.ToDecimal(candle.closeAsk)
+                            ),
                             0,
                             period);
 
                         DataPointCount++;
 
-                        yield return new Slice(tradeBar.EndTime, new[] { tradeBar });
+                        yield return new Slice(quoteBar.EndTime, new[] { quoteBar });
                     }
 
                     // calculate the next request datetime
