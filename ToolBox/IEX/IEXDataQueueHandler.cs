@@ -32,7 +32,8 @@ using System.Text;
 namespace QuantConnect.ToolBox.IEX
 {
     /// <summary>
-    /// IEX live data handler
+    /// IEX live data handler.
+    /// Data provided for free by IEX. See more at https://iextrading.com/api-exhibit-a
     /// </summary>
     public class IEXDataQueueHandler : LiveDataQueue, IDisposable
     {
@@ -75,7 +76,8 @@ namespace QuantConnect.ToolBox.IEX
                 _socket.On(Socket.EVENT_CONNECT, () =>
                 {
                     _connected.TrySetResult(true);
-                    Log.Trace("IEXDataQueueHandler: Connected to IEX live data");
+                    Log.Trace("IEXDataQueueHandler.Reconnect(): Connected to IEX live data");
+                    Log.Trace("IEXDataQueueHandler.Reconnect(): IEX Real-Time Price");
                 });
 
                 _socket.On("message", message => ProcessJsonObject((JObject)message));
@@ -83,7 +85,7 @@ namespace QuantConnect.ToolBox.IEX
             }
             catch (Exception err)
             {
-                Log.Error("IEXDataQueueHandler.ProcessJsonObject(): " + err.Message);
+                Log.Error("IEXDataQueueHandler.Reconnect(): " + err.Message);
             }
         }
 
@@ -103,7 +105,7 @@ namespace QuantConnect.ToolBox.IEX
                     }
                     else
                     {
-                        Log.Trace("IEXDataQueueHandler.ProcessJsonObject(): Recieved unexpected symbol '" + symbolString + "' from IEX in IEXDataQueueHandler");
+                        Log.Trace("IEXDataQueueHandler.ProcessJsonObject(): Received unexpected symbol '" + symbolString + "' from IEX in IEXDataQueueHandler");
                         return;
                     }
                 }
@@ -284,7 +286,7 @@ namespace QuantConnect.ToolBox.IEX
             _socket.Disconnect();
             _socket.Close();
 
-            Log.Trace("IEXDataQueueHandler: Disconnected from IEX live data");
+            Log.Trace("IEXDataQueueHandler.Dispose(): Disconnected from IEX live data");
         }
 
         ~IEXDataQueueHandler()
