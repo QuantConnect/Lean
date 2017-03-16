@@ -627,7 +627,8 @@ namespace QuantConnect
             {"W", "Chicago Board Options Exchange"},
             {"X", "Philadelphia Stock Exchange"},
             {"Y", "BATS Y-Exchange, Inc"},
-            {"Z", "BATS Exchange, Inc"}
+            {"Z", "BATS Exchange, Inc"},
+            {"IEX", "Investors Exchange"},
         };
 
         /// Canada Market Short Codes:
