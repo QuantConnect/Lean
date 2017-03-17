@@ -86,12 +86,12 @@ namespace QuantConnect.Util
 
                         case Resolution.Second:
                         case Resolution.Minute:
-                            var bar = (TradeBar) data;
+                            var bar = (QuoteBar) data;
                             return ToCsv(milliseconds, bar.Open, bar.High, bar.Low, bar.Close);
 
                         case Resolution.Hour:
                         case Resolution.Daily:
-                            var bigBar = (TradeBar) data;
+                            var bigBar = (QuoteBar) data;
                             return ToCsv(longTime, bigBar.Open, bigBar.High, bigBar.Low, bigBar.Close);
                     }
                     break;
