@@ -112,12 +112,29 @@ namespace QuantConnect.VisualStudioPlugin
 
         private static string GetDefaultDataFolder()
         {
+            string path = GetUserHomeDirectory();
+            string resultPath = Path.Combine(path, "Lean", "Data");
+            CreateIfDoesNotExist(resultPath);
+            return resultPath;
+        }
+
+        private static string GetUserHomeDirectory()
+        {
             string path = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).FullName;
             if (Environment.OSVersion.Version.Major >= 6)
             {
                 path = Directory.GetParent(path).ToString();
             }
-            return Path.Combine(path, "Lean", "Data");
+
+            return path;
+        }
+
+        private static void CreateIfDoesNotExist(string resultPath)
+        {
+            if (!Directory.Exists(resultPath))
+            {
+                Directory.CreateDirectory(resultPath);
+            }
         }
     }
 }
