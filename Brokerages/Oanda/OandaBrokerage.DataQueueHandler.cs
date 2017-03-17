@@ -19,6 +19,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using NodaTime;
 using QuantConnect.Brokerages.Oanda.DataType;
 using QuantConnect.Brokerages.Oanda.DataType.Communications;
 using QuantConnect.Brokerages.Oanda.Session;
@@ -26,6 +27,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Oanda
@@ -43,6 +45,8 @@ namespace QuantConnect.Brokerages.Oanda
         private readonly List<Tick> _ticks = new List<Tick>();
         private HashSet<Symbol> _subscribedSymbols = new HashSet<Symbol>();
         private RatesSession _ratesSession;
+
+        private readonly Dictionary<Symbol, DateTimeZone> _symbolExchangeTimeZones = new Dictionary<Symbol, DateTimeZone>();
 
         #region IDataQueueHandler implementation
 
@@ -76,6 +80,16 @@ namespace QuantConnect.Brokerages.Oanda
                     return;
 
                 Log.Trace("OandaBrokerage.Subscribe(): {0}", string.Join(",", symbolsToSubscribe.Select(x => x.Value)));
+
+                // cache exchange time zones for subscribed symbols
+                foreach (var symbol in symbolsToSubscribe)
+                {
+                    if (!_symbolExchangeTimeZones.ContainsKey(symbol))
+                    {
+                        var exchangeTimeZone = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Oanda, symbol, symbol.SecurityType).TimeZone;
+                        _symbolExchangeTimeZones.Add(symbol, exchangeTimeZone);
+                    }
+                }
 
                 // Oanda does not allow more than a few rate streaming sessions, 
                 // so we only use a single session for all currently subscribed symbols
@@ -224,6 +238,14 @@ namespace QuantConnect.Brokerages.Oanda
             var securityType = _symbolMapper.GetBrokerageSecurityType(data.tick.instrument);
             var symbol = _symbolMapper.GetLeanSymbol(data.tick.instrument, securityType, Market.Oanda);
             var time = GetDateTimeFromString(data.tick.time);
+
+            // live ticks timestamps must be in exchange time zone
+            DateTimeZone exchangeTimeZone;
+            if (_symbolExchangeTimeZones.TryGetValue(symbol, out exchangeTimeZone))
+            {
+                time = time.ConvertFromUtc(exchangeTimeZone);
+            }
+
             var bidPrice = Convert.ToDecimal(data.tick.bid);
             var askPrice = Convert.ToDecimal(data.tick.ask);
             var tick = new Tick(time, symbol, bidPrice, askPrice);
