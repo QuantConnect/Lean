@@ -117,6 +117,22 @@ namespace QuantConnect.Tests.Common.Orders
         }
 
         [Test]
+        public void DeserializesOptionExpireOrder()
+        {
+            var expected = new OptionExerciseOrder(Symbols.SPY_P_192_Feb19_2016, 100, new DateTime(2015, 11, 23, 17, 15, 37), "now")
+            {
+                Id = 12345,
+                ContingentId = 123456,
+                BrokerId = new List<string> { "727", "54970" }
+            };
+
+            // Note: Order price equals strike price found in Symbol object
+            // Price = Symbol.ID.StrikePrice
+
+            TestOrderType(expected);
+        }
+
+        [Test]
         public void DeserializesOldSymbol()
         {
             const string json = @"{'Type':0,
