@@ -25,6 +25,7 @@ using com.fxcm.fix.posttrade;
 using com.fxcm.fix.pretrade;
 using com.fxcm.fix.trade;
 using com.fxcm.messaging;
+using NodaTime;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -296,6 +297,13 @@ namespace QuantConnect.Brokerages.Fxcm
             {
                 var time = FromJavaDate(message.getDate().toDate());
 
+                // history timestamps must be in exchange time zone
+                DateTimeZone exchangeTimeZone;
+                if (_symbolExchangeTimeZones.TryGetValue(symbol, out exchangeTimeZone))
+                {
+                    time = time.ConvertFromUtc(exchangeTimeZone);
+                }
+
                 // append ticks/bars to history
                 if (message.getFXCMTimingInterval() == FXCMTimingIntervalFactory.TICK)
                 {
@@ -339,6 +347,13 @@ namespace QuantConnect.Brokerages.Fxcm
                     // For some unknown reason, messages returned by SubscriptionRequestTypeFactory.SUBSCRIBE
                     // have message.getDate() rounded to the second, so we use message.getMakingTime() instead
                     var time = FromJavaDate(new java.util.Date(message.getMakingTime()));
+
+                    // live ticks timestamps must be in exchange time zone
+                    DateTimeZone exchangeTimeZone;
+                    if (_symbolExchangeTimeZones.TryGetValue(symbol, out exchangeTimeZone))
+                    {
+                        time = time.ConvertFromUtc(exchangeTimeZone);
+                    }
 
                     var bidPrice = Convert.ToDecimal(message.getBidClose());
                     var askPrice = Convert.ToDecimal(message.getAskClose());

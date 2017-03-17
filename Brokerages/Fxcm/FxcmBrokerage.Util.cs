@@ -22,7 +22,6 @@ using com.sun.rowset;
 using java.util;
 using NodaTime;
 using QuantConnect.Orders;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Brokerages.Fxcm
 {
@@ -31,8 +30,6 @@ namespace QuantConnect.Brokerages.Fxcm
     /// </summary>
     public partial class FxcmBrokerage
     {
-        private static DateTimeZone _configTimeZone;
-
         /// <summary>
         /// Converts an FXCM order to a QuantConnect order.
         /// </summary>
@@ -175,24 +172,17 @@ namespace QuantConnect.Brokerages.Fxcm
         }
 
         /// <summary>
-        /// Converts a Java Date value to a DateTime value
+        /// Converts a Java Date value to a UTC DateTime value
         /// </summary>
         /// <param name="javaDate">The Java date</param>
         /// <returns></returns>
         private static DateTime FromJavaDate(Date javaDate)
         {
-            if (_configTimeZone == null)
-            {
-                // Read time zone from market-hours-config
-                var symbol = Symbol.Create("*", SecurityType.Forex, Market.FXCM);
-                _configTimeZone = MarketHoursDatabase.FromDataFolder().GetDataTimeZone(symbol.ID.Market, symbol, symbol.ID.SecurityType);
-            }
-
             // Convert javaDate to UTC Instant (Epoch)
             var instant = Instant.FromMillisecondsSinceUnixEpoch(javaDate.getTime());
 
-            // Convert to configured TZ then to a .Net DateTime
-            return instant.InZone(_configTimeZone).ToDateTimeUnspecified();
+            // Convert to .Net UTC DateTime
+            return instant.ToDateTimeUtc();
         }
 
         /// <summary>

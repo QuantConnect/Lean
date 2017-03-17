@@ -24,6 +24,7 @@ using com.fxcm.external.api.util;
 using com.fxcm.fix;
 using com.fxcm.fix.pretrade;
 using com.fxcm.fix.trade;
+using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -57,6 +58,8 @@ namespace QuantConnect.Brokerages.Fxcm
         private readonly FxcmSymbolMapper _symbolMapper = new FxcmSymbolMapper();
 
         private readonly IList<BaseData> _lastHistoryChunk = new List<BaseData>();
+
+        private readonly Dictionary<Symbol, DateTimeZone> _symbolExchangeTimeZones = new Dictionary<Symbol, DateTimeZone>();
 
         /// <summary>
         /// Gets/sets a timeout for history requests (in milliseconds)
@@ -619,6 +622,14 @@ namespace QuantConnect.Brokerages.Fxcm
                 yield break;
             }
 
+            // cache exchange time zone for symbol
+            DateTimeZone exchangeTimeZone;
+            if (!_symbolExchangeTimeZones.TryGetValue(request.Symbol, out exchangeTimeZone))
+            {
+                exchangeTimeZone = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.FXCM, request.Symbol, request.SecurityType).TimeZone;
+                _symbolExchangeTimeZones.Add(request.Symbol, exchangeTimeZone);
+            }
+
             var interval = ToFxcmInterval(request.Resolution);
 
             // download data
@@ -696,7 +707,7 @@ namespace QuantConnect.Brokerages.Fxcm
                     history.InsertRange(0, _lastHistoryChunk);
                 }
 
-                var firstDateUtc = _lastHistoryChunk[0].Time.ConvertToUtc(_configTimeZone);
+                var firstDateUtc = _lastHistoryChunk[0].Time.ConvertToUtc(exchangeTimeZone);
                 if (end != firstDateUtc)
                 {
                     // new end date = first datapoint date.
