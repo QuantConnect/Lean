@@ -307,11 +307,23 @@ namespace QuantConnect.Brokerages.Fxcm
                 }
                 else
                 {
-                    var open = Convert.ToDecimal((message.getBidOpen() + message.getAskOpen()) / 2);
-                    var high = Convert.ToDecimal((message.getBidHigh() + message.getAskHigh()) / 2);
-                    var low = Convert.ToDecimal((message.getBidLow() + message.getAskLow()) / 2);
-                    var close = Convert.ToDecimal((message.getBidClose() + message.getAskClose()) / 2);
-                    var bar = new TradeBar(time, symbol, open, high, low, close, 0);
+                    var bar = new QuoteBar(
+                        time,
+                        symbol,
+                        new Bar(
+                            Convert.ToDecimal(message.getBidOpen()),
+                            Convert.ToDecimal(message.getBidHigh()),
+                            Convert.ToDecimal(message.getBidLow()),
+                            Convert.ToDecimal(message.getBidClose())
+                        ),
+                        0,
+                            new Bar(
+                            Convert.ToDecimal(message.getAskOpen()),
+                            Convert.ToDecimal(message.getAskHigh()),
+                            Convert.ToDecimal(message.getAskLow()),
+                            Convert.ToDecimal(message.getAskClose())
+                        ),
+                        0);
 
                     _lastHistoryChunk.Add(bar);
                 }
