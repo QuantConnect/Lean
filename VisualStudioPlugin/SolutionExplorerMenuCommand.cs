@@ -22,6 +22,8 @@ using EnvDTE80;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using System.Threading;
+using System.Diagnostics;
 
 namespace QuantConnect.VisualStudioPlugin
 {
@@ -52,8 +54,6 @@ namespace QuantConnect.VisualStudioPlugin
 
         private LogInCommand _logInCommand;
 
-        private Dictionary<string, Language> _estensionToLanguage;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="SolutionExplorerMenuCommand"/> class.
         /// Adds our command handlers for menu (commands must exist in the command table file)
@@ -69,7 +69,6 @@ namespace QuantConnect.VisualStudioPlugin
             _package = package as QuantConnectPackage;
             _dte2 = ServiceProvider.GetService(typeof(SDTE)) as DTE2;
             _logInCommand = CreateLogInCommand();
-            _estensionToLanguage = CreateExtensionsDictionary();
 
             var commandService = this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (commandService != null)
@@ -79,16 +78,6 @@ namespace QuantConnect.VisualStudioPlugin
             }
         }
 
-        public Dictionary<string, Language> CreateExtensionsDictionary()
-        {
-            var dict = new Dictionary<string, Language>();
-            dict[".cs"] = Language.CSharp;
-            dict[".java"] = Language.Java;
-            dict[".vb"] = Language.VisualBasic;
-            dict[".fs"] = Language.FSharp;
-
-            return dict;
-        }
 
         private ProjectFinder CreateProjectFinder()
         {
@@ -160,13 +149,6 @@ namespace QuantConnect.VisualStudioPlugin
             ExecuteOnProject(sender, (selectedProjectId, selectedProjectName, files) =>
             {
                 var fileNames = files.Select(f => f.Item1).ToList();
-                var message = string.Format(
-                    CultureInfo.CurrentCulture, 
-                    "Send for backtesting to project {0}, files: {1}", 
-                    selectedProjectId + " : " + selectedProjectName, 
-                    string.Join(" ", fileNames)
-                );
-                ShowMessageBox("Sending To Backtest", message);
 
                 VsUtils.DisplayInStatusBar(this.ServiceProvider, "Uploading files to server ...");
                 UploadFilesToServer(selectedProjectId, files);
@@ -176,7 +158,7 @@ namespace QuantConnect.VisualStudioPlugin
                 if (compileStatus.State == Api.CompileState.BuildError)
                 {
                     VsUtils.DisplayInStatusBar(this.ServiceProvider, "Compile error.");
-                    ShowMessageBox("Compile Error", "Error when compiling project.");
+                    VsUtils.ShowMessageBox(this.ServiceProvider, "Compile Error", "Error when compiling project.");
                     return;
                 }
 
@@ -196,7 +178,7 @@ namespace QuantConnect.VisualStudioPlugin
                     "https://www.quantconnect.com/terminal/#open/{0}", 
                     selectedProjectId
                 );
-                System.Diagnostics.Process.Start(projectUrl);
+                Process.Start(projectUrl);
             });
         }
 
@@ -205,30 +187,11 @@ namespace QuantConnect.VisualStudioPlugin
             ExecuteOnProject(sender, (selectedProjectId, selectedProjectName, files) =>
             {
                 var fileNames = files.Select(f => f.Item1).ToList();
-                var message = string.Format(
-                    CultureInfo.CurrentCulture, 
-                    "Save to project {0}, files {1}", 
-                    selectedProjectId + " : " + selectedProjectName, 
-                    string.Join(" ", fileNames)
-                );
-                ShowMessageBox("Saving To Project", message);
 
                 VsUtils.DisplayInStatusBar(this.ServiceProvider, "Uploading files to server ...");
                 UploadFilesToServer(selectedProjectId, files);
                 VsUtils.DisplayInStatusBar(this.ServiceProvider, "Files upload complete.");
             });
-        }
-
-        private void ShowMessageBox(string title, string message)
-        {            
-            VsShellUtilities.ShowMessageBox(
-                this.ServiceProvider,
-                message,
-                title,
-                OLEMSGICON.OLEMSGICON_INFO,
-                OLEMSGBUTTON.OLEMSGBUTTON_OK,
-                OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST
-            );
         }
 
         private void UploadFilesToServer(int selectedProjectId, List<Tuple<string, string>> files)
@@ -237,7 +200,7 @@ namespace QuantConnect.VisualStudioPlugin
             foreach (Tuple<string, string> file in files)
             {
                 api.DeleteProjectFile(selectedProjectId, file.Item1);
-                string fileContent = System.IO.File.ReadAllText(file.Item2);
+                var fileContent = File.ReadAllText(file.Item2);
                 api.AddProjectFile(selectedProjectId, file.Item1, fileContent);
             }
         }
@@ -245,11 +208,11 @@ namespace QuantConnect.VisualStudioPlugin
         private Api.Compile CompileProjectOnServer(int projectId)
         {
             var api = AuthorizationManager.GetInstance().GetApi();
-            Api.Compile compileStatus = api.CreateCompile(projectId);
+            var compileStatus = api.CreateCompile(projectId);
             var compileId = compileStatus.CompileId;
             while (compileStatus.State == Api.CompileState.InQueue)
             {
-                System.Threading.Thread.Sleep(5000);
+                Thread.Sleep(5000);
                 compileStatus = api.ReadCompile(projectId, compileId);
             }
             return compileStatus;
@@ -258,11 +221,11 @@ namespace QuantConnect.VisualStudioPlugin
         private Api.Backtest BacktestProjectOnServer(int projectId, string compileId)
         {
             var api = AuthorizationManager.GetInstance().GetApi();
-            Api.Backtest backtestStatus = api.CreateBacktest(projectId, compileId, "My New Backtest");
+            var backtestStatus = api.CreateBacktest(projectId, compileId, "My New Backtest");
             var backtestId = backtestStatus.BacktestId;
             while (!backtestStatus.Completed)
             {
-                System.Threading.Thread.Sleep(5000);
+                Thread.Sleep(5000);
                 backtestStatus = api.ReadBacktest(projectId, backtestId);
             }
             return backtestStatus;
@@ -290,10 +253,10 @@ namespace QuantConnect.VisualStudioPlugin
 
                     if (!selectedProjectId.HasValue)
                     {
-                        var newProjectLanguage = DetermineProjectLanguage(files);
+                        var newProjectLanguage = PathUtils.DetermineProjectLanguage(files.Select(f => f.Item2).ToList());
                         if (!newProjectLanguage.HasValue)
                         {
-                            ShowMessageBox("Failed to determine project language",
+                            VsUtils.ShowMessageBox(this.ServiceProvider, "Failed to determine project language",
                                 $"Failed to determine programming laguage for a project");
                             return;
                         }
@@ -301,7 +264,7 @@ namespace QuantConnect.VisualStudioPlugin
                         selectedProjectId = CreateQuantConnectProject(selectedProjectName, newProjectLanguage.Value);
                         if (!selectedProjectId.HasValue)
                         {
-                            ShowMessageBox("Failed to create a project", $"Failed to create a project {selectedProjectName}");
+                            VsUtils.ShowMessageBox(this.ServiceProvider, "Failed to create a project", $"Failed to create a project {selectedProjectName}");
                         }
                         onProject.Invoke(selectedProjectId.Value, selectedProjectName, files);
                     }
@@ -322,23 +285,6 @@ namespace QuantConnect.VisualStudioPlugin
                 return null;
             }
             return projectResponse.Projects[0].ProjectId;
-        }
-
-        private Language? DetermineProjectLanguage(List<Tuple<string, string>> files)
-        {
-            var extensionsSet = new HashSet<string>();
-            foreach (var fileTuple in files)
-            {
-                var fullPath = fileTuple.Item2;
-                extensionsSet.Add(Path.GetExtension(fullPath));
-            }
-
-            if (extensionsSet.Count == 1 && _estensionToLanguage.ContainsKey(extensionsSet.First()))
-            {
-                return _estensionToLanguage[extensionsSet.First()];
-            }
-
-            return null;
         }
 
         private List<Tuple<string, string>> GetSelectedFiles(object sender)
