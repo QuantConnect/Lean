@@ -76,6 +76,7 @@ namespace QuantConnect.VisualStudioPlugin
             get
             {
                 OptionPageGrid page = (OptionPageGrid)GetDialogPage(typeof(OptionPageGrid));
+                page.LoadSettingsFromStorage();
                 return page.DataPath;
             }
         }
@@ -99,7 +100,8 @@ namespace QuantConnect.VisualStudioPlugin
     [Guid("92D0E244-D0DA-458C-88FB-9C0827052177")]
     public class OptionPageGrid : DialogPage
     {
-        private string path = GetDefaultDataFolder();
+        // private string path = GetDefaultDataFolder();
+        private string path = "C:\\Users\\Ivan\\Development\\Lean\\Data";
 
         [Category("QuantConnect")]
         [DisplayName("Path data")]

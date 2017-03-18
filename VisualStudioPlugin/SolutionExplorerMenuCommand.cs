@@ -21,6 +21,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using EnvDTE80;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 
 namespace QuantConnect.VisualStudioPlugin
 {
@@ -51,6 +52,8 @@ namespace QuantConnect.VisualStudioPlugin
 
         private LogInCommand _logInCommand;
 
+        private Dictionary<string, Language> _estensionToLanguage;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="SolutionExplorerMenuCommand"/> class.
         /// Adds our command handlers for menu (commands must exist in the command table file)
@@ -66,6 +69,7 @@ namespace QuantConnect.VisualStudioPlugin
             _package = package as QuantConnectPackage;
             _dte2 = ServiceProvider.GetService(typeof(SDTE)) as DTE2;
             _logInCommand = CreateLogInCommand();
+            _estensionToLanguage = CreateExtensionsDictionary();
 
             var commandService = this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (commandService != null)
@@ -73,6 +77,17 @@ namespace QuantConnect.VisualStudioPlugin
                 RegisterSendForBacktesting(commandService);
                 RegisterSaveToQuantConnect(commandService);
             }
+        }
+
+        public Dictionary<string, Language> CreateExtensionsDictionary()
+        {
+            var dict = new Dictionary<string, Language>();
+            dict[".cs"] = Language.CSharp;
+            dict[".java"] = Language.Java;
+            dict[".vb"] = Language.VisualBasic;
+            dict[".fs"] = Language.FSharp;
+
+            return dict;
         }
 
         private ProjectFinder CreateProjectFinder()
@@ -151,22 +166,22 @@ namespace QuantConnect.VisualStudioPlugin
                     selectedProjectId + " : " + selectedProjectName, 
                     string.Join(" ", fileNames)
                 );
-                showMessageBox("Sending To Backtest", message);
+                ShowMessageBox("Sending To Backtest", message);
 
                 VsUtils.DisplayInStatusBar(this.ServiceProvider, "Uploading files to server ...");
-                uloadFilesToServer(selectedProjectId, files);
+                UploadFilesToServer(selectedProjectId, files);
 
                 VsUtils.DisplayInStatusBar(this.ServiceProvider, "Compiling project ...");
-                var compileStatus = compileProjectOnServer(selectedProjectId);
+                var compileStatus = CompileProjectOnServer(selectedProjectId);
                 if (compileStatus.State == Api.CompileState.BuildError)
                 {
                     VsUtils.DisplayInStatusBar(this.ServiceProvider, "Compile error.");
-                    showMessageBox("Compile Error", "Error when compiling project.");
+                    ShowMessageBox("Compile Error", "Error when compiling project.");
                     return;
                 }
 
                 VsUtils.DisplayInStatusBar(this.ServiceProvider, "Backtesting project ...");
-                Api.Backtest backtest = backtestProjectOnServer(selectedProjectId, compileStatus.CompileId);
+                Api.Backtest backtest = BacktestProjectOnServer(selectedProjectId, compileStatus.CompileId);
                 // Errors are not being transfered in response, so client can't tell if the backtest failed or not.
                 // This response error handling code will not work but should.
                 /* if (backtest.Errors.Count != 0) {
@@ -196,15 +211,15 @@ namespace QuantConnect.VisualStudioPlugin
                     selectedProjectId + " : " + selectedProjectName, 
                     string.Join(" ", fileNames)
                 );
-                showMessageBox("Saving To Project", message);
+                ShowMessageBox("Saving To Project", message);
 
                 VsUtils.DisplayInStatusBar(this.ServiceProvider, "Uploading files to server ...");
-                uloadFilesToServer(selectedProjectId, files);
+                UploadFilesToServer(selectedProjectId, files);
                 VsUtils.DisplayInStatusBar(this.ServiceProvider, "Files upload complete.");
             });
         }
 
-        private void showMessageBox(string title, string message)
+        private void ShowMessageBox(string title, string message)
         {            
             VsShellUtilities.ShowMessageBox(
                 this.ServiceProvider,
@@ -216,7 +231,7 @@ namespace QuantConnect.VisualStudioPlugin
             );
         }
 
-        private void uloadFilesToServer(int selectedProjectId, List<Tuple<string, string>> files)
+        private void UploadFilesToServer(int selectedProjectId, List<Tuple<string, string>> files)
         {
             var api = AuthorizationManager.GetInstance().GetApi();
             foreach (Tuple<string, string> file in files)
@@ -227,7 +242,7 @@ namespace QuantConnect.VisualStudioPlugin
             }
         }
 
-        private Api.Compile compileProjectOnServer(int projectId)
+        private Api.Compile CompileProjectOnServer(int projectId)
         {
             var api = AuthorizationManager.GetInstance().GetApi();
             Api.Compile compileStatus = api.CreateCompile(projectId);
@@ -240,7 +255,7 @@ namespace QuantConnect.VisualStudioPlugin
             return compileStatus;
         }
 
-        private Api.Backtest backtestProjectOnServer(int projectId, string compileId)
+        private Api.Backtest BacktestProjectOnServer(int projectId, string compileId)
         {
             var api = AuthorizationManager.GetInstance().GetApi();
             Api.Backtest backtestStatus = api.CreateBacktest(projectId, compileId, "My New Backtest");
@@ -273,9 +288,57 @@ namespace QuantConnect.VisualStudioPlugin
                     var selectedProjectId = projectNameDialog.GetSelectedProjectId();
                     ProjectFinder.AssociateProjectWith(selectedProjectName, fileNames);
 
-                    onProject.Invoke(selectedProjectId, selectedProjectName, files);
+                    if (!selectedProjectId.HasValue)
+                    {
+                        var newProjectLanguage = DetermineProjectLanguage(files);
+                        if (!newProjectLanguage.HasValue)
+                        {
+                            ShowMessageBox("Failed to determine project language",
+                                $"Failed to determine programming laguage for a project");
+                            return;
+                        }
+
+                        selectedProjectId = CreateQuantConnectProject(selectedProjectName, newProjectLanguage.Value);
+                        if (!selectedProjectId.HasValue)
+                        {
+                            ShowMessageBox("Failed to create a project", $"Failed to create a project {selectedProjectName}");
+                        }
+                        onProject.Invoke(selectedProjectId.Value, selectedProjectName, files);
+                    }
+                    else
+                    {
+                        onProject.Invoke(selectedProjectId.Value, selectedProjectName, files);
+                    }
                 }
             }
+        }
+
+        private int? CreateQuantConnectProject(string projectName, Language projectLanguage)
+        {
+            var api = AuthorizationManager.GetInstance().GetApi();
+            var projectResponse = api.CreateProject(projectName, projectLanguage);
+            if (!projectResponse.Success)
+            {
+                return null;
+            }
+            return projectResponse.Projects[0].ProjectId;
+        }
+
+        private Language? DetermineProjectLanguage(List<Tuple<string, string>> files)
+        {
+            var extensionsSet = new HashSet<string>();
+            foreach (var fileTuple in files)
+            {
+                var fullPath = fileTuple.Item2;
+                extensionsSet.Add(Path.GetExtension(fullPath));
+            }
+
+            if (extensionsSet.Count == 1 && _estensionToLanguage.ContainsKey(extensionsSet.First()))
+            {
+                return _estensionToLanguage[extensionsSet.First()];
+            }
+
+            return null;
         }
 
         private List<Tuple<string, string>> GetSelectedFiles(object sender)

@@ -28,7 +28,7 @@ namespace QuantConnect.VisualStudioPlugin
     {
         private bool _projectNameProvided = false;
         private string _selectedProjectName = null;
-        private int _selectedProjectId = 0;
+        private int? _selectedProjectId = 0;
 
         /// <summary>
         /// Create ProjectNameDialog
@@ -44,7 +44,7 @@ namespace QuantConnect.VisualStudioPlugin
 
         private void SetProjectNames(List<Tuple<int, string>> projects)
         {
-            projects.ForEach(p => projectNameBox.Items.Add(new ComboboxItem(p.Item1.ToString(), p.Item2)));
+            projects.ForEach(p => projectNameBox.Items.Add(new ComboboxItem(p.Item1, p.Item2)));
         }
 
         private void SetSuggestedProjectName(string suggestedProjectName)
@@ -54,18 +54,23 @@ namespace QuantConnect.VisualStudioPlugin
 
         private void SelectButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            ComboboxItem selectedItem = projectNameBox.SelectedItem as ComboboxItem;
-            int projectId = Int32.Parse(selectedItem.Value);
-            var projectName = selectedItem.DisplayText;
+            var selectedItem = projectNameBox.SelectedItem as ComboboxItem;
 
-            if (projectName.Length == 0)
+            if (selectedItem != null)
             {
-                DisplayProjectNameError();
+                var projectId = selectedItem.ProjectId;
+                var projectName = selectedItem.DisplayText;
+                SaveSelectedProjectName(projectId, projectName);
+                Close();
+            }
+            else if (projectNameBox.Text.Length != 0)
+            {
+                SaveSelectedProjectName(null, projectNameBox.Text);
+                Close();
             }
             else
             {
-                SaveSelectedProjectName(projectId, projectName);
-                Close();
+                DisplayProjectNameError();
             }
         }
 
@@ -75,7 +80,7 @@ namespace QuantConnect.VisualStudioPlugin
             projectNameBox.ToolTip = "Error occurred with the data of the control.";
         }
 
-        private void SaveSelectedProjectName(int projectId, string projectName)
+        private void SaveSelectedProjectName(int? projectId, string projectName)
         {
             _projectNameProvided = true;
             _selectedProjectName = projectName;
@@ -97,24 +102,24 @@ namespace QuantConnect.VisualStudioPlugin
             return _selectedProjectName;
         }
 
-        public int GetSelectedProjectId()
+        public int? GetSelectedProjectId()
         {
             return _selectedProjectId;
         }
 
         private class ComboboxItem {
-            public string Value { get; }
+            public int ProjectId { get; }
             public string DisplayText { get; }
 
-            public ComboboxItem(string Value, string DisplayText)
+            public ComboboxItem(int projectId, string displayText)
             {
-                this.Value = Value;
-                this.DisplayText = DisplayText;
+                ProjectId = projectId;
+                DisplayText = displayText;
             }
 
             public override string ToString()
             {
-                return this.DisplayText;
+                return DisplayText;
             }
         }
     }
