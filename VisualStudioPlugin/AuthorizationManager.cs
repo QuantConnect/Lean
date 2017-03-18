@@ -41,6 +41,10 @@ namespace QuantConnect.VisualStudioPlugin
         /// <exception cref="NotAuthenticatedException">It API is not authenticated</exception>
         public Api.Api GetApi()
         {
+            if (_api == null)
+            {
+                throw new InvalidOperationException("Accessing API without logging in first");
+            }
             return _api;
         }
 
