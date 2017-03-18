@@ -3,7 +3,7 @@
   <Metadata>
     <Identity Id="QuantConnect.VisualStudioPlugin.Company.78181cc8-542a-4330-9bcb-a6369c1c0653" Version="1.0" Language="en-US" Publisher="Company" />
     <DisplayName>QuantConnect.VisualStudioPlugin</DisplayName>
-    <Description>Empty VSIX Project.</Description>
+    <Description>Plugin for integration with QuantConnect platform</Description>
   </Metadata>
   <Installation>
     <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[14.0]" />
