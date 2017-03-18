@@ -44,16 +44,18 @@ namespace QuantConnect.VisualStudioPlugin
         /// <returns>true if user logged into QuantConnect, false otherwise</returns>
         public bool DoLogIn(IServiceProvider serviceProvider, bool explicitLogin)
         {
-
+            Log.Info("Logging in");
             var authorizationManager = AuthorizationManager.GetInstance();
             if (authorizationManager.IsLoggedIn())
             {
+                Log.Info("Already logged in");
                 return true;
             }
 
             var previousCredentials = _credentialsManager.GetLastCredential();
             if (!explicitLogin && LoggedInWithLastStorredPassword(previousCredentials))
             {
+                Log.Info("Logged in with previously storred credentials");
                 return true;
             }
 
@@ -69,12 +71,15 @@ namespace QuantConnect.VisualStudioPlugin
 
             if (credentials.HasValue)
             {
+                Log.Info("Logged in successfully");
+                Log.Info("Storring credentials");
                 _credentialsManager.StoreCredentials(credentials.Value);
                 VsUtils.DisplayInStatusBar(serviceProvider, "Logged into QuantConnect");
                 return true;
             }
             else
             {
+                Log.Info("Log in cancelled");
                 return false;
             }
         }

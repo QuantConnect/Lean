@@ -65,6 +65,7 @@ namespace QuantConnect.VisualStudioPlugin
         /// <returns>true if successfully authenticated API, false otherwise</returns>
         public bool LogIn(Credentials credentials, string dataFolderPath)
         {
+            Log.Info($"Authenticating QuantConnect API with data folder {dataFolderPath}");
             try
             {
                 var api = new Api.Api();

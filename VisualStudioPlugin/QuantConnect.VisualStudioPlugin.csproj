@@ -55,6 +55,7 @@
     <Compile Include="AuthorizationManager.cs" />
     <Compile Include="Credentials.cs" />
     <Compile Include="CredentialsManager.cs" />
+    <Compile Include="Log.cs" />
     <Compile Include="LogInCommand.cs" />
     <Compile Include="LogInDialog.xaml.cs" />
     <Compile Include="NotAuthenticatedException.cs" />

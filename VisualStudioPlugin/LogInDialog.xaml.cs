@@ -38,21 +38,33 @@ namespace QuantConnect.VisualStudioPlugin
         /// <param name="solutionFolder">Path to the folder with opened solution</param>
         public LogInDialog(AuthorizationManager authorizationManager, Credentials? previousCredentials, string dataFolder)
         {
+            Log.Info($"Created log in dialog with data folder: {dataFolder}");
             InitializeComponent();
             _authorizationManager = authorizationManager;
             _dataFolder = dataFolder;
 
+            DisplayPreviousCredentials(previousCredentials);
+            StoreCurrentComponentsColors();
+        }
+
+        private void DisplayPreviousCredentials(Credentials? previousCredentials)
+        {
             if (previousCredentials.HasValue)
             {
                 userIdBox.Text = previousCredentials.Value.UserId;
                 accessTokenBox.Password = previousCredentials.Value.AccessToken;
             }
+        }
+
+        private void StoreCurrentComponentsColors()
+        {
             _userIdNormalBrush = userIdBox.BorderBrush;
             _accessTokenNormalBrush = userIdBox.BorderBrush;
         }
 
         private void LogIn_Click(object sender, RoutedEventArgs e)
         {
+            Log.Info("Log in button clicked");
             logInButton.IsEnabled = false;
             var userId = userIdBox.Text;
             var accessToken = accessTokenBox.Password;
@@ -60,6 +72,7 @@ namespace QuantConnect.VisualStudioPlugin
 
             if (_authorizationManager.LogIn(credentials, _dataFolder))
             {
+                Log.Info("Logged in successfully");
                 _credentials = new Credentials(userId, accessToken);
                 this.Close();
             }
