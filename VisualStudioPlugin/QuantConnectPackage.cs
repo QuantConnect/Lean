@@ -106,7 +106,7 @@ namespace QuantConnect.VisualStudioPlugin
         private string path = "C:\\";
 
         [Category("QuantConnect")]
-        [DisplayName("Path data")]
+        [DisplayName("Price data path")]
         [Description("Path to QuantConnect price data")]
         public string DataPath
         {
