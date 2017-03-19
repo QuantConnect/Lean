@@ -86,7 +86,7 @@ namespace QuantConnect.VisualStudioPlugin
 
         private LogInCommand CreateLogInCommand()
         {
-            return new LogInCommand(_package.DataPath);
+            return new LogInCommand();
         }
 
         private void RegisterSendForBacktesting(OleMenuCommandService commandService)
@@ -233,7 +233,7 @@ namespace QuantConnect.VisualStudioPlugin
 
         private void ExecuteOnProject(object sender, Action<int, string, List<Tuple<string, string>>> onProject)
         {
-            if (_logInCommand.DoLogIn(this.ServiceProvider, explicitLogin: false))
+            if (_logInCommand.DoLogIn(this.ServiceProvider, _package.DataPath, explicitLogin: false))
             {
                 var api = AuthorizationManager.GetInstance().GetApi();
                 var projects = api.ListProjects().Projects;

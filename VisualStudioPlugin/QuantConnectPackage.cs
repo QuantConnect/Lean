@@ -76,7 +76,6 @@ namespace QuantConnect.VisualStudioPlugin
             get
             {
                 OptionPageGrid page = (OptionPageGrid)GetDialogPage(typeof(OptionPageGrid));
-                page.LoadSettingsFromStorage();
                 return page.DataPath;
             }
         }
@@ -101,7 +100,7 @@ namespace QuantConnect.VisualStudioPlugin
     public class OptionPageGrid : DialogPage
     {
         // private string path = GetDefaultDataFolder();
-        private string path = "C:\\Users\\Ivan\\Development\\Lean\\Data";
+        private string path = "C:\\";
 
         [Category("QuantConnect")]
         [DisplayName("Path data")]
@@ -110,33 +109,6 @@ namespace QuantConnect.VisualStudioPlugin
         {
             get { return path; }
             set { path = value; }
-        }
-
-        private static string GetDefaultDataFolder()
-        {
-            string path = GetUserHomeDirectory();
-            string resultPath = Path.Combine(path, "Lean", "Data");
-            CreateIfDoesNotExist(resultPath);
-            return resultPath;
-        }
-
-        private static string GetUserHomeDirectory()
-        {
-            string path = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).FullName;
-            if (Environment.OSVersion.Version.Major >= 6)
-            {
-                path = Directory.GetParent(path).ToString();
-            }
-
-            return path;
-        }
-
-        private static void CreateIfDoesNotExist(string resultPath)
-        {
-            if (!Directory.Exists(resultPath))
-            {
-                Directory.CreateDirectory(resultPath);
-            }
         }
     }
 }

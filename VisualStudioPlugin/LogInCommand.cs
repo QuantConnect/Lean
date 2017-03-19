@@ -25,26 +25,23 @@ namespace QuantConnect.VisualStudioPlugin
 
         private CredentialsManager _credentialsManager = new CredentialsManager();
 
-        private string _dataFolderPath;
-
-        /// <summary>
-        /// Create LogInCommand
-        /// </summary>
-        /// <param name="solutionFolder">Folder for currently opened solution</param>
-        public LogInCommand(string dataFolderPath)
-        {
-            _dataFolderPath = dataFolderPath;
-        }
-
         /// <summary>
         /// Perform QuantConnect authentication
         /// </summary>
         /// <param name="serviceProvider">Visual Studio services provider</param>
         /// <param name="explicitLogin">User explicitly clicked Log In button</param>
         /// <returns>true if user logged into QuantConnect, false otherwise</returns>
-        public bool DoLogIn(IServiceProvider serviceProvider, bool explicitLogin)
+        public bool DoLogIn(IServiceProvider serviceProvider, string dataFolderPath, bool explicitLogin)
         {
             Log.Info("Logging in");
+
+            if (!PathUtils.DataFolderPathValid(dataFolderPath))
+            {
+                VsUtils.ShowMessageBox(serviceProvider, "Incorrect data folder", 
+                    $"Incorrect data folder path: {dataFolderPath}\nGo to Tools -> Settings -> QuantConnect to set it");
+                return false;
+            }
+
             var authorizationManager = AuthorizationManager.GetInstance();
             if (authorizationManager.IsLoggedIn())
             {
@@ -53,18 +50,18 @@ namespace QuantConnect.VisualStudioPlugin
             }
 
             var previousCredentials = _credentialsManager.GetLastCredential();
-            if (!explicitLogin && LoggedInWithLastStorredPassword(previousCredentials))
+            if (!explicitLogin && LoggedInWithLastStorredPassword(previousCredentials, dataFolderPath))
             {
                 Log.Info("Logged in with previously storred credentials");
                 return true;
             }
 
-            return LogInWithDialog(serviceProvider, previousCredentials);
+            return LogInWithDialog(serviceProvider, previousCredentials, dataFolderPath);
         }
 
-        private bool LogInWithDialog(IServiceProvider serviceProvider, Credentials? previousCredentials)
+        private bool LogInWithDialog(IServiceProvider serviceProvider, Credentials? previousCredentials, string dataFolderPath)
         {
-            var logInDialog = new LogInDialog(AuthorizationManager.GetInstance(), previousCredentials, _dataFolderPath);
+            var logInDialog = new LogInDialog(AuthorizationManager.GetInstance(), previousCredentials, dataFolderPath);
             VsUtils.DisplayDialogWindow(logInDialog);
 
             var credentials = logInDialog.GetCredentials();
@@ -84,7 +81,7 @@ namespace QuantConnect.VisualStudioPlugin
             }
         }
 
-        private bool LoggedInWithLastStorredPassword(Credentials? previousCredentials)
+        private bool LoggedInWithLastStorredPassword(Credentials? previousCredentials, string dataFolderPath)
         {
             if (!previousCredentials.HasValue)
             {
@@ -92,7 +89,7 @@ namespace QuantConnect.VisualStudioPlugin
             }
 
             var credentials = previousCredentials.Value;
-            return AuthorizationManager.GetInstance().LogIn(credentials, _dataFolderPath);
+            return AuthorizationManager.GetInstance().LogIn(credentials, dataFolderPath);
         }
 
         /// <summary>

@@ -80,7 +80,7 @@ namespace QuantConnect.VisualStudioPlugin
                     return false;
                 }
             }
-            catch (FormatException ex)
+            catch (FormatException)
             {
                 // User id is not a number
                 return false;

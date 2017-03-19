@@ -1,10 +1,7 @@
 ﻿using EnvDTE80;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QuantConnect.VisualStudioPlugin
 {
@@ -44,6 +41,12 @@ namespace QuantConnect.VisualStudioPlugin
             }
 
             return null;
+        }
+
+        public static bool DataFolderPathValid(string dataFolder)
+        {
+            var databasePath = Path.Combine(dataFolder, "market-hours", "market-hours-database.json");
+            return File.Exists(databasePath);
         }
     }
 }

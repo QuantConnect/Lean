@@ -48,15 +48,15 @@ namespace QuantConnect.VisualStudioPlugin
                 var projectAssociations = ParseAssociationFile();
                 FillProjectAssociations(projectAssociations);
             }
-            catch (XmlException ex)
+            catch (XmlException)
             {
                 // Failed to read projects associations. Continuing with none.
             }
-            catch (SerializationException ex)
+            catch (SerializationException)
             {
                 // Failed to parse project associations.
             }
-            catch (FileNotFoundException ex)
+            catch (FileNotFoundException)
             {
                 // Failed to parse project associations.
             }

@@ -60,7 +60,7 @@ namespace QuantConnect.VisualStudioPlugin
 
             _package = package as QuantConnectPackage;
             _dte2 = ServiceProvider.GetService(typeof(SDTE)) as DTE2;
-            _logInCommand = new LogInCommand(_package.DataPath);
+            _logInCommand = new LogInCommand();
 
             var commandService = this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (commandService != null)
@@ -132,7 +132,7 @@ namespace QuantConnect.VisualStudioPlugin
         /// <param name="e">Event args.</param>
         private void LogInCallback(object sender, EventArgs e)
         {
-            _logInCommand.DoLogIn(this.ServiceProvider, explicitLogin: true);
+            _logInCommand.DoLogIn(this.ServiceProvider, _package.DataPath, explicitLogin: true);
         }
 
         private void LogOutCallback(object sender, EventArgs e)
