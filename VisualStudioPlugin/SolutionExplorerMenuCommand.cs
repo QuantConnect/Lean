@@ -148,7 +148,7 @@ namespace QuantConnect.VisualStudioPlugin
         {
             ExecuteOnProject(sender, (selectedProjectId, selectedProjectName, files) =>
             {
-                var fileNames = files.Select(f => f.Item1).ToList();
+                var fileNames = files.Select(f => f.FileName).ToList();
 
                 VsUtils.DisplayInStatusBar(this.ServiceProvider, "Uploading files to server ...");
                 UploadFilesToServer(selectedProjectId, files);
@@ -186,7 +186,7 @@ namespace QuantConnect.VisualStudioPlugin
         {
             ExecuteOnProject(sender, (selectedProjectId, selectedProjectName, files) =>
             {
-                var fileNames = files.Select(f => f.Item1).ToList();
+                var fileNames = files.Select(f => f.FileName).ToList();
 
                 VsUtils.DisplayInStatusBar(this.ServiceProvider, "Uploading files to server ...");
                 UploadFilesToServer(selectedProjectId, files);
@@ -194,14 +194,14 @@ namespace QuantConnect.VisualStudioPlugin
             });
         }
 
-        private void UploadFilesToServer(int selectedProjectId, List<Tuple<string, string>> files)
+        private void UploadFilesToServer(int selectedProjectId, List<SelectedItem> files)
         {
             var api = AuthorizationManager.GetInstance().GetApi();
-            foreach (Tuple<string, string> file in files)
+            foreach (var file in files)
             {
-                api.DeleteProjectFile(selectedProjectId, file.Item1);
-                var fileContent = File.ReadAllText(file.Item2);
-                api.AddProjectFile(selectedProjectId, file.Item1, fileContent);
+                api.DeleteProjectFile(selectedProjectId, file.FileName);
+                var fileContent = File.ReadAllText(file.FilePath);
+                api.AddProjectFile(selectedProjectId, file.FileName, fileContent);
             }
         }
 
@@ -231,7 +231,7 @@ namespace QuantConnect.VisualStudioPlugin
             return backtestStatus;
         }
 
-        private void ExecuteOnProject(object sender, Action<int, string, List<Tuple<string, string>>> onProject)
+        private void ExecuteOnProject(object sender, Action<int, string, List<SelectedItem>> onProject)
         {
             if (_logInCommand.DoLogIn(this.ServiceProvider, _package.DataPath, explicitLogin: false))
             {
@@ -240,7 +240,7 @@ namespace QuantConnect.VisualStudioPlugin
                 var projectNames = projects.Select(p => Tuple.Create(p.ProjectId, p.Name)).ToList();
 
                 var files = GetSelectedFiles(sender);
-                var fileNames = files.Select(tuple => tuple.Item1).ToList();
+                var fileNames = files.Select(tuple => tuple.FileName).ToList();
                 var suggestedProjectName = ProjectFinder.ProjectNameForFiles(fileNames);
                 var projectNameDialog = new ProjectNameDialog(projectNames, suggestedProjectName);
                 VsUtils.DisplayDialogWindow(projectNameDialog);
@@ -253,7 +253,7 @@ namespace QuantConnect.VisualStudioPlugin
 
                     if (!selectedProjectId.HasValue)
                     {
-                        var newProjectLanguage = PathUtils.DetermineProjectLanguage(files.Select(f => f.Item2).ToList());
+                        var newProjectLanguage = PathUtils.DetermineProjectLanguage(files.Select(f => f.FilePath).ToList());
                         if (!newProjectLanguage.HasValue)
                         {
                             VsUtils.ShowMessageBox(this.ServiceProvider, "Failed to determine project language",
@@ -287,11 +287,11 @@ namespace QuantConnect.VisualStudioPlugin
             return projectResponse.Projects[0].ProjectId;
         }
 
-        private List<Tuple<string, string>> GetSelectedFiles(object sender)
+        private List<SelectedItem> GetSelectedFiles(object sender)
         {
             var myCommand = sender as OleMenuCommand;
 
-            var selectedFiles = new List<Tuple<string, string>>();
+            var selectedFiles = new List<SelectedItem>();
             var selectedItems = (object[])_dte2.ToolWindows.SolutionExplorer.SelectedItems;
             foreach (EnvDTE.UIHierarchyItem selectedUIHierarchyItem in selectedItems)
             {
@@ -299,11 +299,28 @@ namespace QuantConnect.VisualStudioPlugin
                 {
                     var item = selectedUIHierarchyItem.Object as EnvDTE.ProjectItem;
                     var filePath = item.Properties.Item("FullPath").Value.ToString();
-                    var fileAndItsPath = new Tuple<string, string>(item.Name, filePath);
-                    selectedFiles.Add(fileAndItsPath);
+                    var selectedItem = new SelectedItem
+                    {
+                        FileName = item.Name,
+                        FilePath = filePath
+                    };
+                    selectedFiles.Add(selectedItem);
                 }
             }
             return selectedFiles;
+        }
+    }
+
+    class SelectedItem
+    {
+        public string FileName
+        {
+            get; set;
+        }
+
+        public string FilePath
+        {
+            get; set;
         }
     }
 }
