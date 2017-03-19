@@ -96,6 +96,9 @@ namespace QuantConnect.VisualStudioPlugin
         #endregion
     }
 
+    /// <summary>
+    /// QuantConnect options
+    /// </summary>
     [Guid("92D0E244-D0DA-458C-88FB-9C0827052177")]
     public class OptionPageGrid : DialogPage
     {

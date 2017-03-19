@@ -16,7 +16,6 @@
 using Microsoft.VisualStudio.PlatformUI;
 using System.Collections.Generic;
 using System;
-using System.Linq;
 
 namespace QuantConnect.VisualStudioPlugin
 {
@@ -59,7 +58,7 @@ namespace QuantConnect.VisualStudioPlugin
             if (selectedItem != null)
             {
                 var projectId = selectedItem.ProjectId;
-                var projectName = selectedItem.DisplayText;
+                var projectName = selectedItem.ProjectName;
                 SaveSelectedProjectName(projectId, projectName);
                 Close();
             }
@@ -92,34 +91,49 @@ namespace QuantConnect.VisualStudioPlugin
             Close();
         }
 
+        /// <summary>
+        /// Check if user selected a valid project name
+        /// </summary>
+        /// <returns>True if a valid project name was selected, false otherwise</returns>
         public bool ProjectNameProvided()
         {
             return _projectNameProvided;
         }
 
+        /// <summary>
+        /// Get selected project name
+        /// </summary>
+        /// <returns>Selected project name</returns>
         public string GetSelectedProjectName()
         {
             return _selectedProjectName;
         }
 
+        /// <summary>
+        /// Get an id of a selected projected
+        /// </summary>
+        /// <returns>Id of a selected project if an existing project name was selected, null otherwise</returns>
         public int? GetSelectedProjectId()
         {
             return _selectedProjectId;
         }
 
+        /// <summary>
+        /// Item that represents project name and project id in a combo box
+        /// </summary>
         private class ComboboxItem {
             public int ProjectId { get; }
-            public string DisplayText { get; }
+            public string ProjectName { get; }
 
-            public ComboboxItem(int projectId, string displayText)
+            public ComboboxItem(int projectId, string projectName)
             {
                 ProjectId = projectId;
-                DisplayText = displayText;
+                ProjectName = projectName;
             }
 
             public override string ToString()
             {
-                return DisplayText;
+                return ProjectName;
             }
         }
     }

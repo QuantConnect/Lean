@@ -34,6 +34,9 @@ namespace QuantConnect.VisualStudioPlugin
             _accessToken = accessToken;
         }
 
+        /// <summary>
+        /// User id for QuantConnect API
+        /// </summary>
         public string UserId
         {
             get
@@ -42,6 +45,9 @@ namespace QuantConnect.VisualStudioPlugin
             }
         }
 
+        /// <summary>
+        /// Access token for QuantConnect API
+        /// </summary>
         public string AccessToken
         {
             get

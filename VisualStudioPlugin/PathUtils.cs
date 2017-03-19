@@ -21,14 +21,23 @@ namespace QuantConnect.VisualStudioPlugin
             _extensionsDictionary[".fs"] = Language.FSharp;
         }
 
+        /// <summary>
+        /// Get path to the currently opened solution folder
+        /// </summary>
+        /// <param name="dte2">VisualStudio DTE2 instance</param>
+        /// <returns>Path to the currently opened solution folder</returns>
         public static string GetSolutionFolder(DTE2 dte2)
         {
             return Path.GetDirectoryName(dte2.Solution.FullName);
         }
 
+        /// <summary>
+        /// Determine programming language from a set of selected files
+        /// </summary>
+        /// <param name="filePaths">List of files in a project</param>
+        /// <returns>Programming language if it can be determined, null otherwise</returns>
         public static Language? DetermineProjectLanguage(List<string> filePaths)
         {
-
             var extensionsSet = new HashSet<string>();
             foreach (var filePath in filePaths)
             {
@@ -43,9 +52,14 @@ namespace QuantConnect.VisualStudioPlugin
             return null;
         }
 
-        public static bool DataFolderPathValid(string dataFolder)
+        /// <summary>
+        /// Validate if a provided path is a valid data folder path
+        /// </summary>
+        /// <param name="dataFolderPath">Path to a data folder</param>
+        /// <returns>True if this is a valid data folder path, false otherwise</returns>
+        public static bool DataFolderPathValid(string dataFolderPath)
         {
-            var databasePath = Path.Combine(dataFolder, "market-hours", "market-hours-database.json");
+            var databasePath = Path.Combine(dataFolderPath, "market-hours", "market-hours-database.json");
             return File.Exists(databasePath);
         }
     }

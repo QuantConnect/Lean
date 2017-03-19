@@ -17,6 +17,9 @@ using Microsoft.VisualStudio.Shell;
 
 namespace QuantConnect.VisualStudioPlugin
 {
+    /// <summary>
+    /// Log helper to write messages into VisualStudio ActivityLog
+    /// </summary>
     static class Log
     {
         private const string QUANT_CONNECT = "QuantConnect";
