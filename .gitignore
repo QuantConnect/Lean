@@ -252,3 +252,6 @@ Charts/
 # NCrunch files
 *.ncrunchsolution
 *.ncrunchproject
+
+# QuantConnect plugin files
+QuantConnectProjects.xml
