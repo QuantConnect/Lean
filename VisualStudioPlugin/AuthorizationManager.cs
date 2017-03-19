@@ -22,6 +22,8 @@ namespace QuantConnect.VisualStudioPlugin
     /// </summary>
     public class AuthorizationManager
     {
+        private static readonly Log _log = new Log(typeof(AuthorizationManager));
+
         private static AuthorizationManager _authorizationManager = new AuthorizationManager();
         private Api.Api _api;
 
@@ -65,7 +67,7 @@ namespace QuantConnect.VisualStudioPlugin
         /// <returns>true if successfully authenticated API, false otherwise</returns>
         public bool LogIn(Credentials credentials, string dataFolderPath)
         {
-            Log.Info($"Authenticating QuantConnect API with data folder {dataFolderPath}");
+            _log.Info($"Authenticating QuantConnect API with data folder {dataFolderPath}");
             try
             {
                 var api = new Api.Api();

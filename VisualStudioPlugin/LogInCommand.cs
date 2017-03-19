@@ -22,6 +22,7 @@ namespace QuantConnect.VisualStudioPlugin
     /// </summary>
     class LogInCommand
     {
+        private static readonly Log _log = new Log(typeof(LogInCommand));
 
         private CredentialsManager _credentialsManager = new CredentialsManager();
 
@@ -33,7 +34,7 @@ namespace QuantConnect.VisualStudioPlugin
         /// <returns>true if user logged into QuantConnect, false otherwise</returns>
         public bool DoLogIn(IServiceProvider serviceProvider, string dataFolderPath, bool explicitLogin)
         {
-            Log.Info("Logging in");
+            _log.Info("Logging in");
 
             if (!PathUtils.DataFolderPathValid(dataFolderPath))
             {
@@ -45,14 +46,14 @@ namespace QuantConnect.VisualStudioPlugin
             var authorizationManager = AuthorizationManager.GetInstance();
             if (authorizationManager.IsLoggedIn())
             {
-                Log.Info("Already logged in");
+                _log.Info("Already logged in");
                 return true;
             }
 
             var previousCredentials = _credentialsManager.GetLastCredential();
             if (!explicitLogin && LoggedInWithLastStorredPassword(previousCredentials, dataFolderPath))
             {
-                Log.Info("Logged in with previously storred credentials");
+                _log.Info("Logged in with previously storred credentials");
                 return true;
             }
 
@@ -68,15 +69,15 @@ namespace QuantConnect.VisualStudioPlugin
 
             if (credentials.HasValue)
             {
-                Log.Info("Logged in successfully");
-                Log.Info("Storring credentials");
+                _log.Info("Logged in successfully");
+                _log.Info("Storring credentials");
                 _credentialsManager.StoreCredentials(credentials.Value);
                 VsUtils.DisplayInStatusBar(serviceProvider, "Logged into QuantConnect");
                 return true;
             }
             else
             {
-                Log.Info("Log in cancelled");
+                _log.Info("Log in cancelled");
                 return false;
             }
         }

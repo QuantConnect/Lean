@@ -14,19 +14,27 @@
 */
 
 using Microsoft.VisualStudio.Shell;
+using System;
 
 namespace QuantConnect.VisualStudioPlugin
 {
     /// <summary>
     /// Log helper to write messages into VisualStudio ActivityLog
     /// </summary>
-    static class Log
+    public class Log
     {
-        private const string QUANT_CONNECT = "QuantConnect";
+        private const string QUANT_CONNECT = "QuantConnect.";
 
-        public static void Info(string message)
+        private string _logSource;
+
+        public Log(Type type)
         {
-            ActivityLog.LogInformation(QUANT_CONNECT, message);
+            _logSource = QUANT_CONNECT + type.Name;
+        }
+
+        public void Info(string message)
+        {
+            ActivityLog.LogInformation(_logSource, message);
         }
     }
 }
