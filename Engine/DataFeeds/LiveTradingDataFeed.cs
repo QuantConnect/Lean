@@ -427,7 +427,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _customExchange.SetDataHandler(request.Configuration.Symbol, data =>
                     {
                         enqueable.Enqueue(data);
-                        if (subscription != null) subscription.RealtimePrice = data.Value;
+                        if (SubscriptionShouldUpdateRealTimePrice(subscription, timeZoneOffsetProvider)) subscription.RealtimePrice = data.Value;
                     });
                     enumerator = enqueable;
                 }
@@ -446,7 +446,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 if (tick.TickType == TickType.Quote)
                                 {
                                     quoteBarAggregator.ProcessData(tick);
-                                    if (subscription != null) subscription.RealtimePrice = data.Value;
+                                    if (SubscriptionShouldUpdateRealTimePrice(subscription, timeZoneOffsetProvider)) subscription.RealtimePrice = data.Value;
                                 }
                             });
                             enumerator = quoteBarAggregator;
@@ -461,7 +461,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 if (tick.TickType == TickType.Trade)
                                 {
                                     tradeBarAggregator.ProcessData(tick);
-                                    if (subscription != null) subscription.RealtimePrice = data.Value;
+                                    if (SubscriptionShouldUpdateRealTimePrice(subscription, timeZoneOffsetProvider)) subscription.RealtimePrice = data.Value;
                                 }
                             });
                             enumerator = tradeBarAggregator;
@@ -488,7 +488,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _exchange.SetDataHandler(request.Configuration.Symbol, data =>
                     {
                         tickEnumerator.Enqueue(data);
-                        if (subscription != null) subscription.RealtimePrice = data.Value;
+                        if (SubscriptionShouldUpdateRealTimePrice(subscription, timeZoneOffsetProvider)) subscription.RealtimePrice = data.Value;
                     });
                     enumerator = tickEnumerator;
                 }
@@ -654,6 +654,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var subscription = new Subscription(request.Universe, request.Security, config, enumerator, tzOffsetProvider, request.StartTimeUtc, request.EndTimeUtc, true);
 
             return subscription;
+        }
+
+                /// <summary>
+        /// Checks if the subscription should update the RealTimePrice
+        /// </summary>
+        /// <param name="subscription">The <see cref="Subscription"/></param>
+        /// <param name="timeZoneOffsetProvider">The <see cref="TimeZoneOffsetProvider"/> used to convert now into the timezone of the exchange</param>
+        /// <returns>True if the subscription is not null and the exchange is open</returns>
+        protected bool SubscriptionShouldUpdateRealTimePrice(Subscription subscription, TimeZoneOffsetProvider timeZoneOffsetProvider)
+        {
+            return subscription != null &&
+                   subscription.Security.Exchange.Hours.IsOpen(
+                       timeZoneOffsetProvider.ConvertFromUtc(_timeProvider.GetUtcNow()),
+                       subscription.Security.IsExtendedMarketHours);
         }
 
         /// <summary>
