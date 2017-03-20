@@ -85,6 +85,8 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="CompositeLogHandler.cs" />
+    <Compile Include="CompositeNLogHandler.cs" />
+    <Compile Include="NLogHandler.cs" />
     <Compile Include="QueueLogHandler.cs" />
     <Compile Include="FunctionalLogHandler.cs" />
     <Compile Include="ConsoleLogHandler.cs" />
@@ -100,7 +102,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="NLog.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="NLog.xsd">
       <SubType>Designer</SubType>
