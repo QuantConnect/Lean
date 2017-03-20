@@ -442,7 +442,9 @@ namespace QuantConnect.Brokerages.Oanda
                 yield break;
             }
 
+            var exchangeTimeZone = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Oanda, request.Symbol, request.SecurityType).TimeZone;
             var granularity = ToGranularity(request.Resolution);
+            var oandaSymbol = _symbolMapper.GetBrokerageSymbol(request.Symbol);
 
             // Oanda only has 5-second bars, we return these for Resolution.Second
             var period = request.Resolution == Resolution.Second ?
@@ -457,7 +459,6 @@ namespace QuantConnect.Brokerages.Oanda
                 var start = startDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ");
 
                 // request blocks of bars at the requested resolution with a starting date/time
-                var oandaSymbol = _symbolMapper.GetBrokerageSymbol(request.Symbol);
                 var candles = DownloadBars(oandaSymbol, start, MaxBarsPerRequest, granularity, ECandleFormat.bidask);
                 if (candles.Count == 0)
                     break;
@@ -469,7 +470,7 @@ namespace QuantConnect.Brokerages.Oanda
                         break;
 
                     var quoteBar = new QuoteBar(
-                        time,
+                        time.ConvertFromUtc(exchangeTimeZone),
                         request.Symbol,
                         new Bar(
                             Convert.ToDecimal(candle.openBid),
@@ -478,7 +479,7 @@ namespace QuantConnect.Brokerages.Oanda
                             Convert.ToDecimal(candle.closeBid)
                         ),
                         0,
-                            new Bar(
+                        new Bar(
                             Convert.ToDecimal(candle.openAsk),
                             Convert.ToDecimal(candle.highAsk),
                             Convert.ToDecimal(candle.lowAsk),

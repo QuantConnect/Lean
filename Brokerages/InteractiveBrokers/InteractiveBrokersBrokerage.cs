@@ -2020,7 +2020,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var contract = CreateContract(request.Symbol);
             var resolution = ConvertResolution(request.Resolution);
             var duration = ConvertResolutionToDuration(request.Resolution);
-            var useRTH = Convert.ToInt32(request.IncludeExtendedMarketHours);
+            var useRegularTradingHours = Convert.ToInt32(!request.IncludeExtendedMarketHours);
             var startTime = request.Resolution == Resolution.Daily ?
                             request.StartTimeUtc.ConvertFromUtc(request.ExchangeHours.TimeZone) :
                             request.StartTimeUtc.ConvertFromUtc(DateTimeZoneProviders.Bcl.GetSystemDefault());
@@ -2078,7 +2078,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Client.HistoricalDataEnd += clientOnHistoricalDataEnd;
 
                 Client.ClientSocket.reqHistoricalData(historicalTicker, contract, endTime.ToString("yyyyMMdd HH:mm:ss"),
-                    duration, resolution, dataType, useRTH, 1, new List<TagValue>());
+                    duration, resolution, dataType, useRegularTradingHours, 1, new List<TagValue>());
 
                 var waitResult = 0;
                 while (waitResult == 0)
