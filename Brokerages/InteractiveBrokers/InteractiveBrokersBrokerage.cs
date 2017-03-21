@@ -35,6 +35,7 @@ using Order = QuantConnect.Orders.Order;
 using IB = QuantConnect.Brokerages.InteractiveBrokers.Client;
 using IBApi;
 using NodaTime;
+using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
@@ -90,8 +91,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             { Market.CBOE, "CFE" }
         };
 
-        // data time zones by symbol (required and only used for futures)
-        private readonly Dictionary<string, DateTimeZone> _dataTimeZones = new Dictionary<string, DateTimeZone>(); 
+        // exchange time zones by symbol
+        private readonly Dictionary<Symbol, DateTimeZone> _symbolExchangeTimeZones = new Dictionary<Symbol, DateTimeZone>();
 
         /// <summary>
         /// Returns true if we're currently connected to the broker
@@ -1494,18 +1495,18 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
         }
 
-        private TradeBar ConvertTradeBar(Symbol symbol, Resolution resolution, IB.HistoricalDataEventArgs historyBar)
+        private static TradeBar ConvertTradeBar(Symbol symbol, Resolution resolution, IB.HistoricalDataEventArgs historyBar)
         {
             var time = resolution != Resolution.Daily ?
-                                DateTime.ParseExact(historyBar.Date, "yyyyMMdd  HH:mm:ss", CultureInfo.InvariantCulture) :
-                                DateTime.ParseExact(historyBar.Date, "yyyyMMdd", CultureInfo.InvariantCulture);
+                Time.UnixTimeStampToDateTime(Convert.ToDouble(historyBar.Date, CultureInfo.InvariantCulture)) :
+                DateTime.ParseExact(historyBar.Date, "yyyyMMdd", CultureInfo.InvariantCulture);
 
-            return new TradeBar(time, symbol, (decimal)historyBar.Open, (decimal)historyBar.High, (decimal)historyBar.Low, 
+            return new TradeBar(time, symbol, (decimal)historyBar.Open, (decimal)historyBar.High, (decimal)historyBar.Low,
                 (decimal)historyBar.Close, historyBar.Volume, resolution.ToTimeSpan());
         }
 
         /// <summary>
-        /// Creates a holding object from te UpdatePortfolioEventArgs
+        /// Creates a holding object from the UpdatePortfolioEventArgs
         /// </summary>
         private Holding CreateHolding(IB.UpdatePortfolioEventArgs e)
         {
@@ -1619,11 +1620,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return result;
         }
 
-        private DateTime GetBrokerTime()
-        {
-            return DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork).Add(_brokerTimeDiff);
-        }
-
         private void HandleBrokerTime(object sender, IB.CurrentTimeUtcEventArgs e)
         {
             // keep track of clock drift
@@ -1634,7 +1630,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
 
         /// <summary>
-        /// IDataQueueHandler interface implementaion 
+        /// IDataQueueHandler interface implementation 
         /// </summary>
         /// 
         public IEnumerable<BaseData> GetNextTicks()
@@ -1649,13 +1645,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             foreach (var tick in ticks)
             {
-                // if we have a cached data time zone for this symbol, perform the conversion 
-                DateTimeZone dataTimeZone;
-                if (_dataTimeZones.TryGetValue(tick.Symbol.Value, out dataTimeZone))
-                {
-                    tick.Time = tick.Time.ConvertTo(TimeZones.NewYork, dataTimeZone);
-                }
-
                 yield return tick;
 
                 if (_underlyings.ContainsKey(tick.Symbol))
@@ -1700,18 +1689,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                                 if (symbol.ID.SecurityType == SecurityType.Future && symbol.IsCanonical())
                                 {
                                     return;
-                                }
-
-                                // for futures, we need to cache data time zones per symbol, 
-                                // as we have multiple exchanges in different time zones
-                                if (symbol.ID.SecurityType == SecurityType.Future)
-                                {
-                                    if (!_dataTimeZones.ContainsKey(symbol.Value))
-                                    {
-                                        // read the data timezone from market-hours-database
-                                        var dataTimeZone = MarketHoursDatabase.FromDataFolder().GetDataTimeZone(symbol.ID.Market, symbol.Underlying, symbol.ID.SecurityType);
-                                        _dataTimeZones.Add(symbol.Value, dataTimeZone);
-                                    }
                                 }
 
                                 var id = GetNextTickerId();
@@ -1792,7 +1769,25 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 (securityType == SecurityType.Option && market == Market.USA) ||
                 (securityType == SecurityType.Future);
         }
-        
+
+        /// <summary>
+        /// Returns a timestamp for a tick converted to the exchange time zone
+        /// </summary>
+        private DateTime GetRealTimeTickTime(Symbol symbol)
+        {
+            var time = DateTime.UtcNow.Add(_brokerTimeDiff);
+
+            DateTimeZone exchangeTimeZone;
+            if (!_symbolExchangeTimeZones.TryGetValue(symbol, out exchangeTimeZone))
+            {
+                // read the exchange time zone from market-hours-database
+                exchangeTimeZone = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType).TimeZone;
+                _symbolExchangeTimeZones.Add(symbol, exchangeTimeZone);
+            }
+
+            return time.ConvertFromUtc(exchangeTimeZone);
+        }
+
         private void HandleTickPrice(object sender, IB.TickPriceEventArgs e)
         {
             Symbol symbol;
@@ -1805,13 +1800,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // in the event of a symbol change this will break since we'll be assigning the
             // new symbol to the permtick which won't be known by the algorithm
             tick.Symbol = symbol;
-            tick.Time = GetBrokerTime();
+            tick.Time = GetRealTimeTickTime(symbol);
             var securityType = symbol.ID.SecurityType;
-            if (securityType == SecurityType.Forex)
-            {
-                // forex exchange hours are specified in UTC-05
-                tick.Time = tick.Time.ConvertTo(TimeZones.NewYork, TimeZones.EasternStandard);
-            }
             tick.Value = price;
 
             if (e.Price <= 0 &&
@@ -1850,7 +1840,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             lock (_ticks)
                 if (tick.IsValid()) _ticks.Add(tick);
-
         }
 
         /// <summary>
@@ -1879,12 +1868,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             tick.Symbol = symbol;
             var securityType = symbol.ID.SecurityType;
             tick.Quantity = AdjustQuantity(securityType, e.Size);
-            tick.Time = GetBrokerTime();
-            if (securityType == SecurityType.Forex)
-            {
-                // forex exchange hours are specified in UTC-05
-                tick.Time = tick.Time.ConvertTo(TimeZones.NewYork, TimeZones.EasternStandard);
-            }
+            tick.Time = GetRealTimeTickTime(symbol);
 
             if (tick.Quantity == 0) return;
 
@@ -1944,7 +1928,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
             lock (_ticks)
                 if (tick.IsValid()) _ticks.Add(tick);
-
         }
 
         /// <summary>
@@ -1989,7 +1972,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             // returning results
             return filteredResults != null ? filteredResults.Select(x => MapSymbol(x)) : Enumerable.Empty<Symbol>();
-                    
         }
 
         /// <summary>
@@ -1998,16 +1980,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="request">The historical data request</param>
         /// <returns>An enumerable of bars covering the span specified in the request</returns>
         /// <remarks>For IB history limitations see https://www.interactivebrokers.com/en/software/api/apiguide/tables/historical_data_limitations.htm </remarks>
-        public override IEnumerable<BaseData> GetHistory(Data.HistoryRequest request)
+        public override IEnumerable<BaseData> GetHistory(HistoryRequest request)
         {
-            var sliceTimeZone = request.TimeZone;
-
-            const int timeOut = 60; // seconds timeout
-
-            var history = new List<TradeBar>();
-            var dataDownloading = new AutoResetEvent(false);
-            var dataDownloaded = new ManualResetEvent(false);
-
             // skipping universe and canonical symbols 
             if (!CanSubscribe(request.Symbol) ||
                 (request.Symbol.ID.SecurityType == SecurityType.Option && request.Symbol.IsCanonical()) ||
@@ -2020,33 +1994,92 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var contract = CreateContract(request.Symbol);
             var resolution = ConvertResolution(request.Resolution);
             var duration = ConvertResolutionToDuration(request.Resolution);
-            var useRegularTradingHours = Convert.ToInt32(!request.IncludeExtendedMarketHours);
-            var startTime = request.Resolution == Resolution.Daily ?
-                            request.StartTimeUtc.ConvertFromUtc(request.ExchangeHours.TimeZone) :
-                            request.StartTimeUtc.ConvertFromUtc(DateTimeZoneProviders.Bcl.GetSystemDefault());
-            var endTime = request.Resolution == Resolution.Daily ?
-                            request.EndTimeUtc.ConvertFromUtc(request.ExchangeHours.TimeZone) :
-                            request.EndTimeUtc.ConvertFromUtc(DateTimeZoneProviders.Bcl.GetSystemDefault());
-            var dataType = request.Symbol.ID.SecurityType == SecurityType.Forex? HistoricalDataType.BidAsk : HistoricalDataType.Trades;
+            var startTime = request.Resolution == Resolution.Daily ? request.StartTimeUtc.Date : request.StartTimeUtc;
+            var endTime = request.Resolution == Resolution.Daily ? request.EndTimeUtc.Date : request.EndTimeUtc;
 
-            Log.Trace("InteractiveBrokersBrokerage::GetHistory(): Submitting request: {0}({1}): {2} {3}->{4}", request.Symbol.Value, contract, request.Resolution, startTime, endTime);
+            Log.Trace("InteractiveBrokersBrokerage::GetHistory(): Submitting request: {0}({1}): {2} {3} UTC -> {4} UTC", 
+                request.Symbol.Value, contract, request.Resolution, startTime, endTime);
+
+            DateTimeZone exchangeTimeZone;
+            if (!_symbolExchangeTimeZones.TryGetValue(request.Symbol, out exchangeTimeZone))
+            {
+                // read the exchange time zone from market-hours-database
+                exchangeTimeZone = MarketHoursDatabase.FromDataFolder().GetExchangeHours(request.Symbol.ID.Market, request.Symbol, request.Symbol.SecurityType).TimeZone;
+                _symbolExchangeTimeZones.Add(request.Symbol, exchangeTimeZone);
+            }
+
+            IEnumerable<BaseData> history;
+            if (request.Symbol.SecurityType == SecurityType.Forex || request.Symbol.SecurityType == SecurityType.Cfd)
+            {
+                // Forex and CFD need two separate IB requests for Bid and Ask, 
+                // each pair of TradeBars will be joined into a single QuoteBar
+                var historyBid = GetHistory(request, contract, startTime, endTime, exchangeTimeZone, duration, resolution, HistoricalDataType.Bid);
+                var historyAsk = GetHistory(request, contract, startTime, endTime, exchangeTimeZone, duration, resolution, HistoricalDataType.Ask);
+
+                history = historyBid.Join(historyAsk, 
+                    bid => bid.Time, 
+                    ask => ask.Time, 
+                    (bid, ask) => new QuoteBar(
+                        bid.Time, 
+                        bid.Symbol, 
+                        new Bar(bid.Open, bid.High, bid.Low, bid.Close), 
+                        0, 
+                        new Bar(ask.Open, ask.High, ask.Low, ask.Close), 
+                        0, 
+                        bid.Period));
+            }
+            else
+            {
+                // other assets will have TradeBars
+                history = GetHistory(request, contract, startTime, endTime, exchangeTimeZone, duration, resolution, HistoricalDataType.Trades);
+            }
+
+            // cleaning the data before returning it back to user
+            var requestStartTime = request.StartTimeUtc.ConvertFromUtc(exchangeTimeZone);
+            var requestEndTime = request.EndTimeUtc.ConvertFromUtc(exchangeTimeZone);
+
+            foreach (var bar in history.Where(bar => bar.Time >= requestStartTime && bar.EndTime <= requestEndTime))
+            {
+                yield return bar;
+            }
+
+            Log.Trace("InteractiveBrokersBrokerage::GetHistory() Download completed");
+        }
+
+        private IEnumerable<TradeBar> GetHistory(
+            HistoryRequest request, 
+            Contract contract, 
+            DateTime startTime, 
+            DateTime endTime, 
+            DateTimeZone exchangeTimeZone, 
+            string duration, 
+            string resolution, 
+            string dataType)
+        {
+            const int timeOut = 60; // seconds timeout
+
+            var history = new List<TradeBar>();
+            var dataDownloading = new AutoResetEvent(false);
+            var dataDownloaded = new ManualResetEvent(false);
+
+            var useRegularTradingHours = Convert.ToInt32(!request.IncludeExtendedMarketHours);
 
             // making multiple requests if needed in order to download the history
             while (endTime >= startTime)
             {
                 var pacing = false;
                 var historyPiece = new List<TradeBar>();
-                int historicalTicker = GetNextTickerId();
+                var historicalTicker = GetNextTickerId();
 
                 EventHandler<IB.HistoricalDataEventArgs> clientOnHistoricalData = (sender, args) =>
                 {
                     if (args.RequestId == historicalTicker)
                     {
                         var bar = ConvertTradeBar(request.Symbol, request.Resolution, args);
-
-                        bar.Time = request.Resolution == Resolution.Daily ?
-                            bar.Time.ConvertTo(request.ExchangeHours.TimeZone, sliceTimeZone) :
-                            bar.Time.ConvertTo(DateTimeZoneProviders.Bcl.GetSystemDefault(), sliceTimeZone);
+                        if (request.Resolution != Resolution.Daily)
+                        {
+                            bar.Time = bar.Time.ConvertFromUtc(exchangeTimeZone);
+                        }
 
                         historyPiece.Add(bar);
                         dataDownloading.Set();
@@ -2060,6 +2093,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         dataDownloaded.Set();
                     }
                 };
+
                 EventHandler<IB.ErrorEventArgs> clientOnError = (sender, args) =>
                 {
                     if (args.Code == 162 && args.Message.Contains("pacing violation"))
@@ -2077,13 +2111,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Client.HistoricalData += clientOnHistoricalData;
                 Client.HistoricalDataEnd += clientOnHistoricalDataEnd;
 
-                Client.ClientSocket.reqHistoricalData(historicalTicker, contract, endTime.ToString("yyyyMMdd HH:mm:ss"),
-                    duration, resolution, dataType, useRegularTradingHours, 1, new List<TagValue>());
+                Client.ClientSocket.reqHistoricalData(historicalTicker, contract, endTime.ToString("yyyyMMdd HH:mm:ss UTC"),
+                    duration, resolution, dataType, useRegularTradingHours, 2, new List<TagValue>());
 
                 var waitResult = 0;
                 while (waitResult == 0)
                 {
-                    waitResult = WaitHandle.WaitAny(new WaitHandle[] { dataDownloading, dataDownloaded }, timeOut * 1000);
+                    waitResult = WaitHandle.WaitAny(new WaitHandle[] {dataDownloading, dataDownloaded}, timeOut*1000);
                 }
 
                 Client.Error -= clientOnError;
@@ -2098,11 +2132,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         Log.Trace("InteractiveBrokersBrokerage::GetHistory() Pacing violation. Paused for {0} secs.", timeOut);
                         continue;
                     }
-                    else
-                    {
-                        Log.Trace("InteractiveBrokersBrokerage::GetHistory() History request timed out ({0} sec)", timeOut);
-                        break;
-                    }
+
+                    Log.Trace("InteractiveBrokersBrokerage::GetHistory() History request timed out ({0} sec)", timeOut);
+                    break;
                 }
 
                 // if no data has been received this time, we exit
@@ -2119,22 +2151,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 endTime = filteredPiece.First().Time;
             }
 
-            // cleaning the data before returning it back to user
-            var sliceStartTime = request.StartTimeUtc.ConvertFromUtc(sliceTimeZone);
-            var sliceEndTime = request.EndTimeUtc.ConvertFromUtc(sliceTimeZone);
-            var filteredHistory =
-                        history
-                        .Where(bar => bar.Time >= sliceStartTime && bar.EndTime <= sliceEndTime)
-                        .GroupBy(bar => bar.Time)
-                        .Select(group => group.First())
-                        .OrderBy(x => x.Time);
-
-            foreach (var bar in filteredHistory)
-            {
-                yield return bar;
-            }
-
-            Log.Trace("InteractiveBrokersBrokerage::GetHistory() Download completed");
+            return history;
         }
 
         /// <summary>
