@@ -74,9 +74,11 @@ namespace QuantConnect.ToolBox
             {
                 case SecurityType.Base:
                 case SecurityType.Equity:
+                    return typeof (TradeBar);
+
                 case SecurityType.Cfd:
                 case SecurityType.Forex:
-                    return typeof (TradeBar);
+                    return typeof (QuoteBar );
 
                 case SecurityType.Option:
                     if (tickType == TickType.Trade) return typeof (TradeBar);
