@@ -275,7 +275,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Gets the Trade Builder to generate trades from executions
         /// </summary>
-        TradeBuilder TradeBuilder
+        ITradeBuilder TradeBuilder
         {
             get;
         }

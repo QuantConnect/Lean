@@ -238,7 +238,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Gets the Trade Builder to generate trades from executions
         /// </summary>
-        public TradeBuilder TradeBuilder
+        public ITradeBuilder TradeBuilder
         {
             get;
             private set;
@@ -1187,6 +1187,15 @@ namespace QuantConnect.Algorithm
                     _endDate = QuantConnect.Time.EndOfTime;
                 }
             }
+        }
+
+        /// <summary>
+        /// Set the <see cref="ITradeBuilder"/> implementation to generate trades from executions and market price updates
+        /// </summary>
+        public void SetTradeBuilder(ITradeBuilder tradeBuilder)
+        {
+            TradeBuilder = tradeBuilder;
+            TradeBuilder.SetLiveMode(LiveMode);
         }
 
         /// <summary>

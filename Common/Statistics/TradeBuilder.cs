@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Util;
 
@@ -24,7 +25,7 @@ namespace QuantConnect.Statistics
     /// <summary>
     /// The <see cref="TradeBuilder"/> class generates trades from executions and market price updates
     /// </summary>
-    public class TradeBuilder
+    public class TradeBuilder : ITradeBuilder
     {
         /// <summary>
         /// Helper class to manage pending trades and market price updates for a symbol
