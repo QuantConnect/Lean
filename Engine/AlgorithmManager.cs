@@ -480,7 +480,8 @@ namespace QuantConnect.Lean.Engine
                                 var algorithmTimeSpan = resolutionTimeSpan == TimeSpan.FromTicks(0)
                                     ? TimeSpan.FromTicks(0)
                                     : TimeSpan.FromSeconds(1);
-                                if (algorithm.UtcTime.RoundDown(algorithmTimeSpan) == dataPoint.EndTime.RoundUp(resolutionTimeSpan).ConvertToUtc(update.Target.ExchangeTimeZone))
+                                if (update.Target.Resolution == Resolution.Tick ||
+                                    algorithm.UtcTime.RoundDown(algorithmTimeSpan) == dataPoint.EndTime.RoundUp(resolutionTimeSpan).ConvertToUtc(update.Target.ExchangeTimeZone))
                                 {
                                     consolidator.Update(dataPoint);
                                 }
