@@ -78,7 +78,7 @@ namespace QuantConnect.ToolBox
 
                 case SecurityType.Cfd:
                 case SecurityType.Forex:
-                    return typeof (QuoteBar );
+                    return typeof (QuoteBar);
 
                 case SecurityType.Option:
                     if (tickType == TickType.Trade) return typeof (TradeBar);

@@ -358,18 +358,17 @@ namespace QuantConnect.Tests.Common.Util
                 // forex
                 new LeanDataLineTestParameters(new Tick {Time = time, Symbol = Symbols.EURUSD, BidPrice = 1, Value =1.5m, AskPrice = 2, TickType = TickType.Quote}, SecurityType.Forex, Resolution.Tick,
                     "34200000,1,2"),
-                new LeanDataLineTestParameters(new TradeBar(time, Symbols.EURUSD, 1, 2, 3, 4, 0, TimeSpan.FromMinutes(1)), SecurityType.Forex, Resolution.Minute,
-                    "34200000,1,2,3,4"),
-                new LeanDataLineTestParameters(new TradeBar(time.Date, Symbols.EURUSD, 1, 2, 3, 4, 0, TimeSpan.FromDays(1)), SecurityType.Forex, Resolution.Daily,
-                    "20160218 00:00,1,2,3,4"),
+                new LeanDataLineTestParameters(new QuoteBar(time, Symbols.EURUSD, new Bar(1, 2, 3, 4), 0, new Bar(1, 2, 3, 4), 0, TimeSpan.FromMinutes(1)), SecurityType.Forex, Resolution.Minute, "34200000,1,2,3,4,0,1,2,3,4,0"),
+                new LeanDataLineTestParameters(new QuoteBar(time.Date, Symbols.EURUSD, new Bar(1, 2, 3, 4), 0, new Bar(1, 2, 3, 4), 0, TimeSpan.FromDays(1)), SecurityType.Forex, Resolution.Daily,
+                    "20160218 00:00,1,2,3,4,0,1,2,3,4,0"),
 
                 // cfd
                 new LeanDataLineTestParameters(new Tick {Time = time, Symbol = Symbols.DE10YBEUR, BidPrice = 1, Value = 1.5m, AskPrice = 2, TickType = TickType.Quote}, SecurityType.Cfd, Resolution.Tick,
                     "34200000,1,2"),
-                new LeanDataLineTestParameters(new TradeBar(time, Symbols.DE10YBEUR, 1, 2, 3, 4, 0, TimeSpan.FromMinutes(1)), SecurityType.Cfd, Resolution.Minute,
-                    "34200000,1,2,3,4"),
-                new LeanDataLineTestParameters(new TradeBar(time.Date, Symbols.DE10YBEUR, 1, 2, 3, 4, 0, TimeSpan.FromDays(1)), SecurityType.Cfd, Resolution.Daily,
-                    "20160218 00:00,1,2,3,4"),
+                new LeanDataLineTestParameters(new QuoteBar(time, Symbols.DE10YBEUR, new Bar(1, 2, 3, 4), 0, new Bar(1, 2, 3, 4), 0, TimeSpan.FromMinutes(1)), SecurityType.Cfd, Resolution.Minute,
+                    "34200000,1,2,3,4,0,1,2,3,4,0"),
+                new LeanDataLineTestParameters(new QuoteBar(time.Date, Symbols.DE10YBEUR, new Bar(1, 2, 3, 4), 0, new Bar(1, 2, 3, 4), 0, TimeSpan.FromDays(1)), SecurityType.Cfd, Resolution.Daily,
+                    "20160218 00:00,1,2,3,4,0,1,2,3,4,0"),
             }.Select(x => new TestCaseData(x).SetName(x.Name)).ToArray();
         }
 

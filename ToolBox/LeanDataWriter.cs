@@ -32,12 +32,12 @@ namespace QuantConnect.ToolBox
     /// </summary>
     public class LeanDataWriter
     {
-        protected readonly Symbol Symbol;
-        protected readonly string Market;
-        protected readonly string DataDirectory;
-        protected readonly TickType DataType;
-        protected readonly Resolution Resolution;
-        protected readonly SecurityType SecurityType;
+        private readonly Symbol _symbol;
+        private readonly string _market;
+        private readonly string _dataDirectory;
+        private readonly TickType _dataType;
+        private readonly Resolution _resolution;
+        private readonly SecurityType _securityType;
 
         /// <summary>
         /// Create a new lean data writer to this base data directory.
@@ -48,23 +48,22 @@ namespace QuantConnect.ToolBox
         /// <param name="dataType">Write the data to trade files</param>
         public LeanDataWriter(Resolution resolution, Symbol symbol, string dataDirectory, TickType dataType = TickType.Trade)
         {
-            SecurityType = symbol.ID.SecurityType;
-            DataDirectory = dataDirectory;
-            Resolution = resolution;
-            Symbol = symbol;
-            Market = symbol.ID.Market.ToLower();
-            DataType = dataType;
-
+            _securityType = symbol.ID.SecurityType;
+            _dataDirectory = dataDirectory;
+            _resolution = resolution;
+            _symbol = symbol;
+            _market = symbol.ID.Market.ToLower();
+            _dataType = dataType;
             // All fx data is quote data.
-            if (SecurityType == SecurityType.Forex || SecurityType == SecurityType.Cfd)
+            if (_securityType == SecurityType.Forex || _securityType == SecurityType.Cfd)
             {
-                DataType = TickType.Quote;
+                _dataType = TickType.Quote;
             }
 
             // Can only process Fx and equity for now
-            if (SecurityType != SecurityType.Equity && SecurityType != SecurityType.Forex && SecurityType != SecurityType.Cfd)
+            if (_securityType != SecurityType.Equity && _securityType != SecurityType.Forex && _securityType != SecurityType.Cfd)
             {
-                throw new Exception("Sorry this security type is not yet supported by the LEAN data writer: " + SecurityType);
+                throw new Exception("Sorry this security type is not yet supported by the LEAN data writer: " + _securityType);
             }
         }
 
@@ -74,7 +73,7 @@ namespace QuantConnect.ToolBox
         /// <param name="source">IEnumerable source of the data: sorted from oldest to newest.</param>
         public void Write(IEnumerable<BaseData> source)
         {
-            switch (Resolution)
+            switch (_resolution)
             {
                 case Resolution.Daily:
                 case Resolution.Hour:
@@ -110,7 +109,7 @@ namespace QuantConnect.ToolBox
                 if (lastTime != DateTime.MinValue && data.Time.Date > lastTime.Date)
                 {
                     // Write and clear the file contents
-                    var outputFile = GetZipOutputFileName(DataDirectory, lastTime);
+                    var outputFile = GetZipOutputFileName(_dataDirectory, lastTime);
                     WriteFile(outputFile, sb.ToString(), lastTime);
                     sb.Clear();
                 }
@@ -118,13 +117,13 @@ namespace QuantConnect.ToolBox
                 lastTime = data.Time;
 
                 // Build the line and append it to the file
-                sb.Append(LeanData.GenerateLine(data, SecurityType, Resolution) + Environment.NewLine);
+                sb.Append(LeanData.GenerateLine(data, _securityType, _resolution) + Environment.NewLine);
             }
 
             // Write the last file
             if (sb.Length > 0)
             {
-                var outputFile = GetZipOutputFileName(DataDirectory, lastTime);
+                var outputFile = GetZipOutputFileName(_dataDirectory, lastTime);
                 WriteFile(outputFile, sb.ToString(), lastTime);
             }
         }
@@ -140,10 +139,10 @@ namespace QuantConnect.ToolBox
             var lastTime = new DateTime();
 
             // Determine file path
-            var outputFile = GetZipOutputFileName(DataDirectory, lastTime);
+            var outputFile = GetZipOutputFileName(_dataDirectory, lastTime);
 
             // Load new data rows into a SortedDictionary for easy merge/update
-            var newRows = new SortedDictionary<DateTime, string>(source.ToDictionary(x => x.Time, x => LeanData.GenerateLine(x, SecurityType, Resolution)));
+            var newRows = new SortedDictionary<DateTime, string>(source.ToDictionary(x => x.Time, x => LeanData.GenerateLine(x, _securityType, _resolution)));
             SortedDictionary<DateTime, string> rows;
 
             if (File.Exists(outputFile))
@@ -205,22 +204,32 @@ namespace QuantConnect.ToolBox
         }
 
         /// <summary>
-        /// Write this file to disk
+        /// Write this file to disk.
         /// </summary>
-        protected virtual void WriteFile(string fileName, string data, DateTime time)
+        /// <param name="filePath">The full path to the new file</param>
+        /// <param name="data">The data to write as a string</param>
+        /// <param name="date">The date the data represents</param>
+        private void WriteFile(string filePath, string data, DateTime date)
         {
+            var tempFilePath = filePath + ".tmp";
+
             data = data.TrimEnd();
-            if (File.Exists(fileName))
+            if (File.Exists(filePath))
             {
-                File.Delete(fileName);
-                Log.Trace("LeanDataWriter.Write(): Existing deleted: " + fileName);
+                File.Delete(filePath);
+                Log.Trace("LeanDataWriter.Write(): Existing deleted: " + filePath);
             }
+
             // Create the directory if it doesnt exist
-            Directory.CreateDirectory(Path.GetDirectoryName(fileName));
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
 
             // Write out this data string to a zip file
-            Compression.Zip(data, fileName, LeanData.GenerateZipEntryName(Symbol.Value, SecurityType, time, Resolution, DataType));
-            Log.Trace("LeanDataWriter.Write(): Created: " + fileName);
+            Compression.Zip(data, tempFilePath, LeanData.GenerateZipEntryName(_symbol.Value, _securityType, date, _resolution, _dataType));
+
+            // Move temp file to the final destination with the appropriate name
+            File.Move(tempFilePath, filePath);
+
+            Log.Trace("LeanDataWriter.Write(): Created: " + filePath);
         }
 
         /// <summary>
@@ -229,9 +238,9 @@ namespace QuantConnect.ToolBox
         /// <param name="baseDirectory">Base output directory for the zip file</param>
         /// <param name="time">Date/time for the data we're writing</param>
         /// <returns>The full path to the output zip file</returns>
-        protected string GetZipOutputFileName(string baseDirectory, DateTime time)
+        private string GetZipOutputFileName(string baseDirectory, DateTime time)
         {
-            return LeanData.GenerateZipFilePath(baseDirectory, Symbol.Value, SecurityType, Market, time, Resolution);
+            return LeanData.GenerateZipFilePath(baseDirectory, _symbol.Value, _securityType, _market, time, _resolution);
         }
 
     }
