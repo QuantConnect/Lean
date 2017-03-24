@@ -35,32 +35,17 @@ namespace QuantConnect.Brokerages.Oanda.Framework
         {
             switch (environment)
             {
-                case Environment.Sandbox:
-                    switch (server)
-                    {
-                        case Server.Account:
-                            return "http://api-sandbox.oanda.com/v1/";
-                        case Server.Rates:
-                            return "http://api-sandbox.oanda.com/v1/";
-                        case Server.StreamingRates:
-                            return "http://stream-sandbox.oanda.com/v1/";
-                        case Server.StreamingEvents:
-                            return "http://stream-sandbox.oanda.com/v1/";
-                        default:
-                            goto EnvironmentServerConfigurationNotFound;
-                    }
-
                 case Environment.Practice:
                     switch (server)
                     {
                         case Server.Account:
-                            return "https://api-fxpractice.oanda.com/v1/";
                         case Server.Rates:
                             return "https://api-fxpractice.oanda.com/v1/";
+
                         case Server.StreamingRates:
-                            return "https://stream-fxpractice.oanda.com/v1/";
                         case Server.StreamingEvents:
                             return "https://stream-fxpractice.oanda.com/v1/";
+
                         default:
                             goto EnvironmentServerConfigurationNotFound;
                     }
@@ -69,20 +54,20 @@ namespace QuantConnect.Brokerages.Oanda.Framework
                     switch (server)
                     {
                         case Server.Account:
-                            return "https://api-fxtrade.oanda.com/v1/";
                         case Server.Rates:
                             return "https://api-fxtrade.oanda.com/v1/";
+
                         case Server.StreamingRates:
-                            return "https://stream-fxtrade.oanda.com/v1/";
                         case Server.StreamingEvents:
                             return "https://stream-fxtrade.oanda.com/v1/";
+
                         default:
                             goto EnvironmentServerConfigurationNotFound;
                     }
             }
 
             EnvironmentServerConfigurationNotFound:
-                throw new ArgumentException(string.Concat("Unexpected or unexpected Oanda Environment: ", environment , "; Server: ", server));
+                throw new ArgumentException(string.Concat("Unexpected Oanda Environment: ", environment, "; Server: ", server));
         }
     }
 }
