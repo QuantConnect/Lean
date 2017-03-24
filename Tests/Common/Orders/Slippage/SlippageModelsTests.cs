@@ -19,6 +19,7 @@ using QuantConnect.Orders;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
+using QuantConnect.Securities.Forex;
 using System;
 
 namespace QuantConnect.Tests.Common.Orders.Slippage
@@ -28,6 +29,8 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
     {
         private Order _equityBuyOrder;
         private Equity _equity;
+        private Order _forexBuyOrder;
+        private Forex _forex;
 
         [SetUp]
         public void Initialize()
@@ -41,6 +44,17 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
             _equity.SetMarketPrice(new TradeBar(DateTime.Now, Symbols.SPY, 100m, 100m, 100m, 100m, 1));
 
             _equityBuyOrder = new MarketOrder(Symbols.SPY, 1, DateTime.Now);
+
+
+            _forex = new Forex(
+                Symbols.EURUSD,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                new Cash(CashBook.AccountCurrency, 0, 1m),
+                SymbolProperties.GetDefault(CashBook.AccountCurrency));
+
+            _forex.SetMarketPrice(new TradeBar(DateTime.Now, Symbols.EURUSD, 100m, 100m, 100m, 100m, 0));
+
+            _forexBuyOrder = new MarketOrder(Symbols.EURUSD, 1000, DateTime.Now);
         }
 
         [Test]
@@ -103,6 +117,17 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
             
             var expected = _equity.Price * priceImpact * volumeShare * volumeShare;
             var actual = model.GetSlippageApproximation(_equity, _equityBuyOrder);
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void VolumeShareSlippageModel_ForexTest()
+        {
+            var model = new VolumeShareSlippageModel();
+
+            // Since FX/CFD often have zero volume, the model returns zero slippage
+            var expected = 0;
+            var actual = model.GetSlippageApproximation(_forex, _forexBuyOrder);
             Assert.AreEqual(expected, actual);
         }
     }

@@ -65,12 +65,21 @@ namespace QuantConnect.Orders.Slippage
                     throw new Exception("VolumeShareSlippageModel.GetSlippageApproximation: Cannot use this model with market data type " + lastData.GetType());
             }
 
-            // If volume is zero or negative, we use the maximum slippage 
-            // percentage since the impact of any quantity is infinite  
+            // If volume is zero or negative, we use the maximum slippage percentage since the impact of any quantity is infinite
+            // In FX/CFD case, we issue a warning and return zero slippage
             if (barVolume <= 0)
             {
+                var securityType = asset.Symbol.ID.SecurityType;
+                if (securityType == SecurityType.Cfd || securityType == SecurityType.Forex)
+                {
+                    Log.Error("VolumeShareSlippageModel.GetSlippageApproximation: " +
+                        securityType + " security type often does not report volume. " +
+                        "If you intend to model slippage beyond the spread, please consider another model.");
+                    return 0;
+                }
+
                 Log.Error(string.Format("VolumeShareSlippageModel.GetSlippageApproximation: " +
-                    "Bar volume cannot be zero or negative. Volume: {0}." +
+                    "Bar volume cannot be zero or negative. Volume: {0}. " +
                     "Using maximum slippage percentage of {1}", barVolume, slippagePercent));
             }
             else
