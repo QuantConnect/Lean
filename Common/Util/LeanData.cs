@@ -582,7 +582,7 @@ namespace QuantConnect.Util
             }
             if (type == typeof(ZipEntryName))
             {
-                return TickType.Trade;
+                return TickType.Quote;
             }
             if (type == typeof(Tick))
             {
