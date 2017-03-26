@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Backtesting;
@@ -29,6 +30,7 @@ using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Lean.Engine.Setup
 {
@@ -40,7 +42,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <summary>
         /// Error which occured during setup may appear here.
         /// </summary>
-        public List<string> Errors { get;  set; }
+        public List<string> Errors { get; set; }
 
         /// <summary>
         /// Maximum runtime of the strategy. (Set to 10 years for local backtesting).
@@ -75,13 +77,12 @@ namespace QuantConnect.Lean.Engine.Setup
         }
 
         /// <summary>
-        /// Creates a new algorithm instance. Checks configuration for a specific type name, and if present will
-        /// force it to find that one
+        /// Create a new instance of an algorithm from a physical dll path.
         /// </summary>
-        /// <param name="assemblyPath">Physical path of the algorithm dll.</param>
-        /// <param name="language">Language of the assembly.</param>
-        /// <returns>Algorithm instance</returns>
-        public IAlgorithm CreateAlgorithmInstance(string assemblyPath, Language language)
+        /// <param name="assemblyPath">The path to the assembly's location</param>
+        /// <param name="algorithmNodePacket">Details of the task required</param>
+        /// <returns>A new instance of IAlgorithm, or throws an exception if there was an error</returns>
+        public IAlgorithm CreateAlgorithmInstance(AlgorithmNodePacket algorithmNodePacket, string assemblyPath)
         {
             string error;
             IAlgorithm algorithm;
@@ -89,8 +90,8 @@ namespace QuantConnect.Lean.Engine.Setup
 
             // don't force load times to be fast here since we're running locally, this allows us to debug
             // and step through some code that may take us longer than the default 10 seconds
-            var loader = new Loader(language, TimeSpan.FromHours(1), names => names.SingleOrDefault(name => MatchTypeName(name, algorithmName)));
-            var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, out algorithm, out error);
+            var loader = new Loader(algorithmNodePacket.Language, TimeSpan.FromHours(1), names => names.SingleOrDefault(name => MatchTypeName(name, algorithmName)));
+            var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, algorithmNodePacket.RamAllocation, out algorithm, out error);
             if (!complete) throw new Exception(error + ": try re-building algorithm.");
 
             return algorithm;
@@ -105,7 +106,9 @@ namespace QuantConnect.Lean.Engine.Setup
         public IBrokerage CreateBrokerage(AlgorithmNodePacket algorithmNodePacket, IAlgorithm uninitializedAlgorithm, out IBrokerageFactory factory)
         {
             factory = new BacktestingBrokerageFactory();
-            return new BacktestingBrokerage(uninitializedAlgorithm);
+            var optionMarketSimulation = new BasicOptionAssignmentSimulation();
+
+            return new BacktestingBrokerage(uninitializedAlgorithm, optionMarketSimulation);
         }
 
         /// <summary>
@@ -129,11 +132,11 @@ namespace QuantConnect.Lean.Engine.Setup
                 if (baseJob.Type == PacketType.BacktestNode)
                 {
                     var backtestJob = baseJob as BacktestNodePacket;
-                    
                     algorithm.SetMaximumOrders(int.MaxValue);
                     // set our parameters
                     algorithm.SetParameters(baseJob.Parameters);
                     algorithm.SetLiveMode(false);
+                    algorithm.SetAvailableDataTypes(GetConfiguredDataFeeds());
                     //Set the source impl for the event scheduling
                     algorithm.Schedule.SetEventSchedule(realTimeHandler);
                     //Setup Base Algorithm:
@@ -148,7 +151,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     backtestJob.Type = PacketType.BacktestNode;
                     backtestJob.UserId = baseJob.UserId;
                     backtestJob.Channel = baseJob.Channel;
-       
+
                     //Backtest Specific Parameters:
                     StartingDate = backtestJob.PeriodStart;
                     StartingPortfolioValue = algorithm.Portfolio.Cash;
@@ -176,6 +179,23 @@ namespace QuantConnect.Lean.Engine.Setup
         }
 
         /// <summary>
+        /// Get the available data feeds from config.json,
+        /// If none available, throw an error
+        /// </summary>
+        private static Dictionary<SecurityType, List<TickType>> GetConfiguredDataFeeds()
+        {
+            var dataFeedsConfigString = Config.Get("security-data-feeds");
+
+            Dictionary<SecurityType, List<TickType>> dataFeeds = new Dictionary<SecurityType, List<TickType>>();
+            if (dataFeedsConfigString != string.Empty)
+            {
+                dataFeeds = JsonConvert.DeserializeObject<Dictionary<SecurityType, List<TickType>>>(dataFeedsConfigString);
+            }
+
+            return dataFeeds;
+        }
+
+        /// <summary>
         /// Matches type names as namespace qualified or just the name
         /// If expectedTypeName is null or empty, this will always return true
         /// </summary>
@@ -198,7 +218,6 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-            // nothing to clean up
         }
 
     } // End Result Handler Thread:

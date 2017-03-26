@@ -99,11 +99,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         var clone = subscription.Current.Clone(subscription.Current.IsFillForward);
                         clone.Time = clone.Time.ExchangeRoundDown(configuration.Increment, subscription.Security.Exchange.Hours, configuration.ExtendedMarketHours);
 
-                        // do not add fill-forward data if rounded down to the previous day
-                        if (!clone.IsFillForward || clone.Time.Date == subscription.Current.Time.Date)
-                        {
-                            packet.Add(clone);
-                        }
+                        packet.Add(clone);
 
                         if (!subscription.MoveNext())
                         {
@@ -130,6 +126,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 var current = subscription.Current as OptionChainUniverseDataCollection;
                                 var underlying = current != null ? current.Underlying : null;
                                 collection = new OptionChainUniverseDataCollection(frontier, subscription.Configuration.Symbol, packetData, underlying);
+                            }
+                            else if (packetBaseDataCollection is FuturesChainUniverseDataCollection)
+                            {
+                                var current = subscription.Current as FuturesChainUniverseDataCollection;
+                                collection = new FuturesChainUniverseDataCollection(frontier, subscription.Configuration.Symbol, packetData);
                             }
                             else
                             {

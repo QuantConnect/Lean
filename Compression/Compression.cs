@@ -30,8 +30,11 @@ using ZipEntry = ICSharpCode.SharpZipLib.Zip.ZipEntry;
 using ZipFile = Ionic.Zip.ZipFile;
 using ZipInputStream = ICSharpCode.SharpZipLib.Zip.ZipInputStream;
 using ZipOutputStream = ICSharpCode.SharpZipLib.Zip.ZipOutputStream;
+using System.Collections.Concurrent;
+using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 
-namespace QuantConnect 
+namespace QuantConnect
 {
     /// <summary>
     /// Compression class manages the opening and extraction of compressed files (zip, tar, tar.gz).
@@ -499,7 +502,7 @@ namespace QuantConnect
                         var entry = zip.FirstOrDefault(x => zipEntryName == null || string.Compare(x.FileName, zipEntryName, StringComparison.OrdinalIgnoreCase) == 0);
                         if (entry == null)
                         {
-                            Log.Error("Compression.Unzip(): Unable to locate zip entry with name: " + zipEntryName + " in file: " + filename);
+                            // Unable to locate zip entry 
                             return null;
                         }
 
@@ -626,7 +629,7 @@ namespace QuantConnect
         /// <summary>
         /// Unzip a local file and return its contents via streamreader:
         /// </summary>
-        public static StreamReader UnzipStream(Stream zipstream)
+        public static StreamReader UnzipStreamToStreamReader(Stream zipstream)
         {
             StreamReader reader = null;
             try
@@ -655,6 +658,31 @@ namespace QuantConnect
             }
 
             return reader;
+        } // End UnZip
+
+        /// <summary>
+        /// Unzip a stream that represents a zip file and return the first entry as a stream
+        /// </summary>
+        public static Stream UnzipStream(Stream zipstream, out ZipFile zipFile)
+        {
+            zipFile = ZipFile.Read(zipstream);
+
+            try
+            {
+                //Read the file entry into buffer:
+                var entry = zipFile.Entries.FirstOrDefault();
+
+                if (entry != null)
+                {
+                    return entry.OpenReader();
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+
+            return null;
         } // End UnZip
 
         /// <summary>

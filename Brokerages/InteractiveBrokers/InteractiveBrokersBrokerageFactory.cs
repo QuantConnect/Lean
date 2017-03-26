@@ -103,6 +103,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             var ib = new InteractiveBrokersBrokerage(algorithm.Transactions, algorithm.Portfolio, account, host, port, agentDescription);
             Composer.Instance.AddPart<IDataQueueHandler>(ib);
+
             return ib;
         }
 

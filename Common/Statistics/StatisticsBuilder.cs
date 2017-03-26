@@ -86,12 +86,22 @@ namespace QuantConnect.Statistics
             var periodProfitLoss = new SortedDictionary<DateTime, decimal>(profitLoss.Where(x => x.Key >= fromDate && x.Key.Date < toDate.AddDays(1)).ToDictionary(x => x.Key, y => y.Value));
             var periodEquity = new SortedDictionary<DateTime, decimal>(equity.Where(x => x.Key.Date >= fromDate && x.Key.Date < toDate.AddDays(1)).ToDictionary(x => x.Key, y => y.Value));
 
-            var listPerformance = new List<double>();
+            var benchmark = ChartPointToDictionary(pointsBenchmark, fromDate, toDate);
             var performance = ChartPointToDictionary(pointsPerformance, fromDate, toDate);
+
+            // we need to have the same dates in the performance and benchmark dictionaries,
+            // so we add missing dates with zero value
+            var missingPerformanceDates = benchmark.Keys.Where(x => !performance.ContainsKey(x));
+            foreach (var date in missingPerformanceDates)
+            {
+                performance.Add(date, 0m);
+            }
+
+            var listPerformance = new List<double>();
             performance.Values.ToList().ForEach(i => listPerformance.Add((double)(i / 100)));
 
-            var benchmark = ChartPointToDictionary(pointsBenchmark, fromDate, toDate);
             var listBenchmark = CreateBenchmarkDifferences(benchmark, periodEquity);
+
             EnsureSameLength(listPerformance, listBenchmark);
 
             var runningCapital = equity.Count == periodEquity.Count ? startingCapital : periodEquity.Values.FirstOrDefault();

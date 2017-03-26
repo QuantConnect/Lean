@@ -532,11 +532,29 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Message we'd like shown in console.</param>
         public void DebugMessage(string message) 
         {
-            if (Messages.Count > 500) return;
             Messages.Enqueue(new DebugPacket(_job.ProjectId, _backtestId, _compileId, message));
 
             //Save last message sent:
-            _log.Add(_algorithm.Time.ToString(DateFormat.UI) + " " + message);
+            if (_algorithm != null)
+            {
+                _log.Add(_algorithm.Time.ToString(DateFormat.UI) + " " + message);
+            }
+            _debugMessage = message;
+        }
+
+        /// <summary>
+        /// Send a system debug message back to the browser console.
+        /// </summary>
+        /// <param name="message">Message we'd like shown in console.</param>
+        public void SystemDebugMessage(string message)
+        {
+            Messages.Enqueue(new SystemDebugPacket(_job.ProjectId, _backtestId, _compileId, message));
+
+            //Save last message sent:
+            if (_algorithm != null)
+            {
+                _log.Add(_algorithm.Time.ToString(DateFormat.UI) + " " + message);
+            }
             _debugMessage = message;
         }
 
@@ -546,9 +564,12 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Message we'd in the log.</param>
         public void LogMessage(string message)
         {
-            Messages.Enqueue(new LogPacket(_backtestId, message)); 
+            Messages.Enqueue(new LogPacket(_backtestId, message));
 
-            _log.Add(_algorithm.Time.ToString(DateFormat.UI) + " " + message);
+            if (_algorithm != null)
+            {
+                _log.Add(_algorithm.Time.ToString(DateFormat.UI) + " " + message);
+            }
         }
 
         /// <summary>
@@ -584,7 +605,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void RuntimeError(string message, string stacktrace = "") 
         {
             PurgeQueue();
-            Messages.Enqueue(new RuntimeErrorPacket(_backtestId, message, stacktrace));
+            Messages.Enqueue(new RuntimeErrorPacket(_job.UserId, _backtestId, message, stacktrace));
             _errorMessage = message;
         }
 
@@ -603,19 +624,26 @@ namespace QuantConnect.Lean.Engine.Results
             lock (_chartLock)
             {
                 //Add a copy locally:
-                if (!Charts.ContainsKey(chartName))
+                Chart chart;
+                if (!Charts.TryGetValue(chartName, out chart))
                 {
-                    Charts.AddOrUpdate(chartName, new Chart(chartName));
+                    chart = new Chart(chartName);
+                    Charts.AddOrUpdate(chartName, chart);
                 }
 
                 //Add the sample to our chart:
-                if (!Charts[chartName].Series.ContainsKey(seriesName)) 
+                Series series;
+                if (!chart.Series.TryGetValue(seriesName, out series))
                 {
-                    Charts[chartName].Series.Add(seriesName, new Series(seriesName, seriesType, seriesIndex, unit));
+                    series = new Series(seriesName, seriesType, seriesIndex, unit);
+                    chart.Series.Add(seriesName, series);
                 }
 
                 //Add our value:
-                Charts[chartName].Series[seriesName].Values.Add(new ChartPoint(time, value));
+                if (series.Values.Count == 0 || time > Time.UnixTimeStampToDateTime(series.Values[series.Values.Count - 1].x))
+                {
+                    series.Values.Add(new ChartPoint(time, value));
+                }
             }
         }
 
@@ -695,8 +723,12 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         public void Exit() 
         {
-            var logLocation = ProcessLogMessages(_job);
-            DebugMessage("Your log was successfully created and can be retrieved from: " + logLocation);
+            // Only process the logs once
+            if (!_exitTriggered)
+            {
+                var logLocation = ProcessLogMessages(_job);
+                SystemDebugMessage("Your log was successfully created and can be retrieved from: " + logLocation);
+            }
 
             //Set exit flag, and wait for the messages to send:
             _exitTriggered = true;

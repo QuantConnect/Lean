@@ -25,6 +25,7 @@ using com.fxcm.fix.posttrade;
 using com.fxcm.fix.pretrade;
 using com.fxcm.fix.trade;
 using com.fxcm.messaging;
+using NodaTime;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -49,6 +50,7 @@ namespace QuantConnect.Brokerages.Fxcm
         private readonly Dictionary<string, MarketDataSnapshot> _rates = new Dictionary<string, MarketDataSnapshot>();
 
         private readonly Dictionary<string, ExecutionReport> _openOrders = new Dictionary<string, ExecutionReport>();
+        // Map key: fxcmPositionId (can have multiple positions for the same symbol)
         private readonly Dictionary<string, PositionReport> _openPositions = new Dictionary<string, PositionReport>();
 
         private readonly Dictionary<string, Order> _mapRequestsToOrders = new Dictionary<string, Order>();
@@ -295,6 +297,13 @@ namespace QuantConnect.Brokerages.Fxcm
             {
                 var time = FromJavaDate(message.getDate().toDate());
 
+                // history timestamps must be in exchange time zone
+                DateTimeZone exchangeTimeZone;
+                if (_symbolExchangeTimeZones.TryGetValue(symbol, out exchangeTimeZone))
+                {
+                    time = time.ConvertFromUtc(exchangeTimeZone);
+                }
+
                 // append ticks/bars to history
                 if (message.getFXCMTimingInterval() == FXCMTimingIntervalFactory.TICK)
                 {
@@ -306,11 +315,23 @@ namespace QuantConnect.Brokerages.Fxcm
                 }
                 else
                 {
-                    var open = Convert.ToDecimal((message.getBidOpen() + message.getAskOpen()) / 2);
-                    var high = Convert.ToDecimal((message.getBidHigh() + message.getAskHigh()) / 2);
-                    var low = Convert.ToDecimal((message.getBidLow() + message.getAskLow()) / 2);
-                    var close = Convert.ToDecimal((message.getBidClose() + message.getAskClose()) / 2);
-                    var bar = new TradeBar(time, symbol, open, high, low, close, 0);
+                    var bar = new QuoteBar(
+                        time,
+                        symbol,
+                        new Bar(
+                            Convert.ToDecimal(message.getBidOpen()),
+                            Convert.ToDecimal(message.getBidHigh()),
+                            Convert.ToDecimal(message.getBidLow()),
+                            Convert.ToDecimal(message.getBidClose())
+                        ),
+                        0,
+                            new Bar(
+                            Convert.ToDecimal(message.getAskOpen()),
+                            Convert.ToDecimal(message.getAskHigh()),
+                            Convert.ToDecimal(message.getAskLow()),
+                            Convert.ToDecimal(message.getAskClose())
+                        ),
+                        0);
 
                     _lastHistoryChunk.Add(bar);
                 }
@@ -326,6 +347,13 @@ namespace QuantConnect.Brokerages.Fxcm
                     // For some unknown reason, messages returned by SubscriptionRequestTypeFactory.SUBSCRIBE
                     // have message.getDate() rounded to the second, so we use message.getMakingTime() instead
                     var time = FromJavaDate(new java.util.Date(message.getMakingTime()));
+
+                    // live ticks timestamps must be in exchange time zone
+                    DateTimeZone exchangeTimeZone;
+                    if (_symbolExchangeTimeZones.TryGetValue(symbol, out exchangeTimeZone))
+                    {
+                        time = time.ConvertFromUtc(exchangeTimeZone);
+                    }
 
                     var bidPrice = Convert.ToDecimal(message.getBidClose());
                     var askPrice = Convert.ToDecimal(message.getAskClose());
@@ -458,14 +486,14 @@ namespace QuantConnect.Brokerages.Fxcm
         {
             if (message.getAccount() == _accountId)
             {
-                var fxcmSymbol = message.getInstrument().getSymbol();
-                if (_openPositions.ContainsKey(fxcmSymbol) && message is ClosedPositionReport)
+                var fxcmPositionId = message.getFXCMPosID();
+                if (_openPositions.ContainsKey(fxcmPositionId) && message is ClosedPositionReport)
                 {
-                    _openPositions.Remove(fxcmSymbol);
+                    _openPositions.Remove(fxcmPositionId);
                 }
                 else
                 {
-                    _openPositions[fxcmSymbol] = message;
+                    _openPositions[fxcmPositionId] = message;
                 }
             }
 

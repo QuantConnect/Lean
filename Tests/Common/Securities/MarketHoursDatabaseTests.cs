@@ -99,6 +99,20 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void CorrectlyReadsUsEquityEarlyCloses()
+        {
+            string file = Path.Combine("TestData", "SampleMarketHoursDatabase.json");
+            var exchangeHours = GetMarketHoursDatabase(file);
+
+            var equityHours = exchangeHours.GetExchangeHours(Market.USA, null, SecurityType.Equity);
+            Assert.AreNotEqual(0, equityHours.EarlyCloses.Count);
+
+            var date = new DateTime(2016, 11, 25);
+            var earlyCloseTime = new TimeSpan(13, 0, 0);
+            Assert.AreEqual(earlyCloseTime, equityHours.EarlyCloses[date]);
+        }
+
+        [Test]
         public void CorrectlyReadFxcmForexMarketHours()
         {
             string file = Path.Combine("TestData", "SampleMarketHoursDatabase.json");

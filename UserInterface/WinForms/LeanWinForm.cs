@@ -99,7 +99,7 @@ namespace QuantConnect.Views.WinForms
             final.dtPeriodStart = packet.PeriodStart.ToString(dateFormat);
             final.dtPeriodFinished = packet.PeriodFinish.AddDays(1).ToString(dateFormat);
             dynamic resultData = new JObject();
-            resultData.version = "3";
+            resultData.version = 3;
             resultData.results = JObject.FromObject(packet.Results);
             resultData.statistics = JObject.FromObject(packet.Results.Statistics);
             resultData.iTradeableDates = 1;

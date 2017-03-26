@@ -102,6 +102,8 @@ namespace QuantConnect.Data.Consolidators
                     if (workingBar.Ask.Low > ask.Low) workingBar.Ask.Low = ask.Low;
                 }
             }
+
+            workingBar.Value = data.Value;
         }
     }
 }

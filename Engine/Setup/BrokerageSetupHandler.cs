@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
@@ -79,15 +80,15 @@ namespace QuantConnect.Lean.Engine.Setup
         /// Create a new instance of an algorithm from a physical dll path.
         /// </summary>
         /// <param name="assemblyPath">The path to the assembly's location</param>
-        /// <param name="language">The algorithm's language</param>
+        /// <param name="algorithmNodePacket">Details of the task required</param>
         /// <returns>A new instance of IAlgorithm, or throws an exception if there was an error</returns>
-        public IAlgorithm CreateAlgorithmInstance(string assemblyPath, Language language)
+        public IAlgorithm CreateAlgorithmInstance(AlgorithmNodePacket algorithmNodePacket, string assemblyPath)
         {
             string error;
             IAlgorithm algorithm;
 
             // limit load times to 10 seconds and force the assembly to have exactly one derived type
-            var loader = new Loader(language, TimeSpan.FromSeconds(15), names =>
+            var loader = new Loader(algorithmNodePacket.Language, TimeSpan.FromSeconds(15), names =>
             {
                 // if there's only one use that guy
                 if (names.Count == 1)
@@ -100,8 +101,8 @@ namespace QuantConnect.Lean.Engine.Setup
                 return names.Single(x => x.Contains("." + algorithmName));
             });
 
-            var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, out algorithm, out error);
-            if (!complete) throw new Exception(error + " Try re-building algorithm.");
+            var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, algorithmNodePacket.RamAllocation, out algorithm, out error);
+            if (!complete) throw new Exception(error + " Try re-building algorithm and remove duplicate QCAlgorithm base classes.");
 
             return algorithm;
         }
@@ -189,6 +190,7 @@ namespace QuantConnect.Lean.Engine.Setup
                         algorithm.Portfolio.MarginCallModel = MarginCallModel.Null;
                         //Set our parameters
                         algorithm.SetParameters(job.Parameters);
+                        algorithm.SetAvailableDataTypes(GetConfiguredDataFeeds());
                         //Algorithm is live, not backtesting:
                         algorithm.SetLiveMode(true);
                         //Initialize the algorithm's starting date
@@ -210,7 +212,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     {
                         AddInitializationError(err.Message);
                     }
-                });
+                }, controls.RamAllocation);
 
                 if (!initializeComplete)
                 {
@@ -289,7 +291,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 {
                     // populate the algorithm with the account's current holdings
                     var holdings = brokerage.GetAccountHoldings();
-                    var supportedSecurityTypes = new HashSet<SecurityType> { SecurityType.Equity, SecurityType.Forex, SecurityType.Cfd };
+                    var supportedSecurityTypes = new HashSet<SecurityType> { SecurityType.Equity, SecurityType.Forex, SecurityType.Cfd, SecurityType.Option, SecurityType.Future };
                     var minResolution = new Lazy<Resolution>(() => algorithm.Securities.Select(x => x.Value.Resolution).DefaultIfEmpty(Resolution.Second).Min());
                     foreach (var holding in holdings)
                     {
@@ -309,9 +311,43 @@ namespace QuantConnect.Lean.Engine.Setup
                         if (!algorithm.Portfolio.ContainsKey(holding.Symbol))
                         {
                             Log.Trace("BrokerageSetupHandler.Setup(): Adding unrequested security: " + holding.Symbol.ToString());
-                            // for items not directly requested set leverage to 1 and at the min resolution
-                            algorithm.AddSecurity(holding.Type, holding.Symbol.Value, minResolution.Value, null, true, 1.0m, false);
+
+                            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+                            var symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
+
+                            // if we adding option, we have to add the option universe, so we take underlying symbol
+                            // Implemented solution is temporary. We will remove this code once it is the idea on how to refactor IAlgorithm is matured. 
+                            if (holding.Type == SecurityType.Option)
+                            {
+                                var underlying = holding.Symbol.Underlying.Value;
+
+                                // adding entire option universe to the system
+                                var canonicalOption = algorithm.AddSecurity(holding.Type, underlying, minResolution.Value, null, true, 1.0m, false);
+                                var universe = algorithm.UniverseManager.Where(x => x.Key == canonicalOption.Symbol).First().Value;
+
+                                // adding current option contract to the system
+                                var option = universe.CreateSecurity(holding.Symbol, algorithm, marketHoursDatabase, symbolPropertiesDatabase);
+                                algorithm.Securities.Add(holding.Symbol, option);
+                            }
+                            else if (holding.Type == SecurityType.Future)
+                            {
+                                var underlying = holding.Symbol.Underlying.Value;
+
+                                // adding entire future universe to the system
+                                var canonicalFuture = algorithm.AddSecurity(holding.Type, underlying, minResolution.Value, null, true, 1.0m, false);
+                                var universe = algorithm.UniverseManager.Where(x => x.Key == canonicalFuture.Symbol).First().Value;
+
+                                // adding current future contract to the system
+                                var future = universe.CreateSecurity(holding.Symbol, algorithm, marketHoursDatabase, symbolPropertiesDatabase);
+                                algorithm.Securities.Add(holding.Symbol, future);
+                            }
+                            else
+                            {
+                                // for items not directly requested set leverage to 1 and at the min resolution
+                                algorithm.AddSecurity(holding.Type, holding.Symbol.Value, minResolution.Value, null, true, 1.0m, false);
+                            }
                         }
+
                         algorithm.Portfolio[holding.Symbol].SetHoldings(holding.AveragePrice, (int) holding.Quantity);
                         algorithm.Securities[holding.Symbol].SetMarketPrice(new TradeBar
                         {
@@ -353,6 +389,24 @@ namespace QuantConnect.Lean.Engine.Setup
 
             return Errors.Count == 0;
         }
+
+        /// <summary>
+        /// Get the available data feeds from config.json,
+        /// If none available, throw an error
+        /// </summary>
+        private static Dictionary<SecurityType, List<TickType>> GetConfiguredDataFeeds()
+        {
+            var dataFeedsConfigString = Config.Get("security-data-feeds");
+
+            Dictionary<SecurityType, List<TickType>> dataFeeds = new Dictionary<SecurityType, List<TickType>>();
+            if (dataFeedsConfigString != string.Empty)
+            {
+                dataFeeds = JsonConvert.DeserializeObject<Dictionary<SecurityType, List<TickType>>>(dataFeedsConfigString);
+            }
+
+            return dataFeeds;
+        }
+
 
         /// <summary>
         /// Adds initializaion error to the Errors list

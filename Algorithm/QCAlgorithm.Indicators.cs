@@ -73,6 +73,57 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new FilteredIdentity indicator for the symbol The indicator will be automatically
+        /// updated on the symbol's subscription resolution
+        /// </summary>
+        /// <param name="symbol">The symbol whose values we want as an indicator</param>
+        /// <param name="selector">Selects a value from the BaseData, if null defaults to the .Value property (x => x.Value)</param>
+        /// <param name="filter">Filters the IBaseData send into the indicator, if null defaults to true (x => true) which means no filter</param>
+        /// <param name="fieldName">The name of the field being selected</param>
+        /// <returns>A new FilteredIdentity indicator for the specified symbol and selector</returns>
+        public FilteredIdentity FilteredIdentity(Symbol symbol, Func<IBaseData, IBaseDataBar> selector = null, Func<IBaseData, bool> filter = null, string fieldName = null)
+        {
+            var resolution = GetSubscription(symbol).Resolution;
+            return FilteredIdentity(symbol, resolution, selector, filter, fieldName);
+        }
+
+        /// <summary>
+        /// Creates a new FilteredIdentity indicator for the symbol The indicator will be automatically
+        /// updated on the symbol's subscription resolution
+        /// </summary>
+        /// <param name="symbol">The symbol whose values we want as an indicator</param>
+        /// <param name="resolution">The desired resolution of the data</param>
+        /// <param name="selector">Selects a value from the BaseData, if null defaults to the .Value property (x => x.Value)</param>
+        /// <param name="filter">Filters the IBaseData send into the indicator, if null defaults to true (x => true) which means no filter</param>
+        /// <param name="fieldName">The name of the field being selected</param>
+        /// <returns>A new FilteredIdentity indicator for the specified symbol and selector</returns>
+        public FilteredIdentity FilteredIdentity(Symbol symbol, Resolution resolution, Func<IBaseData, IBaseDataBar> selector = null, Func<IBaseData, bool> filter = null, string fieldName = null)
+        {
+            string name = CreateIndicatorName(symbol, fieldName ?? "close", resolution);
+            var filteredIdentity = new FilteredIdentity(name, filter);
+            RegisterIndicator<IBaseData>(symbol, filteredIdentity, resolution, selector);
+            return filteredIdentity;
+        }
+
+        /// <summary>
+        /// Creates a new FilteredIdentity indicator for the symbol The indicator will be automatically
+        /// updated on the symbol's subscription resolution
+        /// </summary>
+        /// <param name="symbol">The symbol whose values we want as an indicator</param>
+        /// <param name="resolution">The desired resolution of the data</param>
+        /// <param name="selector">Selects a value from the BaseData, if null defaults to the .Value property (x => x.Value)</param>
+        /// <param name="filter">Filters the IBaseData send into the indicator, if null defaults to true (x => true) which means no filter</param>
+        /// <param name="fieldName">The name of the field being selected</param>
+        /// <returns>A new FilteredIdentity indicator for the specified symbol and selector</returns>
+        public FilteredIdentity FilteredIdentity(Symbol symbol, TimeSpan resolution, Func<IBaseData, IBaseDataBar> selector = null, Func<IBaseData, bool> filter = null, string fieldName = null)
+        {
+            string name = string.Format("{0}({1}_{2})", symbol, fieldName ?? "close", resolution);
+            var filteredIdentity = new FilteredIdentity(name, filter);
+            RegisterIndicator<IBaseData>(symbol, filteredIdentity, ResolveConsolidator(symbol, resolution), selector);
+            return filteredIdentity;
+        }
+
+        /// <summary>
         /// Creates a new IchimokuKinkoHyo indicator for the symbol. The indicator will be automatically
         /// updated on the given resolution.
         /// </summary>
@@ -234,7 +285,7 @@ namespace QuantConnect.Algorithm
         {
             return AROON(symbol, period, period, resolution, selector);
         }
-        
+
         /// <summary>
         /// Creates a new AroonOscillator indicator which will compute the AroonUp and AroonDown (as well as the delta)
         /// </summary>
@@ -1257,11 +1308,32 @@ namespace QuantConnect.Algorithm
                 return new TradeBarConsolidator(timeSpan.Value);
             }
 
-            // if our type can be used as a tick then we'll use the tick consolidator
+            // if our type can be used as a quote bar, then let's just make one of those
+            // we use IsAssignableFrom instead of IsSubclassOf so that we can account for types that are able to be cast to QuoteBar
+            if (typeof(QuoteBar).IsAssignableFrom(subscription.Type))
+            {
+                return new QuoteBarConsolidator(timeSpan.Value);
+            }
+
+            // if our type can be used as a tick then we'll use a consolidator that keeps the TickType 
             // we use IsAssignableFrom instead of IsSubclassOf so that we can account for types that are able to be cast to Tick
             if (typeof(Tick).IsAssignableFrom(subscription.Type))
             {
-                return new TickConsolidator(timeSpan.Value);
+                // Use IdentityDataConsolidator when ticks are not meant to consolidated into bars
+                if (timeSpan.Value.Ticks == 0)
+                {
+                    return new IdentityDataConsolidator<Tick>();
+                }
+
+                switch (subscription.TickType)
+                {
+                    case TickType.OpenInterest:
+                        return new OpenInterestConsolidator(timeSpan.Value);
+                    case TickType.Quote:
+                        return new TickQuoteBarConsolidator(timeSpan.Value);
+                    default:
+                        return new TickConsolidator(timeSpan.Value);
+                }
             }
 
             // if our type can be used as a DynamicData then we'll use the DynamicDataConsolidator

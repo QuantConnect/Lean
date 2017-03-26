@@ -16,6 +16,7 @@
 
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Securities
 {
@@ -54,10 +55,19 @@ namespace QuantConnect.Securities
             security.SlippageModel = _brokerageModel.GetSlippageModel(security);
             security.SettlementModel = _brokerageModel.GetSettlementModel(security, _brokerageModel.AccountType);
 
-            BaseData seedData = _securitySeeder.GetSeedData(security);
-            if (seedData != null)
+            // Do not seed Options and Futures
+            if (security.Symbol.SecurityType != SecurityType.Option && security.Symbol.SecurityType != SecurityType.Future)
             {
-                security.SetMarketPrice(seedData);
+                BaseData seedData = _securitySeeder.GetSeedData(security);
+                if (seedData != null)
+                {
+                    security.SetMarketPrice(seedData);
+                    Log.Trace("BrokerageModelSecurityInitializer.Initialize(): Seeded security: " + seedData.Symbol.Value + ": " + seedData.Value);
+                }
+                else
+                {
+                    Log.Trace("BrokerageModelSecurityInitializer.Initialize(): Unable to seed security: " + security.Symbol.Value);
+                }
             }
         }
     }

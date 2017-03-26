@@ -30,23 +30,31 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class OptionChainUniverse : Universe
     {
-        private static readonly IReadOnlyList<TickType> QuotesAndTrades = new[] { TickType.Quote, TickType.Trade };
+        private static readonly IReadOnlyList<TickType> dataTypes = new[] { TickType.Quote, TickType.Trade, TickType.OpenInterest };
 
         private BaseData _underlying;
         private readonly Option _option;
         private readonly UniverseSettings _universeSettings;
+        private SubscriptionManager _subscriptionManager;
+
+        private DateTime _cacheDate;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OptionChainUniverse"/> class
         /// </summary>
         /// <param name="option">The canonical option chain security</param>
         /// <param name="universeSettings">The universe settings to be used for new subscriptions</param>
+        /// <param name="subscriptionManager">The subscription manager used to return available data types</param>
         /// <param name="securityInitializer">The security initializer to use on newly created securities</param>
-        public OptionChainUniverse(Option option, UniverseSettings universeSettings, ISecurityInitializer securityInitializer = null)
+        public OptionChainUniverse(Option option, 
+                                   UniverseSettings universeSettings, 
+                                   SubscriptionManager subscriptionManager, 
+                                   ISecurityInitializer securityInitializer = null)
             : base(option.SubscriptionDataConfig, securityInitializer)
         {
             _option = option;
             _universeSettings = universeSettings;
+            _subscriptionManager = subscriptionManager;
         }
 
         /// <summary>
@@ -79,50 +87,54 @@ namespace QuantConnect.Data.UniverseSelection
                 return Unchanged;
             }
 
+            if (_cacheDate != null && _cacheDate == data.Time.Date)
+            {
+                return Unchanged;
+            }
+
             var availableContracts = optionsUniverseDataCollection.Data.Select(x => x.Symbol);
-            var results = _option.ContractFilter.Filter(availableContracts, _underlying).ToHashSet();
+            var results = (OptionFilterUniverse)_option.ContractFilter.Filter(new OptionFilterUniverse(availableContracts, _underlying));
+
+            // if results are not dynamic, we cache them and won't call filtering till the end of the day
+            if (!results.IsDynamic)
+            {
+                _cacheDate = data.Time.Date;
+            }
+
+            var resultingSymbols = results.ToHashSet();
 
             // we save off the filtered results to the universe data collection for later
             // population into the OptionChain. This is non-ideal and could be remedied by
             // the universe subscription emitting a special type after selection that could
             // be checked for in TimeSlice.Create, but for now this will do
-            optionsUniverseDataCollection.FilteredContracts = results;
+            optionsUniverseDataCollection.FilteredContracts = resultingSymbols;
 
-            return results;
+            return resultingSymbols;
         }
 
         /// <summary>
-        /// Gets the subscription requests to be added for the specified security
+        /// Adds the specified security to this universe
         /// </summary>
-        /// <param name="security">The security to get subscriptions for</param>
-        /// <param name="currentTimeUtc">The current time in utc. This is the frontier time of the algorithm</param>
-        /// <param name="maximumEndTimeUtc">The max end time</param>
-        /// <returns>All subscriptions required by this security</returns>
-        public override IEnumerable<SubscriptionRequest> GetSubscriptionRequests(Security security, DateTime currentTimeUtc, DateTime maximumEndTimeUtc)
+        /// <param name="utcTime">The current utc date time</param>
+        /// <param name="security">The security to be added</param>
+        /// <returns>True if the security was successfully added,
+        /// false if the security was already in the universe</returns>
+        internal override bool AddMember(DateTime utcTime, Security security)
         {
-            // we want to return both quote and trade subscriptions
-            return QuotesAndTrades
-                .Select(tickType => new SubscriptionDataConfig(
-                    objectType: GetDataType(UniverseSettings.Resolution, tickType),
-                    symbol: security.Symbol,
-                    resolution: UniverseSettings.Resolution,
-                    dataTimeZone: Configuration.DataTimeZone,
-                    exchangeTimeZone: security.Exchange.TimeZone,
-                    fillForward: UniverseSettings.FillForward,
-                    extendedHours: UniverseSettings.ExtendedMarketHours,
-                    isInternalFeed: false,
-                    isCustom: false,
-                    tickType: tickType,
-                    isFilteredSubscription: true
-                    ))
-                .Select(config => new SubscriptionRequest(
-                    isUniverseSubscription: false,
-                    universe: this,
-                    security: security,
-                    configuration: config,
-                    startTimeUtc: currentTimeUtc,
-                    endTimeUtc: maximumEndTimeUtc
-                    ));
+            if (Securities.ContainsKey(security.Symbol))
+            {
+                return false;
+            }
+
+            // method take into account the case, when the option has experienced an adjustment 
+            // we update member reference in this case
+            if (Securities.Any(x => x.Value.Security == security))
+            {
+                Member member;
+                Securities.TryRemove(security.Symbol, out member);
+            }
+
+            return Securities.TryAdd(security.Symbol, new Member(utcTime, security));
         }
 
         /// <summary>
@@ -169,16 +181,6 @@ namespace QuantConnect.Data.UniverseSelection
                 return true;
             }
             return false;
-        }
-
-        /// <summary>
-        /// Gets the data type required for the specified combination of resolution and tick type
-        /// </summary>
-        private static Type GetDataType(Resolution resolution, TickType tickType)
-        {
-            if (resolution == Resolution.Tick) return typeof(Tick);
-            if (tickType == TickType.Quote) return typeof(QuoteBar);
-            return typeof(TradeBar);
         }
     }
 }

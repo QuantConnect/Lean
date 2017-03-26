@@ -554,14 +554,15 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="startUtc">The starting time (UTC)</param>
         /// <param name="barsPerRequest">The number of bars requested (max=5000)</param>
         /// <param name="granularity">The granularity (Oanda resolution)</param>
+        /// <param name="candleFormat">The Oanda candle format (bidask or midpoint)</param>
         /// <returns>The list of candles/bars</returns>
-        public List<Candle> DownloadBars(string oandaSymbol, string startUtc, int barsPerRequest, EGranularity granularity)
+        public List<Candle> DownloadBars(string oandaSymbol, string startUtc, int barsPerRequest, EGranularity granularity, ECandleFormat candleFormat)
         {
             var request = new CandlesRequest
             {
                 instrument = oandaSymbol,
                 granularity = granularity,
-                candleFormat = ECandleFormat.midpoint,
+                candleFormat = candleFormat,
                 count = barsPerRequest,
                 start = Uri.EscapeDataString(startUtc)
             };
@@ -587,6 +588,40 @@ namespace QuantConnect.Brokerages.Oanda
             }
 
             return candles;
+        }
+
+        /// <summary>
+        /// Converts a LEAN Resolution to an EGranularity
+        /// </summary>
+        /// <param name="resolution">The resolution to convert</param>
+        /// <returns></returns>
+        private static EGranularity ToGranularity(Resolution resolution)
+        {
+            EGranularity interval;
+
+            switch (resolution)
+            {
+                case Resolution.Second:
+                    interval = EGranularity.S5;
+                    break;
+
+                case Resolution.Minute:
+                    interval = EGranularity.M1;
+                    break;
+
+                case Resolution.Hour:
+                    interval = EGranularity.H1;
+                    break;
+
+                case Resolution.Daily:
+                    interval = EGranularity.D;
+                    break;
+
+                default:
+                    throw new ArgumentException("Unsupported resolution: " + resolution);
+            }
+
+            return interval;
         }
 
     }

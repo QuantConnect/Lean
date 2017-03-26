@@ -165,6 +165,10 @@ namespace QuantConnect.Orders
                     order = new MarketOnCloseOrder();
                     break;
 
+                case OrderType.OptionExercise:
+                    order = new OptionExerciseOrder();
+                    break;
+
                 default:
                     throw new ArgumentOutOfRangeException();
             }

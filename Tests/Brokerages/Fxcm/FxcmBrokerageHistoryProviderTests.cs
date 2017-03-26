@@ -14,9 +14,13 @@
 */
 
 using System;
+using System.Diagnostics;
+using System.Linq;
 using NUnit.Framework;
+using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Fxcm;
 using QuantConnect.Data;
+using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Logging;
 
 namespace QuantConnect.Tests.Brokerages.Fxcm
@@ -55,6 +59,11 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
             TestDelegate test = () =>
             {
                 var brokerage = (FxcmBrokerage) Brokerage;
+
+                var historyProvider = new BrokerageHistoryProvider();
+                historyProvider.SetBrokerage(brokerage);
+                historyProvider.Initialize(null, null, null, null, null, null);
+
                 var now = DateTime.UtcNow;
 
                 var requests = new[]
@@ -68,7 +77,7 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
                     }
                 };
 
-                var history = brokerage.GetHistory(requests, TimeZones.Utc);
+                var history = historyProvider.GetHistory(requests, TimeZones.Utc);
 
                 foreach (var slice in history)
                 {
@@ -87,7 +96,7 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
                     }
                 }
 
-                Log.Trace("Data points retrieved: " + brokerage.DataPointCount);
+                Log.Trace("Data points retrieved: " + historyProvider.DataPointCount);
             };
 
             if (throwsException)
@@ -98,6 +107,47 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
             {
                 Assert.DoesNotThrow(test);
             }
+        }
+
+        [Test]
+        public void GetsFullDayTickHistory()
+        {
+            var symbol = Symbols.EURUSD;
+            const Resolution resolution = Resolution.Tick;
+
+            var startDate = new DateTime(2016, 11, 1);
+            var endDate = startDate.AddDays(1);
+
+            var brokerage = (FxcmBrokerage)Brokerage;
+
+            var historyProvider = new BrokerageHistoryProvider();
+            historyProvider.SetBrokerage(brokerage);
+            historyProvider.Initialize(null, null, null, null, null, null);
+
+            var stopwatch = Stopwatch.StartNew();
+
+            var requests = new[]
+            {
+                new HistoryRequest
+                {
+                    Symbol = symbol,
+                    Resolution = resolution,
+                    StartTimeUtc = startDate,
+                    EndTimeUtc = endDate
+                }
+            };
+
+            var history = historyProvider.GetHistory(requests, TimeZones.Utc);
+            var tickCount = history.SelectMany(slice => slice.Ticks[symbol]).Count();
+
+            stopwatch.Stop();
+            Log.Trace("Download time: " + stopwatch.Elapsed);
+
+            Log.Trace("History ticks returned: " + tickCount);
+            Log.Trace("Data points retrieved: " + historyProvider.DataPointCount);
+
+            Assert.AreEqual(tickCount, historyProvider.DataPointCount);
+            Assert.AreEqual(241233, tickCount);
         }
     }
 }

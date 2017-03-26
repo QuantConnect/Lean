@@ -195,7 +195,7 @@ namespace QuantConnect.ToolBox
                         while ((line = reader.ReadLine()) != null)
                         {
                             var time = DateTime.ParseExact(line.Substring(0, DateFormat.TwelveCharacter.Length), DateFormat.TwelveCharacter, CultureInfo.InvariantCulture);
-                            rows.Add(time, line);
+                            rows[time] = line;
                         }
                     }
                 }

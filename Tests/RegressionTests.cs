@@ -26,6 +26,15 @@ namespace QuantConnect.Tests
         public void AlgorithmStatisticsRegression(AlgorithmStatisticsTestParameters parameters)
         {
             QuantConnect.Configuration.Config.Set("quandl-auth-token", "WyAazVXnq7ATy_fefTqm");
+
+            if (parameters.Algorithm == "OptionChainConsistencyRegressionAlgorithm")
+            {
+                // special arrangement for consistency test - we check if limits work fine
+                QuantConnect.Configuration.Config.Set("symbol-minute-limit", "100");
+                QuantConnect.Configuration.Config.Set("symbol-second-limit", "100");
+                QuantConnect.Configuration.Config.Set("symbol-tick-limit", "100");
+            }
+
             AlgorithmRunner.RunLocalBacktest(parameters.Algorithm, parameters.Statistics, parameters.Language);
         }
 
@@ -57,15 +66,15 @@ namespace QuantConnect.Tests
             var basicTemplateOptionsStatistics = new Dictionary<string, string>
             {
                 {"Total Trades", "2"},
-                {"Average Win", "18.70%"},
-                {"Average Loss", "0%"},
-                {"Compounding Annual Return", "79228162514264337593543950335%"},
-                {"Drawdown", "40.500%"},
-                {"Expectancy", "0"},
-                {"Net Profit", "18.700%"},
+                {"Average Win", "0%"},
+                {"Average Loss", "-0.21%"},
+                {"Compounding Annual Return", "-68.001%"},
+                {"Drawdown", "0.200%"},
+                {"Expectancy", "-1"},
+                {"Net Profit", "-0.210%"},
                 {"Sharpe Ratio", "0"},
-                {"Loss Rate", "0%"},
-                {"Win Rate", "100%"},
+                {"Loss Rate", "100%"},
+                {"Win Rate", "0%"},
                 {"Profit-Loss Ratio", "0"},
                 {"Alpha", "0"},
                 {"Beta", "0"},
@@ -74,7 +83,7 @@ namespace QuantConnect.Tests
                 {"Information Ratio", "0"},
                 {"Tracking Error", "0"},
                 {"Treynor Ratio", "0"},
-                {"Total Fees", "$0.00"},
+                {"Total Fees", "$0.50"},
             };
 
             var limitFillRegressionStatistics = new Dictionary<string, string>
@@ -175,20 +184,20 @@ namespace QuantConnect.Tests
                 {"Average Win", "0%"},
                 {"Average Loss", "0%"},
                 {"Compounding Annual Return", "155.210%"},
-                {"Drawdown", "99.900%"},
+                {"Drawdown", "84.800%"},
                 {"Expectancy", "0"},
                 {"Net Profit", "0%"},
-                {"Sharpe Ratio", "0.453"},
+                {"Sharpe Ratio", "1.199"},
                 {"Loss Rate", "0%"},
                 {"Win Rate", "0%"},
                 {"Profit-Loss Ratio", "0"},
-                {"Alpha", "46.332"},
-                {"Beta", "73.501"},
-                {"Annual Standard Deviation", "118.922"},
-                {"Annual Variance", "14142.47"},
-                {"Information Ratio", "0.452"},
-                {"Tracking Error", "118.915"},
-                {"Treynor Ratio", "0.733"},
+                {"Alpha", "0.99"},
+                {"Beta", "0.168"},
+                {"Annual Standard Deviation", "0.84"},
+                {"Annual Variance", "0.706"},
+                {"Information Ratio", "1.072"},
+                {"Tracking Error", "0.845"},
+                {"Treynor Ratio", "5.997"},
                 {"Total Fees", "$0.00"}
             };
 
@@ -376,6 +385,166 @@ namespace QuantConnect.Tests
                 {"Total Fees", "$604.31"},
             };
 
+            var optionSplitRegressionAlgorithmStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "2"},
+                {"Average Win", "0.00%"},
+                {"Average Loss", "0%"},
+                {"Compounding Annual Return", "0.198%"},
+                {"Drawdown", "0.500%"},
+                {"Expectancy", "0"},
+                {"Net Profit", "0.002%"},
+                {"Sharpe Ratio", "0.609"},
+                {"Loss Rate", "0%"},
+                {"Win Rate", "100%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "-0.013"},
+                {"Beta", "0"},
+                {"Annual Standard Deviation", "0.002"},
+                {"Annual Variance", "0"},
+                {"Information Ratio", "7.935"},
+                {"Tracking Error", "6.787"},
+                {"Treynor Ratio", "-4.913"},
+                {"Total Fees", "$1.25"},
+            };
+
+            var optionRenameRegressionAlgorithmStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "4"},
+                {"Average Win", "0%"},
+                {"Average Loss", "-0.02%"},
+                {"Compounding Annual Return", "-0.472%"},
+                {"Drawdown", "0.000%"},
+                {"Expectancy", "-1"},
+                {"Net Profit", "-0.006%"},
+                {"Sharpe Ratio", "-3.235"},
+                {"Loss Rate", "100%"},
+                {"Win Rate", "0%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "-0.016"},
+                {"Beta", "-0.001"},
+                {"Annual Standard Deviation", "0.002"},
+                {"Annual Variance", "0"},
+                {"Information Ratio", "10.014"},
+                {"Tracking Error", "0.877"},
+                {"Treynor Ratio", "3.955"},
+                {"Total Fees", "$2.50"},
+            };
+
+            var optionOpenInterestRegressionAlgorithmStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "2"},
+                {"Average Win", "0%"},
+                {"Average Loss", "-0.01%"},
+                {"Compounding Annual Return", "-2.042%"},
+                {"Drawdown", "0.000%"},
+                {"Expectancy", "-1"},
+                {"Net Profit", "-0.010%"},
+                {"Sharpe Ratio", "-11.225"},
+                {"Loss Rate", "100%"},
+                {"Win Rate", "0%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "0"},
+                {"Beta", "-0.036"},
+                {"Annual Standard Deviation", "0.001"},
+                {"Annual Variance", "0"},
+                {"Information Ratio", "-11.225"},
+                {"Tracking Error", "0.033"},
+                {"Treynor Ratio", "0.355"},
+                {"Total Fees", "$0.50"},
+            };
+
+            var optionChainConsistencyRegressionAlgorithmStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "2"},
+                {"Average Win", "0%"},
+                {"Average Loss", "-3.86%"},
+                {"Compounding Annual Return", "-100.000%"},
+                {"Drawdown", "3.900%"},
+                {"Expectancy", "-1"},
+                {"Net Profit", "-3.855%"},
+                {"Sharpe Ratio", "0"},
+                {"Loss Rate", "100%"},
+                {"Win Rate", "0%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "0"},
+                {"Beta", "0"},
+                {"Annual Standard Deviation", "0"},
+                {"Annual Variance", "0"},
+                {"Information Ratio", "0"},
+                {"Tracking Error", "0"},
+                {"Treynor Ratio", "0"},
+                {"Total Fees", "$0.50"},
+            };
+
+            var weeklyUniverseSelectionRegressionAlgorithmStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "8"},
+                {"Average Win", "1.68%"},
+                {"Average Loss", "-0.77%"},
+                {"Compounding Annual Return", "23.389%"},
+                {"Drawdown", "1.900%"},
+                {"Expectancy", "0.597"},
+                {"Net Profit", "1.801%"},
+                {"Sharpe Ratio", "1.884"},
+                {"Loss Rate", "50%"},
+                {"Win Rate", "50%"},
+                {"Profit-Loss Ratio", "2.19"},
+                {"Alpha", "-0.003"},
+                {"Beta", "0.421"},
+                {"Annual Standard Deviation", "0.087"},
+                {"Annual Variance", "0.008"},
+                {"Information Ratio", "-2.459"},
+                {"Tracking Error", "0.094"},
+                {"Treynor Ratio", "0.391"},
+                {"Total Fees", "$23.05"},
+            };
+	    var optionExerciseAssignRegressionAlgorithmStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "4"},
+                {"Average Win", "0.30%"},
+                {"Average Loss", "-0.20%"},
+                {"Compounding Annual Return", "-42.722%"},
+                {"Drawdown", "0.400%"},
+                {"Expectancy", "-0.168"},
+                {"Net Profit", "-0.103%"},
+                {"Sharpe Ratio", "0"},
+                {"Loss Rate", "67%"},
+                {"Win Rate", "33%"},
+                {"Profit-Loss Ratio", "1.50"},
+                {"Alpha", "0"},
+                {"Beta", "0"},
+                {"Annual Standard Deviation", "0"},
+                {"Annual Variance", "0"},
+                {"Information Ratio", "0"},
+                {"Tracking Error", "0"},
+                {"Treynor Ratio", "0"},
+                {"Total Fees", "$0.50"},
+            };
+
+            var basicTemplateDailyStatistics = new Dictionary<string, string>
+            {
+                {"Total Trades", "1"},
+                {"Average Win", "0%"},
+                {"Average Loss", "0%"},
+                {"Compounding Annual Return", "244.780%"},
+                {"Drawdown", "1.100%"},
+                {"Expectancy", "0"},
+                {"Net Profit", "0%"},
+                {"Sharpe Ratio", "6.165"},
+                {"Loss Rate", "0%"},
+                {"Win Rate", "0%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "0.254"},
+                {"Beta", "0.898"},
+                {"Annual Standard Deviation", "0.14"},
+                {"Annual Variance", "0.02"},
+                {"Information Ratio", "4.625"},
+                {"Tracking Error", "0.04"},
+                {"Treynor Ratio", "0.963"},
+                {"Total Fees", "$3.09"}
+            };
+
             return new List<AlgorithmStatisticsTestParameters>
             {
                 // CSharp
@@ -393,7 +562,14 @@ namespace QuantConnect.Tests
                 new AlgorithmStatisticsTestParameters("HistoryAlgorithm", historyAlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("CoarseFundamentalTop5Algorithm", coarseFundamentalTop5AlgorithmStatistics, Language.CSharp),
                 new AlgorithmStatisticsTestParameters("CoarseFineFundamentalRegressionAlgorithm", coarseFineFundamentalRegressionAlgorithmStatistics, Language.CSharp),
-                new AlgorithmStatisticsTestParameters("MACDTrendAlgorithm", macdTrendAlgorithmStatistics, Language.CSharp)
+                new AlgorithmStatisticsTestParameters("MACDTrendAlgorithm", macdTrendAlgorithmStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("OptionSplitRegressionAlgorithm", optionSplitRegressionAlgorithmStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("OptionRenameRegressionAlgorithm", optionRenameRegressionAlgorithmStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("OptionOpenInterestRegressionAlgorithm", optionOpenInterestRegressionAlgorithmStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("OptionChainConsistencyRegressionAlgorithm", optionChainConsistencyRegressionAlgorithmStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("WeeklyUniverseSelectionRegressionAlgorithm", weeklyUniverseSelectionRegressionAlgorithmStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("OptionExerciseAssignRegressionAlgorithm",optionExerciseAssignRegressionAlgorithmStatistics, Language.CSharp),
+                new AlgorithmStatisticsTestParameters("BasicTemplateDailyAlgorithm", basicTemplateDailyStatistics, Language.CSharp),
 
                 // FSharp
                 // new AlgorithmStatisticsTestParameters("BasicTemplateAlgorithm", basicTemplateStatistics, Language.FSharp),

@@ -18,11 +18,9 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
@@ -42,20 +40,12 @@ namespace QuantConnect.Lean.Engine.HistoricalData
     /// Provides an implementation of <see cref="IHistoryProvider"/> that uses <see cref="BaseData"/>
     /// instances to retrieve historical data
     /// </summary>
-    public class SubscriptionDataReaderHistoryProvider : IHistoryProvider
+    public class SubscriptionDataReaderHistoryProvider : SynchronizingHistoryProvider
     {
-        private int _dataPointCount;
         private IMapFileProvider _mapFileProvider;
         private IFactorFileProvider _factorFileProvider;
-        private IDataFileProvider _dataFileProvider;
-
-        /// <summary>
-        /// Gets the total number of data points emitted by this history provider
-        /// </summary>
-        public int DataPointCount
-        {
-            get { return _dataPointCount; }
-        }
+        private IDataProvider _dataProvider;
+        private IDataCacheProvider _dataCacheProvider;
 
         /// <summary>
         /// Initializes this history provider to work for the specified job
@@ -63,13 +53,15 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <param name="job">The job</param>
         /// <param name="mapFileProvider">Provider used to get a map file resolver to handle equity mapping</param>
         /// <param name="factorFileProvider">Provider used to get factor files to handle equity price scaling</param>
-        /// <param name="dataFileProvider">Provider used to get data when it is not present on disk</param>
+        /// <param name="dataProvider">Provider used to get data when it is not present on disk</param>
         /// <param name="statusUpdate">Function used to send status updates</param>
-        public void Initialize(AlgorithmNodePacket job, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, IDataFileProvider dataFileProvider, Action<int> statusUpdate)
+        /// <param name="dataCacheProvider">Provider used to cache history data files</param>
+        public override void Initialize(AlgorithmNodePacket job, IDataProvider dataProvider, IDataCacheProvider dataCacheProvider, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, Action<int> statusUpdate)
         {
             _mapFileProvider = mapFileProvider;
             _factorFileProvider = factorFileProvider;
-            _dataFileProvider = dataFileProvider;
+            _dataProvider = dataProvider;
+            _dataCacheProvider = dataCacheProvider;
         }
 
         /// <summary>
@@ -78,7 +70,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <param name="requests">The historical data requests</param>
         /// <param name="sliceTimeZone">The time zone used when time stamping the slice instances</param>
         /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
-        public IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
+        public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
         {
             // create subscription objects from the configs
             var subscriptions = new List<Subscription>();
@@ -109,7 +101,10 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 request.FillForwardResolution.HasValue, 
                 request.IncludeExtendedMarketHours, 
                 false, 
-                request.IsCustomData
+                request.IsCustomData,
+                null,
+                true,
+                request.DataNormalizationMode
                 );
 
             var security = new Security(request.ExchangeHours, config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
@@ -120,10 +115,11 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 ResultHandlerStub.Instance,
                 config.SecurityType == SecurityType.Equity ? _mapFileProvider.Get(config.Market) : MapFileResolver.Empty, 
                 _factorFileProvider,
-                _dataFileProvider,
+                _dataProvider,
                 Time.EachTradeableDay(request.ExchangeHours, start, end), 
                 false,
-                includeAuxilliaryData: false
+                _dataCacheProvider,
+                false
                 );
 
             // optionally apply fill forward behavior
@@ -153,70 +149,6 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             return new Subscription(null, security, config, reader, timeZoneOffsetProvider, start, end, false);
         }
 
-        /// <summary>
-        /// Enumerates the subscriptions into slices
-        /// </summary>
-        private IEnumerable<Slice> CreateSliceEnumerableFromSubscriptions(List<Subscription> subscriptions, DateTimeZone sliceTimeZone)
-        {
-            // required by TimeSlice.Create, but we don't need it's behavior
-            var cashBook = new CashBook();
-            cashBook.Clear();
-            var frontier = DateTime.MinValue;
-            while (true)
-            {
-                var earlyBirdTicks = long.MaxValue;
-                var data = new List<DataFeedPacket>();
-                foreach (var subscription in subscriptions)
-                {
-                    if (subscription.EndOfStream) continue;
-
-                    var packet = new DataFeedPacket(subscription.Security, subscription.Configuration);
-
-                    var offsetProvider = subscription.OffsetProvider;
-                    var currentOffsetTicks = offsetProvider.GetOffsetTicks(frontier);
-                    while (subscription.Current.EndTime.Ticks - currentOffsetTicks <= frontier.Ticks)
-                    {
-                        // we want bars rounded using their subscription times, we make a clone
-                        // so we don't interfere with the enumerator's internal logic
-                        var clone = subscription.Current.Clone(subscription.Current.IsFillForward);
-                        clone.Time = clone.Time.RoundDown(subscription.Configuration.Increment);
-                        packet.Add(clone);
-                        Interlocked.Increment(ref _dataPointCount);
-                        if (!subscription.MoveNext())
-                        {
-                            break;
-                        }
-                    }
-                    // only add if we have data
-                    if (packet.Count != 0) data.Add(packet);
-                    // udate our early bird ticks (next frontier time)
-                    if (subscription.Current != null)
-                    {
-                        // take the earliest between the next piece of data or the next tz discontinuity
-                        var nextDataOrDiscontinuity = Math.Min(subscription.Current.EndTime.Ticks - currentOffsetTicks, offsetProvider.GetNextDiscontinuity());
-                        earlyBirdTicks = Math.Min(earlyBirdTicks, nextDataOrDiscontinuity);
-                    }
-                }
-
-                // end of subscriptions
-                if (earlyBirdTicks == long.MaxValue) break;
-
-                if (data.Count != 0)
-                {
-                    // reuse the slice construction code from TimeSlice.Create
-                    yield return TimeSlice.Create(frontier, sliceTimeZone, cashBook, data, SecurityChanges.None).Slice;
-                }
-
-                frontier = new DateTime(Math.Max(earlyBirdTicks, frontier.Ticks), DateTimeKind.Utc);
-            }
-
-            // make sure we clean up after ourselves
-            foreach (var subscription in subscriptions)
-            {
-                subscription.Dispose();
-            }
-        }
-
         // this implementation is provided solely for the data reader's dependency,
         // in the future we can refactor the data reader to not use the result handler
         private class ResultHandlerStub : IResultHandler
@@ -241,6 +173,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 ITransactionHandler transactionHandler) { }
             public void Run() { }
             public void DebugMessage(string message) { }
+            public void SystemDebugMessage(string message) { }
             public void SecurityType(List<SecurityType> types) { }
             public void LogMessage(string message) { }
             public void ErrorMessage(string error, string stacktrace = "") { }

@@ -390,7 +390,11 @@ namespace QuantConnect.Orders.Fills
             var tick = asset.Cache.GetData<Tick>();
             if (tick != null)
             {
-                return new Prices(current, open, high, low, close);
+                var price = direction == OrderDirection.Sell ? tick.BidPrice : tick.AskPrice;
+                if (price != 0m)
+                {
+                    return new Prices(price, 0, 0, 0, 0);
+                }
             }
 
             var quoteBar = asset.Cache.GetData<QuoteBar>();
@@ -401,6 +405,15 @@ namespace QuantConnect.Orders.Fills
                 {
                     return new Prices(bar);
                 }
+            }
+
+            if (direction == OrderDirection.Sell && asset.Cache.BidPrice != 0m)
+            {
+                return new Prices(asset.Cache.BidPrice, 0, 0, 0, 0);
+            }
+            if (direction == OrderDirection.Buy && asset.Cache.AskPrice != 0m)
+            {
+                return new Prices(asset.Cache.AskPrice, 0, 0, 0, 0);
             }
 
             var tradeBar = asset.Cache.GetData<TradeBar>();

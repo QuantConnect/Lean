@@ -15,9 +15,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NodaTime;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data
 {
@@ -32,6 +35,15 @@ namespace QuantConnect.Data
         public List<SubscriptionDataConfig> Subscriptions;
 
         /// <summary>
+        /// 
+        /// </summary>
+        public Dictionary<SecurityType, List<TickType>> AvailableDataTypes
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
         /// Initialise the Generic Data Manager Class
         /// </summary>
         /// <param name="timeKeeper">The algoritm's time keeper</param>
@@ -40,6 +52,9 @@ namespace QuantConnect.Data
             _timeKeeper = timeKeeper;
             //Generic Type Data Holder:
             Subscriptions = new List<SubscriptionDataConfig>();
+
+            // Initialize the default data feeds for each security type
+            AvailableDataTypes = DefaultDataTypes();
         }
 
         /// <summary>
@@ -141,6 +156,53 @@ namespace QuantConnect.Data
 
             //If we made it here it is because we never found the symbol in the subscription list
             throw new ArgumentException("Please subscribe to this symbol before adding a consolidator for it. Symbol: " + symbol.ToString());
+        }
+
+        /// <summary>
+        /// Hard code the set of default available data feeds
+        /// </summary>
+        public Dictionary<SecurityType, List<TickType>> DefaultDataTypes()
+        {
+            return new Dictionary<SecurityType, List<TickType>>()
+            {
+                {SecurityType.Base, new List<TickType>() { TickType.Trade } },
+                {SecurityType.Forex, new List<TickType>() { TickType.Quote } },
+                {SecurityType.Equity, new List<TickType>() { TickType.Trade } },
+                {SecurityType.Option, new List<TickType>() { TickType.Quote, TickType.Trade, TickType.OpenInterest } },
+                {SecurityType.Cfd, new List<TickType>() { TickType.Quote } },
+                {SecurityType.Future, new List<TickType>() { TickType.Quote, TickType.Trade, TickType.OpenInterest } },
+                {SecurityType.Commodity, new List<TickType>() { TickType.Trade } }
+            };
+        }
+
+        /// <summary>
+        /// Get the available data types for a security
+        /// </summary>
+        public IReadOnlyList<TickType> GetDataTypesForSecurity(SecurityType securityType)
+        {
+            return AvailableDataTypes[securityType];
+        }
+
+        /// <summary>
+        /// Get the data feed types for a given <see cref="SecurityType"/> <see cref="Resolution"/> 
+        /// </summary>
+        /// <param name="symbolSecurityType">The <see cref="SecurityType"/> used to determine the types</param>
+        /// <param name="resolution">The resolution of the data requested</param>
+        /// <param name="isCanonical">Indicates whether the security is Canonical (future and options)</param>
+        /// <returns>Types that should be added to the <see cref="SubscriptionDataConfig"/></returns>
+        public List<Type> LookupSubscriptionConfigDataTypes(SecurityType symbolSecurityType, Resolution resolution, bool isCanonical)
+        {
+            if (isCanonical)
+            {
+                return new List<Type>() { typeof(ZipEntryName) };
+            }
+
+            if (resolution == Resolution.Tick)
+            {
+                return new List<Type>() { typeof(Tick) };
+            }
+
+            return AvailableDataTypes[symbolSecurityType].Select(tickType => LeanData.GetDataType(resolution, tickType)).ToList();
         }
 
     } // End Algorithm MetaData Manager Class

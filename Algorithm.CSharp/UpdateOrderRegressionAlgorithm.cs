@@ -42,7 +42,9 @@ namespace QuantConnect.Algorithm.CSharp
         private const string Symbol = "SPY";
         private const SecurityType SecType = SecurityType.Equity;
 
-        private readonly CircularQueue<OrderType> _orderTypesQueue = new CircularQueue<OrderType>(Enum.GetValues(typeof(OrderType)).OfType<OrderType>());
+        private readonly CircularQueue<OrderType> _orderTypesQueue = new CircularQueue<OrderType>(Enum.GetValues(typeof(OrderType))
+                                                                        .OfType<OrderType>()
+                                                                        .Where (x => x != OrderType.OptionExercise));
         private readonly List<OrderTicket> _tickets = new List<OrderTicket>(); 
 
         /// <summary>

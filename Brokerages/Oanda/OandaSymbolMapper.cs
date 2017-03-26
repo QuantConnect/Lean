@@ -190,8 +190,11 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="brokerageSymbol">The Oanda symbol</param>
         /// <param name="securityType">The security type</param>
         /// <param name="market">The market</param>
+        /// <param name="expirationDate">Expiration date of the security(if applicable)</param>
+        /// <param name="strike">The strike of the security (if applicable)</param>
+        /// <param name="optionRight">The option right of the security (if applicable)</param>
         /// <returns>A new Lean Symbol instance</returns>
-        public Symbol GetLeanSymbol(string brokerageSymbol, SecurityType securityType, string market)
+        public Symbol GetLeanSymbol(string brokerageSymbol, SecurityType securityType, string market, DateTime expirationDate = default(DateTime), decimal strike = 0, OptionRight optionRight = 0)
         {
             if (string.IsNullOrWhiteSpace(brokerageSymbol))
                 throw new ArgumentException("Invalid Oanda symbol: " + brokerageSymbol);
@@ -251,7 +254,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>True if Oanda supports the symbol</returns>
         public bool IsKnownLeanSymbol(Symbol symbol)
         {
-            if (symbol == null || string.IsNullOrWhiteSpace(symbol.Value)) 
+            if (symbol == null || string.IsNullOrWhiteSpace(symbol.Value) || symbol.Value.Length <= 3) 
                 return false;
 
             var oandaSymbol = ConvertLeanSymbolToOandaSymbol(symbol.Value);

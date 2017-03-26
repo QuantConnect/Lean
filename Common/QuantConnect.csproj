@@ -98,9 +98,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\MathNet.Numerics.3.7.0\lib\net40\MathNet.Numerics.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="NodaTime, Version=1.3.0.0, Culture=neutral, PublicKeyToken=4226afe0d9b296d1, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -108,6 +107,9 @@
     </Reference>
     <Reference Include="Python.Runtime, Version=4.0.0.1, Culture=neutral, processorArchitecture=AMD64">
       <HintPath>..\packages\QuantConnect.pythonnet.1.0.0\lib\UCS2\Python.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="QLNet, Version=1.8.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\QLNet.1.8.0\lib\net40\QLNet.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -160,6 +162,8 @@
     <Compile Include="Commands\QuitCommand.cs" />
     <Compile Include="Commands\UpdateOrderCommand.cs" />
     <Compile Include="Data\Market\IBaseDataBar.cs" />
+    <Compile Include="Data\Consolidators\OpenInterestConsolidator.cs" />
+    <Compile Include="Data\Market\OpenInterest.cs" />
     <Compile Include="Data\Market\RenkoType.cs" />
     <Compile Include="Data\Custom\DailyFx.cs" />
     <Compile Include="Data\Fundamental\FineFundamental.cs" />
@@ -178,18 +182,25 @@
     <Compile Include="Data\Fundamental\Generated\SecurityReference.cs" />
     <Compile Include="Data\Fundamental\Generated\ValuationRatios.cs" />
     <Compile Include="Data\ISubscriptionEnumeratorFactory.cs" />
-    <Compile Include="Data\Market\FirstOrderGreeks.cs" />
+    <Compile Include="Data\Market\Greeks.cs" />
+    <Compile Include="Data\Market\FuturesChain.cs" />
     <Compile Include="Data\Market\OptionChain.cs" />
     <Compile Include="Data\Market\OptionChains.cs" />
+    <Compile Include="Data\Market\FuturesChains.cs" />
+    <Compile Include="Data\Market\FuturesContract.cs" />
     <Compile Include="Data\Market\OptionContract.cs" />
+    <Compile Include="Data\Market\FuturesContracts.cs" />
     <Compile Include="Data\Market\OptionContracts.cs" />
     <Compile Include="Data\Market\QuoteBars.cs" />
     <Compile Include="Data\Market\BarDirection.cs" />
     <Compile Include="Data\Market\IntraDayDividendSplit.cs" />
+    <Compile Include="Data\SubscriptionDataConfigList.cs" />
     <Compile Include="Data\UniverseSelection\CoarseFundamentalUniverse.cs" />
     <Compile Include="Data\UniverseSelection\FineFundamentalUniverse.cs" />
     <Compile Include="Data\UniverseSelection\GetSubscriptionRequestsUniverseDecorator.cs" />
     <Compile Include="Data\UniverseSelection\FineFundamentalFilteredUniverse.cs" />
+    <Compile Include="Data\UniverseSelection\FuturesChainUniverse.cs" />
+    <Compile Include="Data\UniverseSelection\FuturesChainUniverseDataCollection.cs" />
     <Compile Include="Data\UniverseSelection\SelectSymbolsUniverseDecorator.cs" />
     <Compile Include="Data\UniverseSelection\SubscriptionRequest.cs" />
     <Compile Include="Data\UniverseSelection\UniverseDecorator.cs" />
@@ -251,14 +262,18 @@
     <Compile Include="Interfaces\IApi.cs" />
     <Compile Include="Interfaces\IBrokerage.cs" />
     <Compile Include="Interfaces\IBrokerageFactory.cs" />
+    <Compile Include="Interfaces\IDataCacheProvider.cs" />
+    <Compile Include="Interfaces\IDataQueueUniverseProvider.cs" />
     <Compile Include="Interfaces\ICommandQueueHandler.cs" />
     <Compile Include="Interfaces\IDataQueueHandler.cs" />
     <Compile Include="Interfaces\IFactorFileProvider.cs" />
-    <Compile Include="Interfaces\IDataFileProvider.cs" />
+    <Compile Include="Interfaces\IDataProvider.cs" />
     <Compile Include="Interfaces\IHistoryProvider.cs" />
     <Compile Include="Interfaces\IJobQueueHandler.cs" />
     <Compile Include="Interfaces\IMapFileProvider.cs" />
     <Compile Include="Interfaces\IMessagingHandler.cs" />
+    <Compile Include="Interfaces\IStreamReader.cs" />
+    <Compile Include="Interfaces\ITradeBuilder.cs" />
     <Compile Include="LocalTimeKeeper.cs" />
     <Compile Include="Market.cs" />
     <Compile Include="Notifications\Notification.cs" />
@@ -272,6 +287,9 @@
     <Compile Include="Orders\Fills\IFillModel.cs" />
     <Compile Include="Orders\MarketOnCloseOrder.cs" />
     <Compile Include="Orders\MarketOnOpenOrder.cs" />
+    <Compile Include="Orders\OptionExerciseOrder.cs" />
+    <Compile Include="Orders\OptionExercise\DefaultExerciseModel.cs" />
+    <Compile Include="Orders\OptionExercise\IOptionExerciseModel.cs" />
     <Compile Include="Orders\OrderField.cs" />
     <Compile Include="Orders\OrderJsonConverter.cs" />
     <Compile Include="Orders\OrderRequest.cs" />
@@ -281,8 +299,8 @@
     <Compile Include="Orders\OrderResponseErrorCode.cs" />
     <Compile Include="Orders\OrderExtensions.cs" />
     <Compile Include="Orders\OrderTicket.cs" />
+    <Compile Include="Orders\Slippage\VolumeShareSlippageModel.cs" />
     <Compile Include="Orders\Slippage\ConstantSlippageModel.cs" />
-    <Compile Include="Orders\Slippage\SpreadSlippageModel.cs" />
     <Compile Include="Orders\Slippage\ISlippageModel.cs" />
     <Compile Include="Orders\StopLimitOrder.cs" />
     <Compile Include="Orders\StopMarketOrder.cs" />
@@ -297,6 +315,7 @@
     <Compile Include="Packets\Controls.cs" />
     <Compile Include="Packets\HandledErrorPacket.cs" />
     <Compile Include="Packets\HistoryPacket.cs" />
+    <Compile Include="Packets\SystemDebugPacket.cs" />
     <Compile Include="Parameters\ParameterAttribute.cs" />
     <Compile Include="Properties\SharedAssemblyInfo.cs" />
     <Compile Include="Python\Wrappers\AlgorithmPythonWrapper.cs" />
@@ -327,31 +346,57 @@
     <Compile Include="Securities\DelayedSettlementModel.cs" />
     <Compile Include="Securities\AdjustedPriceVariationModel.cs" />
     <Compile Include="Securities\FuncSecuritySeeder.cs" />
+    <Compile Include="Securities\Futures\FutureExpirationCycles.cs" />
+    <Compile Include="Securities\Futures\FutureFilterUniverse.cs" />
+    <Compile Include="Securities\Option\OptionFilterUniverse.cs" />
+    <Compile Include="Securities\IDerivativeSecurityFilterUniverse.cs" />
     <Compile Include="Securities\IMarginCallModel.cs" />
     <Compile Include="Securities\ISecuritySeeder.cs" />
+    <Compile Include="Securities\Option\OptionSymbol.cs" />
     <Compile Include="Securities\SecurityPriceVariationModel.cs" />
     <Compile Include="Securities\FuncSecurityDerivativeFilter.cs" />
     <Compile Include="Securities\FuncSecurityInitializer.cs" />
     <Compile Include="Securities\EquityPriceVariationModel.cs" />
     <Compile Include="Securities\IPriceVariationModel.cs" />
+    <Compile Include="Securities\Futures\Future.cs" />
+    <Compile Include="Securities\Futures\FutureCache.cs" />
+    <Compile Include="Securities\Futures\FutureExchange.cs" />
+    <Compile Include="Securities\Futures\FutureHolding.cs" />
+    <Compile Include="Securities\Futures\Futures.cs" />
+    <Compile Include="Securities\Futures\FutureMarginModel.cs" />
     <Compile Include="Securities\IDerivativeSecurityFilter.cs" />
-    <Compile Include="Securities\IndicatorVolatilityModel.cs" />
+    <Compile Include="Securities\Volatility\IndicatorVolatilityModel.cs" />
+    <Compile Include="Securities\Interfaces\IContinuousContractModel.cs" />
     <Compile Include="Securities\ISecurityInitializer.cs" />
     <Compile Include="Securities\ISettlementModel.cs" />
-    <Compile Include="Securities\IVolatilityModel.cs" />
+    <Compile Include="Securities\Volatility\IVolatilityModel.cs" />
     <Compile Include="Securities\LocalMarketHours.cs" />
     <Compile Include="Securities\MarketHoursSegment.cs" />
     <Compile Include="Securities\MarketHoursState.cs" />
     <Compile Include="Securities\Option\CurrentPriceOptionPriceModel.cs" />
+    <Compile Include="Securities\Option\ConstantQLDividendYieldEstimator.cs" />
+    <Compile Include="Securities\Option\ConstantQLRiskFreeRateEstimator.cs" />
+    <Compile Include="Securities\Option\ConstantQLUnderlyingVolatilityEstimator.cs" />
+    <Compile Include="Securities\Option\IQLDividendYieldEstimator.cs" />
     <Compile Include="Securities\Option\IOptionPriceModel.cs" />
+    <Compile Include="Securities\Option\IQLRiskFreeRateEstimator.cs" />
+    <Compile Include="Securities\Option\IQLUnderlyingVolatilityEstimator.cs" />
     <Compile Include="Securities\Option\Option.cs" />
     <Compile Include="Securities\Option\OptionCache.cs" />
     <Compile Include="Securities\Option\OptionDataFilter.cs" />
     <Compile Include="Securities\Option\OptionExchange.cs" />
     <Compile Include="Securities\Option\OptionHolding.cs" />
+    <Compile Include="Securities\Option\OptionPortfolioModel.cs" />
     <Compile Include="Securities\Option\OptionPriceModelResult.cs" />
+    <Compile Include="Securities\Option\OptionPriceModels.cs" />
+    <Compile Include="Securities\Option\OptionStrategies.cs" />
+    <Compile Include="Securities\Option\OptionStrategy.cs" />
+    <Compile Include="Securities\Option\OptionSymbolProperties.cs" />
+    <Compile Include="Securities\Option\OptionMarginModel.cs" />
+    <Compile Include="Securities\Option\QLOptionPriceModel.cs" />
     <Compile Include="Securities\PatternDayTradingMarginModel.cs" />
-    <Compile Include="Securities\RelativeStandardDeviationVolatilityModel.cs" />
+    <Compile Include="Securities\Volatility\StandardDeviationOfReturnsVolatilityModel.cs" />
+    <Compile Include="Securities\Volatility\RelativeStandardDeviationVolatilityModel.cs" />
     <Compile Include="Securities\SecurityDatabaseKey.cs" />
     <Compile Include="Securities\SecurityExchangeHours.cs" />
     <Compile Include="Securities\MarketHoursDatabase.cs" />
@@ -364,7 +409,6 @@
     <Compile Include="Securities\SecurityPortfolioModel.cs" />
     <Compile Include="Securities\SecurityMarginModel.cs" />
     <Compile Include="Securities\ImmediateSettlementModel.cs" />
-    <Compile Include="Securities\StrikeExpiryOptionFilter.cs" />
     <Compile Include="Securities\SymbolProperties.cs" />
     <Compile Include="Securities\SymbolPropertiesDatabase.cs" />
     <Compile Include="Securities\UniverseManager.cs" />
@@ -443,6 +487,7 @@
     <Compile Include="Statistics\TradeEnums.cs" />
     <Compile Include="SymbolCache.cs" />
     <Compile Include="SymbolJsonConverter.cs" />
+    <Compile Include="SymbolRepresentation.cs" />
     <Compile Include="SymbolValueJsonConverter.cs" />
     <Compile Include="Time.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -451,6 +496,8 @@
     <Compile Include="TimeZoneOffsetProvider.cs" />
     <Compile Include="TimeZones.cs" />
     <Compile Include="Python\PythonData.cs" />
+    <Compile Include="TradingCalendar.cs" />
+    <Compile Include="TradingDay.cs" />
     <Compile Include="Util\BusyBlockingCollection.cs" />
     <Compile Include="Util\CircularQueue.cs" />
     <Compile Include="Util\Composer.cs" />

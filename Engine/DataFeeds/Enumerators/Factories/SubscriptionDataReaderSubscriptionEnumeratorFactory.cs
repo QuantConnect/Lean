@@ -28,41 +28,42 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     /// Provides an implementation of <see cref="ISubscriptionEnumeratorFactory"/> that used the
     /// <see cref="SubscriptionDataReader"/>
     /// </summary>
-    public class SubscriptionDataReaderSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory
+    public class SubscriptionDataReaderSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory, IDisposable
     {
         private readonly bool _isLiveMode;
         private readonly bool _includeAuxiliaryData;
         private readonly IResultHandler _resultHandler;
-        private readonly MapFileResolver _mapFileResolver;
         private readonly IFactorFileProvider _factorFileProvider;
-        private readonly IDataFileProvider _dataFileProvider;
+        private readonly IDataProvider _dataProvider;
+        private ZipDataCacheProvider _zipDataCacheProvider;
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
-
+        private readonly IMapFileProvider _mapFileProvider;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SubscriptionDataReaderSubscriptionEnumeratorFactory"/> class
         /// </summary>
         /// <param name="resultHandler">The result handler for the algorithm</param>
-        /// <param name="mapFileResolver">The map file resolver</param>
-        /// <param name="factorFileProvider">The factory file provider</param>
-        /// <param name="dataFileProvider">Provider used to get data when it is not present on disk</param>
+        /// <param name="mapFileProvider">The map file provider</param>
+        /// <param name="factorFileProvider">The factor file provider</param>
+        /// <param name="dataProvider">Provider used to get data when it is not present on disk</param>
         /// <param name="isLiveMode">True if runnig live algorithm, false otherwise</param>
         /// <param name="includeAuxiliaryData">True to check for auxiliary data, false otherwise</param>
         /// <param name="tradableDaysProvider">Function used to provide the tradable dates to be enumerator.
         /// Specify null to default to <see cref="SubscriptionRequest.TradableDays"/></param>
         public SubscriptionDataReaderSubscriptionEnumeratorFactory(IResultHandler resultHandler,
-            MapFileResolver mapFileResolver,
+            IMapFileProvider mapFileProvider,
             IFactorFileProvider factorFileProvider,
-            IDataFileProvider dataFileProvider,
+            IDataProvider dataProvider,
             bool isLiveMode,
             bool includeAuxiliaryData,
             Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null
             )
         {
             _resultHandler = resultHandler;
-            _mapFileResolver = mapFileResolver;
+            _mapFileProvider = mapFileProvider;
             _factorFileProvider = factorFileProvider;
-            _dataFileProvider = dataFileProvider;
+            _dataProvider = dataProvider;
+            _zipDataCacheProvider = new ZipDataCacheProvider(dataProvider);
             _isLiveMode = isLiveMode;
             _includeAuxiliaryData = includeAuxiliaryData;
             _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
@@ -72,21 +73,37 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// Creates a <see cref="SubscriptionDataReader"/> to read the specified request
         /// </summary>
         /// <param name="request">The subscription request to be read</param>
-        /// <param name="dataFileProvider">Provider used to get data when it is not present on disk</param>
+        /// <param name="dataProvider">Provider used to get data when it is not present on disk</param>
         /// <returns>An enumerator reading the subscription request</returns>
-        public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataFileProvider dataFileProvider)
+        public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataProvider dataProvider)
         {
-            return new SubscriptionDataReader(request.Configuration, 
-                request.StartTimeLocal, 
-                request.EndTimeLocal, 
-                _resultHandler, 
-                _mapFileResolver,
+            var mapFileResolver = request.Configuration.SecurityType == SecurityType.Equity || 
+                                  request.Configuration.SecurityType == SecurityType.Option
+                                    ? _mapFileProvider.Get(request.Security.Symbol.ID.Market)
+                                    : MapFileResolver.Empty;
+
+            return new SubscriptionDataReader(request.Configuration,
+                request.StartTimeLocal,
+                request.EndTimeLocal,
+                _resultHandler,
+                mapFileResolver,
                 _factorFileProvider,
-                _dataFileProvider, 
-                _tradableDaysProvider(request), 
-                _isLiveMode, 
+                _dataProvider,
+                _tradableDaysProvider(request),
+                _isLiveMode,
+                 _zipDataCacheProvider,
                 _includeAuxiliaryData
                 );
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
+        {
+            if (_zipDataCacheProvider != null)
+                _zipDataCacheProvider.Dispose();
         }
     }
 }

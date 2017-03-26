@@ -17,8 +17,8 @@ namespace QuantConnect.Tests.Common.Securities
     {
         private QCAlgorithm _algo;
         private BrokerageModelSecurityInitializer _brokerageInitializer;
-        private Security _security;
-        private readonly SubscriptionDataConfig _config = new SubscriptionDataConfig(typeof(TradeBar),
+        private Security _tradeBarSecurity;
+        private readonly SubscriptionDataConfig _tradeBarConfig = new SubscriptionDataConfig(typeof(TradeBar),
                                                                                      Symbols.SPY,
                                                                                      Resolution.Second,
                                                                                      TimeZones.NewYork,
@@ -30,23 +30,42 @@ namespace QuantConnect.Tests.Common.Securities
                                                                                      TickType.Trade,
                                                                                      false);
 
+        private Security _quoteBarSecurity;
+        private readonly SubscriptionDataConfig _quoteBarConfig = new SubscriptionDataConfig(typeof(QuoteBar),
+                                                                                     Symbols.EURUSD,
+                                                                                     Resolution.Second,
+                                                                                     TimeZones.NewYork,
+                                                                                     TimeZones.NewYork,
+                                                                                     false,
+                                                                                     false,
+                                                                                     false,
+                                                                                     false,
+                                                                                     TickType.Quote,
+                                                                                     false);
+
         [SetUp]
         public void Setup()
         {
             _algo =  new QCAlgorithm();
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
             historyProvider.Initialize(null,
+                                       new DefaultDataProvider(),
+                                       new SingleEntryDataCacheProvider(new DefaultDataProvider()),
                                        new LocalDiskMapFileProvider(),
                                        new LocalDiskFactorFileProvider(),
-                                       new DefaultDataFileProvider(),
                                        null);
 
             _algo.HistoryProvider = historyProvider;
 
-            _security = new Security(SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
-                                        _config,
+            _tradeBarSecurity = new Security(SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
+                                        _tradeBarConfig,
                                         new Cash(CashBook.AccountCurrency, 0, 1m),
                                         SymbolProperties.GetDefault(CashBook.AccountCurrency));
+
+            _quoteBarSecurity = new Security(SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
+                                    _quoteBarConfig,
+                                    new Cash(CashBook.AccountCurrency, 0, 1m),
+                                    SymbolProperties.GetDefault(CashBook.AccountCurrency));
 
             _brokerageInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(),
                                                                              new FuncSecuritySeeder(_algo.GetLastKnownPrice));
@@ -55,39 +74,53 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void BrokerageModelSecurityInitializer_CanSetLeverageForBacktesting_Successfully()
         {
-            Assert.AreEqual(_security.Leverage, 1.0);
+            Assert.AreEqual(_tradeBarSecurity.Leverage, 1.0);
 
-            _brokerageInitializer.Initialize(_security);
+            _brokerageInitializer.Initialize(_tradeBarSecurity);
 
-            Assert.AreEqual(_security.Leverage, 2.0);
+            Assert.AreEqual(_tradeBarSecurity.Leverage, 2.0);
         }
 
         [Test]
-        public void BrokerageModelSecurityInitializer_CanSetPrice_ForExistingHistory()
+        public void BrokerageModelSecurityInitializer_CanSetPrice_ForTradeBar()
         {
             // Arrange
-            var dateForWhichDataExist = DateTime.Parse("10/10/2013 12:00PM");
+            var dateForWhichDataExist = new DateTime(2013, 10, 10, 12, 0, 0);
             _algo.SetDateTime(dateForWhichDataExist);
             
             // Act
-            _brokerageInitializer.Initialize(_security);
+            _brokerageInitializer.Initialize(_tradeBarSecurity);
 
             // Assert
-            Assert.IsFalse(_security.Price == 0);
+            Assert.IsFalse(_tradeBarSecurity.Price == 0);
+        }
+
+        [Test]
+        public void BrokerageModelSecurityInitializer_CanSetPrice_ForQuoteBar()
+        {
+            // Arrange
+            var dateForWhichDataExist = new DateTime(2014, 5, 6, 12, 0, 0);
+            _algo.SetDateTime(dateForWhichDataExist);
+
+            // Act
+            _brokerageInitializer.Initialize(_quoteBarSecurity);
+
+            // Assert
+            Assert.IsFalse(_quoteBarSecurity.Price == 0);
         }
 
         [Test]
         public void BrokerageModelSecurityInitializer_CannotSetPrice_ForNonExistentHistory()
         {
             // Arrange
-            var dateForWhichDataDoesNotExist = DateTime.Parse("10/10/2050 12:00PM");
+            var dateForWhichDataDoesNotExist = new DateTime(2050, 10, 10, 12, 0, 0);
             _algo.SetDateTime(dateForWhichDataDoesNotExist);
 
             // Act
-            _brokerageInitializer.Initialize(_security);
+            _brokerageInitializer.Initialize(_tradeBarSecurity);
 
             // Assert
-            Assert.IsTrue(_security.Price == 0);
+            Assert.IsTrue(_tradeBarSecurity.Price == 0);
         }
     }
 }

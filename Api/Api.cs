@@ -601,10 +601,13 @@ namespace QuantConnect.Api
         /// <param name="algorithmId">String algorithm id we're searching for.</param>
         /// <param name="userId">The user id of the algorithm</param>
         /// <returns>Algorithm status enum</returns>
-        
+
         public virtual AlgorithmControl GetAlgorithmStatus(string algorithmId, int userId)
         {
-            return new AlgorithmControl();
+            return new AlgorithmControl()
+            {
+                ChartSubscription = "*"
+            };
         }
 
         /// <summary>

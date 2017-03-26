@@ -76,7 +76,7 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
             // Until the window is ready, the indicator returns the input value.
-            if (!IsReady) return input;
+            if (window.Samples <= window.Size) return input;
 
             // Sort the window by time, convert the observations to double and transform it to an array
             var series = window

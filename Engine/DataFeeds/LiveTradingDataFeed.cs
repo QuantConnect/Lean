@@ -52,7 +52,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private ITimeProvider _timeProvider;
         // used to keep time constant during a time sync iteration
         private ManualTimeProvider _frontierTimeProvider;
-        private IDataFileProvider _dataFileProvider;
+        private IDataProvider _dataProvider;
+        private SingleEntryDataCacheProvider _dataCacheProvider;
 
         private Ref<TimeSpan> _fillForwardResolution;
         private IResultHandler _resultHandler;
@@ -85,7 +86,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes the data feed for the specified job and algorithm
         /// </summary>
-        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, IDataFileProvider dataFileProvider)
+        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, IDataProvider dataProvider)
         {
             if (!(job is LiveNodePacket))
             {
@@ -99,7 +100,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _resultHandler = resultHandler;
             _timeProvider = GetTimeProvider();
             _dataQueueHandler = GetDataQueueHandler();
-            _dataFileProvider = dataFileProvider;
+            _dataProvider = dataProvider;
+            _dataCacheProvider = new SingleEntryDataCacheProvider(dataProvider);
 
             _frontierTimeProvider = new ManualTimeProvider(_timeProvider.GetUtcNow());
             _customExchange = new BaseDataExchange("CustomDataExchange") {SleepInterval = 10};
@@ -407,7 +409,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         var dateInDataTimeZone = DateTime.UtcNow.ConvertFromUtc(request.Configuration.DataTimeZone).Date;
                         var enumeratorFactory = new BaseDataSubscriptionEnumeratorFactory(r => new[] { dateInDataTimeZone });
-                        var factoryReadEnumerator = enumeratorFactory.CreateEnumerator(request, _dataFileProvider);
+                        var factoryReadEnumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
                         var maximumDataAge = TimeSpan.FromTicks(Math.Max(request.Configuration.Increment.Ticks, TimeSpan.FromSeconds(5).Ticks));
                         var fastForward = new FastForwardEnumerator(factoryReadEnumerator, _timeProvider, request.Security.Exchange.TimeZone, maximumDataAge);
                         return new FrontierAwareEnumerator(fastForward, _frontierTimeProvider, timeZoneOffsetProvider);
@@ -425,7 +427,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _customExchange.SetDataHandler(request.Configuration.Symbol, data =>
                     {
                         enqueable.Enqueue(data);
-                        if (subscription != null) subscription.RealtimePrice = data.Value;
+                        if (SubscriptionShouldUpdateRealTimePrice(subscription, timeZoneOffsetProvider)) subscription.RealtimePrice = data.Value;
                     });
                     enumerator = enqueable;
                 }
@@ -433,13 +435,51 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     // this enumerator allows the exchange to pump ticks into the 'back' of the enumerator,
                     // and the time sync loop can pull aggregated trade bars off the front
-                    var aggregator = new TradeBarBuilderEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider);
-                    _exchange.SetDataHandler(request.Configuration.Symbol, data =>
+                    switch (request.Configuration.TickType)
                     {
-                        aggregator.ProcessData((Tick) data);
-                        if (subscription != null) subscription.RealtimePrice = data.Value;
-                    });
-                    enumerator = aggregator;
+                        case TickType.Quote:
+                            var quoteBarAggregator = new QuoteBarBuilderEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider);
+                            _exchange.AddDataHandler(request.Configuration.Symbol, data =>
+                            {
+                                var tick = data as Tick;
+
+                                if (tick.TickType == TickType.Quote)
+                                {
+                                    quoteBarAggregator.ProcessData(tick);
+                                    if (SubscriptionShouldUpdateRealTimePrice(subscription, timeZoneOffsetProvider)) subscription.RealtimePrice = data.Value;
+                                }
+                            });
+                            enumerator = quoteBarAggregator;
+                            break;
+                        case TickType.Trade:
+                        default:
+                            var tradeBarAggregator = new TradeBarBuilderEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider);
+                            _exchange.AddDataHandler(request.Configuration.Symbol, data =>
+                            {
+                                var tick = data as Tick;
+
+                                if (tick.TickType == TickType.Trade)
+                                {
+                                    tradeBarAggregator.ProcessData(tick);
+                                    if (SubscriptionShouldUpdateRealTimePrice(subscription, timeZoneOffsetProvider)) subscription.RealtimePrice = data.Value;
+                                }
+                            });
+                            enumerator = tradeBarAggregator;
+                            break;
+                        case TickType.OpenInterest:
+                            var oiAggregator = new OpenInterestEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider);
+                            _exchange.AddDataHandler(request.Configuration.Symbol, data =>
+                            {
+                                var tick = data as Tick;
+
+                                if (tick.TickType == TickType.OpenInterest)
+                                {
+                                    oiAggregator.ProcessData(tick);
+                                }
+                            });
+                            enumerator = oiAggregator;
+                            break;
+                    }
                 }
                 else
                 {
@@ -448,13 +488,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _exchange.SetDataHandler(request.Configuration.Symbol, data =>
                     {
                         tickEnumerator.Enqueue(data);
-                        if (subscription != null) subscription.RealtimePrice = data.Value;
+                        if (SubscriptionShouldUpdateRealTimePrice(subscription, timeZoneOffsetProvider)) subscription.RealtimePrice = data.Value;
                     });
                     enumerator = tickEnumerator;
                 }
 
                 if (request.Configuration.FillDataForward)
                 {
+                    var subscriptionConfigs = _subscriptions.Select(x => x.Configuration).Concat(new[] { request.Configuration });
+
+                    UpdateFillForwardResolution(subscriptionConfigs);
+
                     enumerator = new LiveFillForwardEnumerator(_frontierTimeProvider, enumerator, request.Security.Exchange, _fillForwardResolution, request.Configuration.ExtendedMarketHours, localEndTime, request.Configuration.Increment);
                 }
 
@@ -487,7 +531,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // grab the relevant exchange hours
             var config = request.Universe.Configuration;
-
+            var localEndTime = request.EndTimeUtc.ConvertFromUtc(request.Security.Exchange.TimeZone);
             var tzOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
 
             IEnumerator<BaseData> enumerator;
@@ -499,7 +543,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 // spoof a tick on the requested interval to trigger the universe selection function
                 var enumeratorFactory = new UserDefinedUniverseSubscriptionEnumeratorFactory(userDefined, MarketHoursDatabase.FromDataFolder());
-                enumerator = enumeratorFactory.CreateEnumerator(request, _dataFileProvider);
+                enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
 
                 enumerator = new FrontierAwareEnumerator(enumerator, _timeProvider, tzOffsetProvider);
 
@@ -539,6 +583,48 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 });
                 enumerator = enqueable;
             }
+            else if (request.Universe is OptionChainUniverse)
+            {
+                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating option chain universe: " + config.Symbol.ToString());
+
+                Func<SubscriptionRequest, IEnumerator<BaseData>, IEnumerator<BaseData>> configure = (subRequest, input) =>
+                {
+                    // we check if input enumerator is an underlying enumerator. If yes, we subscribe it to the data.
+                    var aggregator = input as TradeBarBuilderEnumerator;
+
+                    if (aggregator != null)
+                    {
+                        _exchange.SetDataHandler(request.Configuration.Symbol, data =>
+                        {
+                            aggregator.ProcessData((Tick)data);
+                        });
+                    }
+
+                    var subscriptionConfigs = _subscriptions.Select(x => x.Configuration).Concat(new[] { request.Configuration });
+
+                    UpdateFillForwardResolution(subscriptionConfigs);
+
+                    return new LiveFillForwardEnumerator(_frontierTimeProvider, input, request.Security.Exchange, _fillForwardResolution, request.Configuration.ExtendedMarketHours, localEndTime, request.Configuration.Increment);
+                };
+
+                var symbolUniverse = _dataQueueHandler as IDataQueueUniverseProvider;
+
+                var enumeratorFactory = new OptionChainUniverseSubscriptionEnumeratorFactory(configure, symbolUniverse, _timeProvider);
+                enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
+
+                enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, tzOffsetProvider);
+            }
+            else if (request.Universe is FuturesChainUniverse)
+            {
+                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating futures chain universe: " + config.Symbol.ToString());
+
+                var symbolUniverse = _dataQueueHandler as IDataQueueUniverseProvider;
+
+                var enumeratorFactory = new FuturesChainUniverseSubscriptionEnumeratorFactory(symbolUniverse, _timeProvider);
+                enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
+
+                enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, tzOffsetProvider);
+            }
             else
             {
                 Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating custom universe: " + config.Symbol.ToString());
@@ -549,7 +635,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var sourceProvider = (BaseData)Activator.CreateInstance(config.Type);
                     var dateInDataTimeZone = DateTime.UtcNow.ConvertFromUtc(config.DataTimeZone).Date;
                     var source = sourceProvider.GetSource(config, dateInDataTimeZone, true);
-                    var factory = SubscriptionDataSourceReader.ForSource(source, _dataFileProvider, config, dateInDataTimeZone, false);
+                    var factory = SubscriptionDataSourceReader.ForSource(source, _dataCacheProvider, config, dateInDataTimeZone, false);
                     var factorEnumerator = factory.Read(source).GetEnumerator();
                     var fastForward = new FastForwardEnumerator(factorEnumerator, _timeProvider, request.Security.Exchange.TimeZone, config.Increment);
                     var frontierAware = new FrontierAwareEnumerator(fastForward, _frontierTimeProvider, tzOffsetProvider);
@@ -568,6 +654,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var subscription = new Subscription(request.Universe, request.Security, config, enumerator, tzOffsetProvider, request.StartTimeUtc, request.EndTimeUtc, true);
 
             return subscription;
+        }
+
+                /// <summary>
+        /// Checks if the subscription should update the RealTimePrice
+        /// </summary>
+        /// <param name="subscription">The <see cref="Subscription"/></param>
+        /// <param name="timeZoneOffsetProvider">The <see cref="TimeZoneOffsetProvider"/> used to convert now into the timezone of the exchange</param>
+        /// <returns>True if the subscription is not null and the exchange is open</returns>
+        protected bool SubscriptionShouldUpdateRealTimePrice(Subscription subscription, TimeZoneOffsetProvider timeZoneOffsetProvider)
+        {
+            return subscription != null &&
+                   subscription.Security.Exchange.Hours.IsOpen(
+                       timeZoneOffsetProvider.ConvertFromUtc(_timeProvider.GetUtcNow()),
+                       subscription.Security.IsExtendedMarketHours);
         }
 
         /// <summary>
@@ -597,9 +697,29 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         private void UpdateFillForwardResolution()
         {
-            _fillForwardResolution.Value = _subscriptions
-                .Where(x => !x.Configuration.IsInternalFeed)
-                .Select(x => x.Configuration.Resolution)
+            UpdateFillForwardResolution(_subscriptions.Select(x => x.Configuration));
+        }
+
+        /// <summary>
+        /// Updates the fill forward resolution by checking specified subscription configurations and
+        /// selecting the smallest resoluton not equal to tick
+        /// </summary>
+        /// <param name="subscriptionConfigs">Subscription configurations list</param>
+        private void UpdateFillForwardResolution(IEnumerable<SubscriptionDataConfig> subscriptionConfigs)
+        {
+            _fillForwardResolution.Value = GetFillForwardResolution(subscriptionConfigs);
+        }
+
+        /// <summary>
+        /// Returns the fill forward resolution by checking specified subscription configurations and
+        /// selecting the smallest resoluton not equal to tick
+        /// </summary>
+        /// <param name="subscriptionConfigs">Subscription configurations list</param>
+        private TimeSpan GetFillForwardResolution(IEnumerable<SubscriptionDataConfig> subscriptionConfigs)
+        {
+            return subscriptionConfigs
+                .Where(x => !x.IsInternalFeed)
+                .Select(x => x.Resolution)
                 .Where(x => x != Resolution.Tick)
                 .DefaultIfEmpty(Resolution.Minute)
                 .Min().ToTimeSpan();

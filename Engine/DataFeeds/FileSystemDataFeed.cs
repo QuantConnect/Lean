@@ -46,11 +46,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private Ref<TimeSpan> _fillForwardResolution;
         private IMapFileProvider _mapFileProvider;
         private IFactorFileProvider _factorFileProvider;
-        private IDataFileProvider _dataFileProvider;
+        private IDataProvider _dataProvider;
         private SubscriptionCollection _subscriptions;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private UniverseSelection _universeSelection;
         private DateTime _frontierUtc;
+        private SubscriptionDataReaderSubscriptionEnumeratorFactory _subscriptionfactory;
 
         /// <summary>
         /// Gets all of the current subscriptions this data feed is processing
@@ -68,16 +69,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Initializes the data feed for the specified job and algorithm
         /// </summary>
-        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, IDataFileProvider dataFileProvider)
+        public void Initialize(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, IDataProvider dataProvider)
         {
             _algorithm = algorithm;
             _resultHandler = resultHandler;
             _mapFileProvider = mapFileProvider;
             _factorFileProvider = factorFileProvider;
-            _dataFileProvider = dataFileProvider;
+            _dataProvider = dataProvider;
             _subscriptions = new SubscriptionCollection();
             _universeSelection = new UniverseSelection(this, algorithm, job.Controls);
             _cancellationTokenSource = new CancellationTokenSource();
+            _subscriptionfactory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(_resultHandler, _mapFileProvider, _factorFileProvider, _dataProvider, false, true);
 
             IsActive = true;
             var threadCount = Math.Max(1, Math.Min(4, Environment.ProcessorCount - 3));
@@ -137,7 +139,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // ReSharper disable once PossibleMultipleEnumeration
             var enumeratorFactory = GetEnumeratorFactory(request);
-            var enumerator = enumeratorFactory.CreateEnumerator(request, _dataFileProvider);
+            var enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
             enumerator = ConfigureEnumerator(request, false, enumerator);
 
             var enqueueable = new EnqueueableEnumerator<BaseData>(true);
@@ -231,18 +233,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>True if the subscription was successfully removed, false otherwise</returns>
         public bool RemoveSubscription(SubscriptionDataConfig configuration)
         {
-            // remove the subscription from our collection
+            // remove the subscription from our collection, if it exists
             Subscription subscription;
-            if (!_subscriptions.TryRemove(configuration, out subscription))
+
+            if (_subscriptions.TryGetValue(configuration, out subscription))
             {
-                Log.Error("FileSystemDataFeed.RemoveSubscription(): Unable to remove: " + configuration);
-                return false;
+                if (!_subscriptions.TryRemove(configuration, out subscription))
+                {
+                    Log.Error("FileSystemDataFeed.RemoveSubscription(): Unable to remove: " + configuration);
+                    return false;
+                }
+
+                subscription.Dispose();
+                Log.Debug("FileSystemDataFeed.RemoveSubscription(): Removed " + configuration);
+
+                UpdateFillForwardResolution();
             }
-
-            subscription.Dispose();
-            Log.Debug("FileSystemDataFeed.RemoveSubscription(): Removed " + configuration);
-
-            UpdateFillForwardResolution();
 
             return true;
         }
@@ -316,7 +322,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var config = request.Configuration;
 
             // define our data enumerator
-            var enumerator = GetEnumeratorFactory(request).CreateEnumerator(request, _dataFileProvider);
+            var enumerator = GetEnumeratorFactory(request).CreateEnumerator(request, _dataProvider);
 
             var firstLoopCount = 5;
             var lowerThreshold = GetLowerThreshold(config.Resolution);
@@ -372,18 +378,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 if (request.Universe is OptionChainUniverse)
                 {
-                    return new OptionChainUniverseSubscriptionEnumeratorFactory((req, e) => ConfigureEnumerator(req, true, e));
+                    return new OptionChainUniverseSubscriptionEnumeratorFactory((req, e) => ConfigureEnumerator(req, true, e), 
+                        _mapFileProvider.Get(request.Security.Symbol.ID.Market), _factorFileProvider);
+                }
+                if (request.Universe is FuturesChainUniverse)
+                {
+                    return new FuturesChainUniverseSubscriptionEnumeratorFactory((req, e) => ConfigureEnumerator(req, true, e));
                 }
             }
 
-            var mapFileResolver = request.Configuration.SecurityType == SecurityType.Equity
-                ? _mapFileProvider.Get(request.Security.Symbol.ID.Market) 
-                : MapFileResolver.Empty;
-
-            return new PostCreateConfigureSubscriptionEnumeratorFactory(
-                new SubscriptionDataReaderSubscriptionEnumeratorFactory(_resultHandler, mapFileResolver, _factorFileProvider, _dataFileProvider, false, true),
-                enumerator => ConfigureEnumerator(request, false, enumerator)
-                );
+            return _subscriptionfactory;
         }
 
         /// <summary>
@@ -401,9 +405,29 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         private void UpdateFillForwardResolution()
         {
-            _fillForwardResolution.Value = _subscriptions
-                .Where(x => !x.Configuration.IsInternalFeed)
-                .Select(x => x.Configuration.Resolution)
+            UpdateFillForwardResolution(_subscriptions.Select( x => x.Configuration ));
+        }
+
+        /// <summary>
+        /// Updates the fill forward resolution by checking specified subscription configurations and
+        /// selecting the smallest resoluton not equal to tick
+        /// </summary>
+        /// <param name="subscriptionConfigs">Subscription configurations list</param>
+        private void UpdateFillForwardResolution(IEnumerable<SubscriptionDataConfig> subscriptionConfigs)
+        {
+            _fillForwardResolution.Value = GetFillForwardResolution(subscriptionConfigs);
+        }
+
+        /// <summary>
+        /// Returns the fill forward resolution by checking specified subscription configurations and
+        /// selecting the smallest resoluton not equal to tick
+        /// </summary>
+        /// <param name="subscriptionConfigs">Subscription configurations list</param>
+        private TimeSpan GetFillForwardResolution(IEnumerable<SubscriptionDataConfig> subscriptionConfigs)
+        {
+            return subscriptionConfigs
+                .Where(x => !x.IsInternalFeed)
+                .Select(x => x.Resolution)
                 .Where(x => x != Resolution.Tick)
                 .DefaultIfEmpty(Resolution.Minute)
                 .Min().ToTimeSpan();
@@ -467,6 +491,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 subscription.Dispose();
             }
 
+            if (_subscriptionfactory != null)
+                _subscriptionfactory.Dispose();
+
             Log.Trace(string.Format("FileSystemDataFeed.Run(): Data Feed Completed at {0} UTC", _frontierUtc));
         }
 
@@ -495,6 +522,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // optionally apply fill forward logic, but never for tick data
             if (request.Configuration.FillDataForward && request.Configuration.Resolution != Resolution.Tick)
             {
+                var subscriptionConfigs = _subscriptions.Select(x => x.Configuration).Concat(new[] { request.Configuration });
+
+                UpdateFillForwardResolution(subscriptionConfigs);
+
                 enumerator = new FillForwardEnumerator(enumerator, request.Security.Exchange, _fillForwardResolution,
                     request.Security.IsExtendedMarketHours, request.EndTimeLocal, request.Configuration.Resolution.ToTimeSpan());
             }

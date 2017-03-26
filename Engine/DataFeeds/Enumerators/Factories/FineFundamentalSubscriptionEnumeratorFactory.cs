@@ -33,6 +33,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     /// </summary>
     public class FineFundamentalSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory
     {
+        private SingleEntryDataCacheProvider _dataCacheProvider;
+
         private readonly bool _isLiveMode;
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
         private string _lastUsedFileName;
@@ -53,10 +55,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// Creates an enumerator to read the specified request
         /// </summary>
         /// <param name="request">The subscription request to be read</param>
-        /// <param name="dataFileProvider">Provider used to get data when it is not present on disk</param>
+        /// <param name="dataProvider">Provider used to get data when it is not present on disk</param>
         /// <returns>An enumerator reading the subscription request</returns>
-        public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataFileProvider dataFileProvider)
+        public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataProvider dataProvider)
         {
+            _dataCacheProvider = new SingleEntryDataCacheProvider(dataProvider);
+
             var tradableDays = _tradableDaysProvider(request);
 
             var fineFundamental = new FineFundamental();
@@ -66,7 +70,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 from date in tradableDays
 
                 let fineFundamentalSource = GetSource(fineFundamental, fineFundamentalConfiguration, date)
-                let fineFundamentalFactory = SubscriptionDataSourceReader.ForSource(fineFundamentalSource, dataFileProvider, fineFundamentalConfiguration, date, _isLiveMode)
+                let fineFundamentalFactory = SubscriptionDataSourceReader.ForSource(fineFundamentalSource, _dataCacheProvider, fineFundamentalConfiguration, date, _isLiveMode)
                 let fineFundamentalForDate = (FineFundamental)fineFundamentalFactory.Read(fineFundamentalSource).FirstOrDefault()
 
                 select new FineFundamental

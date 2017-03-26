@@ -31,7 +31,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class HistoryAlgorithm : QCAlgorithm
     {
         public SimpleMovingAverage spyDailySma;
-
+        private int _count = 0;
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -51,20 +51,20 @@ namespace QuantConnect.Algorithm.CSharp
             spyDailySma = new SimpleMovingAverage(14);
 
             // get the last calendar year's worth of SPY data at the configured resolution (daily)
-            var tradeBarHistory = History("SPY", TimeSpan.FromDays(365));
-            AssertHistoryCount("History(\"SPY\", TimeSpan.FromDays(365))", tradeBarHistory, 250);
+            var tradeBarHistory = History<TradeBar>("SPY", TimeSpan.FromDays(365));
+            AssertHistoryCount("History<TradeBar>(\"SPY\", TimeSpan.FromDays(365))", tradeBarHistory, 250);
 
             // get the last calendar day's worth of SPY data at the specified resolution
-            tradeBarHistory = History("SPY", TimeSpan.FromDays(1), Resolution.Minute);
-            AssertHistoryCount("History(\"SPY\", TimeSpan.FromDays(1), Resolution.Minute)", tradeBarHistory, 390);
+            tradeBarHistory = History<TradeBar>("SPY", TimeSpan.FromDays(1), Resolution.Minute);
+            AssertHistoryCount("History<TradeBar>(\"SPY\", TimeSpan.FromDays(1), Resolution.Minute)", tradeBarHistory, 390);
 
             // get the last 14 bars of SPY at the configured resolution (daily)
-            tradeBarHistory = History("SPY", 14).ToList();
-            AssertHistoryCount("History(\"SPY\", 14)", tradeBarHistory, 14);
+            tradeBarHistory = History<TradeBar>("SPY", 14).ToList();
+            AssertHistoryCount("History<TradeBar>(\"SPY\", 14)", tradeBarHistory, 14);
 
             // get the last 14 minute bars of SPY
-            tradeBarHistory = History("SPY", 14, Resolution.Minute);
-            AssertHistoryCount("History(\"SPY\", 14, Resolution.Minute)", tradeBarHistory, 14);
+            tradeBarHistory = History<TradeBar>("SPY", 14, Resolution.Minute);
+            AssertHistoryCount("History<TradeBar>(\"SPY\", 14, Resolution.Minute)", tradeBarHistory, 14);
 
             // we can loop over the return value from these functions and we get TradeBars
             // we can use these TradeBars to initialize indicators or perform other math
@@ -174,7 +174,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // we can access the history for individual symbols from the all history by specifying the symbol
             // the type must be a trade bar!
-            tradeBarHistory = allHistory.Get("SPY");
+            tradeBarHistory = allHistory.Get<TradeBar>("SPY");
             AssertHistoryCount("allHistory.Get(\"SPY\")", tradeBarHistory, 390);
 
             // we can access all the closing prices in chronological order using this get function
@@ -195,6 +195,13 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
+            _count++;
+
+            if (_count > 5)
+            {
+                throw new Exception("Invalid number of bars arrived. Expected exactly 5");
+            }
+
             if (!Portfolio.Invested)
             {
                 SetHoldings("SPY", 1);

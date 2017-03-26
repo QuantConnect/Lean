@@ -17,10 +17,12 @@ using System.Collections.Generic;
 using System.Linq;
 using com.fxcm.fix;
 using com.fxcm.fix.pretrade;
+using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Brokerages.Fxcm
 {
@@ -70,6 +72,15 @@ namespace QuantConnect.Brokerages.Fxcm
                 if (_fxcmInstruments.TryGetValue(_symbolMapper.GetBrokerageSymbol(symbol), out fxcmSecurity))
                 {
                     request.addRelatedSymbol(fxcmSecurity);
+
+                    // cache exchange time zone for symbol
+                    DateTimeZone exchangeTimeZone;
+                    if (!_symbolExchangeTimeZones.TryGetValue(symbol, out exchangeTimeZone))
+                    {
+                        exchangeTimeZone = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.FXCM, symbol, symbol.SecurityType).TimeZone;
+                        _symbolExchangeTimeZones.Add(symbol, exchangeTimeZone);
+                    }
+
                 }
             }
             request.setSubscriptionRequestType(SubscriptionRequestTypeFactory.SUBSCRIBE);

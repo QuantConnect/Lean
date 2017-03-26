@@ -15,9 +15,11 @@
 
 using System;
 using NUnit.Framework;
+using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Oanda;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
+using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Logging;
 using Environment = QuantConnect.Brokerages.Oanda.Environment;
 
@@ -44,11 +46,11 @@ namespace QuantConnect.Tests.Brokerages.Oanda
                     // invalid period, no error, empty result
                     new TestCaseData(Symbols.EURUSD, Resolution.Daily, TimeSpan.FromDays(-15), false),
 
-                    // invalid symbol, throws "System.ArgumentException : Unknown symbol: XYZ"
-                    new TestCaseData(Symbol.Create("XYZ", SecurityType.Forex, Market.FXCM), Resolution.Daily, TimeSpan.FromDays(15), true),
+                    // invalid symbol, no error, empty result
+                    new TestCaseData(Symbol.Create("XYZ", SecurityType.Forex, Market.FXCM), Resolution.Daily, TimeSpan.FromDays(15), false),
 
-                    // invalid security type, throws "System.ArgumentException : Invalid security type: Equity"
-                    new TestCaseData(Symbols.AAPL, Resolution.Daily, TimeSpan.FromDays(15), true),
+                    // invalid security type, no error, empty result
+                    new TestCaseData(Symbols.AAPL, Resolution.Daily, TimeSpan.FromDays(15), false),
                 };
             }
         }
@@ -63,7 +65,11 @@ namespace QuantConnect.Tests.Brokerages.Oanda
                 var accountId = Config.Get("oanda-account-id");
 
                 var brokerage = new OandaBrokerage(null, null, environment, accessToken, accountId);
-        
+
+                var historyProvider = new BrokerageHistoryProvider();
+                historyProvider.SetBrokerage(brokerage);
+                historyProvider.Initialize(null, null, null, null, null, null);
+
                 var now = DateTime.UtcNow;
 
                 var requests = new[]
@@ -77,7 +83,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
                     }
                 };
 
-                var history = brokerage.GetHistory(requests, TimeZones.Utc);
+                var history = historyProvider.GetHistory(requests, TimeZones.Utc);
 
                 foreach (var slice in history)
                 {
@@ -96,7 +102,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
                     }
                 }
 
-                Log.Trace("Data points retrieved: " + brokerage.DataPointCount);
+                Log.Trace("Data points retrieved: " + historyProvider.DataPointCount);
             };
 
             if (throwsException)

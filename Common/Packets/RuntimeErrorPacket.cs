@@ -43,6 +43,12 @@ namespace QuantConnect.Packets
         public string StackTrace;
 
         /// <summary>
+        /// User Id associated with the backtest that threw the error
+        /// </summary>
+        [JsonProperty(PropertyName = "iUserID")]
+        public int UserId = 0;
+
+        /// <summary>
         /// Default constructor for JSON
         /// </summary>
         public RuntimeErrorPacket()
@@ -52,9 +58,10 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Create a new runtime error packet
         /// </summary>
-        public RuntimeErrorPacket(string algorithmId, string message, string stacktrace = "")
+        public RuntimeErrorPacket(int userId, string algorithmId, string message, string stacktrace = "")
             : base(PacketType.RuntimeError)
         {
+            UserId = userId;
             Message = message;
             AlgorithmId = algorithmId;
             StackTrace = stacktrace;

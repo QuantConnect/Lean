@@ -1639,5 +1639,50 @@ namespace QuantConnect.Tests.Common.Statistics
             }
         }
 
+        [TestCase(FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO)]
+        [TestCase(FillGroupingMethod.FillToFill, FillMatchingMethod.LIFO)]
+        [TestCase(FillGroupingMethod.FlatToFlat, FillMatchingMethod.FIFO)]
+        [TestCase(FillGroupingMethod.FlatToFlat, FillMatchingMethod.LIFO)]
+        [TestCase(FillGroupingMethod.FlatToReduced, FillMatchingMethod.FIFO)]
+        [TestCase(FillGroupingMethod.FlatToReduced, FillMatchingMethod.LIFO)]
+        public void AllInAllOutLongWithMultiplier(FillGroupingMethod groupingMethod, FillMatchingMethod matchingMethod)
+        {
+            var multiplier = 10;
+
+            // Buy 1k, Sell 1k
+
+            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            var time = _startTime;
+
+            // Buy 1k
+            builder.ProcessFill(new OrderEvent(1, Symbols.EURUSD, time, OrderStatus.Filled, OrderDirection.Buy, fillPrice: 1.08m, fillQuantity: 1000, orderFee: OrderFee), ConversionRate, multiplier);
+
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.EURUSD));
+
+            builder.SetMarketPrice(Symbols.EURUSD, 1.075m);
+            builder.SetMarketPrice(Symbols.EURUSD, 1.10m);
+
+            // Sell 1k
+            builder.ProcessFill(new OrderEvent(2, Symbols.EURUSD, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Sell, fillPrice: 1.09m, fillQuantity: -1000, orderFee: OrderFee), ConversionRate, multiplier);
+
+            Assert.IsFalse(builder.HasOpenPosition(Symbols.EURUSD));
+
+            Assert.AreEqual(1, builder.ClosedTrades.Count);
+
+            var trade = builder.ClosedTrades[0];
+
+            Assert.AreEqual(Symbols.EURUSD, trade.Symbol);
+            Assert.AreEqual(time, trade.EntryTime);
+            Assert.AreEqual(1.08m, trade.EntryPrice);
+            Assert.AreEqual(TradeDirection.Long, trade.Direction);
+            Assert.AreEqual(1000, trade.Quantity);
+            Assert.AreEqual(time.AddMinutes(10), trade.ExitTime);
+            Assert.AreEqual(1.09m, trade.ExitPrice);
+            Assert.AreEqual(10 * multiplier, trade.ProfitLoss);
+            Assert.AreEqual(2, trade.TotalFees);
+            Assert.AreEqual(-5 * multiplier, trade.MAE);
+            Assert.AreEqual(20m * multiplier, trade.MFE);
+        }
+
     }
 }

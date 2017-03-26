@@ -137,6 +137,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
+        /// Adds the specified hander function to handle data for the handler's symbol 
+        /// </summary>
+        /// <param name="symbol">The symbol whose data is to be handled</param>
+        /// <param name="handler">The handler to use when this symbol's data is encountered</param>
+        /// <returns>An identifier that can be used to remove this handler</returns>
+        public void AddDataHandler(Symbol symbol, Action<BaseData> handler)
+        {
+            _dataHandlers.AddOrUpdate(symbol,
+                x =>
+                {
+                    var dataHandler = new DataHandler(symbol);
+                    dataHandler.DataEmitted += (sender, args) => handler(args);
+                    return dataHandler;
+                },
+                (x, existingHandler) => 
+                {
+                    existingHandler.DataEmitted += (sender, args) => handler(args);
+                    return existingHandler;
+                });
+        }
+
+        /// <summary>
         /// Removes the handler with the specified identifier
         /// </summary>
         /// <param name="symbol">The symbol to remove handlers for</param>
