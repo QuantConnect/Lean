@@ -235,6 +235,9 @@
     <Compile Include="InteractiveBrokers\InteractiveBrokersGatewayRunner.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersSymbolMapper.cs" />
     <Compile Include="ISymbolMapper.cs" />
+    <Compile Include="Oanda\OandaRestApiBase.cs" />
+    <Compile Include="Oanda\OandaRestApiV1.cs" />
+    <Compile Include="Oanda\OandaRestApiV20.cs" />
     <Compile Include="Oanda\RestV1\DataType\Account.cs" />
     <Compile Include="Oanda\RestV1\DataType\Candle.cs" />
     <Compile Include="Oanda\RestV1\DataType\Communications\AccountResponse.cs" />
@@ -263,8 +266,6 @@
     <Compile Include="Oanda\RestV1\Framework\Common.cs" />
     <Compile Include="Oanda\RestV1\Framework\EndpointResolver.cs" />
     <Compile Include="Oanda\OandaBrokerage.cs" />
-    <Compile Include="Oanda\OandaBrokerage.DataQueueHandler.cs" />
-    <Compile Include="Oanda\OandaBrokerage.Rest.cs" />
     <Compile Include="Oanda\OandaBrokerageFactory.cs" />
     <Compile Include="Oanda\OandaSymbolMapper.cs" />
     <Compile Include="Oanda\RestV20\Api\DefaultApi.cs" />

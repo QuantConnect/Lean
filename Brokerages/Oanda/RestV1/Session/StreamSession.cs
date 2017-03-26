@@ -23,9 +23,9 @@ using System.Net;
 using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Threading.Tasks;
-using QuantConnect.Brokerages.Oanda.DataType;
+using QuantConnect.Brokerages.Oanda.RestV1.DataType;
 
-namespace QuantConnect.Brokerages.Oanda.Session
+namespace QuantConnect.Brokerages.Oanda.RestV1.Session
 {
 #pragma warning disable 1591
     /// <summary>

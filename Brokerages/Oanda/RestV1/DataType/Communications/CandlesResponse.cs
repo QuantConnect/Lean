@@ -19,7 +19,7 @@
 
 using System.Collections.Generic;
 
-namespace QuantConnect.Brokerages.Oanda.DataType.Communications
+namespace QuantConnect.Brokerages.Oanda.RestV1.DataType.Communications
 {
 #pragma warning disable 1591
     public class CandlesResponse

@@ -16,7 +16,8 @@
  * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-namespace QuantConnect.Brokerages.Oanda.DataType
+
+namespace QuantConnect.Brokerages.Oanda.RestV1.DataType
 {
 #pragma warning disable 1591
     /// <summary>

@@ -20,7 +20,7 @@
 using System.Reflection;
 using System.Text;
 
-namespace QuantConnect.Brokerages.Oanda.DataType.Communications.Requests
+namespace QuantConnect.Brokerages.Oanda.RestV1.DataType.Communications.Requests
 {
 #pragma warning disable 1591
     public interface ISmartProperty

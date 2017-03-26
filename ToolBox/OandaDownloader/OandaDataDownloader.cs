@@ -16,11 +16,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Brokerages.Oanda;
-using QuantConnect.Brokerages.Oanda.DataType;
-using QuantConnect.Brokerages.Oanda.DataType.Communications.Requests;
 using Environment = QuantConnect.Brokerages.Oanda.Environment;
 
 namespace QuantConnect.ToolBox.OandaDownloader
@@ -84,21 +83,18 @@ namespace QuantConnect.ToolBox.OandaDownloader
             if (endUtc < startUtc)
                 throw new ArgumentException("The end date must be greater or equal than the start date.");
 
-            var barsTotalInPeriod = new List<Candle>();
-            var barsToSave = new List<Candle>();
+            var barsTotalInPeriod = new List<TradeBar>();
+            var barsToSave = new List<TradeBar>();
 
             // set the starting date/time
-            DateTime date = startUtc;
-            DateTime startDateTime = date;
+            var date = startUtc;
+            var startDateTime = date;
 
             // loop until last date
             while (startDateTime <= endUtc.AddDays(1))
             {
-                string start = startDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ");
-
                 // request blocks of 5-second bars with a starting date/time
-                var oandaSymbol = _symbolMapper.GetBrokerageSymbol(symbol);
-                var bars = _brokerage.DownloadBars(oandaSymbol, start, OandaBrokerage.MaxBarsPerRequest, EGranularity.S5, ECandleFormat.midpoint);
+                var bars = _brokerage.DownloadTradeBars(symbol, startDateTime, endUtc.AddDays(1), Resolution.Second, DateTimeZone.Utc).ToList();
                 if (bars.Count == 0)
                     break;
 
@@ -144,7 +140,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
                 }
 
                 // calculate the next request datetime (next 5-sec bar time)
-                startDateTime = OandaBrokerage.GetDateTimeFromString(bars[bars.Count - 1].time).AddSeconds(5);
+                startDateTime = bars[bars.Count - 1].Time.AddSeconds(5);
             }
 
             if (barsToSave.Count > 0)
@@ -173,20 +169,20 @@ namespace QuantConnect.ToolBox.OandaDownloader
         /// <param name="bars"></param>
         /// <param name="resolution"></param>
         /// <returns></returns>
-        private static IEnumerable<TradeBar> AggregateBars(Symbol symbol, List<Candle> bars, TimeSpan resolution)
+        private static IEnumerable<TradeBar> AggregateBars(Symbol symbol, IEnumerable<TradeBar> bars, TimeSpan resolution)
         {
             return
                 (from b in bars
-                 group b by OandaBrokerage.GetDateTimeFromString(b.time).RoundDown(resolution)
+                 group b by b.Time.RoundDown(resolution)
                      into g
                      select new TradeBar
                      {
                          Symbol = symbol,
                          Time = g.Key,
-                         Open = Convert.ToDecimal(g.First().openMid),
-                         High = Convert.ToDecimal(g.Max(b => b.highMid)),
-                         Low = Convert.ToDecimal(g.Min(b => b.lowMid)),
-                         Close = Convert.ToDecimal(g.Last().closeMid)
+                         Open = g.First().Open,
+                         High = g.Max(b => b.High),
+                         Low = g.Min(b => b.Low),
+                         Close = g.Last().Close
                      });
         }
 
@@ -195,16 +191,16 @@ namespace QuantConnect.ToolBox.OandaDownloader
         /// </summary>
         /// <param name="bars"></param>
         /// <returns></returns>
-        private static SortedDictionary<DateTime, List<Candle>> GroupBarsByDate(List<Candle> bars)
+        private static SortedDictionary<DateTime, List<TradeBar>> GroupBarsByDate(IEnumerable<TradeBar> bars)
         {
-            var groupedBars = new SortedDictionary<DateTime, List<Candle>>();
+            var groupedBars = new SortedDictionary<DateTime, List<TradeBar>>();
 
             foreach (var bar in bars)
             {
-                var date = OandaBrokerage.GetDateTimeFromString(bar.time).Date;
+                var date = bar.Time.Date;
 
                 if (!groupedBars.ContainsKey(date))
-                    groupedBars[date] = new List<Candle>();
+                    groupedBars[date] = new List<TradeBar>();
 
                 groupedBars[date].Add(bar);
             }

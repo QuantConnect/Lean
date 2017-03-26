@@ -15,44 +15,27 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
-using System.Threading;
-using QuantConnect.Brokerages.Oanda.DataType;
-using QuantConnect.Brokerages.Oanda.DataType.Communications.Requests;
-using QuantConnect.Brokerages.Oanda.Framework;
-using QuantConnect.Brokerages.Oanda.Session;
+using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
-using QuantConnect.Orders;
+using QuantConnect.Packets;
 using QuantConnect.Securities;
+using HistoryRequest = QuantConnect.Data.HistoryRequest;
 using Order = QuantConnect.Orders.Order;
 
 namespace QuantConnect.Brokerages.Oanda
 {
     /// <summary>
-    /// Oanda Brokerage - implementation of IBrokerage interface
+    /// Oanda Brokerage implementation
     /// </summary>
-    public partial class OandaBrokerage : Brokerage, IDataQueueHandler
+    public class OandaBrokerage : Brokerage, IDataQueueHandler
     {
-        private readonly IOrderProvider _orderProvider;
-        private readonly ISecurityProvider _securityProvider;
-        private readonly Environment _environment;
-        private readonly string _accessToken;
-        private readonly string _accountId;
-
-        private EventsSession _eventsSession;
-        private Dictionary<string, Instrument> _oandaInstruments;
         private readonly OandaSymbolMapper _symbolMapper = new OandaSymbolMapper();
-
-        private bool _isConnected;
-
-        private DateTime _lastHeartbeatUtcTime;
-        private Thread _connectionMonitorThread;
-        private readonly object _lockerConnectionMonitor = new object();
-        private volatile bool _connectionLost;
-        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        private readonly OandaRestApiBase _api;
 
         /// <summary>
         /// The maximum number of bars per historical data request
@@ -70,15 +53,10 @@ namespace QuantConnect.Brokerages.Oanda
         public OandaBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, string accountId)
             : base("Oanda Brokerage")
         {
-            _orderProvider = orderProvider;
-            _securityProvider = securityProvider;
-
             if (environment != Environment.Trade && environment != Environment.Practice)
                 throw new NotSupportedException("Oanda Environment not supported: " + environment);
 
-            _environment = environment;
-            _accessToken = accessToken;
-            _accountId = accountId;
+            _api = new OandaRestApiV1(_symbolMapper, orderProvider, securityProvider, environment, accessToken, accountId);
         }
 
         #region IBrokerage implementation
@@ -88,7 +66,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         public override bool IsConnected
         {
-            get { return _isConnected && !_connectionLost; }
+            get { return _api.IsConnected; }
         }
 
         /// <summary>
@@ -98,112 +76,7 @@ namespace QuantConnect.Brokerages.Oanda
         {
             if (IsConnected) return;
 
-            // Load the list of instruments
-            _oandaInstruments = GetInstruments().ToDictionary(x => x.instrument);
-
-            // Register to the event session to receive events.
-            _eventsSession = new EventsSession(this, _accountId);
-            _eventsSession.DataReceived += OnEventReceived;
-            _eventsSession.StartSession();
-
-            _isConnected = true;
-
-            // create new thread to manage disconnections and reconnections
-            _cancellationTokenSource = new CancellationTokenSource();
-            _connectionMonitorThread = new Thread(() =>
-            {
-                var nextReconnectionAttemptUtcTime = DateTime.UtcNow;
-                double nextReconnectionAttemptSeconds = 1;
-
-                lock (_lockerConnectionMonitor)
-                {
-                    _lastHeartbeatUtcTime = DateTime.UtcNow;
-                }
-
-                try
-                {
-                    while (!_cancellationTokenSource.IsCancellationRequested)
-                    {
-                        TimeSpan elapsed;
-                        lock (_lockerConnectionMonitor)
-                        {
-                            elapsed = DateTime.UtcNow - _lastHeartbeatUtcTime;
-                        }
-
-                        if (!_connectionLost && elapsed > TimeSpan.FromSeconds(20))
-                        {
-                            _connectionLost = true;
-                            nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
-
-                            OnMessage(BrokerageMessageEvent.Disconnected("Connection with Oanda server lost. " +
-                                                                         "This could be because of internet connectivity issues. "));
-                        }
-                        else if (_connectionLost)
-                        {
-                            try
-                            {
-                                if (elapsed <= TimeSpan.FromSeconds(20))
-                                {
-                                    _connectionLost = false;
-                                    nextReconnectionAttemptSeconds = 1;
-
-                                    OnMessage(BrokerageMessageEvent.Reconnected("Connection with Oanda server restored."));
-                                }
-                                else
-                                {
-                                    if (DateTime.UtcNow > nextReconnectionAttemptUtcTime)
-                                    {
-                                        try
-                                        {
-                                            // check if we have a connection
-                                            GetInstruments();
-
-                                            // restore events session
-                                            if (_eventsSession != null)
-                                            {
-                                                _eventsSession.DataReceived -= OnEventReceived;
-                                                _eventsSession.StopSession();
-                                            }
-                                            _eventsSession = new EventsSession(this, _accountId);
-                                            _eventsSession.DataReceived += OnEventReceived;
-                                            _eventsSession.StartSession();
-
-                                            // restore rates session
-                                            List<Symbol> symbolsToSubscribe;
-                                            lock (_lockerSubscriptions)
-                                            {
-                                                symbolsToSubscribe = _subscribedSymbols.ToList();
-                                            }
-                                            SubscribeSymbols(symbolsToSubscribe);
-                                        }
-                                        catch (Exception)
-                                        {
-                                            // double the interval between attempts (capped to 1 minute)
-                                            nextReconnectionAttemptSeconds = Math.Min(nextReconnectionAttemptSeconds * 2, 60);
-                                            nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
-                                        }
-                                    }
-                                }
-                            }
-                            catch (Exception exception)
-                            {
-                                Log.Error(exception);
-                            }
-                        }
-
-                        Thread.Sleep(1000);
-                    }
-                }
-                catch (Exception exception)
-                {
-                    Log.Error(exception);
-                }
-            });
-            _connectionMonitorThread.Start();
-            while (!_connectionMonitorThread.IsAlive)
-            {
-                Thread.Sleep(1);
-            }
+            _api.Connect();
         }
 
         /// <summary>
@@ -211,23 +84,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         public override void Disconnect()
         {
-            if (_eventsSession != null)
-            {
-                _eventsSession.DataReceived -= OnEventReceived;
-                _eventsSession.StopSession();
-            }
-
-            if (_ratesSession != null)
-            {
-                _ratesSession.DataReceived -= OnDataReceived;
-                _ratesSession.StopSession();
-            }
-
-            // request and wait for thread to stop
-            _cancellationTokenSource.Cancel();
-            _connectionMonitorThread.Join();
-
-            _isConnected = false;
+            _api.Disconnect();
         }
 
         /// <summary>
@@ -237,10 +94,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>The open orders returned from Oanda</returns>
         public override List<Order> GetOpenOrders()
         {
-            var oandaOrders = GetOrderList();
-
-            var orderList = oandaOrders.Select(ConvertOrder).ToList();
-            return orderList;
+            return _api.GetOpenOrders();
         }
 
         /// <summary>
@@ -249,7 +103,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>The current holdings from the account</returns>
         public override List<Holding> GetAccountHoldings()
         {
-            var holdings = GetPositions(_accountId).Select(ConvertHolding).Where(x => x.Quantity != 0).ToList();
+            var holdings = _api.GetAccountHoldings();
 
             // Set MarketPrice in each Holding
             var oandaSymbols = holdings
@@ -258,14 +112,14 @@ namespace QuantConnect.Brokerages.Oanda
 
             if (oandaSymbols.Count > 0)
             {
-                var quotes = GetRates(oandaSymbols).ToDictionary(x => x.instrument);
+                var quotes = _api.GetRates(oandaSymbols);
                 foreach (var holding in holdings)
                 {
                     var oandaSymbol = _symbolMapper.GetBrokerageSymbol(holding.Symbol);
-                    Price quote;
-                    if (quotes.TryGetValue(oandaSymbol, out quote))
+                    Tick tick;
+                    if (quotes.TryGetValue(oandaSymbol, out tick))
                     {
-                        holding.MarketPrice = Convert.ToDecimal((quote.bid + quote.ask) / 2);
+                        holding.MarketPrice = (tick.BidPrice + tick.AskPrice) / 2;
                     }
                 }
             }
@@ -279,14 +133,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>The current cash balance for each currency available for trading</returns>
         public override List<Cash> GetCashBalance()
         {
-            var getAccountRequestString = EndpointResolver.ResolveEndpoint(_environment, Server.Account) + "accounts/" + _accountId;
-            var accountResponse = MakeRequest<Account>(getAccountRequestString);
-
-            return new List<Cash>
-            {
-                new Cash(accountResponse.accountCurrency, accountResponse.balance.ToDecimal(),
-                    GetUsdConversion(accountResponse.accountCurrency))
-            };
+            return _api.GetCashBalance();
         }
 
         /// <summary>
@@ -296,84 +143,8 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public override bool PlaceOrder(Order order)
         {
-            var requestParams = new Dictionary<string, string>
-            {
-                { "instrument", _symbolMapper.GetBrokerageSymbol(order.Symbol) },
-                { "units", Convert.ToInt32(order.AbsoluteQuantity).ToString() }
-            };
-
-            PopulateOrderRequestParameters(order, requestParams);
-
-            var postOrderResponse = PostOrderAsync(requestParams);
-            if (postOrderResponse == null)
-                return false;
-
-            // if market order, find fill quantity and price
-            var marketOrderFillPrice = 0m;
-            if (order.Type == OrderType.Market)
-            {
-                marketOrderFillPrice = Convert.ToDecimal(postOrderResponse.price);
-            }
-
-            var marketOrderFillQuantity = 0;
-            if (postOrderResponse.tradeOpened != null && postOrderResponse.tradeOpened.id > 0)
-            {
-                if (order.Type == OrderType.Market)
-                {
-                    marketOrderFillQuantity = postOrderResponse.tradeOpened.units;
-                }
-                else
-                {
-                    order.BrokerId.Add(postOrderResponse.tradeOpened.id.ToString());
-                }
-            }
-
-            if (postOrderResponse.tradeReduced != null && postOrderResponse.tradeReduced.id > 0)
-            {
-                if (order.Type == OrderType.Market)
-                {
-                    marketOrderFillQuantity = postOrderResponse.tradeReduced.units;
-                }
-                else
-                {
-                    order.BrokerId.Add(postOrderResponse.tradeReduced.id.ToString());
-                }
-            }
-
-            if (postOrderResponse.orderOpened != null && postOrderResponse.orderOpened.id > 0)
-            {
-                if (order.Type != OrderType.Market)
-                {
-                    order.BrokerId.Add(postOrderResponse.orderOpened.id.ToString());
-                }
-            }
-
-            if (postOrderResponse.tradesClosed != null && postOrderResponse.tradesClosed.Count > 0)
-            {
-                marketOrderFillQuantity += postOrderResponse.tradesClosed
-                    .Where(trade => order.Type == OrderType.Market)
-                    .Sum(trade => trade.units);
-            }
-
-            // send Submitted order event
-            const int orderFee = 0;
-            order.PriceCurrency = _securityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
-            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee) { Status = OrderStatus.Submitted });
-
-            if (order.Type == OrderType.Market)
-            {
-                // if market order, also send Filled order event
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee)
-                {
-                    Status = OrderStatus.Filled,
-                    FillPrice = marketOrderFillPrice,
-                    FillQuantity = marketOrderFillQuantity * Math.Sign(order.Quantity)
-                });
-            }
-
-            return true;
+            return _api.PlaceOrder(order);
         }
-
 
         /// <summary>
         /// Updates the order with the same id
@@ -382,27 +153,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
         public override bool UpdateOrder(Order order)
         {
-            Log.Trace("OandaBrokerage.UpdateOrder(): " + order);
-
-            if (!order.BrokerId.Any())
-            {
-                // we need the brokerage order id in order to perform an update
-                Log.Trace("OandaBrokerage.UpdateOrder(): Unable to update order without BrokerId.");
-                return false;
-            }
-
-            var requestParams = new Dictionary<string, string>
-            {
-                { "instrument", _symbolMapper.GetBrokerageSymbol(order.Symbol) },
-                { "units", Convert.ToInt32(order.AbsoluteQuantity).ToString() },
-            };
-
-            // we need the brokerage order id in order to perform an update
-            PopulateOrderRequestParameters(order, requestParams);
-
-            UpdateOrder(long.Parse(order.BrokerId.First()), requestParams);
-
-            return true;
+            return _api.UpdateOrder(order);
         }
 
         /// <summary>
@@ -412,21 +163,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>True if the request was made for the order to be canceled, false otherwise</returns>
         public override bool CancelOrder(Order order)
         {
-            Log.Trace("OandaBrokerage.CancelOrder(): " + order);
-
-            if (!order.BrokerId.Any())
-            {
-                Log.Trace("OandaBrokerage.CancelOrder(): Unable to cancel order without BrokerId.");
-                return false;
-            }
-
-            foreach (var orderId in order.BrokerId)
-            {
-                CancelOrder(long.Parse(orderId));
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Oanda Cancel Order Event") { Status = OrderStatus.Canceled });
-            }
-
-            return true;
+            return _api.CancelOrder(order);
         }
 
         /// <summary>
@@ -443,12 +180,9 @@ namespace QuantConnect.Brokerages.Oanda
             }
 
             var exchangeTimeZone = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Oanda, request.Symbol, request.SecurityType).TimeZone;
-            var granularity = ToGranularity(request.Resolution);
-            var oandaSymbol = _symbolMapper.GetBrokerageSymbol(request.Symbol);
 
             // Oanda only has 5-second bars, we return these for Resolution.Second
-            var period = request.Resolution == Resolution.Second ?
-                TimeSpan.FromSeconds(5) : request.Resolution.ToTimeSpan();
+            var period = request.Resolution == Resolution.Second ? TimeSpan.FromSeconds(5) : request.Resolution.ToTimeSpan();
 
             // set the starting date/time
             var startDateTime = request.StartTimeUtc;
@@ -456,47 +190,102 @@ namespace QuantConnect.Brokerages.Oanda
             // loop until last date
             while (startDateTime <= request.EndTimeUtc)
             {
-                var start = startDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ");
-
                 // request blocks of bars at the requested resolution with a starting date/time
-                var candles = DownloadBars(oandaSymbol, start, MaxBarsPerRequest, granularity, ECandleFormat.bidask);
-                if (candles.Count == 0)
+                var quoteBars = _api.DownloadQuoteBars(request.Symbol, startDateTime, request.EndTimeUtc, request.Resolution, exchangeTimeZone).ToList();
+                if (quoteBars.Count == 0)
                     break;
 
-                foreach (var candle in candles)
+                foreach (var quoteBar in quoteBars)
                 {
-                    var time = GetDateTimeFromString(candle.time);
-                    if (time > request.EndTimeUtc)
-                        break;
-
-                    var quoteBar = new QuoteBar(
-                        time.ConvertFromUtc(exchangeTimeZone),
-                        request.Symbol,
-                        new Bar(
-                            Convert.ToDecimal(candle.openBid),
-                            Convert.ToDecimal(candle.highBid),
-                            Convert.ToDecimal(candle.lowBid),
-                            Convert.ToDecimal(candle.closeBid)
-                        ),
-                        0,
-                        new Bar(
-                            Convert.ToDecimal(candle.openAsk),
-                            Convert.ToDecimal(candle.highAsk),
-                            Convert.ToDecimal(candle.lowAsk),
-                            Convert.ToDecimal(candle.closeAsk)
-                        ),
-                        0,
-                        period);
-
                     yield return quoteBar;
                 }
 
                 // calculate the next request datetime
-                startDateTime = GetDateTimeFromString(candles[candles.Count - 1].time).Add(period);
+                startDateTime = quoteBars[quoteBars.Count - 1].Time.ConvertToUtc(exchangeTimeZone).Add(period);
             }
         }
 
         #endregion
+
+        #region IDataQueueHandler implementation
+
+        /// <summary>
+        /// Get the next ticks from the live trading data queue
+        /// </summary>
+        /// <returns>IEnumerable list of ticks since the last update.</returns>
+        public IEnumerable<BaseData> GetNextTicks()
+        {
+            return _api.GetNextTicks();
+        }
+
+        /// <summary>
+        /// Adds the specified symbols to the subscription
+        /// </summary>
+        /// <param name="job">Job we're subscribing for:</param>
+        /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
+        public void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        {
+            _api.Subscribe(job, symbols);
+        }
+
+        /// <summary>
+        /// Removes the specified symbols from the subscription
+        /// </summary>
+        /// <param name="job">Job we're processing.</param>
+        /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
+        public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
+        {
+            _api.Unsubscribe(job, symbols);
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Returns a DateTime from an RFC3339 string (with microsecond resolution)
+        /// </summary>
+        /// <param name="time">The time string</param>
+        public static DateTime GetDateTimeFromString(string time)
+        {
+            return DateTime.ParseExact(time, "yyyy-MM-dd'T'HH:mm:ss.ffffff'Z'", CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
+        /// Retrieves the current quotes for an instrument
+        /// </summary>
+        /// <param name="instrument">the instrument to check</param>
+        /// <returns>Returns a Tick object with the current bid/ask prices for the instrument</returns>
+        public Tick GetRates(string instrument)
+        {
+            return _api.GetRates(new List<string> { instrument }).Values.First();
+        }
+
+        /// <summary>
+        /// Downloads a list of TradeBars at the requested resolution
+        /// </summary>
+        /// <param name="symbol">The symbol</param>
+        /// <param name="startTimeUtc">The starting time (UTC)</param>
+        /// <param name="endTimeUtc">The ending time (UTC)</param>
+        /// <param name="resolution">The requested resolution</param>
+        /// <param name="requestedTimeZone">The requested timezone for the data</param>
+        /// <returns>The list of bars</returns>
+        public IEnumerable<TradeBar> DownloadTradeBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone)
+        {
+            return _api.DownloadTradeBars(symbol, startTimeUtc, endTimeUtc, resolution, requestedTimeZone);
+        }
+
+        /// <summary>
+        /// Downloads a list of QuoteBars at the requested resolution
+        /// </summary>
+        /// <param name="symbol">The symbol</param>
+        /// <param name="startTimeUtc">The starting time (UTC)</param>
+        /// <param name="endTimeUtc">The ending time (UTC)</param>
+        /// <param name="resolution">The requested resolution</param>
+        /// <param name="requestedTimeZone">The requested timezone for the data</param>
+        /// <returns>The list of bars</returns>
+        public IEnumerable<QuoteBar> DownloadQuoteBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone)
+        {
+            return _api.DownloadQuoteBars(symbol, startTimeUtc, endTimeUtc, resolution, requestedTimeZone);
+        }
 
     }
 }

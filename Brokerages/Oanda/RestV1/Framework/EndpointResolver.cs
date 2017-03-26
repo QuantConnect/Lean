@@ -16,9 +16,10 @@
  * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
+
 using System;
 
-namespace QuantConnect.Brokerages.Oanda.Framework
+namespace QuantConnect.Brokerages.Oanda.RestV1.Framework
 {
     /// <summary>
     /// Helper class to resolve the endpoint for the Oanda RESTful call.

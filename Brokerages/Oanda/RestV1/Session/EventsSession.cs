@@ -19,9 +19,9 @@
 
 using System.Collections.Generic;
 using System.Net;
-using QuantConnect.Brokerages.Oanda.DataType;
+using QuantConnect.Brokerages.Oanda.RestV1.DataType;
 
-namespace QuantConnect.Brokerages.Oanda.Session
+namespace QuantConnect.Brokerages.Oanda.RestV1.Session
 {
 #pragma warning disable 1591
     /// <summary>
@@ -29,17 +29,17 @@ namespace QuantConnect.Brokerages.Oanda.Session
     /// </summary>
     public class EventsSession : StreamSession<Event>
     {
-        private readonly OandaBrokerage _brokerage;
+        private readonly OandaRestApiV1 _api;
 
-        public EventsSession(OandaBrokerage brokerage, string accountId)
+        public EventsSession(OandaRestApiV1 api, string accountId)
             : base(accountId)
         {
-            _brokerage = brokerage;
+            _api = api;
         }
 
         protected override WebResponse GetSession()
         {
-            return _brokerage.StartEventsSession(new List<string> {_accountId});
+            return _api.StartEventsSession(new List<string> {_accountId});
         }
     }
 #pragma warning restore 1591

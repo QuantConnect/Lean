@@ -19,27 +19,26 @@
 
 using System.Collections.Generic;
 using System.Net;
-using QuantConnect.Brokerages.Oanda.DataType;
-using QuantConnect.Brokerages.Oanda.DataType.Communications;
+using QuantConnect.Brokerages.Oanda.RestV1.DataType.Communications;
 
-namespace QuantConnect.Brokerages.Oanda.Session
+namespace QuantConnect.Brokerages.Oanda.RestV1.Session
 {
 #pragma warning disable 1591
     public class RatesSession : StreamSession<RateStreamResponse>
     {
-        private readonly OandaBrokerage _brokerage;
-        private readonly List<Instrument> _instruments;
+        private readonly OandaRestApiV1 _api;
+        private readonly List<string> _instruments;
 
-        public RatesSession(OandaBrokerage brokerage, string accountId, List<Instrument> instruments)
+        public RatesSession(OandaRestApiV1 api, string accountId, List<string> instruments)
             : base(accountId)
         {
-            _brokerage = brokerage;
+            _api = api;
             _instruments = instruments;
         }
 
         protected override WebResponse GetSession()
         {
-            return _brokerage.StartRatesSession(_instruments, _accountId);
+            return _api.StartRatesSession(_instruments, _accountId);
         }
     }
 #pragma warning restore 1591

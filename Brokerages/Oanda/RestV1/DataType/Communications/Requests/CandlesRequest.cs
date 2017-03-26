@@ -19,7 +19,7 @@
 
 using System.ComponentModel;
 
-namespace QuantConnect.Brokerages.Oanda.DataType.Communications.Requests
+namespace QuantConnect.Brokerages.Oanda.RestV1.DataType.Communications.Requests
 {
 #pragma warning disable 1591
     public class CandlesRequest : Request
