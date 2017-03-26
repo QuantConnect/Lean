@@ -17,21 +17,32 @@ using Python.Runtime;
 using QuantConnect.Benchmarks;
 using System;
 
-namespace QuantConnect.Algorithm.PythonWrappers
+namespace QuantConnect.Python.Wrappers
 {
     /// <summary>
-    /// Wrapper for an IBenchmark instance created in Python.
+    /// Wrapper for an <see cref = "IBenchmark"/> instance created in Python.
     /// All calls to python should be inside a "using (Py.GIL()) {/* Your code here */}" block.
     /// </summary>
     class BenchmarkPythonWrapper : IBenchmark
     {
         IBenchmark _benchmark;
 
+        /// <summary>
+        /// <see cref = "BenchmarkPythonWrapper"/> constructor.
+        /// Wraps the <see cref = "IBenchmark"/> object.  
+        /// </summary>
+        /// <param name="benchmark"><see cref = "IBenchmark"/> object to be wrapped</param>
         public BenchmarkPythonWrapper(IBenchmark benchmark)
         {
             _benchmark = benchmark;
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IBenchmark.Evaluate" /> in Python.
+        /// Evaluates this benchmark at the specified time
+        /// </summary>
+        /// <param name="time">The time to evaluate the benchmark at</param>
+        /// <returns>The value of the benchmark at the specified time</returns>
         public decimal Evaluate(DateTime time)
         {
             using (Py.GIL())

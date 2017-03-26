@@ -69,6 +69,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="CustomDataBitcoinAlgorithm.py" />
     <Compile Include="PythonAlgorithm.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -105,6 +106,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="AddRemoveSecurityRegressionAlgorithm.py" />
+    <Content Include="CustomDataNIFTYAlgorithm.py" />
+    <Content Include="CustomDataUniverseAlgorithm.py" />
     <Content Include="DataConsolidationAlgorithm.py" />
     <Content Include="HistoryAndWarmupRegressionAlgorithm.py" />
     <Content Include="CustomChartingAlgorithm.py" />
@@ -112,14 +115,15 @@
     <Content Include="DividendAlgorithm.py" />
     <Content Include="ETFGlobalRotationAlgorithm.py" />
     <Content Include="MACDTrendAlgorithm.py" />
+    <Content Include="QCUWeatherBasedRebalancing.py" />
+    <Content Include="AlgorithmPythonUtil.py" />
     <Content Include="QuandlImporterAlgorithm.py" />
     <Content Include="OrderTicketDemoAlgorithm.py" />
-    <Content Include="BasicTemplateFillForwardAlgorithm.py" />
     <Content Include="DailyAlgorithm.py" />
     <Content Include="MarketOnOpenOnCloseAlgorithm.py" />
     <Content Include="ParameterizedAlgorithm.py" />
     <Content Include="DropboxUniverseSelectionAlgorithm.py" />
-    <Content Include="CoarseFundamentalTop5Algorithm.py" />
+    <Content Include="CoarseFineFundamentalComboAlgorithm.py" />
     <Content Include="ScheduledEventsAlgorithm.py" />
     <Content Include="TickDataFilteringAlgorithm.py" />
     <Content Include="UniverseSelectionDefinitionsAlgorithm.py" />

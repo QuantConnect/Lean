@@ -29,8 +29,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Python.Runtime;
+using ImpromptuInterface;
 
-namespace QuantConnect.Algorithm.PythonWrappers
+namespace QuantConnect.Python.Wrappers
 {
     /// <summary>
     /// Wrapper for an IAlgorithm instance created in Python.
@@ -38,16 +39,63 @@ namespace QuantConnect.Algorithm.PythonWrappers
     /// </summary>
     public class AlgorithmPythonWrapper : IAlgorithm
     {
-        IAlgorithm _algorithm;
-        IBenchmark _benchmark;
-        IBrokerageModel _brokerageModel;
-        IHistoryProvider _historyProvider;
+        private IAlgorithm _algorithm;
+        private IBenchmark _benchmark;
+        private IBrokerageModel _brokerageModel;
+        private IHistoryProvider _historyProvider;
 
-        public AlgorithmPythonWrapper(IAlgorithm algorithm)
+        private dynamic _pyAlgorithm;
+
+        /// <summary>
+        /// <see cref = "AlgorithmPythonWrapper"/> constructor.
+        /// Creates and wraps the algorithm written in python.  
+        /// </summary>
+        /// <param name="module">Python module with the algorithm written in Python</param>
+        public AlgorithmPythonWrapper(PyObject module)
         {
-            _algorithm = algorithm;
+            _algorithm = null;
+
+            try
+            {
+                using (Py.GIL())
+                {
+                    if (!module.HasAttr("QCAlgorithm"))
+                    {
+                        return;
+                    }
+
+                    var baseClass = module.GetAttr("QCAlgorithm");
+
+                    // Load module with util methods
+                    var onPythonData = Py.Import("AlgorithmPythonUtil").GetAttr("OnPythonData");
+
+                    var moduleName = module.Repr().Split('\'')[1];
+
+                    foreach (var name in module.Dir())
+                    {
+                        var attr = module.GetAttr(name.ToString());
+
+                        if (attr.IsSubclass(baseClass) && attr.Repr().Contains(moduleName))
+                        {
+                            attr.SetAttr("OnPythonData", onPythonData);
+
+                            _pyAlgorithm = attr.Invoke();
+                            _algorithm = Impromptu.ActLike<IAlgorithm>(_pyAlgorithm);
+
+                            return; 
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Logging.Log.Error(e);
+            }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.AlgorithmId" /> in Python
+        /// </summary>
         public string AlgorithmId
         {
             get
@@ -59,6 +107,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.Benchmark" /> in Python
+        /// </summary>
         public IBenchmark Benchmark
         {
             get
@@ -74,6 +125,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.BrokerageMessageHandler" /> in Python
+        /// </summary>
         public IBrokerageMessageHandler BrokerageMessageHandler
         {
             get
@@ -90,6 +144,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.BrokerageModel" /> in Python
+        /// </summary>
         public IBrokerageModel BrokerageModel
         {
             get
@@ -105,6 +162,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.DebugMessages" /> in Python
+        /// </summary>
         public ConcurrentQueue<string> DebugMessages
         {
             get
@@ -116,6 +176,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.EndDate" /> in Python
+        /// </summary>
         public DateTime EndDate
         {
             get
@@ -127,6 +190,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.ErrorMessages" /> in Python
+        /// </summary>
         public ConcurrentQueue<string> ErrorMessages
         {
             get
@@ -138,6 +204,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.HistoryProvider" /> in Python
+        /// </summary>
         public IHistoryProvider HistoryProvider
         {
             get
@@ -158,6 +227,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.IsWarmingUp" /> in Python
+        /// </summary>
         public bool IsWarmingUp
         {
             get
@@ -169,6 +241,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.LiveMode" /> in Python
+        /// </summary>
         public bool LiveMode
         {
             get
@@ -180,6 +255,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.LogMessages" /> in Python
+        /// </summary>
         public ConcurrentQueue<string> LogMessages
         {
             get
@@ -191,6 +269,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.Name" /> in Python
+        /// </summary>
         public string Name
         {
             get
@@ -202,6 +283,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.Notify" /> in Python
+        /// </summary>
         public NotificationManager Notify
         {
             get
@@ -213,6 +297,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.Portfolio" /> in Python
+        /// </summary>
         public SecurityPortfolioManager Portfolio
         {
             get
@@ -224,6 +311,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.RunTimeError" /> in Python
+        /// </summary>
         public Exception RunTimeError
         {
             get
@@ -240,6 +330,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.RuntimeStatistics" /> in Python
+        /// </summary>
         public Dictionary<string, string> RuntimeStatistics
         {
             get
@@ -251,6 +344,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.Schedule" /> in Python
+        /// </summary>
         public ScheduleManager Schedule
         {
             get
@@ -262,6 +358,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.Securities" /> in Python
+        /// </summary>
         public SecurityManager Securities
         {
             get
@@ -273,6 +372,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.SecurityInitializer" /> in Python
+        /// </summary>
         public ISecurityInitializer SecurityInitializer
         {
             get
@@ -284,6 +386,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.StartDate" /> in Python
+        /// </summary>
         public DateTime StartDate
         {
             get
@@ -295,6 +400,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.Status" /> in Python
+        /// </summary>
         public AlgorithmStatus Status
         {
             get
@@ -311,6 +419,10 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.SetStatus" /> in Python
+        /// </summary>
+        /// <param name="value"></param>
         public void SetStatus(AlgorithmStatus value)
         {
             using (Py.GIL())
@@ -319,6 +431,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.SubscriptionManager" /> in Python
+        /// </summary>
         public SubscriptionManager SubscriptionManager
         {
             get
@@ -330,6 +445,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.Time" /> in Python
+        /// </summary>
         public DateTime Time
         {
             get
@@ -341,6 +459,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.TimeZone" /> in Python
+        /// </summary>
         public DateTimeZone TimeZone
         {
             get
@@ -352,6 +473,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.TradeBuilder" /> in Python
+        /// </summary>
         public TradeBuilder TradeBuilder
         {
             get
@@ -363,6 +487,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.Transactions" /> in Python
+        /// </summary>
         public SecurityTransactionManager Transactions
         {
             get
@@ -374,6 +501,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.UniverseManager" /> in Python
+        /// </summary>
         public UniverseManager UniverseManager
         {
             get
@@ -385,6 +515,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.UniverseSettings" /> in Python
+        /// </summary>
         public UniverseSettings UniverseSettings
         {
             get
@@ -396,6 +529,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.UtcTime" /> in Python
+        /// </summary>
         public DateTime UtcTime
         {
             get
@@ -407,6 +543,17 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.AddSecurity" /> in Python
+        /// </summary>
+        /// <param name="securityType"></param>
+        /// <param name="symbol"></param>
+        /// <param name="resolution"></param>
+        /// <param name="market"></param>
+        /// <param name="fillDataForward"></param>
+        /// <param name="leverage"></param>
+        /// <param name="extendedMarketHours"></param>
+        /// <returns></returns>
         public Security AddSecurity(SecurityType securityType, string symbol, Resolution resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours)
         {
             using (Py.GIL())
@@ -415,6 +562,10 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.Debug" /> in Python
+        /// </summary>
+        /// <param name="message"></param>
         public void Debug(string message)
         {
             using (Py.GIL())
@@ -423,6 +574,10 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.Error" /> in Python
+        /// </summary>
+        /// <param name="message"></param>
         public void Error(string message)
         {
             using (Py.GIL())
@@ -431,6 +586,11 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.GetChartUpdates" /> in Python
+        /// </summary>
+        /// <param name="clearChartData"></param>
+        /// <returns></returns>
         public List<Chart> GetChartUpdates(bool clearChartData = false)
         {
             using (Py.GIL())
@@ -439,6 +599,10 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.GetLocked" /> in Python
+        /// </summary>
+        /// <returns></returns>
         public bool GetLocked()
         {
             using (Py.GIL())
@@ -447,6 +611,11 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.GetParameter" /> in Python
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
         public string GetParameter(string name)
         {
             using (Py.GIL())
@@ -455,6 +624,10 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.GetWarmupHistoryRequests" /> in Python
+        /// </summary>
+        /// <returns></returns>
         public IEnumerable<HistoryRequest> GetWarmupHistoryRequests()
         {
             using (Py.GIL())
@@ -463,6 +636,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.Initialize" /> in Python
+        /// </summary>
         public void Initialize()
         {
             using (Py.GIL())
@@ -471,6 +647,11 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.Liquidate" /> in Python
+        /// </summary>
+        /// <param name="symbolToLiquidate"></param>
+        /// <returns></returns>
         public List<int> Liquidate(Symbol symbolToLiquidate = null)
         {
             using (Py.GIL())
@@ -479,6 +660,10 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.Log" /> in Python
+        /// </summary>
+        /// <param name="message"></param>
         public void Log(string message)
         {
             using (Py.GIL())
@@ -487,6 +672,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.OnBrokerageDisconnect" /> in Python
+        /// </summary>
         public void OnBrokerageDisconnect()
         {
             using (Py.GIL())
@@ -495,6 +683,10 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.OnBrokerageMessage" /> in Python
+        /// </summary>
+        /// <param name="messageEvent"></param>
         public void OnBrokerageMessage(BrokerageMessageEvent messageEvent)
         {
             using (Py.GIL())
@@ -503,6 +695,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.OnBrokerageReconnect" /> in Python
+        /// </summary>
         public void OnBrokerageReconnect()
         {
             using (Py.GIL())
@@ -511,14 +706,20 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.OnData" /> in Python
+        /// </summary>
         public void OnData(Slice slice)
         {
             using (Py.GIL())
             {
-                _algorithm.OnData(slice);
+                _pyAlgorithm.OnPythonData(slice);
             }
         }
-
+        
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.OnEndOfAlgorithm" /> in Python
+        /// </summary>
         public void OnEndOfAlgorithm()
         {
             using (Py.GIL())
@@ -527,6 +728,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.OnEndOfDay()" /> in Python
+        /// </summary>
         public void OnEndOfDay()
         {
             using (Py.GIL())
@@ -535,6 +739,10 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.OnEndOfDay(Symbol)" /> in Python
+        /// </summary>
+        /// <param name="symbol"></param>
         public void OnEndOfDay(Symbol symbol)
         {
             using (Py.GIL())
@@ -543,6 +751,10 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.OnMarginCall" /> in Python
+        /// </summary>
+        /// <param name="requests"></param>
         public void OnMarginCall(List<SubmitOrderRequest> requests)
         {
             using (Py.GIL())
@@ -551,6 +763,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.OnMarginCallWarning" /> in Python
+        /// </summary>
         public void OnMarginCallWarning()
         {
             using (Py.GIL())
@@ -559,6 +774,10 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.OnOrderEvent" /> in Python
+        /// </summary>
+        /// <param name="newEvent"></param>
         public void OnOrderEvent(OrderEvent newEvent)
         {
             using (Py.GIL())
@@ -567,6 +786,10 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.OnSecuritiesChanged" /> in Python
+        /// </summary>
+        /// <param name="changes"></param>
         public void OnSecuritiesChanged(SecurityChanges changes)
         {
             using (Py.GIL())
@@ -575,6 +798,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.PostInitialize" /> in Python
+        /// </summary>
         public void PostInitialize()
         {
             using (Py.GIL())
@@ -583,6 +809,11 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.RemoveSecurity" /> in Python
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <returns></returns>
         public bool RemoveSecurity(Symbol symbol)
         {
             using (Py.GIL())
@@ -591,6 +822,10 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.SetAlgorithmId" /> in Python
+        /// </summary>
+        /// <param name="algorithmId"></param>
         public void SetAlgorithmId(string algorithmId)
         {
             using (Py.GIL())
@@ -599,6 +834,10 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.SetBrokerageMessageHandler" /> in Python
+        /// </summary>
+        /// <param name="brokerageMessageHandler"></param>
         public void SetBrokerageMessageHandler(IBrokerageMessageHandler brokerageMessageHandler)
         {
             using (Py.GIL())
@@ -607,6 +846,10 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.SetBrokerageModel" /> in Python
+        /// </summary>
+        /// <param name="brokerageModel"></param>
         public void SetBrokerageModel(IBrokerageModel brokerageModel)
         {
             using (Py.GIL())
@@ -615,6 +858,10 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.SetCash(decimal)" /> in Python
+        /// </summary>
+        /// <param name="startingCash"></param>
         public void SetCash(decimal startingCash)
         {
             using (Py.GIL())
@@ -623,6 +870,12 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.SetCash(string, decimal, decimal)" /> in Python
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <param name="startingCash"></param>
+        /// <param name="conversionRate"></param>
         public void SetCash(string symbol, decimal startingCash, decimal conversionRate)
         {
             using (Py.GIL())
@@ -631,6 +884,10 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.SetDateTime" /> in Python
+        /// </summary>
+        /// <param name="time"></param>
         public void SetDateTime(DateTime time)
         {
             using (Py.GIL())
@@ -639,6 +896,10 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.SetRunTimeError" /> in Python
+        /// </summary>
+        /// <param name="exception"></param>
         public void SetRunTimeError(Exception exception)
         {
             using (Py.GIL())
@@ -647,6 +908,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.SetFinishedWarmingUp" /> in Python
+        /// </summary>
         public void SetFinishedWarmingUp()
         {
             using (Py.GIL())
@@ -655,6 +919,10 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.SetHistoryProvider" /> in Python
+        /// </summary>
+        /// <param name="historyProvider"></param>
         public void SetHistoryProvider(IHistoryProvider historyProvider)
         {
             using (Py.GIL())
@@ -663,6 +931,10 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.SetLiveMode" /> in Python
+        /// </summary>
+        /// <param name="live"></param>
         public void SetLiveMode(bool live)
         {
             using (Py.GIL())
@@ -671,6 +943,9 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.SetLocked" /> in Python
+        /// </summary>
         public void SetLocked()
         {
             using (Py.GIL())
@@ -679,6 +954,10 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.SetMaximumOrders" /> in Python
+        /// </summary>
+        /// <param name="max"></param>
         public void SetMaximumOrders(int max)
         {
             using (Py.GIL())
@@ -687,6 +966,10 @@ namespace QuantConnect.Algorithm.PythonWrappers
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.SetParameters" /> in Python
+        /// </summary>
+        /// <param name="parameters"></param>
         public void SetParameters(Dictionary<string, string> parameters)
         {
             using (Py.GIL())
