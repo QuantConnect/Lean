@@ -74,15 +74,16 @@ namespace QuantConnect.Python.Wrappers
         /// Wrapper for <see cref = "IHistoryProvider.Initialize" /> in Python
         /// </summary>
         /// <param name="job">The job</param>
+        /// <param name="dataCacheProvider">Cache system for the history request</param>
         /// <param name="mapFileProvider">Provider used to get a map file resolver to handle equity mapping</param>
         /// <param name="factorFileProvider">Provider used to get factor files to handle equity price scaling</param>
-        /// <param name="dataFileProvider">Provider used to get data when it is not present on disk</param>
+        /// <param name="dataProvider">Provider used to get data when it is not present on disk</param>
         /// <param name="statusUpdate">Function used to send status updates</param>
-        public void Initialize(AlgorithmNodePacket job, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, IDataFileProvider dataFileProvider, Action<int> statusUpdate)
+        public void Initialize(AlgorithmNodePacket job, IDataProvider dataProvider, IDataCacheProvider dataCacheProvider, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, Action<int> statusUpdate)
         {
             using (Py.GIL())
             {
-                _historyProvider.Initialize(job, mapFileProvider, factorFileProvider, dataFileProvider, statusUpdate);
+                _historyProvider.Initialize(job, dataProvider, dataCacheProvider, mapFileProvider, factorFileProvider, statusUpdate);
             }
         }
     }

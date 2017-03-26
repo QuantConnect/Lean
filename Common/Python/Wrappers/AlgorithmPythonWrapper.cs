@@ -387,6 +387,20 @@ namespace QuantConnect.Python.Wrappers
         }
 
         /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.TradeBuilder" /> in Python
+        /// </summary>
+        ITradeBuilder IAlgorithm.TradeBuilder
+        {
+            get
+            {
+                using (Py.GIL())
+                {
+                    return _algorithm.TradeBuilder;
+                }
+            }
+        }
+
+        /// <summary>
         /// Wrapper for <see cref = "IAlgorithm.StartDate" /> in Python
         /// </summary>
         public DateTime StartDate
@@ -432,6 +446,18 @@ namespace QuantConnect.Python.Wrappers
         }
 
         /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.SetAvailableDataTypes" /> in Python
+        /// </summary>
+        /// <param name="availableDataTypes"></param>
+        public void SetAvailableDataTypes(Dictionary<SecurityType, List<TickType>> availableDataTypes)
+        {
+            using (Py.GIL())
+            {
+                _algorithm.SetAvailableDataTypes(availableDataTypes);
+            }
+        }
+
+        /// <summary>
         /// Wrapper for <see cref = "IAlgorithm.SubscriptionManager" /> in Python
         /// </summary>
         public SubscriptionManager SubscriptionManager
@@ -469,20 +495,6 @@ namespace QuantConnect.Python.Wrappers
                 using (Py.GIL())
                 {
                     return _algorithm.TimeZone;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Wrapper for <see cref = "IAlgorithm.TradeBuilder" /> in Python
-        /// </summary>
-        public TradeBuilder TradeBuilder
-        {
-            get
-            {
-                using (Py.GIL())
-                {
-                    return _algorithm.TradeBuilder;
                 }
             }
         }
@@ -783,6 +795,18 @@ namespace QuantConnect.Python.Wrappers
             using (Py.GIL())
             {
                 _algorithm.OnOrderEvent(newEvent);
+            }
+        }
+
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.OnAssignmentOrderEvent" /> in Python
+        /// </summary>
+        /// <param name="newEvent"></param>
+        public void OnAssignmentOrderEvent(OrderEvent newEvent)
+        {
+            using (Py.GIL())
+            {
+                _algorithm.OnAssignmentOrderEvent(newEvent);
             }
         }
 
