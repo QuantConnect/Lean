@@ -56,7 +56,11 @@ namespace QuantConnect.Brokerages.Oanda
             if (environment != Environment.Trade && environment != Environment.Practice)
                 throw new NotSupportedException("Oanda Environment not supported: " + environment);
 
-            _api = new OandaRestApiV1(_symbolMapper, orderProvider, securityProvider, environment, accessToken, accountId);
+            // Use v20 REST API only if you have a v20 account
+            // Use v1 REST API if your account id contains only digits(ie. 2534253) as it is a legacy account
+            _api = IsLegacyAccount(accountId) ? (OandaRestApiBase)
+                new OandaRestApiV1(_symbolMapper, orderProvider, securityProvider, environment, accessToken, accountId) :
+                new OandaRestApiV20(_symbolMapper, orderProvider, securityProvider, environment, accessToken, accountId);
         }
 
         #region IBrokerage implementation
@@ -287,5 +291,10 @@ namespace QuantConnect.Brokerages.Oanda
             return _api.DownloadQuoteBars(symbol, startTimeUtc, endTimeUtc, resolution, requestedTimeZone);
         }
 
+        private static bool IsLegacyAccount(string accountId)
+        {
+            long value;
+            return long.TryParse(accountId, out value);
+        }
     }
 }
