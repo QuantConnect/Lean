@@ -38,24 +38,23 @@ namespace QuantConnect.Algorithm.Examples
     /// </summary>
     /// 
 
-
     public class CustomChartingGBPJPYAlgorithm : QCAlgorithm
     {
         private const string _symbol = "GBPJPY";
         decimal riskpercent = 1;
         int recentBars = 10;
-        private decimal recentBuffer = 0.1m;
-        int veryRecentBars = 3;
-        private decimal veryRecentBuffer = 0.05m; //yen
+        private decimal recentBuffer = 1.0m;
+        int veryRecentBars = 4;
+        private decimal veryRecentBuffer = 0.5m; //yen
 
         private string _symbolCounterCurrency = _symbol.ToString().Substring(3);
-        
+
 
         DateTime startDate = new DateTime(2015, 1, 1);
-        DateTime endDate = new DateTime(2016, 1, 1);
+        DateTime endDate = new DateTime(2015, 2, 1);
 
-        private const Resolution resolution = Resolution.Hour;
-        
+        private const Resolution resolution = Resolution.Minute;
+
         private DateTime previous;
         private ExponentialMovingAverage fastema;
         private ExponentialMovingAverage slowema;
@@ -67,6 +66,8 @@ namespace QuantConnect.Algorithm.Examples
         public Dictionary<int, decimal> stoplosses = new Dictionary<int, decimal>();
         public decimal CurrentStopProfit;
         public Dictionary<int, decimal> stopProfits = new Dictionary<int, decimal>();
+        public List<OrderTicket> orders = new List<OrderTicket>();
+
 
         /// Called at the start of your algorithm to setup your requirements:
         /// </summary>
@@ -76,25 +77,22 @@ namespace QuantConnect.Algorithm.Examples
             SetStartDate(startDate);
             SetEndDate(endDate);
             //Set the starting cash for your strategy:
-            SetCash(100000);
+            SetCash(30000);
 
             //Add any stocks you'd like to analyse, and set the resolution:
             // Find more symbols here: http://quantconnect.com/data
             AddForex(_symbol, resolution);
             AddForex("usd" + _symbolCounterCurrency, resolution);
-            
+
             History(recentBars, resolution);
             SetWarmUp(30);
             //Initialize indicators 
             // create a 15 day exponential moving average
-            fastema = EMA(_symbol, 15, resolution);
+            fastema = EMA(_symbol, 30, resolution);
 
             // create a 30 day exponential moving average
-            slowema = EMA(_symbol, 30, resolution);
+            slowema = EMA(_symbol, 60, resolution);
 
-            int ribbonCount = 8;
-            int ribbonInterval = 15;
-            ribbon = Enumerable.Range(0, ribbonCount).Select(x => SMA(_symbol, (x + 1) * ribbonInterval, resolution)).ToArray();
 
         }
 
@@ -131,80 +129,185 @@ namespace QuantConnect.Algorithm.Examples
                 tradingDirection = -1;
 
 
-
-            //if flat then trade
-
-            if (Math.Abs(tradingDirection) == 1)
+            //check stop loss
+            if (!CheckStopLoss() && !CheckTakeProfits())
             {
-                if (tradingDirection == 1) //want to buy
+
+                //if flat then trade
+
+                if (Math.Abs(tradingDirection) == 1)
                 {
-                    if (holdings == 0)  //no problem just buy
+
+                    if (tradingDirection == 1) //want to buy
                     {
-                        //BUY
-                        Log("BUY  >> " + Securities[_symbol].Price);
-                        decimal sl = GetLossAmount(OrderDirection.Buy);
-                        CurrentStopLoss = sl;
-                        decimal sp = GetProfitAmount(OrderDirection.Buy);
-                        CurrentStopProfit = sp;
-                        orderticket = StopMarketOrder(_symbol, +GetRiskNormalizedOrderSize(sl), GetStopPrice(OrderDirection.Buy) );
-                        stoplosses[orderticket.OrderId] = GetRecentLow();
+                        Log("Want to buy...");
+                        if (holdings == 0)  //no problem just buy
+                        {
+                            //BUY
+                            CancelOrder();
+                            decimal sl = GetLossAmount(OrderDirection.Buy);
+                            CurrentStopLoss = sl;
+                            decimal sp = GetProfitAmount(OrderDirection.Buy);
+                            CurrentStopProfit = sp;
+                            decimal stopprice = GetStopPrice(OrderDirection.Buy);
+                            orderticket = StopMarketOrder(_symbol, +GetRiskNormalizedOrderSize(sl), stopprice);
+                            orders.Add(orderticket);
+                            stoplosses[orderticket.OrderId] = GetRecentLow();
+                            stopProfits[orderticket.OrderId] = GetRecentHigh();
+                            Log("Setting BUY order, Price Now:" + data[_symbol].Price + "");
+                            logorder(orderticket.OrderId);
+                        }
+                        else if (holdings > 0) //already in a buy ...
+                        {
+                            Log("but in a buy... so ignoring");
+                        }
+                        else if (holdings < 0) //in a short, liquidate!
+                        {
+                            Log("but in a short, liquidate!");
+                            Liquidate(_symbol);
+                        }
                     }
-                    else if (holdings > 0) //already in a buy ...
+                    else if (tradingDirection == -1)
+                    //want to sell
                     {
+                        Log("Want to sell...");
+                        if (holdings == 0)  //no problem just sell
+                        {
+                            //SELL
+                            CancelOrder();
+                            decimal sl = GetLossAmount(OrderDirection.Sell);
+                            CurrentStopLoss = sl;
+                            decimal sp = GetProfitAmount(OrderDirection.Sell);
+                            CurrentStopProfit = sp;
+                            decimal stopprice = GetStopPrice(OrderDirection.Sell);
+                            orderticket = StopMarketOrder(_symbol, -GetRiskNormalizedOrderSize(sl), stopprice);
+                            orders.Add(orderticket);
+                            stoplosses[orderticket.OrderId] = GetRecentHigh();
+                            stopProfits[orderticket.OrderId] = GetRecentLow();
+                            Log("Setting SELL  >> Price Now:" + data[_symbol].Price);
+                            logorder(orderticket.OrderId);
+                        }
+                        else if (holdings < 0) //already in a short ...
+                        {
+                            Log("but in a sell... so ignoring");
+
+
+                        }
+                        else if (holdings > 0) //in a Long, liquidate!
+                        {
+                            Log("in a long, want to short,  liquidate!");
+                            Liquidate(_symbol);
+                        }
 
                     }
-                    else if (holdings < 0) //in a short, liquidate!
-                    {
-                        Log("in a short, want to long, liquidate!");
-                        Liquidate(_symbol);
-                    }
-                }
-                else if (tradingDirection == -1)
-                //want to sell
-                {
-                    if (holdings == 0)  //no problem just sell
-                    {
-                        //SELL
-                        Log("SELL  >> " + Securities[_symbol].Price);
-                        decimal sl = GetLossAmount(OrderDirection.Sell);
-                        CurrentStopLoss = sl;
-                        decimal sp = GetProfitAmount(OrderDirection.Buy);
-                        CurrentStopProfit = sp;
-                        orderticket = StopMarketOrder(_symbol, -GetRiskNormalizedOrderSize(sl), GetStopPrice(OrderDirection.Sell));
-                        stoplosses[orderticket.OrderId] = GetRecentHigh();
-                    }
-                    else if (holdings < 0) //already in a short ...
-                    {
-
-                    }
-                    else if (holdings > 0) //in a Long, liquidate!
-                    {
-                        Log("in a long, want to short,  liquidate!");
-                        Liquidate(_symbol);
-                    }
-
                 }
             }
-
 
 
             Plot(_symbol, "Price", data[_symbol].Price);
 
             // easily plot indicators, the series name will be the name of the indicator
             Plot(_symbol, fastema, slowema);
-            Plot("Ribbon", ribbon);
+            Plot(_symbol, "VeryRecentHigh", GetVeryRecentHigh());
+            Plot(_symbol, "RecentHigh", GetRecentHigh());
+            Plot(_symbol, "RecentLow", GetRecentLow());
+            Plot(_symbol, "VeryRecentLow", GetVeryRecentLow());
+
 
             previous = Time;
 
         }
 
+        public void logorder(int id)
+        {
+            var order = orders.Where(o => o.OrderId == id).First();
+            Log("OrderId:" + order.OrderId + ", Amount:" + order.Quantity + ", StopLoss:" + stoplosses[id] + ", TakeProfit:" + stopProfits[id]);
+        }
+
+        public void CancelOrder()
+        {
+            foreach (var order in orders)
+            {
+                order.Cancel();
+                //Log("Cancelling order " + order.OrderId);
+            }
+
+        }
+
+
+        public bool CheckStopLoss()
+        {
+            //for all orders
+            foreach (var order in orders)
+            {
+                if (order.Status == OrderStatus.Filled)
+                {
+                    if (order.Quantity > 0 && Securities[_symbol].Price <= stoplosses[order.OrderId]) //buy event, price must be less than or equal
+                    {
+                        Liquidate(_symbol);
+                        order.Cancel();
+                        Log("Accepting LOSS!");
+                        MarketOrder(_symbol, (int)-order.QuantityFilled);
+                        logorder(order.OrderId); return true;
+                    }
+
+                    if (order.Quantity < 0 && Securities[_symbol].Price >= stoplosses[order.OrderId]) //buy event, price must be less than or equal
+                    {
+                        Liquidate(_symbol);
+                        order.Cancel();
+                        Log("Accepting LOSS!");
+                        MarketOrder(_symbol, (int)-order.QuantityFilled);
+                        logorder(order.OrderId); return true;
+                    }
+                }
+            }
+
+            return false;
+
+        }
+
+
+        public bool CheckTakeProfits()
+        {
+            //for all orders
+            foreach (var order in orders)
+            {
+                if (order.Status == OrderStatus.Filled)
+                {
+                    if (order.Quantity > 0 && Securities[_symbol].Price >= stopProfits[order.OrderId]) //buy event, price must be more than or equal
+                    {
+                        Liquidate(_symbol);
+                        order.Cancel();
+                        MarketOrder(_symbol, (int)-order.QuantityFilled);
+                        Log("Taking PROFIT!");
+                        logorder(order.OrderId);
+                        return true;
+                    }
+
+                    if (order.Quantity < 0 && Securities[_symbol].Price <= stopProfits[order.OrderId]) //buy event, price must be less than or equal
+                    {
+                        Liquidate(_symbol);
+                        order.Cancel();
+                        Log("Taking PROFIT!");
+                        MarketOrder(_symbol, (int)-order.QuantityFilled);
+                        logorder(order.OrderId);
+                        return true;
+                    }
+                }
+            }
+            return false;
+
+        }
+
         public decimal GetStopPrice(OrderDirection dir)
         {
-            
+
             if (dir == OrderDirection.Buy)
             {
                 return Math.Round(GetVeryRecentHigh(), 3);
-            } else {
+            }
+            else
+            {
                 return Math.Round(GetVeryRecentLow(), 3);
             }
         }
@@ -226,7 +329,7 @@ namespace QuantConnect.Algorithm.Examples
                 usdcounter = Securities["usd" + _symbolCounterCurrency.ToLower()].Price;
             }
 
-            var lossinusd = lossAmountInCounterCurrency/ usdcounter;
+            var lossinusd = lossAmountInCounterCurrency / usdcounter;
 
             //risk is lossinusd per unit we decide to buy.
             //total loss allowed is
@@ -238,13 +341,14 @@ namespace QuantConnect.Algorithm.Examples
             var maxUnitsToGet = xpercentOfEquity / lossinusd;
 
             return (int)maxUnitsToGet;
+            //return (int)Math.Floor(maxUnitsToGet / 1000) * 1000;
         }
 
 
         public decimal GetRecentHigh()
         {
             IEnumerable<QuoteBar> bars = History<QuoteBar>(_symbol, recentBars, resolution);
-            if (bars.Count() == 0) return Securities[_symbol].Price  + recentBuffer;
+            if (bars.Count() == 0) return Securities[_symbol].Price + recentBuffer;
             return bars.Select(a => a.Close).Max() + recentBuffer;
         }
 
@@ -281,11 +385,12 @@ namespace QuantConnect.Algorithm.Examples
 
             {
                 ret = Math.Abs(Securities[_symbol].Price - GetRecentHigh());
-            } else
+            }
+            else
             {
                 throw new Exception("OrderDirection not specified");
             }
-                return Math.Round(ret,3);
+            return Math.Round(ret, 3);
         }
 
         public decimal GetProfitAmount(OrderDirection direction)
@@ -307,68 +412,71 @@ namespace QuantConnect.Algorithm.Examples
             return Math.Round(ret, 3);
         }
 
+
         public override void OnOrderEvent(OrderEvent fill)
         {
-            if (fill.Status != OrderStatus.Filled)
-            {
-                return;
-            }
-            Log("OnOrderEvent  >> Stoploss " + fill.OrderId + " : " + " ^ ^ " + stoplosses);
-
-            // if we just finished entering, place a stop loss as well
-            if (Securities[_symbol].Invested)
-            {
-                decimal stop = CurrentStopLoss;
-                if (stoplosses.ContainsKey(fill.OrderId))
-                {
-                    stop = stoplosses[fill.OrderId];
-                }
-                _stopLossTicket = StopMarketOrder(_symbol, -Securities[_symbol].Holdings.Quantity, Math.Round(stop, 3), "StopLoss at: " + stop);
-            }
-            // check for an exit, cancel the stop loss
-            else
-            {
-                if (_stopLossTicket != null && _stopLossTicket.Status.IsOpen())
-                {
-                    // cancel our current stop loss
-                    _stopLossTicket.Cancel("Exited position");
-                    _stopLossTicket = null;
-                }
-            }
-
-
-
-
-
-            // if we just finished entering, place a stop loss as well
-            if (Securities[_symbol].Invested)
-            {
-                decimal profit = CurrentStopProfit;
-                if (stopProfits.ContainsKey(fill.OrderId))
-                {
-                    profit = stopProfits[fill.OrderId];
-                }
-                _stopProfitTicket = StopMarketOrder(_symbol, -Securities[_symbol].Holdings.Quantity, Math.Round(profit, 3), "StopProfit at: " + profit);
-            }
-            // check for an exit, cancel the stop loss
-            else
-            {
-                if (_stopProfitTicket != null && _stopProfitTicket.Status.IsOpen())
-                {
-                    // cancel our current stop loss
-                    _stopProfitTicket.Cancel("Exited position");
-                    _stopProfitTicket = null;
-                }
-            }
-
-
-
+            Log("Filling:" + fill.OrderId + ", " + fill.Status + ", ");
+            orders[fill.OrderId] = fill.
+            //logorder(fill.OrderId);
         }
+        //public override void OnOrderEvent(OrderEvent fill)
+        //{
+        //    if (fill.Status != OrderStatus.Filled)
+        //    {
+        //        return;
+        //    }
+        //    Log("OnOrderEvent  >> Stoploss " + fill.OrderId + " : " + " ^ ^ " + stoplosses);
+
+        //    // if we just finished entering, place a stop loss as well
+        //    if (Securities[_symbol].Invested)
+        //    {
+        //        decimal stop = CurrentStopLoss;
+        //        if (stoplosses.ContainsKey(fill.OrderId))
+        //        {
+        //            stop = stoplosses[fill.OrderId];
+        //        }
+        //        _stopLossTicket = StopMarketOrder(_symbol, -Securities[_symbol].Holdings.Quantity, Math.Round(stop, 3), "StopLoss at: " + stop);
+        //    }
+        //    // check for an exit, cancel the stop loss
+        //    else
+        //    {
+        //        if (_stopLossTicket != null && _stopLossTicket.Status.IsOpen())
+        //        {
+        //            // cancel our current stop loss
+        //            _stopLossTicket.Cancel("Exited position");
+        //            _stopLossTicket = null;
+        //        }
+        //    }
+
+
+
+
+
+        //    // if we just finished entering, place a stop loss as well
+        //    if (Securities[_symbol].Invested)
+        //    {
+        //        decimal profit = CurrentStopProfit;
+        //        if (stopProfits.ContainsKey(fill.OrderId))
+        //        {
+        //            profit = stopProfits[fill.OrderId];
+        //        }
+        //        _stopProfitTicket = StopMarketOrder(_symbol, -Securities[_symbol].Holdings.Quantity, Math.Round(profit, 3), "StopProfit at: " + profit);
+        //    }
+        //    // check for an exit, cancel the stop loss
+        //    else
+        //    {
+        //        if (_stopProfitTicket != null && _stopProfitTicket.Status.IsOpen())
+        //        {
+        //            // cancel our current stop loss
+        //            _stopProfitTicket.Cancel("Exited position");
+        //            _stopProfitTicket = null;
+        //        }
+        //    }
 
 
 
     }
 
-    
+
 
 }
