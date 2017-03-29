@@ -86,13 +86,17 @@ namespace QuantConnect.Util
 
                         case Resolution.Second:
                         case Resolution.Minute:
-                            var bar = (TradeBar) data;
-                            return ToCsv(milliseconds, bar.Open, bar.High, bar.Low, bar.Close);
+                            var bar = (QuoteBar) data;
+                            return ToCsv(milliseconds,
+                                    ToCsv(bar.Bid, false), bar.LastBidSize,
+                                    ToCsv(bar.Ask, false), bar.LastAskSize);
 
                         case Resolution.Hour:
                         case Resolution.Daily:
-                            var bigBar = (TradeBar) data;
-                            return ToCsv(longTime, bigBar.Open, bigBar.High, bigBar.Low, bigBar.Close);
+                            var bigBar = (QuoteBar) data;
+                            return ToCsv(longTime,
+                                    ToCsv(bigBar.Bid, false), bigBar.LastBidSize,
+                                    ToCsv(bigBar.Ask, false), bigBar.LastAskSize);
                     }
                     break;
 
@@ -550,13 +554,15 @@ namespace QuantConnect.Util
         /// <summary>
         /// Creates a csv line for the bar, if null fills in empty strings
         /// </summary>
-        private static string ToCsv(IBar bar)
+        private static string ToCsv(IBar bar, bool scale = true)
         {
             if (bar == null)
             {
                 return ToCsv(string.Empty, string.Empty, string.Empty, string.Empty);
             }
-            return ToCsv(Scale(bar.Open), Scale(bar.High), Scale(bar.Low), Scale(bar.Close));
+
+            return scale ? ToCsv(Scale(bar.Open), Scale(bar.High), Scale(bar.Low), Scale(bar.Close)) 
+                         : ToCsv(bar.Open, bar.High, bar.Low, bar.Close);
         }
 
         /// <summary>
