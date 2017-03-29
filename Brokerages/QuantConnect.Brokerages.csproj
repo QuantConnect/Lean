@@ -278,10 +278,10 @@
     <Compile Include="Oanda\RestV20\Model\AcceptDatetimeFormat.cs" />
     <Compile Include="Oanda\RestV20\Model\Account.cs" />
     <Compile Include="Oanda\RestV20\Model\AccountChanges.cs" />
+    <Compile Include="Oanda\RestV20\Model\AccountChangesState.cs" />
     <Compile Include="Oanda\RestV20\Model\AccountFinancingMode.cs" />
     <Compile Include="Oanda\RestV20\Model\AccountID.cs" />
     <Compile Include="Oanda\RestV20\Model\AccountProperties.cs" />
-    <Compile Include="Oanda\RestV20\Model\AccountState.cs" />
     <Compile Include="Oanda\RestV20\Model\AccountSummary.cs" />
     <Compile Include="Oanda\RestV20\Model\AccountUnits.cs" />
     <Compile Include="Oanda\RestV20\Model\CalculatedPositionState.cs" />
@@ -350,6 +350,12 @@
     <Compile Include="Oanda\RestV20\Model\InlineResponse4007.cs" />
     <Compile Include="Oanda\RestV20\Model\InlineResponse401.cs" />
     <Compile Include="Oanda\RestV20\Model\InlineResponse404.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse4041.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse4042.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse4043.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse4044.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse4045.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse4046.cs" />
     <Compile Include="Oanda\RestV20\Model\Instrument.cs" />
     <Compile Include="Oanda\RestV20\Model\InstrumentName.cs" />
     <Compile Include="Oanda\RestV20\Model\InstrumentType.cs" />
@@ -393,6 +399,7 @@
     <Compile Include="Oanda\RestV20\Model\OrderRequest.cs" />
     <Compile Include="Oanda\RestV20\Model\OrderSpecifier.cs" />
     <Compile Include="Oanda\RestV20\Model\OrderState.cs" />
+    <Compile Include="Oanda\RestV20\Model\OrderTriggerCondition.cs" />
     <Compile Include="Oanda\RestV20\Model\OrderType.cs" />
     <Compile Include="Oanda\RestV20\Model\Position.cs" />
     <Compile Include="Oanda\RestV20\Model\PositionAggregationMode.cs" />
@@ -406,6 +413,7 @@
     <Compile Include="Oanda\RestV20\Model\QuoteHomeConversionFactors.cs" />
     <Compile Include="Oanda\RestV20\Model\ReopenTransaction.cs" />
     <Compile Include="Oanda\RestV20\Model\ReplaceOrderBody.cs" />
+    <Compile Include="Oanda\RestV20\Model\RequestID.cs" />
     <Compile Include="Oanda\RestV20\Model\ResetResettablePLTransaction.cs" />
     <Compile Include="Oanda\RestV20\Model\SetOrderClientExtensionsBody.cs" />
     <Compile Include="Oanda\RestV20\Model\SetTradeClientExtensionsBody.cs" />
