@@ -458,6 +458,9 @@
     <Compile Include="Oanda\RestV20\Model\UserSpecifier.cs" />
     <Compile Include="Oanda\RestV20\Model\VWAPReceipt.cs" />
     <Compile Include="Oanda\RestV20\Model\WeeklyAlignment.cs" />
+    <Compile Include="Oanda\RestV20\Session\PricingStreamSession.cs" />
+    <Compile Include="Oanda\RestV20\Session\StreamSession.cs" />
+    <Compile Include="Oanda\RestV20\Session\TransactionStreamSession.cs" />
     <Compile Include="Oanda\Server.cs" />
     <Compile Include="Oanda\RestV1\Session\EventsSession.cs" />
     <Compile Include="Oanda\RestV1\Session\RatesSession.cs" />

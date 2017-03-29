@@ -15,11 +15,24 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.IO.Compression;
+using System.Linq;
+using System.Net;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NodaTime;
-using QuantConnect.Data;
+using Oanda.RestV20.Api;
+using Oanda.RestV20.Model;
+using Oanda.RestV20.Session;
 using QuantConnect.Data.Market;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
+using DateTime = System.DateTime;
+using MarketOrder = QuantConnect.Orders.MarketOrder;
 using Order = QuantConnect.Orders.Order;
+using OandaOrder = Oanda.RestV20.Model.Order;
 
 namespace QuantConnect.Brokerages.Oanda
 {
@@ -28,6 +41,13 @@ namespace QuantConnect.Brokerages.Oanda
     /// </summary>
     public class OandaRestApiV20 : OandaRestApiBase
     {
+        private readonly DefaultApi _apiRest;
+        private readonly DefaultApi _apiStreaming;
+
+        private TransactionStreamSession _eventsSession;
+        private PricingStreamSession _ratesSession;
+        private readonly Dictionary<Symbol, DateTimeZone> _symbolExchangeTimeZones = new Dictionary<Symbol, DateTimeZone>();
+
         /// <summary>
         /// Initializes a new instance of the <see cref="OandaRestApiV20"/> class.
         /// </summary>
@@ -40,30 +60,16 @@ namespace QuantConnect.Brokerages.Oanda
         public OandaRestApiV20(OandaSymbolMapper symbolMapper, IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, string accountId)
             : base(symbolMapper, orderProvider, securityProvider, environment, accessToken, accountId)
         {
-        }
+            var basePathRest = environment == Environment.Trade ? 
+                "https://api-fxtrade.oanda.com/v3" : 
+                "https://api-fxpractice.oanda.com/v3";
 
-        /// <summary>
-        /// Returns true if we're currently connected to the broker
-        /// </summary>
-        public override bool IsConnected
-        {
-            get { throw new NotImplementedException(); }
-        }
+            var basePathStreaming = environment == Environment.Trade ? 
+                "https://stream-fxtrade.oanda.com/v3" : 
+                "https://stream-fxpractice.oanda.com/v3";
 
-        /// <summary>
-        /// Connects the client to the broker's remote servers
-        /// </summary>
-        public override void Connect()
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Disconnects the client from the broker's remote servers
-        /// </summary>
-        public override void Disconnect()
-        {
-            throw new NotImplementedException();
+            _apiRest = new DefaultApi(basePathRest);
+            _apiStreaming = new DefaultApi(basePathStreaming);
         }
 
         /// <summary>
@@ -71,7 +77,9 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         public override List<string> GetInstrumentList()
         {
-            throw new NotImplementedException();
+            var response = _apiRest.GetAcountInstruments(Authorization, AccountId);
+
+            return response.Instruments.Select(x => x.Name).ToList();
         }
 
         /// <summary>
@@ -81,7 +89,10 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>The open orders returned from Oanda</returns>
         public override List<Order> GetOpenOrders()
         {
-            throw new NotImplementedException();
+            var response = _apiRest.GetAccount(Authorization, AccountId);
+
+            var orders = response.Account.Orders;
+            return orders.Select(ConvertOrder).ToList();
         }
 
         /// <summary>
@@ -90,7 +101,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>The current holdings from the account</returns>
         public override List<Holding> GetAccountHoldings()
         {
-            throw new NotImplementedException();
+            return new List<Holding>();
         }
 
         /// <summary>
@@ -99,7 +110,14 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>The current cash balance for each currency available for trading</returns>
         public override List<Cash> GetCashBalance()
         {
-            throw new NotImplementedException();
+            var response = _apiRest.GetAccountSummary(Authorization, AccountId);
+
+            return new List<Cash>
+            {
+                new Cash(response.Account.Currency, 
+                    response.Account.Balance.ToDecimal(),
+                    GetUsdConversion(response.Account.Currency))
+            };
         }
 
         /// <summary>
@@ -109,7 +127,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>Dictionary containing the current quotes for each instrument</returns>
         public override Dictionary<string, Tick> GetRates(List<string> instruments)
         {
-            throw new NotImplementedException();
+            return new Dictionary<string, Tick>();
         }
 
         /// <summary>
@@ -119,7 +137,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public override bool PlaceOrder(Order order)
         {
-            throw new NotImplementedException();
+            return false;
         }
 
         /// <summary>
@@ -129,7 +147,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
         public override bool UpdateOrder(Order order)
         {
-            throw new NotImplementedException();
+            return false;
         }
 
         /// <summary>
@@ -139,7 +157,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>True if the request was made for the order to be canceled, false otherwise</returns>
         public override bool CancelOrder(Order order)
         {
-            throw new NotImplementedException();
+            return false;
         }
 
         /// <summary>
@@ -147,7 +165,9 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         public override void StartTransactionStream()
         {
-            throw new NotImplementedException();
+            _eventsSession = new TransactionStreamSession(this);
+            _eventsSession.DataReceived += OnTransactionDataReceived;
+            _eventsSession.StartSession();
         }
 
         /// <summary>
@@ -155,7 +175,11 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         public override void StopTransactionStream()
         {
-            throw new NotImplementedException();
+            if (_eventsSession != null)
+            {
+                _eventsSession.DataReceived -= OnTransactionDataReceived;
+                _eventsSession.StopSession();
+            }
         }
 
         /// <summary>
@@ -163,7 +187,9 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         public override void StartPricingStream(List<string> instruments)
         {
-            throw new NotImplementedException();
+            _ratesSession = new PricingStreamSession(this, instruments);
+            _ratesSession.DataReceived += OnPricingDataReceived;
+            _ratesSession.StartSession();
         }
 
         /// <summary>
@@ -171,7 +197,182 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         public override void StopPricingStream()
         {
-            throw new NotImplementedException();
+            if (_ratesSession != null)
+            {
+                _ratesSession.DataReceived -= OnPricingDataReceived;
+                _ratesSession.StopSession();
+            }
+        }
+
+        /// <summary>
+        /// Returns a DateTime from an RFC3339 string (with high resolution)
+        /// </summary>
+        /// <param name="time">The time string</param>
+        private static DateTime GetTickDateTimeFromString(string time)
+        {
+            // remove nanoseconds, DateTime.ParseExact will throw with 9 digits after seconds
+            return OandaBrokerage.GetDateTimeFromString(time.Remove(25, 3));
+        }
+
+        /// <summary>
+        /// Event handler for streaming events
+        /// </summary>
+        /// <param name="json">The event object</param>
+        private void OnTransactionDataReceived(string json)
+        {
+            var obj = (JObject)JsonConvert.DeserializeObject(json);
+            var type = obj["type"].ToString();
+
+            switch (type)
+            {
+                case "HEARTBEAT":
+                    //var heartBeat = obj.ToObject<TransactionHeartbeat>();
+                    lock (LockerConnectionMonitor)
+                    {
+                        LastHeartbeatUtcTime = DateTime.UtcNow;
+                    }
+                    break;
+
+                case "ORDER_FILL":
+                    var transaction = obj.ToObject<OrderFillTransaction>();
+
+                    var order = OrderProvider.GetOrderByBrokerageId(transaction.OrderID);
+                    order.PriceCurrency = SecurityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
+
+                    const int orderFee = 0;
+                    var fill = new OrderEvent(order, DateTime.UtcNow, orderFee, "Oanda Fill Event")
+                    {
+                        Status = OrderStatus.Filled,
+                        FillPrice = transaction.Price.ToDecimal(),
+                        FillQuantity = transaction.Units.ToInt32()
+                    };
+
+                    // flip the quantity on sell actions
+                    if (order.Direction == OrderDirection.Sell)
+                    {
+                        fill.FillQuantity *= -1;
+                    }
+                    OnOrderEvent(fill);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Event handler for streaming ticks
+        /// </summary>
+        /// <param name="json">The data object containing the received tick</param>
+        private void OnPricingDataReceived(string json)
+        {
+            var obj = (JObject)JsonConvert.DeserializeObject(json);
+            var type = obj["type"].ToString();
+
+            switch (type)
+            {
+                case "HEARTBEAT":
+                    //var heartBeat = obj.ToObject<PricingHeartbeat>();
+                    lock (LockerConnectionMonitor)
+                    {
+                        LastHeartbeatUtcTime = DateTime.UtcNow;
+                    }
+                    break;
+
+                case "PRICE":
+                    var data = obj.ToObject<Price>();
+
+                    var securityType = SymbolMapper.GetBrokerageSecurityType(data.Instrument);
+                    var symbol = SymbolMapper.GetLeanSymbol(data.Instrument, securityType, Market.Oanda);
+                    var time = GetTickDateTimeFromString(data.Time);
+
+                    // live ticks timestamps must be in exchange time zone
+                    DateTimeZone exchangeTimeZone;
+                    if (!_symbolExchangeTimeZones.TryGetValue(symbol, out exchangeTimeZone))
+                    {
+                        exchangeTimeZone = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Oanda, symbol, securityType).TimeZone;
+                        _symbolExchangeTimeZones.Add(symbol, exchangeTimeZone);
+                    }
+                    time = time.ConvertFromUtc(exchangeTimeZone);
+
+                    var bidPrice = Convert.ToDecimal(data.Bids.Last().Price);
+                    var askPrice = Convert.ToDecimal(data.Asks.Last().Price);
+                    var tick = new Tick(time, symbol, bidPrice, askPrice);
+
+                    lock (Ticks)
+                    {
+                        Ticks.Add(tick);
+                    }
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Initializes a streaming rates session with the given instruments on the given account
+        /// </summary>
+        /// <param name="instruments">list of instruments to stream rates for</param>
+        /// <returns>the WebResponse object that can be used to retrieve the rates as they stream</returns>
+        public WebResponse StartRatesSession(List<string> instruments)
+        {
+            var instrumentList = string.Join(",", instruments);
+
+            var requestString = _apiStreaming.GetBasePath() + "/accounts/" + AccountId + "/pricing/stream" +
+                "?instruments=" + Uri.EscapeDataString(instrumentList);
+
+            var request = WebRequest.CreateHttp(requestString);
+            request.Method = "GET";
+            request.Headers[HttpRequestHeader.Authorization] = Authorization;
+
+            try
+            {
+                var response = request.GetResponse();
+                return response;
+            }
+            catch (WebException ex)
+            {
+                var stream = GetResponseStream(ex.Response);
+                using (var reader = new StreamReader(stream))
+                {
+                    var result = reader.ReadToEnd();
+                    throw new Exception(result);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Initializes a streaming events session which will stream events for the given accounts
+        /// </summary>
+        /// <returns>the WebResponse object that can be used to retrieve the events as they stream</returns>
+        public WebResponse StartEventsSession()
+        {
+            var requestString = _apiStreaming.GetBasePath() + "/accounts/" + AccountId + "/transactions/stream";
+
+            var request = WebRequest.CreateHttp(requestString);
+            request.Method = "GET";
+            request.Headers[HttpRequestHeader.Authorization] = Authorization;
+
+            try
+            {
+                var response = request.GetResponse();
+                return response;
+            }
+            catch (WebException ex)
+            {
+                var stream = GetResponseStream(ex.Response);
+                using (var reader = new StreamReader(stream))
+                {
+                    var result = reader.ReadToEnd();
+                    throw new Exception(result);
+                }
+            }
+        }
+
+        private static Stream GetResponseStream(WebResponse response)
+        {
+            var stream = response.GetResponseStream();
+            if (response.Headers["Content-Encoding"] == "gzip")
+            {
+                // if we received a gzipped response, handle that
+                if (stream != null) stream = new GZipStream(stream, CompressionMode.Decompress);
+            }
+            return stream;
         }
 
         /// <summary>
@@ -185,7 +386,30 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>The list of bars</returns>
         public override IEnumerable<TradeBar> DownloadTradeBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone)
         {
-            throw new NotImplementedException();
+            var oandaSymbol = SymbolMapper.GetBrokerageSymbol(symbol);
+            var startUtc = startTimeUtc.ToString("yyyy-MM-ddTHH:mm:ssZ");
+            var endUtc = endTimeUtc.ToString("yyyy-MM-ddTHH:mm:ssZ");
+
+            // Oanda only has 5-second bars, we return these for Resolution.Second
+            var period = resolution == Resolution.Second ? TimeSpan.FromSeconds(5) : resolution.ToTimeSpan();
+
+            var response = _apiRest.GetInstrumentCandles(Authorization, oandaSymbol, "M", ToGranularity(resolution).ToString(), null, startUtc, endUtc);
+            foreach (var candle in response.Candles)
+            {
+                var time = Time.UnixTimeStampToDateTime(Convert.ToDouble(candle.Time, CultureInfo.InvariantCulture));
+                if (time > endTimeUtc)
+                    break;
+
+                yield return new TradeBar(
+                    time.ConvertFromUtc(requestedTimeZone),
+                    symbol,
+                    candle.Bid.O.ToDecimal(),
+                    candle.Bid.H.ToDecimal(),
+                    candle.Bid.L.ToDecimal(),
+                    candle.Bid.C.ToDecimal(),
+                    0,
+                    period);
+            }
         }
 
         /// <summary>
@@ -199,16 +423,147 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>The list of bars</returns>
         public override IEnumerable<QuoteBar> DownloadQuoteBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone)
         {
-            throw new NotImplementedException();
+            var oandaSymbol = SymbolMapper.GetBrokerageSymbol(symbol);
+            var startUtc = startTimeUtc.ToString("yyyy-MM-ddTHH:mm:ssZ");
+            var endUtc = endTimeUtc.ToString("yyyy-MM-ddTHH:mm:ssZ");
+
+            // Oanda only has 5-second bars, we return these for Resolution.Second
+            var period = resolution == Resolution.Second ? TimeSpan.FromSeconds(5) : resolution.ToTimeSpan();
+
+            var response = _apiRest.GetInstrumentCandles(Authorization, oandaSymbol, "BA", ToGranularity(resolution).ToString(), null, startUtc, endUtc);
+            foreach (var candle in response.Candles)
+            {
+                var time = Time.UnixTimeStampToDateTime(Convert.ToDouble(candle.Time, CultureInfo.InvariantCulture));
+                if (time > endTimeUtc)
+                    break;
+
+                yield return new QuoteBar(
+                    time.ConvertFromUtc(requestedTimeZone),
+                    symbol,
+                    new Bar(
+                        candle.Bid.O.ToDecimal(),
+                        candle.Bid.H.ToDecimal(),
+                        candle.Bid.L.ToDecimal(),
+                        candle.Bid.C.ToDecimal()
+                    ),
+                    0,
+                    new Bar(
+                        candle.Ask.O.ToDecimal(),
+                        candle.Ask.H.ToDecimal(),
+                        candle.Ask.L.ToDecimal(),
+                        candle.Ask.C.ToDecimal()
+                    ),
+                    0,
+                    period);
+            }
+        }
+
+        private string Authorization
+        {
+            get { return "Bearer " + AccessToken; }
         }
 
         /// <summary>
-        /// Get the next ticks from the live trading data queue
+        /// Converts the specified Oanda order into a qc order.
+        /// The 'task' will have a value if we needed to issue a rest call for the stop price, otherwise it will be null
         /// </summary>
-        /// <returns>IEnumerable list of ticks since the last update.</returns>
-        public override IEnumerable<BaseData> GetNextTicks()
+        private Order ConvertOrder(OandaOrder order)
         {
-            throw new NotImplementedException();
+            return new MarketOrder();
+
+            //Order qcOrder;
+            //switch (order.type)
+            //{
+            //    case "limit":
+            //        qcOrder = new LimitOrder();
+            //        if (order.side == "buy")
+            //        {
+            //            ((LimitOrder)qcOrder).LimitPrice = Convert.ToDecimal(order.lowerBound);
+            //        }
+
+            //        if (order.side == "sell")
+            //        {
+            //            ((LimitOrder)qcOrder).LimitPrice = Convert.ToDecimal(order.upperBound);
+            //        }
+            //        break;
+
+            //    case "stop":
+            //        qcOrder = new StopLimitOrder();
+            //        if (order.side == "buy")
+            //        {
+            //            ((StopLimitOrder)qcOrder).LimitPrice = Convert.ToDecimal(order.lowerBound);
+            //        }
+
+            //        if (order.side == "sell")
+            //        {
+            //            ((StopLimitOrder)qcOrder).LimitPrice = Convert.ToDecimal(order.upperBound);
+            //        }
+            //        break;
+
+            //    case "marketIfTouched":
+            //        //when market reaches the price sell at market.
+            //        qcOrder = new StopMarketOrder { Price = Convert.ToDecimal(order.price), StopPrice = Convert.ToDecimal(order.price) };
+            //        break;
+
+            //    case "market":
+            //        qcOrder = new MarketOrder();
+            //        break;
+
+            //    default:
+            //        throw new NotSupportedException("The Oanda order type " + order.type + " is not supported.");
+            //}
+
+            //var securityType = SymbolMapper.GetBrokerageSecurityType(order.instrument);
+            //qcOrder.Symbol = SymbolMapper.GetLeanSymbol(order.instrument, securityType, Market.Oanda);
+            //qcOrder.Quantity = ConvertQuantity(order);
+            //qcOrder.Status = OrderStatus.None;
+            //qcOrder.BrokerId.Add(order.id.ToString());
+
+            //var orderByBrokerageId = OrderProvider.GetOrderByBrokerageId(order.id);
+            //if (orderByBrokerageId != null)
+            //{
+            //    qcOrder.Id = orderByBrokerageId.Id;
+            //}
+
+            //qcOrder.Duration = OrderDuration.Custom;
+            //qcOrder.DurationValue = XmlConvert.ToDateTime(order.expiry, XmlDateTimeSerializationMode.Utc);
+            //qcOrder.Time = XmlConvert.ToDateTime(order.time, XmlDateTimeSerializationMode.Utc);
+
+            //return qcOrder;
+        }
+
+        /// <summary>
+        /// Converts a LEAN Resolution to a CandlestickGranularity
+        /// </summary>
+        /// <param name="resolution">The resolution to convert</param>
+        /// <returns></returns>
+        private static CandlestickGranularity ToGranularity(Resolution resolution)
+        {
+            CandlestickGranularity interval;
+
+            switch (resolution)
+            {
+                case Resolution.Second:
+                    interval = CandlestickGranularity.S5;
+                    break;
+
+                case Resolution.Minute:
+                    interval = CandlestickGranularity.M1;
+                    break;
+
+                case Resolution.Hour:
+                    interval = CandlestickGranularity.H1;
+                    break;
+
+                case Resolution.Daily:
+                    interval = CandlestickGranularity.D;
+                    break;
+
+                default:
+                    throw new ArgumentException("Unsupported resolution: " + resolution);
+            }
+
+            return interval;
         }
     }
 }

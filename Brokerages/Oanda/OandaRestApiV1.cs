@@ -21,7 +21,6 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Text;
-using System.Threading;
 using System.Xml;
 using Newtonsoft.Json;
 using NodaTime;
@@ -30,7 +29,6 @@ using QuantConnect.Brokerages.Oanda.RestV1.DataType.Communications;
 using QuantConnect.Brokerages.Oanda.RestV1.DataType.Communications.Requests;
 using QuantConnect.Brokerages.Oanda.RestV1.Framework;
 using QuantConnect.Brokerages.Oanda.RestV1.Session;
-using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -47,14 +45,6 @@ namespace QuantConnect.Brokerages.Oanda
         private EventsSession _eventsSession;
         private RatesSession _ratesSession;
         private readonly Dictionary<Symbol, DateTimeZone> _symbolExchangeTimeZones = new Dictionary<Symbol, DateTimeZone>();
-        private readonly List<Tick> _ticks = new List<Tick>();
-
-        private bool _isConnected;
-        private DateTime _lastHeartbeatUtcTime;
-        private Thread _connectionMonitorThread;
-        private readonly object _lockerConnectionMonitor = new object();
-        private volatile bool _connectionLost;
-        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OandaRestApiV1"/> class.
@@ -68,131 +58,6 @@ namespace QuantConnect.Brokerages.Oanda
         public OandaRestApiV1(OandaSymbolMapper symbolMapper, IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, string accountId)
             : base(symbolMapper, orderProvider, securityProvider, environment, accessToken, accountId)
         {
-        }
-
-        /// <summary>
-        /// Returns true if we're currently connected to the broker
-        /// </summary>
-        public override bool IsConnected
-        {
-            get { return _isConnected && !_connectionLost; }
-        }
-
-        /// <summary>
-        /// Connects the client to the broker's remote servers
-        /// </summary>
-        public override void Connect()
-        {
-            // Register to the event session to receive events.
-            StartTransactionStream();
-
-            _isConnected = true;
-
-            // create new thread to manage disconnections and reconnections
-            _cancellationTokenSource = new CancellationTokenSource();
-            _connectionMonitorThread = new Thread(() =>
-            {
-                var nextReconnectionAttemptUtcTime = DateTime.UtcNow;
-                double nextReconnectionAttemptSeconds = 1;
-
-                lock (_lockerConnectionMonitor)
-                {
-                    _lastHeartbeatUtcTime = DateTime.UtcNow;
-                }
-
-                try
-                {
-                    while (!_cancellationTokenSource.IsCancellationRequested)
-                    {
-                        TimeSpan elapsed;
-                        lock (_lockerConnectionMonitor)
-                        {
-                            elapsed = DateTime.UtcNow - _lastHeartbeatUtcTime;
-                        }
-
-                        if (!_connectionLost && elapsed > TimeSpan.FromSeconds(20))
-                        {
-                            _connectionLost = true;
-                            nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
-
-                            OnMessage(BrokerageMessageEvent.Disconnected("Connection with Oanda server lost. " +
-                                                                         "This could be because of internet connectivity issues. "));
-                        }
-                        else if (_connectionLost)
-                        {
-                            try
-                            {
-                                if (elapsed <= TimeSpan.FromSeconds(20))
-                                {
-                                    _connectionLost = false;
-                                    nextReconnectionAttemptSeconds = 1;
-
-                                    OnMessage(BrokerageMessageEvent.Reconnected("Connection with Oanda server restored."));
-                                }
-                                else
-                                {
-                                    if (DateTime.UtcNow > nextReconnectionAttemptUtcTime)
-                                    {
-                                        try
-                                        {
-                                            // check if we have a connection
-                                            GetInstrumentList();
-
-                                            // restore events session
-                                            StopTransactionStream();
-                                            StartTransactionStream();
-
-                                            // restore rates session
-                                            List<Symbol> symbolsToSubscribe;
-                                            lock (LockerSubscriptions)
-                                            {
-                                                symbolsToSubscribe = SubscribedSymbols.ToList();
-                                            }
-                                            SubscribeSymbols(symbolsToSubscribe);
-                                        }
-                                        catch (Exception)
-                                        {
-                                            // double the interval between attempts (capped to 1 minute)
-                                            nextReconnectionAttemptSeconds = Math.Min(nextReconnectionAttemptSeconds * 2, 60);
-                                            nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
-                                        }
-                                    }
-                                }
-                            }
-                            catch (Exception exception)
-                            {
-                                Log.Error(exception);
-                            }
-                        }
-
-                        Thread.Sleep(1000);
-                    }
-                }
-                catch (Exception exception)
-                {
-                    Log.Error(exception);
-                }
-            });
-            _connectionMonitorThread.Start();
-            while (!_connectionMonitorThread.IsAlive)
-            {
-                Thread.Sleep(1);
-            }
-        }
-
-        /// <summary>
-        /// Disconnects the client from the broker's remote servers
-        /// </summary>
-        public override void Disconnect()
-        {
-            StopTransactionStream();
-            StopPricingStream();
-
-            // request and wait for thread to stop
-            _cancellationTokenSource.Cancel();
-            _connectionMonitorThread.Join();
-
-            _isConnected = false;
         }
 
         /// <summary>
@@ -534,20 +399,6 @@ namespace QuantConnect.Brokerages.Oanda
         }
 
         /// <summary>
-        /// Get the next ticks from the live trading data queue
-        /// </summary>
-        /// <returns>IEnumerable list of ticks since the last update.</returns>
-        public override IEnumerable<BaseData> GetNextTicks()
-        {
-            lock (_ticks)
-            {
-                var copy = _ticks.ToArray();
-                _ticks.Clear();
-                return copy;
-            }
-        }
-
-        /// <summary>
         /// Retrieves the list of open orders belonging to the account
         /// </summary>
         /// <param name="requestParams">optional additional parameters for the request (name, value pairs)</param>
@@ -741,9 +592,9 @@ namespace QuantConnect.Brokerages.Oanda
         {
             if (data.IsHeartbeat())
             {
-                lock (_lockerConnectionMonitor)
+                lock (LockerConnectionMonitor)
                 {
-                    _lastHeartbeatUtcTime = DateTime.UtcNow;
+                    LastHeartbeatUtcTime = DateTime.UtcNow;
                 }
                 return;
             }
@@ -781,9 +632,9 @@ namespace QuantConnect.Brokerages.Oanda
         {
             if (data.IsHeartbeat())
             {
-                lock (_lockerConnectionMonitor)
+                lock (LockerConnectionMonitor)
                 {
-                    _lastHeartbeatUtcTime = DateTime.UtcNow;
+                    LastHeartbeatUtcTime = DateTime.UtcNow;
                 }
                 return;
             }
@@ -807,9 +658,9 @@ namespace QuantConnect.Brokerages.Oanda
             var askPrice = Convert.ToDecimal(data.tick.ask);
             var tick = new Tick(time, symbol, bidPrice, askPrice);
 
-            lock (_ticks)
+            lock (Ticks)
             {
-                _ticks.Add(tick);
+                Ticks.Add(tick);
             }
         }
 

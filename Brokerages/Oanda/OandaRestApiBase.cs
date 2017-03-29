@@ -38,6 +38,26 @@ namespace QuantConnect.Brokerages.Oanda
         private DateTime _lastSubscribeRequestUtcTime = DateTime.MinValue;
         private bool _subscriptionsPending;
 
+        private bool _isConnected;
+        private Thread _connectionMonitorThread;
+        private volatile bool _connectionLost;
+        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+
+        /// <summary>
+        /// The UTC time of the last received heartbeat message
+        /// </summary>
+        protected DateTime LastHeartbeatUtcTime;
+
+        /// <summary>
+        /// A lock object used to synchronize access to LastHeartbeatUtcTime
+        /// </summary>
+        protected readonly object LockerConnectionMonitor = new object();
+
+        /// <summary>
+        /// The list of ticks received
+        /// </summary>
+        protected readonly List<Tick> Ticks = new List<Tick>();
+
         /// <summary>
         /// The list of currently subscribed symbols
         /// </summary>
@@ -99,6 +119,131 @@ namespace QuantConnect.Brokerages.Oanda
         }
 
         /// <summary>
+        /// Returns true if we're currently connected to the broker
+        /// </summary>
+        public override bool IsConnected
+        {
+            get { return _isConnected && !_connectionLost; }
+        }
+
+        /// <summary>
+        /// Connects the client to the broker's remote servers
+        /// </summary>
+        public override void Connect()
+        {
+            // Register to the event session to receive events.
+            StartTransactionStream();
+
+            _isConnected = true;
+
+            // create new thread to manage disconnections and reconnections
+            _cancellationTokenSource = new CancellationTokenSource();
+            _connectionMonitorThread = new Thread(() =>
+            {
+                var nextReconnectionAttemptUtcTime = DateTime.UtcNow;
+                double nextReconnectionAttemptSeconds = 1;
+
+                lock (LockerConnectionMonitor)
+                {
+                    LastHeartbeatUtcTime = DateTime.UtcNow;
+                }
+
+                try
+                {
+                    while (!_cancellationTokenSource.IsCancellationRequested)
+                    {
+                        TimeSpan elapsed;
+                        lock (LockerConnectionMonitor)
+                        {
+                            elapsed = DateTime.UtcNow - LastHeartbeatUtcTime;
+                        }
+
+                        if (!_connectionLost && elapsed > TimeSpan.FromSeconds(20))
+                        {
+                            _connectionLost = true;
+                            nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
+
+                            OnMessage(BrokerageMessageEvent.Disconnected("Connection with Oanda server lost. " +
+                                                                         "This could be because of internet connectivity issues. "));
+                        }
+                        else if (_connectionLost)
+                        {
+                            try
+                            {
+                                if (elapsed <= TimeSpan.FromSeconds(20))
+                                {
+                                    _connectionLost = false;
+                                    nextReconnectionAttemptSeconds = 1;
+
+                                    OnMessage(BrokerageMessageEvent.Reconnected("Connection with Oanda server restored."));
+                                }
+                                else
+                                {
+                                    if (DateTime.UtcNow > nextReconnectionAttemptUtcTime)
+                                    {
+                                        try
+                                        {
+                                            // check if we have a connection
+                                            GetInstrumentList();
+
+                                            // restore events session
+                                            StopTransactionStream();
+                                            StartTransactionStream();
+
+                                            // restore rates session
+                                            List<Symbol> symbolsToSubscribe;
+                                            lock (LockerSubscriptions)
+                                            {
+                                                symbolsToSubscribe = SubscribedSymbols.ToList();
+                                            }
+                                            SubscribeSymbols(symbolsToSubscribe);
+                                        }
+                                        catch (Exception)
+                                        {
+                                            // double the interval between attempts (capped to 1 minute)
+                                            nextReconnectionAttemptSeconds = Math.Min(nextReconnectionAttemptSeconds * 2, 60);
+                                            nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
+                                        }
+                                    }
+                                }
+                            }
+                            catch (Exception exception)
+                            {
+                                Log.Error(exception);
+                            }
+                        }
+
+                        Thread.Sleep(1000);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    Log.Error(exception);
+                }
+            });
+            _connectionMonitorThread.Start();
+            while (!_connectionMonitorThread.IsAlive)
+            {
+                Thread.Sleep(1);
+            }
+        }
+
+        /// <summary>
+        /// Disconnects the client from the broker's remote servers
+        /// </summary>
+        public override void Disconnect()
+        {
+            StopTransactionStream();
+            StopPricingStream();
+
+            // request and wait for thread to stop
+            _cancellationTokenSource.Cancel();
+            _connectionMonitorThread.Join();
+
+            _isConnected = false;
+        }
+
+        /// <summary>
         /// Gets the list of available tradable instruments/products from Oanda
         /// </summary>
         public abstract List<string> GetInstrumentList();
@@ -156,7 +301,15 @@ namespace QuantConnect.Brokerages.Oanda
         /// Get the next ticks from the live trading data queue
         /// </summary>
         /// <returns>IEnumerable list of ticks since the last update.</returns>
-        public abstract IEnumerable<BaseData> GetNextTicks();
+        public IEnumerable<BaseData> GetNextTicks()
+        {
+            lock (Ticks)
+            {
+                var copy = Ticks.ToArray();
+                Ticks.Clear();
+                return copy;
+            }
+        }
 
         /// <summary>
         /// Adds the specified symbols to the subscription
