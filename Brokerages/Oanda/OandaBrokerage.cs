@@ -61,6 +61,11 @@ namespace QuantConnect.Brokerages.Oanda
             _api = IsLegacyAccount(accountId) ? (OandaRestApiBase)
                 new OandaRestApiV1(_symbolMapper, orderProvider, securityProvider, environment, accessToken, accountId) :
                 new OandaRestApiV20(_symbolMapper, orderProvider, securityProvider, environment, accessToken, accountId);
+
+            // forward events received from API
+            _api.OrderStatusChanged += (sender, orderEvent) => OnOrderEvent(orderEvent);
+            _api.AccountChanged += (sender, accountEvent) => OnAccountChanged(accountEvent);
+            _api.Message += (sender, messageEvent) => OnMessage(messageEvent);
         }
 
         #region IBrokerage implementation
@@ -183,7 +188,7 @@ namespace QuantConnect.Brokerages.Oanda
                 yield break;
             }
 
-            var exchangeTimeZone = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Oanda, request.Symbol, request.SecurityType).TimeZone;
+            var exchangeTimeZone = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.Oanda, request.Symbol, request.Symbol.SecurityType).TimeZone;
 
             // Oanda only has 5-second bars, we return these for Resolution.Second
             var period = request.Resolution == Resolution.Second ? TimeSpan.FromSeconds(5) : request.Resolution.ToTimeSpan();

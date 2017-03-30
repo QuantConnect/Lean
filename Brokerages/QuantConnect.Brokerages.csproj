@@ -275,6 +275,7 @@
     <Compile Include="Oanda\RestV20\Client\Configuration.cs" />
     <Compile Include="Oanda\RestV20\Client\ExceptionFactory.cs" />
     <Compile Include="Oanda\RestV20\Client\IApiAccessor.cs" />
+    <Compile Include="Oanda\RestV20\DefaultApiExtensions.cs" />
     <Compile Include="Oanda\RestV20\Model\AcceptDatetimeFormat.cs" />
     <Compile Include="Oanda\RestV20\Model\Account.cs" />
     <Compile Include="Oanda\RestV20\Model\AccountChanges.cs" />

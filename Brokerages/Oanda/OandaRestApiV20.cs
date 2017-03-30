@@ -27,12 +27,15 @@ using Oanda.RestV20.Api;
 using Oanda.RestV20.Model;
 using Oanda.RestV20.Session;
 using QuantConnect.Data.Market;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using DateTime = System.DateTime;
+using LimitOrder = QuantConnect.Orders.LimitOrder;
 using MarketOrder = QuantConnect.Orders.MarketOrder;
 using Order = QuantConnect.Orders.Order;
-using OandaOrder = Oanda.RestV20.Model.Order;
+using OandaLimitOrder = Oanda.RestV20.Model.LimitOrder;
+using OrderType = QuantConnect.Orders.OrderType;
 
 namespace QuantConnect.Brokerages.Oanda
 {
@@ -77,7 +80,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         public override List<string> GetInstrumentList()
         {
-            var response = _apiRest.GetAcountInstruments(Authorization, AccountId);
+            var response = _apiRest.GetAccountInstruments(Authorization, AccountId);
 
             return response.Instruments.Select(x => x.Name).ToList();
         }
@@ -89,10 +92,11 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>The open orders returned from Oanda</returns>
         public override List<Order> GetOpenOrders()
         {
-            var response = _apiRest.GetAccount(Authorization, AccountId);
+            var json = _apiRest.ListPendingOrdersAsJson(Authorization, AccountId);
 
-            var orders = response.Account.Orders;
-            return orders.Select(ConvertOrder).ToList();
+            var response = (JObject)JsonConvert.DeserializeObject(json);
+
+            return response["orders"].Select(ConvertOrder).ToList();
         }
 
         /// <summary>
@@ -101,7 +105,9 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>The current holdings from the account</returns>
         public override List<Holding> GetAccountHoldings()
         {
-            return new List<Holding>();
+            var response = _apiRest.ListOpenPositions(Authorization, AccountId);
+
+            return response.Positions.Select(ConvertHolding).ToList();
         }
 
         /// <summary>
@@ -127,7 +133,13 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>Dictionary containing the current quotes for each instrument</returns>
         public override Dictionary<string, Tick> GetRates(List<string> instruments)
         {
-            return new Dictionary<string, Tick>();
+            var response = _apiRest.GetPrices(Authorization, AccountId, instruments);
+
+            return response.Prices
+                .ToDictionary(
+                    x => x.Instrument,
+                    x => new Tick { BidPrice = x.Bids.Last().Price.ToDecimal(), AskPrice = x.Asks.Last().Price.ToDecimal() }
+                );
         }
 
         /// <summary>
@@ -137,7 +149,53 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public override bool PlaceOrder(Order order)
         {
-            return false;
+            var request = GenerateOrderRequest(order);
+            var response = _apiRest.CreateOrder(Authorization, AccountId, request);
+
+            order.BrokerId.Add(response.Data.OrderCreateTransaction.Id);
+
+            // if market order, find fill quantity and price
+            var fill = response.Data.OrderFillTransaction;
+            var marketOrderFillPrice = 0m;
+            var marketOrderFillQuantity = 0;
+
+            if (order.Type == OrderType.Market)
+            {
+                marketOrderFillPrice = Convert.ToDecimal(fill.Price);
+
+                if (fill.TradeOpened != null && fill.TradeOpened.TradeID.Length > 0)
+                {
+                    marketOrderFillQuantity = Convert.ToInt32(fill.TradeOpened.Units);
+                }
+
+                if (fill.TradeReduced != null && fill.TradeReduced.TradeID.Length > 0)
+                {
+                    marketOrderFillQuantity = Convert.ToInt32(fill.TradeReduced.Units);
+                }
+
+                if (fill.TradesClosed != null && fill.TradesClosed.Count > 0)
+                {
+                    marketOrderFillQuantity += fill.TradesClosed.Sum(trade => Convert.ToInt32(trade.Units));
+                }
+            }
+
+            // send Submitted order event
+            const int orderFee = 0;
+            order.PriceCurrency = SecurityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
+            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee) { Status = OrderStatus.Submitted });
+
+            if (order.Type == OrderType.Market)
+            {
+                // if market order, also send Filled order event
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee)
+                {
+                    Status = OrderStatus.Filled,
+                    FillPrice = marketOrderFillPrice,
+                    FillQuantity = marketOrderFillQuantity
+                });
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -147,7 +205,36 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
         public override bool UpdateOrder(Order order)
         {
-            return false;
+            Log.Trace("OandaBrokerage.UpdateOrder(): " + order);
+
+            if (!order.BrokerId.Any())
+            {
+                // we need the brokerage order id in order to perform an update
+                Log.Trace("OandaBrokerage.UpdateOrder(): Unable to update order without BrokerId.");
+                return false;
+            }
+
+            var request = GenerateOrderRequest(order);
+
+            var orderId = order.BrokerId.First();
+            var response = _apiRest.ReplaceOrder(Authorization, AccountId, orderId, request);
+
+            // replace the brokerage order id
+            order.BrokerId[0] = response.Data.OrderCreateTransaction.Id;
+
+            // check if the updated (marketable) order was filled
+            if (response.Data.OrderFillTransaction != null)
+            {
+                const int orderFee = 0;
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee)
+                {
+                    Status = OrderStatus.Filled,
+                    FillPrice = response.Data.OrderFillTransaction.Price.ToDecimal(),
+                    FillQuantity = Convert.ToInt32(response.Data.OrderFillTransaction.Units)
+                });
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -157,7 +244,21 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>True if the request was made for the order to be canceled, false otherwise</returns>
         public override bool CancelOrder(Order order)
         {
-            return false;
+            Log.Trace("OandaBrokerage.CancelOrder(): " + order);
+
+            if (!order.BrokerId.Any())
+            {
+                Log.Trace("OandaBrokerage.CancelOrder(): Unable to cancel order without BrokerId.");
+                return false;
+            }
+
+            foreach (var orderId in order.BrokerId)
+            {
+                _apiRest.CancelOrder(Authorization, AccountId, orderId);
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Oanda Cancel Order Event") { Status = OrderStatus.Canceled });
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -226,7 +327,6 @@ namespace QuantConnect.Brokerages.Oanda
             switch (type)
             {
                 case "HEARTBEAT":
-                    //var heartBeat = obj.ToObject<TransactionHeartbeat>();
                     lock (LockerConnectionMonitor)
                     {
                         LastHeartbeatUtcTime = DateTime.UtcNow;
@@ -237,22 +337,18 @@ namespace QuantConnect.Brokerages.Oanda
                     var transaction = obj.ToObject<OrderFillTransaction>();
 
                     var order = OrderProvider.GetOrderByBrokerageId(transaction.OrderID);
-                    order.PriceCurrency = SecurityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
-
-                    const int orderFee = 0;
-                    var fill = new OrderEvent(order, DateTime.UtcNow, orderFee, "Oanda Fill Event")
+                    if (order != null)
                     {
-                        Status = OrderStatus.Filled,
-                        FillPrice = transaction.Price.ToDecimal(),
-                        FillQuantity = transaction.Units.ToInt32()
-                    };
+                        order.PriceCurrency = SecurityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
 
-                    // flip the quantity on sell actions
-                    if (order.Direction == OrderDirection.Sell)
-                    {
-                        fill.FillQuantity *= -1;
+                        const int orderFee = 0;
+                        OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Oanda Fill Event")
+                        {
+                            Status = OrderStatus.Filled,
+                            FillPrice = transaction.Price.ToDecimal(),
+                            FillQuantity = Convert.ToInt32(transaction.Units)
+                        });
                     }
-                    OnOrderEvent(fill);
                     break;
             }
         }
@@ -269,7 +365,6 @@ namespace QuantConnect.Brokerages.Oanda
             switch (type)
             {
                 case "HEARTBEAT":
-                    //var heartBeat = obj.ToObject<PricingHeartbeat>();
                     lock (LockerConnectionMonitor)
                     {
                         LastHeartbeatUtcTime = DateTime.UtcNow;
@@ -322,16 +417,14 @@ namespace QuantConnect.Brokerages.Oanda
 
             try
             {
-                var response = request.GetResponse();
-                return response;
+                return request.GetResponse();
             }
             catch (WebException ex)
             {
                 var stream = GetResponseStream(ex.Response);
                 using (var reader = new StreamReader(stream))
                 {
-                    var result = reader.ReadToEnd();
-                    throw new Exception(result);
+                    throw new Exception(reader.ReadToEnd());
                 }
             }
         }
@@ -350,16 +443,14 @@ namespace QuantConnect.Brokerages.Oanda
 
             try
             {
-                var response = request.GetResponse();
-                return response;
+                return request.GetResponse();
             }
             catch (WebException ex)
             {
                 var stream = GetResponseStream(ex.Response);
                 using (var reader = new StreamReader(stream))
                 {
-                    var result = reader.ReadToEnd();
-                    throw new Exception(result);
+                    throw new Exception(reader.ReadToEnd());
                 }
             }
         }
@@ -393,7 +484,7 @@ namespace QuantConnect.Brokerages.Oanda
             // Oanda only has 5-second bars, we return these for Resolution.Second
             var period = resolution == Resolution.Second ? TimeSpan.FromSeconds(5) : resolution.ToTimeSpan();
 
-            var response = _apiRest.GetInstrumentCandles(Authorization, oandaSymbol, "M", ToGranularity(resolution).ToString(), null, startUtc, endUtc);
+            var response = _apiRest.GetInstrumentCandles(Authorization, oandaSymbol, null, "M", ToGranularity(resolution).ToString(), null, startUtc, endUtc);
             foreach (var candle in response.Candles)
             {
                 var time = Time.UnixTimeStampToDateTime(Convert.ToDouble(candle.Time, CultureInfo.InvariantCulture));
@@ -430,7 +521,7 @@ namespace QuantConnect.Brokerages.Oanda
             // Oanda only has 5-second bars, we return these for Resolution.Second
             var period = resolution == Resolution.Second ? TimeSpan.FromSeconds(5) : resolution.ToTimeSpan();
 
-            var response = _apiRest.GetInstrumentCandles(Authorization, oandaSymbol, "BA", ToGranularity(resolution).ToString(), null, startUtc, endUtc);
+            var response = _apiRest.GetInstrumentCandles(Authorization, oandaSymbol, null, "BA", ToGranularity(resolution).ToString(), null, startUtc, endUtc);
             foreach (var candle in response.Candles)
             {
                 var time = Time.UnixTimeStampToDateTime(Convert.ToDouble(candle.Time, CultureInfo.InvariantCulture));
@@ -464,72 +555,108 @@ namespace QuantConnect.Brokerages.Oanda
         }
 
         /// <summary>
-        /// Converts the specified Oanda order into a qc order.
-        /// The 'task' will have a value if we needed to issue a rest call for the stop price, otherwise it will be null
+        /// Converts an Oanda order into a LEAN order.
         /// </summary>
-        private Order ConvertOrder(OandaOrder order)
+        private Order ConvertOrder(JToken order)
         {
-            return new MarketOrder();
+            var type = order["type"].ToString();
+            var instrument = order["instrument"].ToString();
+            var id = order["id"].ToString();
+            var units = Convert.ToInt32(order["units"]);
+            var createTime = order["createTime"].ToString();
 
-            //Order qcOrder;
-            //switch (order.type)
-            //{
-            //    case "limit":
-            //        qcOrder = new LimitOrder();
-            //        if (order.side == "buy")
-            //        {
-            //            ((LimitOrder)qcOrder).LimitPrice = Convert.ToDecimal(order.lowerBound);
-            //        }
+            Order qcOrder;
+            switch (type)
+            {
+                case "MARKET_IF_TOUCHED":
+                    var stopOrder = order.ToObject<MarketIfTouchedOrder>();
+                    qcOrder = new StopMarketOrder
+                    {
+                        StopPrice = stopOrder.Price.ToDecimal()
+                    };
+                    break;
 
-            //        if (order.side == "sell")
-            //        {
-            //            ((LimitOrder)qcOrder).LimitPrice = Convert.ToDecimal(order.upperBound);
-            //        }
-            //        break;
+                case "LIMIT":
+                    var limitOrder = order.ToObject<OandaLimitOrder>();
+                    qcOrder = new LimitOrder
+                    {
+                        LimitPrice = limitOrder.Price.ToDecimal()
+                    };
+                    break;
 
-            //    case "stop":
-            //        qcOrder = new StopLimitOrder();
-            //        if (order.side == "buy")
-            //        {
-            //            ((StopLimitOrder)qcOrder).LimitPrice = Convert.ToDecimal(order.lowerBound);
-            //        }
+                case "STOP":
+                    var stopLimitOrder = order.ToObject<StopOrder>();
+                    qcOrder = new StopLimitOrder
+                    {
+                        Price = Convert.ToDecimal(stopLimitOrder.Price),
+                        LimitPrice = Convert.ToDecimal(stopLimitOrder.PriceBound)
+                    };
+                    break;
 
-            //        if (order.side == "sell")
-            //        {
-            //            ((StopLimitOrder)qcOrder).LimitPrice = Convert.ToDecimal(order.upperBound);
-            //        }
-            //        break;
+                case "MARKET":
+                    qcOrder = new MarketOrder();
+                    break;
 
-            //    case "marketIfTouched":
-            //        //when market reaches the price sell at market.
-            //        qcOrder = new StopMarketOrder { Price = Convert.ToDecimal(order.price), StopPrice = Convert.ToDecimal(order.price) };
-            //        break;
+                default:
+                    throw new NotSupportedException("The Oanda order type " + type + " is not supported.");
+            }
 
-            //    case "market":
-            //        qcOrder = new MarketOrder();
-            //        break;
+            var securityType = SymbolMapper.GetBrokerageSecurityType(instrument);
+            qcOrder.Symbol = SymbolMapper.GetLeanSymbol(instrument, securityType, Market.Oanda);
+            qcOrder.Time = GetTickDateTimeFromString(createTime);
+            qcOrder.Quantity = units;
+            qcOrder.Status = OrderStatus.None;
+            qcOrder.BrokerId.Add(id);
 
-            //    default:
-            //        throw new NotSupportedException("The Oanda order type " + order.type + " is not supported.");
-            //}
+            var orderByBrokerageId = OrderProvider.GetOrderByBrokerageId(id);
+            if (orderByBrokerageId != null)
+            {
+                qcOrder.Id = orderByBrokerageId.Id;
+            }
 
-            //var securityType = SymbolMapper.GetBrokerageSecurityType(order.instrument);
-            //qcOrder.Symbol = SymbolMapper.GetLeanSymbol(order.instrument, securityType, Market.Oanda);
-            //qcOrder.Quantity = ConvertQuantity(order);
-            //qcOrder.Status = OrderStatus.None;
-            //qcOrder.BrokerId.Add(order.id.ToString());
+            var gtdTime = order["gtdTime"];
+            if (gtdTime != null)
+            {
+                qcOrder.Duration = OrderDuration.Custom;
+                qcOrder.DurationValue = GetTickDateTimeFromString(gtdTime.ToString());
+            }
 
-            //var orderByBrokerageId = OrderProvider.GetOrderByBrokerageId(order.id);
-            //if (orderByBrokerageId != null)
-            //{
-            //    qcOrder.Id = orderByBrokerageId.Id;
-            //}
+            return qcOrder;
+        }
 
-            //qcOrder.Duration = OrderDuration.Custom;
-            //qcOrder.DurationValue = XmlConvert.ToDateTime(order.expiry, XmlDateTimeSerializationMode.Utc);
-            //qcOrder.Time = XmlConvert.ToDateTime(order.time, XmlDateTimeSerializationMode.Utc);
+        /// <summary>
+        /// Converts an Oanda position into a LEAN holding.
+        /// </summary>
+        private Holding ConvertHolding(Position position)
+        {
+            var securityType = SymbolMapper.GetBrokerageSecurityType(position.Instrument);
+            var symbol = SymbolMapper.GetLeanSymbol(position.Instrument, securityType, Market.Oanda);
 
-            //return qcOrder;
+            var longUnits = Convert.ToInt32(position._Long.Units);
+            var shortUnits = Convert.ToInt32(position._Short.Units);
+
+            decimal averagePrice = 0;
+            var quantity = 0;
+            if (longUnits > 0)
+            {
+                averagePrice = position._Long.AveragePrice.ToDecimal();
+                quantity = longUnits;
+            }
+            else if (shortUnits < 0)
+            {
+                averagePrice = position._Short.AveragePrice.ToDecimal();
+                quantity = shortUnits;
+            }
+
+            return new Holding
+            {
+                Symbol = symbol,
+                Type = securityType,
+                AveragePrice = averagePrice,
+                ConversionRate = 1.0m,
+                CurrencySymbol = "$",
+                Quantity = quantity
+            };
         }
 
         /// <summary>
@@ -564,6 +691,69 @@ namespace QuantConnect.Brokerages.Oanda
             }
 
             return interval;
+        }
+
+        /// <summary>
+        /// Generates an Oanda order request
+        /// </summary>
+        /// <param name="order">The LEAN order</param>
+        /// <returns>The request in JSON format</returns>
+        private string GenerateOrderRequest(Order order)
+        {
+            var instrument = SymbolMapper.GetBrokerageSymbol(order.Symbol);
+
+            string request;
+            switch (order.Type)
+            {
+                case OrderType.Market:
+                    var marketOrderRequest = new MarketOrderRequest
+                    {
+                        Type = MarketOrderRequest.TypeEnum.MARKET,
+                        Instrument = instrument,
+                        Units = order.Quantity.ToString()
+                    };
+                    request = JsonConvert.SerializeObject(new { order = marketOrderRequest });
+                    break;
+
+                case OrderType.Limit:
+                    var limitOrderRequest = new LimitOrderRequest
+                    {
+                        Type = LimitOrderRequest.TypeEnum.LIMIT,
+                        Instrument = instrument,
+                        Units = order.Quantity.ToString(),
+                        Price = ((LimitOrder)order).LimitPrice.ToString(CultureInfo.InvariantCulture)
+                    };
+                    request = JsonConvert.SerializeObject(new { order = limitOrderRequest });
+                    break;
+
+                case OrderType.StopMarket:
+                    var marketIfTouchedOrderRequest = new MarketIfTouchedOrderRequest
+                    {
+                        Type = MarketIfTouchedOrderRequest.TypeEnum.MARKETIFTOUCHED,
+                        Instrument = instrument,
+                        Units = order.Quantity.ToString(),
+                        Price = ((StopMarketOrder)order).StopPrice.ToString(CultureInfo.InvariantCulture)
+                    };
+                    request = JsonConvert.SerializeObject(new { order = marketIfTouchedOrderRequest });
+                    break;
+
+                case OrderType.StopLimit:
+                    var stopOrderRequest = new StopOrderRequest
+                    {
+                        Type = StopOrderRequest.TypeEnum.STOP,
+                        Instrument = instrument,
+                        Units = order.Quantity.ToString(),
+                        Price = ((StopLimitOrder)order).StopPrice.ToString(CultureInfo.InvariantCulture),
+                        PriceBound = ((StopLimitOrder)order).LimitPrice.ToString(CultureInfo.InvariantCulture)
+                    };
+                    request = JsonConvert.SerializeObject(new { order = stopOrderRequest });
+                    break;
+
+                default:
+                    throw new NotSupportedException("The order type " + order.Type + " is not supported.");
+            }
+
+            return request;
         }
     }
 }
