@@ -37,7 +37,7 @@ namespace Oanda.RestV20.Model
         /// <param name="LastTransactionID">The ID of the most recent Transaction created for the Account. Only present if the Account exists..</param>
         /// <param name="ErrorCode">The code of the error that has occurred. This field may not be returned for some errors..</param>
         /// <param name="ErrorMessage">The human-readable description of the error that has occurred..</param>
-        public InlineResponse404(Transaction OrderRejectTransaction = default(Transaction), List<TransactionID> RelatedTransactionIDs = default(List<TransactionID>), string LastTransactionID = default(string), string ErrorCode = default(string), string ErrorMessage = default(string))
+        public InlineResponse404(Transaction OrderRejectTransaction = default(Transaction), List<string> RelatedTransactionIDs = default(List<string>), string LastTransactionID = default(string), string ErrorCode = default(string), string ErrorMessage = default(string))
         {
             this.OrderRejectTransaction = OrderRejectTransaction;
             this.RelatedTransactionIDs = RelatedTransactionIDs;
@@ -56,7 +56,7 @@ namespace Oanda.RestV20.Model
         /// </summary>
         /// <value>The IDs of all Transactions that were created while satisfying the request. Only present if the Account exists.</value>
         [DataMember(Name="relatedTransactionIDs", EmitDefaultValue=false)]
-        public List<TransactionID> RelatedTransactionIDs { get; set; }
+        public List<string> RelatedTransactionIDs { get; set; }
         /// <summary>
         /// The ID of the most recent Transaction created for the Account. Only present if the Account exists.
         /// </summary>

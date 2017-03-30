@@ -35,7 +35,7 @@ namespace Oanda.RestV20.Model
         /// <param name="OrderClientExtensionsModifyTransaction">OrderClientExtensionsModifyTransaction.</param>
         /// <param name="LastTransactionID">The ID of the most recent Transaction created for the Account.</param>
         /// <param name="RelatedTransactionIDs">The IDs of all Transactions that were created while satisfying the request..</param>
-        public InlineResponse20010(OrderClientExtensionsModifyTransaction OrderClientExtensionsModifyTransaction = default(OrderClientExtensionsModifyTransaction), string LastTransactionID = default(string), List<TransactionID> RelatedTransactionIDs = default(List<TransactionID>))
+        public InlineResponse20010(OrderClientExtensionsModifyTransaction OrderClientExtensionsModifyTransaction = default(OrderClientExtensionsModifyTransaction), string LastTransactionID = default(string), List<string> RelatedTransactionIDs = default(List<string>))
         {
             this.OrderClientExtensionsModifyTransaction = OrderClientExtensionsModifyTransaction;
             this.LastTransactionID = LastTransactionID;
@@ -58,7 +58,7 @@ namespace Oanda.RestV20.Model
         /// </summary>
         /// <value>The IDs of all Transactions that were created while satisfying the request.</value>
         [DataMember(Name="relatedTransactionIDs", EmitDefaultValue=false)]
-        public List<TransactionID> RelatedTransactionIDs { get; set; }
+        public List<string> RelatedTransactionIDs { get; set; }
         /// <summary>
         /// Returns the string presentation of the object
         /// </summary>

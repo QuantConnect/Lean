@@ -40,7 +40,7 @@ namespace Oanda.RestV20.Model
         /// <param name="ShortOrderCancelTransaction">ShortOrderCancelTransaction.</param>
         /// <param name="RelatedTransactionIDs">The IDs of all Transactions that were created while satisfying the request..</param>
         /// <param name="LastTransactionID">The ID of the most recent Transaction created for the Account.</param>
-        public InlineResponse20014(MarketOrderTransaction LongOrderCreateTransaction = default(MarketOrderTransaction), OrderFillTransaction LongOrderFillTransaction = default(OrderFillTransaction), OrderCancelTransaction LongOrderCancelTransaction = default(OrderCancelTransaction), MarketOrderTransaction ShortOrderCreateTransaction = default(MarketOrderTransaction), OrderFillTransaction ShortOrderFillTransaction = default(OrderFillTransaction), OrderCancelTransaction ShortOrderCancelTransaction = default(OrderCancelTransaction), List<TransactionID> RelatedTransactionIDs = default(List<TransactionID>), string LastTransactionID = default(string))
+        public InlineResponse20014(MarketOrderTransaction LongOrderCreateTransaction = default(MarketOrderTransaction), OrderFillTransaction LongOrderFillTransaction = default(OrderFillTransaction), OrderCancelTransaction LongOrderCancelTransaction = default(OrderCancelTransaction), MarketOrderTransaction ShortOrderCreateTransaction = default(MarketOrderTransaction), OrderFillTransaction ShortOrderFillTransaction = default(OrderFillTransaction), OrderCancelTransaction ShortOrderCancelTransaction = default(OrderCancelTransaction), List<string> RelatedTransactionIDs = default(List<string>), string LastTransactionID = default(string))
         {
             this.LongOrderCreateTransaction = LongOrderCreateTransaction;
             this.LongOrderFillTransaction = LongOrderFillTransaction;
@@ -87,7 +87,7 @@ namespace Oanda.RestV20.Model
         /// </summary>
         /// <value>The IDs of all Transactions that were created while satisfying the request.</value>
         [DataMember(Name="relatedTransactionIDs", EmitDefaultValue=false)]
-        public List<TransactionID> RelatedTransactionIDs { get; set; }
+        public List<string> RelatedTransactionIDs { get; set; }
         /// <summary>
         /// The ID of the most recent Transaction created for the Account
         /// </summary>

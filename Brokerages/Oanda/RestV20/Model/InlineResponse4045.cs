@@ -37,7 +37,7 @@ namespace Oanda.RestV20.Model
         /// <param name="RelatedTransactionIDs">The IDs of all Transactions that were created while satisfying the request. Only present if the Account exists..</param>
         /// <param name="ErrorCode">The code of the error that has occurred. This field may not be returned for some errors..</param>
         /// <param name="ErrorMessage">The human-readable description of the error that has occurred..</param>
-        public InlineResponse4045(MarketOrderRejectTransaction OrderRejectTransaction = default(MarketOrderRejectTransaction), string LastTransactionID = default(string), List<TransactionID> RelatedTransactionIDs = default(List<TransactionID>), string ErrorCode = default(string), string ErrorMessage = default(string))
+        public InlineResponse4045(MarketOrderRejectTransaction OrderRejectTransaction = default(MarketOrderRejectTransaction), string LastTransactionID = default(string), List<string> RelatedTransactionIDs = default(List<string>), string ErrorCode = default(string), string ErrorMessage = default(string))
         {
             this.OrderRejectTransaction = OrderRejectTransaction;
             this.LastTransactionID = LastTransactionID;
@@ -62,7 +62,7 @@ namespace Oanda.RestV20.Model
         /// </summary>
         /// <value>The IDs of all Transactions that were created while satisfying the request. Only present if the Account exists.</value>
         [DataMember(Name="relatedTransactionIDs", EmitDefaultValue=false)]
-        public List<TransactionID> RelatedTransactionIDs { get; set; }
+        public List<string> RelatedTransactionIDs { get; set; }
         /// <summary>
         /// The code of the error that has occurred. This field may not be returned for some errors.
         /// </summary>

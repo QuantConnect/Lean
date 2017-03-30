@@ -35,7 +35,7 @@ namespace Oanda.RestV20.Model
         /// <param name="OrderCancelTransaction">OrderCancelTransaction.</param>
         /// <param name="RelatedTransactionIDs">The IDs of all Transactions that were created while satisfying the request..</param>
         /// <param name="LastTransactionID">The ID of the most recent Transaction created for the Account.</param>
-        public InlineResponse2009(OrderCancelTransaction OrderCancelTransaction = default(OrderCancelTransaction), List<TransactionID> RelatedTransactionIDs = default(List<TransactionID>), string LastTransactionID = default(string))
+        public InlineResponse2009(OrderCancelTransaction OrderCancelTransaction = default(OrderCancelTransaction), List<string> RelatedTransactionIDs = default(List<string>), string LastTransactionID = default(string))
         {
             this.OrderCancelTransaction = OrderCancelTransaction;
             this.RelatedTransactionIDs = RelatedTransactionIDs;
@@ -52,7 +52,7 @@ namespace Oanda.RestV20.Model
         /// </summary>
         /// <value>The IDs of all Transactions that were created while satisfying the request.</value>
         [DataMember(Name="relatedTransactionIDs", EmitDefaultValue=false)]
-        public List<TransactionID> RelatedTransactionIDs { get; set; }
+        public List<string> RelatedTransactionIDs { get; set; }
         /// <summary>
         /// The ID of the most recent Transaction created for the Account
         /// </summary>

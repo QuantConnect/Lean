@@ -82,7 +82,7 @@ namespace Oanda.RestV20.Model
         /// <param name="TakeProfitOrderID">ID of the Trade&#39;s Take Profit Order, only provided if such an Order exists..</param>
         /// <param name="StopLossOrderID">ID of the Trade&#39;s Stop Loss Order, only provided if such an Order exists..</param>
         /// <param name="TrailingStopLossOrderID">ID of the Trade&#39;s Trailing Stop Loss Order, only provided if such an Order exists..</param>
-        public TradeSummary(string Id = default(string), string Instrument = default(string), string Price = default(string), string OpenTime = default(string), StateEnum? State = default(StateEnum?), string InitialUnits = default(string), string CurrentUnits = default(string), string RealizedPL = default(string), string UnrealizedPL = default(string), string AverageClosePrice = default(string), List<TransactionID> ClosingTransactionIDs = default(List<TransactionID>), string Financing = default(string), string CloseTime = default(string), ClientExtensions ClientExtensions = default(ClientExtensions), string TakeProfitOrderID = default(string), string StopLossOrderID = default(string), string TrailingStopLossOrderID = default(string))
+        public TradeSummary(string Id = default(string), string Instrument = default(string), string Price = default(string), string OpenTime = default(string), StateEnum? State = default(StateEnum?), string InitialUnits = default(string), string CurrentUnits = default(string), string RealizedPL = default(string), string UnrealizedPL = default(string), string AverageClosePrice = default(string), List<string> ClosingTransactionIDs = default(List<string>), string Financing = default(string), string CloseTime = default(string), ClientExtensions ClientExtensions = default(ClientExtensions), string TakeProfitOrderID = default(string), string StopLossOrderID = default(string), string TrailingStopLossOrderID = default(string))
         {
             this.Id = Id;
             this.Instrument = Instrument;
@@ -162,7 +162,7 @@ namespace Oanda.RestV20.Model
         /// </summary>
         /// <value>The IDs of the Transactions that have closed portions of this Trade.</value>
         [DataMember(Name="closingTransactionIDs", EmitDefaultValue=false)]
-        public List<TransactionID> ClosingTransactionIDs { get; set; }
+        public List<string> ClosingTransactionIDs { get; set; }
         /// <summary>
         /// The financing paid/collected for this Trade.
         /// </summary>

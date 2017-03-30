@@ -308,10 +308,10 @@ namespace Oanda.RestV20.Model
             REDUCEONLY,
             
             /// <summary>
-            /// Enum DEFAULT for "DEFAULT"
+            /// Enum POSITIONDEFAULT for "POSITION_DEFAULT"
             /// </summary>
-            [EnumMember(Value = "DEFAULT")]
-            DEFAULT
+            [EnumMember(Value = "POSITION_DEFAULT")]
+            POSITIONDEFAULT
         }
 
         /// <summary>
@@ -323,10 +323,10 @@ namespace Oanda.RestV20.Model
         {
             
             /// <summary>
-            /// Enum DEFAULT for "DEFAULT"
+            /// Enum TRIGGERDEFAULT for "TRIGGER_DEFAULT"
             /// </summary>
-            [EnumMember(Value = "DEFAULT")]
-            DEFAULT,
+            [EnumMember(Value = "TRIGGER_DEFAULT")]
+            TRIGGERDEFAULT,
             
             /// <summary>
             /// Enum INVERSE for "INVERSE"

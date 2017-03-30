@@ -32,10 +32,10 @@ namespace Oanda.RestV20.Model
     {
         
         /// <summary>
-        /// Enum DEFAULT for "DEFAULT"
+        /// Enum TRIGGERDEFAULT for "TRIGGER_DEFAULT"
         /// </summary>
-        [EnumMember(Value = "DEFAULT")]
-        DEFAULT,
+        [EnumMember(Value = "TRIGGER_DEFAULT")]
+        TRIGGERDEFAULT,
         
         /// <summary>
         /// Enum INVERSE for "INVERSE"

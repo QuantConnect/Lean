@@ -82,7 +82,7 @@ namespace Oanda.RestV20.Model
         /// <param name="TakeProfitOrder">TakeProfitOrder.</param>
         /// <param name="StopLossOrder">StopLossOrder.</param>
         /// <param name="TrailingStopLossOrder">TrailingStopLossOrder.</param>
-        public Trade(string Id = default(string), string Instrument = default(string), string Price = default(string), string OpenTime = default(string), StateEnum? State = default(StateEnum?), string InitialUnits = default(string), string CurrentUnits = default(string), string RealizedPL = default(string), string UnrealizedPL = default(string), string AverageClosePrice = default(string), List<TransactionID> ClosingTransactionIDs = default(List<TransactionID>), string Financing = default(string), string CloseTime = default(string), ClientExtensions ClientExtensions = default(ClientExtensions), TakeProfitOrder TakeProfitOrder = default(TakeProfitOrder), StopLossOrder StopLossOrder = default(StopLossOrder), TrailingStopLossOrder TrailingStopLossOrder = default(TrailingStopLossOrder))
+        public Trade(string Id = default(string), string Instrument = default(string), string Price = default(string), string OpenTime = default(string), StateEnum? State = default(StateEnum?), string InitialUnits = default(string), string CurrentUnits = default(string), string RealizedPL = default(string), string UnrealizedPL = default(string), string AverageClosePrice = default(string), List<string> ClosingTransactionIDs = default(List<string>), string Financing = default(string), string CloseTime = default(string), ClientExtensions ClientExtensions = default(ClientExtensions), TakeProfitOrder TakeProfitOrder = default(TakeProfitOrder), StopLossOrder StopLossOrder = default(StopLossOrder), TrailingStopLossOrder TrailingStopLossOrder = default(TrailingStopLossOrder))
         {
             this.Id = Id;
             this.Instrument = Instrument;
@@ -162,7 +162,7 @@ namespace Oanda.RestV20.Model
         /// </summary>
         /// <value>The IDs of the Transactions that have closed portions of this Trade.</value>
         [DataMember(Name="closingTransactionIDs", EmitDefaultValue=false)]
-        public List<TransactionID> ClosingTransactionIDs { get; set; }
+        public List<string> ClosingTransactionIDs { get; set; }
         /// <summary>
         /// The financing paid/collected for this Trade.
         /// </summary>

@@ -42,7 +42,7 @@ namespace Oanda.RestV20.Model
         /// <param name="RelatedTransactionIDs">The IDs of all Transactions that were created while satisfying the request..</param>
         /// <param name="ErrorCode">The code of the error that has occurred. This field may not be returned for some errors..</param>
         /// <param name="ErrorMessage">The human-readable description of the error that has occurred..</param>
-        public InlineResponse4007(OrderCancelRejectTransaction TakeProfitOrderCancelRejectTransaction = default(OrderCancelRejectTransaction), TakeProfitOrderRejectTransaction TakeProfitOrderRejectTransaction = default(TakeProfitOrderRejectTransaction), OrderCancelRejectTransaction StopLossOrderCancelRejectTransaction = default(OrderCancelRejectTransaction), StopLossOrderRejectTransaction StopLossOrderRejectTransaction = default(StopLossOrderRejectTransaction), OrderCancelRejectTransaction TrailingStopLossOrderCancelRejectTransaction = default(OrderCancelRejectTransaction), TrailingStopLossOrderRejectTransaction TrailingStopLossOrderRejectTransaction = default(TrailingStopLossOrderRejectTransaction), string LastTransactionID = default(string), List<TransactionID> RelatedTransactionIDs = default(List<TransactionID>), string ErrorCode = default(string), string ErrorMessage = default(string))
+        public InlineResponse4007(OrderCancelRejectTransaction TakeProfitOrderCancelRejectTransaction = default(OrderCancelRejectTransaction), TakeProfitOrderRejectTransaction TakeProfitOrderRejectTransaction = default(TakeProfitOrderRejectTransaction), OrderCancelRejectTransaction StopLossOrderCancelRejectTransaction = default(OrderCancelRejectTransaction), StopLossOrderRejectTransaction StopLossOrderRejectTransaction = default(StopLossOrderRejectTransaction), OrderCancelRejectTransaction TrailingStopLossOrderCancelRejectTransaction = default(OrderCancelRejectTransaction), TrailingStopLossOrderRejectTransaction TrailingStopLossOrderRejectTransaction = default(TrailingStopLossOrderRejectTransaction), string LastTransactionID = default(string), List<string> RelatedTransactionIDs = default(List<string>), string ErrorCode = default(string), string ErrorMessage = default(string))
         {
             this.TakeProfitOrderCancelRejectTransaction = TakeProfitOrderCancelRejectTransaction;
             this.TakeProfitOrderRejectTransaction = TakeProfitOrderRejectTransaction;
@@ -97,7 +97,7 @@ namespace Oanda.RestV20.Model
         /// </summary>
         /// <value>The IDs of all Transactions that were created while satisfying the request.</value>
         [DataMember(Name="relatedTransactionIDs", EmitDefaultValue=false)]
-        public List<TransactionID> RelatedTransactionIDs { get; set; }
+        public List<string> RelatedTransactionIDs { get; set; }
         /// <summary>
         /// The code of the error that has occurred. This field may not be returned for some errors.
         /// </summary>
