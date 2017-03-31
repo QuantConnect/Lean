@@ -1001,7 +1001,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 if (!IsConnected)
                 {
-                    Log.Error("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): Not connected");
+                    if (_client != null)
+                    {
+                        Log.Error("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): Not connected; update dropped, _client.Connected: {0}, _disconnected1100Fired: {1}", _client.Connected, _disconnected1100Fired);
+                    }
+                    else
+                    {
+                        Log.Error("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): Not connected; _client is null");
+                    }
                     return;
                 }
 
