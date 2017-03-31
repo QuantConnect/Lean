@@ -997,7 +997,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             try
             {
-                if (!IsConnected) return;
+                Log.Trace("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): " + update);
+
+                if (!IsConnected)
+                {
+                    Log.Error("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): Not connected");
+                    return;
+                }
 
                 var order = _orderProvider.GetOrderByBrokerageId(update.OrderId);
                 if (order == null)
@@ -1067,6 +1073,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 if (_recentOrderEvents.Add(orderEvent.ToString() + update.Remaining))
                 {
                     OnOrderEvent(orderEvent);
+                }
+                else
+                {
+                    Log.Trace("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): Ignored duplicate order event");
                 }
             }
             catch(InvalidOperationException err)
