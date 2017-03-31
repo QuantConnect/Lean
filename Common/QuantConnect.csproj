@@ -293,6 +293,7 @@
     <Compile Include="Orders\OrderResponseErrorCode.cs" />
     <Compile Include="Orders\OrderExtensions.cs" />
     <Compile Include="Orders\OrderTicket.cs" />
+    <Compile Include="Orders\Slippage\VolumeShareSlippageModel.cs" />
     <Compile Include="Orders\Slippage\ConstantSlippageModel.cs" />
     <Compile Include="Orders\Slippage\ISlippageModel.cs" />
     <Compile Include="Orders\StopLimitOrder.cs" />

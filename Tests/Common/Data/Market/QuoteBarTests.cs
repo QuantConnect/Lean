@@ -23,6 +23,14 @@ namespace QuantConnect.Tests.Common.Data.Market
     [TestFixture]
     public class QuoteBarTests
     {
+        private QuoteBar _quoteBar;
+
+        [TestFixtureSetUp]
+        public void Setup()
+        {
+            _quoteBar = new QuoteBar();
+        }
+
         [Test]
         public void DoesntGenerateCorruptedPricesIfBidOrAskAreMissing()
         {
@@ -113,6 +121,116 @@ namespace QuantConnect.Tests.Common.Data.Market
             Assert.AreEqual(parsedQuoteBar.Ask.High, 1.1088);
             Assert.AreEqual(parsedQuoteBar.Ask.Low, 1.1088);
             Assert.AreEqual(parsedQuoteBar.Ask.Close, 1.1090);
+        }
+
+        [Test]
+        public void QuoteBar_CanParseEquity_Successfully()
+        {
+            var config = new SubscriptionDataConfig(typeof(QuoteBar), Symbols.SPY, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+
+            var line = "14340000,10000,20000,30000,40000,0,50000,60000,70000,80000,1";
+
+            var quoteBar = _quoteBar.ParseEquity(config, line, DateTime.MinValue);
+
+            Assert.AreEqual(quoteBar.Bid.Open, 1m);
+            Assert.AreEqual(quoteBar.Bid.High, 2m);
+            Assert.AreEqual(quoteBar.Bid.Low, 3m);
+            Assert.AreEqual(quoteBar.Bid.Close, 4m);
+            Assert.AreEqual(quoteBar.LastBidSize, 0m);
+
+            Assert.AreEqual(quoteBar.Ask.Open, 5m);
+            Assert.AreEqual(quoteBar.Ask.High, 6m);
+            Assert.AreEqual(quoteBar.Ask.Low, 7m);
+            Assert.AreEqual(quoteBar.Ask.Close, 8m);
+            Assert.AreEqual(quoteBar.LastAskSize, 1m);
+        }
+
+        [Test]
+        public void QuoteBar_CanParseForex_Successfully()
+        {
+            var config = new SubscriptionDataConfig(typeof(QuoteBar), Symbols.EURUSD, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+
+            var line = "14340000,1,2,3,4,0,5,6,7,8,1";
+
+            var quoteBar = _quoteBar.ParseForex(config, line, DateTime.MinValue);
+
+            Assert.AreEqual(quoteBar.Bid.Open, 1m);
+            Assert.AreEqual(quoteBar.Bid.High, 2m);
+            Assert.AreEqual(quoteBar.Bid.Low, 3m);
+            Assert.AreEqual(quoteBar.Bid.Close, 4m);
+            Assert.AreEqual(quoteBar.LastBidSize, 0m);
+
+            Assert.AreEqual(quoteBar.Ask.Open, 5m);
+            Assert.AreEqual(quoteBar.Ask.High, 6m);
+            Assert.AreEqual(quoteBar.Ask.Low, 7m);
+            Assert.AreEqual(quoteBar.Ask.Close, 8m);
+            Assert.AreEqual(quoteBar.LastAskSize, 1m);
+        }
+
+        [Test]
+        public void QuoteBar_CanParseCfd_Successfully()
+        {
+            var config = new SubscriptionDataConfig(typeof(QuoteBar), Symbols.DE10YBEUR, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+
+            var line = "14340000,1,2,3,4,0,5,6,7,8,1";
+
+            var quoteBar = _quoteBar.ParseCfd(config, line, DateTime.MinValue);
+
+            Assert.AreEqual(quoteBar.Bid.Open, 1m);
+            Assert.AreEqual(quoteBar.Bid.High, 2m);
+            Assert.AreEqual(quoteBar.Bid.Low, 3m);
+            Assert.AreEqual(quoteBar.Bid.Close, 4m);
+            Assert.AreEqual(quoteBar.LastBidSize, 0m);
+
+            Assert.AreEqual(quoteBar.Ask.Open, 5m);
+            Assert.AreEqual(quoteBar.Ask.High, 6m);
+            Assert.AreEqual(quoteBar.Ask.Low, 7m);
+            Assert.AreEqual(quoteBar.Ask.Close, 8m);
+            Assert.AreEqual(quoteBar.LastAskSize, 1m);
+        }
+
+        [Test]
+        public void QuoteBar_CanParseOption_Successfully()
+        {
+            var config = new SubscriptionDataConfig(typeof(QuoteBar), Symbols.SPY_C_192_Feb19_2016, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+
+            var line = "14340000,10000,20000,30000,40000,0,50000,60000,70000,80000,1";
+
+            var quoteBar = _quoteBar.ParseOption(config, line, DateTime.MinValue);
+
+            Assert.AreEqual(quoteBar.Bid.Open, 1m);
+            Assert.AreEqual(quoteBar.Bid.High, 2m);
+            Assert.AreEqual(quoteBar.Bid.Low, 3m);
+            Assert.AreEqual(quoteBar.Bid.Close, 4m);
+            Assert.AreEqual(quoteBar.LastBidSize, 0m);
+
+            Assert.AreEqual(quoteBar.Ask.Open, 5m);
+            Assert.AreEqual(quoteBar.Ask.High, 6m);
+            Assert.AreEqual(quoteBar.Ask.Low, 7m);
+            Assert.AreEqual(quoteBar.Ask.Close, 8m);
+            Assert.AreEqual(quoteBar.LastAskSize, 1m);
+        }
+
+        [Test]
+        public void QuoteBar_CanParseFuture_Successfully()
+        {
+            var config = new SubscriptionDataConfig(typeof(QuoteBar), Symbols.Fut_SPY_Feb19_2016, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+
+            var line = "14340000,10000,20000,30000,40000,0,50000,60000,70000,80000,1";
+
+            var quoteBar = _quoteBar.ParseFuture(config, line, DateTime.MinValue);
+
+            Assert.AreEqual(quoteBar.Bid.Open, 1m);
+            Assert.AreEqual(quoteBar.Bid.High, 2m);
+            Assert.AreEqual(quoteBar.Bid.Low, 3m);
+            Assert.AreEqual(quoteBar.Bid.Close, 4m);
+            Assert.AreEqual(quoteBar.LastBidSize, 0m);
+
+            Assert.AreEqual(quoteBar.Ask.Open, 5m);
+            Assert.AreEqual(quoteBar.Ask.High, 6m);
+            Assert.AreEqual(quoteBar.Ask.Low, 7m);
+            Assert.AreEqual(quoteBar.Ask.Close, 8m);
+            Assert.AreEqual(quoteBar.LastAskSize, 1m);
         }
     }
 }
