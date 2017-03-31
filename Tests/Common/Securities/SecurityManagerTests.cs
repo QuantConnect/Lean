@@ -22,8 +22,6 @@ using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Future;
-using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -178,7 +176,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual(option.Subscriptions.Count(), 1);
             Assert.AreEqual(option.Subscriptions.First().Type, typeof(ZipEntryName));
-            Assert.AreEqual(option.Subscriptions.First().TickType, TickType.Trade);
+            Assert.AreEqual(option.Subscriptions.First().TickType, TickType.Quote);
         }
 
 
