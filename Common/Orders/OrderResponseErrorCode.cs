@@ -168,6 +168,11 @@ namespace QuantConnect.Orders
         /// <summary>
         /// The order's symbol references a non-exercisable security
         /// </summary>
-        NonExercisableSecurity = -29
+        NonExercisableSecurity = -29,
+
+        /// <summary>
+        /// Order quantity is not a multiple of lot size
+        /// </summary>
+        InvalidOrderQuantityForLotSize = -30
     }
 }
