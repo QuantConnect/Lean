@@ -105,6 +105,22 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         [Test]
+        public void ConvertsDecimalFromStringWithExtraWhiteSpace()
+        {
+            const string input = " 123.45678 ";
+            var value = input.ToDecimal();
+            Assert.AreEqual(123.45678m, value);
+        }
+
+        [Test]
+        public void ConvertsDecimalFromIntStringWithExtraWhiteSpace()
+        {
+            const string input = " 12345678 ";
+            var value = input.ToDecimal();
+            Assert.AreEqual(12345678m, value);
+        }
+
+        [Test]
         public void ConvertsZeroDecimalFromString()
         {
             const string input = "0.45678";
@@ -118,6 +134,22 @@ namespace QuantConnect.Tests.Common.Util
             const string input = "1.45678";
             var value = input.ToDecimal();
             Assert.AreEqual(1.45678m, value);
+        }
+
+        [Test]
+        public void ConvertsZeroDecimalValueFromString()
+        {
+            const string input = "0";
+            var value = input.ToDecimal();
+            Assert.AreEqual(0m, value);
+        }
+
+        [Test]
+        public void ConvertsEmptyDecimalValueFromString()
+        {
+            const string input = "";
+            var value = input.ToDecimal();
+            Assert.AreEqual(0m, value);
         }
 
         [Test]
