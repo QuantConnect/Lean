@@ -25,7 +25,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using Newtonsoft.Json;
 using NodaTime;
-using QuantConnect.Data;
 using QuantConnect.Securities;
 using Timer = System.Timers.Timer;
 
@@ -242,21 +241,35 @@ namespace QuantConnect
         /// Extension method for faster string to decimal conversion. 
         /// </summary>
         /// <param name="str">String to be converted to positive decimal value</param>
-        /// <remarks>Method makes some assuptions - always numbers, no "signs" +,- etc.</remarks>
+        /// <remarks>
+        /// Method makes some assuptions - always numbers, no "signs" +,- etc.
+        /// Leading and trailing whitespace chars are ignored
+        /// </remarks>
         /// <returns>Decimal value of the string</returns>
         public static decimal ToDecimal(this string str)
         {
             long value = 0;
             var decimalPlaces = 0;
-            bool hasDecimals = false;
+            var hasDecimals = false;
+            var index = 0;
+            var length = str.Length;
 
-            for (var i = 0; i < str.Length; i++)
+            while (index < length && char.IsWhiteSpace(str[index]))
             {
-                var ch = str[i];
+                index++;
+            }
+
+            while (index < length)
+            {
+                var ch = str[index++];
                 if (ch == '.')
                 {
                     hasDecimals = true;
                     decimalPlaces = 0;
+                }
+                else if (char.IsWhiteSpace(ch))
+                {
+                    break;
                 }
                 else
                 {
