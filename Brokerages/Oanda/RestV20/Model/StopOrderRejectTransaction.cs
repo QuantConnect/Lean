@@ -308,6 +308,12 @@ namespace Oanda.RestV20.Model
             REDUCEONLY,
             
             /// <summary>
+            /// Enum DEFAULT for "DEFAULT"
+            /// </summary>
+            [EnumMember(Value = "DEFAULT")]
+            DEFAULT,
+            
+            /// <summary>
             /// Enum POSITIONDEFAULT for "POSITION_DEFAULT"
             /// </summary>
             [EnumMember(Value = "POSITION_DEFAULT")]
@@ -321,6 +327,12 @@ namespace Oanda.RestV20.Model
         [JsonConverter(typeof(StringEnumConverter))]
         public enum TriggerConditionEnum
         {
+            
+            /// <summary>
+            /// Enum DEFAULT for "DEFAULT"
+            /// </summary>
+            [EnumMember(Value = "DEFAULT")]
+            DEFAULT,
             
             /// <summary>
             /// Enum TRIGGERDEFAULT for "TRIGGER_DEFAULT"

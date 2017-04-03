@@ -161,6 +161,12 @@ namespace Oanda.RestV20.Model
         {
             
             /// <summary>
+            /// Enum DEFAULT for "DEFAULT"
+            /// </summary>
+            [EnumMember(Value = "DEFAULT")]
+            DEFAULT,
+            
+            /// <summary>
             /// Enum TRIGGERDEFAULT for "TRIGGER_DEFAULT"
             /// </summary>
             [EnumMember(Value = "TRIGGER_DEFAULT")]
@@ -238,7 +244,7 @@ namespace Oanda.RestV20.Model
         /// <param name="CancelledTime">Date/time when the Order was cancelled (only provided when the state of the Order is CANCELLED).</param>
         /// <param name="ReplacesOrderID">The ID of the Order that was replaced by this Order (only provided if this Order was created as part of a cancel/replace)..</param>
         /// <param name="ReplacedByOrderID">The ID of the Order that replaced this Order (only provided if this Order was cancelled as part of a cancel/replace)..</param>
-        public StopLossOrder(string Id = default(string), string CreateTime = default(string), StateEnum? State = default(StateEnum?), ClientExtensions ClientExtensions = default(ClientExtensions), TypeEnum? Type = default(TypeEnum?), string TradeID = default(string), string ClientTradeID = default(string), string Price = default(string), TimeInForceEnum? TimeInForce = default(TimeInForceEnum?), string GtdTime = default(string), TriggerConditionEnum? TriggerCondition = default(TriggerConditionEnum?), string FillingTransactionID = default(string), string FilledTime = default(string), string TradeOpenedID = default(string), string TradeReducedID = default(string), List<TradeID> TradeClosedIDs = default(List<TradeID>), string CancellingTransactionID = default(string), string CancelledTime = default(string), string ReplacesOrderID = default(string), string ReplacedByOrderID = default(string))
+        public StopLossOrder(string Id = default(string), string CreateTime = default(string), StateEnum? State = default(StateEnum?), ClientExtensions ClientExtensions = default(ClientExtensions), TypeEnum? Type = default(TypeEnum?), string TradeID = default(string), string ClientTradeID = default(string), string Price = default(string), TimeInForceEnum? TimeInForce = default(TimeInForceEnum?), string GtdTime = default(string), TriggerConditionEnum? TriggerCondition = default(TriggerConditionEnum?), string FillingTransactionID = default(string), string FilledTime = default(string), string TradeOpenedID = default(string), string TradeReducedID = default(string), List<string> TradeClosedIDs = default(List<string>), string CancellingTransactionID = default(string), string CancelledTime = default(string), string ReplacesOrderID = default(string), string ReplacedByOrderID = default(string))
         {
             this.Id = Id;
             this.CreateTime = CreateTime;
@@ -332,7 +338,7 @@ namespace Oanda.RestV20.Model
         /// </summary>
         /// <value>Trade IDs of Trades closed when the Order was filled (only provided when the Order&#39;s state is FILLED and one or more Trades were closed as a result of the fill)</value>
         [DataMember(Name="tradeClosedIDs", EmitDefaultValue=false)]
-        public List<TradeID> TradeClosedIDs { get; set; }
+        public List<string> TradeClosedIDs { get; set; }
         /// <summary>
         /// ID of the Transaction that cancelled the Order (only provided when the Order&#39;s state is CANCELLED)
         /// </summary>

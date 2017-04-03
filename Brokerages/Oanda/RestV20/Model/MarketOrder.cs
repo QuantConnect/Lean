@@ -179,6 +179,12 @@ namespace Oanda.RestV20.Model
             REDUCEONLY,
             
             /// <summary>
+            /// Enum DEFAULT for "DEFAULT"
+            /// </summary>
+            [EnumMember(Value = "DEFAULT")]
+            DEFAULT,
+            
+            /// <summary>
             /// Enum POSITIONDEFAULT for "POSITION_DEFAULT"
             /// </summary>
             [EnumMember(Value = "POSITION_DEFAULT")]
@@ -238,7 +244,7 @@ namespace Oanda.RestV20.Model
         /// <param name="TradeClosedIDs">Trade IDs of Trades closed when the Order was filled (only provided when the Order&#39;s state is FILLED and one or more Trades were closed as a result of the fill).</param>
         /// <param name="CancellingTransactionID">ID of the Transaction that cancelled the Order (only provided when the Order&#39;s state is CANCELLED).</param>
         /// <param name="CancelledTime">Date/time when the Order was cancelled (only provided when the state of the Order is CANCELLED).</param>
-        public MarketOrder(string Id = default(string), string CreateTime = default(string), StateEnum? State = default(StateEnum?), ClientExtensions ClientExtensions = default(ClientExtensions), TypeEnum? Type = default(TypeEnum?), string Instrument = default(string), string Units = default(string), TimeInForceEnum? TimeInForce = default(TimeInForceEnum?), string PriceBound = default(string), PositionFillEnum? PositionFill = default(PositionFillEnum?), MarketOrderTradeClose TradeClose = default(MarketOrderTradeClose), MarketOrderPositionCloseout LongPositionCloseout = default(MarketOrderPositionCloseout), MarketOrderPositionCloseout ShortPositionCloseout = default(MarketOrderPositionCloseout), MarketOrderMarginCloseout MarginCloseout = default(MarketOrderMarginCloseout), MarketOrderDelayedTradeClose DelayedTradeClose = default(MarketOrderDelayedTradeClose), TakeProfitDetails TakeProfitOnFill = default(TakeProfitDetails), StopLossDetails StopLossOnFill = default(StopLossDetails), TrailingStopLossDetails TrailingStopLossOnFill = default(TrailingStopLossDetails), ClientExtensions TradeClientExtensions = default(ClientExtensions), string FillingTransactionID = default(string), string FilledTime = default(string), string TradeOpenedID = default(string), string TradeReducedID = default(string), List<TradeID> TradeClosedIDs = default(List<TradeID>), string CancellingTransactionID = default(string), string CancelledTime = default(string))
+        public MarketOrder(string Id = default(string), string CreateTime = default(string), StateEnum? State = default(StateEnum?), ClientExtensions ClientExtensions = default(ClientExtensions), TypeEnum? Type = default(TypeEnum?), string Instrument = default(string), string Units = default(string), TimeInForceEnum? TimeInForce = default(TimeInForceEnum?), string PriceBound = default(string), PositionFillEnum? PositionFill = default(PositionFillEnum?), MarketOrderTradeClose TradeClose = default(MarketOrderTradeClose), MarketOrderPositionCloseout LongPositionCloseout = default(MarketOrderPositionCloseout), MarketOrderPositionCloseout ShortPositionCloseout = default(MarketOrderPositionCloseout), MarketOrderMarginCloseout MarginCloseout = default(MarketOrderMarginCloseout), MarketOrderDelayedTradeClose DelayedTradeClose = default(MarketOrderDelayedTradeClose), TakeProfitDetails TakeProfitOnFill = default(TakeProfitDetails), StopLossDetails StopLossOnFill = default(StopLossDetails), TrailingStopLossDetails TrailingStopLossOnFill = default(TrailingStopLossDetails), ClientExtensions TradeClientExtensions = default(ClientExtensions), string FillingTransactionID = default(string), string FilledTime = default(string), string TradeOpenedID = default(string), string TradeReducedID = default(string), List<string> TradeClosedIDs = default(List<string>), string CancellingTransactionID = default(string), string CancelledTime = default(string))
         {
             this.Id = Id;
             this.CreateTime = CreateTime;
@@ -377,7 +383,7 @@ namespace Oanda.RestV20.Model
         /// </summary>
         /// <value>Trade IDs of Trades closed when the Order was filled (only provided when the Order&#39;s state is FILLED and one or more Trades were closed as a result of the fill)</value>
         [DataMember(Name="tradeClosedIDs", EmitDefaultValue=false)]
-        public List<TradeID> TradeClosedIDs { get; set; }
+        public List<string> TradeClosedIDs { get; set; }
         /// <summary>
         /// ID of the Transaction that cancelled the Order (only provided when the Order&#39;s state is CANCELLED)
         /// </summary>

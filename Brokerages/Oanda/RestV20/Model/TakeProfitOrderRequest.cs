@@ -128,6 +128,12 @@ namespace Oanda.RestV20.Model
         {
             
             /// <summary>
+            /// Enum DEFAULT for "DEFAULT"
+            /// </summary>
+            [EnumMember(Value = "DEFAULT")]
+            DEFAULT,
+            
+            /// <summary>
             /// Enum TRIGGERDEFAULT for "TRIGGER_DEFAULT"
             /// </summary>
             [EnumMember(Value = "TRIGGER_DEFAULT")]
