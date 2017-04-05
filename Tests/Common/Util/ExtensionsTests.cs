@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Securities;
@@ -214,6 +215,16 @@ namespace QuantConnect.Tests.Common.Util
             var input = (double) decimal.MinValue;
             var output = input.SafeDecimalCast();
             Assert.AreEqual(decimal.MinValue, output);
+        }
+
+        [Test]
+        [TestCase(1.200, "1.2")]
+        [TestCase(1200, "1200")]
+        [TestCase(123.456, "123.456")]
+        public void NormalizeDecimalReturnsNoTrailingZeros(decimal input, string expectedOutput)
+        {
+            var output = input.Normalize();
+            Assert.AreEqual(expectedOutput, output.ToString(CultureInfo.InvariantCulture));
         }
 
         private class Super<T>

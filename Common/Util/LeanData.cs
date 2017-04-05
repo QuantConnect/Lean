@@ -544,7 +544,7 @@ namespace QuantConnect.Util
                 var value = args[i];
                 if (value is decimal)
                 {
-                    args[i] = ((decimal) value).ToString(CultureInfo.InvariantCulture);
+                    args[i] = ((decimal) value).Normalize().ToString(CultureInfo.InvariantCulture);
                 }
             }
 
