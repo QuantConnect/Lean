@@ -231,7 +231,7 @@ namespace QuantConnect
             return (decimal) input;
         }
 
-        private static decimal Normalize(decimal input)
+        public static decimal Normalize(this decimal input)
         {
             // http://stackoverflow.com/a/7983330/1582922
             return input / 1.000000000000000000000000000000000m;
