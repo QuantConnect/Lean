@@ -704,7 +704,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 details = args.ContractDetails;
                 _contractDetails.TryAdd(GetUniqueKey(contract), details);
                 manualResetEvent.Set();
-                Log.Trace("InteractiveBrokersBrokerage.GetContractDetails(): clientOnContractDetails event: " + contract.Symbol);
+                Log.Trace("InteractiveBrokersBrokerage.GetContractDetails(): clientOnContractDetails event: " + contract.Symbol + " " + contract.Currency);
             };
 
             _client.ContractDetails += clientOnContractDetails;
@@ -782,7 +782,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 return 1m;
             }
 
-            Log.Trace("InteractiveBrokersBrokerage.GetUsdCurrency(): Getting USD conversion for " + currency);
+            Log.Trace("InteractiveBrokersBrokerage.GetUsdConversion(): Getting USD conversion for " + currency);
 
             // determine the correct symbol to choose
             var invertedSymbol = "USD" + currency;
@@ -800,35 +800,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var details = GetContractDetails(contract);
             if (details == null)
             {
-                Log.Error("InteractiveBrokersBrokerage.GetUsdConversion(): Unable to resolve conversion for currency: " + currency);
-                return 1m;
+                throw new Exception("Unable to resolve conversion for currency: " + currency);
             }
 
             // if this stays zero then we haven't received the conversion rate
             var rate = 0m; 
             var manualResetEvent = new ManualResetEvent(false);
 
-            // we're going to request both history and active ticks, we'll use the ticks first
-            // and if not present, we'll use the latest from the history request
-
-            var data = new List<IB.HistoricalDataEventArgs>();
-            var historicalTicker = GetNextTickerId();
-            var lastHistoricalData = DateTime.MaxValue;
-            EventHandler<IB.HistoricalDataEventArgs> clientOnHistoricalData = (sender, args) =>
-            {
-                if (args.RequestId == historicalTicker)
-                {
-                    data.Add(args);
-                    lastHistoricalData = DateTime.UtcNow;
-                }
-            };
-
-            Log.Trace("InteractiveBrokersBrokerage.GetUsdCurrency(): Requesting historical data for " + contract.Symbol);
-            _client.HistoricalData += clientOnHistoricalData;
-
-            // request some historical data, IB's api takes into account weekends/market opening hours
-            const string requestSpan = "100 S";
-            _client.ClientSocket.reqHistoricalData(historicalTicker, contract, DateTime.UtcNow.ToString("yyyyMMdd HH:mm:ss"), requestSpan, IB.BarSize.OneSecond, HistoricalDataType.Ask, 0, 1, new List<TagValue>());
+            // we're going to request ticks first and if not present, 
+            // we'll make a history request and use the latest value returned.
 
             // define and add our tick handler for the ticks
             var marketDataTicker = GetNextTickerId();
@@ -837,12 +817,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 if (args.TickerId == marketDataTicker && args.Field == IBApi.TickType.ASK)
                 {
                     rate = Convert.ToDecimal(args.Price);
-                    Log.Trace("InteractiveBrokersBrokerage.GetUsdCurrency(): Price rate is " + args.Price + " for Currency " + symbol.ToString());
+                    Log.Trace("InteractiveBrokersBrokerage.GetUsdConversion(): Market price rate is " + args.Price + " for currency " + currency);
                     manualResetEvent.Set();
                 }
             };
 
-            Log.Trace("InteractiveBrokersBrokerage.GetUsdCurrency(): Requesting market data for " + contract.Symbol);
+            Log.Trace("InteractiveBrokersBrokerage.GetUsdConversion(): Requesting market data for " + currencyPair);
             _client.TickPrice += clientOnTickPrice;
 
             _client.ClientSocket.reqMktData(marketDataTicker, contract, string.Empty, true, new List<TagValue>());
@@ -854,33 +834,83 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // check to see if ticks returned something
             if (rate == 0)
             {
-                Log.Trace("InteractiveBrokersBrokerage.GetUsdCurrency(): History conversion rate returned 0, waiting for data");
+                bool pacingViolation;
+                const int pacingDelaySeconds = 60;
 
-                // history doesn't have a completed event, so we'll just wait for it to not have been called for a second
-                while (DateTime.UtcNow - lastHistoricalData < Time.OneSecond)
+                do
                 {
-                    Log.Trace("InteractiveBrokersBrokerage.GetUsdCurrency(): Waiting for history requests to finish...", true);
-                    Thread.Sleep(300);
-                }
+                    pacingViolation = false;
+                    manualResetEvent.Reset();
 
-                // check for history
-                var ordered = data.OrderByDescending(x => x.Date);
-                var mostRecentQuote = ordered.FirstOrDefault();
-                if (mostRecentQuote == null)
-                {
-                    throw new Exception("Unable to get recent quote for " + currencyPair);
-                }
-                rate = Convert.ToDecimal(mostRecentQuote.Close);
+                    var data = new List<IB.HistoricalDataEventArgs>();
+                    var historicalTicker = GetNextTickerId();
+
+                    EventHandler<IB.HistoricalDataEventArgs> clientOnHistoricalData = (sender, args) =>
+                    {
+                        if (args.RequestId == historicalTicker)
+                        {
+                            data.Add(args);
+                        }
+                    };
+
+                    EventHandler<IB.HistoricalDataEndEventArgs> clientOnHistoricalDataEnd = (sender, args) =>
+                    {
+                        if (args.RequestId == historicalTicker)
+                        {
+                            manualResetEvent.Set();
+                        }
+                    };
+
+                    EventHandler<IB.ErrorEventArgs> clientOnError = (sender, args) =>
+                    {
+                        if (args.Code == 162 && args.Message.Contains("pacing violation"))
+                        {
+                            // pacing violation happened
+                            pacingViolation = true;
+                        }
+                    };
+
+                    Log.Trace("InteractiveBrokersBrokerage.GetUsdConversion(): Requesting historical data for " + currencyPair);
+                    _client.HistoricalData += clientOnHistoricalData;
+                    _client.HistoricalDataEnd += clientOnHistoricalDataEnd;
+                    _client.Error += clientOnError;
+
+                    // request some historical data, IB's api takes into account weekends/market opening hours
+                    const string requestSpan = "100 S";
+                    _client.ClientSocket.reqHistoricalData(historicalTicker, contract, DateTime.UtcNow.ToString("yyyyMMdd HH:mm:ss UTC"), 
+                        requestSpan, IB.BarSize.OneSecond, HistoricalDataType.Ask, 0, 2, new List<TagValue>());
+
+                    manualResetEvent.WaitOne(2500);
+
+                    if (pacingViolation)
+                    {
+                        // we received 'pacing violation' error from IB, so we have to wait
+                        Log.Trace("InteractiveBrokersBrokerage.GetUsdConversion() Pacing violation, pausing for {0} secs.", pacingDelaySeconds);
+                        Thread.Sleep(pacingDelaySeconds * 1000);
+                    }
+                    else
+                    {
+                        // check for history
+                        var ordered = data.OrderByDescending(x => x.Date);
+                        var mostRecentQuote = ordered.FirstOrDefault();
+                        if (mostRecentQuote == null)
+                        {
+                            throw new Exception("Unable to get recent quote for " + currencyPair);
+                        }
+
+                        rate = Convert.ToDecimal(mostRecentQuote.Close);
+                        Log.Trace("InteractiveBrokersBrokerage.GetUsdConversion(): Last historical price rate is " + rate + " for currency " + currency);
+                    }
+
+                    // be sure to unwire our history handler as well
+                    _client.HistoricalData -= clientOnHistoricalData;
+                    _client.HistoricalDataEnd -= clientOnHistoricalDataEnd;
+                    _client.Error -= clientOnError;
+
+                } while (pacingViolation);
             }
 
-            // be sure to unwire our history handler as well
-            _client.HistoricalData -= clientOnHistoricalData;
-
-            if (inverted)
-            {
-                return 1/rate;
-            }
-            return rate;
+            return inverted ? 1 / rate : rate;
         }
 
         /// <summary>
