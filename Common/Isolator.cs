@@ -73,7 +73,7 @@ namespace QuantConnect
             withinCustomLimits = withinCustomLimits ?? (() => null);
 
             var message = "";
-            var emaPeriod = 60;
+            var emaPeriod = 60d;
             var memoryUsed = 0L;
             var end = DateTime.Now + timeSpan;
             var memoryLogger = DateTime.Now + TimeSpan.FromMinutes(1);
@@ -88,15 +88,15 @@ namespace QuantConnect
             while (!task.IsCompleted && DateTime.Now < end)
             {
                 // if over 80% allocation force GC then sample
-                var sample = GC.GetTotalMemory(memoryUsed > memoryCap * 0.8);
+                var sample = Convert.ToDouble(GC.GetTotalMemory(memoryUsed > memoryCap * 0.8));
 
                 // find the EMA of the memory used to prevent spikes killing stategy
-                memoryUsed = (emaPeriod-1)/emaPeriod * memoryUsed + (1/emaPeriod)*sample;
+                memoryUsed = Convert.ToInt64((emaPeriod-1)/emaPeriod * memoryUsed + (1/emaPeriod)*sample);
 
                 // if the rolling EMA > cap; or the spike is more than 2x the allocation.
                 if (memoryUsed > memoryCap || sample > spikeLimit)
                 {
-                    message = "Execution Security Error: Memory Usage Maxed Out - " + PrettyFormatRam(memoryCap) + "MB max, with last sample of " + PrettyFormatRam(sample) + "MB.";
+                    message = "Execution Security Error: Memory Usage Maxed Out - " + PrettyFormatRam(memoryCap) + "MB max, with last sample of " + PrettyFormatRam((long)sample) + "MB.";
                     break;
                 }
 
@@ -106,7 +106,7 @@ namespace QuantConnect
                     {
                         Log.Error("Execution Security Error: Memory usage over 80% capacity. Sampled at {0}", sample);
                     }
-                    Log.Trace("{0} Isolator.ExecuteWithTimeLimit(): Used: {1} Sample: {2}", DateTime.Now.ToString("u"), PrettyFormatRam(memoryUsed), sample);
+                    Log.Trace("{0} Isolator.ExecuteWithTimeLimit(): Used: {1} Sample: {2}", DateTime.Now.ToString("u"), PrettyFormatRam(memoryUsed), PrettyFormatRam((long)sample));
                     memoryLogger = DateTime.Now.AddMinutes(1);
                 }
 
