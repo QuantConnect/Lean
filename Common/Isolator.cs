@@ -80,6 +80,7 @@ namespace QuantConnect
 
             //Convert to bytes
             memoryCap *= 1024 * 1024;
+            var spikeLimit = memoryCap*2;
 
             //Launch task
             var task = Task.Factory.StartNew(codeBlock, CancellationTokenSource.Token);
@@ -92,9 +93,10 @@ namespace QuantConnect
                 // find the EMA of the memory used to prevent spikes killing stategy
                 memoryUsed = (emaPeriod-1)/emaPeriod * memoryUsed + (1/emaPeriod)*sample;
 
-                if (memoryUsed > memoryCap)
+                // if the rolling EMA > cap; or the spike is more than 2x the allocation.
+                if (memoryUsed > memoryCap || sample > spikeLimit)
                 {
-                    message = "Execution Security Error: Memory Usage Maxed Out - " + PrettyFormatRam(memoryCap) + "MB max.";
+                    message = "Execution Security Error: Memory Usage Maxed Out - " + PrettyFormatRam(memoryCap) + "MB max, with last sample of " + PrettyFormatRam(sample) + "MB.";
                     break;
                 }
 
