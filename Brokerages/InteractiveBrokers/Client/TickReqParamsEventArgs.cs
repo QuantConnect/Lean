@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -13,33 +13,44 @@
  * limitations under the License.
 */
 
-using IBApi;
+using System;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers.Client
 {
     /// <summary>
-    /// Event arguments class for the <see cref="InteractiveBrokersClient.TickPrice"/> event
+    /// Event arguments class for the <see cref="InteractiveBrokersClient.TickReqParams"/> event
     /// </summary>
-    public sealed class TickPriceEventArgs : TickEventArgs
+    public class TickReqParamsEventArgs : EventArgs
     {
         /// <summary>
-        /// The actual price.
+        /// The ticker id.
         /// </summary>
-        public double Price { get; private set; }
+        public int TickerId { get; set; }
 
         /// <summary>
-        /// The tick attributes.
+        /// The min tick.
         /// </summary>
-        public TickAttrib TickAttributes { get; private set; }
+        public double MinTick { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TickPriceEventArgs"/> class
+        /// The BBO exchange.
         /// </summary>
-        public TickPriceEventArgs(int tickerId, int field, double price, TickAttrib attribs)
-            : base(tickerId, field)
+        public string BboExchange { get; set; }
+
+        /// <summary>
+        /// The snapshot permissions.
+        /// </summary>
+        public int SnapshotPermissions { get; set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TickReqParamsEventArgs"/> class
+        /// </summary>
+        public TickReqParamsEventArgs(int tickerId, double minTick, string bboExchange, int snapshotPermissions)
         {
-            Price = price;
-            TickAttributes = attribs;
+            TickerId = tickerId;
+            MinTick = minTick;
+            BboExchange = bboExchange;
+            SnapshotPermissions = snapshotPermissions;
         }
     }
 }
