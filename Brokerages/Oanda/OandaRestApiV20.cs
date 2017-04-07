@@ -487,7 +487,7 @@ namespace QuantConnect.Brokerages.Oanda
             var response = _apiRest.GetInstrumentCandles(Authorization, oandaSymbol, null, "M", ToGranularity(resolution).ToString(), null, startUtc, endUtc);
             foreach (var candle in response.Candles)
             {
-                var time = Time.UnixTimeStampToDateTime(Convert.ToDouble(candle.Time, CultureInfo.InvariantCulture));
+                var time = GetTickDateTimeFromString(candle.Time);
                 if (time > endTimeUtc)
                     break;
 
@@ -524,7 +524,7 @@ namespace QuantConnect.Brokerages.Oanda
             var response = _apiRest.GetInstrumentCandles(Authorization, oandaSymbol, null, "BA", ToGranularity(resolution).ToString(), null, startUtc, endUtc);
             foreach (var candle in response.Candles)
             {
-                var time = Time.UnixTimeStampToDateTime(Convert.ToDouble(candle.Time, CultureInfo.InvariantCulture));
+                var time = GetTickDateTimeFromString(candle.Time);
                 if (time > endTimeUtc)
                     break;
 
