@@ -559,9 +559,18 @@ namespace QuantConnect.Algorithm
         /// Sets the security initializer function, used to initialize/configure securities after creation
         /// </summary>
         /// <param name="securityInitializer">The security initializer function</param>
-        public void SetSecurityInitializer(Action<Security> securityInitializer)
+        public void SetSecurityInitializer(Action<Security, bool> securityInitializer)
         {
             SetSecurityInitializer(new FuncSecurityInitializer(securityInitializer));
+        }
+
+        /// <summary>
+        /// Sets the security initializer function, used to initialize/configure securities after creation
+        /// </summary>
+        /// <param name="securityInitializer">The security initializer function</param>
+        public void SetSecurityInitializer(Action<Security> securityInitializer)
+        {
+            SetSecurityInitializer(new FuncSecurityInitializer((security, seedSecurity) => securityInitializer(security)));
         }
 
         /// <summary>
@@ -864,6 +873,13 @@ namespace QuantConnect.Algorithm
             {
                 // purposefully use the direct setter vs Set method so we don't flip the switch :/
                 SecurityInitializer = new BrokerageModelSecurityInitializer(model, new FuncSecuritySeeder(GetLastKnownPrice));
+
+                // update models on securities added earlier (before SetBrokerageModel is called)
+                foreach (var security in Securities.Values)
+                {
+                    // no need to seed the security, has already been done in AddSecurity
+                    SecurityInitializer.Initialize(security, false);
+                }
             }
         }
 
