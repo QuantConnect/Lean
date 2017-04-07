@@ -23,13 +23,13 @@ namespace QuantConnect.Securities
     /// </summary>
     public class FuncSecurityInitializer : ISecurityInitializer
     {
-        private readonly Action<Security> _initializer;
+        private readonly Action<Security, bool> _initializer;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FuncSecurityInitializer"/> class
         /// </summary>
         /// <param name="initializer">The functional implementation of <see cref="ISecurityInitializer.Initialize"/></param>
-        public FuncSecurityInitializer(Action<Security> initializer)
+        public FuncSecurityInitializer(Action<Security, bool> initializer)
         {
             _initializer = initializer;
         }
@@ -38,9 +38,10 @@ namespace QuantConnect.Securities
         /// Initializes the specified security
         /// </summary>
         /// <param name="security">The security to be initialized</param>
-        public void Initialize(Security security)
+        /// <param name="seedSecurity">True to seed the security, false otherwise</param>
+        public void Initialize(Security security, bool seedSecurity)
         {
-            _initializer(security);
+            _initializer(security, seedSecurity);
         }
     }
 }
