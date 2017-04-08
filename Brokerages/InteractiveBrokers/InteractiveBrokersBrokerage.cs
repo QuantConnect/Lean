@@ -311,6 +311,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns>The current holdings from the account</returns>
         public override List<Holding> GetAccountHoldings()
         {
+            CheckIbGateway();
+
             var holdings = _accountHoldings.Select(x => ObjectActivator.Clone(x.Value)).Where(x => x.Quantity != 0).ToList();
 
             // fire up tasks to resolve the conversion rates so we can do them in parallel
@@ -346,6 +348,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns>The current cash balance for each currency available for trading</returns>
         public override List<Cash> GetCashBalance()
         {
+            CheckIbGateway();
+
             return _cashBalances.Select(x => new Cash(x.Key, x.Value, GetUsdConversion(x.Key))).ToList();
         }
 
@@ -833,7 +837,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.TickPrice -= clientOnTickPrice;
 
             // check to see if ticks returned something
-            if (rate == 0)
+            // we also need to check for negative values, IB returns -1 on Saturday
+            if (rate <= 0)
             {
                 bool pacingViolation;
                 const int pacingDelaySeconds = 60;
@@ -2237,6 +2242,26 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var index = lines.FindLastIndex(x => x.Contains(separatorLine));
 
             return index >= 0 && lines.Skip(index + 1).Any(line => line.Contains("End this session and let the other session proceed"));
+        }
+
+        /// <summary>
+        /// Check if IB Gateway running, restart if not
+        /// </summary>
+        private void CheckIbGateway()
+        {
+            Log.Trace("InteractiveBrokersBrokerage.CheckIbGateway(): start");
+            if (!InteractiveBrokersGatewayRunner.IsRunning())
+            {
+                Log.Trace("InteractiveBrokersBrokerage.CheckIbGateway(): IB Gateway not running. Restarting...");
+                InteractiveBrokersGatewayRunner.Restart();
+
+                Log.Trace("InteractiveBrokersBrokerage.CheckIbGateway(): Disconnecting...");
+                Disconnect();
+
+                Log.Trace("InteractiveBrokersBrokerage.CheckIbGateway(): Reconnecting...");
+                Connect();
+            }
+            Log.Trace("InteractiveBrokersBrokerage.CheckIbGateway(): end");
         }
 
         private readonly ConcurrentDictionary<Symbol, int> _subscribedSymbols = new ConcurrentDictionary<Symbol, int>();
