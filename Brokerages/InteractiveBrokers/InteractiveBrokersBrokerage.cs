@@ -35,6 +35,7 @@ using Order = QuantConnect.Orders.Order;
 using IB = QuantConnect.Brokerages.InteractiveBrokers.Client;
 using IBApi;
 using NodaTime;
+using Bar = QuantConnect.Data.Market.Bar;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
@@ -826,7 +827,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             Log.Trace("InteractiveBrokersBrokerage.GetUsdConversion(): Requesting market data for " + currencyPair);
             _client.TickPrice += clientOnTickPrice;
 
-            _client.ClientSocket.reqMktData(marketDataTicker, contract, string.Empty, true, new List<TagValue>());
+            _client.ClientSocket.reqMktData(marketDataTicker, contract, string.Empty, true, false, new List<TagValue>());
 
             manualResetEvent.WaitOne(2500);
 
@@ -879,7 +880,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     // request some historical data, IB's api takes into account weekends/market opening hours
                     const string requestSpan = "100 S";
                     _client.ClientSocket.reqHistoricalData(historicalTicker, contract, DateTime.UtcNow.ToString("yyyyMMdd HH:mm:ss UTC"), 
-                        requestSpan, IB.BarSize.OneSecond, HistoricalDataType.Ask, 0, 2, new List<TagValue>());
+                        requestSpan, IB.BarSize.OneSecond, HistoricalDataType.Ask, 0, 2, false, new List<TagValue>());
 
                     manualResetEvent.WaitOne(2500);
 
@@ -892,14 +893,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     else
                     {
                         // check for history
-                        var ordered = data.OrderByDescending(x => x.Date);
+                        var ordered = data.OrderByDescending(x => x.Bar.Time);
                         var mostRecentQuote = ordered.FirstOrDefault();
                         if (mostRecentQuote == null)
                         {
                             throw new Exception("Unable to get recent quote for " + currencyPair);
                         }
 
-                        rate = Convert.ToDecimal(mostRecentQuote.Close);
+                        rate = Convert.ToDecimal(mostRecentQuote.Bar.Close);
                         Log.Trace("InteractiveBrokersBrokerage.GetUsdConversion(): Last historical price rate is " + rate + " for currency " + currency);
                     }
 
@@ -1546,11 +1547,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private static TradeBar ConvertTradeBar(Symbol symbol, Resolution resolution, IB.HistoricalDataEventArgs historyBar)
         {
             var time = resolution != Resolution.Daily ?
-                Time.UnixTimeStampToDateTime(Convert.ToDouble(historyBar.Date, CultureInfo.InvariantCulture)) :
-                DateTime.ParseExact(historyBar.Date, "yyyyMMdd", CultureInfo.InvariantCulture);
+                Time.UnixTimeStampToDateTime(Convert.ToDouble(historyBar.Bar.Time, CultureInfo.InvariantCulture)) :
+                DateTime.ParseExact(historyBar.Bar.Time, "yyyyMMdd", CultureInfo.InvariantCulture);
 
-            return new TradeBar(time, symbol, (decimal)historyBar.Open, (decimal)historyBar.High, (decimal)historyBar.Low,
-                (decimal)historyBar.Close, historyBar.Volume, resolution.ToTimeSpan());
+            return new TradeBar(time, symbol, (decimal)historyBar.Bar.Open, (decimal)historyBar.Bar.High, (decimal)historyBar.Bar.Low,
+                (decimal)historyBar.Bar.Close, historyBar.Bar.Volume, resolution.ToTimeSpan());
         }
 
         /// <summary>
@@ -1743,7 +1744,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                                 var contract = CreateContract(subscribeSymbol);
 
                                 // we would like to receive OI (101)
-                                Client.ClientSocket.reqMktData(id, contract, "101", false, new List<TagValue>());
+                                Client.ClientSocket.reqMktData(id, contract, "101", false, false, new List<TagValue>());
 
                                 _subscribedSymbols[symbol] = id;
                                 _subscribedTickets[id] = subscribeSymbol;
@@ -2160,7 +2161,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Client.HistoricalDataEnd += clientOnHistoricalDataEnd;
 
                 Client.ClientSocket.reqHistoricalData(historicalTicker, contract, endTime.ToString("yyyyMMdd HH:mm:ss UTC"),
-                    duration, resolution, dataType, useRegularTradingHours, 2, new List<TagValue>());
+                    duration, resolution, dataType, useRegularTradingHours, 2, false, new List<TagValue>());
 
                 var waitResult = 0;
                 while (waitResult == 0)

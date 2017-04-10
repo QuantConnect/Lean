@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -13,33 +13,32 @@
  * limitations under the License.
 */
 
-using IBApi;
+using System;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers.Client
 {
     /// <summary>
-    /// Event arguments class for the <see cref="InteractiveBrokersClient.TickPrice"/> event
+    /// Event arguments class for the <see cref="InteractiveBrokersClient.HistoricalNewsEnd"/> event
     /// </summary>
-    public sealed class TickPriceEventArgs : TickEventArgs
+    public class HistoricalNewsEndEventArgs : EventArgs
     {
         /// <summary>
-        /// The actual price.
+        /// The request id.
         /// </summary>
-        public double Price { get; private set; }
+        public int RequestId { get; set; }
 
         /// <summary>
-        /// The tick attributes.
+        /// Indicates whether there are more results available, false otherwise.
         /// </summary>
-        public TickAttrib TickAttributes { get; private set; }
+        public bool HasMore { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TickPriceEventArgs"/> class
+        /// Initializes a new instance of the <see cref="HistoricalNewsEndEventArgs"/> class
         /// </summary>
-        public TickPriceEventArgs(int tickerId, int field, double price, TickAttrib attribs)
-            : base(tickerId, field)
+        public HistoricalNewsEndEventArgs(int requestId, bool hasMore)
         {
-            Price = price;
-            TickAttributes = attribs;
+            RequestId = requestId;
+            HasMore = hasMore;
         }
     }
 }

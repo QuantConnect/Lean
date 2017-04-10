@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -13,33 +13,27 @@
  * limitations under the License.
 */
 
+using System;
 using IBApi;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers.Client
 {
     /// <summary>
-    /// Event arguments class for the <see cref="InteractiveBrokersClient.TickPrice"/> event
+    /// Event arguments class for the <see cref="InteractiveBrokersClient.FamilyCodes"/> event
     /// </summary>
-    public sealed class TickPriceEventArgs : TickEventArgs
+    public class FamilyCodesEventArgs : EventArgs
     {
         /// <summary>
-        /// The actual price.
+        /// The array of family codes.
         /// </summary>
-        public double Price { get; private set; }
+        public FamilyCode[] FamilyCodes { get; private set; }
 
         /// <summary>
-        /// The tick attributes.
+        /// Initializes a new instance of the <see cref="FamilyCodesEventArgs"/> class
         /// </summary>
-        public TickAttrib TickAttributes { get; private set; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="TickPriceEventArgs"/> class
-        /// </summary>
-        public TickPriceEventArgs(int tickerId, int field, double price, TickAttrib attribs)
-            : base(tickerId, field)
+        public FamilyCodesEventArgs(FamilyCode[] familyCodes)
         {
-            Price = price;
-            TickAttributes = attribs;
+            FamilyCodes = familyCodes;
         }
     }
 }

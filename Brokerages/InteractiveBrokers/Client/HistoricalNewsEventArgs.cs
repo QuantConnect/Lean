@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -14,32 +14,49 @@
 */
 
 using System;
-using IBApi;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers.Client
 {
     /// <summary>
-    /// Event arguments class for the <see cref="InteractiveBrokersClient.HistoricalData"/> event
+    /// Event arguments class for the <see cref="InteractiveBrokersClient.HistoricalNews"/> event
     /// </summary>
-    public class HistoricalDataEventArgs : EventArgs
+    public class HistoricalNewsEventArgs : EventArgs
     {
         /// <summary>
-        /// The request's identifier.
+        /// The request id.
         /// </summary>
-        public int RequestId { get; private set; }
+        public int RequestId { get; set; }
 
         /// <summary>
-        /// The bar data. 
+        /// The time.
         /// </summary>
-        public Bar Bar { get; private set; }
+        public string Time { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="HistoricalDataEventArgs"/> class
+        /// The provider code.
         /// </summary>
-        public HistoricalDataEventArgs(int requestId, Bar bar)
+        public string ProviderCode { get; set; }
+
+        /// <summary>
+        /// The article id.
+        /// </summary>
+        public string ArticleId { get; set; }
+
+        /// <summary>
+        /// The headline.
+        /// </summary>
+        public string Headline { get; set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HistoricalNewsEventArgs"/> class
+        /// </summary>
+        public HistoricalNewsEventArgs(int requestId, string time, string providerCode, string articleId, string headline)
         {
             RequestId = requestId;
-            Bar = bar;
+            Time = time;
+            ProviderCode = providerCode;
+            ArticleId = articleId;
+            Headline = headline;
         }
     }
 }

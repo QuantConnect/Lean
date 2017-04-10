@@ -13,33 +13,33 @@
  * limitations under the License.
 */
 
+using System;
 using IBApi;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers.Client
 {
     /// <summary>
-    /// Event arguments class for the <see cref="InteractiveBrokersClient.TickPrice"/> event
+    /// Event arguments class for the <see cref="InteractiveBrokersClient.HistoricalDataUpdate"/> event
     /// </summary>
-    public sealed class TickPriceEventArgs : TickEventArgs
+    public class HistoricalDataUpdateEventArgs : EventArgs
     {
         /// <summary>
-        /// The actual price.
+        /// The request's identifier.
         /// </summary>
-        public double Price { get; private set; }
+        public int RequestId { get; private set; }
 
         /// <summary>
-        /// The tick attributes.
+        /// The bar data. 
         /// </summary>
-        public TickAttrib TickAttributes { get; private set; }
+        public Bar Bar { get; private set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TickPriceEventArgs"/> class
+        /// Initializes a new instance of the <see cref="HistoricalDataUpdateEventArgs"/> class
         /// </summary>
-        public TickPriceEventArgs(int tickerId, int field, double price, TickAttrib attribs)
-            : base(tickerId, field)
+        public HistoricalDataUpdateEventArgs(int requestId, Bar bar)
         {
-            Price = price;
-            TickAttributes = attribs;
+            RequestId = requestId;
+            Bar = bar;
         }
     }
 }

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -13,33 +13,38 @@
  * limitations under the License.
 */
 
-using IBApi;
+using System;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers.Client
 {
     /// <summary>
-    /// Event arguments class for the <see cref="InteractiveBrokersClient.TickPrice"/> event
+    /// Event arguments class for the <see cref="InteractiveBrokersClient.NewsArticle"/> event
     /// </summary>
-    public sealed class TickPriceEventArgs : TickEventArgs
+    public class NewsArticleEventArgs : EventArgs
     {
         /// <summary>
-        /// The actual price.
+        /// The request id.
         /// </summary>
-        public double Price { get; private set; }
+        public int RequestId { get; set; }
 
         /// <summary>
-        /// The tick attributes.
+        /// The type of news article (0 - plain text or html, 1 - binary data / pdf).
         /// </summary>
-        public TickAttrib TickAttributes { get; private set; }
+        public int ArticleType { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TickPriceEventArgs"/> class
+        /// The body of article (if articleType == 1, the binary data is encoded using the Base64 scheme).
         /// </summary>
-        public TickPriceEventArgs(int tickerId, int field, double price, TickAttrib attribs)
-            : base(tickerId, field)
+        public string ArticleText { get; set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NewsArticleEventArgs"/> class
+        /// </summary>
+        public NewsArticleEventArgs(int requestId, int articleType, string articleText)
         {
-            Price = price;
-            TickAttributes = attribs;
+            RequestId = requestId;
+            ArticleType = articleType;
+            ArticleText = articleText;
         }
     }
 }

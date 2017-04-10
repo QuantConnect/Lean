@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -13,33 +13,38 @@
  * limitations under the License.
 */
 
-using IBApi;
+using System;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers.Client
 {
     /// <summary>
-    /// Event arguments class for the <see cref="InteractiveBrokersClient.TickPrice"/> event
+    /// Event arguments class for the <see cref="InteractiveBrokersClient.RerouteMktDepthReq"/> event
     /// </summary>
-    public sealed class TickPriceEventArgs : TickEventArgs
+    public class RerouteMktDepthReqEventArgs : EventArgs
     {
         /// <summary>
-        /// The actual price.
+        /// The request id.
         /// </summary>
-        public double Price { get; private set; }
+        public int RequestId { get; set; }
 
         /// <summary>
-        /// The tick attributes.
+        /// The connection id.
         /// </summary>
-        public TickAttrib TickAttributes { get; private set; }
+        public int ConId { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TickPriceEventArgs"/> class
+        /// The exchange.
         /// </summary>
-        public TickPriceEventArgs(int tickerId, int field, double price, TickAttrib attribs)
-            : base(tickerId, field)
+        public string Exchange { get; set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RerouteMktDepthReqEventArgs"/> class
+        /// </summary>
+        public RerouteMktDepthReqEventArgs(int requestId, int conId, string exchange)
         {
-            Price = price;
-            TickAttributes = attribs;
+            RequestId = requestId;
+            ConId = conId;
+            Exchange = exchange;
         }
     }
 }

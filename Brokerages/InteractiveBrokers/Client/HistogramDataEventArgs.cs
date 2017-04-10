@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -13,33 +13,33 @@
  * limitations under the License.
 */
 
+using System;
 using IBApi;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers.Client
 {
     /// <summary>
-    /// Event arguments class for the <see cref="InteractiveBrokersClient.TickPrice"/> event
+    /// Event arguments class for the <see cref="InteractiveBrokersClient.HistogramData"/> event
     /// </summary>
-    public sealed class TickPriceEventArgs : TickEventArgs
+    public class HistogramDataEventArgs : EventArgs
     {
         /// <summary>
-        /// The actual price.
+        /// The request id.
         /// </summary>
-        public double Price { get; private set; }
+        public int RequestId { get; set; }
 
         /// <summary>
-        /// The tick attributes.
+        /// The returned Tuple of histogram data, number of trades at specified price level.
         /// </summary>
-        public TickAttrib TickAttributes { get; private set; }
+        public HistogramEntry[] Data { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TickPriceEventArgs"/> class
+        /// Initializes a new instance of the <see cref="HistogramDataEventArgs"/> class
         /// </summary>
-        public TickPriceEventArgs(int tickerId, int field, double price, TickAttrib attribs)
-            : base(tickerId, field)
+        public HistogramDataEventArgs(int requestId, HistogramEntry[] data)
         {
-            Price = price;
-            TickAttributes = attribs;
+            RequestId = requestId;
+            Data = data;
         }
     }
 }
