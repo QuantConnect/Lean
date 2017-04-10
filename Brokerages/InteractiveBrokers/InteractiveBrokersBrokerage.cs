@@ -457,6 +457,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                         // no response, disconnect and retry
                         _client.ClientSocket.eDisconnect();
+                        signal.issueSignal();
                         messageProcessingThread.Join();
 
                         // if existing session detected from IBController log file, log error and throw exception
