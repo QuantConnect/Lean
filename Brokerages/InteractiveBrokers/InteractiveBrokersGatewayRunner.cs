@@ -198,7 +198,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     StartInfo = new ProcessStartInfo
                     {
                         FileName = "bash",
-                        Arguments = "-c 'ps aux | grep java | grep ibgateway'",
+                        Arguments = "-c 'ps aux | grep -v bash | grep java | grep ibgateway'",
                         UseShellExecute = false,
                         RedirectStandardOutput = true,
                         CreateNoWindow = true
