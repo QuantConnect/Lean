@@ -456,7 +456,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             Log.Debug("BrokerageTransactionHandler.ProcessSynchronousEvents(): Enter");
 
             // every morning flip this switch back
-            if (_syncedLiveBrokerageCashToday && DateTime.Now.Date != LastSyncDate)
+            //if (_syncedLiveBrokerageCashToday && DateTime.Now.Date != LastSyncDate)
+            // TEST: sync every minute
+            if (_syncedLiveBrokerageCashToday && (DateTime.Now.Date != LastSyncDate || DateTime.Now.Second == 0))
             {
                 _syncedLiveBrokerageCashToday = false;
             }
