@@ -140,9 +140,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 return false;
             }
 
+            // do not restart if using TWS instead of Gateway
+            if (_useTws)
+            {
+                return true;
+            }
+
             try
             {
-                return GetSpawnedProcesses(_scriptProcessId).ToList().Count > 0;
+                return IsIbControllerRunning();
             }
             catch (Exception err)
             {
@@ -161,6 +167,54 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             // wait a few seconds for IB to start up
             Thread.Sleep(TimeSpan.FromSeconds(30));
+        }
+
+        /// <summary>
+        /// Detects if the IB Controller is running
+        /// </summary>
+        private static bool IsIbControllerRunning()
+        {
+            if (OS.IsWindows)
+            {
+                foreach (var process in Process.GetProcesses())
+                {
+                    try
+                    {
+                        if (process.MainWindowTitle.ToLower().Contains("ibcontroller"))
+                        {
+                            return true;
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // ignored
+                    }
+                }
+            }
+            else
+            {
+                var process = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "bash",
+                        Arguments = "-c 'ps -a | grep IBController'",
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        CreateNoWindow = true
+                    }
+                };
+
+                process.Start();
+                var output = process.StandardOutput.ReadToEnd();
+                var processFound = output.Contains("IBController.sh");
+
+                process.WaitForExit();
+
+                return processFound;
+            }
+
+            return false;
         }
 
         private static IEnumerable<Process> GetSpawnedProcesses(int id)
