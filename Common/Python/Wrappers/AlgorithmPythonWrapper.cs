@@ -43,6 +43,7 @@ namespace QuantConnect.Python.Wrappers
         private IBenchmark _benchmark;
         private IBrokerageModel _brokerageModel;
         private IHistoryProvider _historyProvider;
+        private ITradeBuilder _tradeBuilder;
 
         private dynamic _pyAlgorithm;
 
@@ -389,13 +390,17 @@ namespace QuantConnect.Python.Wrappers
         /// <summary>
         /// Wrapper for <see cref = "IAlgorithm.TradeBuilder" /> in Python
         /// </summary>
-        ITradeBuilder IAlgorithm.TradeBuilder
+        public ITradeBuilder TradeBuilder
         {
             get
             {
                 using (Py.GIL())
                 {
-                    return _algorithm.TradeBuilder;
+                    if (_tradeBuilder == null)
+                    {
+                        _tradeBuilder = new TradeBuilderPythonWrapper(_algorithm.TradeBuilder);
+                    }
+                    return _tradeBuilder;
                 }
             }
         }

@@ -30,7 +30,7 @@ namespace QuantConnect.Python.Wrappers
     /// </summary>
     public class HistoryProviderPythonWrapper : IHistoryProvider
     {
-        IHistoryProvider _historyProvider;
+        private IHistoryProvider _historyProvider;
 
         /// <summary>
         /// <see cref = "HistoryProviderPythonWrapper"/> constructor.
