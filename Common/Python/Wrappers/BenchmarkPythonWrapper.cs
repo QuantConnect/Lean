@@ -25,7 +25,7 @@ namespace QuantConnect.Python.Wrappers
     /// </summary>
     class BenchmarkPythonWrapper : IBenchmark
     {
-        IBenchmark _benchmark;
+        private IBenchmark _benchmark;
 
         /// <summary>
         /// <see cref = "BenchmarkPythonWrapper"/> constructor.
