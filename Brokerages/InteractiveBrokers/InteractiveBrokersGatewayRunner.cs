@@ -198,7 +198,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     StartInfo = new ProcessStartInfo
                     {
                         FileName = "bash",
-                        Arguments = "-c 'ps -a | grep IBController'",
+                        Arguments = "-c 'ps aux | grep java | grep ibgateway'",
                         UseShellExecute = false,
                         RedirectStandardOutput = true,
                         CreateNoWindow = true
@@ -207,7 +207,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 process.Start();
                 var output = process.StandardOutput.ReadToEnd();
-                var processFound = output.Contains("IBController.sh");
+                var processFound = output.Contains("java") && output.Contains("ibgateway");
 
                 process.WaitForExit();
 
