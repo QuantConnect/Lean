@@ -967,12 +967,17 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             if (InvalidatingCodes.Contains(errorCode))
             {
-                Log.Trace(string.Format("InteractiveBrokersBrokerage.HandleError.InvalidateOrder(): Order: {0} ErrorCode: {1} - {2}", tickerId, errorCode, errorMsg));
+                var message = string.Format("{0} - {1}", errorCode, errorMsg);
+                Log.Trace(string.Format("InteractiveBrokersBrokerage.HandleError.InvalidateOrder(): Order: {0} ErrorCode: {1}", tickerId, message));
 
                 // invalidate the order
                 var order = _orderProvider.GetOrderByBrokerageId(tickerId);
                 const int orderFee = 0;
-                var orderEvent = new OrderEvent(order, DateTime.UtcNow, orderFee) { Status = OrderStatus.Invalid };
+                var orderEvent = new OrderEvent(order, DateTime.UtcNow, orderFee)
+                {
+                    Status = OrderStatus.Invalid,
+                    Message = message
+                };
                 OnOrderEvent(orderEvent);
             }
 
