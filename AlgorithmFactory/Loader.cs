@@ -144,19 +144,23 @@ namespace QuantConnect.AlgorithmFactory
             errorMessage = string.Empty;
 
             var name = Config.Get("algorithm-type-name", "main");
-            var path = Config.Get("algorithm-path-python", "../../../Algorithm.Python/");
             Environment.SetEnvironmentVariable("PYTHONPATH", Environment.CurrentDirectory);
 
-            // Copies file to execution location
-            foreach (var file in new DirectoryInfo(path).GetFiles("*.py"))
+            if (!File.Exists(name + ".pyc"))
             {
-                file.CopyTo(file.FullName.Replace(file.DirectoryName, Environment.CurrentDirectory), true);
-            }
+                var path = Config.Get("algorithm-path-python", "../../../Algorithm.Python/");
 
-            if (!File.Exists(name + ".py"))
-            {
-                errorMessage = "Loader.TryCreatePythonAlgorithm(): Unable to find py file: " + name + ".py";
-                return false;
+                // Copies file to execution location
+                foreach (var file in new DirectoryInfo(path).GetFiles("*.py"))
+                {
+                    file.CopyTo(file.FullName.Replace(file.DirectoryName, Environment.CurrentDirectory), true);
+                }
+
+                if (!File.Exists(name + ".py"))
+                {
+                    errorMessage = "Loader.TryCreatePythonAlgorithm(): Unable to find py file: " + name + ".py";
+                    return false;
+                }
             }
 
             try
