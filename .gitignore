@@ -3,6 +3,7 @@
 *.ko
 *.obj
 *.elf
+*.pyc
 
 # Visual Studio Project Items:
 *.suo
