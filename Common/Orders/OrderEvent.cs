@@ -161,9 +161,9 @@ namespace QuantConnect.Orders
             if (OrderFee != 0m) message += string.Format(" OrderFee: {0} {1}", OrderFee, CashBook.AccountCurrency);
 
             // add message from brokerage
-            if (!string.IsNullOrEmpty(message))
+            if (!string.IsNullOrEmpty(Message))
             {
-                message += string.Format(" Message: {0}", message);
+                message += string.Format(" Message: {0}", Message);
             } 
 
             return message;
