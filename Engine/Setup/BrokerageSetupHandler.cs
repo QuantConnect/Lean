@@ -225,8 +225,6 @@ namespace QuantConnect.Lean.Engine.Setup
 
                 brokerage.Message += brokerageOnMessage;
 
-                algorithm.Transactions.SetOrderProcessor(transactionHandler);
-
                 Log.Trace("BrokerageSetupHandler.Setup(): Connecting to brokerage...");
                 try
                 {
