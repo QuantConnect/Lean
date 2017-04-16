@@ -124,6 +124,9 @@ namespace QuantConnect.Lean.Engine
                     // initialize command queue system
                     _algorithmHandlers.CommandQueue.Initialize(job, algorithm);
 
+                    // set the order processor on the transaction manager (needs to be done before initializing BrokerageHistoryProvider)
+                    algorithm.Transactions.SetOrderProcessor(_algorithmHandlers.Transactions);
+
                     // set the history provider before setting up the algorithm
                     var historyProvider = GetHistoryProvider(job.HistoryProvider);
                     if (historyProvider is BrokerageHistoryProvider)
