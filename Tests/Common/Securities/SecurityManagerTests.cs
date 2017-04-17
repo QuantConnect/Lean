@@ -307,8 +307,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void SecurityManagerCanCreate_ConcreteFutures_WithCorrectSubscriptions()
         {
-            var ed = SecurityIdentifier.GenerateBase("ED", Market.USA);
-            var identifier = SecurityIdentifier.GenerateFuture(new DateTime(2020, 12, 15), ed, Market.USA);
+            var identifier = SecurityIdentifier.GenerateFuture(new DateTime(2020, 12, 15), "ED", Market.USA);
             var symbol = new Symbol(identifier, "ED", Symbol.Empty);
             var marketHoursDbEntry = _marketHoursDatabase.GetEntry(Market.USA, "ED", SecurityType.Equity, TimeZones.NewYork);
             var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, "ED", symbol.ID.SecurityType, CashBook.AccountCurrency);
