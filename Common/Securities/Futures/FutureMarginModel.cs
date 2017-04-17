@@ -19,7 +19,6 @@ using System.Globalization;
 using QuantConnect.Orders;
 using QuantConnect.Logging;
 using System.IO;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace QuantConnect.Securities
@@ -224,7 +223,7 @@ namespace QuantConnect.Securities
                                             symbol.SecurityType.ToLower(),
                                             symbol.ID.Market.ToLower(),
                                             "margins");
-                return FromCsvFile(Path.Combine(directory, symbol.Underlying.Value + ".csv"));
+                return FromCsvFile(Path.Combine(directory, symbol.ID.Symbol + ".csv"));
             }
         }
                 

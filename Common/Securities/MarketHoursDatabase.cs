@@ -199,12 +199,10 @@ namespace QuantConnect.Securities
         /// <returns>The entry matching the specified market/symbol/security-type</returns>
         public virtual Entry GetEntry(string market, Symbol symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
         {
-            var stringSymbol = symbol == null ?
-                        string.Empty :
-                        (symbol.ID.SecurityType == SecurityType.Future ||
-                         symbol.ID.SecurityType == SecurityType.Option ?
-                            symbol.Underlying.Value :
-                            symbol.Value);
+            var stringSymbol = symbol == null ? string.Empty :
+                (symbol.ID.SecurityType == SecurityType.Option ? symbol.Underlying.Value :
+                (symbol.ID.SecurityType == SecurityType.Future ? symbol.ID.Symbol :
+                 symbol.Value));
 
             return GetEntry(market, stringSymbol, securityType, overrideTimeZone);
         }

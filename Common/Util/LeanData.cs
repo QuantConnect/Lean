@@ -14,12 +14,9 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net.Sockets;
-using Fasterflect;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
@@ -246,10 +243,12 @@ namespace QuantConnect.Util
                 case SecurityType.Cfd:
                     return !isHourOrDaily ? Path.Combine(directory, symbol.Value.ToLower()) : directory;
 
-                case SecurityType.Future:
                 case SecurityType.Option:
                     // options uses the underlying symbol for pathing
                     return !isHourOrDaily ? Path.Combine(directory, symbol.Underlying.Value.ToLower()) : directory;
+
+                case SecurityType.Future:
+                    return !isHourOrDaily ? Path.Combine(directory, symbol.ID.Symbol.ToLower()) : directory;
 
                 case SecurityType.Commodity:
                 default:
@@ -268,6 +267,7 @@ namespace QuantConnect.Util
                                         "factor_files",
                                         symbol.Value.ToLower() + ".csv");
         }
+
         /// <summary>
         /// Generates the relative zip file path rooted in the /Data directory
         /// </summary>
@@ -346,7 +346,7 @@ namespace QuantConnect.Util
                     if (isHourOrDaily)
                     {
                         return string.Join("_",
-                            symbol.Underlying.Value.ToLower(), // underlying
+                            symbol.ID.Symbol.ToLower(),
                             tickType.ToLower(),
                             symbol.ID.Date.ToString(DateFormat.YearMonth)
                             ) + ".csv";
@@ -354,7 +354,7 @@ namespace QuantConnect.Util
 
                     return string.Join("_",
                         formattedDate,
-                        symbol.Underlying.Value.ToLower(), // underlying
+                        symbol.ID.Symbol.ToLower(),
                         resolution.ToLower(),
                         tickType.ToLower(),
                         symbol.ID.Date.ToString(DateFormat.YearMonth)
@@ -439,7 +439,7 @@ namespace QuantConnect.Util
                     if (isHourOrDaily)
                     {
                         return string.Format("{0}_{1}.zip",
-                            symbol.Underlying.Value.ToLower(), // underlying
+                            symbol.ID.Symbol.ToLower(),
                             tickTypeString);
                     }
 
