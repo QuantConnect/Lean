@@ -397,7 +397,8 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="newEvent">New order event details</param>
         public void OrderEvent(OrderEvent newEvent)
         {
-            DebugMessage("DesktopResultHandler.OrderEvent(): id:" + newEvent.OrderId + " >> Status:" + newEvent.Status + " >> Fill Price: " + newEvent.FillPrice.ToString("C") + " >> Fill Quantity: " + newEvent.FillQuantity);
+			Messages.Enqueue(new OrderEventPacket(_algorithm.AlgorithmId,newEvent));
+			DebugMessage("DesktopResultHandler.OrderEvent(): id:" + newEvent.OrderId + " >> Status:" + newEvent.Status + " >> Fill Price: " + newEvent.FillPrice.ToString("C") + " >> Fill Quantity: " + newEvent.FillQuantity);
         }
 
 
