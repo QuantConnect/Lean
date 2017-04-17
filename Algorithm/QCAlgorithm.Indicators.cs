@@ -163,6 +163,23 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new swing direction indicator
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol the swing filtering is being undertaken on</param>
+        /// <param name="resolution">The resolution.</param> 
+        /// <param name="k">The percentage swing filter</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The Swing Points for the requested symbol.</returns>
+        public SwingPoints SWG(Symbol symbol, decimal k, Resolution? resolution = null, Func<BaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "SWG", resolution);
+            var swingpoint = new SwingPoints(name, k);
+            RegisterIndicator(symbol, swingpoint, resolution, selector);
+            return swingpoint;
+        }
+
+        /// <summary>
         /// Creates an ExponentialMovingAverage indicator for the symbol. The indicator will be automatically
         /// updated on the given resolution.
         /// </summary>
