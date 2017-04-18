@@ -176,16 +176,16 @@ namespace QuantConnect.Util
                             if (tick.TickType == TickType.Trade)
                             {
                                 return ToCsv(milliseconds,
-                                    Scale(tick.LastPrice), tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1": "0");
+                                             tick.LastPrice, tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1": "0", false);
                             }
                             if (tick.TickType == TickType.Quote)
                             {
                                 return ToCsv(milliseconds,
-                                    Scale(tick.BidPrice), tick.BidSize, Scale(tick.AskPrice), tick.AskSize, tick.Exchange, tick.Suspicious ? "1" : "0");
+                                             tick.BidPrice, tick.BidSize, tick.AskPrice, tick.AskSize, tick.Exchange, tick.Suspicious ? "1" : "0", false);
                             }
                             if (tick.TickType == TickType.OpenInterest)
                             {
-                                return ToCsv(milliseconds, tick.Value);
+                                return ToCsv(milliseconds, tick.Value, false);
                             }
                             break;
 
@@ -196,19 +196,19 @@ namespace QuantConnect.Util
                             if (quoteBar != null)
                             {
                                 return ToCsv(milliseconds,
-                                    ToCsv(quoteBar.Bid), quoteBar.LastBidSize, 
-                                    ToCsv(quoteBar.Ask), quoteBar.LastAskSize);
+                                    ToCsv(quoteBar.Bid, false), quoteBar.LastBidSize, 
+                                    ToCsv(quoteBar.Ask, false), quoteBar.LastAskSize, false);
                             }
                             var tradeBar = data as TradeBar;
                             if (tradeBar != null)
                             {
                                 return ToCsv(milliseconds,
-                                    Scale(tradeBar.Open), Scale(tradeBar.High), Scale(tradeBar.Low), Scale(tradeBar.Close), tradeBar.Volume);
+                                             tradeBar.Open, tradeBar.High, tradeBar.Low, tradeBar.Close, tradeBar.Volume, false);
                             }
                             var openInterest = data as OpenInterest;
                             if (openInterest != null)
                             {
-                                return ToCsv(milliseconds, openInterest.Value);
+                                return ToCsv(milliseconds, openInterest.Value, false);
                             }
                             break;
 
@@ -219,19 +219,19 @@ namespace QuantConnect.Util
                             if (bigQuoteBar != null)
                             {
                                 return ToCsv(longTime,
-                                    ToCsv(bigQuoteBar.Bid), bigQuoteBar.LastBidSize,
-                                    ToCsv(bigQuoteBar.Ask), bigQuoteBar.LastAskSize);
+                                    ToCsv(bigQuoteBar.Bid, false), bigQuoteBar.LastBidSize,
+                                    ToCsv(bigQuoteBar.Ask, false), bigQuoteBar.LastAskSize, false);
                             }
                             var bigTradeBar = data as TradeBar;
                             if (bigTradeBar != null)
                             {
                                 return ToCsv(longTime,
-                                    ToCsv(bigTradeBar), bigTradeBar.Volume);
+                                    ToCsv(bigTradeBar, false), bigTradeBar.Volume, false);
                             }
                             var bigOpenInterest = data as OpenInterest;
                             if (bigOpenInterest != null)
                             {
-                                return ToCsv(milliseconds, bigOpenInterest.Value);
+                                return ToCsv(milliseconds, bigOpenInterest.Value, false);
                             }
                             break;
 
