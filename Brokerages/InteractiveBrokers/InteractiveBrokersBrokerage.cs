@@ -1076,12 +1076,26 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 else
                 {
                     // IB likes to duplicate/triplicate some events, so we fire non-fill events only if status changed
-                    if (status != order.Status && status != OrderStatus.New)
+                    if (status != order.Status)
                     {
-                        OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Interactive Brokers Order Event")
+                        if (order.Status.IsClosed())
                         {
-                            Status = status
-                        });
+                            // if the order is already in a closed state, we ignore the event
+                            Log.Trace("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): ignoring update in closed state - order.Status: " + order.Status + ", status: " + status);
+                        }
+                        else if (order.Status == OrderStatus.PartiallyFilled && (status == OrderStatus.New || status == OrderStatus.Submitted))
+                        {
+                            // if we receive a New or Submitted event when already partially filled, we ignore it
+                            Log.Trace("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): ignoring status " + status + " after partial fills");
+                        }
+                        else
+                        {
+                            // fire the event
+                            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Interactive Brokers Order Event")
+                            {
+                                Status = status
+                            });
+                        }
                     }
                 }
             }
