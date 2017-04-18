@@ -98,6 +98,76 @@ namespace QuantConnect.Util
                     break;
 
                 case SecurityType.Option:
+                    switch (resolution)
+                    {
+                        case Resolution.Tick:
+                            var tick = (Tick)data;
+                            if (tick.TickType == TickType.Trade)
+                            {
+                                return ToCsv(milliseconds,
+                                    Scale(tick.LastPrice), tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1" : "0");
+                            }
+                            if (tick.TickType == TickType.Quote)
+                            {
+                                return ToCsv(milliseconds,
+                                    Scale(tick.BidPrice), tick.BidSize, Scale(tick.AskPrice), tick.AskSize, tick.Exchange, tick.Suspicious ? "1" : "0");
+                            }
+                            if (tick.TickType == TickType.OpenInterest)
+                            {
+                                return ToCsv(milliseconds, tick.Value);
+                            }
+                            break;
+
+                        case Resolution.Second:
+                        case Resolution.Minute:
+                            // option and future data can be quote or trade bars
+                            var quoteBar = data as QuoteBar;
+                            if (quoteBar != null)
+                            {
+                                return ToCsv(milliseconds,
+                                    ToCsv(quoteBar.Bid), quoteBar.LastBidSize,
+                                    ToCsv(quoteBar.Ask), quoteBar.LastAskSize);
+                            }
+                            var tradeBar = data as TradeBar;
+                            if (tradeBar != null)
+                            {
+                                return ToCsv(milliseconds,
+                                    Scale(tradeBar.Open), Scale(tradeBar.High), Scale(tradeBar.Low), Scale(tradeBar.Close), tradeBar.Volume);
+                            }
+                            var openInterest = data as OpenInterest;
+                            if (openInterest != null)
+                            {
+                                return ToCsv(milliseconds, openInterest.Value);
+                            }
+                            break;
+
+                        case Resolution.Hour:
+                        case Resolution.Daily:
+                            // option and future data can be quote or trade bars
+                            var bigQuoteBar = data as QuoteBar;
+                            if (bigQuoteBar != null)
+                            {
+                                return ToCsv(longTime,
+                                    ToCsv(bigQuoteBar.Bid), bigQuoteBar.LastBidSize,
+                                    ToCsv(bigQuoteBar.Ask), bigQuoteBar.LastAskSize);
+                            }
+                            var bigTradeBar = data as TradeBar;
+                            if (bigTradeBar != null)
+                            {
+                                return ToCsv(longTime,
+                                    ToCsv(bigTradeBar), bigTradeBar.Volume);
+                            }
+                            var bigOpenInterest = data as OpenInterest;
+                            if (bigOpenInterest != null)
+                            {
+                                return ToCsv(milliseconds, bigOpenInterest.Value);
+                            }
+                            break;
+
+                        default:
+                            throw new ArgumentOutOfRangeException("resolution", resolution, null);
+                    }
+                    break;
                 case SecurityType.Future:
                     switch (resolution)
                     {
