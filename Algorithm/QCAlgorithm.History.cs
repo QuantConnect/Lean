@@ -552,23 +552,7 @@ namespace QuantConnect.Algorithm
             resolution = resolution ?? security.Resolution;
 
             // find the correct data type for the history request
-            Type dataType;
-            if (subscription.IsCustomData)
-            {
-                dataType = subscription.Type;
-            }
-            else if (resolution == Resolution.Tick)
-            {
-                dataType = typeof(Tick);
-            }
-            else if (security.Symbol.SecurityType == SecurityType.Forex || security.Symbol.SecurityType == SecurityType.Cfd)
-            {
-                dataType = typeof(QuoteBar);
-            }
-            else
-            {
-                dataType = typeof(TradeBar);
-            }
+            var dataType = subscription.IsCustomData ? subscription.Type : LeanData.GetDataType(resolution.Value, subscription.TickType);
 
             var request = new HistoryRequest(subscription, security.Exchange.Hours, startAlgoTz.ConvertToUtc(TimeZone), endAlgoTz.ConvertToUtc(TimeZone))
             {
