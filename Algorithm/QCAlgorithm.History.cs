@@ -550,12 +550,33 @@ namespace QuantConnect.Algorithm
         private HistoryRequest CreateHistoryRequest(Security security, SubscriptionDataConfig subscription, DateTime startAlgoTz, DateTime endAlgoTz, Resolution? resolution)
         {
             resolution = resolution ?? security.Resolution;
+
+            // find the correct data type for the history request
+            Type dataType;
+            if (subscription.IsCustomData)
+            {
+                dataType = subscription.Type;
+            }
+            else if (resolution == Resolution.Tick)
+            {
+                dataType = typeof(Tick);
+            }
+            else if (security.Symbol.SecurityType == SecurityType.Forex || security.Symbol.SecurityType == SecurityType.Cfd)
+            {
+                dataType = typeof(QuoteBar);
+            }
+            else
+            {
+                dataType = typeof(TradeBar);
+            }
+
             var request = new HistoryRequest(subscription, security.Exchange.Hours, startAlgoTz.ConvertToUtc(TimeZone), endAlgoTz.ConvertToUtc(TimeZone))
             {
-                DataType = subscription.IsCustomData || resolution != Resolution.Tick ? subscription.Type : typeof(Tick),
+                DataType = dataType,
                 Resolution = resolution.Value,
                 FillForwardResolution = subscription.FillDataForward ? resolution : null
             };
+
             return request;
         }
 
