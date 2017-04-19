@@ -247,7 +247,7 @@ namespace QuantConnect.Lean.Engine
                     //On day-change sample equity and daily performance for statistics calculations
                     if (_previousTime.Date != time.Date)
                     {
-                        SampleBenchmark(algorithm, results, _previousTime.Date);
+                        SampleBenchmark(algorithm, results, _previousTime);
 
                         //Sample the portfolio value over time for chart.
                         results.SampleEquity(_previousTime, Math.Round(algorithm.Portfolio.TotalPortfolioValue, 4));
@@ -255,11 +255,11 @@ namespace QuantConnect.Lean.Engine
                         //Check for divide by zero
                         if (portfolioValue == 0m)
                         {
-                            results.SamplePerformance(_previousTime.Date, 0);
+                            results.SamplePerformance(_previousTime, 0);
                         }
                         else
                         {
-                            results.SamplePerformance(_previousTime.Date, Math.Round((algorithm.Portfolio.TotalPortfolioValue - portfolioValue) * 100 / portfolioValue, 10));
+                            results.SamplePerformance(_previousTime, Math.Round((algorithm.Portfolio.TotalPortfolioValue - portfolioValue) * 100 / portfolioValue, 10));
                         }
                         portfolioValue = algorithm.Portfolio.TotalPortfolioValue;
                     }
