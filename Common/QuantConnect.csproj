@@ -272,6 +272,10 @@
     <Compile Include="Market.cs" />
     <Compile Include="Notifications\Notification.cs" />
     <Compile Include="Notifications\NotificationManager.cs" />
+    <Compile Include="Optimizers\BisectOptimizer.cs" />
+    <Compile Include="Optimizers\GenericOptimizer.cs" />
+    <Compile Include="Optimizers\GridSearchOptimizer.cs" />
+    <Compile Include="Optimizers\IOptimizer.cs" />
     <Compile Include="Orders\CancelOrderRequest.cs" />
     <Compile Include="Orders\Fees\ConstantFeeModel.cs" />
     <Compile Include="Orders\Fees\InteractiveBrokersFeeModel.cs" />
