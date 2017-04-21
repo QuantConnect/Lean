@@ -776,8 +776,7 @@ namespace QuantConnect.Algorithm
 
             // this is the value in dollars that we want our holdings to have
             var targetPortfolioValue = target*Portfolio.TotalPortfolioValue;
-            var quantity = security.Holdings.Quantity;
-            var currentHoldingsValue = price*quantity;
+            var currentHoldingsValue = security.Holdings.HoldingsValue;
 
             // remove directionality, we'll work in the land of absolutes
             var targetOrderValue = Math.Abs(targetPortfolioValue - currentHoldingsValue);
