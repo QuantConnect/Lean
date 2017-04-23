@@ -483,7 +483,10 @@ namespace QuantConnect.Brokerages.Oanda
             "ZAR_JPY"
         };
 
-        public static List<string> DelistedSymbols = new List<string>()
+        /// <summary>
+        /// The list of delisted/invalid Oanda symbols.
+        /// </summary>
+        public static HashSet<string> DelistedSymbols = new HashSet<string>
         {
             "AUD_CNY",
             "AUD_CZK",
@@ -906,7 +909,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>True if Oanda supports the symbol</returns>
         public bool IsKnownBrokerageSymbol(string brokerageSymbol)
         {
-            return KnownSymbols.Contains(brokerageSymbol);
+            return KnownSymbols.Contains(brokerageSymbol) && !DelistedSymbols.Contains(brokerageSymbol);
         }
 
         /// <summary>
@@ -921,7 +924,7 @@ namespace QuantConnect.Brokerages.Oanda
 
             var oandaSymbol = ConvertLeanSymbolToOandaSymbol(symbol.Value);
 
-            return KnownSymbols.Contains(oandaSymbol) && GetBrokerageSecurityType(oandaSymbol) == symbol.ID.SecurityType;
+            return IsKnownBrokerageSymbol(oandaSymbol) && GetBrokerageSecurityType(oandaSymbol) == symbol.ID.SecurityType;
         }
 
         /// <summary>
