@@ -632,7 +632,7 @@ namespace QuantConnect.Algorithm
                     }
                     else
                     {
-                        Transactions.CancelOrder(order.Id);
+                        Transactions.CancelOrder(order.Id,"Liquidated");
                     }
                 }
 
