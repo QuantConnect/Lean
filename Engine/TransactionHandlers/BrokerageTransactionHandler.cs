@@ -458,13 +458,14 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             Log.Debug("BrokerageTransactionHandler.ProcessSynchronousEvents(): Enter");
 
             // every morning flip this switch back
-            if (_syncedLiveBrokerageCashToday && DateTime.UtcNow.Date != LastSyncDate)
+            var currentTimeNewYork = DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork);
+            if (_syncedLiveBrokerageCashToday && currentTimeNewYork.Date != LastSyncDate)
             {
                 _syncedLiveBrokerageCashToday = false;
             }
 
             // we want to sync up our cash balance before market open
-            if (_algorithm.LiveMode && !_syncedLiveBrokerageCashToday && DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork).TimeOfDay >= LiveBrokerageCashSyncTime)
+            if (_algorithm.LiveMode && !_syncedLiveBrokerageCashToday && currentTimeNewYork.TimeOfDay >= LiveBrokerageCashSyncTime)
             {
                 try
                 {
@@ -993,11 +994,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Gets the date of the last sync
+        /// Gets the date of the last sync (New York time zone)
         /// </summary>
         private DateTime LastSyncDate
         {
-            get { return new DateTime(Interlocked.Read(ref _lastSyncTimeTicks)).Date; }
+            get { return new DateTime(Interlocked.Read(ref _lastSyncTimeTicks)).ConvertFromUtc(TimeZones.NewYork).Date; }
         }
 
         /// <summary>
