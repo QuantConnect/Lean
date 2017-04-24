@@ -29,7 +29,7 @@ namespace QuantConnect
         /// </summary>
         public static Func<IBaseData, decimal> Open
         {
-            get { return TradeBarPropertyOrValue(x => x.Open); }
+            get { return BaseDataBarPropertyOrValue(x => x.Open); }
         }
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace QuantConnect
         /// </summary>
         public static Func<IBaseData, decimal> High
         {
-            get { return TradeBarPropertyOrValue(x => x.High); }
+            get { return BaseDataBarPropertyOrValue(x => x.High); }
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace QuantConnect
         /// </summary>
         public static Func<IBaseData, decimal> Low
         {
-            get { return TradeBarPropertyOrValue(x => x.Low); }
+            get { return BaseDataBarPropertyOrValue(x => x.Low); }
         }
 
         /// <summary>
@@ -61,7 +61,7 @@ namespace QuantConnect
         /// </summary>
         public static Func<IBaseData, decimal> Average
         {
-            get { return TradeBarPropertyOrValue(x => (x.Open + x.High + x.Low + x.Close) / 4m); }
+            get { return BaseDataBarPropertyOrValue(x => (x.Open + x.High + x.Low + x.Close) / 4m); }
         }
 
         /// <summary>
@@ -69,7 +69,7 @@ namespace QuantConnect
         /// </summary>
         public static Func<IBaseData, decimal> Median
         {
-            get { return TradeBarPropertyOrValue(x => (x.High + x.Low) / 2m); }
+            get { return BaseDataBarPropertyOrValue(x => (x.High + x.Low) / 2m); }
         }
 
         /// <summary>
@@ -77,7 +77,7 @@ namespace QuantConnect
         /// </summary>
         public static Func<IBaseData, decimal> Typical
         {
-            get { return TradeBarPropertyOrValue(x => (x.High + x.Low + x.Close) / 3m); }
+            get { return BaseDataBarPropertyOrValue(x => (x.High + x.Low + x.Close) / 3m); }
         }
 
         /// <summary>
@@ -85,7 +85,7 @@ namespace QuantConnect
         /// </summary>
         public static Func<IBaseData, decimal> Weighted
         {
-            get { return TradeBarPropertyOrValue(x => (x.High + x.Low + 2 * x.Close) / 4m); }
+            get { return BaseDataBarPropertyOrValue(x => (x.High + x.Low + 2 * x.Close) / 4m); }
         }
 
         /// <summary>
@@ -93,7 +93,7 @@ namespace QuantConnect
         /// </summary>
         public static Func<IBaseData, decimal> SevenBar
         {
-            get { return TradeBarPropertyOrValue(x => (2*x.Open + x.High + x.Low + 3*x.Close)/7m); }
+            get { return BaseDataBarPropertyOrValue(x => (2*x.Open + x.High + x.Low + 3*x.Close)/7m); }
         }
 
         /// <summary>
@@ -101,14 +101,14 @@ namespace QuantConnect
         /// </summary>
         public static Func<IBaseData, decimal> Volume
         {
-            get { return TradeBarPropertyOrValue(x => x.Volume, x => 0m); }
+            get { return BaseDataBarPropertyOrValue(x => x is TradeBar ? ((TradeBar)x).Volume : 0m, x => 0m); }
         }
 
-        private static Func<IBaseData, decimal> TradeBarPropertyOrValue(Func<TradeBar, decimal> selector, Func<IBaseData, decimal> defaultSelector = null)
+        private static Func<IBaseData, decimal> BaseDataBarPropertyOrValue(Func<IBaseDataBar, decimal> selector, Func<IBaseData, decimal> defaultSelector = null)
         {
             return x =>
             {
-                var bar = x as TradeBar;
+                var bar = x as IBaseDataBar;
                 if (bar != null)
                 {
                     return selector(bar);

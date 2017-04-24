@@ -14,12 +14,9 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net.Sockets;
-using Fasterflect;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
@@ -86,13 +83,17 @@ namespace QuantConnect.Util
 
                         case Resolution.Second:
                         case Resolution.Minute:
-                            var bar = (TradeBar) data;
-                            return ToCsv(milliseconds, bar.Open, bar.High, bar.Low, bar.Close);
+                            var bar = (QuoteBar) data;
+                            return ToCsv(milliseconds,
+                                    ToCsv(bar.Bid, false), bar.LastBidSize,
+                                    ToCsv(bar.Ask, false), bar.LastAskSize);
 
                         case Resolution.Hour:
                         case Resolution.Daily:
-                            var bigBar = (TradeBar) data;
-                            return ToCsv(longTime, bigBar.Open, bigBar.High, bigBar.Low, bigBar.Close);
+                            var bigBar = (QuoteBar) data;
+                            return ToCsv(longTime,
+                                    ToCsv(bigBar.Bid, false), bigBar.LastBidSize,
+                                    ToCsv(bigBar.Ask, false), bigBar.LastAskSize);
                     }
                     break;
 
@@ -242,10 +243,12 @@ namespace QuantConnect.Util
                 case SecurityType.Cfd:
                     return !isHourOrDaily ? Path.Combine(directory, symbol.Value.ToLower()) : directory;
 
-                case SecurityType.Future:
                 case SecurityType.Option:
                     // options uses the underlying symbol for pathing
                     return !isHourOrDaily ? Path.Combine(directory, symbol.Underlying.Value.ToLower()) : directory;
+
+                case SecurityType.Future:
+                    return !isHourOrDaily ? Path.Combine(directory, symbol.ID.Symbol.ToLower()) : directory;
 
                 case SecurityType.Commodity:
                 default:
@@ -264,6 +267,7 @@ namespace QuantConnect.Util
                                         "factor_files",
                                         symbol.Value.ToLower() + ".csv");
         }
+
         /// <summary>
         /// Generates the relative zip file path rooted in the /Data directory
         /// </summary>
@@ -342,7 +346,7 @@ namespace QuantConnect.Util
                     if (isHourOrDaily)
                     {
                         return string.Join("_",
-                            symbol.Underlying.Value.ToLower(), // underlying
+                            symbol.ID.Symbol.ToLower(),
                             tickType.ToLower(),
                             symbol.ID.Date.ToString(DateFormat.YearMonth)
                             ) + ".csv";
@@ -350,7 +354,7 @@ namespace QuantConnect.Util
 
                     return string.Join("_",
                         formattedDate,
-                        symbol.Underlying.Value.ToLower(), // underlying
+                        symbol.ID.Symbol.ToLower(),
                         resolution.ToLower(),
                         tickType.ToLower(),
                         symbol.ID.Date.ToString(DateFormat.YearMonth)
@@ -435,7 +439,7 @@ namespace QuantConnect.Util
                     if (isHourOrDaily)
                     {
                         return string.Format("{0}_{1}.zip",
-                            symbol.Underlying.Value.ToLower(), // underlying
+                            symbol.ID.Symbol.ToLower(),
                             tickTypeString);
                     }
 
@@ -540,7 +544,7 @@ namespace QuantConnect.Util
                 var value = args[i];
                 if (value is decimal)
                 {
-                    args[i] = ((decimal) value).ToString(CultureInfo.InvariantCulture);
+                    args[i] = ((decimal) value).Normalize().ToString(CultureInfo.InvariantCulture);
                 }
             }
 
@@ -550,13 +554,15 @@ namespace QuantConnect.Util
         /// <summary>
         /// Creates a csv line for the bar, if null fills in empty strings
         /// </summary>
-        private static string ToCsv(IBar bar)
+        private static string ToCsv(IBar bar, bool scale = true)
         {
             if (bar == null)
             {
                 return ToCsv(string.Empty, string.Empty, string.Empty, string.Empty);
             }
-            return ToCsv(Scale(bar.Open), Scale(bar.High), Scale(bar.Low), Scale(bar.Close));
+
+            return scale ? ToCsv(Scale(bar.Open), Scale(bar.High), Scale(bar.Low), Scale(bar.Close)) 
+                         : ToCsv(bar.Open, bar.High, bar.Low, bar.Close);
         }
 
         /// <summary>
@@ -582,7 +588,7 @@ namespace QuantConnect.Util
             }
             if (type == typeof(ZipEntryName))
             {
-                return TickType.Trade;
+                return TickType.Quote;
             }
             if (type == typeof(Tick))
             {

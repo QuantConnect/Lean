@@ -312,15 +312,15 @@ namespace QuantConnect
         /// <summary>
         /// Generates a new <see cref="SecurityIdentifier"/> for a future
         /// </summary>
-        /// <param name="expiry">The date the option expires</param>
-        /// <param name="underlying">The underlying security's symbol</param>
+        /// <param name="expiry">The date the future expires</param>
+        /// <param name="symbol">The security's symbol</param>
         /// <param name="market">The market</param>
         /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified futures security</returns>
         public static SecurityIdentifier GenerateFuture(DateTime expiry,
-            SecurityIdentifier underlying,
+            string symbol,
             string market)
         {
-            return Generate(expiry, underlying.Symbol, SecurityType.Future, market, 0, 0, 0, underlying);
+            return Generate(expiry, symbol, SecurityType.Future, market);
         }
 
         /// <summary>

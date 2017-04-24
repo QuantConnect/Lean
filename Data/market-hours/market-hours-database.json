@@ -5741,95 +5741,56 @@
     "Cfd-oanda-SG30SGD": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "Asia/Hong_Kong",
-      "sunday": [
-        {
-          "start": "18:15:00",
-          "end": "1.00:00:00",
-          "state": "market"
-        }
-      ],
+      "sunday": [],
       "monday": [
         {
-          "start": "00:00:00",
-          "end": "02:00:00",
-          "state": "market"
-        },
-        {
-          "start": "08:30:00",
-          "end": "17:10:00",
-          "state": "market"
-        },
-        {
-          "start": "18:15:00",
-          "end": "1.00:00:00",
+          "start": "09:00:00",
+          "end": "05:00:00",
           "state": "market"
         }
       ],
       "tuesday": [
-        {
-          "start": "00:00:00",
-          "end": "02:00:00",
-          "state": "market"
-        },
-        {
-          "start": "08:30:00",
-          "end": "17:10:00",
-          "state": "market"
-        },
-        {
-          "start": "18:15:00",
-          "end": "1.00:00:00",
+      {
+          "start": "09:00:00",
+          "end": "05:00:00",
           "state": "market"
         }
       ],
       "wednesday": [
         {
-          "start": "00:00:00",
-          "end": "02:00:00",
-          "state": "market"
-        },
-        {
-          "start": "08:30:00",
-          "end": "17:10:00",
-          "state": "market"
-        },
-        {
-          "start": "18:15:00",
-          "end": "1.00:00:00",
+          "start": "09:00:00",
+          "end": "05:00:00",
           "state": "market"
         }
       ],
       "thursday": [
-        {
-          "start": "00:00:00",
-          "end": "02:00:00",
-          "state": "market"
-        },
-        {
-          "start": "08:30:00",
-          "end": "17:10:00",
-          "state": "market"
-        },
-        {
-          "start": "18:15:00",
-          "end": "1.00:00:00",
+       {
+          "start": "09:00:00",
+          "end": "05:00:00",
           "state": "market"
         }
       ],
       "friday": [
-        {
-          "start": "00:00:00",
-          "end": "02:00:00",
-          "state": "market"
-        },
-        {
-          "start": "08:30:00",
-          "end": "17:10:00",
+      {
+          "start": "09:00:00",
+          "end": "05:00:00",
           "state": "market"
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "2/15/2010",
+        "2/13/2011",
+        "1/23/2012",
+        "2/11/2013",
+        "1/31/2014",
+        "2/19/2015",
+        "2/8/2016",
+        "1/30/2017",
+        "2/16/2018",
+        "2/5/2019",
+        "1/27/2020"
+      ]
     },
     "Cfd-oanda-SOYBNUSD": {
       "dataTimeZone": "UTC",

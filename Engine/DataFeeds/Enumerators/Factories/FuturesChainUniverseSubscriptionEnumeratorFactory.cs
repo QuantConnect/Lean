@@ -21,7 +21,6 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
-using System.Threading;
 using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
@@ -51,6 +50,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// Initializes a new instance of the <see cref="FuturesChainUniverseSubscriptionEnumeratorFactory"/> class
         /// </summary>
         /// <param name="symbolUniverse">Symbol universe provider of the data queue</param>
+        /// <param name="timeProvider">The time provider to be used</param>
         public FuturesChainUniverseSubscriptionEnumeratorFactory(IDataQueueUniverseProvider symbolUniverse, ITimeProvider timeProvider)
         {
             _isLiveMode = true;
@@ -70,9 +70,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             if (_isLiveMode)
             {
                 var localTime = request.StartTimeUtc.ConvertFromUtc(request.Configuration.ExchangeTimeZone);
-                
+
                 // loading the list of futures contracts and converting them into zip entries
-                var symbols = _symbolUniverse.LookupSymbols(request.Security.Symbol.Underlying.Value, request.Security.Type);
+                var symbols = _symbolUniverse.LookupSymbols(request.Security.Symbol.ID.Symbol, request.Security.Type);
                 var zipEntries = symbols.Select(x => new ZipEntryName { Time = localTime, Symbol = x } as BaseData).ToList();
 
                 var underlyingEnumerator = new TradeBarBuilderEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider);
@@ -98,24 +98,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             }
         }
 
-        private IEnumerable<SubscriptionDataConfig> GetSubscriptionConfigurations(SubscriptionRequest request)
+        private static IEnumerable<SubscriptionDataConfig> GetSubscriptionConfigurations(SubscriptionRequest request)
         {
-            // canonical also needs underlying price data
             var config = request.Configuration;
-            var underlying = config.Symbol.Underlying;
             var resolution = config.Resolution;
 
             var configurations = new List<SubscriptionDataConfig>
             {
-                // add underlying trade data
-                new SubscriptionDataConfig(config, resolution: resolution, fillForward: true, symbol: underlying, objectType: typeof (TradeBar), tickType: TickType.Trade),
-            };
-
-            if (!_isLiveMode)
-            {
                 // rewrite the primary to be fill forward
-                configurations.Add(new SubscriptionDataConfig(config, resolution: resolution, fillForward: true));
-            }
+                new SubscriptionDataConfig(config, resolution: resolution, fillForward: true)
+            };
 
             return configurations;
         }
