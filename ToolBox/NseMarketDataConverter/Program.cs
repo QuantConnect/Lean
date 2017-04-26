@@ -26,7 +26,7 @@ namespace QuantConnect.ToolBox.NseMarketDataConverter
     class Program
     {
         /// <summary>
-        /// Primary entry point to the program
+        /// Supports data from http://TrueData.in
         /// </summary>
         private static void Main(string[] args)
         {
