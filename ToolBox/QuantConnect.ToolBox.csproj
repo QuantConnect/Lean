@@ -33,7 +33,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>QuantConnect.ToolBox.AlgoSeekFuturesConverter.Program</StartupObject>
+    <StartupObject>QuantConnect.ToolBox.NseMarketDataConverter.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="EngineIoClientDotNet, Version=0.9.22.0, Culture=neutral, processorArchitecture=MSIL">
@@ -193,6 +193,7 @@
     <Compile Include="LeanDataWriter.cs" />
     <Compile Include="LeanInstrument.cs" />
     <Compile Include="LeanParser.cs" />
+    <Compile Include="NseMarketDataConverter\Program.cs" />
     <Compile Include="OandaDownloader\OandaDataDownloader.cs" />
     <Compile Include="OandaDownloader\Program.cs" />
     <Compile Include="PipeDataProcessor.cs" />
