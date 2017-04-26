@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using NodaTime;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
@@ -406,6 +407,80 @@ namespace QuantConnect
                 }
             }
             return current;
+        }
+
+        /// <summary>
+        /// Function to provide common American holidays for a given year.
+        /// Useful when determining if a date is a business day
+        /// </summary>
+        /// <param name="year">The year </param>
+        /// <returns>A HastSet of DateTime representing common american holidays</returns>
+        /// <remarks>http://stackoverflow.com/questions/3709584/business-holiday-date-handling</remarks>
+        public static HashSet<DateTime> CommonAmericanHolidays(int year)
+        {
+            HashSet<DateTime> holidays = new HashSet<DateTime>();
+            
+            // New Years
+            DateTime newYearsDate = AdjustForWeekendHoliday(new DateTime(year, 1, 1).Date);
+            holidays.Add(newYearsDate);
+
+            //Memorial day (last monday in May)
+            DateTime memorialDay = new DateTime(year, 5, 31);
+            DayOfWeek dayOfWeek = memorialDay.DayOfWeek;
+            while (dayOfWeek != DayOfWeek.Monday)
+            {
+                memorialDay = memorialDay.AddDays(-1);
+                dayOfWeek = memorialDay.DayOfWeek;
+            }
+            holidays.Add(memorialDay.Date);
+
+            // Independence Day
+            DateTime independenceDay = AdjustForWeekendHoliday(new DateTime(year, 7, 4).Date);
+            holidays.Add(independenceDay);
+
+            //Labor Day (1st Monday in September)
+            DateTime laborDay = new DateTime(year, 9, 1);
+            dayOfWeek = laborDay.DayOfWeek;
+            while (dayOfWeek != DayOfWeek.Monday)
+            {
+                laborDay = laborDay.AddDays(1);
+                dayOfWeek = laborDay.DayOfWeek;
+            }
+            holidays.Add(laborDay.Date);
+
+            //Thanksgiving (4th Thursday in November)
+            var thanksgiving = (from day in Enumerable.Range(1, 30)
+                where new DateTime(year, 11, day).DayOfWeek == DayOfWeek.Thursday
+                select day).ElementAt(3);
+            DateTime thanksgivingDay = new DateTime(year, 11, thanksgiving);
+            holidays.Add(thanksgivingDay.Date);
+
+            // Christmas
+            DateTime christmasDay = AdjustForWeekendHoliday(new DateTime(year, 12, 25).Date);
+            holidays.Add(christmasDay);
+
+            return holidays;
+        }
+
+        /// <summary>
+        /// Adjust holidays if they fall on a weekend
+        /// </summary>
+        /// <param name="holiday">The date of a holiday</param>
+        /// <returns>The DateTime of the holiday</returns>
+        public static DateTime AdjustForWeekendHoliday(DateTime holiday)
+        {
+            if (holiday.DayOfWeek == DayOfWeek.Saturday)
+            {
+                return holiday.AddDays(-1);
+            }
+            else if (holiday.DayOfWeek == DayOfWeek.Sunday)
+            {
+                return holiday.AddDays(1);
+            }
+            else
+            {
+                return holiday;
+            }
         }
     }
 }

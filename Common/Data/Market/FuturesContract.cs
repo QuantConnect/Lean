@@ -49,7 +49,11 @@ namespace QuantConnect.Data.Market
         /// </summary>
         public DateTime Expiry
         {
-            get { return Symbol.ID.Date; }
+            get
+            {
+                var expiryFunc = FuturesExpiryFunctions.FuturesExpiryFunction(Symbol);
+                return expiryFunc(Symbol.ID.Date);
+            }
         }
 
         /// <summary>
