@@ -593,9 +593,10 @@ namespace QuantConnect.Algorithm
         /// Liquidate all holdings and cancel open orders. Called at the end of day for tick-strategies.
         /// </summary>
         /// <param name="symbolToLiquidate">Symbols we wish to liquidate</param>
+        /// <param name="tag">Custom tag to know who is calling this.</param>
         /// <returns>Array of order ids for liquidated symbols</returns>
         /// <seealso cref="MarketOrder"/>
-        public List<int> Liquidate(Symbol symbolToLiquidate = null)
+        public List<int> Liquidate(Symbol symbolToLiquidate = null, string tag = "Liquidated")
         {
             var orderIdList = new List<int>();
             symbolToLiquidate = symbolToLiquidate ?? QuantConnect.Symbol.Empty;
@@ -632,7 +633,7 @@ namespace QuantConnect.Algorithm
                     }
                     else
                     {
-                        Transactions.CancelOrder(order.Id);
+                        Transactions.CancelOrder(order.Id, tag);
                     }
                 }
 
