@@ -74,21 +74,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     if (dataStream != null)
                     {
-                        _zipFileCache.AddOrUpdate(filename,
-                            x =>
+                        Lazy<CachedZipFile> existingEntry;
+                        if (!_zipFileCache.TryGetValue(filename, out existingEntry))
+                        {
+                            try
                             {
                                 var newItem = new CachedZipFile(ZipFile.Read(dataStream), filename);
                                 stream = CreateStream(newItem.ZipFile, entryName);
-                                return newItem;
-                            },
-                            (x, existingEntry) =>
+                                _zipFileCache.TryAdd(filename, new Lazy<CachedZipFile>(() => newItem));
+                            }
+                            catch (ZipException exception)
                             {
-                                stream = CreateStream(existingEntry.ZipFile, entryName);
-                                return existingEntry;
-                            });
-                        //stream = CreateStream(ZipFile.Read(dataStream), entryName);
+                                Log.Error("ZipDataCacheProvider.Fetch(): Corrupt file: " + filename + " Error: " + exception);
+                            }
+                        }
+                        else
+                        {
+                            stream = CreateStream(existingEntry.Value.ZipFile, entryName);
+                        }
                     }
-
 
                     return stream;
                 }
@@ -182,7 +186,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class CachedZipFile : IDisposable
     {
-        public string _key;
+        private string _key;
         private DateTime _dateCached;
         private ZipFile _data;
 
