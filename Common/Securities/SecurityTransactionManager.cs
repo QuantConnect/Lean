@@ -162,7 +162,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="orderId">Order id we wish to cancel</param>
         /// <param name="orderTag">Tag to indicate from where this method was called</param>
-        public OrderTicket CancelOrder(int orderId,string orderTag = null)
+        public OrderTicket CancelOrder(int orderId, string orderTag = null)
         {
             return RemoveOrder(orderId, orderTag);
         }
@@ -188,7 +188,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="orderId">Specific order id to remove</param>
         /// <param name="tag">Tag request</param>
-        public OrderTicket RemoveOrder(int orderId,string tag = null)
+        public OrderTicket RemoveOrder(int orderId, string tag = null)
         {
             return ProcessRequest(new CancelOrderRequest(_securities.UtcTime, orderId, tag ?? string.Empty));
         }
