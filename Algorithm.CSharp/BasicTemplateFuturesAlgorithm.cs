@@ -40,8 +40,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void Initialize()
         {
-            SetStartDate(2016, 08, 17);
-            SetEndDate(2016, 08, 20);
+            SetStartDate(2013, 10, 07);
+            SetEndDate(2013, 10, 11);
             SetCash(1000000);
 
             var futureSP500 = AddFuture(RootSP500);
