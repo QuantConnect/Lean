@@ -112,6 +112,12 @@ namespace QuantConnect.Lean.Engine
                 {
                     return "Algorithm took longer than 10 minutes on a single time loop.";
                 }
+
+                if (_algorithm.Portfolio.TotalPortfolioValue <= 0)
+                {
+                    return "Portfolio value is less or equal to zero";
+                }
+
                 return null;
             };
             _liveMode = liveMode;
