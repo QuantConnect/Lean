@@ -23,6 +23,7 @@ using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Util
 {
@@ -587,8 +588,9 @@ namespace QuantConnect.Util
 
                 case SecurityType.Future:
                     var expiryYearMonth = DateTime.ParseExact(parts[4], DateFormat.YearMonth, null);
-                    expiryYearMonth = new DateTime(expiryYearMonth.Year, expiryYearMonth.Month, DateTime.DaysInMonth(expiryYearMonth.Year, expiryYearMonth.Month));
-                    return Symbol.CreateFuture(parts[1], Market.USA, expiryYearMonth);
+                    var futureExpiryFunc = FuturesExpiryFunctions.FuturesExpiryFunction(parts[1]);
+                    var futureExpiry = futureExpiryFunc(expiryYearMonth);
+                    return Symbol.CreateFuture(parts[1], Market.USA, futureExpiry);
 
                 default:
                     throw new NotImplementedException("ReadSymbolFromZipEntry is not implemented for " + symbol.ID.SecurityType + " " + resolution);

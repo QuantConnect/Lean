@@ -5,11 +5,11 @@ namespace QuantConnect.Securities.Future
 {
     public class FuturesExpiryFunctions
     {
-        public static Func<DateTime, DateTime> FuturesExpiryFunction(Symbol symbol)
+        public static Func<DateTime, DateTime> FuturesExpiryFunction(string symbol)
         {
-            if (FuturesExpiryDictionary.ContainsKey(symbol.ID.Symbol))
+            if (FuturesExpiryDictionary.ContainsKey(symbol.ToUpper()))
             {
-                return FuturesExpiryDictionary[symbol.ID.Symbol];
+                return FuturesExpiryDictionary[symbol.ToUpper()];
             }
 
             // If func for expiry cannot be found pass the date through
@@ -26,20 +26,19 @@ namespace QuantConnect.Securities.Future
                     var holidays = Time.CommonAmericanHolidays(time.Year);
 
                     // Count the number of days in the month after the third to last business day
-                    var daysAfterThirdToLastBusinessDay = 0;
-                    var i = 0;
-                    while (daysAfterThirdToLastBusinessDay < 3)
+                    var businessDays = 3;
+                    var totalDays = 0;
+                    do
                     {
-                        var previousDay = lastDayOfMonth.AddDays(-i);
+                        var previousDay = lastDayOfMonth.AddDays(-totalDays);
                         if (previousDay.IsCommonBusinessDay() && !holidays.Contains(previousDay))
                         {
-                            daysAfterThirdToLastBusinessDay++;
+                            businessDays--;
                         }
+                        if (businessDays > 0) totalDays++;
+                    } while (businessDays > 0);
 
-                        if (daysAfterThirdToLastBusinessDay < 3) i++;
-                    }
-
-                    return lastDayOfMonth.AddDays(-i);
+                    return lastDayOfMonth.AddDays(-totalDays);
                 })
             }
         };
