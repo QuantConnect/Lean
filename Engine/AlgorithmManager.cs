@@ -115,7 +115,7 @@ namespace QuantConnect.Lean.Engine
 
                 if (_algorithm.Portfolio.TotalPortfolioValue <= 0)
                 {
-                    return "Portfolio value is less or equal to zero";
+                    return "Portfolio value is less than or equal to zero";
                 }
 
                 return null;
