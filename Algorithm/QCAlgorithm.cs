@@ -877,8 +877,14 @@ namespace QuantConnect.Algorithm
                 // update models on securities added earlier (before SetBrokerageModel is called)
                 foreach (var security in Securities.Values)
                 {
+                    // save the leverage specified in AddSecurity, just in case the SecurityInitializer overwrites it
+                    var leverage = security.Leverage;
+
                     // no need to seed the security, has already been done in AddSecurity
                     SecurityInitializer.Initialize(security, false);
+
+                    // restore the saved leverage
+                    security.SetLeverage(leverage);
                 }
             }
         }
