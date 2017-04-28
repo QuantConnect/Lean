@@ -115,7 +115,7 @@ namespace QuantConnect.Algorithm.Examples
                             Liquidate();
                         }
                         Log(">>BUY>>" + bestGrowth.Symbol + "@" + (100 * bestGrowth.OneMonthPerformance).ToString("00.00"));
-                        decimal qty = Portfolio.Cash / Securities[bestGrowth.Symbol].Close;
+                        decimal qty = Portfolio.MarginRemaining / Securities[bestGrowth.Symbol].Close;
                         MarketOrder(bestGrowth.Symbol, (int) qty);
                     }
                     else
