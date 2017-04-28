@@ -494,6 +494,22 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new HullMovingAverage indicator. The Hull moving average is a series of nested weighted moving averages, is fast and smooth.
+        /// </summary>
+        /// <param name="symbol">The symbol whose Hull moving average we want</param>
+        /// <param name="period">The period over which to compute the Hull moving average</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns></returns>
+        public HullMovingAverage HMA(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "HMA" + period, resolution);
+            var hma = new HullMovingAverage(name, period);
+            RegisterIndicator(symbol, hma, resolution, selector);
+            return hma;
+        }
+
+        /// <summary>
         /// Creates a new On Balance Volume indicator. This will compute the cumulative total volume
         /// based on whether the close price being higher or lower than the previous period.
         /// The indicator will be automatically updated on the given resolution.
@@ -1063,6 +1079,7 @@ namespace QuantConnect.Algorithm
             RegisterIndicator(symbol, vwap, resolution, selector);
             return vwap;
         }
+
 
         /// <summary>
         /// Creates an FractalAdaptiveMovingAverage (FRAMA) indicator for the symbol. The indicator will be automatically

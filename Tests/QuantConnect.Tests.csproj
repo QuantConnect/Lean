@@ -247,6 +247,7 @@
     <Compile Include="Indicators\AccumulationDistributionTests.cs" />
     <Compile Include="Indicators\AverageDirectionalIndexTests.cs" />
     <Compile Include="Indicators\FractalAdaptiveMovingAverageTests.cs" />
+    <Compile Include="Indicators\HullMovingAverageTest.cs" />
     <Compile Include="Indicators\KaufmanAdaptiveMovingAverageTests.cs" />
     <Compile Include="Indicators\AverageDirectionalMovementIndexRatingTests.cs" />
     <Compile Include="Indicators\BalanceOfPowerTests.cs" />
@@ -372,6 +373,9 @@
     <None Include="TestData\multizip.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="TestData\spy_hma.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="TestData\spy_with_ichimoku.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
