@@ -501,7 +501,7 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns></returns>
-        public HullMovingAverage HULL(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        public HullMovingAverage HMA(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
             var name = CreateIndicatorName(symbol, "HMA" + period, resolution);
             var hma = new HullMovingAverage(name, period);
