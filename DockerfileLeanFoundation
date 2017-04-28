@@ -54,6 +54,6 @@ RUN echo "deb http://download.mono-project.com/repo/debian wheezy/snapshots/4.6.
   && apt-get install -y fsharp && rm -rf /var/lib/apt/lists/* /tmp/*
 
 # Install Python.NET
-RUN nuget install QuantConnect.pythonnet \
+RUN nuget install QuantConnect.pythonnet -Version 1.0.0 \
     && cp QuantConnect.pythonnet.1.0.0/lib/UCS4/Python.Runtime.dll /usr/lib \
     && cp QuantConnect.pythonnet.1.0.0/build/Python.Runtime.dll.config /usr/lib
