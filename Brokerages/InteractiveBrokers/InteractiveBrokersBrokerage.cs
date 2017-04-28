@@ -63,6 +63,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly IB.InteractiveBrokersClient _client;
         private readonly string _agentDescription;
 
+        // Notifies the thread reading information from Gateway/TWS whenever there are messages ready to be consumed
+        private readonly EReaderSignal _signal = new EReaderMonitorSignal();
+
         private readonly ManualResetEvent _waitForNextValidId = new ManualResetEvent(false);
         private readonly ManualResetEvent _accountHoldingsResetEvent = new ManualResetEvent(false);
 
@@ -160,7 +163,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _port = port;
             _clientId = IncrementClientId();
             _agentDescription = agentDescription;
-            _client = new IB.InteractiveBrokersClient();
+            _client = new IB.InteractiveBrokersClient(_signal);
             
             // set up event handlers
             _client.UpdatePortfolio += HandlePortfolioUpdates;
@@ -426,8 +429,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     _client.ClientSocket.eConnect(_host, _port, _clientId);
 
                     // create the message processing thread
-                    var signal = new EReaderMonitorSignal();
-                    var reader = new EReader(_client.ClientSocket, signal);
+                    var reader = new EReader(_client.ClientSocket, _signal);
                     reader.Start();
 
                     var messageProcessingThread = new Thread(() =>
@@ -438,7 +440,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         {
                             try
                             {
-                                signal.waitForSignal();
+                                _signal.waitForSignal();
                                 reader.processMsgs();
                             }
                             catch (Exception error)
@@ -460,7 +462,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                         // no response, disconnect and retry
                         _client.ClientSocket.eDisconnect();
-                        signal.issueSignal();
+                        _signal.issueSignal();
                         messageProcessingThread.Join();
 
                         // if existing session detected from IBController log file, log error and throw exception

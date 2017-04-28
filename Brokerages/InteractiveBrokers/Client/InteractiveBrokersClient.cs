@@ -402,9 +402,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// <summary>
         /// Initializes a new instance of the <see cref="InteractiveBrokersClient"/> class
         /// </summary>
-        public InteractiveBrokersClient()
+        public InteractiveBrokersClient(EReaderSignal signal)
         {
-            ClientSocket = new EClientSocket(this, new EReaderMonitorSignal());
+            ClientSocket = new EClientSocket(this, signal);
         }
 
         /// <summary>
