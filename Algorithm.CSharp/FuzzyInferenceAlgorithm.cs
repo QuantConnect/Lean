@@ -26,8 +26,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void Initialize()
         {
-            SetStartDate(2016, 01, 01);  //Set Start Date
-            SetEndDate(2016, 06, 30);    //Set End Date
+            SetStartDate(2015, 01, 01);  //Set Start Date
+            SetEndDate(2015, 06, 30);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
             AddEquity(symbol, Resolution.Daily);
 
@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
                     {
                         if (signal > 30)
                         {
-                            int quantity = Decimal.ToInt32(Portfolio.Cash / data[symbol].Price);
+                            int quantity = Decimal.ToInt32(Portfolio.MarginRemaining / data[symbol].Price);
                             Buy(symbol, quantity);
                             Debug("Purchased Stock: " + quantity + " shares");
                         }
