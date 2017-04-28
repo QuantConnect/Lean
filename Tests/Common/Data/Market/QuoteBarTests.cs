@@ -216,7 +216,7 @@ namespace QuantConnect.Tests.Common.Data.Market
         {
             var config = new SubscriptionDataConfig(typeof(QuoteBar), Symbols.Fut_SPY_Feb19_2016, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
 
-            var line = "14340000,10000,20000,30000,40000,0,50000,60000,70000,80000,1";
+            var line = "14340000,1,2,3,4,0,5,6,7,8,1";
 
             var quoteBar = _quoteBar.ParseFuture(config, line, DateTime.MinValue);
 
