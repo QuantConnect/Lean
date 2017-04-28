@@ -98,7 +98,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
                 // if there's more than one then check configuration for which one we should use
                 var algorithmName = Config.Get("algorithm-type-name");
-                return names.Single(x => x.Contains("." + algorithmName));
+                return names.Single(x => x.EndsWith("." + algorithmName));
             });
 
             var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, algorithmNodePacket.RamAllocation, out algorithm, out error);
