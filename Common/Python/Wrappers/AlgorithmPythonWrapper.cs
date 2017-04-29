@@ -668,12 +668,13 @@ namespace QuantConnect.Python.Wrappers
         /// Wrapper for <see cref = "IAlgorithm.Liquidate" /> in Python
         /// </summary>
         /// <param name="symbolToLiquidate"></param>
+        /// <param name="tag"></param>
         /// <returns></returns>
-        public List<int> Liquidate(Symbol symbolToLiquidate = null)
+        public List<int> Liquidate(Symbol symbolToLiquidate = null, string tag = "Liquidated")
         {
             using (Py.GIL())
             {
-                return _algorithm.Liquidate(symbolToLiquidate);
+                return _algorithm.Liquidate(symbolToLiquidate, tag);
             }
         }
 
