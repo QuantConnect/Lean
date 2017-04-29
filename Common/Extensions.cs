@@ -580,6 +580,16 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Business day here is defined as any day of the week that is not saturday or sunday
+        /// </summary>
+        /// <param name="date">The date to be examined</param>
+        /// <returns>A bool indicating wether the datetime is a weekday or not</returns>
+        public static bool IsCommonBusinessDay(this DateTime date)
+        {
+            return (date.DayOfWeek != DayOfWeek.Saturday && date.DayOfWeek != DayOfWeek.Sunday);
+        }
+
+        /// <summary>
         /// Add the reset method to the System.Timer class.
         /// </summary>
         /// <param name="timer">System.timer object</param>
