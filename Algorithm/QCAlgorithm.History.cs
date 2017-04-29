@@ -448,7 +448,7 @@ namespace QuantConnect.Algorithm
             // Get the config with the largest resolution
             var subscriptionDataConfig = GetMatchingSubscription(security, typeof(BaseData));
 
-            var request = new HistoryRequest()
+            var request = new HistoryRequest
             {
                 StartTimeUtc = startTime.ConvertToUtc(_localTimeKeeper.TimeZone),
                 EndTimeUtc = endTime.ConvertToUtc(_localTimeKeeper.TimeZone),
@@ -456,9 +456,7 @@ namespace QuantConnect.Algorithm
                 Resolution = resolution,
                 FillForwardResolution = resolution,
                 Symbol = security.Symbol,
-                Market = security.Symbol.ID.Market,
-                ExchangeHours = security.Exchange.Hours,
-                SecurityType = security.Type
+                ExchangeHours = security.Exchange.Hours
             };
 
             var history = History(new List<HistoryRequest> { request });

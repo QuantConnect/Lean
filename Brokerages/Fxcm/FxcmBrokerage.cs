@@ -626,7 +626,7 @@ namespace QuantConnect.Brokerages.Fxcm
             DateTimeZone exchangeTimeZone;
             if (!_symbolExchangeTimeZones.TryGetValue(request.Symbol, out exchangeTimeZone))
             {
-                exchangeTimeZone = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.FXCM, request.Symbol, request.SecurityType).TimeZone;
+                exchangeTimeZone = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.FXCM, request.Symbol, request.Symbol.SecurityType).TimeZone;
                 _symbolExchangeTimeZones.Add(request.Symbol, exchangeTimeZone);
             }
 
