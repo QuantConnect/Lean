@@ -263,12 +263,14 @@ namespace QuantConnect.Lean.Engine
                             results.SamplePerformance(_previousTime.Date, Math.Round((algorithm.Portfolio.TotalPortfolioValue - portfolioValue) * 100 / portfolioValue, 10));
                         }
                         portfolioValue = algorithm.Portfolio.TotalPortfolioValue;
+                    }
 
-                        if (portfolioValue <= 0)
-                        {
-                            Log.Trace("AlgorithmManager.Run(): Portfolio value is less than or equal to zero");
-                            break;
-                        }
+                    if (portfolioValue <= 0)
+                    {
+                        string logMessage = "AlgorithmManager.Run(): Portfolio value is less than or equal to zero";
+                        Log.Trace(logMessage);
+                        results.SystemDebugMessage(logMessage);
+                        break;
                     }
                 }
                 else
