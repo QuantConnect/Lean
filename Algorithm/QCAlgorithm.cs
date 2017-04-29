@@ -559,9 +559,18 @@ namespace QuantConnect.Algorithm
         /// Sets the security initializer function, used to initialize/configure securities after creation
         /// </summary>
         /// <param name="securityInitializer">The security initializer function</param>
-        public void SetSecurityInitializer(Action<Security> securityInitializer)
+        public void SetSecurityInitializer(Action<Security, bool> securityInitializer)
         {
             SetSecurityInitializer(new FuncSecurityInitializer(securityInitializer));
+        }
+
+        /// <summary>
+        /// Sets the security initializer function, used to initialize/configure securities after creation
+        /// </summary>
+        /// <param name="securityInitializer">The security initializer function</param>
+        public void SetSecurityInitializer(Action<Security> securityInitializer)
+        {
+            SetSecurityInitializer(new FuncSecurityInitializer((security, seedSecurity) => securityInitializer(security)));
         }
 
         /// <summary>
@@ -864,6 +873,13 @@ namespace QuantConnect.Algorithm
             {
                 // purposefully use the direct setter vs Set method so we don't flip the switch :/
                 SecurityInitializer = new BrokerageModelSecurityInitializer(model, new FuncSecuritySeeder(GetLastKnownPrice));
+
+                // update models on securities added earlier (before SetBrokerageModel is called)
+                foreach (var security in Securities.Values)
+                {
+                    // no need to seed the security, has already been done in AddSecurity
+                    SecurityInitializer.Initialize(security, false);
+                }
             }
         }
 
@@ -1359,7 +1375,7 @@ namespace QuantConnect.Algorithm
             }
 
             Symbol canonicalSymbol;
-            var alias = "?" + symbol;
+            var alias = "/" + symbol;
             if (!SymbolCache.TryGetSymbol(alias, out canonicalSymbol))
             {
                 canonicalSymbol = QuantConnect.Symbol.Create(symbol, SecurityType.Future, market, alias);
@@ -1367,7 +1383,9 @@ namespace QuantConnect.Algorithm
 
             var marketHoursEntry = _marketHoursDatabase.GetEntry(market, symbol, SecurityType.Future);
             var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(market, symbol, SecurityType.Future, CashBook.AccountCurrency);
-            var canonicalSecurity = (Future)SecurityManager.CreateSecurity(new List<Type>() { typeof(ZipEntryName) }, Portfolio, SubscriptionManager,
+            var types = SubscriptionManager.LookupSubscriptionConfigDataTypes(SecurityType.Future, resolution, canonicalSymbol.IsCanonical());
+
+            var canonicalSecurity = (Future)SecurityManager.CreateSecurity(types, Portfolio, SubscriptionManager,
                 marketHoursEntry.ExchangeHours, marketHoursEntry.DataTimeZone, symbolProperties, SecurityInitializer, canonicalSymbol, resolution,
                 fillDataForward, leverage, false, false, false, LiveMode, true, false);
             canonicalSecurity.IsTradable = false;

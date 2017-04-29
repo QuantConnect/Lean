@@ -116,6 +116,7 @@
     <Compile Include="Brokerages\Fxcm\FxcmLimitOrderTestParameters.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmStopMarketOrderTestParameters.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmSymbolMapperTests.cs" />
+    <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageAdditionalTests.cs" />
     <Compile Include="Brokerages\Oanda\OandaBrokerageHistoryProviderTests.cs" />
     <Compile Include="Brokerages\SecurityProvider.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageDataQueueHandlerTest.cs" />
@@ -138,6 +139,7 @@
     <Compile Include="Common\Orders\Slippage\SlippageModelsTests.cs" />
     <Compile Include="Common\Securities\BrokerageModelSecurityInitializerTests.cs" />
     <Compile Include="Common\Securities\FutureFilterTests.cs" />
+    <Compile Include="Common\Securities\Futures\FuturesExpiryFunctionsTests.cs" />
     <Compile Include="Common\Securities\StandardDeviationOfReturnsVolatilityModelTests.cs" />
     <Compile Include="Common\Util\FactorFileGeneratorTests.cs" />
     <Compile Include="Common\Data\Auxiliary\LocalDiskFactorFileProviderTests.cs" />
@@ -250,6 +252,7 @@
     <Compile Include="Indicators\AccumulationDistributionTests.cs" />
     <Compile Include="Indicators\AverageDirectionalIndexTests.cs" />
     <Compile Include="Indicators\FractalAdaptiveMovingAverageTests.cs" />
+    <Compile Include="Indicators\HullMovingAverageTest.cs" />
     <Compile Include="Indicators\KaufmanAdaptiveMovingAverageTests.cs" />
     <Compile Include="Indicators\AverageDirectionalMovementIndexRatingTests.cs" />
     <Compile Include="Indicators\BalanceOfPowerTests.cs" />
@@ -293,6 +296,7 @@
     <Compile Include="Symbols.cs" />
     <Compile Include="TestExtensions.cs" />
     <Compile Include="Indicators\LinearWeightedMovingAverageTests.cs" />
+    <Compile Include="ToolBox\LeanDataWriterTests.cs" />
     <None Include="app.config" />
     <None Include="RegressionAlgorithms\Test_Cash.cs" />
     <None Include="RegressionAlgorithms\Test_LiveAlgorithm.cs" />
@@ -374,6 +378,9 @@
     <None Include="TestData\multizip.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="TestData\spy_hma.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="TestData\spy_with_ichimoku.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

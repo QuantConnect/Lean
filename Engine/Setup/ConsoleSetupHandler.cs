@@ -172,7 +172,6 @@ namespace QuantConnect.Lean.Engine.Setup
                 initializeComplete = true;
             }
 
-            algorithm.Transactions.SetOrderProcessor(transactionHandler);
             algorithm.PostInitialize();
 
             return initializeComplete;

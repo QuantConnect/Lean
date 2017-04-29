@@ -116,7 +116,7 @@ namespace QuantConnect.Algorithm.Examples
             //On the 5th days when not invested buy:
             if (!Portfolio.Invested && Time.Day % 13 == 0)
             {
-                Order("SPY", (int)(Portfolio.Cash / data["SPY"].Close));
+                Order("SPY", (int)(Portfolio.MarginRemaining / data["SPY"].Close));
                 Plot("Trade Plot", "Buy", lastPrice);
             }
             else if (Time.Day % 21 == 0 && Portfolio.Invested)

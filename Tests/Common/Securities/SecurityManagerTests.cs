@@ -22,8 +22,6 @@ using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Future;
-using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -178,7 +176,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual(option.Subscriptions.Count(), 1);
             Assert.AreEqual(option.Subscriptions.First().Type, typeof(ZipEntryName));
-            Assert.AreEqual(option.Subscriptions.First().TickType, TickType.Trade);
+            Assert.AreEqual(option.Subscriptions.First().TickType, TickType.Quote);
         }
 
 
@@ -309,8 +307,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void SecurityManagerCanCreate_ConcreteFutures_WithCorrectSubscriptions()
         {
-            var ed = SecurityIdentifier.GenerateBase("ED", Market.USA);
-            var identifier = SecurityIdentifier.GenerateFuture(new DateTime(2020, 12, 15), ed, Market.USA);
+            var identifier = SecurityIdentifier.GenerateFuture(new DateTime(2020, 12, 15), "ED", Market.USA);
             var symbol = new Symbol(identifier, "ED", Symbol.Empty);
             var marketHoursDbEntry = _marketHoursDatabase.GetEntry(Market.USA, "ED", SecurityType.Equity, TimeZones.NewYork);
             var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, "ED", symbol.ID.SecurityType, CashBook.AccountCurrency);

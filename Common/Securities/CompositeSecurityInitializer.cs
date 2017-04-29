@@ -37,11 +37,12 @@ namespace QuantConnect.Securities
         /// Execute each of the internally held initializers in sequence
         /// </summary>
         /// <param name="security">The security to be initialized</param>
-        public void Initialize(Security security)
+        /// <param name="seedSecurity">True to seed the security, false otherwise</param>
+        public void Initialize(Security security, bool seedSecurity)
         {
             foreach (var initializer in _initializers)
             {
-                initializer.Initialize(security);
+                initializer.Initialize(security, seedSecurity);
             }
         }
     }

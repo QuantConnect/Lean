@@ -482,8 +482,9 @@ namespace QuantConnect.Interfaces
         /// Liquidate your portfolio holdings:
         /// </summary>
         /// <param name="symbolToLiquidate">Specific asset to liquidate, defaults to all.</param>
+        /// <param name="tag">Custom tag to know who is calling this.</param>
         /// <returns>list of order ids</returns>
-        List<int> Liquidate(Symbol symbolToLiquidate = null);
+        List<int> Liquidate(Symbol symbolToLiquidate = null, string tag = "Liquidated");
 
         /// <summary>
         /// Set live mode state of the algorithm run: Public setter for the algorithm property LiveMode.
