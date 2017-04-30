@@ -155,6 +155,8 @@ namespace QuantConnect.AlgorithmFactory
 
             try
             {
+                Environment.SetEnvironmentVariable("PYTHONPATH", Environment.CurrentDirectory);
+
                 // Initialize Python Engine
                 if (!PythonEngine.IsInitialized)
                 {
@@ -165,8 +167,18 @@ namespace QuantConnect.AlgorithmFactory
                 // Import Python module
                 using (Py.GIL())
                 {
-                    Log.Trace("Loader.TryCreatePythonAlgorithm(): Importing python module " + assemblyPath);
-                    var module = Py.Import(assemblyPath);
+                    Log.Trace("Loader.TryCreatePythonAlgorithm(): Centralizing module..");
+                    var compiledPythonFile = new FileInfo(assemblyPath);
+                    var localPath = Path.Combine(Environment.CurrentDirectory, compiledPythonFile.Name);
+                    if (assemblyPath != localPath)
+                    {
+                        if (File.Exists(localPath)) File.Delete(localPath);
+                        File.Copy(assemblyPath, localPath);
+                    }
+                    var moduleName = compiledPythonFile.Name.Replace(".pyc", "").Replace(".py", "");
+
+                    Log.Trace("Loader.TryCreatePythonAlgorithm(): Importing python module " + moduleName);
+                    var module = Py.Import(moduleName);
 
                     if (module == null)
                     {
@@ -184,7 +196,6 @@ namespace QuantConnect.AlgorithmFactory
             {
                 Log.Error(e);
                 errorMessage = "Loader.TryCreatePythonAlgorithm(): Unable to import python module " + assemblyPath + ". " + e.Message;
-                Environment.Exit(1);
             }
 
             //Successful load.
