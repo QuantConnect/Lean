@@ -40,6 +40,7 @@ namespace QuantConnect.Queues
         private static readonly int UserId = Config.GetInt("job-user-id", 0);
         private static readonly int ProjectId = Config.GetInt("job-project-id", 0);
         private static readonly string AlgorithmTypeName = Config.Get("algorithm-type-name");
+        private static readonly string AlgorithmPathPython = Config.Get("algorithm-path-python", "../../../Algorithm.Python/");
         private readonly Language Language = (Language)Enum.Parse(typeof(Language), Config.Get("algorithm-language"));
 
         /// <summary>
@@ -68,7 +69,8 @@ namespace QuantConnect.Queues
         /// <returns></returns>
         public AlgorithmNodePacket NextJob(out string location)
         {
-            location = AlgorithmLocation;
+            location = GetAlgorithmLocation();
+                
             Log.Trace("JobQueue.NextJob(): Selected " + location);
 
             // check for parameters in the config
@@ -139,6 +141,32 @@ namespace QuantConnect.Queues
             };
 
             return backtestJob;
+        }
+
+        /// <summary>
+        /// Get the algorithm location for client side backtests.
+        /// </summary>
+        /// <returns></returns>
+        private string GetAlgorithmLocation()
+        {
+            if (Language == Language.Python)
+            {
+                var pythonSource = AlgorithmTypeName + ".py";
+                if (!File.Exists(pythonSource))
+                {
+                    // Copies file to execution location
+                    foreach (var file in new DirectoryInfo(AlgorithmPathPython).GetFiles("*.py"))
+                    {
+                        file.CopyTo(file.FullName.Replace(file.DirectoryName, Environment.CurrentDirectory), true);
+                    }
+
+                    if (!File.Exists(pythonSource))
+                    {
+                        throw new Exception("JobQueue.TryCreatePythonAlgorithm(): Unable to find py file: " + pythonSource);
+                    }
+                }
+            }
+            return AlgorithmLocation;
         }
 
         /// <summary>
