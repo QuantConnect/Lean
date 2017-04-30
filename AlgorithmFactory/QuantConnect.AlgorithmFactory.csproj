@@ -48,7 +48,7 @@
       <HintPath>..\packages\IronPython.2.7.5\lib\Net45\Microsoft.Scripting.Metadata.dll</HintPath>
     </Reference>
     <Reference Include="Python.Runtime, Version=4.0.0.1, Culture=neutral, processorArchitecture=AMD64">
-      <HintPath>..\packages\QuantConnect.pythonnet.1.0.1.1\lib\UCS2\Python.Runtime.dll</HintPath>
+      <HintPath>..\packages\QuantConnect.pythonnet.1.0.1.1\lib\UCS4\Python.Runtime.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
