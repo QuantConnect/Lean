@@ -155,7 +155,11 @@ namespace QuantConnect.AlgorithmFactory
 
             try
             {
-                Environment.SetEnvironmentVariable("PYTHONPATH", Environment.CurrentDirectory);
+                //Copy the util to cache and set the 
+                var cache = new DirectoryInfo(assemblyPath).FullName;
+                var util = Path.Combine(cache, "AlgorithmPythonUtil.py");
+                Environment.SetEnvironmentVariable("PYTHONPATH", cache);
+                if (!File.Exists(util)) File.Copy("AlgorithmPythonUtil.py", util);
 
                 // Initialize Python Engine
                 if (!PythonEngine.IsInitialized)
@@ -167,15 +171,9 @@ namespace QuantConnect.AlgorithmFactory
                 // Import Python module
                 using (Py.GIL())
                 {
-                    Log.Trace("Loader.TryCreatePythonAlgorithm(): Centralizing module..");
-                    var compiledPythonFile = new FileInfo(assemblyPath);
-                    var localPath = Path.Combine(Environment.CurrentDirectory, compiledPythonFile.Name);
-                    if (assemblyPath != localPath)
-                    {
-                        if (File.Exists(localPath)) File.Delete(localPath);
-                        File.Copy(assemblyPath, localPath);
-                    }
-                    var moduleName = compiledPythonFile.Name.Replace(".pyc", "").Replace(".py", "");
+                    Log.Trace("Loader.TryCreatePythonAlgorithm(): Locating module name..");
+                    var pythonFile = new FileInfo(assemblyPath);
+                    var moduleName = pythonFile.Name.Replace(".pyc", "").Replace(".py", "");
 
                     Log.Trace("Loader.TryCreatePythonAlgorithm(): Importing python module " + moduleName);
                     var module = Py.Import(moduleName);

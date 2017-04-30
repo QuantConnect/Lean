@@ -137,14 +137,22 @@ namespace QuantConnect.Util
         /// <param name="module">The algorithm python module</param>
         public static void SetPythonModule(PyObject module)
         {
-            _activatorsByType.Add(typeof(PythonData), type => 
+            _activatorsByType[typeof(PythonData)] = type => 
             {
                 using (Py.GIL())
                 {
                     var instance = module.GetAttr(((Type)type[0]).Name).Invoke();
                     return new PythonData(instance);
                 }
-            });
+            };
+        }
+
+        /// <summary>
+        /// Reset the object activators
+        /// </summary>
+        public static void ResetActivators()
+        {
+            _activatorsByType.Clear();
         }
     }
 }
