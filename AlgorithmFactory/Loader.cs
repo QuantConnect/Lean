@@ -156,10 +156,12 @@ namespace QuantConnect.AlgorithmFactory
             try
             {
                 //Copy the util to cache and set the 
-                var cache = new DirectoryInfo(assemblyPath).FullName;
+                var cache = new FileInfo(assemblyPath).DirectoryName;
                 var util = Path.Combine(cache, "AlgorithmPythonUtil.py");
-                Environment.SetEnvironmentVariable("PYTHONPATH", cache);
                 if (!File.Exists(util)) File.Copy("AlgorithmPythonUtil.py", util);
+
+                //Help python find the module
+                Environment.SetEnvironmentVariable("PYTHONPATH", cache);
 
                 // Initialize Python Engine
                 if (!PythonEngine.IsInitialized)
