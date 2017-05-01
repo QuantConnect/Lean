@@ -510,6 +510,33 @@ namespace QuantConnect.Interfaces
         void SetMaximumOrders(int max);
 
         /// <summary>
+        /// Sets the implementation used to handle messages from the brokerage.
+        /// The default implementation will forward messages to debug or error
+        /// and when a <see cref="BrokerageMessageType.Error"/> occurs, the algorithm
+        /// is stopped.
+        /// </summary>
+        /// <param name="handler">The message handler to use</param>
+        void SetBrokerageMessageHandler(IBrokerageMessageHandler handler);
+        
+        /// <summary>
+        /// Set the historical data provider
+        /// </summary>
+        /// <param name="historyProvider">Historical data provider</param>
+        void SetHistoryProvider(IHistoryProvider historyProvider);
+
+        /// <summary>
+        /// Set the runtime error
+        /// </summary>
+        /// <param name="exception">Represents error that occur during execution</param>
+        void SetRunTimeError(Exception exception);
+
+        /// <summary>
+        /// Set the state of a live deployment
+        /// </summary>
+        /// <param name="status">Live deployment status</param>
+        void SetStatus(AlgorithmStatus status);
+
+        /// <summary>
         /// Set the available <see cref="TickType"/> supported by each <see cref="SecurityType"/> in <see cref="SecurityManager"/>
         /// </summary>
         /// <param name="availableDataTypes">>The different <see cref="TickType"/> each <see cref="Security"/> supports</param>
