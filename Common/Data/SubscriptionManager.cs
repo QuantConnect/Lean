@@ -35,6 +35,11 @@ namespace QuantConnect.Data
         public List<SubscriptionDataConfig> Subscriptions;
 
         /// <summary>
+        /// Flags the existence of custom data in the subscriptions
+        /// </summary>
+        public bool HasCustomData { get; internal set; }
+
+        /// <summary>
         /// 
         /// </summary>
         public Dictionary<SecurityType, List<TickType>> AvailableDataTypes
@@ -125,6 +130,9 @@ namespace QuantConnect.Data
 
             // add the time zone to our time keeper
             _timeKeeper.AddTimeZone(exchangeTimeZone);
+
+            // if is custom data, sets HasCustomData to true
+            HasCustomData = HasCustomData || isCustomData;
 
             return newConfig;
         }

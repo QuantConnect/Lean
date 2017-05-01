@@ -731,7 +731,14 @@ namespace QuantConnect.Python.Wrappers
         {
             using (Py.GIL())
             {
-                _pyAlgorithm.OnPythonData(slice);
+                if (_algorithm.SubscriptionManager.HasCustomData)
+                {
+                    _pyAlgorithm.OnPythonData(slice);
+                }
+                else
+                {
+                    _algorithm.OnData(slice);
+                }
             }
         }
         
