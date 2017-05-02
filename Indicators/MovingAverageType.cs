@@ -59,6 +59,10 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// The Hull Moving Average
         /// </summary>
-        Hull
+        Hull,
+        /// <summary>
+        /// The Arnaud Legoux Moving Average
+        /// </summary>
+        Alma
     }
 }
