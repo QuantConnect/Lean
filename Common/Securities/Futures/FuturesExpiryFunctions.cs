@@ -20,12 +20,12 @@ using System.Linq;
 namespace QuantConnect.Securities.Future
 {
     /// <summary>
-    /// Calculate the date of an futures expiry given an expiry month and year
+    /// Calculate the date of a futures expiry given an expiry month and year
     /// </summary>
     public class FuturesExpiryFunctions
     {
         /// <summary>
-        /// Method to retrieve the Func for a specific future symbol
+        /// Method to retrieve the Function for a specific future symbol
         /// </summary>
         public static Func<DateTime, DateTime> FuturesExpiryFunction(string symbol)
         {
@@ -37,8 +37,9 @@ namespace QuantConnect.Securities.Future
             // If func for expiry cannot be found pass the date through
             return (date) => date;
         }
+
         /// <summary>
-        /// Mythod to return n^th succeeding/preceding business day from a given day
+        /// Method to retrieve n^th succeeding/preceding business day for a given day
         /// </summary>
         private static DateTime NthBusinessDay(DateTime time, int n)
         {
@@ -77,7 +78,7 @@ namespace QuantConnect.Securities.Future
         }
 
         /// <summary>
-        /// Method to retrive the third last business day of the delivery month.
+        /// Method to retrieve the third last business day of the delivery month.
         /// </summary>
         private static DateTime ThirdLastBusinessDay(DateTime time)
         {
@@ -99,18 +100,20 @@ namespace QuantConnect.Securities.Future
 
             return lastDayOfMonth.AddDays(-totalDays);
         }
+
         /// <summary>
-        /// Method to retrive 9:30 a.m. Eastern Time (ET) on the 3rd Friday of the contract month
+        /// Method to retrieve 9:30 a.m. Eastern Time (ET) on the 3rd Friday of the contract month
         /// </summary>
         private static DateTime ThirdFridayAtNineThirty(DateTime time)
         {
             var daysInMonth = DateTime.DaysInMonth(time.Year, time.Month);
             return (from day in Enumerable.Range(1, daysInMonth)
                     where new DateTime(time.Year, time.Month, day).DayOfWeek == DayOfWeek.Friday
-                    select new DateTime(time.Year, time.Month, day, 9, 30, 0)).ElementAt(2);
+                    select new DateTime(time.Year, time.Month, day, 13, 30, 0)).ElementAt(2);
         }
+
         ///<summary>
-        /// Method to retrive the business day prior to the 15th calendar day of the contract month.
+        /// Method to retrieve the business day prior to the 15th calendar day of the contract month.
         /// </summary>
         private static DateTime BusinessDayBeforeFifteenth(DateTime time)
         {
@@ -123,8 +126,9 @@ namespace QuantConnect.Securities.Future
             }
             return previousDay;
         }
+
         /// <summary>
-        /// Method to retrive 9:16 a.m. Central Time (CT) on the second business day immediately preceding the third Wednesday of the contract month (usually Monday).
+        /// Method to retrieve 9:16 a.m. Central Time (CT) on the second business day immediately preceding the third Wednesday of the contract month (usually Monday).
         /// </summary>
         private static DateTime SecondBusinessDayPrecedingThirdWednesdayAtNineSixteen(DateTime time)
         {
@@ -138,8 +142,9 @@ namespace QuantConnect.Securities.Future
             var previousDay = NthBusinessDay(ThirdWednesday, -2);
             return new DateTime(previousDay.Year, previousDay.Month, previousDay.Day, 14, 16, 0);
         }
+
         /// <summary>
-        /// Method to retrive 9:16 a.m. Central Time (CT) on the business day immediately preceding the third Wednesday of the contract month (usually Tuesday).
+        /// Method to retrieve 9:16 a.m. Central Time (CT) on the business day immediately preceding the third Wednesday of the contract month (usually Tuesday).
         /// </summary>
         private static DateTime BusinessDayPrecedingThirdWednesdayAtNineSixteen(DateTime time)
         {
@@ -153,8 +158,9 @@ namespace QuantConnect.Securities.Future
             var previousDay = NthBusinessDay(ThirdWednesday, -1);
             return new DateTime(previousDay.Year, previousDay.Month, previousDay.Day, 14, 16, 0);
         }
+
         /// <summary>
-        /// Mehtod to retrive 12:01 on last business day of the calendar month.
+        /// Mehtod to retrieve 12:01 on last business day of the calendar month.
         /// </summary>
         private static DateTime LastBusinessDay(DateTime time, TimeSpan t)
         {
@@ -164,8 +170,9 @@ namespace QuantConnect.Securities.Future
                     where notHoliday(_day)
                     select _day).Reverse().ElementAt(0);
         }
+
         /// <summary>
-        /// Method to retrive  12:01 pm on the seventh business day preceding the last business day of the delivery month.
+        /// Method to retrieve 12:01 pm on the seventh business day preceding the last business day of the delivery month.
         /// </summary>
         private static DateTime SeventhBusinessDayPreceedingLastBusinessDay(DateTime time)
         {
@@ -177,8 +184,9 @@ namespace QuantConnect.Securities.Future
             var seventhPreceding = NthBusinessDay(lastBusinessDay, -7);
             return new DateTime(seventhPreceding.Year, seventhPreceding.Month, seventhPreceding.Day, 12, 01, 0);
         }
+
         /// <summary>
-        /// Method to retrive last business day of the month preceding the delivery month. 
+        /// Method to retrieve last business day of the month preceding the delivery month. 
         /// </summary>
         private static DateTime LastBusinessDayPrecedingMonth(DateTime time)
         {
@@ -190,8 +198,9 @@ namespace QuantConnect.Securities.Future
                                    select _day).Reverse().ElementAt(0);
             return lastBusinessDay;
         }
+
         /// <summary>
-        /// This function checks whether a give time is holiday or not
+        /// Method to check whether a given time is holiday or not
         /// </summary>
         /// <param name="time"></param>
         /// <returns></returns>
@@ -199,8 +208,9 @@ namespace QuantConnect.Securities.Future
         {
             return time.IsCommonBusinessDay() && !USHoliday.Dates.Contains(time);
         }
+
         /// <summary>
-        /// This functions takes a Thursday as input and returns true if four weekdays preceding it are not Holidays
+        /// This function takes Thursday as input and returns true if four weekdays preceding it are not Holidays
         /// </summary>
         /// <param name="Thursday"></param>
         /// <returns></returns>
@@ -226,6 +236,7 @@ namespace QuantConnect.Securities.Future
             }
             return result;
         }
+
         /// <summary>
         /// Dictorionary of the Func that calculates the expiry for a given year and month.
         /// It does not matter what the day and time of day are passed into the Func.
@@ -234,7 +245,7 @@ namespace QuantConnect.Securities.Future
         public static Dictionary<string, Func<DateTime, DateTime>> FuturesExpiryDictionary = new Dictionary<string, Func<DateTime, DateTime>>()
         {
             // Metals
-            // Gold (EC): http://www.cmegroup.com/trading/metals/precious/gold_contract_specifications.html
+            // Gold (GC): http://www.cmegroup.com/trading/metals/precious/gold_contract_specifications.html
             {Futures.Metals.Gold, (time =>
                 {
                     // Trading terminates on the third last business day of the delivery month.
@@ -328,6 +339,7 @@ namespace QuantConnect.Securities.Future
                     return BusinessDayBeforeFifteenth(time);
                 })
             },
+
             // Currencies group
             // U.S. Dollar Index Futures is not found on cmegroup will discuss and update
             //  GBP (6B): http://www.cmegroup.com/trading/fx/g10/british-pound_contract_specifications.html
@@ -379,6 +391,7 @@ namespace QuantConnect.Securities.Future
                     return SecondBusinessDayPrecedingThirdWednesdayAtNineSixteen(time);
                 })
             },
+
             // Financials group
             // Y30TreasuryBond (ZB): http://www.cmegroup.com/trading/interest-rates/us-treasury/30-year-us-treasury-bond_contract_specifications.html
             {Futures.Financials.Y30TreasuryBond, (time =>
@@ -409,6 +422,7 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // EuroDollar Futures : TODO London bank calendar
+
             // Energies group
             // CrudeOilWTI (CL): http://www.cmegroup.com/trading/energy/crude-oil/light-sweet-crude_contract_specifications.html
             {Futures.Energies.CrudeOilWTI, (time =>
@@ -449,6 +463,7 @@ namespace QuantConnect.Securities.Future
                     return NthBusinessDay(firstDay,-3);
                 })
             },
+
             // Meats group
             // LiveCattle (LE): http://www.cmegroup.com/trading/agricultural/livestock/live-cattle_contract_specifications.html
             {Futures.Meats.LiveCattle, (time =>

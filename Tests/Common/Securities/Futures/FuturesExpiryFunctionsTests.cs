@@ -16,12 +16,114 @@
 using System;
 using NUnit.Framework;
 using QuantConnect.Securities.Future;
+using System.Collections.Generic;
+using System.Linq;
+using System.Xml;
+using System.Xml.Serialization;
+using System.IO;
 
 namespace QuantConnect.Tests.Common.Securities.Futures
 {
     [TestFixture]
     public class FuturesExpiryFunctionsTests
     {
+        /// <summary>
+        /// Dates for Termination Conditions of futures
+        /// </summary>
+        public class Dates
+        {
+            public DateTime contractMonth;
+            public DateTime lastTrade;
+            public Dates() { }
+            public Dates(DateTime c, DateTime l)
+            {
+                contractMonth = c;
+                lastTrade = l;
+            }
+        }
+
+        /// <summary>
+        /// Symbol and list of dates for testing Futures
+        /// </summary>
+        public class SymbolData
+        {
+            public String symbol;
+            public List<Dates> dateList;
+            public SymbolData() { }
+            public SymbolData(String symbol, List<Dates> list)
+            {
+                this.symbol = symbol;
+                this.dateList = list;
+            }
+        }
+
+        [Test]
+        public void TestAllExpiryDateFunctions()
+        {
+            var _path = Directory.GetCurrentDirectory();
+            _path = _path.Substring(0,_path.Length-10) + "\\Common\\Securities\\Futures\\FuturesExpiryFunctionsTestData.xml";
+            IList<String> symbolsForNineThirtyEasternTime = new List<String>
+            {
+                QuantConnect.Securities.Futures.Indices.NASDAQ100EMini,
+                QuantConnect.Securities.Futures.Indices.SP500EMini,
+                QuantConnect.Securities.Futures.Indices.Dow30EMini
+            };
+            IList<String> symbolsForNineSixteenCentralTime = new List<String>
+            {
+                QuantConnect.Securities.Futures.Currencies.GBP,
+                QuantConnect.Securities.Futures.Currencies.CAD,
+                QuantConnect.Securities.Futures.Currencies.JPY,
+                QuantConnect.Securities.Futures.Currencies.CHF,
+                QuantConnect.Securities.Futures.Currencies.EUR,
+                QuantConnect.Securities.Futures.Currencies.AUD,
+                QuantConnect.Securities.Futures.Currencies.NZD
+            };
+            IList<String> symbolsForTwelveOne = new List<String>
+            {
+                QuantConnect.Securities.Futures.Financials.Y30TreasuryBond,
+                QuantConnect.Securities.Futures.Financials.Y10TreasuryNote,
+                QuantConnect.Securities.Futures.Financials.Y5TreasuryNote,
+                QuantConnect.Securities.Futures.Financials.Y2TreasuryNote
+            };
+            IList<String> symbolsForTwelveOclock = new List<String>
+            {
+                QuantConnect.Securities.Futures.Meats.LiveCattle,
+                QuantConnect.Securities.Futures.Meats.LeanHogs
+            };
+            using (XmlReader reader = XmlReader.Create(_path))
+            {
+                List<SymbolData> data = new List<SymbolData>();
+                XmlSerializer serializer = new XmlSerializer(typeof(List<SymbolData>));
+                data = (List<SymbolData>)serializer.Deserialize(reader);
+                foreach(var _symdata in data)
+                {
+                    var symbol = _symdata.symbol;
+                    foreach (var dates in _symdata.dateList)
+                    {
+                        var _security = Symbol.CreateFuture(symbol, Market.USA, dates.contractMonth);
+                        var func = FuturesExpiryFunctions.FuturesExpiryFunction(_security.ID.Symbol);
+                        var calculated = func(_security.ID.Date);
+                        var expected = dates.lastTrade;
+                        if (symbolsForNineThirtyEasternTime.Contains(_security.ID.Symbol))
+                        {
+                            expected = expected + new TimeSpan(13,30,0);
+                        }else if(symbolsForNineSixteenCentralTime.Contains(_security.ID.Symbol))
+                        {
+                            expected = expected + new TimeSpan(14, 16, 0);
+                        }else if(symbolsForTwelveOclock.Contains(_security.ID.Symbol))
+                        {
+                            expected = expected + new TimeSpan(12, 0, 0);
+                        }else if (symbolsForTwelveOne.Contains(_security.ID.Symbol))
+                        {
+                            expected = expected + new TimeSpan(12, 1, 0);
+                        }
+                        Assert.AreEqual(calculated,expected);
+                        
+                    }
+                }
+            }
+        }
+
         [Test]
         public void TestGoldExpiryDateFunction()
         {
@@ -49,6 +151,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var december2021Func = FuturesExpiryFunctions.FuturesExpiryFunction(december2021.ID.Symbol);
             Assert.AreEqual(december2021Func(december2021.ID.Date), new DateTime(2021, 12, 29));
         }
+
         [Test]
         public void TestSilverExpiryDateFunction()
         {
@@ -69,6 +172,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             Assert.AreEqual(july2017Func(july2017.ID.Date), new DateTime(2017, 7, 27));
 
         }
+
         [Test]
         public void TestSP500EMiniExpiryDateFunction()
         {
@@ -92,6 +196,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var june2018Func = FuturesExpiryFunctions.FuturesExpiryFunction(june2018.ID.Symbol);
             Assert.AreEqual(june2018Func(june2018.ID.Date), new DateTime(2018, 3, 16, 9, 30, 0));
         }
+
         [Test]
         public void TestWheatExpiryDateFunction()
         {
@@ -99,6 +204,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var may2017Func = FuturesExpiryFunctions.FuturesExpiryFunction(may2017.ID.Symbol);
             Assert.AreEqual(may2017Func(may2017.ID.Date), new DateTime(2017, 5, 12));
         }
+
         [Test]
         public void TestGBPExpiryDateFunction()
         {
@@ -106,6 +212,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var may2017Func = FuturesExpiryFunctions.FuturesExpiryFunction(may2017.ID.Symbol);
             Assert.AreEqual(may2017Func(may2017.ID.Date), new DateTime(2017, 5, 15, 14, 16, 0));
         }
+
         [Test]
         public void TestY30TreasuryBondExpiryDateFunction()
         {
@@ -113,6 +220,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var jun2017Func = FuturesExpiryFunctions.FuturesExpiryFunction(jun2017.ID.Symbol);
             Assert.AreEqual(jun2017Func(jun2017.ID.Date), new DateTime(2017, 6, 21, 12, 01, 0));
         }
+
         [Test]
         public void TestCADExpiryDateFunction()
         {
@@ -120,6 +228,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var jun2017Func = FuturesExpiryFunctions.FuturesExpiryFunction(jun2017.ID.Symbol);
             Assert.AreEqual(jun2017Func(jun2017.ID.Date), new DateTime(2017, 6, 20, 14, 16, 0));
         }
+
         [Test]
         public void TestY5TreasuryNotesExpiryDateFunction()
         {
@@ -127,6 +236,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var jun2017Func = FuturesExpiryFunctions.FuturesExpiryFunction(jun2017.ID.Symbol);
             Assert.AreEqual(jun2017Func(jun2017.ID.Date), new DateTime(2017, 6, 30, 12, 1, 0));
         }
+
         [Test]
         public void TestCrudeOilWTINotesExpiryDateFunction()
         {
@@ -134,6 +244,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var jun2017Func = FuturesExpiryFunctions.FuturesExpiryFunction(jun2017.ID.Symbol);
             Assert.AreEqual(jun2017Func(jun2017.ID.Date), new DateTime(2017, 5, 22));
         }
+
         [Test]
         public void TestHeatingOilNotesExpiryDateFunction()
         {
@@ -141,6 +252,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var jun2017Func = FuturesExpiryFunctions.FuturesExpiryFunction(jun2017.ID.Symbol);
             Assert.AreEqual(jun2017Func(jun2017.ID.Date), new DateTime(2017, 5, 31));
         }
+
         [Test]
         public void TestNaturalGasNotesExpiryDateFunction()
         {
@@ -148,6 +260,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var jun2017Func = FuturesExpiryFunctions.FuturesExpiryFunction(jun2017.ID.Symbol);
             Assert.AreEqual(jun2017Func(jun2017.ID.Date), new DateTime(2017, 5, 26));
         }
+
         [Test]
         public void TestLiveCattleExpiryDateFunction()
         {
@@ -155,6 +268,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var jun2017Func = FuturesExpiryFunctions.FuturesExpiryFunction(jun2017.ID.Symbol);
             Assert.AreEqual(jun2017Func(jun2017.ID.Date), new DateTime(2017, 6, 30, 12, 0, 0));
         }
+
         [Test]
         public void TestLeanHogsExpiryDateFunction()
         {
@@ -162,6 +276,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var jun2017Func = FuturesExpiryFunctions.FuturesExpiryFunction(jun2017.ID.Symbol);
             Assert.AreEqual(jun2017Func(jun2017.ID.Date), new DateTime(2017, 6, 14, 12, 0, 0));
         }
+
         [Test]
         public void TestFeederCattleExpiryDateFunction()
         {
