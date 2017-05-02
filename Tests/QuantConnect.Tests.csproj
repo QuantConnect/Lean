@@ -357,6 +357,7 @@
     <None Include="TestData\CashTestingStrategy.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="Common\Securities\Futures\FuturesExpiryFunctionsTestData.xml" />
     <Content Include="TestData\eurusd_candle_patterns.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
