@@ -37,7 +37,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Flags the existence of custom data in the subscriptions
         /// </summary>
-        public bool HasCustomData { get; internal set; }
+        public bool HasCustomData { get; set; }
 
         /// <summary>
         /// 

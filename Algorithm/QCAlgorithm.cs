@@ -1461,6 +1461,8 @@ namespace QuantConnect.Algorithm
                         AddToUserDefinedUniverse(security);
                     }
 
+                    SubscriptionManager.HasCustomData = universe.Members.Any(x => x.Value.Subscriptions.Any(y => y.IsCustomData));
+
                     return ret;
                 }
             }
