@@ -49,6 +49,7 @@
     <Compile Include="AbsolutePriceOscillator.cs" />
     <Compile Include="AccumulationDistribution.cs" />
     <Compile Include="AccumulationDistributionOscillator.cs" />
+    <Compile Include="ArnaudLegouxMovingAverage.cs" />
     <Compile Include="AverageDirectionalIndex.cs" />
     <Compile Include="AverageDirectionalMovementIndexRating.cs" />
     <Compile Include="BalanceOfPower.cs" />
