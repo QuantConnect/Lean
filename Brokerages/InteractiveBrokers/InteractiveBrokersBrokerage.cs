@@ -959,6 +959,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // we've reconnected
                 _disconnected1100Fired = false;
                 OnMessage(BrokerageMessageEvent.Reconnected(errorMsg));
+
+                // With IB Gateway v960.2a in the cloud, we are not receiving order fill events after the nightly reset,
+                // so we execute the following sequence: 
+                // disconnect, kill IB Gateway, restart IB Gateway, reconnect, restore data subscriptions
+                ResetGatewayConnection(brokerageMessageType, errorCode, errorMsg);
+
+                return;
             }
             else if (errorCode == 506)
             {
@@ -982,6 +989,46 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             OnMessage(new BrokerageMessageEvent(brokerageMessageType, errorCode, errorMsg));
+        }
+
+        /// <summary>
+        /// Restarts the IB Gateway and restores the connection
+        /// </summary>
+        private void ResetGatewayConnection(BrokerageMessageType brokerageMessageType, int errorCode, string errorMsg)
+        {
+            OnMessage(new BrokerageMessageEvent(brokerageMessageType, errorCode, errorMsg));
+
+            Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): Disconnecting...");
+            Disconnect();
+
+            Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): Stopping IB Gateway...");
+            InteractiveBrokersGatewayRunner.Stop();
+
+            Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): Restarting IB Gateway...");
+            InteractiveBrokersGatewayRunner.Restart();
+
+            Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): Reconnecting...");
+            Connect();
+
+            Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): Restoring data subscriptions...");
+            RestoreDataSubscriptions();
+        }
+
+        /// <summary>
+        /// Restores data subscriptions existing before the IB Gateway restart
+        /// </summary>
+        private void RestoreDataSubscriptions()
+        {
+            List<Symbol> subscribedSymbols;
+            lock (_sync)
+            {
+                subscribedSymbols = _subscribedSymbols.Keys.ToList();
+
+                _subscribedSymbols.Clear();
+                _subscribedTickets.Clear();
+            }
+
+            Subscribe(null, subscribedSymbols);
         }
 
         /// <summary>

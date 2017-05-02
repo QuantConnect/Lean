@@ -113,12 +113,38 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 Log.Trace("InteractiveBrokersGatewayRunner.Stop(): Stopping IBController...");
 
-                // we need to materialize this ienumerable since if we start killing some of them
-                // we may leave some daemon processes hanging
-                foreach (var process in GetSpawnedProcesses(_scriptProcessId).ToList())
+                if (OS.IsWindows)
                 {
-                    // kill all spawned processes
-                    process.Kill();
+                    foreach (var process in Process.GetProcesses())
+                    {
+                        try
+                        {
+                            if (process.MainWindowTitle.ToLower().Contains("ibcontroller") ||
+                                process.MainWindowTitle.ToLower().Contains("ib gateway"))
+                            {
+                                process.Kill();
+                                Thread.Sleep(2500);
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            // ignored
+                        }
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        Process.Start("pkill", "xvfb-run");
+                        Process.Start("pkill", "java");
+                        Process.Start("pkill", "Xvfb");
+                        Thread.Sleep(2500);
+                    }
+                    catch (Exception)
+                    {
+                        // ignored
+                    }
                 }
 
                 _scriptProcessId = 0;
