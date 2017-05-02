@@ -30,14 +30,15 @@ namespace QuantConnect.Indicators
         private readonly decimal[] weightVector;
 
         /// <summary>
-        ///     Initializes a new instance of the <see cref="ArnaudLegouxMovingAverage" /> class.
+        /// Initializes a new instance of the <see cref="ArnaudLegouxMovingAverage"/> class.
         /// </summary>
         /// <param name="name">string - a name for the indicator</param>
         /// <param name="period">int - the number of periods to calculate the ALMA</param>
-        /// <param name="sigma">int - this parameter is responsible for the shape of the curve coefficients.</param>
+        /// <param name="sigma"> int - this parameter is responsible for the shape of the curve coefficients.
+        /// </param>
         /// <param name="offset">
-        ///     decimal -  This parameter allows regulating the smoothness and high sensitivity of the Moving
-        ///     Average. The range for this parameter is [0, 1].
+        /// decimal - This parameter allows regulating the smoothness and high sensitivity of the
+        /// Moving Average. The range for this parameter is [0, 1].
         /// </param>
         public ArnaudLegouxMovingAverage(string name, int period, int sigma, decimal offset = 0.85m)
             : base(name, period)
