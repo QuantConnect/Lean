@@ -72,8 +72,6 @@ namespace QuantConnect.Algorithm
         /// <param name="leverage">Custom leverage per security</param>
         public void AddData(Type T, string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
-            if (_locked) return;
-
             var marketHoursDbEntry = _marketHoursDatabase.GetEntry(Market.USA, symbol, SecurityType.Base, timeZone);
 
             //Add this to the data-feed subscriptions
