@@ -50,7 +50,7 @@ namespace QuantConnect.Securities.Future
                 do
                 {
                     var previousDay = time.AddDays(-totalDays);
-                    if (notHoliday(previousDay))
+                    if (NotHoliday(previousDay))
                     {
                         businessDays--;
                     }
@@ -66,7 +66,7 @@ namespace QuantConnect.Securities.Future
                 do
                 {
                     var previousDay = time.AddDays(totalDays);
-                    if (notHoliday(previousDay))
+                    if (NotHoliday(previousDay))
                     {
                         businessDays--;
                     }
@@ -91,7 +91,7 @@ namespace QuantConnect.Securities.Future
             do
             {
                 var previousDay = lastDayOfMonth.AddDays(-totalDays);
-                if (notHoliday(previousDay))
+                if (NotHoliday(previousDay))
                 {
                     businessDays--;
                 }
@@ -134,12 +134,12 @@ namespace QuantConnect.Securities.Future
         {
             // Get Third Wednesday
             var daysInMonth = DateTime.DaysInMonth(time.Year, time.Month);
-            var ThirdWednesday = (from day in Enumerable.Range(1, daysInMonth)
+            var thirdWednesday = (from day in Enumerable.Range(1, daysInMonth)
                                   where new DateTime(time.Year, time.Month, day).DayOfWeek == DayOfWeek.Wednesday
                                   select new DateTime(time.Year, time.Month, day)).ElementAt(2);
 
             // Now get the second business day preceding third Wednesday
-            var previousDay = NthBusinessDay(ThirdWednesday, -2);
+            var previousDay = NthBusinessDay(thirdWednesday, -2);
             return new DateTime(previousDay.Year, previousDay.Month, previousDay.Day, 14, 16, 0);
         }
 
@@ -150,12 +150,12 @@ namespace QuantConnect.Securities.Future
         {
             // Get Third Wednesday
             var daysInMonth = DateTime.DaysInMonth(time.Year, time.Month);
-            var ThirdWednesday = (from day in Enumerable.Range(1, daysInMonth)
+            var thirdWednesday = (from day in Enumerable.Range(1, daysInMonth)
                                   where new DateTime(time.Year, time.Month, day).DayOfWeek == DayOfWeek.Wednesday
                                   select new DateTime(time.Year, time.Month, day)).ElementAt(2);
 
             // Now get the second business day preceding third Wednesday
-            var previousDay = NthBusinessDay(ThirdWednesday, -1);
+            var previousDay = NthBusinessDay(thirdWednesday, -1);
             return new DateTime(previousDay.Year, previousDay.Month, previousDay.Day, 14, 16, 0);
         }
 
@@ -165,10 +165,10 @@ namespace QuantConnect.Securities.Future
         private static DateTime LastBusinessDay(DateTime time, TimeSpan t)
         {
             var daysInMonth = DateTime.DaysInMonth(time.Year, time.Month);
-            return (from day in Enumerable.Range(1, daysInMonth)
-                    let _day = new DateTime(time.Year, time.Month, day, t.Hours, t.Minutes, t.Seconds)
-                    where notHoliday(_day)
-                    select _day).Reverse().ElementAt(0);
+            return (from n in Enumerable.Range(1, daysInMonth)
+                    let nthDay = new DateTime(time.Year, time.Month, n, t.Hours, t.Minutes, t.Seconds)
+                    where NotHoliday(nthDay)
+                    select nthDay).Reverse().ElementAt(0);
         }
 
         /// <summary>
@@ -177,10 +177,10 @@ namespace QuantConnect.Securities.Future
         private static DateTime SeventhBusinessDayPreceedingLastBusinessDay(DateTime time)
         {
             var daysInMonth = DateTime.DaysInMonth(time.Year, time.Month);
-            var lastBusinessDay = (from day in Enumerable.Range(1, daysInMonth)
-                                   let _day = new DateTime(time.Year, time.Month, day)
-                                   where notHoliday(_day)
-                                   select _day).Reverse().ElementAt(0);
+            var lastBusinessDay = (from n in Enumerable.Range(1, daysInMonth)
+                                   let nthDay = new DateTime(time.Year, time.Month, n)
+                                   where NotHoliday(nthDay)
+                                   select nthDay).Reverse().ElementAt(0);
             var seventhPreceding = NthBusinessDay(lastBusinessDay, -7);
             return new DateTime(seventhPreceding.Year, seventhPreceding.Month, seventhPreceding.Day, 12, 01, 0);
         }
@@ -192,10 +192,10 @@ namespace QuantConnect.Securities.Future
         {
             var precedingMonth = time.AddMonths(-1);
             var daysInMonth = DateTime.DaysInMonth(precedingMonth.Year, precedingMonth.Month);
-            var lastBusinessDay = (from day in Enumerable.Range(1, daysInMonth)
-                                   let _day = new DateTime(precedingMonth.Year, precedingMonth.Month, day)
-                                   where notHoliday(_day)
-                                   select _day).Reverse().ElementAt(0);
+            var lastBusinessDay = (from n in Enumerable.Range(1, daysInMonth)
+                                   let nthDay = new DateTime(precedingMonth.Year, precedingMonth.Month, n)
+                                   where NotHoliday(nthDay)
+                                   select nthDay).Reverse().ElementAt(0);
             return lastBusinessDay;
         }
 
@@ -204,7 +204,7 @@ namespace QuantConnect.Securities.Future
         /// </summary>
         /// <param name="time"></param>
         /// <returns></returns>
-        private static bool notHoliday(DateTime time)
+        private static bool NotHoliday(DateTime time)
         {
             return time.IsCommonBusinessDay() && !USHoliday.Dates.Contains(time);
         }
@@ -214,7 +214,7 @@ namespace QuantConnect.Securities.Future
         /// </summary>
         /// <param name="Thursday"></param>
         /// <returns></returns>
-        private static bool notPrecededByHoliday(DateTime Thursday)
+        private static bool NotPrecededByHoliday(DateTime Thursday)
         {
             if (Thursday.DayOfWeek != DayOfWeek.Thursday)
             {
@@ -224,13 +224,13 @@ namespace QuantConnect.Securities.Future
             // for Monday, Tuesday and Wednesday
             for (int i = 1; i <= 3; i++)
             {
-                if (!notHoliday(Thursday.AddDays(-i)))
+                if (!NotHoliday(Thursday.AddDays(-i)))
                 {
                     result = false;
                 }
             }
             // for Friday
-            if (!notHoliday(Thursday.AddDays(-6)))
+            if (!NotHoliday(Thursday.AddDays(-6)))
             {
                 result = false;
             }
@@ -428,15 +428,15 @@ namespace QuantConnect.Securities.Future
             {Futures.Energies.CrudeOilWTI, (time =>
                 {
                     // Trading in the current delivery month shall cease on the third business day prior to the twenty-fifth calendar day of the month preceding the delivery month. If the twenty-fifth calendar day of the month is a non-business day, trading shall cease on the third business day prior to the last business day preceding the twenty-fifth calendar day. In the event that the official Exchange holiday schedule changes subsequent to the listing of a Crude Oil futures, the originally listed expiration date shall remain in effect.In the event that the originally listed expiration day is declared a holiday, expiration will move to the business day immediately prior.
-                    var twenty_fifth = new DateTime(time.Year,time.Month,25);
-                    twenty_fifth = twenty_fifth.AddMonths(-1);
-                    if(notHoliday(twenty_fifth))
+                    var twentyFifth = new DateTime(time.Year,time.Month,25);
+                    twentyFifth = twentyFifth.AddMonths(-1);
+                    if(NotHoliday(twentyFifth))
                     {
-                        return NthBusinessDay(twenty_fifth,-3);
+                        return NthBusinessDay(twentyFifth,-3);
                     }
                     else
                     {
-                        var lastBuisnessDay = NthBusinessDay(twenty_fifth,-1);
+                        var lastBuisnessDay = NthBusinessDay(twentyFifth,-1);
                         return NthBusinessDay(lastBuisnessDay,-3);
                     }
                 })
@@ -505,7 +505,7 @@ namespace QuantConnect.Securities.Future
                         var PriorThursday = (from day in Enumerable.Range(1, daysInMonth)
                                   where new DateTime(time.Year, time.Month, day).DayOfWeek == DayOfWeek.Thursday
                                   select new DateTime(time.Year, time.Month, day)).Reverse().ElementAt(1);
-                        while (!notHoliday(PriorThursday) || !notPrecededByHoliday(PriorThursday))
+                        while (!NotHoliday(PriorThursday) || !NotPrecededByHoliday(PriorThursday))
                         {
                             PriorThursday = PriorThursday.AddDays(-7);
                         }
@@ -515,7 +515,7 @@ namespace QuantConnect.Securities.Future
                     var lastThursday = (from day in Enumerable.Range(1, daysInMonth)
                                   where new DateTime(time.Year, time.Month, day).DayOfWeek == DayOfWeek.Thursday
                                   select new DateTime(time.Year, time.Month, day)).Reverse().ElementAt(0);
-                    while (!notHoliday(lastThursday) || !notPrecededByHoliday(lastThursday))
+                    while (!NotHoliday(lastThursday) || !NotPrecededByHoliday(lastThursday))
                     {
                         lastThursday = lastThursday.AddDays(-7);
                     }
