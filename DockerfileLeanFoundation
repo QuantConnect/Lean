@@ -1,5 +1,5 @@
 #
-#	LEAN Foundation Docker Container March-2017
+#	LEAN Foundation Docker Container May-2017
 #	Cross platform deployment for multiple brokerages	
 #	Intended to be used in conjunction with DockerfileLeanAlgorithm. This is just the foundation common OS+Dependencies required.
 #
@@ -17,7 +17,7 @@ CMD ["/sbin/my_init"]
 RUN \
   apt-get update && \
   apt-get install -y wget xvfb unzip curl libxrender1 libxtst6 libxi6 python-pip && \
-  pip install --upgrade pip && pip install pycparser pandas scipy numpy
+  pip install --upgrade pip && pip install pycparser pandas scipy numpy sklearn
 
 # Java for running IB inside container:
 # https://github.com/dockerfile/java/blob/master/oracle-java8/Dockerfile
