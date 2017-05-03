@@ -20,6 +20,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Configuration;
@@ -708,9 +709,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // ignore other requests
                 if (args.RequestId != requestId) return;
                 details = args.ContractDetails;
-                _contractDetails.TryAdd(GetUniqueKey(contract), details);
+                var uniqueKey = GetUniqueKey(contract);
+                _contractDetails.TryAdd(uniqueKey, details);
                 manualResetEvent.Set();
-                Log.Trace("InteractiveBrokersBrokerage.GetContractDetails(): clientOnContractDetails event: " + contract.Symbol + " " + contract.Currency);
+                Log.Trace("InteractiveBrokersBrokerage.GetContractDetails(): clientOnContractDetails event: " + uniqueKey);
             };
 
             _client.ContractDetails += clientOnContractDetails;
@@ -742,7 +744,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     .OrderByDescending(e => Array.IndexOf(exchanges, e))
                     .FirstOrDefault();
         }
-
 
         private IEnumerable<ContractDetails> FindContracts(Contract contract)
         {
@@ -2145,13 +2146,27 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             Func<string, int> exchangeFilter = exchange => securityType == SecurityType.Future ? Array.IndexOf(futuresExchanges, exchange) : 0;
 
             // setting up lookup request
-            var contract = new Contract();
-            contract.Symbol = _symbolMapper.GetBrokerageRootSymbol(lookupName);
-            contract.Currency = securityCurrency??"USD";
-            contract.Exchange = exchangeSpecifier;
-            contract.SecType = ConvertSecurityType(securityType);
+            var contract = new Contract
+            {
+                Symbol = _symbolMapper.GetBrokerageRootSymbol(lookupName),
+                Currency = securityCurrency ?? "USD",
+                Exchange = exchangeSpecifier,
+                SecType = ConvertSecurityType(securityType)
+            };
 
-            Log.Trace("InteractiveBrokersBrokerage.LookupSymbols(): Requesting symbol list ...");
+            Log.Trace("InteractiveBrokersBrokerage.LookupSymbols(): Requesting symbol list for " + contract.Symbol + " ...");
+
+            if (securityType == SecurityType.Option)
+            {
+                // IB requests for full option chains are rate limited and responses can be delayed up to a minute for each underlying,
+                // so we fetch them from the OCC website instead of using the IB API.
+
+                var symbols = FindOptionContracts(contract.Symbol);
+
+                Log.Trace("InteractiveBrokersBrokerage.LookupSymbols(): Returning {0} contracts for {1}", symbols.Count, contract.Symbol);
+
+                return symbols;
+            }
 
             // processing request
             var results = FindContracts(contract);
@@ -2167,7 +2182,50 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             Log.Trace("InteractiveBrokersBrokerage.LookupSymbols(): Returning {0} symbol(s)", filteredResults != null ? filteredResults.Count() : 0);
 
             // returning results
-            return filteredResults != null ? filteredResults.Select(x => MapSymbol(x)) : Enumerable.Empty<Symbol>();
+            return filteredResults != null ? filteredResults.Select(MapSymbol) : Enumerable.Empty<Symbol>();
+        }
+
+        /// <summary>
+        /// Retrieve the list of option contracts for an underlying symbol from the OCC website
+        /// </summary>
+        private IList<Symbol> FindOptionContracts(string underlyingSymbol)
+        {
+            var symbols = new List<Symbol>();
+
+            using (var client = new WebClient())
+            {
+                // download the text file
+                var url = "https://www.theocc.com/webapps/series-search?symbolType=U&symbol=" + underlyingSymbol;
+                var fileContent = client.DownloadString(url);
+
+                // read the lines, skipping the headers
+                var lines = fileContent.Split(new[] { "\r\n" }, StringSplitOptions.None).Skip(7);
+
+                // parse the lines, creating the Lean option symbols
+                foreach (var line in lines)
+                {
+                    var fields = line.Split('\t');
+
+                    var ticker = fields[0].Trim();
+                    if (ticker != underlyingSymbol)
+                        continue;
+
+                    var expiryDate = new DateTime(fields[2].ToInt32(), fields[3].ToInt32(), fields[4].ToInt32());
+                    var strike = (fields[5] + "." + fields[6]).ToDecimal();
+
+                    if (fields[7].Contains("C"))
+                    {
+                        symbols.Add(_symbolMapper.GetLeanSymbol(underlyingSymbol, SecurityType.Option, Market.USA, expiryDate, strike, OptionRight.Call));
+                    }
+
+                    if (fields[7].Contains("P"))
+                    {
+                        symbols.Add(_symbolMapper.GetLeanSymbol(underlyingSymbol, SecurityType.Option, Market.USA, expiryDate, strike, OptionRight.Put));
+                    }
+                }
+            }
+
+            return symbols;
         }
 
         /// <summary>
