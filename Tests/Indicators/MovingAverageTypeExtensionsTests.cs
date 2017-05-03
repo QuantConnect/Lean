@@ -54,6 +54,9 @@ namespace QuantConnect.Tests.Indicators
             indicator = MovingAverageType.Hull.AsIndicator(4);
             Assert.IsInstanceOf(typeof(HullMovingAverage), indicator);
 
+            indicator = MovingAverageType.Alma.AsIndicator(9);
+            Assert.IsInstanceOf(typeof(ArnaudLegouxMovingAverage), indicator);
+
             string name = string.Empty;
             indicator = MovingAverageType.Simple.AsIndicator(name, 1);
             Assert.IsInstanceOf(typeof(SimpleMovingAverage), indicator);
@@ -84,6 +87,9 @@ namespace QuantConnect.Tests.Indicators
 
             indicator = MovingAverageType.Hull.AsIndicator(name, 4);
             Assert.IsInstanceOf(typeof(HullMovingAverage), indicator);
+
+            indicator = MovingAverageType.Alma.AsIndicator(name, 9);
+            Assert.IsInstanceOf(typeof(ArnaudLegouxMovingAverage), indicator);
         }
     }
 }
