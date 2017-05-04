@@ -45,7 +45,9 @@ class CustomDataNIFTYAlgorithm(QCAlgorithm):
         self.rupee = self.Securities["USDINR"].Symbol
         self.AddData(Nifty, "NIFTY")
         self.nifty = self.Securities["NIFTY"].Symbol
-        
+
+        self.AddEquity("SPY", Resolution.Daily)     
+
         self.minimumCorrelationHistory = 50
         self.today = CorrelationPair()
         self.prices = []

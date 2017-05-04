@@ -23,38 +23,33 @@ from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
+from AlgorithmPythonUtil import to_python_datetime
 
 
 class MACDTrendAlgorithm(QCAlgorithm):
     '''MACD Example Algorithm'''
-    def __init__(self):
-        self.__macd = None
-        self.__previous = datetime.min
-        self.__Symbol = "SPY"
-    
+        
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
         
-        self.SetStartDate(2009, 01, 01)  #Set Start Date
+        self.SetStartDate(2004, 01, 01)  #Set Start Date
         self.SetEndDate(2015, 01, 01)    #Set End Date
-        self.SetCash(100000)           #Set Strategy Cash
+        self.SetCash(100000)             #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.AddSecurity(SecurityType.Equity, self.__Symbol)
+        equity = self.AddEquity("SPY", Resolution.Daily)
+        self.spy = equity.Symbol
 
         # define our daily macd(12,26) with a 9 day signal
-        self.__macd = self.MACD(self.__Symbol, 9, 26, 9, MovingAverageType.Exponential, Resolution.Daily)
+        self.__macd = self.MACD(self.spy, 9, 26, 9, MovingAverageType.Exponential, Resolution.Daily)
+        self.__previous = datetime.min
 
-        
+
     def OnData(self, data):
-        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        
-        Arguments:
-            data: TradeBars IDictionary object with your stock data
-        '''
+        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
         # wait for our macd to fully initialize
         if not self.__macd.IsReady: return    
 
-        pyTime = datetime(self.Time)
+        pyTime = to_python_datetime(self.Time)
     
         # only once per day
         if self.__previous.date() == pyTime.date(): return
@@ -62,21 +57,23 @@ class MACDTrendAlgorithm(QCAlgorithm):
         # define a small tolerance on our checks to avoid bouncing
         tolerance = 0.0025;
         
-        holdings = self.Portfolio[self.__Symbol].Quantity
+        holdings = self.Portfolio[self.spy].Quantity
 
         signalDeltaPercent = (self.__macd.Current.Value - self.__macd.Signal.Current.Value)/self.__macd.Fast.Current.Value
 
         # if our macd is greater than our signal, then let's go long
         if holdings <= 0 and signalDeltaPercent > tolerance:  # 0.01%
             # longterm says buy as well
-            self.SetHoldings(self.__Symbol, 1.0)
+            self.SetHoldings(self.spy, 1.0)
 
         # of our macd is less than our signal, then let's go short
         elif holdings >= 0 and signalDeltaPercent < -tolerance:
-            self.Liquidate(self.__Symbol)  
+            self.Liquidate(self.spy)  
 
         # plot both lines
-        self.Plot("MACD", self.__macd, self.__macd.Signal)
-        self.Plot(self.__Symbol, self.__macd.Fast, self.__macd.Slow)
+        self.Plot("MACD", self.__macd.Current.Value)
+        self.Plot("MACD", self.__macd.Signal.Current.Value)
+        self.Plot(str(self.spy), self.__macd.Fast.Current.Value)
+        self.Plot(str(self.spy), self.__macd.Slow.Current.Value)
 
         self.__previous = pyTime

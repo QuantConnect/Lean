@@ -43,9 +43,6 @@ class DataConsolidationAlgorithm(QCAlgorithm):
     Microsoft's overview of events in C#
      
          http://msdn.microsoft.com/en-us/library/aa645739%28v=vs.71%29.aspx'''
-    def __init__(self):
-        self.__last = None
-
 
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
@@ -53,7 +50,8 @@ class DataConsolidationAlgorithm(QCAlgorithm):
         self.SetStartDate(DateTime(2013, 10, 07, 9, 30, 0))  #Set Start Date
         self.SetEndDate(self.StartDate.AddDays(1))           #Set End Date
         # Find more symbols here: http://quantconnect.com/data
-        self.AddSecurity(SecurityType.Equity, "SPY")
+        equity = self.AddEquity("SPY")
+        self.spy = equity.Symbol
 
         # define our 30 minute trade bar consolidator. we can
         # access the 30 minute bar from the DataConsolidated events
@@ -65,7 +63,7 @@ class DataConsolidationAlgorithm(QCAlgorithm):
 
         # this call adds our 30 minute consolidator to
         # the manager to receive updates from the engine
-        self.SubscriptionManager.AddConsolidator("SPY", thirtyMinuteConsolidator)
+        self.SubscriptionManager.AddConsolidator(self.spy, thirtyMinuteConsolidator)
 
         # here we'll define a slightly more complex consolidator. what we're trying to produce is
         # a 3 day bar. Now we could just use a single TradeBarConsolidator like above and pass in
@@ -88,44 +86,40 @@ class DataConsolidationAlgorithm(QCAlgorithm):
         three_oneDayBar.DataConsolidated += self.ThreeDayBarConsolidatedHandler
 
         # this call adds our 3 day to the manager to receive updates from the engine
-        self.SubscriptionManager.AddConsolidator("SPY", three_oneDayBar)
+        self.SubscriptionManager.AddConsolidator(self.spy, three_oneDayBar)
 
+        self.__last = None
 
     def OnData(self, data):
-        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        
-        Arguments:
-            data: Slice object keyed by symbol containing the stock data
-        '''
-        # we need to declare this method
+        '''We need to declare this method'''
         pass
 
 
-    def OnEndOfDay(self, symbol):
+    def OnEndOfDay(self):
         # close up shop each day and reset our 'last' value so we start tomorrow fresh
-        self.Liquidate(symbol)
+        self.Liquidate(self.spy)
         self.__last = None
 
 
-    def ThirtyMinuteBarHandler(self, sender, consolidated):
+    def ThirtyMinuteBarHandler(self, sender, bar):
         '''This is our event handler for our 30 minute trade bar defined above in Initialize(). So each time the
         consolidator produces a new 30 minute bar, this function will be called automatically. The 'sender' parameter
          will be the instance of the IDataConsolidator that invoked the event, but you'll almost never need that!''' 
 
-        if self.__last is not None and consolidated.Close > self.__last.Close:
-            self.Log("{0} >> SPY >> LONG  >> 100 >> {1}".format(consolidated.Time.ToString("o"), self.Portfolio["SPY"].Quantity))
-            self.Order("SPY", 100)
+        if self.__last is not None and bar.Close > self.__last.Close:
+            self.Log("{0} >> SPY >> LONG  >> 100 >> {1}".format(bar.Time.ToString("o"), self.Portfolio[self.spy].Quantity))
+            self.Order(self.spy, 100)
 
-        elif self.__last is not None and consolidated.Close < self.__last.Close:
-            self.Log("{0} >> SPY >> SHORT  >> 100 >> {1}".format(consolidated.Time.ToString("o"), self.Portfolio["SPY"].Quantity))
-            self.Order("SPY", -100)
+        elif self.__last is not None and bar.Close < self.__last.Close:
+            self.Log("{0} >> SPY >> SHORT  >> 100 >> {1}".format(bar.Time.ToString("o"), self.Portfolio[self.spy].Quantity))
+            self.Order(self.spy, -100)
 
-        self.__last = consolidated
+        self.__last = bar
         
 
-    def ThreeDayBarConsolidatedHandler(self, sender, consolidated):
+    def ThreeDayBarConsolidatedHandler(self, sender, bar):
         ''' This is our event handler for our 3 day trade bar defined above in Initialize(). So each time the
         consolidator produces a new 3 day bar, this function will be called automatically. The 'sender' parameter
         will be the instance of the IDataConsolidator that invoked the event, but you'll almost never need that!'''       
-        self.Log("{0} >> Plotting!".format(consolidated.Time.ToString("o")))
-        self.Plot(consolidated.Symbol, "3HourBar", consolidated.Close)
+        self.Log("{0} >> Plotting!".format(bar.Time.ToString("o")))
+        self.Plot(bar.Symbol, "3HourBar", bar.Close)
