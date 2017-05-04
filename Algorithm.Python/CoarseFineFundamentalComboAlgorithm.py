@@ -17,7 +17,7 @@ AddReference("System.Collections")
 AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Algorithm")
 
-#from System import *
+from System import *
 from System.Collections.Generic import List
 from QuantConnect import *
 from QuantConnect.Algorithm import QCAlgorithm

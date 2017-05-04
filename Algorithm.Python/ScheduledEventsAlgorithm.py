@@ -32,7 +32,8 @@ class ScheduledEventsAlgorithm(QCAlgorithm):
         self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.AddSecurity(SecurityType.Equity, "SPY", Resolution.Second)
+        equity = self.AddEquity("SPY")
+        self.spy = equity.Symbol
 
         # events are scheduled using date and time rules
         # date rules specify on what dates and event will fire
@@ -47,11 +48,11 @@ class ScheduledEventsAlgorithm(QCAlgorithm):
 
         # schedule an event to fire every trading day for a security the
         # time rule here tells it to fire 10 minutes after SPY's market open
-        self.Schedule.On(self.DateRules.EveryDay("SPY"), self.TimeRules.AfterMarketOpen("SPY", 10), Action(self.EveryDayAfterMarketOpen))
+        self.Schedule.On(self.DateRules.EveryDay(self.spy), self.TimeRules.AfterMarketOpen(self.spy, 10), Action(self.EveryDayAfterMarketOpen))
 
         # schedule an event to fire every trading day for a security the
         # time rule here tells it to fire 10 minutes before SPY's market close
-        self.Schedule.On(self.DateRules.EveryDay("SPY"), self.TimeRules.BeforeMarketClose("SPY", 10), Action(self.EveryDayAfterMarketClose))
+        self.Schedule.On(self.DateRules.EveryDay(self.spy), self.TimeRules.BeforeMarketClose(self.spy, 10), Action(self.EveryDayAfterMarketClose))
 
         # schedule an event to fire on certain days of the week
         self.Schedule.On(self.DateRules.Every(DayOfWeek.Monday, DayOfWeek.Friday), self.TimeRules.At(12, 0), Action(self.EveryMonFriAtNoon))
@@ -63,17 +64,13 @@ class ScheduledEventsAlgorithm(QCAlgorithm):
         # schedule an event to fire at the beginning of the month, the symbol is optional
         # if specified, it will fire the first trading day for that symbol of the month,
         # if not specified it will fire on the first day of the month
-        self.Schedule.On(self.DateRules.MonthStart("SPY"), self.TimeRules.AfterMarketOpen("SPY"), Action(self.RebalancingCode))
+        self.Schedule.On(self.DateRules.MonthStart(self.spy), self.TimeRules.AfterMarketOpen(self.spy), Action(self.RebalancingCode))
 
 
     def OnData(self, data):
-        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        
-        Arguments:
-            data: Slice object keyed by symbol containing the stock data
-        '''
+        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
         if not self.Portfolio.Invested:
-            self.SetHoldings("SPY", 1)
+            self.SetHoldings(self.spy, 1)
 
 
     def SpecificTime(self):

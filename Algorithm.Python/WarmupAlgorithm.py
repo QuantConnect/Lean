@@ -26,14 +26,6 @@ from QuantConnect.Indicators import *
 
 class WarmupAlgorithm(QCAlgorithm):
     '''Warmup Algorithm'''
-    def __init__(self):
-        self.__first = True
-        self.__symbol = "SPY"
-        self.__fastPeriod = 60
-        self.__slowPeriod = 3600
-        self.__fast = None
-        self.__slow = None
-
 
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
@@ -42,7 +34,12 @@ class WarmupAlgorithm(QCAlgorithm):
         self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.AddSecurity(SecurityType.Equity, self.__symbol, Resolution.Second)
+        equity = self.AddEquity("SPY", Resolution.Second)
+        self.__symbol = equity.Symbol
+        
+        self.__first = True       
+        self.__fastPeriod = 60
+        self.__slowPeriod = 3600
 
         self.__fast = self.EMA(self.__symbol, self.__fastPeriod)
         self.__slow = self.EMA(self.__symbol, self.__slowPeriod)
@@ -51,11 +48,7 @@ class WarmupAlgorithm(QCAlgorithm):
 
 
     def OnData(self, data):
-        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        
-        Arguments:
-            data: Slice object keyed by symbol containing the stock data
-        '''
+        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
         if self.__first and not self.IsWarmingUp:
             self.__first = False
             self.Log("Fast: {0}".format(self.__fast.Samples))

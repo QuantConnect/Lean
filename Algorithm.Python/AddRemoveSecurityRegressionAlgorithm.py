@@ -31,17 +31,13 @@ class AddRemoveSecurityRegressionAlgorithm(QCAlgorithm):
         self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.spy = self.AddSecurity(SecurityType.Equity, "SPY")
+        self.spy = self.AddEquity("SPY")
         
         self._lastAction = None
 
 
     def OnData(self, data):
-        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        
-        Arguments:
-            data: Slice object keyed by symbol containing the stock data
-        '''
+        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
         if self._lastAction is not None and self._lastAction.Date == self.Time.Date:
             return
 
@@ -50,8 +46,8 @@ class AddRemoveSecurityRegressionAlgorithm(QCAlgorithm):
             self._lastAction = self.Time
 
         if self.Time.DayOfWeek == DayOfWeek.Tuesday:
-            self.aig = self.AddSecurity(SecurityType.Equity, "AIG")
-            self.bac = self.AddSecurity(SecurityType.Equity, "BAC")
+            self.aig = self.AddEquity("AIG")
+            self.bac = self.AddEquity("BAC")
             self._lastAction = self.Time
 
         if self.Time.DayOfWeek == DayOfWeek.Wednesday:
