@@ -22,6 +22,8 @@ namespace QuantConnect.Indicators
     /// <summary>
     ///     Smooth and high sensitive moving Average. This moving average reduce lag of the informations
     ///     but still being smooth to reduce noises.
+    ///     Is a weighted moving average, which weight have a Normal shape. The parameters Sigma and Offset affect the 
+    ///     kurtosis and skewness of the weights distribution respectively.
     ///     Source: http://www.arnaudlegoux.com/index.html
     /// </summary>
     /// <seealso cref="IndicatorDataPoint" />
@@ -34,11 +36,11 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="name">string - a name for the indicator</param>
         /// <param name="period">int - the number of periods to calculate the ALMA</param>
-        /// <param name="sigma"> int - this parameter is responsible for the shape of the curve coefficients.
+        /// <param name="sigma"> int - this parameter is responsible for the shape of the curve coefficients. It affects the weight vector kurtosis.
         /// </param>
         /// <param name="offset">
         /// decimal - This parameter allows regulating the smoothness and high sensitivity of the
-        /// Moving Average. The range for this parameter is [0, 1].
+        /// Moving Average. The range for this parameter is [0, 1]. It affects the weight vector skewness.
         /// </param>
         public ArnaudLegouxMovingAverage(string name, int period, int sigma=6, decimal offset = 0.85m)
             : base(name, period)
@@ -69,7 +71,7 @@ namespace QuantConnect.Indicators
         /// <param name="sigma">int - this parameter is responsible for the shape of the curve coefficients.</param>
         /// <param name="offset">
         ///     decimal -  This parameter allows regulating the smoothness and high sensitivity of the Moving
-        ///     Average. The range for this parameter is [0, 1].
+        ///     Average. The range for this parameter is [0, 1]. It affects the weight vector skewness.
         /// </param>
         public ArnaudLegouxMovingAverage(int period, int sigma, decimal offset = 0.85m)
             : this(string.Format("ALMA_{0}_{1}_{2}", period, sigma, offset), period, sigma, offset)
