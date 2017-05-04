@@ -58,7 +58,7 @@ namespace QuantConnect.Indicators
         /// <param name="name">string - a name for the indicator</param>
         /// <param name="period">int - the number of periods to calculate the ALMA.</param>
         public ArnaudLegouxMovingAverage(string name, int period)
-            : this(name, period)
+            : this(name, period, 6)
         {
         }
 
