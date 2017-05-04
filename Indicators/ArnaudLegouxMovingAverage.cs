@@ -40,7 +40,7 @@ namespace QuantConnect.Indicators
         /// decimal - This parameter allows regulating the smoothness and high sensitivity of the
         /// Moving Average. The range for this parameter is [0, 1].
         /// </param>
-        public ArnaudLegouxMovingAverage(string name, int period, int sigma, decimal offset = 0.85m)
+        public ArnaudLegouxMovingAverage(string name, int period, int sigma=6, decimal offset = 0.85m)
             : base(name, period)
         {
             if (offset < 0 || offset > 1) throw new ArgumentException("Offset parameter range is [0,1]", "offset");
@@ -54,12 +54,11 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="ArnaudLegouxMovingAverage" /> class.
-        ///     In this case, the sigma is estimated to keep the ratio period / sigma approximately 1.5.
         /// </summary>
         /// <param name="name">string - a name for the indicator</param>
         /// <param name="period">int - the number of periods to calculate the ALMA.</param>
         public ArnaudLegouxMovingAverage(string name, int period)
-            : this(name, period, (int)(period * 1d / 1.5))
+            : this(name, period)
         {
         }
 
@@ -79,12 +78,10 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="ArnaudLegouxMovingAverage" /> class.
-        ///     In this case, the sigma is estimated to keep the ratio period / sigma approximately 1.5.
         /// </summary>
         /// <param name="period">int - the number of periods to calculate the ALMA.</param>
         public ArnaudLegouxMovingAverage(int period)
-            : this(string.Format("ALMA_{0}_{1}_{2}", period, (int) (period * 1d / 1.5), 0.85m), period,
-                (int) (period * 1d / 1.5))
+            : this(string.Format("ALMA_{0}_{1}_{2}", period, 6, 0.85m), period)
         {
         }
 
