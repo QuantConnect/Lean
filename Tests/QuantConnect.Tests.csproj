@@ -359,6 +359,7 @@
     </None>
     <Content Include="TestData\FuturesExpiryFunctionsTestData.xml">
       <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\eurusd_candle_patterns.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

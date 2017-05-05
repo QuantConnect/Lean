@@ -78,9 +78,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestFixtureSetUp]
         public void Init()
         {
-            var testsDirectory = Directory.GetParent(Directory.GetParent(Directory.GetCurrentDirectory()).ToString());
             var path = Path.Combine("TestData", "FuturesExpiryFunctionsTestData.xml");
-            path = Path.Combine(testsDirectory.ToString(), path);
             using (var reader = XmlReader.Create(path))
             {
                 var serializer = new XmlSerializer(typeof(Item[]));
