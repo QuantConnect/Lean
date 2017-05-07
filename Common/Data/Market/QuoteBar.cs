@@ -304,8 +304,8 @@ namespace QuantConnect.Data.Market
             }
             catch (Exception err)
             {
-                Log.Error("QuoteBar.Reader(): Error parsing line: '{0}', Symbol: {1}, Resolution: {2}, Date: {3}, Message: {4}", 
-                    line, config.Symbol.Value, config.Resolution, date.ToString("yyyy-MM-dd"), err);
+                Log.Error("QuoteBar.Reader(): Error parsing line: '{0}', Symbol: {1}, SecurityType: {2}, Resolution: {3}, Date: {4}, Message: {5}", 
+                    line, config.Symbol.Value, config.SecurityType, config.Resolution, date.ToString("yyyy-MM-dd"), err);
             }
 
             // if we couldn't parse it above return a default instance
