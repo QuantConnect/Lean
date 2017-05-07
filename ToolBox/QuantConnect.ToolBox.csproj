@@ -154,7 +154,6 @@
     <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesConverter.cs" />
     <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesProcessor.cs" />
     <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesReader.cs" />
-    <Compile Include="AlgoSeekFuturesConverter\FuturesSteamWriter.cs" />
     <Compile Include="AlgoSeekFuturesConverter\Program.cs" />
     <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsConverter.cs" />
     <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsProcessor.cs" />
@@ -191,6 +190,7 @@
     <Compile Include="IQFeed\IQ\SocketClient.cs" />
     <Compile Include="IStreamParser.cs" />
     <Compile Include="IStreamProvider.cs" />
+    <Compile Include="LazyStreamWriter.cs" />
     <Compile Include="LeanDataWriter.cs" />
     <Compile Include="LeanInstrument.cs" />
     <Compile Include="LeanParser.cs" />

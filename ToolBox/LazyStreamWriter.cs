@@ -1,6 +1,20 @@
-﻿using System.IO;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+using System.IO;
 
-namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
+namespace QuantConnect.ToolBox
 {
     /// <summary>
     /// This class wraps a <see cref="StreamWriter"/> so that the StreamWriter is only
@@ -8,16 +22,16 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
     /// writing to is only created if something is written to it. A StreamWriter will create a empty file
     /// as soon as it is instantiated.
     /// </summary>
-    public class FuturesStreamWriter
+    public class LazyStreamWriter
     {
         private StreamWriter _streamWriter;
         private readonly string _path;
 
         /// <summary>
-        /// Constructor for the <see cref="FuturesStreamWriter"/>
+        /// Constructor for the <see cref="LazyStreamWriter"/>
         /// </summary>
         /// <param name="path">Path to the file that should be created</param>
-        public FuturesStreamWriter(string path)
+        public LazyStreamWriter(string path)
         {
             _path = path;
         }

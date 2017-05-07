@@ -36,7 +36,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         private Symbol _symbol;
         private TickType _tickType;
         private Resolution _resolution;
-        private FuturesStreamWriter _streamWriter;
+        private LazyStreamWriter _streamWriter;
         private string _dataDirectory;
         private IDataConsolidator _consolidator;
         private DateTime _referenceDate;
@@ -155,7 +155,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 
             try
             {
-                _streamWriter = new FuturesStreamWriter(file);
+                _streamWriter = new LazyStreamWriter(file);
             }
             catch (Exception err)
             {
@@ -165,7 +165,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 
                 // we store the information under different (randomized) name
                 Log.Trace("Changing name from {0} to {1}", file, newRandomizedName);
-                _streamWriter = new FuturesStreamWriter(newRandomizedName);
+                _streamWriter = new LazyStreamWriter(newRandomizedName);
             }
 
             // On consolidating the bars put the bar into a queue in memory to be written to disk later.

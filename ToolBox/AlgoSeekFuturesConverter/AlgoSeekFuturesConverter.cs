@@ -148,11 +148,11 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                             if (!processors.TryGetValue(tick.Symbol, out symbolProcessors))
                             {
                                 symbolProcessors = new List<List<AlgoSeekFuturesProcessor>>(3)
-                                {
-                                    { _resolutions.Select(x => new AlgoSeekFuturesProcessor(tick.Symbol, _referenceDate, TickType.Trade, x, _destination)).ToList() },
-                                    { _resolutions.Select(x => new AlgoSeekFuturesProcessor(tick.Symbol, _referenceDate, TickType.Quote, x, _destination)).ToList() },
-                                    { _resolutions.Select(x => new AlgoSeekFuturesProcessor(tick.Symbol, _referenceDate, TickType.OpenInterest, x, _destination)).ToList() }
-                                };
+                                        {
+                                            { _resolutions.Select(x => new AlgoSeekFuturesProcessor(tick.Symbol, _referenceDate, TickType.Trade, x, _destination)).ToList() },
+                                            { _resolutions.Select(x => new AlgoSeekFuturesProcessor(tick.Symbol, _referenceDate, TickType.Quote, x, _destination)).ToList() },
+                                            { _resolutions.Select(x => new AlgoSeekFuturesProcessor(tick.Symbol, _referenceDate, TickType.OpenInterest, x, _destination)).ToList() }
+                                        };
 
                                 processors[tick.Symbol] = symbolProcessors;
                             }
@@ -184,7 +184,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                     Log.Trace("AlgoSeekFuturesConverter.Convert(): Finished processing file: " + file);
                     Interlocked.Increment(ref totalFilesProcessed);
                 }
-                catch (Exception err)
+                catch(Exception err)
                 {
                     Log.Error("Exception caught! File: {0} Err: {1} Source {2} Stack {3}", file, err.Message, err.Source, err.StackTrace);
                 }
@@ -207,14 +207,14 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             const int columnInfo = 3;
 
             return File.ReadAllLines("AlgoSeekFuturesConverter/AlgoSeek.US.Futures.PriceMultipliers.1.1.csv")
-                .Select(line => line.ToCsvData())
-                // skipping empty fields
-                .Where(line => !string.IsNullOrEmpty(line[columnUnderlying]) &&
-                               !string.IsNullOrEmpty(line[columnMultipleFactor]))
-                // skipping header
-                .Skip(1)
-                .ToDictionary(line => line[columnUnderlying],
-                    line => System.Convert.ToDecimal(line[columnMultipleFactor]));
+                    .Select(line => line.ToCsvData())
+                    // skipping empty fields
+                    .Where(line => !string.IsNullOrEmpty(line[columnUnderlying]) &&
+                                   !string.IsNullOrEmpty(line[columnMultipleFactor]))
+                    // skipping header
+                    .Skip(1)
+                    .ToDictionary(line => line[columnUnderlying],
+                                  line => System.Convert.ToDecimal(line[columnMultipleFactor]));
         }
 
         private void Flush(Processors processors, DateTime time, bool final)
@@ -240,8 +240,8 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 
             var files =
                 Directory.EnumerateFiles(destination, dateMask + "*.csv", SearchOption.AllDirectories)
-                    .GroupBy(x => Directory.GetParent(x).FullName)
-                    .ToList();
+                .GroupBy(x => Directory.GetParent(x).FullName)
+                .ToList();
 
             // Zip each file massively in parallel
             Parallel.ForEach(files, file =>

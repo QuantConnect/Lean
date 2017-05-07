@@ -138,11 +138,11 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                             if (!processors.TryGetValue(tick.Symbol, out symbolProcessors))
                             {
                                 symbolProcessors = new List<AlgoSeekOptionsProcessor>(3)
-                                {
-                                    new AlgoSeekOptionsProcessor(tick.Symbol, _referenceDate, TickType.Trade, _resolution, _destination),
-                                    new AlgoSeekOptionsProcessor(tick.Symbol, _referenceDate, TickType.Quote, _resolution, _destination),
-                                    new AlgoSeekOptionsProcessor(tick.Symbol, _referenceDate, TickType.OpenInterest, _resolution, _destination)
-                                };
+                                            {
+                                                new AlgoSeekOptionsProcessor(tick.Symbol, _referenceDate, TickType.Trade, _resolution, _destination),
+                                                new AlgoSeekOptionsProcessor(tick.Symbol, _referenceDate, TickType.Quote, _resolution, _destination),
+                                                new AlgoSeekOptionsProcessor(tick.Symbol, _referenceDate, TickType.OpenInterest, _resolution, _destination)
+                                            };
 
                                 processors[tick.Symbol] = symbolProcessors;
                             }
@@ -272,7 +272,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
 
             var files =
                 Directory.EnumerateFiles(destination, dateMask + "*.csv", SearchOption.AllDirectories)
-                    .GroupBy(x => Directory.GetParent(x).FullName);
+                .GroupBy(x => Directory.GetParent(x).FullName);
 
             //Zip each file massively in parallel.
             Parallel.ForEach(files, parallelOptionsZipping, file =>
@@ -325,8 +325,8 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
 
             var files =
                 Directory.EnumerateFiles(destination, dateMask + "_" + "*.*", SearchOption.AllDirectories)
-                    .Where(x => extensions.Contains(Path.GetExtension(x)))
-                    .ToList();
+                .Where(x => extensions.Contains(Path.GetExtension(x)))
+                .ToList();
 
             Log.Trace("AlgoSeekOptionsConverter.Clean(): found {0} files..", files.Count);
 
@@ -395,7 +395,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                     }
                 }
             }
-            catch (Exception e)
+            catch(Exception e)
             {
                 if (!timedOut)
                 {
