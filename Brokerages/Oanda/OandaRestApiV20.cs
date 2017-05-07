@@ -516,12 +516,11 @@ namespace QuantConnect.Brokerages.Oanda
         {
             var oandaSymbol = SymbolMapper.GetBrokerageSymbol(symbol);
             var startUtc = startTimeUtc.ToString("yyyy-MM-ddTHH:mm:ssZ");
-            var endUtc = endTimeUtc.ToString("yyyy-MM-ddTHH:mm:ssZ");
 
             // Oanda only has 5-second bars, we return these for Resolution.Second
             var period = resolution == Resolution.Second ? TimeSpan.FromSeconds(5) : resolution.ToTimeSpan();
 
-            var response = _apiRest.GetInstrumentCandles(Authorization, oandaSymbol, null, "BA", ToGranularity(resolution).ToString(), null, startUtc, endUtc);
+            var response = _apiRest.GetInstrumentCandles(Authorization, oandaSymbol, null, "BA", ToGranularity(resolution).ToString(), OandaBrokerage.MaxBarsPerRequest, startUtc);
             foreach (var candle in response.Candles)
             {
                 var time = GetTickDateTimeFromString(candle.Time);
