@@ -52,7 +52,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
                 // Load settings from config.json
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
                 var accessToken = Config.Get("access-token", "73eba38ad5b44778f9a0c0fec1a66ed1-44f47f052c897b3e1e7f24196bbc071f");
-                var accountId = Config.Get("account-id", "001-011-5838423-001");
+                var accountId = Config.Get("account-id", "621396");
 
                 // Create an instance of the downloader
                 const string market = Market.Oanda;
