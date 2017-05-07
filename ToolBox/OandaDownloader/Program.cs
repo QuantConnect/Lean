@@ -74,7 +74,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
 
                     if (allResolutions)
                     {
-                        var bars = data.Cast<TradeBar>().ToList();
+                        var bars = data.Cast<QuoteBar>().ToList();
 
                         // Save the data (second resolution)
                         var writer = new LeanDataWriter(resolution, symbol, dataDirectory);
@@ -83,7 +83,7 @@ namespace QuantConnect.ToolBox.OandaDownloader
                         // Save the data (other resolutions)
                         foreach (var res in new[] { Resolution.Minute, Resolution.Hour, Resolution.Daily })
                         {
-                            var resData = AggregateBars(symbol, bars, res.ToTimeSpan());
+                            var resData = downloader.AggregateBars(symbol, bars, res.ToTimeSpan());
 
                             writer = new LeanDataWriter(res, symbol, dataDirectory);
                             writer.Write(resData);
@@ -101,30 +101,6 @@ namespace QuantConnect.ToolBox.OandaDownloader
             {
                 Log.Error(err);
             }
-        }
-
-        /// <summary>
-        /// Aggregates a list of 5-second bars at the requested resolution
-        /// </summary>
-        /// <param name="symbol"></param>
-        /// <param name="bars"></param>
-        /// <param name="resolution"></param>
-        /// <returns></returns>
-        private static IEnumerable<TradeBar> AggregateBars(Symbol symbol, IEnumerable<TradeBar> bars, TimeSpan resolution)
-        {
-            return
-                (from b in bars
-                 group b by b.Time.RoundDown(resolution)
-                     into g
-                     select new TradeBar
-                     {
-                         Symbol = symbol,
-                         Time = g.Key,
-                         Open = g.First().Open,
-                         High = g.Max(b => b.High),
-                         Low = g.Min(b => b.Low),
-                         Close = g.Last().Close
-                     });
         }
     }
 }
