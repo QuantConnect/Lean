@@ -16,10 +16,6 @@
 using System;
 using NUnit.Framework;
 using QuantConnect.Securities.Future;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QuantConnect.Tests.Common.Securities.Futures
 {
