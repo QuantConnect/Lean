@@ -350,6 +350,7 @@
     <Compile Include="Securities\Futures\FutureExpirationCycles.cs" />
     <Compile Include="Securities\Futures\FutureFilterUniverse.cs" />
     <Compile Include="Securities\Futures\FuturesExpiryFunctions.cs" />
+    <Compile Include="Securities\Futures\FuturesExpiryUtilityFunctions.cs" />
     <Compile Include="Securities\Option\OptionFilterUniverse.cs" />
     <Compile Include="Securities\IDerivativeSecurityFilterUniverse.cs" />
     <Compile Include="Securities\IMarginCallModel.cs" />
