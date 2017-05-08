@@ -59,3 +59,12 @@ RUN nuget install QuantConnect.pythonnet -Version 1.0.1.1 \
     && cp QuantConnect.pythonnet.1.0.1.1/build/Python.Runtime.dll.config /usr/lib
 	
 RUN ln -s /usr/lib/x86_64-linux-gnu/libpython2.7.so /usr/lib/libpython27.so
+
+# Install TA-lib for python
+RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz \
+    && tar -zxvf ta-lib-0.4.0-src.tar.gz \
+    && cd ta-lib \
+    && ./configure --prefix=/usr \
+    && make \
+    && make install \ 
+    && pip install TA-lib

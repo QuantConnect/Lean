@@ -45,7 +45,7 @@ import cvxopt
 import cvxpy
 from pykalman import KalmanFilter
 import statsmodels.api as sm
-
+import talib
 
 class PythonPackageTestAlgorithm(QCAlgorithm):
     '''Basic template algorithm simply initializes the date range and cash'''
@@ -81,6 +81,9 @@ class PythonPackageTestAlgorithm(QCAlgorithm):
 
         # pykalman test
         pykalman_test()
+
+        # talib test
+        print "talib test >>>", talib.SMA(numpy.random.random(100))
 
     def OnData(self, data): pass
 
