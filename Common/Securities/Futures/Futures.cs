@@ -182,7 +182,7 @@ namespace QuantConnect.Securities
         public static class Indices
         {
             /// <summary>
-            /// E-mini S&P 500 Futures  
+            /// E-mini S&amp;P 500 Futures  
             /// </summary>
             /// <returns>The symbol</returns>
             public const string SP500EMini = "ES";
