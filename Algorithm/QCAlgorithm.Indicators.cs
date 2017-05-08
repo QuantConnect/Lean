@@ -103,9 +103,8 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>The ArnaudLegouxMovingAverage indicator for the requested symbol over the specified period</returns>
-        public ArnaudLegouxMovingAverage ALMA(Symbol symbol, int period, int sigma = 0, decimal offset = 0.85m, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        public ArnaudLegouxMovingAverage ALMA(Symbol symbol, int period, int sigma = 6, decimal offset = 0.85m, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            sigma = sigma != 0 ? sigma : (int) (period * 1d / 1.5);
             var name = CreateIndicatorName(symbol, string.Format("ALMA_{0}_{1}_{2}", period, sigma, offset), resolution);
             var alma = new ArnaudLegouxMovingAverage(name, period, sigma, offset);
             RegisterIndicator(symbol, alma, resolution, selector);
