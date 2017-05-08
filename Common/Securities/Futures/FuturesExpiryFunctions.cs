@@ -39,205 +39,6 @@ namespace QuantConnect.Securities.Future
         }
 
         /// <summary>
-        /// Method to retrieve n^th succeeding/preceding business day for a given day
-        /// </summary>
-        private static DateTime NthBusinessDay(DateTime time, int n)
-        {
-            if (n < 0)
-            {
-                var businessDays = (-1) * n;
-                var totalDays = 1;
-                do
-                {
-                    var previousDay = time.AddDays(-totalDays);
-                    if (NotHoliday(previousDay))
-                    {
-                        businessDays--;
-                    }
-                    if (businessDays > 0) totalDays++;
-                } while (businessDays > 0);
-
-                return time.AddDays(-totalDays);
-            }
-            else
-            {
-                var businessDays = n;
-                var totalDays = 1;
-                do
-                {
-                    var previousDay = time.AddDays(totalDays);
-                    if (NotHoliday(previousDay))
-                    {
-                        businessDays--;
-                    }
-                    if (businessDays > 0) totalDays++;
-                } while (businessDays > 0);
-
-                return time.AddDays(totalDays);
-            }
-        }
-
-        /// <summary>
-        /// Method to retrieve the third last business day of the delivery month.
-        /// </summary>
-        private static DateTime ThirdLastBusinessDay(DateTime time)
-        {
-            var daysInMonth = DateTime.DaysInMonth(time.Year, time.Month);
-            var lastDayOfMonth = new DateTime(time.Year, time.Month, daysInMonth);
-
-            // Count the number of days in the month after the third to last business day
-            var businessDays = 3;
-            var totalDays = 0;
-            do
-            {
-                var previousDay = lastDayOfMonth.AddDays(-totalDays);
-                if (NotHoliday(previousDay))
-                {
-                    businessDays--;
-                }
-                if (businessDays > 0) totalDays++;
-            } while (businessDays > 0);
-
-            return lastDayOfMonth.AddDays(-totalDays);
-        }
-
-        /// <summary>
-        /// Method to retrieve 9:30 a.m. Eastern Time (ET) on the 3rd Friday of the contract month
-        /// </summary>
-        private static DateTime ThirdFridayAtNineThirty(DateTime time)
-        {
-            var daysInMonth = DateTime.DaysInMonth(time.Year, time.Month);
-            return (from day in Enumerable.Range(1, daysInMonth)
-                    where new DateTime(time.Year, time.Month, day).DayOfWeek == DayOfWeek.Friday
-                    select new DateTime(time.Year, time.Month, day, 13, 30, 0)).ElementAt(2);
-        }
-
-        ///<summary>
-        /// Method to retrieve the business day prior to the 15th calendar day of the contract month.
-        /// </summary>
-        private static DateTime BusinessDayBeforeFifteenth(DateTime time)
-        {
-            var fifteenthDayOfMonth = new DateTime(time.Year, time.Month, 15);
-            // Get the previous businessday recursively
-            var previousDay = fifteenthDayOfMonth.AddDays(-1);
-            while (!previousDay.IsCommonBusinessDay() || USHoliday.Dates.Contains(previousDay))
-            {
-                previousDay = previousDay.AddDays(-1);
-            }
-            return previousDay;
-        }
-
-        /// <summary>
-        /// Method to retrieve 9:16 a.m. Central Time (CT) on the second business day immediately preceding the third Wednesday of the contract month (usually Monday).
-        /// </summary>
-        private static DateTime SecondBusinessDayPrecedingThirdWednesdayAtNineSixteen(DateTime time)
-        {
-            // Get Third Wednesday
-            var daysInMonth = DateTime.DaysInMonth(time.Year, time.Month);
-            var thirdWednesday = (from day in Enumerable.Range(1, daysInMonth)
-                                  where new DateTime(time.Year, time.Month, day).DayOfWeek == DayOfWeek.Wednesday
-                                  select new DateTime(time.Year, time.Month, day)).ElementAt(2);
-
-            // Now get the second business day preceding third Wednesday
-            var previousDay = NthBusinessDay(thirdWednesday, -2);
-            return new DateTime(previousDay.Year, previousDay.Month, previousDay.Day, 14, 16, 0);
-        }
-
-        /// <summary>
-        /// Method to retrieve 9:16 a.m. Central Time (CT) on the business day immediately preceding the third Wednesday of the contract month (usually Tuesday).
-        /// </summary>
-        private static DateTime BusinessDayPrecedingThirdWednesdayAtNineSixteen(DateTime time)
-        {
-            // Get Third Wednesday
-            var daysInMonth = DateTime.DaysInMonth(time.Year, time.Month);
-            var thirdWednesday = (from day in Enumerable.Range(1, daysInMonth)
-                                  where new DateTime(time.Year, time.Month, day).DayOfWeek == DayOfWeek.Wednesday
-                                  select new DateTime(time.Year, time.Month, day)).ElementAt(2);
-
-            // Now get the second business day preceding third Wednesday
-            var previousDay = NthBusinessDay(thirdWednesday, -1);
-            return new DateTime(previousDay.Year, previousDay.Month, previousDay.Day, 14, 16, 0);
-        }
-
-        /// <summary>
-        /// Mehtod to retrieve 12:01 on last business day of the calendar month.
-        /// </summary>
-        private static DateTime LastBusinessDay(DateTime time, TimeSpan t)
-        {
-            var daysInMonth = DateTime.DaysInMonth(time.Year, time.Month);
-            return (from n in Enumerable.Range(1, daysInMonth)
-                    let nthDay = new DateTime(time.Year, time.Month, n, t.Hours, t.Minutes, t.Seconds)
-                    where NotHoliday(nthDay)
-                    select nthDay).Reverse().ElementAt(0);
-        }
-
-        /// <summary>
-        /// Method to retrieve 12:01 pm on the seventh business day preceding the last business day of the delivery month.
-        /// </summary>
-        private static DateTime SeventhBusinessDayPreceedingLastBusinessDay(DateTime time)
-        {
-            var daysInMonth = DateTime.DaysInMonth(time.Year, time.Month);
-            var lastBusinessDay = (from n in Enumerable.Range(1, daysInMonth)
-                                   let nthDay = new DateTime(time.Year, time.Month, n)
-                                   where NotHoliday(nthDay)
-                                   select nthDay).Reverse().ElementAt(0);
-            var seventhPreceding = NthBusinessDay(lastBusinessDay, -7);
-            return new DateTime(seventhPreceding.Year, seventhPreceding.Month, seventhPreceding.Day, 12, 01, 0);
-        }
-
-        /// <summary>
-        /// Method to retrieve last business day of the month preceding the delivery month. 
-        /// </summary>
-        private static DateTime LastBusinessDayPrecedingMonth(DateTime time)
-        {
-            var precedingMonth = time.AddMonths(-1);
-            var daysInMonth = DateTime.DaysInMonth(precedingMonth.Year, precedingMonth.Month);
-            var lastBusinessDay = (from n in Enumerable.Range(1, daysInMonth)
-                                   let nthDay = new DateTime(precedingMonth.Year, precedingMonth.Month, n)
-                                   where NotHoliday(nthDay)
-                                   select nthDay).Reverse().ElementAt(0);
-            return lastBusinessDay;
-        }
-
-        /// <summary>
-        /// Method to check whether a given time is holiday or not
-        /// </summary>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        private static bool NotHoliday(DateTime time)
-        {
-            return time.IsCommonBusinessDay() && !USHoliday.Dates.Contains(time);
-        }
-
-        /// <summary>
-        /// This function takes Thursday as input and returns true if four weekdays preceding it are not Holidays
-        /// </summary>
-        /// <param name="Thursday"></param>
-        /// <returns></returns>
-        private static bool NotPrecededByHoliday(DateTime Thursday)
-        {
-            if (Thursday.DayOfWeek != DayOfWeek.Thursday)
-            {
-                return false;
-            }
-            var result = true;
-            // for Monday, Tuesday and Wednesday
-            for (int i = 1; i <= 3; i++)
-            {
-                if (!NotHoliday(Thursday.AddDays(-i)))
-                {
-                    result = false;
-                }
-            }
-            // for Friday
-            if (!NotHoliday(Thursday.AddDays(-6)))
-            {
-                result = false;
-            }
-            return result;
-        }
-
-        /// <summary>
         /// Dictorionary of the Func that calculates the expiry for a given year and month.
         /// It does not matter what the day and time of day are passed into the Func.
         /// The Func is reposible for calulating the day and time of day given a year and month
@@ -249,28 +50,28 @@ namespace QuantConnect.Securities.Future
             {Futures.Metals.Gold, (time =>
                 {
                     // Trading terminates on the third last business day of the delivery month.
-                    return ThirdLastBusinessDay(time);
+                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time,3);
                 })
             },
             // Silver (SI): http://www.cmegroup.com/trading/metals/precious/silver_contract_specifications.html
             {Futures.Metals.Silver, (time =>
                 {
                     // Trading terminates on the third last business day of the delivery month.
-                    return ThirdLastBusinessDay(time);
+                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time,3);
                 })
             },
             // Platinum (PL): http://www.cmegroup.com/trading/metals/precious/platinum_contract_specifications.html
             {Futures.Metals.Platinum, (time =>
                 {
                     // Trading terminates on the third last business day of the delivery month.
-                    return ThirdLastBusinessDay(time);
+                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time,3);
                 })
             },
             // Palladium (PA): http://www.cmegroup.com/trading/metals/precious/palladium_contract_specifications.html
             {Futures.Metals.Palladium, (time =>
                 {
                     // Trading terminates on the third last business day of the delivery month.
-                    return ThirdLastBusinessDay(time);
+                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time,3);
                 })
             },
             // Indices
@@ -278,21 +79,24 @@ namespace QuantConnect.Securities.Future
             {Futures.Indices.SP500EMini, (time =>
                 {
                     // Trading can occur up to 9:30 a.m. Eastern Time (ET) on the 3rd Friday of the contract month
-                    return ThirdFridayAtNineThirty(time);
+                    var thirdFriday = FuturesExpiryUtilityFunctions.ThirdFriday(time);
+                    return thirdFriday.Add(new TimeSpan(13,30,0));
                 })
             },
             // NASDAQ100EMini (NQ): http://www.cmegroup.com/trading/equity-index/us-index/e-mini-nasdaq-100_contract_specifications.html
             {Futures.Indices.NASDAQ100EMini, (time =>
                 {
                     // Trading can occur up to 9:30 a.m. Eastern Time (ET) on the 3rd Friday of the contract month
-                    return ThirdFridayAtNineThirty(time);
+                    var thirdFriday = FuturesExpiryUtilityFunctions.ThirdFriday(time);
+                    return thirdFriday.Add(new TimeSpan(13,30,0));
                 })
             },
             // Dow30EMini (YM): http://www.cmegroup.com/trading/equity-index/us-index/e-mini-dow_contract_specifications.html
             {Futures.Indices.Dow30EMini, (time =>
                 {
                     // Trading can occur up to 9:30 a.m. Eastern Time (ET) on the 3rd Friday of the contract month
-                    return ThirdFridayAtNineThirty(time);
+                    var thirdFriday = FuturesExpiryUtilityFunctions.ThirdFriday(time);
+                    return thirdFriday.Add(new TimeSpan(13,30,0));
                 })
             },
             // CBOE Volatility Index Futures (VIX)  is not found on cmegroup will discuss and update
@@ -301,42 +105,48 @@ namespace QuantConnect.Securities.Future
             {Futures.Grains.Wheat, (time =>
                 {
                     // The business day prior to the 15th calendar day of the contract month.
-                    return BusinessDayBeforeFifteenth(time);
+                    var fifteenth = new DateTime(time.Year,time.Month,15);
+                    return FuturesExpiryUtilityFunctions.AddBusinessDays(fifteenth,-1);
                 })
             },
             // Corn (ZC): http://www.cmegroup.com/trading/agricultural/grain-and-oilseed/corn_contract_specifications.html
             {Futures.Grains.Corn, (time =>
                 {
                     // The business day prior to the 15th calendar day of the contract month.
-                    return BusinessDayBeforeFifteenth(time);
+                    var fifteenth = new DateTime(time.Year,time.Month,15);
+                    return FuturesExpiryUtilityFunctions.AddBusinessDays(fifteenth,-1);
                 })
             },
             // Soybeans (ZS): http://www.cmegroup.com/trading/agricultural/grain-and-oilseed/soybean_contract_specifications.html
             {Futures.Grains.Soybeans, (time =>
                 {
                     // The business day prior to the 15th calendar day of the contract month.
-                    return BusinessDayBeforeFifteenth(time);
+                    var fifteenth = new DateTime(time.Year,time.Month,15);
+                    return FuturesExpiryUtilityFunctions.AddBusinessDays(fifteenth,-1);
                 })
             },
             // SoybeanMeal (ZM): http://www.cmegroup.com/trading/agricultural/grain-and-oilseed/soybean-meal_contract_specifications.html
             {Futures.Grains.SoybeanMeal, (time =>
                 {
                     // The business day prior to the 15th calendar day of the contract month.
-                    return BusinessDayBeforeFifteenth(time);
+                    var fifteenth = new DateTime(time.Year,time.Month,15);
+                    return FuturesExpiryUtilityFunctions.AddBusinessDays(fifteenth,-1);
                 })
             },
             // SoybeanOil (ZL): http://www.cmegroup.com/trading/agricultural/grain-and-oilseed/soybean-oil_contract_specifications.html
             {Futures.Grains.SoybeanOil, (time =>
                 {
                     // The business day prior to the 15th calendar day of the contract month.
-                    return BusinessDayBeforeFifteenth(time);
+                    var fifteenth = new DateTime(time.Year,time.Month,15);
+                    return FuturesExpiryUtilityFunctions.AddBusinessDays(fifteenth,-1);
                 })
             },
             // Oats (ZO): http://www.cmegroup.com/trading/agricultural/grain-and-oilseed/oats_contract_specifications.html
             {Futures.Grains.Oats, (time =>
                 {
                     // The business day prior to the 15th calendar day of the contract month.
-                    return BusinessDayBeforeFifteenth(time);
+                    var fifteenth = new DateTime(time.Year,time.Month,15);
+                    return FuturesExpiryUtilityFunctions.AddBusinessDays(fifteenth,-1);
                 })
             },
 
@@ -346,49 +156,63 @@ namespace QuantConnect.Securities.Future
             {Futures.Currencies.GBP, (time =>
                 {
                     // 9:16 a.m. Central Time (CT) on the second business day immediately preceding the third Wednesday of the contract month (usually Monday).
-                    return SecondBusinessDayPrecedingThirdWednesdayAtNineSixteen(time);
+                    var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
+                    var secondBusinessDayPrecedingThridWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday,-2);
+                    return secondBusinessDayPrecedingThridWednesday.Add(new TimeSpan(14,16,0));
                 })
             },
             // CAD (6C): http://www.cmegroup.com/trading/fx/g10/canadian-dollar_contract_specifications.html
             {Futures.Currencies.CAD, (time =>
                 {
                     // 9:16 a.m. Central Time (CT) on the business day immediately preceding the third Wednesday of the contract month (usually Tuesday).
-                    return BusinessDayPrecedingThirdWednesdayAtNineSixteen(time);
+                    var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
+                    var businessDayPrecedingThridWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday,-1);
+                    return businessDayPrecedingThridWednesday.Add(new TimeSpan(14,16,0));
                 })
             },
             // JPY (6J): http://www.cmegroup.com/trading/fx/g10/japanese-yen_contract_specifications.html
             {Futures.Currencies.JPY, (time =>
                 {
                     // 9:16 a.m. Central Time (CT) on the second business day immediately preceding the third Wednesday of the contract month (usually Monday).
-                    return SecondBusinessDayPrecedingThirdWednesdayAtNineSixteen(time);
+                    var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
+                    var secondBusinessDayPrecedingThridWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday,-2);
+                    return secondBusinessDayPrecedingThridWednesday.Add(new TimeSpan(14,16,0));
                 })
             },
             // CHF (6S): http://www.cmegroup.com/trading/fx/g10/swiss-franc_contract_specifications.html
             {Futures.Currencies.CHF, (time =>
                 {
                     // 9:16 a.m. Central Time (CT) on the second business day immediately preceding the third Wednesday of the contract month (usually Monday).
-                    return SecondBusinessDayPrecedingThirdWednesdayAtNineSixteen(time);
+                    var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
+                    var secondBusinessDayPrecedingThridWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday,-2);
+                    return secondBusinessDayPrecedingThridWednesday.Add(new TimeSpan(14,16,0));
                 })
             },
             // EUR (6E): http://www.cmegroup.com/trading/fx/g10/euro-fx_contract_specifications.html
             {Futures.Currencies.EUR, (time =>
                 {
                     // 9:16 a.m. Central Time (CT) on the second business day immediately preceding the third Wednesday of the contract month (usually Monday).
-                    return SecondBusinessDayPrecedingThirdWednesdayAtNineSixteen(time);
+                    var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
+                    var secondBusinessDayPrecedingThridWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday,-2);
+                    return secondBusinessDayPrecedingThridWednesday.Add(new TimeSpan(14,16,0));
                 })
             },
             // AUD (6A): http://www.cmegroup.com/trading/fx/g10/australian-dollar_contract_specifications.html
             {Futures.Currencies.AUD, (time =>
                 {
                     // 9:16 a.m. Central Time (CT) on the second business day immediately preceding the third Wednesday of the contract month (usually Monday).
-                    return SecondBusinessDayPrecedingThirdWednesdayAtNineSixteen(time);
+                    var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
+                    var secondBusinessDayPrecedingThridWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday,-2);
+                    return secondBusinessDayPrecedingThridWednesday.Add(new TimeSpan(14,16,0));
                 })
             },
             // NZD (6N): http://www.cmegroup.com/trading/fx/g10/new-zealand-dollar_contract_specifications.html
             {Futures.Currencies.NZD, (time =>
                 {
                     // 9:16 a.m. Central Time (CT) on the second business day immediately preceding the third Wednesday of the contract month (usually Monday).
-                    return SecondBusinessDayPrecedingThirdWednesdayAtNineSixteen(time);
+                    var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
+                    var secondBusinessDayPrecedingThridWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday,-2);
+                    return secondBusinessDayPrecedingThridWednesday.Add(new TimeSpan(14,16,0));
                 })
             },
 
@@ -397,28 +221,34 @@ namespace QuantConnect.Securities.Future
             {Futures.Financials.Y30TreasuryBond, (time =>
                 {
                     //  Seventh business day preceding the last business day of the delivery month. Trading in expiring contracts closes at 12:01 p.m. on the last trading day.
-                    return SeventhBusinessDayPreceedingLastBusinessDay(time);
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
+                    var seventhBusinessDayPrecedingLastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastBusinessDay,-7);
+                    return seventhBusinessDayPrecedingLastBusinessDay.Add(new TimeSpan(12,01,0));
                 })
             },
             // Y10TreasuryNote (ZN): http://www.cmegroup.com/trading/interest-rates/us-treasury/10-year-us-treasury-note_contract_specifications.html
             {Futures.Financials.Y10TreasuryNote, (time =>
                 {
                     //  Seventh business day preceding the last business day of the delivery month. Trading in expiring contracts closes at 12:01 p.m. on the last trading day.
-                    return SeventhBusinessDayPreceedingLastBusinessDay(time);
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
+                    var seventhBusinessDayPrecedingLastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastBusinessDay,-7);
+                    return seventhBusinessDayPrecedingLastBusinessDay.Add(new TimeSpan(12,01,0));
                 })
             },
             // Y5TreasuryNote (ZF): http://www.cmegroup.com/trading/interest-rates/us-treasury/5-year-us-treasury-note_contract_specifications.html
             {Futures.Financials.Y5TreasuryNote, (time =>
                 {
                     // Last business day of the calendar month. Trading in expiring contracts closes at 12:01 p.m. on the last trading day.
-                    return LastBusinessDay(time, new TimeSpan(12,1,0));
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
+                    return lastBusinessDay.Add(new TimeSpan(12,01,0));
                 })
             },
             // Y2TreasuryNote (ZT): http://www.cmegroup.com/trading/interest-rates/us-treasury/2-year-us-treasury-note_contract_specifications.html
             {Futures.Financials.Y2TreasuryNote, (time =>
                 {
                     // Last business day of the calendar month. Trading in expiring contracts closes at 12:01 p.m. on the last trading day.
-                    return LastBusinessDay(time, new TimeSpan(12,1,0));
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
+                    return lastBusinessDay.Add(new TimeSpan(12,01,0));
                 })
             },
             // EuroDollar Futures : TODO London bank calendar
@@ -430,14 +260,14 @@ namespace QuantConnect.Securities.Future
                     // Trading in the current delivery month shall cease on the third business day prior to the twenty-fifth calendar day of the month preceding the delivery month. If the twenty-fifth calendar day of the month is a non-business day, trading shall cease on the third business day prior to the last business day preceding the twenty-fifth calendar day. In the event that the official Exchange holiday schedule changes subsequent to the listing of a Crude Oil futures, the originally listed expiration date shall remain in effect.In the event that the originally listed expiration day is declared a holiday, expiration will move to the business day immediately prior.
                     var twentyFifth = new DateTime(time.Year,time.Month,25);
                     twentyFifth = twentyFifth.AddMonths(-1);
-                    if(NotHoliday(twentyFifth))
+                    if(FuturesExpiryUtilityFunctions.NotHoliday(twentyFifth))
                     {
-                        return NthBusinessDay(twentyFifth,-3);
+                        return FuturesExpiryUtilityFunctions.AddBusinessDays(twentyFifth,-3);
                     }
                     else
                     {
-                        var lastBuisnessDay = NthBusinessDay(twentyFifth,-1);
-                        return NthBusinessDay(lastBuisnessDay,-3);
+                        var lastBuisnessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(twentyFifth,-1);
+                        return FuturesExpiryUtilityFunctions.AddBusinessDays(lastBuisnessDay,-3);
                     }
                 })
             },
@@ -445,14 +275,16 @@ namespace QuantConnect.Securities.Future
             {Futures.Energies.HeatingOil, (time =>
                 {
                     // Trading in a current month shall cease on the last business day of the month preceding the delivery month.
-                    return LastBusinessDayPrecedingMonth(time);
+                    var precedingMonth = time.AddMonths(-1);
+                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(precedingMonth, 1);
                 })
             },
             // Gasoline (RB): http://www.cmegroup.com/trading/energy/refined-products/rbob-gasoline_contract_specifications.html
             {Futures.Energies.Gasoline, (time =>
                 {
                     // Trading in a current delivery month shall cease on the last business day of the month preceding the delivery month.
-                    return LastBusinessDayPrecedingMonth(time);
+                    var precedingMonth = time.AddMonths(-1);
+                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(precedingMonth, 1);
                 })
             },
             // Natural Gas (NG) : http://www.cmegroup.com/trading/energy/natural-gas/natural-gas_contract_specifications.html
@@ -460,7 +292,7 @@ namespace QuantConnect.Securities.Future
                 {
                     //Trading of any delivery month shall cease three (3) business days prior to the first day of the delivery month. In the event that the official Exchange holiday schedule changes subsequent to the listing of a Natural Gas futures, the originally listed expiration date shall remain in effect.In the event that the originally listed expiration day is declared a holiday, expiration will move to the business day immediately prior.
                     var firstDay = new DateTime(time.Year,time.Month,1);
-                    return NthBusinessDay(firstDay,-3);
+                    return FuturesExpiryUtilityFunctions.AddBusinessDays(firstDay,-3);
                 })
             },
 
@@ -469,7 +301,8 @@ namespace QuantConnect.Securities.Future
             {Futures.Meats.LiveCattle, (time =>
                 {
                     //Last business day of the contract month, 12:00 p.m.
-                    return LastBusinessDay(time, new TimeSpan(12,0,0));
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
+                    return lastBusinessDay.Add(new TimeSpan(12,0,0));
                 })
             },
             // LeanHogs (HE): http://www.cmegroup.com/trading/agricultural/livestock/lean-hogs_contract_specifications.html
@@ -478,8 +311,8 @@ namespace QuantConnect.Securities.Future
                     // 10th business day of the contract month, 12:00 p.m.
                     var lastday = new DateTime(time.Year,time.Month,1);
                     lastday = lastday.AddDays(-1);
-                    var tenthday = NthBusinessDay(lastday,10);
-                    return new DateTime(tenthday.Year,tenthday.Month,tenthday.Day,12,0,0);
+                    var tenthday = FuturesExpiryUtilityFunctions.AddBusinessDays(lastday,10);
+                    return tenthday.Add(new TimeSpan(12,0,0));
                 })
             },
             // FeederCattle (GF): http://www.cmegroup.com/trading/agricultural/livestock/feeder-cattle_contract_specifications.html
@@ -505,7 +338,7 @@ namespace QuantConnect.Securities.Future
                         var PriorThursday = (from day in Enumerable.Range(1, daysInMonth)
                                   where new DateTime(time.Year, time.Month, day).DayOfWeek == DayOfWeek.Thursday
                                   select new DateTime(time.Year, time.Month, day)).Reverse().ElementAt(1);
-                        while (!NotHoliday(PriorThursday) || !NotPrecededByHoliday(PriorThursday))
+                        while (!FuturesExpiryUtilityFunctions.NotHoliday(PriorThursday) || !FuturesExpiryUtilityFunctions.NotPrecededByHoliday(PriorThursday))
                         {
                             PriorThursday = PriorThursday.AddDays(-7);
                         }
@@ -515,7 +348,7 @@ namespace QuantConnect.Securities.Future
                     var lastThursday = (from day in Enumerable.Range(1, daysInMonth)
                                   where new DateTime(time.Year, time.Month, day).DayOfWeek == DayOfWeek.Thursday
                                   select new DateTime(time.Year, time.Month, day)).Reverse().ElementAt(0);
-                    while (!NotHoliday(lastThursday) || !NotPrecededByHoliday(lastThursday))
+                    while (!FuturesExpiryUtilityFunctions.NotHoliday(lastThursday) || !FuturesExpiryUtilityFunctions.NotPrecededByHoliday(lastThursday))
                     {
                         lastThursday = lastThursday.AddDays(-7);
                     }

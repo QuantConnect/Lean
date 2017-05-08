@@ -140,6 +140,7 @@
     <Compile Include="Common\Securities\BrokerageModelSecurityInitializerTests.cs" />
     <Compile Include="Common\Securities\FutureFilterTests.cs" />
     <Compile Include="Common\Securities\Futures\FuturesExpiryFunctionsTests.cs" />
+    <Compile Include="Common\Securities\Futures\FuturesExpiryUtilityFunctionsTests.cs" />
     <Compile Include="Common\Securities\StandardDeviationOfReturnsVolatilityModelTests.cs" />
     <Compile Include="Common\Data\Auxiliary\LocalDiskFactorFileProviderTests.cs" />
     <Compile Include="Common\Data\Auxiliary\LocalDiskMapFileProviderTests.cs" />
