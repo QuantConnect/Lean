@@ -217,7 +217,8 @@ namespace QuantConnect.Data.Market
             }
             catch (Exception err)
             {
-                Log.Error(err, "SecurityType: " + config.SecurityType + " Line: " + line);
+                Log.Error("TradeBar.Reader(): Error parsing line: '{0}', Symbol: {1}, SecurityType: {2}, Resolution: {3}, Date: {4}, Message: {5}",
+                    line, config.Symbol.Value, config.SecurityType, config.Resolution, date.ToString("yyyy-MM-dd"), err);
             }
 
             // if we couldn't parse it above return a default instance
