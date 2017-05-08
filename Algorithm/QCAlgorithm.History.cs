@@ -516,7 +516,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         private IEnumerable<HistoryRequest> CreateDateRangeHistoryRequests(IEnumerable<Symbol> symbols, DateTime startAlgoTz, DateTime endAlgoTz, Resolution? resolution = null, bool? fillForward = null, bool? extendedMarket = null)
         {
-            return symbols.Select(x =>
+            return symbols.Where(x => !x.IsCanonical()).Select(x =>
             {
                 var security = Securities[x];
                 var config = GetMatchingSubscription(security, typeof (BaseData));
@@ -535,7 +535,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         private IEnumerable<HistoryRequest> CreateBarCountHistoryRequests(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null)
         {
-            return symbols.Select(x =>
+            return symbols.Where(x => !x.IsCanonical()).Select(x =>
             {
                 var security = Securities[x];
                 Resolution? res = resolution ?? security.Resolution;
