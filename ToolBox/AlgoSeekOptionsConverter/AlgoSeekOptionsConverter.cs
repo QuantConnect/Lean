@@ -14,18 +14,16 @@
 */
 
 using System;
-using System.IO;
-using System.Linq;
-using QuantConnect.Logging;
-using System.Diagnostics;
-using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.IO.Compression;
+using System.Linq;
 using System.Text;
 using System.Threading;
-using QuantConnect.Data;
+using System.Threading.Tasks;
 using QuantConnect.Data.Market;
-using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
-using QuantConnect.Orders;
+using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
@@ -112,7 +110,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                     // var symbolFilter = symbolFilterNames.SelectMany(name => new[] { name, name + "1", name + ".1" }).ToHashSet();
                     // var reader = new AlgoSeekOptionsReader(csvFile, _referenceDate, symbolFilter);
 
-                    var reader = new AlgoSeekOptionsReader(csvFile, _referenceDate);
+                    var reader = new ToolBox.AlgoSeekOptionsConverter.AlgoSeekOptionsReader(csvFile, _referenceDate);
                     if (start == DateTime.MinValue)
                     {
                         start = DateTime.Now;
@@ -202,7 +200,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                         Parallel.ForEach(groups, group =>
                         {
                             string zip = string.Empty;
-                             
+
                             try
                             {
                                 var symbol = group.Key;
@@ -282,12 +280,20 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                 try
                 {
                     var outputFileName = file.Key + ".zip";
-                    var inputFileNames = Path.Combine(file.Key, "*.csv");
-                    var cmdArgs = " a " + outputFileName + " " + inputFileNames;
+                    // Create and open a new ZIP file
+                    var filesToCompress = Directory.GetFiles(file.Key, "*.csv", SearchOption.AllDirectories);
+                    var zip = ZipFile.Open(outputFileName, ZipArchiveMode.Create);
 
                     Log.Trace("AlgoSeekOptionsConverter.Package(): Zipping " + outputFileName);
 
-                    RunZipper(zipper, cmdArgs);
+                    foreach (var fileToCompress in filesToCompress)
+                    {
+                        // Add the entry for each file
+                        zip.CreateEntryFromFile(fileToCompress, Path.GetFileName(fileToCompress), CompressionLevel.Optimal);
+                    }
+
+                    // Dispose of the object when we are done
+                    zip.Dispose();
 
                     try
                     {
@@ -314,6 +320,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
 
             var extensions = new HashSet<string> { ".zip", ".csv" };
             var destination = Path.Combine(_destination, "option");
+            Directory.CreateDirectory(destination);
             var dateMask = date.ToString(DateFormat.EightCharacter);
 
             var files =

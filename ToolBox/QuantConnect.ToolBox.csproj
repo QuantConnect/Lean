@@ -190,6 +190,7 @@
     <Compile Include="IQFeed\IQ\SocketClient.cs" />
     <Compile Include="IStreamParser.cs" />
     <Compile Include="IStreamProvider.cs" />
+    <Compile Include="LazyStreamWriter.cs" />
     <Compile Include="LeanDataWriter.cs" />
     <Compile Include="LeanInstrument.cs" />
     <Compile Include="LeanParser.cs" />

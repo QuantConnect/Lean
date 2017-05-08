@@ -14,15 +14,13 @@
 */
 
 using System;
-using QuantConnect.Data;
-using System.Collections.Generic;
 using System.IO;
-using QuantConnect.Data.Consolidators;
-using QuantConnect.Data.Market;
-using QuantConnect.Util;
 using System.Linq;
 using System.Threading;
+using QuantConnect.Data.Consolidators;
+using QuantConnect.Data.Market;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 {
@@ -38,7 +36,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         private Symbol _symbol;
         private TickType _tickType;
         private Resolution _resolution;
-        private StreamWriter _streamWriter;
+        private LazyStreamWriter _streamWriter;
         private string _dataDirectory;
         private IDataConsolidator _consolidator;
         private DateTime _referenceDate;
@@ -106,6 +104,14 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         }
 
         /// <summary>
+        /// If no data has been consolidated, do not write to disk
+        /// </summary>
+        public bool ShouldWriteToDisk()
+        {
+            return _consolidator.Consolidated != null;
+        }
+
+        /// <summary>
         /// Create a new AlgoSeekFuturesProcessor for enquing consolidated bars and flushing them to disk
         /// </summary>
         /// <param name="symbol">Symbol for the processor</param>
@@ -149,7 +155,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 
             try
             {
-                _streamWriter = new StreamWriter(file);
+                _streamWriter = new LazyStreamWriter(file);
             }
             catch (Exception err)
             {
@@ -159,7 +165,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 
                 // we store the information under different (randomized) name
                 Log.Trace("Changing name from {0} to {1}", file, newRandomizedName);
-                _streamWriter = new StreamWriter(newRandomizedName);
+                _streamWriter = new LazyStreamWriter(newRandomizedName);
             }
 
             // On consolidating the bars put the bar into a queue in memory to be written to disk later.
@@ -241,7 +247,10 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             {
                 foreach (var name in _windowsRestrictedNames)
                 {
-                    fileName = fileName.Replace(name, "_" + name);
+                    // The 'con' restricted filename will corrupt the 'seCONed' filepath
+                    var restrictedFilePath = Path.DirectorySeparatorChar + name;
+                    var safeFilePath = Path.DirectorySeparatorChar + "_" + name;
+                    fileName = fileName.Replace(restrictedFilePath, safeFilePath);
                 }
             }
             return fileName;
