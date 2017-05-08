@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using QuantConnect.Logging;
 using System.Linq;
 using Ionic.Zip;
+using Ionic.Zlib;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -83,14 +84,29 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 stream = CreateStream(newItem.ZipFile, entryName);
                                 _zipFileCache.TryAdd(filename, new Lazy<CachedZipFile>(() => newItem));
                             }
-                            catch (ZipException exception)
+                            catch (Exception exception)
                             {
-                                Log.Error("ZipDataCacheProvider.Fetch(): Corrupt file: " + filename + " Error: " + exception);
+                                if (exception is ZipException || exception is ZlibException)
+                                {
+                                    Log.Error("ZipDataCacheProvider.Fetch(): Corrupt zip file/entry: " + filename + "#" + entryName + " Error: " + exception);
+                                }
+                                else throw;
                             }
                         }
                         else
                         {
-                            stream = CreateStream(existingEntry.Value.ZipFile, entryName);
+                            try
+                            {
+                                stream = CreateStream(existingEntry.Value.ZipFile, entryName);
+                            }
+                            catch (Exception exception)
+                            {
+                                if (exception is ZipException || exception is ZlibException)
+                                {
+                                    Log.Error("ZipDataCacheProvider.Fetch(): Corrupt zip file/entry: " + filename + "#" + entryName + " Error: " + exception);
+                                }
+                                else throw;
+                            }
                         }
                     }
 
