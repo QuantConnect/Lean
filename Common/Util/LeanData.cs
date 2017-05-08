@@ -86,15 +86,15 @@ namespace QuantConnect.Util
                         case Resolution.Minute:
                             var bar = (QuoteBar) data;
                             return ToCsv(milliseconds,
-                                    ToCsv(bar.Bid, false), bar.LastBidSize,
-                                    ToCsv(bar.Ask, false), bar.LastAskSize);
+                                ToNonScaledCsv(bar.Bid), bar.LastBidSize,
+                                ToNonScaledCsv(bar.Ask), bar.LastAskSize);
 
                         case Resolution.Hour:
                         case Resolution.Daily:
                             var bigBar = (QuoteBar) data;
                             return ToCsv(longTime,
-                                    ToCsv(bigBar.Bid, false), bigBar.LastBidSize,
-                                    ToCsv(bigBar.Ask, false), bigBar.LastAskSize);
+                                ToNonScaledCsv(bigBar.Bid), bigBar.LastBidSize,
+                                ToNonScaledCsv(bigBar.Ask), bigBar.LastAskSize);
                     }
                     break;
 
@@ -126,8 +126,8 @@ namespace QuantConnect.Util
                             if (quoteBar != null)
                             {
                                 return ToCsv(milliseconds,
-                                    ToCsv(quoteBar.Bid), quoteBar.LastBidSize,
-                                    ToCsv(quoteBar.Ask), quoteBar.LastAskSize);
+                                    ToScaledCsv(quoteBar.Bid), quoteBar.LastBidSize,
+                                    ToScaledCsv(quoteBar.Ask), quoteBar.LastAskSize);
                             }
                             var tradeBar = data as TradeBar;
                             if (tradeBar != null)
@@ -149,14 +149,13 @@ namespace QuantConnect.Util
                             if (bigQuoteBar != null)
                             {
                                 return ToCsv(longTime,
-                                    ToCsv(bigQuoteBar.Bid), bigQuoteBar.LastBidSize,
-                                    ToCsv(bigQuoteBar.Ask), bigQuoteBar.LastAskSize);
+                                    ToScaledCsv(bigQuoteBar.Bid), bigQuoteBar.LastBidSize,
+                                    ToScaledCsv(bigQuoteBar.Ask), bigQuoteBar.LastAskSize);
                             }
                             var bigTradeBar = data as TradeBar;
                             if (bigTradeBar != null)
                             {
-                                return ToCsv(longTime,
-                                    ToCsv(bigTradeBar), bigTradeBar.Volume);
+                                return ToCsv(longTime, ToScaledCsv(bigTradeBar), bigTradeBar.Volume);
                             }
                             var bigOpenInterest = data as OpenInterest;
                             if (bigOpenInterest != null)
@@ -197,19 +196,19 @@ namespace QuantConnect.Util
                             if (quoteBar != null)
                             {
                                 return ToCsv(milliseconds,
-                                    ToCsv(quoteBar.Bid, false), quoteBar.LastBidSize, 
-                                    ToCsv(quoteBar.Ask, false), quoteBar.LastAskSize, false);
+                                    ToNonScaledCsv(quoteBar.Bid), quoteBar.LastBidSize,
+                                    ToNonScaledCsv(quoteBar.Ask), quoteBar.LastAskSize);
                             }
                             var tradeBar = data as TradeBar;
                             if (tradeBar != null)
                             {
                                 return ToCsv(milliseconds,
-                                             tradeBar.Open, tradeBar.High, tradeBar.Low, tradeBar.Close, tradeBar.Volume, false);
+                                             tradeBar.Open, tradeBar.High, tradeBar.Low, tradeBar.Close, tradeBar.Volume);
                             }
                             var openInterest = data as OpenInterest;
                             if (openInterest != null)
                             {
-                                return ToCsv(milliseconds, openInterest.Value, false);
+                                return ToCsv(milliseconds, openInterest.Value);
                             }
                             break;
 
@@ -220,19 +219,18 @@ namespace QuantConnect.Util
                             if (bigQuoteBar != null)
                             {
                                 return ToCsv(longTime,
-                                    ToCsv(bigQuoteBar.Bid, false), bigQuoteBar.LastBidSize,
-                                    ToCsv(bigQuoteBar.Ask, false), bigQuoteBar.LastAskSize, false);
+                                    ToNonScaledCsv(bigQuoteBar.Bid), bigQuoteBar.LastBidSize,
+                                    ToNonScaledCsv(bigQuoteBar.Ask), bigQuoteBar.LastAskSize);
                             }
                             var bigTradeBar = data as TradeBar;
                             if (bigTradeBar != null)
                             {
-                                return ToCsv(longTime,
-                                    ToCsv(bigTradeBar, false), bigTradeBar.Volume, false);
+                                return ToCsv(longTime, ToNonScaledCsv(bigTradeBar), bigTradeBar.Volume);
                             }
                             var bigOpenInterest = data as OpenInterest;
                             if (bigOpenInterest != null)
                             {
-                                return ToCsv(milliseconds, bigOpenInterest.Value, false);
+                                return ToCsv(milliseconds, bigOpenInterest.Value);
                             }
                             break;
 
@@ -624,17 +622,30 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// Creates a csv line for the bar, if null fills in empty strings
+        /// Creates a scaled csv line for the bar, if null fills in empty strings
         /// </summary>
-        private static string ToCsv(IBar bar, bool scale = true)
+        private static string ToScaledCsv(IBar bar)
         {
             if (bar == null)
             {
                 return ToCsv(string.Empty, string.Empty, string.Empty, string.Empty);
             }
 
-            return scale ? ToCsv(Scale(bar.Open), Scale(bar.High), Scale(bar.Low), Scale(bar.Close)) 
-                         : ToCsv(bar.Open, bar.High, bar.Low, bar.Close);
+            return ToCsv(Scale(bar.Open), Scale(bar.High), Scale(bar.Low), Scale(bar.Close));
+        }
+
+
+        /// <summary>
+        /// Creates a non scaled csv line for the bar, if null fills in empty strings
+        /// </summary>
+        private static string ToNonScaledCsv(IBar bar)
+        {
+            if (bar == null)
+            {
+                return ToCsv(string.Empty, string.Empty, string.Empty, string.Empty);
+            }
+
+            return ToCsv(bar.Open, bar.High, bar.Low, bar.Close);
         }
 
         /// <summary>

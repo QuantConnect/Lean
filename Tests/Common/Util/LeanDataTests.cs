@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -61,6 +62,16 @@ namespace QuantConnect.Tests.Common.Util
         {
             var line = LeanData.GenerateLine(parameters.Data, parameters.SecurityType, parameters.Resolution);
             Assert.AreEqual(parameters.ExpectedLine, line);
+
+            if (parameters.Config.Type == typeof(QuoteBar))
+            {
+                Assert.AreEqual(line.Split(',').Length, 11);
+            }
+
+            if (parameters.Config.Type == typeof(TradeBar))
+            {
+                Assert.AreEqual(line.Split(',').Length, 6);
+            }
         }
 
         [Test, TestCaseSource("GetLeanDataLineTestParameters")]
