@@ -176,16 +176,16 @@ namespace QuantConnect.Util
                             if (tick.TickType == TickType.Trade)
                             {
                                 return ToCsv(milliseconds,
-                                             tick.LastPrice, tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1": "0", false);
+                                             tick.LastPrice, tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1": "0");
                             }
                             if (tick.TickType == TickType.Quote)
                             {
                                 return ToCsv(milliseconds,
-                                             tick.BidPrice, tick.BidSize, tick.AskPrice, tick.AskSize, tick.Exchange, tick.Suspicious ? "1" : "0", false);
+                                             tick.BidPrice, tick.BidSize, tick.AskPrice, tick.AskSize, tick.Exchange, tick.Suspicious ? "1" : "0");
                             }
                             if (tick.TickType == TickType.OpenInterest)
                             {
-                                return ToCsv(milliseconds, tick.Value, false);
+                                return ToCsv(milliseconds, tick.Value);
                             }
                             break;
 
