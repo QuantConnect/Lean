@@ -32,7 +32,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private const int CacheSeconds = 10;
 
         // ZipArchive cache used by the class
-        private readonly ConcurrentDictionary<string, Lazy<CachedZipFile>> _zipFileCache = new ConcurrentDictionary<string, Lazy<CachedZipFile>>();
+        private readonly ConcurrentDictionary<string, CachedZipFile> _zipFileCache = new ConcurrentDictionary<string, CachedZipFile>();
         private DateTime _lastCacheScan = DateTime.MinValue;
         private readonly IDataProvider _dataProvider;
 
@@ -71,7 +71,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 try
                 {
-                    Lazy<CachedZipFile> existingEntry;
+                    CachedZipFile existingEntry;
                     if (!_zipFileCache.TryGetValue(filename, out existingEntry))
                     {
                         var dataStream = _dataProvider.Fetch(filename);
@@ -82,7 +82,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             {
                                 var newItem = new CachedZipFile(ZipFile.Read(dataStream), filename);
                                 stream = CreateStream(newItem.ZipFile, entryName);
-                                _zipFileCache.TryAdd(filename, new Lazy<CachedZipFile>(() => newItem));
+                                _zipFileCache.TryAdd(filename, newItem);
                             }
                             catch (Exception exception)
                             {
@@ -98,7 +98,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         try
                         {
-                            stream = CreateStream(existingEntry.Value.ZipFile, entryName);
+                            stream = CreateStream(existingEntry.ZipFile, entryName);
                         }
                         catch (Exception exception)
                         {
@@ -144,7 +144,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             foreach (var zip in _zipFileCache)
             {
-                zip.Value.Value.ZipFile.Dispose();
+                zip.Value.ZipFile.Dispose();
             }
 
             _zipFileCache.Clear();
@@ -160,14 +160,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // clean all items that that are older than CacheSeconds than the current date
             foreach (var zip in _zipFileCache)
             {
-                if (zip.Value.Value.Uncache(clearCacheIfOlderThan))
+                if (zip.Value.Uncache(clearCacheIfOlderThan))
                 {
                     // removing it from the cache
-                    Lazy<CachedZipFile> removed;
+                    CachedZipFile removed;
                     if (_zipFileCache.TryRemove(zip.Key, out removed))
                     {
                         // disposing zip archive
-                        removed.Value.Dispose();
+                        removed.Dispose();
                     }
                 }
             }
