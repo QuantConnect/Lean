@@ -168,6 +168,11 @@ namespace QuantConnect.Securities
         /// </summary>
         protected virtual decimal GetInitialMarginRequirement(Security security, decimal holdingValue)
         {
+            if (security == null ||
+                security.GetLastData() == null ||
+                holdingValue == 0m)
+                return 0m;
+
             var symbol = security.Symbol;
             var date = security.GetLastData().Time.Date;
             var marginReq = GetCurrentMarginRequirements(symbol, date);
