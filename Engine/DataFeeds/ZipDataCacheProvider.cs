@@ -36,6 +36,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private DateTime _lastCacheScan = DateTime.MinValue;
         private readonly IDataProvider _dataProvider;
 
+        // Ionic.Zip.ZipFile instances are not thread-safe
+        private readonly object _zipFileSynchronizer = new object();
+
         /// <summary>
         /// Constructor that sets the <see cref="IDataProvider"/> used to retrieve data
         /// </summary>
@@ -81,7 +84,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             try
                             {
                                 var newItem = new CachedZipFile(ZipFile.Read(dataStream), filename);
-                                stream = CreateStream(newItem.ZipFile, entryName);
+
+                                lock (_zipFileSynchronizer)
+                                {
+                                    stream = CreateStream(newItem.ZipFile, entryName);
+                                }
+
                                 _zipFileCache.TryAdd(filename, newItem);
                             }
                             catch (Exception exception)
@@ -98,7 +106,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         try
                         {
-                            stream = CreateStream(existingEntry.ZipFile, entryName);
+                            lock (_zipFileSynchronizer)
+                            {
+                                stream = CreateStream(existingEntry.ZipFile, entryName);
+                            }
                         }
                         catch (Exception exception)
                         {
@@ -142,9 +153,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-            foreach (var zip in _zipFileCache)
+            lock (_zipFileSynchronizer)
             {
-                zip.Value.ZipFile.Dispose();
+                foreach (var zip in _zipFileCache)
+                {
+                    zip.Value.ZipFile.Dispose();
+                }
             }
 
             _zipFileCache.Clear();
