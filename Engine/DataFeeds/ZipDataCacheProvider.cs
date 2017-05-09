@@ -71,12 +71,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 try
                 {
-                    var dataStream = _dataProvider.Fetch(filename);
-
-                    if (dataStream != null)
+                    Lazy<CachedZipFile> existingEntry;
+                    if (!_zipFileCache.TryGetValue(filename, out existingEntry))
                     {
-                        Lazy<CachedZipFile> existingEntry;
-                        if (!_zipFileCache.TryGetValue(filename, out existingEntry))
+                        var dataStream = _dataProvider.Fetch(filename);
+
+                        if (dataStream != null)
                         {
                             try
                             {
@@ -93,20 +93,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 else throw;
                             }
                         }
-                        else
+                    }
+                    else
+                    {
+                        try
                         {
-                            try
+                            stream = CreateStream(existingEntry.Value.ZipFile, entryName);
+                        }
+                        catch (Exception exception)
+                        {
+                            if (exception is ZipException || exception is ZlibException)
                             {
-                                stream = CreateStream(existingEntry.Value.ZipFile, entryName);
+                                Log.Error("ZipDataCacheProvider.Fetch(): Corrupt zip file/entry: " + filename + "#" + entryName + " Error: " + exception);
                             }
-                            catch (Exception exception)
-                            {
-                                if (exception is ZipException || exception is ZlibException)
-                                {
-                                    Log.Error("ZipDataCacheProvider.Fetch(): Corrupt zip file/entry: " + filename + "#" + entryName + " Error: " + exception);
-                                }
-                                else throw;
-                            }
+                            else throw;
                         }
                     }
 
