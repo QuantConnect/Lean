@@ -34,45 +34,41 @@ namespace QuantConnect.Securities.Future
                 return FuturesExpiryDictionary[symbol.ToUpper()];
             }
 
-            // If func for expiry cannot be found pass the date through
+            // If function for expiry cannot be found pass the date through
             return (date) => date;
         }
 
         /// <summary>
-        /// Dictorionary of the Func that calculates the expiry for a given year and month.
-        /// It does not matter what the day and time of day are passed into the Func.
-        /// The Func is reposible for calulating the day and time of day given a year and month
+        /// Dictionary of the Functions that calculates the expiry for a given year and month.
+        /// It does not matter what the day and time of day are passed into the Functions.
+        /// The Functions is responsible for calculating the day and time of day given a year and month
         /// </summary>
         public static Dictionary<string, Func<DateTime, DateTime>> FuturesExpiryDictionary = new Dictionary<string, Func<DateTime, DateTime>>()
         {
             // Metals
             // Gold (GC): http://www.cmegroup.com/trading/metals/precious/gold_contract_specifications.html
             {Futures.Metals.Gold, (time =>
-                {
                     // Trading terminates on the third last business day of the delivery month.
-                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time,3);
-                })
+                    FuturesExpiryUtilityFunctions.NthLastBusinessDay(time,3)
+                )
             },
             // Silver (SI): http://www.cmegroup.com/trading/metals/precious/silver_contract_specifications.html
             {Futures.Metals.Silver, (time =>
-                {
                     // Trading terminates on the third last business day of the delivery month.
-                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time,3);
-                })
+                    FuturesExpiryUtilityFunctions.NthLastBusinessDay(time,3)
+                )
             },
             // Platinum (PL): http://www.cmegroup.com/trading/metals/precious/platinum_contract_specifications.html
             {Futures.Metals.Platinum, (time =>
-                {
                     // Trading terminates on the third last business day of the delivery month.
-                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time,3);
-                })
+                    FuturesExpiryUtilityFunctions.NthLastBusinessDay(time,3)
+                )
             },
             // Palladium (PA): http://www.cmegroup.com/trading/metals/precious/palladium_contract_specifications.html
             {Futures.Metals.Palladium, (time =>
-                {
                     // Trading terminates on the third last business day of the delivery month.
-                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time,3);
-                })
+                    FuturesExpiryUtilityFunctions.NthLastBusinessDay(time,3)
+                )
             },
             // Indices
             // SP500EMini (ES): http://www.cmegroup.com/trading/equity-index/us-index/e-mini-sandp500_contract_specifications.html
@@ -335,14 +331,14 @@ namespace QuantConnect.Securities.Future
                     // Checking condition 1
                     if(time.Month == 11)
                     {
-                        var PriorThursday = (from day in Enumerable.Range(1, daysInMonth)
+                        var priorThursday = (from day in Enumerable.Range(1, daysInMonth)
                                   where new DateTime(time.Year, time.Month, day).DayOfWeek == DayOfWeek.Thursday
                                   select new DateTime(time.Year, time.Month, day)).Reverse().ElementAt(1);
-                        while (!FuturesExpiryUtilityFunctions.NotHoliday(PriorThursday) || !FuturesExpiryUtilityFunctions.NotPrecededByHoliday(PriorThursday))
+                        while (!FuturesExpiryUtilityFunctions.NotHoliday(priorThursday) || !FuturesExpiryUtilityFunctions.NotPrecededByHoliday(priorThursday))
                         {
-                            PriorThursday = PriorThursday.AddDays(-7);
+                            priorThursday = priorThursday.AddDays(-7);
                         }
-                        return PriorThursday;
+                        return priorThursday;
                     }
                     // Checking Condition 2
                     var lastThursday = (from day in Enumerable.Range(1, daysInMonth)
