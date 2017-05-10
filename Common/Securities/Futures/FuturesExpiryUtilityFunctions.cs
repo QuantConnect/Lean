@@ -28,8 +28,8 @@ namespace QuantConnect.Securities.Future
         /// Method to retrieve n^th succeeding/preceding business day for a given day
         /// </summary>
         /// <param name="time">The current Time</param>
-        /// <param name="n">Number of business days succeding current time. Use negative value for preceding business days</param>
-        /// <returns>The datetime after adding n business days</returns>
+        /// <param name="n">Number of business days succeeding current time. Use negative value for preceding business days</param>
+        /// <returns>The date-time after adding n business days</returns>
         public static DateTime AddBusinessDays(DateTime time, int n)
         {
             if (n < 0)
@@ -135,25 +135,25 @@ namespace QuantConnect.Securities.Future
         /// <summary>
         /// This function takes Thursday as input and returns true if four weekdays preceding it are not Holidays
         /// </summary>
-        /// <param name="Thursday">DateTime of a given Thursday</param>
+        /// <param name="thursday">DateTime of a given Thursday</param>
         /// <returns>False if DayOfWeek is not Thursday or is not preceded by four weekdays,Otherwise returns True</returns>
-        public static bool NotPrecededByHoliday(DateTime Thursday)
+        public static bool NotPrecededByHoliday(DateTime thursday)
         {
-            if (Thursday.DayOfWeek != DayOfWeek.Thursday)
+            if (thursday.DayOfWeek != DayOfWeek.Thursday)
             {
                 throw new ArgumentException("Input to NotPrecededByHolidays must be a Thursday");
             }
             var result = true;
             // for Monday, Tuesday and Wednesday
-            for (int i = 1; i <= 3; i++)
+            for (var i = 1; i <= 3; i++)
             {
-                if (!NotHoliday(Thursday.AddDays(-i)))
+                if (!NotHoliday(thursday.AddDays(-i)))
                 {
                     result = false;
                 }
             }
             // for Friday
-            if (!NotHoliday(Thursday.AddDays(-6)))
+            if (!NotHoliday(thursday.AddDays(-6)))
             {
                 result = false;
             }

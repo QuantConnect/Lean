@@ -79,7 +79,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var inputDate = DateTime.ParseExact(time, "dd/MM/yyyy", null);
             
             //Act
-            var calculatedDate = FuturesExpiryUtilityFunctions.NthLastBusinessDay(inputDate, numberOfDays);
+            FuturesExpiryUtilityFunctions.NthLastBusinessDay(inputDate, numberOfDays);
             
         }
 
@@ -155,7 +155,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var inputDate = DateTime.ParseExact(day, "dd/MM/yyyy", null);
 
             //Act
-            var calculatedOutput = FuturesExpiryUtilityFunctions.NotPrecededByHoliday(inputDate);
+            FuturesExpiryUtilityFunctions.NotPrecededByHoliday(inputDate);
 
         }
 
