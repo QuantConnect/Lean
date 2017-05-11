@@ -227,7 +227,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(symbol.ID.Market, Market.Oanda);
             Assert.AreEqual(resolution, Resolution.Tick);
             Assert.AreEqual(symbol.ID.Symbol.ToLower(), "eurusd");
-            Assert.AreEqual(date.Date, DateTime.Parse("01/04/2017").Date);
+            Assert.AreEqual(date.Date, DateTime.Parse("2017-01-04").Date);
 
             var mixedPathSeperators = @"Data//forex/fxcm\/minute//eurusd\\20160101_quote.zip";
             Assert.IsTrue(LeanData.TryParsePath(mixedPathSeperators, out symbol, out date, out resolution));
@@ -235,7 +235,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(symbol.ID.Market, Market.FXCM);
             Assert.AreEqual(resolution, Resolution.Minute);
             Assert.AreEqual(symbol.ID.Symbol.ToLower(), "eurusd");
-            Assert.AreEqual(date.Date, DateTime.Parse("01/01/2016").Date);
+            Assert.AreEqual(date.Date, DateTime.Parse("2016-01-01").Date);
 
             var longRelativePath = "../../../../../../../../../Data/forex/fxcm/hour/gbpusd.zip";
             Assert.IsTrue(LeanData.TryParsePath(longRelativePath, out symbol, out date, out resolution));
@@ -251,7 +251,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(symbol.ID.Market, Market.FXCM);
             Assert.AreEqual(resolution, Resolution.Minute);
             Assert.AreEqual(symbol.ID.Symbol.ToLower(), "eurusd");
-            Assert.AreEqual(date.Date, DateTime.Parse("01/02/2016").Date);
+            Assert.AreEqual(date.Date, DateTime.Parse("2016-01-02").Date);
 
             var dailyEquitiesPath = "Data/equity/usa/daily/aapl.zip";
             Assert.IsTrue(LeanData.TryParsePath(dailyEquitiesPath, out symbol, out date, out resolution));
@@ -267,7 +267,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(symbol.ID.Market, Market.USA);
             Assert.AreEqual(resolution, Resolution.Minute);
             Assert.AreEqual(symbol.ID.Symbol.ToLower(), "goog");
-            Assert.AreEqual(date.Date, DateTime.Parse("01/03/2007").Date);
+            Assert.AreEqual(date.Date, DateTime.Parse("2007-01-03").Date);
 
             var cfdPath = "Data/cfd/oanda/minute/bcousd/20160101_trade.zip";
             Assert.IsTrue(LeanData.TryParsePath(cfdPath, out symbol, out date, out resolution));
@@ -275,7 +275,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(symbol.ID.Market, Market.Oanda);
             Assert.AreEqual(resolution, Resolution.Minute);
             Assert.AreEqual(symbol.ID.Symbol.ToLower(), "bcousd");
-            Assert.AreEqual(date.Date, DateTime.Parse("01/01/2016").Date);
+            Assert.AreEqual(date.Date, DateTime.Parse("2016-01-01").Date);
         }
 
         private static void AssertBarsAreEqual(IBar expected, IBar actual)
