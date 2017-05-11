@@ -54,9 +54,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// </summary>
         /// <param name="dataCacheProvider">The <see cref="IDataCacheProvider"/> used to retrieve a stream of data</param>
         /// <param name="source">The local file to be read</param>
-        /// <param name="entryName">Specifies the zip entry to be opened. Leave null if not applicable,
-        /// <param name="startingPosition">The starting position in the local file to be read</param>
-        /// or to open the first zip entry found regardless of name</param>
         /// <param name="startingPosition">The position in the stream from which to start reading</param>
         public LocalFileSubscriptionStreamReader(IDataCacheProvider dataCacheProvider, string source, long startingPosition)
         {

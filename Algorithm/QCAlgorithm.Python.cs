@@ -36,7 +36,7 @@ namespace QuantConnect.Algorithm
         /// AddData a new user defined data source, requiring only the minimum config options.
         /// The data is added with a default time zone of NewYork (Eastern Daylight Savings Time)
         /// </summary>
-        /// <param name="typeName">Data source type</param>
+        /// <param name="type">Data source type</param>
         /// <param name="symbol">Key/Symbol for data</param>
         /// <param name="resolution">Resolution of the data</param>
         /// <remarks>Generic type T must implement base data</remarks>
@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// AddData a new user defined data source, requiring only the minimum config options.
         /// </summary>
-        /// <param name="typeName">Data source type</param>
+        /// <param name="type">Data source type</param>
         /// <param name="symbol">Key/Symbol for data</param>
         /// <param name="resolution">Resolution of the Data Required</param>
         /// <param name="timeZone">Specifies the time zone of the raw data</param>

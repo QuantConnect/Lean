@@ -369,7 +369,6 @@ namespace QuantConnect.Algorithm
         /// <param name="period">The period of the FRAMA</param>
         /// <param name="longPeriod">The long period of the FRAMA</param>
         /// <param name="resolution">The resolution</param>
-        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>The FRAMA for the given parameters</returns>
         public FractalAdaptiveMovingAverage FRAMA(Symbol symbol, int period, int longPeriod = 198, Resolution? resolution = null)
         {
