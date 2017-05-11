@@ -3621,7 +3621,10 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017"
+      ]
     },
     "Cfd-fxcm-BCOUSD": {
       "dataTimeZone": "UTC",
@@ -3663,7 +3666,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-fxcm-CH20CHF": {
       "dataTimeZone": "UTC",
@@ -3705,7 +3710,10 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017"
+      ]
     },
     "Cfd-fxcm-DE10YBEUR": {
       "dataTimeZone": "UTC",
@@ -3747,7 +3755,10 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017"
+      ]
     },
     "Cfd-fxcm-DE30EUR": {
       "dataTimeZone": "UTC",
@@ -3789,7 +3800,10 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017"
+      ]
     },
     "Cfd-fxcm-DXYUSD": {
       "dataTimeZone": "UTC",
@@ -3879,7 +3893,10 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017"
+      ]
     },
     "Cfd-fxcm-EU50EUR": {
       "dataTimeZone": "UTC",
@@ -3921,7 +3938,10 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017"
+      ]
     },
     "Cfd-fxcm-FR40EUR": {
       "dataTimeZone": "UTC",
@@ -3963,7 +3983,10 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017"
+      ]
     },
     "Cfd-fxcm-HK33HKD": {
       "dataTimeZone": "UTC",
@@ -4030,7 +4053,10 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017"
+      ]
     },
     "Cfd-fxcm-IT40EUR": {
       "dataTimeZone": "UTC",
@@ -4114,7 +4140,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-fxcm-NAS100USD": {
       "dataTimeZone": "UTC",
@@ -4182,7 +4210,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-fxcm-NATGASUSD": {
       "dataTimeZone": "UTC",
@@ -4250,7 +4280,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-fxcm-SPX500USD": {
       "dataTimeZone": "UTC",
@@ -4318,7 +4350,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-fxcm-UK100GBP": {
       "dataTimeZone": "UTC",
@@ -4360,7 +4394,10 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017"
+      ]
     },
     "Cfd-fxcm-US30USD": {
       "dataTimeZone": "UTC",
@@ -4428,7 +4465,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-fxcm-WTICOUSD": {
       "dataTimeZone": "UTC",
@@ -4496,7 +4535,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-fxcm-XAGUSD": {
       "dataTimeZone": "UTC",
@@ -4564,7 +4605,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-fxcm-XAUUSD": {
       "dataTimeZone": "UTC",
@@ -4632,7 +4675,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-fxcm-XCUUSD": {
       "dataTimeZone": "UTC",
@@ -4700,7 +4745,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-fxcm-XPDUSD": {
       "dataTimeZone": "UTC",
@@ -4768,7 +4815,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-fxcm-XPTUSD": {
       "dataTimeZone": "UTC",
@@ -4836,7 +4885,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-[*]": {
       "dataTimeZone": "UTC",
@@ -4977,7 +5028,10 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017"
+      ]
     },
     "Cfd-oanda-BCOUSD": {
       "dataTimeZone": "UTC",
@@ -5045,7 +5099,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-CH20CHF": {
       "dataTimeZone": "UTC",
@@ -5087,7 +5143,10 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017"
+      ]
     },
     "Cfd-oanda-CORNUSD": {
       "dataTimeZone": "UTC",
@@ -5180,7 +5239,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-DE10YBEUR": {
       "dataTimeZone": "UTC",
@@ -5222,7 +5283,10 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017"
+      ]
     },
     "Cfd-oanda-DE30EUR": {
       "dataTimeZone": "UTC",
@@ -5264,7 +5328,10 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017"
+      ]
     },
     "Cfd-oanda-EU50EUR": {
       "dataTimeZone": "UTC",
@@ -5306,7 +5373,10 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017"
+      ]
     },
     "Cfd-oanda-FR40EUR": {
       "dataTimeZone": "UTC",
@@ -5348,7 +5418,10 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017"
+      ]
     },
     "Cfd-oanda-HK33HKD": {
       "dataTimeZone": "UTC",
@@ -5440,7 +5513,10 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017"
+      ]
     },
     "Cfd-oanda-JP225USD": {
       "dataTimeZone": "UTC",
@@ -5533,7 +5609,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-NAS100USD": {
       "dataTimeZone": "UTC",
@@ -5626,7 +5704,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-NATGASUSD": {
       "dataTimeZone": "UTC",
@@ -5694,7 +5774,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-NL25EUR": {
       "dataTimeZone": "UTC",
@@ -5736,7 +5818,10 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017"
+      ]
     },
     "Cfd-oanda-SG30SGD": {
       "dataTimeZone": "UTC",
@@ -5789,7 +5874,8 @@
         "1/30/2017",
         "2/16/2018",
         "2/5/2019",
-        "1/27/2020"
+        "1/27/2020",
+        "4/14/2017"
       ]
     },
     "Cfd-oanda-SOYBNUSD": {
@@ -5883,7 +5969,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-SPX500USD": {
       "dataTimeZone": "UTC",
@@ -5976,7 +6064,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-SUGARUSD": {
       "dataTimeZone": "UTC",
@@ -6018,7 +6108,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-UK100GBP": {
       "dataTimeZone": "UTC",
@@ -6060,7 +6152,10 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017"
+      ]
     },
     "Cfd-oanda-UK10YBGBP": {
       "dataTimeZone": "UTC",
@@ -6102,7 +6197,10 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017"
+      ]
     },
     "Cfd-oanda-US2000USD": {
       "dataTimeZone": "UTC",
@@ -6170,7 +6268,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-US30USD": {
       "dataTimeZone": "UTC",
@@ -6263,7 +6363,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-USB02YUSD": {
       "dataTimeZone": "UTC",
@@ -6331,7 +6433,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-USB05YUSD": {
       "dataTimeZone": "UTC",
@@ -6399,7 +6503,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-USB10YUSD": {
       "dataTimeZone": "UTC",
@@ -6467,7 +6573,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-USB30YUSD": {
       "dataTimeZone": "UTC",
@@ -6535,7 +6643,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-WHEATUSD": {
       "dataTimeZone": "UTC",
@@ -6628,7 +6738,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-WTICOUSD": {
       "dataTimeZone": "UTC",
@@ -6696,7 +6808,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAGAUD": {
       "dataTimeZone": "UTC",
@@ -6764,7 +6878,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAGCAD": {
       "dataTimeZone": "UTC",
@@ -6832,7 +6948,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+
+      ]
     },
     "Cfd-oanda-XAGCHF": {
       "dataTimeZone": "UTC",
@@ -6900,7 +7018,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAGEUR": {
       "dataTimeZone": "UTC",
@@ -6968,7 +7088,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAGGBP": {
       "dataTimeZone": "UTC",
@@ -7036,7 +7158,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAGHKD": {
       "dataTimeZone": "UTC",
@@ -7104,7 +7228,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAGJPY": {
       "dataTimeZone": "UTC",
@@ -7172,7 +7298,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAGNZD": {
       "dataTimeZone": "UTC",
@@ -7240,7 +7368,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAGSGD": {
       "dataTimeZone": "UTC",
@@ -7308,7 +7438,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAGUSD": {
       "dataTimeZone": "UTC",
@@ -7376,7 +7508,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAUAUD": {
       "dataTimeZone": "UTC",
@@ -7444,7 +7578,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAUCAD": {
       "dataTimeZone": "UTC",
@@ -7512,7 +7648,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAUCHF": {
       "dataTimeZone": "UTC",
@@ -7580,7 +7718,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAUEUR": {
       "dataTimeZone": "UTC",
@@ -7648,7 +7788,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAUGBP": {
       "dataTimeZone": "UTC",
@@ -7716,7 +7858,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAUHKD": {
       "dataTimeZone": "UTC",
@@ -7784,7 +7928,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAUJPY": {
       "dataTimeZone": "UTC",
@@ -7852,7 +7998,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAUNZD": {
       "dataTimeZone": "UTC",
@@ -7920,7 +8068,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAUSGD": {
       "dataTimeZone": "UTC",
@@ -7988,7 +8138,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAUUSD": {
       "dataTimeZone": "UTC",
@@ -8056,7 +8208,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAUXAG": {
       "dataTimeZone": "UTC",
@@ -8124,7 +8278,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XCUUSD": {
       "dataTimeZone": "UTC",
@@ -8192,7 +8348,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XPDUSD": {
       "dataTimeZone": "UTC",
@@ -8260,7 +8418,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XPTUSD": {
       "dataTimeZone": "UTC",
@@ -8328,7 +8488,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     }
   }
 }
