@@ -27,7 +27,7 @@ namespace QuantConnect.Algorithm.Examples
     /// </summary>
     public class MovingAverageCrossAlgorithm : QCAlgorithm
     {
-        private const string Symbol = "SPY";
+        private const string symbol = "SPY";
         private DateTime previous;
         private ExponentialMovingAverage fast;
         private ExponentialMovingAverage slow;
@@ -43,17 +43,17 @@ namespace QuantConnect.Algorithm.Examples
             SetEndDate(2015, 01, 01);
 
             // request SPY data with minute resolution
-            AddSecurity(SecurityType.Equity, Symbol, Resolution.Minute);
+            AddSecurity(SecurityType.Equity, symbol, Resolution.Minute);
 
             // create a 15 day exponential moving average
-            fast = EMA(Symbol, 15, Resolution.Daily);
+            fast = EMA(symbol, 15, Resolution.Daily);
 
             // create a 30 day exponential moving average
-            slow = EMA(Symbol, 30, Resolution.Daily);
+            slow = EMA(symbol, 30, Resolution.Daily);
 
             int ribbonCount = 8;
             int ribbonInterval = 15;
-            ribbon = Enumerable.Range(0, ribbonCount).Select(x => SMA(Symbol, (x + 1)*ribbonInterval, Resolution.Daily)).ToArray();
+            ribbon = Enumerable.Range(0, ribbonCount).Select(x => SMA(symbol, (x + 1)*ribbonInterval, Resolution.Daily)).ToArray();
         }
 
         
@@ -76,7 +76,7 @@ namespace QuantConnect.Algorithm.Examples
 
             // define a small tolerance on our checks to avoid bouncing
             const decimal tolerance = 0.00015m;
-            var holdings = Portfolio[Symbol].Quantity;
+            var holdings = Portfolio[symbol].Quantity;
 
             // we only want to go long if we're currently short or flat
             if (holdings <= 0)
@@ -84,8 +84,8 @@ namespace QuantConnect.Algorithm.Examples
                 // if the fast is greater than the slow, we'll go long
                 if (fast > slow * (1 + tolerance))
                 {
-                    Log("BUY  >> " + Securities[Symbol].Price);
-                    SetHoldings(Symbol, 1.0);
+                    Log("BUY  >> " + Securities[symbol].Price);
+                    SetHoldings(symbol, 1.0);
                 }
             }
 
@@ -93,14 +93,14 @@ namespace QuantConnect.Algorithm.Examples
             // if the fast is less than the slow we'll liquidate our long
             if (holdings > 0 && fast < slow)
             {
-                Log("SELL >> " + Securities[Symbol].Price);
-                Liquidate(Symbol);    
+                Log("SELL >> " + Securities[symbol].Price);
+                Liquidate(symbol);    
             }
 
-            Plot(Symbol, "Price", data[Symbol].Price);
+            Plot(symbol, "Price", data[symbol].Price);
             
             // easily plot indicators, the series name will be the name of the indicator
-            Plot(Symbol, fast, slow);
+            Plot(symbol, fast, slow);
             Plot("Ribbon", ribbon);
 
             previous = Time;

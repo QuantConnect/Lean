@@ -54,7 +54,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class OpeningBreakoutAlgorithm : QCAlgorithm
     {
         // the equity symbol we're trading
-        private const string Symbol = "SPY";
+        private const string symbol = "SPY";
 
         // plotting and logging control
         private const bool EnablePlotting = true;
@@ -118,19 +118,19 @@ namespace QuantConnect.Algorithm.CSharp
             SetBrokerageModel(BrokerageName.TradierBrokerage);
 
             // request high resolution equity data
-            AddSecurity(SecurityType.Equity, Symbol, Resolution.Second);
+            AddSecurity(SecurityType.Equity, symbol, Resolution.Second);
 
             // save off our security so we can reference it quickly later
-            Security = Securities[Symbol];
+            Security = Securities[symbol];
 
             // Set our max leverage
             Security.SetLeverage(MaximumLeverage);
 
             // define our longer term indicators
-            ADX14 = ADX(Symbol, 28, Resolution.Hour);
-            STD14 = STD(Symbol, 14, Resolution.Daily);
-            ATR14 = ATR(Symbol, 14, resolution: Resolution.Daily);
-            PSARMin = new ParabolicStopAndReverse(Symbol, afStart: 0.0001m, afIncrement: 0.0001m);
+            ADX14 = ADX(symbol, 28, Resolution.Hour);
+            STD14 = STD(symbol, 14, Resolution.Daily);
+            ATR14 = ATR(symbol, 14, resolution: Resolution.Daily);
+            PSARMin = new ParabolicStopAndReverse(symbol, afStart: 0.0001m, afIncrement: 0.0001m);
 
             // smooth our ATR over a week, we'll use this to determine if recent volatilty warrants entrance
             var oneWeekInMarketHours = (int)(5*6.5);
@@ -139,14 +139,14 @@ namespace QuantConnect.Algorithm.CSharp
             SmoothedSTD14 = new ExponentialMovingAverage("Smoothed_"+STD14.Name, oneWeekInMarketHours).Of(STD14);
 
             // initialize our charts
-            var chart = new Chart(Symbol);
+            var chart = new Chart(symbol);
             chart.AddSeries(new Series(ADX14.Name, SeriesType.Line, 0));
             chart.AddSeries(new Series("Enter", SeriesType.Scatter, 0));
             chart.AddSeries(new Series("Exit", SeriesType.Scatter, 0));
             chart.AddSeries(new Series(PSARMin.Name, SeriesType.Scatter, 0));
             AddChart(chart);
 
-            var history = History(Symbol, 20, Resolution.Daily);
+            var history = History(symbol, 20, Resolution.Daily);
             foreach (var bar in history)
             {
                 ADX14.Update(bar);
@@ -154,15 +154,15 @@ namespace QuantConnect.Algorithm.CSharp
                 STD14.Update(bar.EndTime, bar.Close);
             }
 
-            // schedule an event to run every day at five minutes after our Symbol's market open
+            // schedule an event to run every day at five minutes after our symbol's market open
             Schedule.Event("MarketOpenSpan")
-                .EveryDay(Symbol)
-                .AfterMarketOpen(Symbol, minutesAfterOpen: OpeningSpanInMinutes)
+                .EveryDay(symbol)
+                .AfterMarketOpen(symbol, minutesAfterOpen: OpeningSpanInMinutes)
                 .Run(MarketOpeningSpanHandler);
 
             Schedule.Event("MarketOpen")
-                .EveryDay(Symbol)
-                .AfterMarketOpen(Symbol, minutesAfterOpen: -1)
+                .EveryDay(symbol)
+                .AfterMarketOpen(symbol, minutesAfterOpen: -1)
                 .Run(() => PSARMin.Reset());
         }
 
@@ -173,7 +173,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             // request the last n minutes of data in minute bars, we're going to
             // define the opening rang
-            var history = History(Symbol, OpeningSpanInMinutes, Resolution.Minute);
+            var history = History(symbol, OpeningSpanInMinutes, Resolution.Minute);
 
             // this is our bar size
             var openingSpan = TimeSpan.FromMinutes(OpeningSpanInMinutes);
@@ -236,11 +236,11 @@ namespace QuantConnect.Algorithm.CSharp
             if (ShouldPlot)
             {
                 // we can plot price more often if we want
-                Plot(Symbol, "Price", Security.Close);
+                Plot(symbol, "Price", Security.Close);
                 // only plot psar on the minute
                 if (PSARMin.IsReady)
                 {
-                    Plot(Symbol, PSARMin);
+                    Plot(symbol, PSARMin);
                 }
             }
 
@@ -294,27 +294,27 @@ namespace QuantConnect.Algorithm.CSharp
             //var shares = (int) (MaximumLeverage*MaximumPorfolioRiskPercentPerPosition*Portfolio.TotalPortfolioValue/(0.4m*ATR14));
 
             // max out at a little below our stated max, prevents margin calls and such
-            var maxShare = CalculateOrderQuantity(Symbol, MaximumLeverage);
+            var maxShare = CalculateOrderQuantity(symbol, MaximumLeverage);
             shares = Math.Min(shares, maxShare);
 
             // min out at 1x leverage
-            //var minShare = CalculateOrderQuantity(Symbol, MaximumLeverage/2m);
+            //var minShare = CalculateOrderQuantity(symbol, MaximumLeverage/2m);
             //shares = Math.Max(shares, minShare);
 
             // we're looking for a breakout of the opening range bar in the direction of the medium term trend
             if (ShouldEnterLong)
             {
                 // breakout to the upside, go long (fills synchronously)
-                MarketTicket = MarketOrder(Symbol, shares);
+                MarketTicket = MarketOrder(symbol, shares);
                 Log("Enter long @ " + MarketTicket.AverageFillPrice.SmartRounding() + " Shares: " + shares);
-                Plot(Symbol, "Enter", MarketTicket.AverageFillPrice);
+                Plot(symbol, "Enter", MarketTicket.AverageFillPrice);
 
                 // we'll start with a global, non-trailing stop loss
                 EnablePsarTrailingStop = false;
 
                 // submit stop loss order for max loss on the trade
                 var stopPrice = Security.Low*(1 - GlobalStopLossPercent);
-                StopLossTicket = StopMarketOrder(Symbol, -shares, stopPrice);
+                StopLossTicket = StopMarketOrder(symbol, -shares, stopPrice);
                 if (EnableOrderUpdateLogging)
                 {
                     Log("Submitted stop loss @ " + stopPrice.SmartRounding());
@@ -323,16 +323,16 @@ namespace QuantConnect.Algorithm.CSharp
             else if (ShouldEnterShort)
             {
                 // breakout to the downside, go short
-                MarketTicket = MarketOrder(Symbol, - -shares);
+                MarketTicket = MarketOrder(symbol, - -shares);
                 Log("Enter short @ " + MarketTicket.AverageFillPrice.SmartRounding());
-                Plot(Symbol, "Enter", MarketTicket.AverageFillPrice);
+                Plot(symbol, "Enter", MarketTicket.AverageFillPrice);
 
                 // we'll start with a global, non-trailing stop loss
                 EnablePsarTrailingStop = false;
 
                 // submit stop loss order for max loss on the trade
                 var stopPrice = Security.High*(1 + GlobalStopLossPercent);
-                StopLossTicket = StopMarketOrder(Symbol, -shares, stopPrice);
+                StopLossTicket = StopMarketOrder(symbol, -shares, stopPrice);
                 if (EnableOrderUpdateLogging)
                 {
                     Log("Submitted stop loss @ " + stopPrice.SmartRounding() + " Shares: " + shares);
@@ -387,7 +387,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // reset values for tomorrow
                 LastExitTime = Time;
                 var ticket = Transactions.GetOrderTickets(x => x.OrderId == orderEvent.OrderId).Single();
-                Plot(Symbol, "Exit", ticket.AverageFillPrice);
+                Plot(symbol, "Exit", ticket.AverageFillPrice);
             }
         }
 
