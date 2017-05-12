@@ -13,6 +13,10 @@
  * limitations under the License.
 */
 
+// plotting and logging controls
+#define ENABLE_PLOTTING
+#undef ENABLE_ORDER_UPDATE_LOGGING
+
 using System;
 using System.Linq;
 using QuantConnect.Brokerages;
@@ -57,7 +61,6 @@ namespace QuantConnect.Algorithm.CSharp
         private const string Symbol = "SPY";
 
         // plotting and logging control
-        private const bool EnablePlotting = true;
         private const bool EnableOrderUpdateLogging = false;
         private const int PricePlotFrequencyInSeconds = 15;
         
@@ -315,10 +318,9 @@ namespace QuantConnect.Algorithm.CSharp
                 // submit stop loss order for max loss on the trade
                 var stopPrice = Security.Low*(1 - GlobalStopLossPercent);
                 StopLossTicket = StopMarketOrder(Symbol, -shares, stopPrice);
-                if (EnableOrderUpdateLogging)
-                {
-                    Log("Submitted stop loss @ " + stopPrice.SmartRounding());
-                }
+#if ENABLE_ORDER_UPDATE_LOGGING
+                Log("Submitted stop loss @ " + stopPrice.SmartRounding());
+#endif
             }
             else if (ShouldEnterShort)
             {
@@ -333,10 +335,9 @@ namespace QuantConnect.Algorithm.CSharp
                 // submit stop loss order for max loss on the trade
                 var stopPrice = Security.High*(1 + GlobalStopLossPercent);
                 StopLossTicket = StopMarketOrder(Symbol, -shares, stopPrice);
-                if (EnableOrderUpdateLogging)
-                {
-                    Log("Submitted stop loss @ " + stopPrice.SmartRounding() + " Shares: " + shares);
-                }
+#if ENABLE_ORDER_UPDATE_LOGGING
+                Log("Submitted stop loss @ " + stopPrice.SmartRounding() + " Shares: " + shares);
+#endif
             }
         }
 
@@ -415,7 +416,9 @@ namespace QuantConnect.Algorithm.CSharp
                 // always in live
                 if (LiveMode) return true;
                 // set in top to override plotting during long backtests
-                if (!EnablePlotting) return false;
+#if !ENABLE_PLOTTING
+                return false;
+#endif
                 // every 30 seconds in backtest
                 if (Time.RoundDown(TimeSpan.FromSeconds(PricePlotFrequencyInSeconds)) != Time) return false;
                 // always if we're invested
