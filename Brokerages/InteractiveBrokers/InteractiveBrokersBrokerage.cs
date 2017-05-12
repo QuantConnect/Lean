@@ -96,6 +96,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         // exchange time zones by symbol
         private readonly Dictionary<Symbol, DateTimeZone> _symbolExchangeTimeZones = new Dictionary<Symbol, DateTimeZone>();
 
+        // IB requests made through the IB-API must be limited to a maximum of 50 messages/second
+        private readonly RateGate _messagingRateLimiter = new RateGate(50, TimeSpan.FromSeconds(1));
+
         /// <summary>
         /// Returns true if we're currently connected to the broker
         /// </summary>
@@ -578,6 +581,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 _client.ClientSocket.eDisconnect();
                 _client.Dispose();
             }
+
+            _messagingRateLimiter.Dispose();
         }
 
         /// <summary>
@@ -1891,6 +1896,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                                 var id = GetNextTickerId();
                                 var contract = CreateContract(subscribeSymbol);
 
+                                _messagingRateLimiter.WaitToProceed();
+
                                 // we would like to receive OI (101)
                                 Client.ClientSocket.reqMktData(id, contract, "101", false, false, new List<TagValue>());
 
@@ -1934,6 +1941,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                         if (_subscribedSymbols.TryRemove(symbol, out res))
                         {
+                            _messagingRateLimiter.WaitToProceed();
+
                             Client.ClientSocket.cancelMktData(res);
 
                             var secRes = default(Symbol);
