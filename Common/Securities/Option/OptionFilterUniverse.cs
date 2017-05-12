@@ -95,7 +95,6 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Includes universe of weeklys options (if any) into selection
         /// </summary>
-        /// <param name="universe"></param>
         /// <returns></returns>
         public OptionFilterUniverse IncludeWeeklys()
         {
@@ -106,7 +105,6 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Sets universe of weeklys options (if any) as a selection
         /// </summary>
-        /// <param name="universe"></param>
         /// <returns></returns>
         public OptionFilterUniverse WeeklysOnly()
         {
@@ -158,7 +156,6 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Returns front month contract
         /// </summary>
-        /// <param name="universe"></param>
         /// <returns></returns>
         public OptionFilterUniverse FrontMonth()
         {
@@ -174,7 +171,6 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Returns a list of back month contracts
         /// </summary>
-        /// <param name="universe"></param>
         /// <returns></returns>
         public OptionFilterUniverse BackMonths()
         {
@@ -189,7 +185,6 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Returns first of back month contracts
         /// </summary>
-        /// <param name="universe"></param>
         /// <returns></returns>
         public OptionFilterUniverse BackMonth()
         {

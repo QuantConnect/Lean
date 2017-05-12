@@ -60,7 +60,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Initializes a new instance of the <see cref="BaseDataExchange"/>
         /// </summary>
         /// <param name="name">A name for this exchange</param>
-        /// <param name="enumerators">The enumerators to fanout</param>
         public BaseDataExchange(string name)
         {
             _name = name;
