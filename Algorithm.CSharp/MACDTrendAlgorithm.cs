@@ -26,7 +26,7 @@ namespace QuantConnect.Algorithm.Examples
     {
         private DateTime previous;
         private MovingAverageConvergenceDivergence macd;
-        private string Symbol = "SPY";
+        private string symbol = "SPY";
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -36,10 +36,10 @@ namespace QuantConnect.Algorithm.Examples
             SetStartDate(2004, 01, 01);
             SetEndDate(2015, 01, 01);
 
-            AddSecurity(SecurityType.Equity, Symbol, Resolution.Daily);
+            AddSecurity(SecurityType.Equity, symbol, Resolution.Daily);
 
             // define our daily macd(12,26) with a 9 day signal
-            macd = MACD(Symbol, 9, 26, 9, MovingAverageType.Exponential, Resolution.Daily);
+            macd = MACD(symbol, 9, 26, 9, MovingAverageType.Exponential, Resolution.Daily);
         }
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace QuantConnect.Algorithm.Examples
 
             if (!macd.IsReady) return;
 
-            var holding = Portfolio[Symbol];
+            var holding = Portfolio[symbol];
 
             decimal signalDeltaPercent = (macd - macd.Signal)/macd.Fast;
             var tolerance = 0.0025m;
@@ -62,18 +62,18 @@ namespace QuantConnect.Algorithm.Examples
             if (holding.Quantity <= 0 && signalDeltaPercent > tolerance) // 0.01%
             {
                 // longterm says buy as well
-                SetHoldings(Symbol, 1.0);
+                SetHoldings(symbol, 1.0);
             }
             // of our macd is less than our signal, then let's go short
             else if (holding.Quantity >= 0 && signalDeltaPercent < -tolerance)
             {
-                Liquidate(Symbol);
+                Liquidate(symbol);
             }
 
             // plot both lines
             Plot("MACD", macd, macd.Signal);
-            Plot(Symbol, "Open", data[Symbol].Open);
-            Plot(Symbol, macd.Fast, macd.Slow);
+            Plot(symbol, "Open", data[symbol].Open);
+            Plot(symbol, macd.Fast, macd.Slow);
 
             previous = Time;
         }
