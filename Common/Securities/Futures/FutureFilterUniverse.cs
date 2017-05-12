@@ -66,7 +66,6 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Returns front month contract
         /// </summary>
-        /// <param name="universe"></param>
         /// <returns></returns>
         public FutureFilterUniverse FrontMonth()
         {
@@ -82,7 +81,6 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Returns a list of back month contracts
         /// </summary>
-        /// <param name="universe"></param>
         /// <returns></returns>
         public FutureFilterUniverse BackMonths()
         {
@@ -97,7 +95,6 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Returns first of back month contracts
         /// </summary>
-        /// <param name="universe"></param>
         /// <returns></returns>
         public FutureFilterUniverse BackMonth()
         {
