@@ -582,7 +582,6 @@ namespace QuantConnect.Util
                         var expiry = DateTime.ParseExact(parts[7], DateFormat.EightCharacter, null);
                         return Symbol.CreateOption(symbol.Underlying, Market.USA, style, right, strike, expiry);
                     }
-                    break;
 
                 case SecurityType.Future:
                     var expiryYearMonth = DateTime.ParseExact(parts[4], DateFormat.YearMonth, null);
