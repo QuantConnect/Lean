@@ -124,11 +124,11 @@ namespace QuantConnect.Lean.Launcher
             }
             finally
             {
-                //Delete the message from the job queue:
+                // Delete the message from the job queue:
                 leanEngineSystemHandlers.JobQueue.AcknowledgeJob(job);
                 Log.Trace("Engine.Main(): Packet removed from queue: " + job.AlgorithmId);
 
-                // clean up resources
+                // Clean up resources
                 leanEngineSystemHandlers.Dispose();
                 leanEngineAlgorithmHandlers.Dispose();
                 Log.LogHandler.Dispose();
