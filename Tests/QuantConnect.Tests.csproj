@@ -135,6 +135,7 @@
     <Compile Include="Brokerages\Tradier\TradierBrokerageSerializationTests.cs" />
     <Compile Include="Brokerages\Tradier\TradierBrokerageTests.cs" />
     <Compile Include="Common\CurrenciesTests.cs" />
+    <Compile Include="Common\Data\DataFileLockTests.cs" />
     <Compile Include="Common\Data\Market\QuoteBarTests.cs" />
     <Compile Include="Common\Orders\Slippage\SlippageModelsTests.cs" />
     <Compile Include="Common\Securities\BrokerageModelSecurityInitializerTests.cs" />
