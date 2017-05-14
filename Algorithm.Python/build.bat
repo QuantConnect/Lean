@@ -1,4 +1,4 @@
-﻿REM QuantConnect Lean Engine -- Python Build Script.
+REM QuantConnect Lean Engine -- Python Build Script.
 del Python.Runtime.dll
 
 REM Python Compile the Algorithm with all the files in current directory
