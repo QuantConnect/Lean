@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
     [TestFixture]
     public class FuturesExpiryFunctionsTests
     {
-        private static IDictionary<String, List<Dates>> _data = new Dictionary<String, List<Dates>>();
+        private IDictionary<String, List<Dates>> _data = new Dictionary<String, List<Dates>>();
         private const string Zero = "00:00:00";
         private const string NineSixteenCentralTime = "14:16:00";
         private const string NineThirtyEasternTime = "13:30:00";
