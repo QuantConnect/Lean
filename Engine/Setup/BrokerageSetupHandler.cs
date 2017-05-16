@@ -329,11 +329,11 @@ namespace QuantConnect.Lean.Engine.Setup
                             }
                             else if (holding.Type == SecurityType.Future)
                             {
-                                var underlying = holding.Symbol.Underlying.Value;
+                                var underlying = holding.Symbol.ID.Symbol;
 
                                 // adding entire future universe to the system
                                 var canonicalFuture = algorithm.AddSecurity(holding.Type, underlying, minResolution.Value, null, true, 1.0m, false);
-                                var universe = algorithm.UniverseManager.Where(x => x.Key == canonicalFuture.Symbol).First().Value;
+                                var universe = algorithm.UniverseManager.First(x => x.Key == canonicalFuture.Symbol).Value;
 
                                 // adding current future contract to the system
                                 var future = universe.CreateSecurity(holding.Symbol, algorithm, marketHoursDatabase, symbolPropertiesDatabase);
