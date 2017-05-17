@@ -18,7 +18,6 @@ using QuantConnect.Data;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
-using System.Collections.Generic;
 
 namespace QuantConnect.Securities.Future
 {
@@ -154,11 +153,23 @@ namespace QuantConnect.Securities.Future
         /// Sets the <see cref="ContractFilter"/> to a new universe selection function
         /// </summary>
         /// <param name="universeFunc">new universe selection function</param>
-        public void SetFilter(Func<FutureFilterUniverse, FutureFilterUniverse> universeFunc)
+        /// <param name="replace">If true, the new function replaces the existing one, 
+        /// otherwise the selection of the previous filter is merged with the selection 
+        /// of the new filter (set union)</param>
+        public void SetFilter(Func<FutureFilterUniverse, FutureFilterUniverse> universeFunc, bool replace = true)
         {
+            var previousFilter = ContractFilter != null ? ContractFilter.GetFilter() : null;
+
             Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func = universe =>
             {
                 var futureUniverse = universe as FutureFilterUniverse;
+
+                if (!replace && previousFilter != null)
+                {
+                    // if there is a previous filter, perform the union
+                    return universeFunc(futureUniverse).Union((FutureFilterUniverse)previousFilter(futureUniverse));
+                }
+
                 return universeFunc(futureUniverse);
             };
 

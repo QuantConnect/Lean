@@ -14,8 +14,6 @@
  *
 */
 
-using System.Collections.Generic;
-using QuantConnect.Data;
 using System;
 
 namespace QuantConnect.Securities
@@ -31,5 +29,11 @@ namespace QuantConnect.Securities
         /// <param name="universe">derivative symbols universe used in filtering</param>
         /// <returns>The filtered set of symbols</returns>
         IDerivativeSecurityFilterUniverse Filter(IDerivativeSecurityFilterUniverse universe);
+
+        /// <summary>
+        /// Gets the current filter function
+        /// </summary>
+        /// <returns>The filter function</returns>
+        Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> GetFilter();
     }
 }

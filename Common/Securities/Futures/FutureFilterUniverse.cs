@@ -197,5 +197,15 @@ namespace QuantConnect.Securities
             universe._isDynamic = true;
             return universe;
         }
+
+        /// <summary>
+        /// Set union of universes
+        /// </summary>
+        public static FutureFilterUniverse Union(this FutureFilterUniverse universe, FutureFilterUniverse second)
+        {
+            universe._allSymbols = universe._allSymbols.Union(second._allSymbols);
+            universe._isDynamic = true;
+            return universe;
+        }
     }
 }
