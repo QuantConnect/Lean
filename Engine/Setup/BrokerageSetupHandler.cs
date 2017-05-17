@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
+using QuantConnect.Algorithm;
 using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
@@ -329,15 +330,8 @@ namespace QuantConnect.Lean.Engine.Setup
                             }
                             else if (holding.Type == SecurityType.Future)
                             {
-                                var underlying = holding.Symbol.ID.Symbol;
-
-                                // adding entire future universe to the system
-                                var canonicalFuture = algorithm.AddSecurity(holding.Type, underlying, minResolution.Value, null, true, 1.0m, false);
-                                var universe = algorithm.UniverseManager.First(x => x.Key == canonicalFuture.Symbol).Value;
-
-                                // adding current future contract to the system
-                                var future = universe.CreateSecurity(holding.Symbol, algorithm, marketHoursDatabase, symbolPropertiesDatabase);
-                                algorithm.Securities.Add(holding.Symbol, future);
+                                // add current future contract to the system
+                                ((QCAlgorithm) algorithm).AddFutureContract(holding.Symbol, minResolution.Value, true, 1.0m);
                             }
                             else
                             {
