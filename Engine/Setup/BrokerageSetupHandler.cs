@@ -28,6 +28,7 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Future;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Setup
@@ -332,12 +333,15 @@ namespace QuantConnect.Lean.Engine.Setup
                                 var underlying = holding.Symbol.ID.Symbol;
 
                                 // adding entire future universe to the system
-                                var canonicalFuture = algorithm.AddSecurity(holding.Type, underlying, minResolution.Value, null, true, 1.0m, false);
+                                var canonicalFuture = (Future)algorithm.AddSecurity(holding.Type, underlying, minResolution.Value, null, true, 1.0m, false);
                                 var universe = algorithm.UniverseManager.First(x => x.Key == canonicalFuture.Symbol).Value;
 
                                 // adding current future contract to the system
                                 var future = universe.CreateSecurity(holding.Symbol, algorithm, marketHoursDatabase, symbolPropertiesDatabase);
                                 algorithm.Securities.Add(holding.Symbol, future);
+
+                                // update the filter function to include this contract
+                                canonicalFuture.SetFilter(x => new FutureFilterUniverse(x._allSymbols, x.Underlying).Select(symbol => future.Symbol), replace: false);
                             }
                             else
                             {

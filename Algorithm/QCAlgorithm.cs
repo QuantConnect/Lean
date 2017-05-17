@@ -24,7 +24,6 @@ using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
 using QuantConnect.Notifications;
 using QuantConnect.Orders;
@@ -37,7 +36,6 @@ using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Option;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
-using SecurityTypeMarket = System.Tuple<QuantConnect.SecurityType, string>;
 using System.Collections.Concurrent;
 using QuantConnect.Securities.Future;
 
@@ -1385,22 +1383,27 @@ namespace QuantConnect.Algorithm
             var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(market, symbol, SecurityType.Future, CashBook.AccountCurrency);
             var types = SubscriptionManager.LookupSubscriptionConfigDataTypes(SecurityType.Future, resolution, canonicalSymbol.IsCanonical());
 
-            var canonicalSecurity = (Future)SecurityManager.CreateSecurity(types, Portfolio, SubscriptionManager,
-                marketHoursEntry.ExchangeHours, marketHoursEntry.DataTimeZone, symbolProperties, SecurityInitializer, canonicalSymbol, resolution,
-                fillDataForward, leverage, false, false, false, LiveMode, true, false);
-            canonicalSecurity.IsTradable = false;
-            Securities.Add(canonicalSecurity);
+            Security canonicalSecurity;
+            if (!Securities.TryGetValue(canonicalSymbol, out canonicalSecurity))
+            {
+                canonicalSecurity = SecurityManager.CreateSecurity(types, Portfolio, SubscriptionManager,
+                    marketHoursEntry.ExchangeHours, marketHoursEntry.DataTimeZone, symbolProperties, SecurityInitializer,
+                    canonicalSymbol, resolution, fillDataForward, leverage, false, false, false, LiveMode, true, false);
+                canonicalSecurity.IsTradable = false;
+                Securities.Add(canonicalSecurity);
+            }
+            var future = (Future)canonicalSecurity;
 
             // add this security to the user defined universe
             Universe universe;
             if (!UniverseManager.TryGetValue(canonicalSymbol, out universe))
             {
                 var settings = new UniverseSettings(resolution, leverage, true, false, TimeSpan.Zero);
-                universe = new FuturesChainUniverse(canonicalSecurity, settings, SubscriptionManager, SecurityInitializer);
+                universe = new FuturesChainUniverse(future, settings, SubscriptionManager, SecurityInitializer);
                 UniverseManager.Add(canonicalSymbol, universe);
             }
 
-            return canonicalSecurity;
+            return future;
         }
 
         /// <summary>
