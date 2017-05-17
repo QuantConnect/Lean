@@ -28,7 +28,6 @@ namespace QuantConnect.Tests.Engine
         [TestFixtureSetUp]
         public void Setup()
         {
-            Config.Set("data-folder", "./TestData");
             Globals.Reset();
         }
 
