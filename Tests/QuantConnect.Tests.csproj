@@ -140,6 +140,7 @@
     <Compile Include="Common\Securities\BrokerageModelSecurityInitializerTests.cs" />
     <Compile Include="Common\Securities\FutureFilterTests.cs" />
     <Compile Include="Common\Securities\Futures\FuturesExpiryFunctionsTests.cs" />
+    <Compile Include="Common\Securities\Futures\FuturesExpiryUtilityFunctionsTests.cs" />
     <Compile Include="Common\Securities\StandardDeviationOfReturnsVolatilityModelTests.cs" />
     <Compile Include="Common\Data\Auxiliary\LocalDiskFactorFileProviderTests.cs" />
     <Compile Include="Common\Data\Auxiliary\LocalDiskMapFileProviderTests.cs" />
@@ -357,6 +358,10 @@
     <None Include="TestData\CashTestingStrategy.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="TestData\FuturesExpiryFunctionsTestData.xml">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="TestData\eurusd_candle_patterns.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
