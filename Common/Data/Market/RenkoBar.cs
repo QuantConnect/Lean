@@ -149,7 +149,7 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="WickoBar"/> class with the specified values
+        /// Initializes a new instance of the <see cref="RenkoBar"/> class with the specified values
         /// </summary>
         /// <param name="symbol">The symbol of this data</param>
         /// <param name="start">The start time of the bar</param>
