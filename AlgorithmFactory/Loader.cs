@@ -19,6 +19,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security.Policy;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -384,7 +385,7 @@ namespace QuantConnect.AlgorithmFactory
         /// Unload this factory's appDomain.
         /// </summary>
         /// <remarks>Not used in lean engine. Running the library in an app domain is 10x slower.</remarks>
-        /// <seealso cref="CreateAppDomain"/>
+        /// <seealso cref="AppDomain.CreateDomain(string, Evidence, string, string, bool, AppDomainInitializer, string[])"/>
         public void Unload() {
             if (appDomain != null) 
             {
