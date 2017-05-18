@@ -25,7 +25,8 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Util
 {
-    [TestFixture]
+    [TestFixture, Category("TravisExclude")]
+    [Ignore("These tests are now disabled, as the Yahoo Finance API has been discontinued on 5/16/2017.")]
     public class FactorFileGeneratorTests
     {
         private const string PermTick = "AAPL";
