@@ -46,16 +46,16 @@ import cvxpy
 from pykalman import KalmanFilter
 import statsmodels.api as sm
 import talib
+from copulalib.copulalib import Copula
+import theano 
+import xgboost
 
 class PythonPackageTestAlgorithm(QCAlgorithm):
-    '''Basic template algorithm simply initializes the date range and cash'''
-
+    '''Algorithm to test third party libraries'''
 
     def Initialize(self):
-        '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
-        
         self.SetStartDate(2013, 10, 7)   #Set Start Date
-        self.SetStartDate(2013, 10, 11)  #Set End Date
+        self.SetStartDate(2013, 10, 7)  #Set End Date
         self.AddEquity("SPY", Resolution.Daily)
 
         # numpy test
@@ -70,6 +70,9 @@ class PythonPackageTestAlgorithm(QCAlgorithm):
         # cvxopt matrix test
         print "cvxopt >>>", cvxopt.matrix([1.0, 2.0, 3.0, 4.0, 5.0, 6.0], (2,3))
 
+        # talib test
+        print "talib test >>>", talib.SMA(numpy.random.random(100))
+
         # blaze test
         blaze_test()
         
@@ -82,8 +85,14 @@ class PythonPackageTestAlgorithm(QCAlgorithm):
         # pykalman test
         pykalman_test()
 
-        # talib test
-        print "talib test >>>", talib.SMA(numpy.random.random(100))
+        # copulalib test
+        copulalib_test()
+
+        # theano test
+        theano_test()
+
+        # xgboost test
+        xgboost_test()
 
     def OnData(self, data): pass
 
@@ -135,3 +144,21 @@ def pykalman_test():
     measurements = numpy.asarray([[1,0], [0,0], [0,1]])  # 3 observations
     kf = kf.em(measurements, n_iter=5)
     print "pykalman test >>>", kf.filter(measurements)
+
+def copulalib_test():
+    x = numpy.random.normal(size=100) 
+    y = 2.5 * x + numpy.random.normal(size=100) 
+
+    #Make the instance of Copula class with x, y and clayton family:: 
+    print "copulalib test >>>", Copula(x, y, family='clayton') 
+
+def theano_test():
+    a = theano.tensor.vector() # declare variable
+    out = a + a ** 10               # build symbolic expression
+    f = theano.function([a], out)   # compile function
+    print "theano test >>>", f([0, 1, 2])
+
+def xgboost_test():
+    data = numpy.random.rand(5,10) # 5 entities, each contains 10 features
+    label = numpy.random.randint(2, size=5) # binary target
+    print "xgboost test >>>", xgboost.DMatrix( data, label=label)
