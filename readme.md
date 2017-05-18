@@ -132,6 +132,17 @@ cd Lean/Launcher/bin/Debug
 - Press `ctrl-f5` to run without debugging.
 By default Visual Studio includes NuGet, if your version cannot find DLL references, install [Nuget](https://www.nuget.org/) and build again. 
 
+### QuantConnect plugin
+
+To install QuantConnect plugin build the `VisualStudioPlugin` project in `Release` mode. Then go to `VisualStudioPlugin/bin/Release` and run `QuantConnect.VisualStudioPlugin.vsix` file. Restart VisualStudio.
+In VisualStudio go to Tools -> Options -> QuantConnect and set "<Path to Lean repo>/Data" value to "Price data path".
+
+VisualStudio plugin writes log data to the VisualStudio activity log, but only if VisualStudio is started with the `/log` parameter passed to it. To debug the QuantConnect plugin start VisualStudio with the following command:
+
+```
+devenv /log <path-to-log>
+```
+
 
 ## Issues and Feature Requests ##
 

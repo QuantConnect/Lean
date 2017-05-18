@@ -51,7 +51,7 @@ namespace QuantConnect.Api
         {
             _connection = new ApiConnection(userId, token);
             _socketConnection = new ApiWebSocketConnection(userId, token);
-            _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+            _marketHoursDatabase = MarketHoursDatabase.FromDataFolder(dataFolder);
             _dataFolder = dataFolder;
 
             //Allow proper decoding of orders from the API.
@@ -59,6 +59,17 @@ namespace QuantConnect.Api
             {
                 Converters = { new OrderJsonConverter() }
             };
+        }
+
+        /// <summary>
+        /// Check if Api is successfully connected with correct credentials
+        /// </summary>
+        public bool Connected
+        {
+            get
+            {
+                return _connection.Connected;
+            }
         }
 
         /// <summary>

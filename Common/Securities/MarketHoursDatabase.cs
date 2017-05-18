@@ -119,11 +119,22 @@ namespace QuantConnect.Securities
         /// <returns>A <see cref="MarketHoursDatabase"/> class that represents the data in the market-hours folder</returns>
         public static MarketHoursDatabase FromDataFolder()
         {
+            return FromDataFolder(Globals.DataFolder);
+        }
+
+        /// <summary>
+        /// Gets the instance of the <see cref="MarketHoursDatabase"/> class produced by reading in the market hours
+        /// data found in /Data/market-hours/
+        /// </summary>
+        /// <param name="dataFolder">Path to the data folder</param>
+        /// <returns>A <see cref="MarketHoursDatabase"/> class that represents the data in the market-hours folder</returns>
+        public static MarketHoursDatabase FromDataFolder(string dataFolder)
+        {
             lock (DataFolderMarketHoursDatabaseLock)
             {
                 if (_dataFolderMarketHoursDatabase == null)
                 {
-                    var path = Path.Combine(Globals.DataFolder, "market-hours", "market-hours-database.json");
+                    var path = Path.Combine(dataFolder, "market-hours", "market-hours-database.json");
                     _dataFolderMarketHoursDatabase = FromFile(path);
                 }
             }

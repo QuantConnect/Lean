@@ -68,13 +68,34 @@ namespace QuantConnect.Tests.API
         }
 
         /// <summary>
+        /// Test successfully authenticating with the ApiConnection using valid credentials.
+        /// </summary>
+        [Test]
+        public void ApiConnectionWillAuthenticate_ValidCredentials_Successfully()
+        {
+            var connection = new ApiConnection(_testAccount, _testToken);
+            Assert.IsTrue(connection.Connected);
+        }
+
+        /// <summary>
         /// Test successfully authenticating with the API using valid credentials.
         /// </summary>
         [Test]
         public void ApiWillAuthenticate_ValidCredentials_Successfully()
         {
-            var connection = new ApiConnection(_testAccount, _testToken);
-            Assert.IsTrue(connection.Connected);
+            var api = new Api.Api();
+            api.Initialize(_testAccount, _testToken, _dataFolder);
+            Assert.IsTrue(api.Connected);
+        }
+
+        /// <summary>
+        /// Test that the ApiConnection will reject invalid credentials
+        /// </summary>
+        [Test]
+        public void ApiConnectionWillAuthenticate_InvalidCredentials_Unsuccessfully()
+        {
+            var connection = new ApiConnection(_testAccount, "");
+            Assert.IsFalse(connection.Connected);
         }
 
         /// <summary>
@@ -83,8 +104,9 @@ namespace QuantConnect.Tests.API
         [Test]
         public void ApiWillAuthenticate_InvalidCredentials_Unsuccessfully()
         {
-            var connection = new ApiConnection(_testAccount, "");
-            Assert.IsFalse(connection.Connected);
+            var api = new Api.Api();
+            api.Initialize(_testAccount, "", _dataFolder);
+            Assert.IsFalse(api.Connected);
         }
 
         /// <summary>
