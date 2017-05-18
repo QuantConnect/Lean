@@ -49,7 +49,8 @@ namespace QuantConnect.Securities
         /// <returns>The current leverage in the security</returns>
         public virtual decimal GetLeverage(Security security)
         {
-            return 1 / GetMaintenanceMarginRequirement(security, security.Holdings.HoldingsCost);
+            var marginRequirement = GetMaintenanceMarginRequirement(security, security.Holdings.HoldingsCost);
+            return marginRequirement == 0 ? 1m : 1 / marginRequirement;
         }
 
         /// <summary>
