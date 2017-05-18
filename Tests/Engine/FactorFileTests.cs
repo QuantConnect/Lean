@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
-using QuantConnect.Configuration;
 using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.Tests.Engine
@@ -25,12 +24,6 @@ namespace QuantConnect.Tests.Engine
     [TestFixture]
     public class FactorFileTests
     {
-        [TestFixtureSetUp]
-        public void Setup()
-        {
-            Globals.Reset();
-        }
-
         [Test]
         public void ReadsFactorFileWithoutInfValues()
         {
