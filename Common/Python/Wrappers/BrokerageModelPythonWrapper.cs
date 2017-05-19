@@ -22,6 +22,7 @@ using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Python.Wrappers
 {
@@ -66,7 +67,7 @@ namespace QuantConnect.Python.Wrappers
             {
                 using (Py.GIL())
                 {
-                    return _brokerageModel.DefaultMarkets;
+                    return _brokerageModel.DefaultMarkets.ToDictionary(x => x.Key, x => x.Value);
                 }
             }
         }
