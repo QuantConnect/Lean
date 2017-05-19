@@ -43,6 +43,7 @@ namespace QuantConnect.Python.Wrappers
         private IAlgorithm _algorithm;
         private IBenchmark _benchmark;
         private IBrokerageModel _brokerageModel;
+        private IBrokerageMessageHandler _brokerageMessageHandler;
         private IHistoryProvider _historyProvider;
         private ITradeBuilder _tradeBuilder;
 
@@ -128,7 +129,7 @@ namespace QuantConnect.Python.Wrappers
         }
 
         /// <summary>
-        /// Wrapper for <see cref = "IAlgorithm.BrokerageMessageHandler" /> in Python
+        /// Wrapper for <see cref="IAlgorithm.BrokerageMessageHandler" /> in Python
         /// </summary>
         public IBrokerageMessageHandler BrokerageMessageHandler
         {
@@ -136,7 +137,11 @@ namespace QuantConnect.Python.Wrappers
             {
                 using (Py.GIL())
                 {
-                    return _algorithm.BrokerageMessageHandler;
+                    if (_brokerageMessageHandler == null)
+                    {
+                        _brokerageMessageHandler = new BrokerageMessageHandlerPythonWrapper(_algorithm.BrokerageMessageHandler);
+                    }
+                    return _brokerageMessageHandler;
                 }
             }
 
