@@ -314,12 +314,12 @@ namespace QuantConnect.Lean.Engine.Setup
                             if (holding.Type == SecurityType.Option)
                             {
                                 // add current option contract to the system
-                                ((QCAlgorithm) algorithm).AddOptionContract(holding.Symbol, minResolution.Value, true, 1.0m);
+                                algorithm.AddOptionContract(holding.Symbol, minResolution.Value, true, 1.0m);
                             }
                             else if (holding.Type == SecurityType.Future)
                             {
                                 // add current future contract to the system
-                                ((QCAlgorithm) algorithm).AddFutureContract(holding.Symbol, minResolution.Value, true, 1.0m);
+                                algorithm.AddFutureContract(holding.Symbol, minResolution.Value, true, 1.0m);
                             }
                             else
                             {
