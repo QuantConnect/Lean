@@ -320,6 +320,7 @@
     <Compile Include="Properties\SharedAssemblyInfo.cs" />
     <Compile Include="Python\Wrappers\AlgorithmPythonWrapper.cs" />
     <Compile Include="Python\Wrappers\BenchmarkPythonWrapper.cs" />
+    <Compile Include="Python\Wrappers\BrokerageMessageHandlerPythonWrapper.cs" />
     <Compile Include="Python\Wrappers\BrokerageModelPythonWrapper.cs" />
     <Compile Include="Python\Wrappers\TradeBuilderPythonWrapper.cs" />
     <Compile Include="Python\Wrappers\HistoryProviderPythonWrapper.cs" />

@@ -23,13 +23,14 @@ using QuantConnect.Notifications;
 using QuantConnect.Orders;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
-using QuantConnect.Statistics;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Python.Runtime;
 using ImpromptuInterface;
+using QuantConnect.Securities.Future;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Python.Wrappers
 {
@@ -42,6 +43,7 @@ namespace QuantConnect.Python.Wrappers
         private IAlgorithm _algorithm;
         private IBenchmark _benchmark;
         private IBrokerageModel _brokerageModel;
+        private IBrokerageMessageHandler _brokerageMessageHandler;
         private IHistoryProvider _historyProvider;
         private ITradeBuilder _tradeBuilder;
 
@@ -127,7 +129,7 @@ namespace QuantConnect.Python.Wrappers
         }
 
         /// <summary>
-        /// Wrapper for <see cref = "IAlgorithm.BrokerageMessageHandler" /> in Python
+        /// Wrapper for <see cref="IAlgorithm.BrokerageMessageHandler" /> in Python
         /// </summary>
         public IBrokerageMessageHandler BrokerageMessageHandler
         {
@@ -135,7 +137,11 @@ namespace QuantConnect.Python.Wrappers
             {
                 using (Py.GIL())
                 {
-                    return _algorithm.BrokerageMessageHandler;
+                    if (_brokerageMessageHandler == null)
+                    {
+                        _brokerageMessageHandler = new BrokerageMessageHandlerPythonWrapper(_algorithm.BrokerageMessageHandler);
+                    }
+                    return _brokerageMessageHandler;
                 }
             }
 
@@ -576,6 +582,38 @@ namespace QuantConnect.Python.Wrappers
             using (Py.GIL())
             {
                 return _algorithm.AddSecurity(securityType, symbol, resolution, market, fillDataForward, leverage, extendedMarketHours);
+            }
+        }
+
+        /// <summary>
+        /// Creates and adds a new single <see cref="Future"/> contract to the algorithm
+        /// </summary>
+        /// <param name="symbol">The futures contract symbol</param>
+        /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
+        /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
+        /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
+        /// <returns>The new <see cref="Future"/> security</returns>
+        public Future AddFutureContract(Symbol symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true, decimal leverage = 0m)
+        {
+            using (Py.GIL())
+            {
+                return _algorithm.AddFutureContract(symbol, resolution, fillDataForward, leverage);
+            }
+        }
+
+        /// <summary>
+        /// Creates and adds a new single <see cref="Option"/> contract to the algorithm
+        /// </summary>
+        /// <param name="symbol">The option contract symbol</param>
+        /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
+        /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
+        /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
+        /// <returns>The new <see cref="Option"/> security</returns>
+        public Option AddOptionContract(Symbol symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true, decimal leverage = 0m)
+        {
+            using (Py.GIL())
+            {
+                return _algorithm.AddOptionContract(symbol, resolution, fillDataForward, leverage);
             }
         }
 

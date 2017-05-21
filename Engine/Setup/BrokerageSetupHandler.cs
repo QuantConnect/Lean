@@ -309,29 +309,17 @@ namespace QuantConnect.Lean.Engine.Setup
 
                         if (!algorithm.Portfolio.ContainsKey(holding.Symbol))
                         {
-                            Log.Trace("BrokerageSetupHandler.Setup(): Adding unrequested security: " + holding.Symbol.ToString());
+                            Log.Trace("BrokerageSetupHandler.Setup(): Adding unrequested security: " + holding.Symbol.Value);
 
-                            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
-                            var symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
-
-                            // if we adding option, we have to add the option universe, so we take underlying symbol
-                            // Implemented solution is temporary. We will remove this code once it is the idea on how to refactor IAlgorithm is matured. 
                             if (holding.Type == SecurityType.Option)
                             {
-                                var underlying = holding.Symbol.Underlying.Value;
-
-                                // adding entire option universe to the system
-                                var canonicalOption = algorithm.AddSecurity(holding.Type, underlying, minResolution.Value, null, true, 1.0m, false);
-                                var universe = algorithm.UniverseManager.Where(x => x.Key == canonicalOption.Symbol).First().Value;
-
-                                // adding current option contract to the system
-                                var option = universe.CreateSecurity(holding.Symbol, algorithm, marketHoursDatabase, symbolPropertiesDatabase);
-                                algorithm.Securities.Add(holding.Symbol, option);
+                                // add current option contract to the system
+                                algorithm.AddOptionContract(holding.Symbol, minResolution.Value, true, 1.0m);
                             }
                             else if (holding.Type == SecurityType.Future)
                             {
                                 // add current future contract to the system
-                                ((QCAlgorithm) algorithm).AddFutureContract(holding.Symbol, minResolution.Value, true, 1.0m);
+                                algorithm.AddFutureContract(holding.Symbol, minResolution.Value, true, 1.0m);
                             }
                             else
                             {
