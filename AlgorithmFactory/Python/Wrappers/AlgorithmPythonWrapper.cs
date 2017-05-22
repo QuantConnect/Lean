@@ -26,9 +26,9 @@ using QuantConnect.Securities;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using Python.Runtime;
 using ImpromptuInterface;
+using QuantConnect.Algorithm;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
 
@@ -40,14 +40,9 @@ namespace QuantConnect.Python.Wrappers
     /// </summary>
     public class AlgorithmPythonWrapper : IAlgorithm
     {
-        private IAlgorithm _algorithm;
-        private IBenchmark _benchmark;
-        private IBrokerageModel _brokerageModel;
-        private IBrokerageMessageHandler _brokerageMessageHandler;
-        private IHistoryProvider _historyProvider;
-        private ITradeBuilder _tradeBuilder;
-
-        private dynamic _pyAlgorithm;
+        private readonly IAlgorithm _algorithm;
+        private readonly dynamic _pyAlgorithm;
+        private readonly QCAlgorithm _baseAlgorithm;
 
         /// <summary>
         /// <see cref = "AlgorithmPythonWrapper"/> constructor.
@@ -85,6 +80,9 @@ namespace QuantConnect.Python.Wrappers
                             _pyAlgorithm = attr.Invoke();
                             _algorithm = Impromptu.ActLike<IAlgorithm>(_pyAlgorithm);
 
+                            // QCAlgorithm reference for LEAN internal C# calls (without going from C# to Python and back)
+                            _baseAlgorithm = _algorithm.UndoActLike();
+
                             return; 
                         }
                     }
@@ -103,10 +101,7 @@ namespace QuantConnect.Python.Wrappers
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _algorithm.AlgorithmId;
-                }
+                return _baseAlgorithm.AlgorithmId;
             }
         }
 
@@ -117,14 +112,7 @@ namespace QuantConnect.Python.Wrappers
         {
             get
             {
-                using (Py.GIL())
-                {
-                    if (_benchmark == null)
-                    {
-                        _benchmark = new BenchmarkPythonWrapper(_algorithm.Benchmark);
-                    }
-                    return _benchmark;
-                }
+                return _baseAlgorithm.Benchmark;
             }
         }
 
@@ -135,14 +123,7 @@ namespace QuantConnect.Python.Wrappers
         {
             get
             {
-                using (Py.GIL())
-                {
-                    if (_brokerageMessageHandler == null)
-                    {
-                        _brokerageMessageHandler = new BrokerageMessageHandlerPythonWrapper(_algorithm.BrokerageMessageHandler);
-                    }
-                    return _brokerageMessageHandler;
-                }
+                return _baseAlgorithm.BrokerageMessageHandler;
             }
 
             set
@@ -158,14 +139,7 @@ namespace QuantConnect.Python.Wrappers
         {
             get
             {
-                using (Py.GIL())
-                {
-                    if (_brokerageModel == null)
-                    {
-                        _brokerageModel = new BrokerageModelPythonWrapper(_algorithm.BrokerageModel);
-                    }
-                    return _brokerageModel;
-                }
+                return _baseAlgorithm.BrokerageModel;
             }
         }
 
@@ -176,10 +150,7 @@ namespace QuantConnect.Python.Wrappers
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _algorithm.DebugMessages;
-                }
+                return _baseAlgorithm.DebugMessages;
             }
         }
 
@@ -190,10 +161,7 @@ namespace QuantConnect.Python.Wrappers
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _algorithm.EndDate;
-                }
+                return _baseAlgorithm.EndDate;
             }
         }
 
@@ -204,10 +172,7 @@ namespace QuantConnect.Python.Wrappers
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _algorithm.ErrorMessages;
-                }
+                return _baseAlgorithm.ErrorMessages;
             }
         }
 
@@ -218,14 +183,7 @@ namespace QuantConnect.Python.Wrappers
         {
             get
             {
-                using (Py.GIL())
-                {
-                    if (_historyProvider == null)
-                    {
-                        _historyProvider = new HistoryProviderPythonWrapper(_algorithm.HistoryProvider);
-                    }
-                    return _historyProvider;
-                }
+                return _baseAlgorithm.HistoryProvider;
             }
 
             set
@@ -241,10 +199,7 @@ namespace QuantConnect.Python.Wrappers
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _algorithm.IsWarmingUp;
-                }
+                return _baseAlgorithm.IsWarmingUp;
             }
         }
 
@@ -255,10 +210,7 @@ namespace QuantConnect.Python.Wrappers
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _algorithm.LiveMode;
-                }
+                return _baseAlgorithm.LiveMode;
             }
         }
 
@@ -269,10 +221,7 @@ namespace QuantConnect.Python.Wrappers
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _algorithm.LogMessages;
-                }
+                return _baseAlgorithm.LogMessages;
             }
         }
 
@@ -283,10 +232,7 @@ namespace QuantConnect.Python.Wrappers
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _algorithm.Name;
-                }
+                return _baseAlgorithm.Name;
             }
         }
 
@@ -297,10 +243,7 @@ namespace QuantConnect.Python.Wrappers
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _algorithm.Notify;
-                }
+                return _baseAlgorithm.Notify;
             }
         }
 
@@ -311,10 +254,7 @@ namespace QuantConnect.Python.Wrappers
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _algorithm.Portfolio;
-                }
+                return _baseAlgorithm.Portfolio;
             }
         }
 
@@ -325,10 +265,7 @@ namespace QuantConnect.Python.Wrappers
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _algorithm.RunTimeError;
-                }
+                return _baseAlgorithm.RunTimeError;
             }
 
             set
@@ -344,10 +281,7 @@ namespace QuantConnect.Python.Wrappers
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _algorithm.RuntimeStatistics;
-                }
+                return _baseAlgorithm.RuntimeStatistics;
             }
         }
 
@@ -358,10 +292,7 @@ namespace QuantConnect.Python.Wrappers
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _algorithm.Schedule;
-                }
+                return _baseAlgorithm.Schedule;
             }
         }
 
@@ -372,10 +303,7 @@ namespace QuantConnect.Python.Wrappers
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _algorithm.Securities;
-                }
+                return _baseAlgorithm.Securities;
             }
         }
 
@@ -386,10 +314,7 @@ namespace QuantConnect.Python.Wrappers
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _algorithm.SecurityInitializer;
-                }
+                return _baseAlgorithm.SecurityInitializer;
             }
         }
 
@@ -400,14 +325,7 @@ namespace QuantConnect.Python.Wrappers
         {
             get
             {
-                using (Py.GIL())
-                {
-                    if (_tradeBuilder == null)
-                    {
-                        _tradeBuilder = new TradeBuilderPythonWrapper(_algorithm.TradeBuilder);
-                    }
-                    return _tradeBuilder;
-                }
+                return _baseAlgorithm.TradeBuilder;
             }
         }
 
@@ -418,10 +336,7 @@ namespace QuantConnect.Python.Wrappers
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _algorithm.StartDate;
-                }
+                return _baseAlgorithm.StartDate;
             }
         }
 
@@ -432,10 +347,7 @@ namespace QuantConnect.Python.Wrappers
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _algorithm.Status;
-                }
+                return _baseAlgorithm.Status;
             }
 
             set
@@ -450,10 +362,7 @@ namespace QuantConnect.Python.Wrappers
         /// <param name="value"></param>
         public void SetStatus(AlgorithmStatus value)
         {
-            using (Py.GIL())
-            {
-                _algorithm.SetStatus(value);
-            }
+            _baseAlgorithm.SetStatus(value);
         }
 
         /// <summary>
@@ -462,10 +371,7 @@ namespace QuantConnect.Python.Wrappers
         /// <param name="availableDataTypes"></param>
         public void SetAvailableDataTypes(Dictionary<SecurityType, List<TickType>> availableDataTypes)
         {
-            using (Py.GIL())
-            {
-                _algorithm.SetAvailableDataTypes(availableDataTypes);
-            }
+            _baseAlgorithm.SetAvailableDataTypes(availableDataTypes);
         }
 
         /// <summary>
@@ -475,10 +381,7 @@ namespace QuantConnect.Python.Wrappers
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _algorithm.SubscriptionManager;
-                }
+                return _baseAlgorithm.SubscriptionManager;
             }
         }
 
@@ -489,10 +392,7 @@ namespace QuantConnect.Python.Wrappers
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _algorithm.Time;
-                }
+                return _baseAlgorithm.Time;
             }
         }
 
@@ -503,10 +403,7 @@ namespace QuantConnect.Python.Wrappers
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _algorithm.TimeZone;
-                }
+                return _baseAlgorithm.TimeZone;
             }
         }
 
@@ -517,10 +414,7 @@ namespace QuantConnect.Python.Wrappers
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _algorithm.Transactions;
-                }
+                return _baseAlgorithm.Transactions;
             }
         }
 
@@ -531,10 +425,7 @@ namespace QuantConnect.Python.Wrappers
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _algorithm.UniverseManager;
-                }
+                return _baseAlgorithm.UniverseManager;
             }
         }
 
@@ -545,10 +436,7 @@ namespace QuantConnect.Python.Wrappers
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _algorithm.UniverseSettings;
-                }
+                return _baseAlgorithm.UniverseSettings;
             }
         }
 
@@ -559,10 +447,7 @@ namespace QuantConnect.Python.Wrappers
         {
             get
             {
-                using (Py.GIL())
-                {
-                    return _algorithm.UtcTime;
-                }
+                return _baseAlgorithm.UtcTime;
             }
         }
 
@@ -579,10 +464,7 @@ namespace QuantConnect.Python.Wrappers
         /// <returns></returns>
         public Security AddSecurity(SecurityType securityType, string symbol, Resolution resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours)
         {
-            using (Py.GIL())
-            {
-                return _algorithm.AddSecurity(securityType, symbol, resolution, market, fillDataForward, leverage, extendedMarketHours);
-            }
+            return _baseAlgorithm.AddSecurity(securityType, symbol, resolution, market, fillDataForward, leverage, extendedMarketHours);
         }
 
         /// <summary>
@@ -595,10 +477,7 @@ namespace QuantConnect.Python.Wrappers
         /// <returns>The new <see cref="Future"/> security</returns>
         public Future AddFutureContract(Symbol symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true, decimal leverage = 0m)
         {
-            using (Py.GIL())
-            {
-                return _algorithm.AddFutureContract(symbol, resolution, fillDataForward, leverage);
-            }
+            return _baseAlgorithm.AddFutureContract(symbol, resolution, fillDataForward, leverage);
         }
 
         /// <summary>
@@ -611,10 +490,7 @@ namespace QuantConnect.Python.Wrappers
         /// <returns>The new <see cref="Option"/> security</returns>
         public Option AddOptionContract(Symbol symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true, decimal leverage = 0m)
         {
-            using (Py.GIL())
-            {
-                return _algorithm.AddOptionContract(symbol, resolution, fillDataForward, leverage);
-            }
+            return _baseAlgorithm.AddOptionContract(symbol, resolution, fillDataForward, leverage);
         }
 
         /// <summary>
@@ -623,10 +499,7 @@ namespace QuantConnect.Python.Wrappers
         /// <param name="message"></param>
         public void Debug(string message)
         {
-            using (Py.GIL())
-            {
-                _algorithm.Debug(message);
-            }
+            _baseAlgorithm.Debug(message);
         }
 
         /// <summary>
@@ -635,10 +508,7 @@ namespace QuantConnect.Python.Wrappers
         /// <param name="message"></param>
         public void Error(string message)
         {
-            using (Py.GIL())
-            {
-                _algorithm.Error(message);
-            }
+            _baseAlgorithm.Error(message);
         }
 
         /// <summary>
@@ -648,10 +518,7 @@ namespace QuantConnect.Python.Wrappers
         /// <returns></returns>
         public List<Chart> GetChartUpdates(bool clearChartData = false)
         {
-            using (Py.GIL())
-            {
-                return _algorithm.GetChartUpdates(clearChartData);
-            }
+            return _baseAlgorithm.GetChartUpdates(clearChartData);
         }
 
         /// <summary>
@@ -660,10 +527,7 @@ namespace QuantConnect.Python.Wrappers
         /// <returns></returns>
         public bool GetLocked()
         {
-            using (Py.GIL())
-            {
-                return _algorithm.GetLocked();
-            }
+            return _baseAlgorithm.GetLocked();
         }
 
         /// <summary>
@@ -673,10 +537,7 @@ namespace QuantConnect.Python.Wrappers
         /// <returns></returns>
         public string GetParameter(string name)
         {
-            using (Py.GIL())
-            {
-                return _algorithm.GetParameter(name);
-            }
+            return _baseAlgorithm.GetParameter(name);
         }
 
         /// <summary>
@@ -685,10 +546,7 @@ namespace QuantConnect.Python.Wrappers
         /// <returns></returns>
         public IEnumerable<HistoryRequest> GetWarmupHistoryRequests()
         {
-            using (Py.GIL())
-            {
-                return _algorithm.GetWarmupHistoryRequests().ToList();
-            }
+            return _baseAlgorithm.GetWarmupHistoryRequests();
         }
 
         /// <summary>
@@ -710,10 +568,7 @@ namespace QuantConnect.Python.Wrappers
         /// <returns></returns>
         public List<int> Liquidate(Symbol symbolToLiquidate = null, string tag = "Liquidated")
         {
-            using (Py.GIL())
-            {
-                return _algorithm.Liquidate(symbolToLiquidate, tag);
-            }
+            return _baseAlgorithm.Liquidate(symbolToLiquidate, tag);
         }
 
         /// <summary>
@@ -722,10 +577,7 @@ namespace QuantConnect.Python.Wrappers
         /// <param name="message"></param>
         public void Log(string message)
         {
-            using (Py.GIL())
-            {
-                _algorithm.Log(message);
-            }
+            _baseAlgorithm.Log(message);
         }
 
         /// <summary>
@@ -769,7 +621,7 @@ namespace QuantConnect.Python.Wrappers
         {
             using (Py.GIL())
             {
-                if (_algorithm.SubscriptionManager.HasCustomData)
+                if (SubscriptionManager.HasCustomData)
                 {
                     _pyAlgorithm.OnPythonData(slice);
                 }
@@ -878,10 +730,7 @@ namespace QuantConnect.Python.Wrappers
         /// </summary>
         public void PostInitialize()
         {
-            using (Py.GIL())
-            {
-                _algorithm.PostInitialize();
-            }
+            _baseAlgorithm.PostInitialize();
         }
 
         /// <summary>
@@ -891,10 +740,7 @@ namespace QuantConnect.Python.Wrappers
         /// <returns></returns>
         public bool RemoveSecurity(Symbol symbol)
         {
-            using (Py.GIL())
-            {
-                return _algorithm.RemoveSecurity(symbol);
-            }
+            return _baseAlgorithm.RemoveSecurity(symbol);
         }
 
         /// <summary>
@@ -903,10 +749,7 @@ namespace QuantConnect.Python.Wrappers
         /// <param name="algorithmId"></param>
         public void SetAlgorithmId(string algorithmId)
         {
-            using (Py.GIL())
-            {
-                _algorithm.SetAlgorithmId(algorithmId);
-            }
+            _baseAlgorithm.SetAlgorithmId(algorithmId);
         }
 
         /// <summary>
@@ -915,10 +758,7 @@ namespace QuantConnect.Python.Wrappers
         /// <param name="brokerageMessageHandler"></param>
         public void SetBrokerageMessageHandler(IBrokerageMessageHandler brokerageMessageHandler)
         {
-            using (Py.GIL())
-            {
-                _algorithm.SetBrokerageMessageHandler(brokerageMessageHandler);
-            }
+            _baseAlgorithm.SetBrokerageMessageHandler(brokerageMessageHandler);
         }
 
         /// <summary>
@@ -927,10 +767,7 @@ namespace QuantConnect.Python.Wrappers
         /// <param name="brokerageModel"></param>
         public void SetBrokerageModel(IBrokerageModel brokerageModel)
         {
-            using (Py.GIL())
-            {
-                _algorithm.SetBrokerageModel(new BrokerageModelPythonWrapper(brokerageModel));
-            }
+            _baseAlgorithm.SetBrokerageModel(brokerageModel);
         }
 
         /// <summary>
@@ -939,10 +776,7 @@ namespace QuantConnect.Python.Wrappers
         /// <param name="startingCash"></param>
         public void SetCash(decimal startingCash)
         {
-            using (Py.GIL())
-            {
-                _algorithm.SetCash(startingCash);
-            }
+            _baseAlgorithm.SetCash(startingCash);
         }
 
         /// <summary>
@@ -953,10 +787,7 @@ namespace QuantConnect.Python.Wrappers
         /// <param name="conversionRate"></param>
         public void SetCash(string symbol, decimal startingCash, decimal conversionRate)
         {
-            using (Py.GIL())
-            {
-                _algorithm.SetCash(symbol, startingCash, conversionRate);
-            }
+            _baseAlgorithm.SetCash(symbol, startingCash, conversionRate);
         }
 
         /// <summary>
@@ -965,10 +796,7 @@ namespace QuantConnect.Python.Wrappers
         /// <param name="time"></param>
         public void SetDateTime(DateTime time)
         {
-            using (Py.GIL())
-            {
-                _algorithm.SetDateTime(time);
-            }
+            _baseAlgorithm.SetDateTime(time);
         }
 
         /// <summary>
@@ -977,10 +805,7 @@ namespace QuantConnect.Python.Wrappers
         /// <param name="exception"></param>
         public void SetRunTimeError(Exception exception)
         {
-            using (Py.GIL())
-            {
-                _algorithm.SetRunTimeError(exception);
-            }
+            _baseAlgorithm.SetRunTimeError(exception);
         }
 
         /// <summary>
@@ -988,10 +813,7 @@ namespace QuantConnect.Python.Wrappers
         /// </summary>
         public void SetFinishedWarmingUp()
         {
-            using (Py.GIL())
-            {
-                _algorithm.SetFinishedWarmingUp();
-            }
+            _baseAlgorithm.SetFinishedWarmingUp();
         }
 
         /// <summary>
@@ -1000,10 +822,7 @@ namespace QuantConnect.Python.Wrappers
         /// <param name="historyProvider"></param>
         public void SetHistoryProvider(IHistoryProvider historyProvider)
         {
-            using (Py.GIL())
-            {
-                _algorithm.SetHistoryProvider(new HistoryProviderPythonWrapper(historyProvider));
-            }
+            _baseAlgorithm.SetHistoryProvider(historyProvider);
         }
 
         /// <summary>
@@ -1012,10 +831,7 @@ namespace QuantConnect.Python.Wrappers
         /// <param name="live"></param>
         public void SetLiveMode(bool live)
         {
-            using (Py.GIL())
-            {
-                _algorithm.SetLiveMode(live);
-            }
+            _baseAlgorithm.SetLiveMode(live);
         }
 
         /// <summary>
@@ -1023,10 +839,7 @@ namespace QuantConnect.Python.Wrappers
         /// </summary>
         public void SetLocked()
         {
-            using (Py.GIL())
-            {
-                _algorithm.SetLocked();
-            }
+            _baseAlgorithm.SetLocked();
         }
 
         /// <summary>
@@ -1035,10 +848,7 @@ namespace QuantConnect.Python.Wrappers
         /// <param name="max"></param>
         public void SetMaximumOrders(int max)
         {
-            using (Py.GIL())
-            {
-                _algorithm.SetMaximumOrders(max);
-            }
+            _baseAlgorithm.SetMaximumOrders(max);
         }
 
         /// <summary>
@@ -1047,10 +857,7 @@ namespace QuantConnect.Python.Wrappers
         /// <param name="parameters"></param>
         public void SetParameters(Dictionary<string, string> parameters)
         {
-            using (Py.GIL())
-            {
-                _algorithm.SetParameters(parameters);
-            }
+            _baseAlgorithm.SetParameters(parameters);
         }
     }
 }

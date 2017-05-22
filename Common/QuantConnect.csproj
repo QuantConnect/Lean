@@ -91,9 +91,6 @@
     <Reference Include="Fasterflect">
       <HintPath>..\packages\fasterflect.2.1.3\lib\net40\Fasterflect.dll</HintPath>
     </Reference>
-    <Reference Include="ImpromptuInterface">
-      <HintPath>..\packages\ImpromptuInterface.6.2.2\lib\net40\ImpromptuInterface.dll</HintPath>
-    </Reference>
     <Reference Include="MathNet.Numerics, Version=3.7.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\MathNet.Numerics.3.7.0\lib\net40\MathNet.Numerics.dll</HintPath>
@@ -318,12 +315,7 @@
     <Compile Include="Packets\SystemDebugPacket.cs" />
     <Compile Include="Parameters\ParameterAttribute.cs" />
     <Compile Include="Properties\SharedAssemblyInfo.cs" />
-    <Compile Include="Python\Wrappers\AlgorithmPythonWrapper.cs" />
-    <Compile Include="Python\Wrappers\BenchmarkPythonWrapper.cs" />
-    <Compile Include="Python\Wrappers\BrokerageMessageHandlerPythonWrapper.cs" />
-    <Compile Include="Python\Wrappers\BrokerageModelPythonWrapper.cs" />
-    <Compile Include="Python\Wrappers\TradeBuilderPythonWrapper.cs" />
-    <Compile Include="Python\Wrappers\HistoryProviderPythonWrapper.cs" />
+    <Compile Include="Python\PythonData.cs" />
     <Compile Include="Scheduling\CompositeTimeRule.cs" />
     <Compile Include="Scheduling\DateRules.cs" />
     <Compile Include="Scheduling\FluentScheduledEventBuilder.cs" />
@@ -499,7 +491,6 @@
     <Compile Include="TimeUpdatedEventArgs.cs" />
     <Compile Include="TimeZoneOffsetProvider.cs" />
     <Compile Include="TimeZones.cs" />
-    <Compile Include="Python\PythonData.cs" />
     <Compile Include="TradingCalendar.cs" />
     <Compile Include="TradingDay.cs" />
     <Compile Include="Util\BusyBlockingCollection.cs" />
