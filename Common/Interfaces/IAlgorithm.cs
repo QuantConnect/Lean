@@ -282,6 +282,14 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
+        /// Gets the user settings for the algorithm
+        /// </summary>
+        AlgorithmSettings Settings
+        {
+            get;
+        }
+
+        /// <summary>
         /// Initialise the Algorithm and Prepare Required Data:
         /// </summary>
         void Initialize();

@@ -146,6 +146,8 @@ namespace QuantConnect.Algorithm
 
             // initialize trading calendar 
             TradingCalendar = new TradingCalendar(Securities, _marketHoursDatabase);
+
+            Settings = new AlgorithmSettings(false);
         }
 
         /// <summary>
@@ -271,6 +273,15 @@ namespace QuantConnect.Algorithm
         /// Gets trading calendar populated with trading events
         /// </summary>
         public TradingCalendar TradingCalendar
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Gets the user settings for the algorithm
+        /// </summary>
+        public AlgorithmSettings Settings
         {
             get;
             private set;
@@ -1193,6 +1204,7 @@ namespace QuantConnect.Algorithm
             {
                 _liveMode = live;
                 Notify = new NotificationManager(live);
+                Settings = new AlgorithmSettings(live);
                 TradeBuilder.SetLiveMode(live);
 
                 if (live)
