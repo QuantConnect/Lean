@@ -11,9 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from datetime import date, timedelta
-import decimal
-
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
@@ -24,6 +21,9 @@ from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Data import SubscriptionDataSource
 from QuantConnect.Python import PythonData
+from datetime import datetime, timedelta
+import decimal
+
 
 class QCUWeatherBasedRebalancing(QCAlgorithm):    
     '''Initialize: Storage for our custom data:
@@ -70,8 +70,8 @@ class Weather(PythonData):
     ''' Weather based rebalancing'''
     
     def GetSource(self, config, date, isLive):
-        source = "https://www.wunderground.com/history/airport/{0}/{1}/1/1/CustomHistory.html?dayend=31&monthend=12&yearend={1}&format=1".format(config.Symbol, date.Year);
         source = "https://dl.dropboxusercontent.com/u/44311500/KNYC.csv"
+        source = "https://www.wunderground.com/history/airport/{0}/{1}/1/1/CustomHistory.html?dayend=31&monthend=12&yearend={1}&format=1".format(config.Symbol, date.year);
         return SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile);       
 
 
@@ -82,7 +82,7 @@ class Weather(PythonData):
         data = line.split(',')
         weather = Weather()
         weather.Symbol = config.Symbol
-        weather.Time = DateTime.ParseExact(data[0], "M/d/yyyy", None).AddHours(20) # Make sure we only get this data AFTER trading day - don't want forward bias.
+        weather.Time = datetime.strptime(data[0], '%Y-%m-%d') + timedelta(hours=20) # Make sure we only get this data AFTER trading day - don't want forward bias.
         weather.Value = decimal.Decimal(data[2])
         weather["MaxC"] = float(data[1])
         weather["MinC"] = float(data[3])

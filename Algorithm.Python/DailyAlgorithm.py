@@ -38,7 +38,6 @@ class DailyAlgorithm(QCAlgorithm):
         ibm_security.SetLeverage(1.0)
         self.ibm = ibm_security.Symbol
         self.spy = spy_security.Symbol
-
         self.macd = self.MACD(self.spy, 12, 26, 9, MovingAverageType.Wilders, Resolution.Daily, Field.Close)
         self.ema = self.EMA(self.ibm, 15*6, Resolution.Hour, Field.SevenBar)
         self.lastAction = None
@@ -55,7 +54,7 @@ class DailyAlgorithm(QCAlgorithm):
         if data[self.ibm] is None:
             self.Log("Price Missing Time: %s"%str(self.Time))
             return
-        if self.lastAction is not None and self.lastAction.Date == self.Time.Date: return
+        if self.lastAction is not None and self.lastAction.date() == self.Time.date(): return
         
         self.lastAction = self.Time
         holding = self.Portfolio[self.spy]

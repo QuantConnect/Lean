@@ -21,7 +21,6 @@ from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Orders import *
 from QuantConnect.Data import *
-from AlgorithmPythonUtil import to_python_datetime
 import decimal as d
 
 
@@ -132,12 +131,12 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
             self.Log("Updating limits - Long: {0:.2f} Short: {1:.2f}".format(newLongLimit, newShortLimit))
 
             updateOrderFields = UpdateOrderFields()
-            updateOrderFields.LimitPrice = Nullable[Decimal](newLongLimit)
+            updateOrderFields.LimitPrice = newLongLimit
             updateOrderFields.Tag = "Update #{0}".format(longOrder.UpdateRequests.Count + 1)
             longOrder.Update(updateOrderFields)
 
             updateOrderFields = UpdateOrderFields()
-            updateOrderFields.LimitPrice = Nullable[Decimal](newShortLimit)
+            updateOrderFields.LimitPrice = newShortLimit
             updateOrderFields.Tag = "Update #{0}".format(shortOrder.UpdateRequests.Count + 1)
             shortOrder.Update(updateOrderFields)
 
@@ -183,12 +182,12 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
             self.Log("Updating stops - Long: {0:.2f} Short: {1:.2f}".format(newLongStop, newShortStop))
 
             updateOrderFields = UpdateOrderFields()
-            updateOrderFields.StopPrice = Nullable[Decimal](newLongStop)
+            updateOrderFields.StopPrice = newLongStop
             updateOrderFields.Tag = "Update #{0}".format(longOrder.UpdateRequests.Count + 1)
             longOrder.Update(updateOrderFields)
 
             updateOrderFields = UpdateOrderFields()
-            updateOrderFields.StopPrice = Nullable[Decimal](newShortStop)
+            updateOrderFields.StopPrice = newShortStop
             updateOrderFields.Tag = "Update #{0}".format(shortOrder.UpdateRequests.Count + 1)
             shortOrder.Update(updateOrderFields)
             self.Log("Updated price - Long: {0} Short: {1}".format(longOrder.Get(OrderField.StopPrice), shortOrder.Get(OrderField.StopPrice)))
@@ -249,14 +248,14 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
             self.Log("Updating limits - Long: {0:.2f}  Short: {1:.2f}".format(newLongLimit, newShortLimit))
 
             updateOrderFields = UpdateOrderFields()
-            updateOrderFields.StopPrice = Nullable[Decimal](newLongStop)
-            updateOrderFields.LimitPrice = Nullable[Decimal](newLongLimit)
+            updateOrderFields.StopPrice = newLongStop
+            updateOrderFields.LimitPrice = newLongLimit
             updateOrderFields.Tag = "Update #{0}".format(longOrder.UpdateRequests.Count + 1)
             longOrder.Update(updateOrderFields)
 
             updateOrderFields = UpdateOrderFields()
-            updateOrderFields.StopPrice = Nullable[Decimal](newShortStop)
-            updateOrderFields.LimitPrice = Nullable[Decimal](newShortLimit)
+            updateOrderFields.StopPrice = newShortStop
+            updateOrderFields.LimitPrice = newShortLimit
             updateOrderFields.Tag = "Update #{0}".format(shortOrder.UpdateRequests.Count + 1)
             shortOrder.Update(updateOrderFields)
 
@@ -274,7 +273,7 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
             newTicket = self.MarketOnCloseOrder(self.spy, qty);
             self.__openMarketOnCloseOrders.append(newTicket)
 
-        if len(self.__openMarketOnCloseOrders) == 1 and to_python_datetime(self.Time).minute == 59:
+        if len(self.__openMarketOnCloseOrders) == 1 and self.Time.minute == 59:
             ticket = self.__openMarketOnCloseOrders[0]
             # check for fills
             if ticket.Status == OrderStatus.Filled:
@@ -286,11 +285,11 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
 
             # we can update the quantity and tag
             updateOrderFields = UpdateOrderFields()
-            updateOrderFields.Quantity = Nullable[int](quantity)
+            updateOrderFields.Quantity = quantity
             updateOrderFields.Tag = "Update #{0}".format(ticket.UpdateRequests.Count + 1)
             ticket.Update(updateOrderFields)
 
-        if self.TimeIs(self.EndDate.Day, 12 + 3, 45):
+        if self.TimeIs(self.EndDate.day, 12 + 3, 45):
             self.Log("Submitting MarketOnCloseOrder to liquidate end of algorithm")
             self.MarketOnCloseOrder(self.spy, -self.Portfolio[self.spy.Value].Quantity, "Liquidate end of algorithm")
 
@@ -306,7 +305,7 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
             newTicket = self.MarketOnOpenOrder(self.spy, 50)
             self.__openMarketOnOpenOrders.append(newTicket)
 
-        if len(self.__openMarketOnOpenOrders) == 1 and to_python_datetime(self.Time).minute == 59:
+        if len(self.__openMarketOnOpenOrders) == 1 and self.Time.minute == 59:
             ticket = self.__openMarketOnOpenOrders[0]
 
             # check for fills
@@ -319,7 +318,7 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
 
             # we can update the quantity and tag
             updateOrderFields = UpdateOrderFields()
-            updateOrderFields.Quantity = Nullable[int](quantity)
+            updateOrderFields.Quantity = quantity
             updateOrderFields.Tag = "Update #{0}".format(ticket.UpdateRequests.Count + 1)
             ticket.Update(updateOrderFields)
 
@@ -344,5 +343,4 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
 
 
     def TimeIs(self, day, hour, minute):
-        pyTime = to_python_datetime(self.Time)
-        return pyTime.day == day and pyTime.hour == hour and pyTime.minute == minute
+        return self.Time.day == day and self.Time.hour == hour and self.Time.minute == minute

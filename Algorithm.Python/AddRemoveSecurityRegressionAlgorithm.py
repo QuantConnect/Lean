@@ -38,24 +38,24 @@ class AddRemoveSecurityRegressionAlgorithm(QCAlgorithm):
 
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
-        if self._lastAction is not None and self._lastAction.Date == self.Time.Date:
+        if self._lastAction is not None and self._lastAction.date() == self.Time.date():
             return
 
         if not self.Portfolio.Invested:
             self.SetHoldings(self.spy.Symbol, .5)
             self._lastAction = self.Time
 
-        if self.Time.DayOfWeek == DayOfWeek.Tuesday:
+        if self.Time.weekday() == 1:
             self.aig = self.AddEquity("AIG")
             self.bac = self.AddEquity("BAC")
             self._lastAction = self.Time
 
-        if self.Time.DayOfWeek == DayOfWeek.Wednesday:
+        if self.Time.weekday() == 2:
             self.SetHoldings(self.aig.Symbol, .25)
             self.SetHoldings(self.bac.Symbol, .25)
             self._lastAction = self.Time
 
-        if self.Time.DayOfWeek == DayOfWeek.Thursday:
+        if self.Time.weekday() == 3:
             self.RemoveSecurity(self.aig.Symbol)
             self.RemoveSecurity(self.bac.Symbol)
             self._lastAction = self.Time

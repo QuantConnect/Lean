@@ -11,14 +11,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from math import copysign
-from datetime import datetime
-
-import clr
-clr.AddReference("System.Core")
-clr.AddReference("System.Collections")
-clr.AddReference("QuantConnect.Algorithm")
-clr.AddReference("QuantConnect.Common")
+from clr import AddReference
+AddReference("System.Core")
+AddReference("System.Collections")
+AddReference("QuantConnect.Algorithm")
+AddReference("QuantConnect.Common")
 
 from System import *
 from System.Linq import *
@@ -28,8 +25,10 @@ from QuantConnect.Data import *
 from QuantConnect.Orders import *
 from QuantConnect.Securities import *
 from QuantConnect.Util import *
-from AlgorithmPythonUtil import to_python_datetime
 import decimal as d
+from math import copysign
+from datetime import datetime
+
 
 class UpdateOrderRegressionAlgorithm(QCAlgorithm):
     '''Basic template algorithm simply initializes the date range and cash'''
@@ -70,15 +69,13 @@ class UpdateOrderRegressionAlgorithm(QCAlgorithm):
         if not data.ContainsKey(self.__Symbol):
             return
 
-        pyTime = to_python_datetime(self.Time)
-
-        if pyTime.month != self.__LastMonth:
+        if self.Time.month != self.__LastMonth:
             # we'll submit the next type of order from the queue
             orderType = self.__orderTypesQueue.Dequeue();
             #Log("");
-            self.Log("\r\n--------------MONTH: {0}:: {1}\r\n".format(pyTime.strftime("%B"), orderType))
+            self.Log("\r\n--------------MONTH: {0}:: {1}\r\n".format(self.Time.strftime("%B"), orderType))
             #Log("")
-            self.__LastMonth = pyTime.month
+            self.__LastMonth = self.Time.month
             self.Log("ORDER TYPE:: {0}".format(orderType))
             isLong = self.__Quantity > 0
             stopPrice = d.Decimal(1 + self.__StopPercentage)*data[self.__Symbol].High if isLong else d.Decimal(1 - self.__StopPercentage)*data[self.__Symbol].Low
@@ -94,26 +91,26 @@ class UpdateOrderRegressionAlgorithm(QCAlgorithm):
         elif len(self.__tickets) > 0:
             ticket = self.__tickets[-1]
                     
-            if pyTime.day > 8 and pyTime.day < 14:
+            if self.Time.day > 8 and self.Time.day < 14:
                 if ticket.UpdateRequests.Count == 0 and ticket.Status is not OrderStatus.Filled:
                     self.Log("TICKET:: {0}".format(ticket))
                     updateOrderFields = UpdateOrderFields()
-                    updateOrderFields.Quantity = Nullable[int](ticket.Quantity + copysign(self.__DeltaQuantity, self.__Quantity))
-                    updateOrderFields.Tag = "Change quantity: {0}".format(pyTime)
+                    updateOrderFields.Quantity = ticket.Quantity + copysign(self.__DeltaQuantity, self.__Quantity)
+                    updateOrderFields.Tag = "Change quantity: {0}".format(self.Time)
                     ticket.Update(updateOrderFields)
                     
-            elif pyTime.day > 13 and pyTime.day < 20:
+            elif self.Time.day > 13 and self.Time.day < 20:
                 if ticket.UpdateRequests.Count == 1 and ticket.Status is not OrderStatus.Filled:
                     self.Log("TICKET:: {0}".format(ticket))
                     updateOrderFields = UpdateOrderFields()
-                    updateOrderFields.LimitPrice = Nullable[Decimal](self.__Security.Price*d.Decimal(1 - copysign(self.__LimitPercentageDelta, ticket.Quantity)))
-                    updateOrderFields.StopPrice = Nullable[Decimal](self.__Security.Price*d.Decimal(1 + copysign(self.__StopPercentageDelta, ticket.Quantity)))
-                    updateOrderFields.Tag = "Change prices: {0}".format(pyTime)
+                    updateOrderFields.LimitPrice = self.__Security.Price*d.Decimal(1 - copysign(self.__LimitPercentageDelta, ticket.Quantity))
+                    updateOrderFields.StopPrice = self.__Security.Price*d.Decimal(1 + copysign(self.__StopPercentageDelta, ticket.Quantity))
+                    updateOrderFields.Tag = "Change prices: {0}".format(self.Time)
                     ticket.Update(updateOrderFields)
             else:
                 if ticket.UpdateRequests.Count == 2 and ticket.Status is not OrderStatus.Filled:
                     self.Log("TICKET:: {0}".format(ticket))
-                    ticket.Cancel("{0} and is still open!".format(pyTime))
+                    ticket.Cancel("{0} and is still open!".format(self.Time))
                     self.Log("CANCELLED:: {0}".format(ticket.CancelRequest))
 
 

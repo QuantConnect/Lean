@@ -25,8 +25,6 @@ from QuantConnect.Data import *
 from QuantConnect.Indicators import *
 from QuantConnect.Orders import *
 from QuantConnect.Securities import *
-from AlgorithmPythonUtil import to_python_datetime
-from datetime import datetime
 import decimal as d
 
 
@@ -64,7 +62,7 @@ class HistoryAndWarmupRegressionAlgorithm(QCAlgorithm):
         if self.IsWarmingUp: return
 
         for sd in self.__sd.values():
-            lastPriceTime = to_python_datetime(sd.Close.Current.Time)
+            lastPriceTime = sd.Close.Current.Time
             if self.RoundDown(lastPriceTime, sd.Security.SubscriptionDataConfig.Increment):
                 sd.Update()
 
@@ -76,7 +74,7 @@ class HistoryAndWarmupRegressionAlgorithm(QCAlgorithm):
 
 
     def RoundDown(self, time, increment):
-        if increment.Days != 0:
+        if increment.days != 0:
             return time.hour == 0 and time.minute == 0 and time.second == 0
         else:
             return time.second == 0

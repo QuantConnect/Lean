@@ -11,8 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from datetime import datetime
-
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
@@ -23,8 +21,7 @@ from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
-from AlgorithmPythonUtil import to_python_datetime
-
+from datetime import datetime
 
 class MACDTrendAlgorithm(QCAlgorithm):
     '''MACD Example Algorithm'''
@@ -48,11 +45,9 @@ class MACDTrendAlgorithm(QCAlgorithm):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
         # wait for our macd to fully initialize
         if not self.__macd.IsReady: return    
-
-        pyTime = to_python_datetime(self.Time)
     
         # only once per day
-        if self.__previous.date() == pyTime.date(): return
+        if self.__previous.date() == self.Time.date(): return
 
         # define a small tolerance on our checks to avoid bouncing
         tolerance = 0.0025;
@@ -76,4 +71,4 @@ class MACDTrendAlgorithm(QCAlgorithm):
         self.Plot(str(self.spy), self.__macd.Fast.Current.Value)
         self.Plot(str(self.spy), self.__macd.Slow.Current.Value)
 
-        self.__previous = pyTime
+        self.__previous = self.Time

@@ -11,8 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from datetime import datetime
-
 from clr import AddReference
 AddReference("System.Core")
 AddReference("QuantConnect.Common")
@@ -24,7 +22,8 @@ from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Orders import *
 from QuantConnect.Data.UniverseSelection import *
-from AlgorithmPythonUtil import to_python_datetime
+from datetime import datetime
+
 
 class UniverseSelectionRegressionAlgorithm(QCAlgorithm):
     '''Basic template algorithm simply initializes the date range and cash'''
@@ -67,9 +66,7 @@ class UniverseSelectionRegressionAlgorithm(QCAlgorithm):
         for kvp in data.Delistings:
             self.__delistedSymbols.append(kvp.Key)
 
-        pyTime = to_python_datetime(self.Time)
-
-        if pyTime.date == datetime(2014, 4, 7):
+        if self.Time.date == datetime(2014, 4, 7):
             self.Liquidade()
             return
 
@@ -78,12 +75,12 @@ class UniverseSelectionRegressionAlgorithm(QCAlgorithm):
         
         for security in self.__changes.AddedSecurities:
             if security.Symbol in data:
-                self.Log("{0}: Added Security: {1}".format(pyTime, security.Symbol))
+                self.Log("{0}: Added Security: {1}".format(self.Time, security.Symbol))
                 self.MarketOnOpenOrder(security.Symbol, 100)
 
         for security in self.__changes.RemovedSecurities:
             if security.Symbol in data:
-                self.Log("{0}: Removed Security: {1}".format(pyTime, security.Symbol))
+                self.Log("{0}: Removed Security: {1}".format(self.Time, security.Symbol))
                 if security.Symbol not in self.__delistedSymbols:
                     self.Log("Not in delisted: {0}:".format(security.Symbol))
                     self.MarketOnOpenOrder(security.Symbol, -100)

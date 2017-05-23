@@ -15,17 +15,8 @@ from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Common")
 
-from System import DateTime
 from QuantConnect.Python import PythonData
-from datetime import datetime, timedelta
 import decimal
-
-
-def to_python_datetime(value):
-    if not isinstance(value, DateTime):
-        raise ValueError('Value is not DateTime')
-
-    return datetime(value.Year, value.Month, value.Day, value.Hour, value.Minute, value.Second, value.Millisecond)
 
 
 def OnPythonData(self, data):       

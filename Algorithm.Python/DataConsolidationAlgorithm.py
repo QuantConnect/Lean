@@ -23,7 +23,7 @@ from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
 from QuantConnect.Data.Market import *
 from QuantConnect.Data.Consolidators import *
-
+from datetime import timedelta
 
 class DataConsolidationAlgorithm(QCAlgorithm):
     '''Example algorithm giving an introduction into using IDataConsolidators.  
@@ -48,14 +48,14 @@ class DataConsolidationAlgorithm(QCAlgorithm):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
         
         self.SetStartDate(DateTime(2013, 10, 07, 9, 30, 0))  #Set Start Date
-        self.SetEndDate(self.StartDate.AddDays(1))           #Set End Date
+        self.SetEndDate(self.StartDate + timedelta(1))           #Set End Date
         # Find more symbols here: http://quantconnect.com/data
         equity = self.AddEquity("SPY")
         self.spy = equity.Symbol
 
         # define our 30 minute trade bar consolidator. we can
         # access the 30 minute bar from the DataConsolidated events
-        thirtyMinuteConsolidator = TradeBarConsolidator(TimeSpan.FromMinutes(30))
+        thirtyMinuteConsolidator = TradeBarConsolidator(timedelta(minutes=30))
 
         # attach our event handler. the event handler is a function that will
         # be called each time we produce a new consolidated piece of data.
@@ -72,7 +72,7 @@ class DataConsolidationAlgorithm(QCAlgorithm):
         # days. So we'll create a daily consolidator, and then wrap it with a 3 count consolidator.
 
         # first define a one day trade bar -- this produces a consolidated piece of data after a day has passed
-        oneDayConsolidator = TradeBarConsolidator(TimeSpan.FromDays(1))
+        oneDayConsolidator = TradeBarConsolidator(timedelta(1))
 
         # next define our 3 count trade bar -- this produces a consolidated piece of data after it sees 3 pieces of data
         threeCountConsolidator = TradeBarConsolidator(3)
@@ -107,11 +107,11 @@ class DataConsolidationAlgorithm(QCAlgorithm):
          will be the instance of the IDataConsolidator that invoked the event, but you'll almost never need that!''' 
 
         if self.__last is not None and bar.Close > self.__last.Close:
-            self.Log("{0} >> SPY >> LONG  >> 100 >> {1}".format(bar.Time.ToString("o"), self.Portfolio[self.spy].Quantity))
+            self.Log("{0} >> SPY >> LONG  >> 100 >> {1}".format(bar.Time, self.Portfolio[self.spy].Quantity))
             self.Order(self.spy, 100)
 
         elif self.__last is not None and bar.Close < self.__last.Close:
-            self.Log("{0} >> SPY >> SHORT  >> 100 >> {1}".format(bar.Time.ToString("o"), self.Portfolio[self.spy].Quantity))
+            self.Log("{0} >> SPY >> SHORT  >> 100 >> {1}".format(bar.Time, self.Portfolio[self.spy].Quantity))
             self.Order(self.spy, -100)
 
         self.__last = bar
@@ -121,5 +121,5 @@ class DataConsolidationAlgorithm(QCAlgorithm):
         ''' This is our event handler for our 3 day trade bar defined above in Initialize(). So each time the
         consolidator produces a new 3 day bar, this function will be called automatically. The 'sender' parameter
         will be the instance of the IDataConsolidator that invoked the event, but you'll almost never need that!'''       
-        self.Log("{0} >> Plotting!".format(bar.Time.ToString("o")))
+        self.Log("{0} >> Plotting!".format(bar.Time))
         self.Plot(bar.Symbol, "3HourBar", bar.Close)

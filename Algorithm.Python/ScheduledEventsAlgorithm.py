@@ -20,6 +20,7 @@ from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Data import *
+from datetime import timedelta
 
 
 class ScheduledEventsAlgorithm(QCAlgorithm):
@@ -59,7 +60,7 @@ class ScheduledEventsAlgorithm(QCAlgorithm):
 
         # the scheduling methods return the ScheduledEvent object which can be used for other things here I set
         # the event up to check the portfolio value every 10 minutes, and liquidate if we have too many losses
-        self.Schedule.On(self.DateRules.EveryDay(), self.TimeRules.Every(TimeSpan.FromMinutes(10)), Action(self.LiquidateUnrealizedLosses))
+        self.Schedule.On(self.DateRules.EveryDay(), self.TimeRules.Every(timedelta(minutes=10)), Action(self.LiquidateUnrealizedLosses))
 
         # schedule an event to fire at the beginning of the month, the symbol is optional
         # if specified, it will fire the first trading day for that symbol of the month,

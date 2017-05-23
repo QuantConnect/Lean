@@ -11,8 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from datetime import datetime
-
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
@@ -24,7 +22,7 @@ from QuantConnect.Algorithm import *
 from QuantConnect.Securities import *
 from QuantConnect.Data.Market import *
 from QuantConnect.Orders import *
-from AlgorithmPythonUtil import to_python_datetime
+from datetime import datetime
 
 
 class MarketOnOpenOnCloseAlgorithm(QCAlgorithm):
@@ -43,11 +41,10 @@ class MarketOnOpenOnCloseAlgorithm(QCAlgorithm):
 
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
-        pyTime = to_python_datetime(self.Time)
-        if pyTime.date() != self.__last.date():   # each morning submit a market on open order
+        if self.Time.date() != self.__last.date():   # each morning submit a market on open order
             self.__submittedMarketOnCloseToday = False
             self.MarketOnOpenOrder(self.equity.Symbol, 100)
-            self.__last = pyTime
+            self.__last = self.Time
 
         if not self.__submittedMarketOnCloseToday and self.equity.Exchange.ExchangeOpen:   # once the exchange opens submit a market on close order
             self.__submittedMarketOnCloseToday = True
