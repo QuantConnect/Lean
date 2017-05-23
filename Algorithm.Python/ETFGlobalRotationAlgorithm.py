@@ -22,7 +22,6 @@ from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
 from QuantConnect.Data.Market import *
-from AlgorithmPythonUtil import to_python_datetime
 from datetime import datetime, timedelta
 
 
@@ -67,17 +66,16 @@ class ETFGlobalRotationAlgorithm(QCAlgorithm):
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
         try:
-            pyTime = to_python_datetime(self.Time)
             # the first time we come through here we'll need to do some 
             # things such as allocation and initializing our symbol data
             if self.__first:
                 self.__first = False
-                self.__lastRotationTime = pyTime
+                self.__lastRotationTime = self.Time
                 return
 
-            delta = pyTime - self.__lastRotationTime
+            delta = self.Time - self.__lastRotationTime
             if delta > self.__rotationInternal:
-                self.__lastRotationTime = pyTime
+                self.__lastRotationTime = self.Time
                 for x in self.SymbolData: x.Update()
             
                 # pick which one is best from growth and safety symbols

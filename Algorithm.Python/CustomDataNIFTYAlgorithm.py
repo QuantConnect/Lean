@@ -11,12 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from datetime import date, timedelta
-import decimal
-import numpy as np
-import math
-import json
-
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
@@ -27,6 +21,11 @@ from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Data import SubscriptionDataSource
 from QuantConnect.Python import PythonData
+from datetime import date, timedelta, datetime
+import decimal
+import numpy as np
+import math
+import json
 
 class CustomDataNIFTYAlgorithm(QCAlgorithm):
     '''3.0 CUSTOM DATA SOURCE: USE YOUR OWN MARKET DATA (OPTIONS, FOREX, FUTURES, DERIVATIVES etc).
@@ -62,13 +61,13 @@ class CustomDataNIFTYAlgorithm(QCAlgorithm):
 
         self.today.NiftyPrice = data[self.nifty].Close
 
-        if self.today.Date == data[self.nifty].Time:
+        if self.today.date() == data[self.nifty].Time.date():
             self.prices.append(self.today)
             if len(self.prices) > self.minimumCorrelationHistory:
                 self.prices.pop(0)
-
+        
         # Strategy
-        if self.Time.DayOfWeek != DayOfWeek.Wednesday: return
+        if self.Time.weekday() != 2: return
 
         cur_qnty = self.Portfolio[self.nifty].Quantity
         quantity = math.floor(self.Portfolio.TotalPortfolioValue * decimal.Decimal(0.9) / data[self.nifty].Close)
@@ -101,7 +100,7 @@ class Nifty(PythonData):
             # Date,       Open       High        Low       Close     Volume      Turnover
             # 2011-09-13  7792.9    7799.9     7722.65    7748.7    116534670    6107.78
             data = line.split(',')
-            index.Time = DateTime.ParseExact(data[0], "yyyy-MM-dd", None)            
+            index.Time = datetime.strptime(data[0], "%Y-%m-%d")            
             index.Value = decimal.Decimal(data[4])
             index["Open"] = float(data[1])
             index["High"] = float(data[2])
@@ -130,7 +129,7 @@ class DollarRupee(PythonData):
         
         try:
             data = line.split(',')
-            currency.Time = DateTime.Parse(data[0])
+            currency.Time = datetime.strptime(data[0], "%Y-%m-%d")
             currency.Value = decimal.Decimal(data[1])
             currency["Close"] = float(data[1])
             
@@ -144,7 +143,10 @@ class DollarRupee(PythonData):
 class CorrelationPair:
     '''Correlation Pair is a helper class to combine two data points which we'll use to perform the correlation.'''
     def __init__(self, *args):
-        self.NiftyPrice = 0       # Nifty price for this correlation pair
-        self.CurrencyPrice = 0    # Currency price for this correlation pair
-        self.Date = DateTime()    # Date of the correlation pair
-        if len(args) > 0: self.Date = args[0]
+        self.NiftyPrice = 0        # Nifty price for this correlation pair
+        self.CurrencyPrice = 0     # Currency price for this correlation pair
+        self._date = datetime.min    # Date of the correlation pair
+        if len(args) > 0: self._date = args[0]
+
+    def date(self):
+        return self._date

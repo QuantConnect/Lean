@@ -60,7 +60,7 @@ class MovingAverageCrossAlgorithm(QCAlgorithm):
             return    
 
         # only once per day
-        if self.previous is not None and self.previous.Date == self.Time.Date:
+        if self.previous is not None and self.previous.date() == self.Time.date():
             return
 
         # define a small tolerance on our checks to avoid bouncing

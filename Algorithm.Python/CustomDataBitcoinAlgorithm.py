@@ -11,11 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from datetime import date, timedelta
-import decimal
-import numpy as np
-import json
-
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
@@ -27,6 +22,11 @@ from QuantConnect.Algorithm import *
 from QuantConnect.Data import SubscriptionDataSource
 from QuantConnect.Python import PythonData
 
+from datetime import date, timedelta, datetime
+import decimal
+import numpy as np
+import json
+
 
 class CustomDataBitcoinAlgorithm(QCAlgorithm):
     '''3.0 CUSTOM DATA SOURCE: USE YOUR OWN MARKET DATA (OPTIONS, FOREX, FUTURES, DERIVATIVES etc).
@@ -36,7 +36,7 @@ class CustomDataBitcoinAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         self.SetStartDate(2011, 9, 13)
-        self.SetEndDate(DateTime.Now.Date.AddDays(-1))
+        self.SetEndDate(datetime.now().date() - timedelta(1))
         self.SetCash(100000)
 
         # Define the symbol and "type" of our generic data:
@@ -55,7 +55,7 @@ class CustomDataBitcoinAlgorithm(QCAlgorithm):
             self.SetHoldings(self.btc, 1)
             self.Debug("Buying BTC 'Shares': BTC: {0}".format(close))
         
-        self.Debug("Time: {0} {1} {2}".format(DateTime.Now.ToLongDateString(), DateTime.Now.ToLongTimeString(), close))
+        self.Debug("Time: {0} {1}".format(datetime.now(), close))
 
 
 class Bitcoin(PythonData):
@@ -84,7 +84,7 @@ class Bitcoin(PythonData):
                 value = decimal.Decimal(liveBTC["last"])
                 if value == 0: return None
 
-                coin.Time = DateTime.Now
+                coin.Time = datetime.now()
                 coin.Value = value                
                 coin["Open"] = float(liveBTC["open"])
                 coin["High"] = float(liveBTC["high"])
@@ -111,7 +111,7 @@ class Bitcoin(PythonData):
             value = decimal.Decimal(data[4])
             if value == 0: return None
 
-            coin.Time = DateTime.Now #DateTime.Parse(data[0], None)
+            coin.Time = datetime.strptime(data[0], "%Y-%m-%d")
             coin.Value = value
             coin["Open"] = float(data[1])
             coin["High"] = float(data[2])

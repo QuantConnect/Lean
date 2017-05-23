@@ -20,7 +20,6 @@ from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Data.Market import *
-from AlgorithmPythonUtil import to_python_datetime
 from datetime import datetime, timedelta
 
 
@@ -39,23 +38,21 @@ class RegressionAlgorithm(QCAlgorithm):
         self.AddEquity("AIG", Resolution.Hour)
         self.AddEquity("IBM", Resolution.Daily)
 
-        self.__lastTradeTicks = to_python_datetime(self.StartDate)
+        self.__lastTradeTicks = self.StartDate
         self.__lastTradeTradeBars = self.__lastTradeTicks
         self.__tradeEvery = timedelta(minutes=1)
         
 
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
-        pyTime = to_python_datetime(self.Time)
-
-        if pyTime - self.__lastTradeTradeBars < self.__tradeEvery:
+        if self.Time - self.__lastTradeTradeBars < self.__tradeEvery:
             return
-        self.__lastTradeTradeBars = pyTime
+        self.__lastTradeTradeBars = self.Time
 
         for kvp in data.Bars:
-            period = kvp.Value.Period.TotalSeconds
+            period = kvp.Value.Period.total_seconds()
             
-            if self.roundTime(pyTime, period) != pyTime:
+            if self.roundTime(self.Time, period) != self.Time:
                 pass
 
             symbol = kvp.Key
