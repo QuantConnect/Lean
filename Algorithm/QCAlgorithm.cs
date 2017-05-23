@@ -108,7 +108,7 @@ namespace QuantConnect.Algorithm
             _localTimeKeeper = _timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork);
 
             //Initialise Data Manager 
-            SubscriptionManager = new SubscriptionManager(_timeKeeper);
+            SubscriptionManager = new SubscriptionManager(this, _timeKeeper);
 
             Securities = new SecurityManager(_timeKeeper);
             Transactions = new SecurityTransactionManager(Securities);

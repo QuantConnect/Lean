@@ -20,6 +20,8 @@ using NodaTime;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect.Data
@@ -29,6 +31,7 @@ namespace QuantConnect.Data
     /// </summary>
     public class SubscriptionManager
     {
+        private readonly IAlgorithm _algorithm;
         private readonly TimeKeeper _timeKeeper;
 
         /// Generic Market Data Requested and Object[] Arguements to Get it:
@@ -51,9 +54,11 @@ namespace QuantConnect.Data
         /// <summary>
         /// Initialise the Generic Data Manager Class
         /// </summary>
-        /// <param name="timeKeeper">The algoritm's time keeper</param>
-        public SubscriptionManager(TimeKeeper timeKeeper)
+        /// <param name="algorithm">The algorithm instance, used for obtaining the default <see cref="AlgorithmSettings"/></param>
+        /// <param name="timeKeeper">The algorithm's time keeper</param>
+        public SubscriptionManager(IAlgorithm algorithm, TimeKeeper timeKeeper)
         {
+            _algorithm = algorithm;
             _timeKeeper = timeKeeper;
             //Generic Type Data Holder:
             Subscriptions = new List<SubscriptionDataConfig>();
@@ -93,7 +98,7 @@ namespace QuantConnect.Data
             {
                 dataType = typeof(Tick);
             }
-            return Add(dataType, symbol, resolution, timeZone, exchangeTimeZone, isCustomData, fillDataForward, extendedMarketHours, false);
+            return Add(dataType, symbol, resolution, timeZone, exchangeTimeZone, isCustomData, fillDataForward, extendedMarketHours);
         }
 
         /// <summary>
@@ -121,12 +126,29 @@ namespace QuantConnect.Data
             {
                 throw new ArgumentNullException("exchangeTimeZone", "ExchangeTimeZone is a required parameter for new subscriptions.  Set to the time zone the security exchange resides in.");
             }
-            
+
             //Create:
             var newConfig = new SubscriptionDataConfig(dataType, symbol, resolution, dataTimeZone, exchangeTimeZone, fillDataForward, extendedMarketHours, isInternalFeed, isCustomData, isFilteredSubscription: isFilteredSubscription);
 
             //Add to subscription list: make sure we don't have his symbol:
             Subscriptions.Add(newConfig);
+
+            // count data subscriptions by symbol, ignoring multiple data types
+            var uniqueCount = Subscriptions
+                .Where(x => !x.Symbol.IsCanonical())
+                .DistinctBy(x => x.Symbol.Value)
+                .Count();
+            if (uniqueCount > _algorithm.Settings.DataSubscriptionLimit)
+            {
+                var message = string.Format(
+                        "The maximum number of concurrent market data subscriptions was exceeded ({0}). Please reduce the number of symbols requested or increase the limit using Settings.DataSubscriptionLimit.",
+                        _algorithm.Settings.DataSubscriptionLimit);
+                var error = new Exception(message);
+
+                // log the error message and abort algorithm execution
+                Log.Error(error);
+                _algorithm.RunTimeError = error;
+            }
 
             // add the time zone to our time keeper
             _timeKeeper.AddTimeZone(exchangeTimeZone);
@@ -163,7 +185,7 @@ namespace QuantConnect.Data
             }
 
             //If we made it here it is because we never found the symbol in the subscription list
-            throw new ArgumentException("Please subscribe to this symbol before adding a consolidator for it. Symbol: " + symbol.ToString());
+            throw new ArgumentException("Please subscribe to this symbol before adding a consolidator for it. Symbol: " + symbol.Value);
         }
 
         /// <summary>

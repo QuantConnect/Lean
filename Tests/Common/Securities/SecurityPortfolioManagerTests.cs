@@ -38,6 +38,7 @@ namespace QuantConnect.Tests.Common.Securities
     [TestFixture]
     public class SecurityPortfolioManagerTests
     {
+        private static readonly QCAlgorithm Algorithm = new QCAlgorithm();
         private static readonly SecurityExchangeHours SecurityExchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
         private static readonly Symbol CASH = new Symbol(SecurityIdentifier.GenerateBase("CASH", Market.USA), "CASH");
         private static readonly Symbol MCHJWB = new Symbol(SecurityIdentifier.GenerateForex("MCHJWB", Market.FXCM), "MCHJWB");
@@ -83,7 +84,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(fills.Count + 1, equity.Count);
 
             // we're going to process fills and very our equity after each fill
-            var subscriptions = new SubscriptionManager(TimeKeeper);
+            var subscriptions = new SubscriptionManager(Algorithm, TimeKeeper);
             var securities = new SecurityManager(TimeKeeper);
             var security = new Security(SecurityExchangeHours, subscriptions.Add(CASH, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
             security.SetLeverage(10m);
@@ -146,7 +147,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(fills.Count + 1, equity.Count);
 
             // we're going to process fills and very our equity after each fill
-            var subscriptions = new SubscriptionManager(TimeKeeper);
+            var subscriptions = new SubscriptionManager(Algorithm, TimeKeeper);
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(securities);
             var portfolio = new SecurityPortfolioManager(securities, transactions);

@@ -22,12 +22,27 @@ namespace QuantConnect
     /// </summary>
     public class AlgorithmSettings
     {
+        private const int DefaultSubscriptionLimitLiveTrading = 100;
+        private const int DefaultSubscriptionLimitBacktesting = int.MaxValue;
+
+        /// <summary>
+        /// Gets/sets the maximum number of concurrent market data subscriptions available
+        /// </summary>
+        /// <remarks>
+        /// All securities added with <see cref="IAlgorithm.AddSecurity"/> are counted as one,
+        /// with the exception of options and futures where every single contract in a chain counts as one.
+        /// </remarks>
+        public int DataSubscriptionLimit { get; set; }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="AlgorithmSettings"/> class
         /// </summary>
         /// <param name="liveMode">True if we're running in live mode, false for backtest mode</param>
         public AlgorithmSettings(bool liveMode)
         {
+            DataSubscriptionLimit = liveMode ? 
+                DefaultSubscriptionLimitLiveTrading : 
+                DefaultSubscriptionLimitBacktesting;
         }
     }
 }
