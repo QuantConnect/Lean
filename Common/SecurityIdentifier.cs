@@ -20,6 +20,7 @@ using System.Numerics;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect
@@ -593,23 +594,31 @@ namespace QuantConnect
                 return true;
             }
 
-            var sids = value.Split('|');
-            for (var i = sids.Length - 1; i > -1; i--)
+            try
             {
-                var current = sids[i];
-                var parts = current.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                if (parts.Length != 2)
+                var sids = value.Split('|');
+                for (var i = sids.Length - 1; i > -1; i--)
                 {
-                    exception = new FormatException("The string must be splittable on space into two parts.");
-                    return false;
+                    var current = sids[i];
+                    var parts = current.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length != 2)
+                    {
+                        throw new FormatException("The string must be splittable on space into two parts.");
+                    }
+
+                    var symbol = parts[0];
+                    var otherData = parts[1];
+                    var props = DecodeBase36(otherData);
+
+                    // toss the previous in as the underlying, if Empty, ignored by ctor
+                    identifier = new SecurityIdentifier(symbol, props, identifier);
                 }
-
-                var symbol = parts[0];
-                var otherData = parts[1];
-                var props = DecodeBase36(otherData);
-
-                // toss the previous in as the underlying, if Empty, ignored by ctor
-                identifier = new SecurityIdentifier(symbol, props, identifier);
+            }
+            catch (Exception error)
+            {
+                exception = error;
+                Log.Error("SecurityIdentifier.TryParseProperties(): Error parsing SecurityIdentifier: '{0}', Exception: {1}", value, exception);
+                return false;
             }
 
             return true;
