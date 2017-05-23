@@ -107,8 +107,10 @@ namespace QuantConnect.Algorithm
             // set our local time zone
             _localTimeKeeper = _timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork);
 
+            Settings = new AlgorithmSettings();
+
             //Initialise Data Manager 
-            SubscriptionManager = new SubscriptionManager(this, _timeKeeper);
+            SubscriptionManager = new SubscriptionManager(Settings, _timeKeeper);
 
             Securities = new SecurityManager(_timeKeeper);
             Transactions = new SecurityTransactionManager(Securities);
@@ -146,8 +148,6 @@ namespace QuantConnect.Algorithm
 
             // initialize trading calendar 
             TradingCalendar = new TradingCalendar(Securities, _marketHoursDatabase);
-
-            Settings = new AlgorithmSettings(false);
         }
 
         /// <summary>
@@ -1204,7 +1204,6 @@ namespace QuantConnect.Algorithm
             {
                 _liveMode = live;
                 Notify = new NotificationManager(live);
-                Settings = new AlgorithmSettings(live);
                 TradeBuilder.SetLiveMode(live);
 
                 if (live)

@@ -22,9 +22,6 @@ namespace QuantConnect
     /// </summary>
     public class AlgorithmSettings
     {
-        private const int DefaultSubscriptionLimitLiveTrading = 100;
-        private const int DefaultSubscriptionLimitBacktesting = int.MaxValue;
-
         /// <summary>
         /// Gets/sets the maximum number of concurrent market data subscriptions available
         /// </summary>
@@ -37,12 +34,10 @@ namespace QuantConnect
         /// <summary>
         /// Initializes a new instance of the <see cref="AlgorithmSettings"/> class
         /// </summary>
-        /// <param name="liveMode">True if we're running in live mode, false for backtest mode</param>
-        public AlgorithmSettings(bool liveMode)
+        public AlgorithmSettings()
         {
-            DataSubscriptionLimit = liveMode ? 
-                DefaultSubscriptionLimitLiveTrading : 
-                DefaultSubscriptionLimitBacktesting;
+            // default is unlimited
+            DataSubscriptionLimit = int.MaxValue;
         }
     }
 }

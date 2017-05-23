@@ -20,8 +20,6 @@ using NodaTime;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
-using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect.Data
@@ -31,7 +29,7 @@ namespace QuantConnect.Data
     /// </summary>
     public class SubscriptionManager
     {
-        private readonly IAlgorithm _algorithm;
+        private readonly AlgorithmSettings _algorithmSettings;
         private readonly TimeKeeper _timeKeeper;
 
         /// Generic Market Data Requested and Object[] Arguements to Get it:
@@ -54,11 +52,11 @@ namespace QuantConnect.Data
         /// <summary>
         /// Initialise the Generic Data Manager Class
         /// </summary>
-        /// <param name="algorithm">The algorithm instance, used for obtaining the default <see cref="AlgorithmSettings"/></param>
+        /// <param name="algorithmSettings">The algorithm settings instance</param>
         /// <param name="timeKeeper">The algorithm's time keeper</param>
-        public SubscriptionManager(IAlgorithm algorithm, TimeKeeper timeKeeper)
+        public SubscriptionManager(AlgorithmSettings algorithmSettings, TimeKeeper timeKeeper)
         {
-            _algorithm = algorithm;
+            _algorithmSettings = algorithmSettings;
             _timeKeeper = timeKeeper;
             //Generic Type Data Holder:
             Subscriptions = new List<SubscriptionDataConfig>();
@@ -138,16 +136,12 @@ namespace QuantConnect.Data
                 .Where(x => !x.Symbol.IsCanonical())
                 .DistinctBy(x => x.Symbol.Value)
                 .Count();
-            if (uniqueCount > _algorithm.Settings.DataSubscriptionLimit)
+            if (uniqueCount > _algorithmSettings.DataSubscriptionLimit)
             {
-                var message = string.Format(
+                throw new Exception(
+                    string.Format(
                         "The maximum number of concurrent market data subscriptions was exceeded ({0}). Please reduce the number of symbols requested or increase the limit using Settings.DataSubscriptionLimit.",
-                        _algorithm.Settings.DataSubscriptionLimit);
-                var error = new Exception(message);
-
-                // log the error message and abort algorithm execution
-                Log.Error(error);
-                _algorithm.RunTimeError = error;
+                        _algorithmSettings.DataSubscriptionLimit));
             }
 
             // add the time zone to our time keeper

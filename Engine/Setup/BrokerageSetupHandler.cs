@@ -17,9 +17,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
-using QuantConnect.Algorithm;
 using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages;
+using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
@@ -198,6 +198,14 @@ namespace QuantConnect.Lean.Engine.Setup
                         algorithm.SetDateTime(DateTime.UtcNow);
                         //Set the source impl for the event scheduling
                         algorithm.Schedule.SetEventSchedule(realTimeHandler);
+
+                        // If we're using IB, set the default subscription limit to 100,
+                        // algorithms can override this setting in the Initialize method
+                        if (brokerage is InteractiveBrokersBrokerage)
+                        {
+                            algorithm.Settings.DataSubscriptionLimit = 100;
+                        }
+
                         //Initialise the algorithm, get the required data:
                         algorithm.Initialize();
                         if (liveJob.Brokerage != "PaperBrokerage")
