@@ -78,8 +78,8 @@ namespace QuantConnect.Securities
         internal Type _type = Type.Standard;
 
         // Fields used in relative strikes filter
-        private decimal _strikeSize;
-        private DateTime _strikeSizeResolveDate;
+        private List<decimal> _uniqueStrikes;
+        private DateTime _uniqueStrikesResolveDate;
 
         /// <summary>
         /// Constructs OptionFilterUniverse
@@ -159,7 +159,7 @@ namespace QuantConnect.Securities
         /// <returns></returns>
         public OptionFilterUniverse FrontMonth()
         {
-            if (_allSymbols.Count() == 0) return this;
+            if (!_allSymbols.Any()) return this;
             var ordered = this.OrderBy(x => x.ID.Date).ToList();
             var frontMonth = ordered.TakeWhile(x => ordered[0].ID.Date == x.ID.Date);
 
@@ -174,7 +174,7 @@ namespace QuantConnect.Securities
         /// <returns></returns>
         public OptionFilterUniverse BackMonths()
         {
-            if (_allSymbols.Count() == 0) return this;
+            if (!_allSymbols.Any()) return this;
             var ordered = this.OrderBy(x => x.ID.Date).ToList();
             var backMonths = ordered.SkipWhile(x => ordered[0].ID.Date == x.ID.Date);
 
@@ -204,28 +204,60 @@ namespace QuantConnect.Securities
                 return this;
             }
 
-            if (_underlying.Time.Date != _strikeSizeResolveDate)
+            if (_underlying.Time.Date != _uniqueStrikesResolveDate)
             {
-                // each day we need to recompute the strike size
-                var uniqueStrikes = _allSymbols.DistinctBy(x => x.ID.StrikePrice).OrderBy(x => x.ID.StrikePrice).ToList();
-                _strikeSize = uniqueStrikes.Zip(uniqueStrikes.Skip(1), (l, r) => r.ID.StrikePrice - l.ID.StrikePrice).DefaultIfEmpty(5m).Min();
-                _strikeSizeResolveDate = _underlying.Time.Date;
+                // each day we need to recompute the unique strikes list
+                _uniqueStrikes = _allSymbols
+                    .DistinctBy(x => x.ID.StrikePrice)
+                    .OrderBy(x => x.ID.StrikePrice)
+                    .Select(symbol => symbol.ID.StrikePrice)
+                    .ToList();
+
+                _uniqueStrikesResolveDate = _underlying.Time.Date;
             }
-
-            // compute the bounds, no need to worry about rounding and such
-            var minPrice = _underlying.Price + minStrike * _strikeSize;
-            var maxPrice = _underlying.Price + maxStrike * _strikeSize;
-
-            var filtered =
-                   from symbol in _allSymbols
-                   let contract = symbol.ID
-                   where contract.StrikePrice >= minPrice
-                      && contract.StrikePrice <= maxPrice
-                   select symbol;
 
             // new universe is dynamic
             _isDynamic = true;
+
+            // find the current price in the list of strikes
+            var index = _uniqueStrikes.BinarySearch(_underlying.Price);
+            if (index < 0)
+            {
+                // exact price not found
+                index = ~index;
+
+                if (index >= _uniqueStrikes.Count)
+                {
+                    // price out of range: should never happen, return empty
+                    _allSymbols = Enumerable.Empty<Symbol>();
+                    return this;
+                }
+            }
+
+            // compute the bounds, no need to worry about rounding and such
+            var indexMinPrice = index + minStrike;
+            if (indexMinPrice < 0)
+            {
+                indexMinPrice = 0;
+            }
+            var indexMaxPrice = index + maxStrike - 1;
+            if (indexMaxPrice >= _uniqueStrikes.Count)
+            {
+                indexMaxPrice = _uniqueStrikes.Count - 1;
+            }
+
+            var minPrice = _uniqueStrikes[indexMinPrice];
+            var maxPrice = _uniqueStrikes[indexMaxPrice];
+
+            var filtered =
+                    from symbol in _allSymbols
+                    let contract = symbol.ID
+                    where contract.StrikePrice >= minPrice
+                        && contract.StrikePrice <= maxPrice
+                    select symbol;
+
             _allSymbols = filtered.ToList();
+
             return this;
         }
 
@@ -249,7 +281,6 @@ namespace QuantConnect.Securities
             var minExpiryToDate = _underlying.Time.Date + minExpiry;
             var maxExpiryToDate = _underlying.Time.Date + maxExpiry;
 
-            // ReSharper disable once PossibleMultipleEnumeration - ReSharper is wrong here due to the ToList call
             var filtered =
                    from symbol in _allSymbols
                    let contract = symbol.ID
@@ -258,6 +289,7 @@ namespace QuantConnect.Securities
                    select symbol;
 
             _allSymbols = filtered.ToList();
+
             return this;
         }
 
