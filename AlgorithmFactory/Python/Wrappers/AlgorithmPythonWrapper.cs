@@ -330,6 +330,17 @@ namespace QuantConnect.Python.Wrappers
         }
 
         /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.Settings" /> in Python
+        /// </summary>
+        public AlgorithmSettings Settings
+        {
+            get
+            {
+                return _baseAlgorithm.Settings;
+            }
+        }
+
+        /// <summary>
         /// Wrapper for <see cref = "IAlgorithm.StartDate" /> in Python
         /// </summary>
         public DateTime StartDate

@@ -43,7 +43,7 @@ namespace QuantConnect.Tests.Common.Securities
             _securityManager = new SecurityManager(timeKeeper);
             _securityTransactionManager = new SecurityTransactionManager(_securityManager);
             _securityPortfolioManager = new SecurityPortfolioManager(_securityManager, _securityTransactionManager);
-            _subscriptionManager = new SubscriptionManager(timeKeeper);
+            _subscriptionManager = new SubscriptionManager(new AlgorithmSettings(), timeKeeper);
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             _securityInitializer = SecurityInitializer.Null;

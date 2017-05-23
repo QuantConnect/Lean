@@ -107,8 +107,10 @@ namespace QuantConnect.Algorithm
             // set our local time zone
             _localTimeKeeper = _timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork);
 
+            Settings = new AlgorithmSettings();
+
             //Initialise Data Manager 
-            SubscriptionManager = new SubscriptionManager(_timeKeeper);
+            SubscriptionManager = new SubscriptionManager(Settings, _timeKeeper);
 
             Securities = new SecurityManager(_timeKeeper);
             Transactions = new SecurityTransactionManager(Securities);
@@ -271,6 +273,15 @@ namespace QuantConnect.Algorithm
         /// Gets trading calendar populated with trading events
         /// </summary>
         public TradingCalendar TradingCalendar
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Gets the user settings for the algorithm
+        /// </summary>
+        public AlgorithmSettings Settings
         {
             get;
             private set;
