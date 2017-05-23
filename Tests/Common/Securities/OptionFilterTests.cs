@@ -53,13 +53,53 @@ namespace QuantConnect.Tests.Common.Securities
                 Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry), // 9
             };
 
-            var filtered = filter.Filter(new OptionFilterUniverse(symbols, underlying)).ToList();
+            var filterUniverse = new OptionFilterUniverse(symbols, underlying);
+            var filtered = filter.Filter(filterUniverse).ToList();
             Assert.AreEqual(5, filtered.Count);
             Assert.AreEqual(symbols[3], filtered[0]);
             Assert.AreEqual(symbols[4], filtered[1]);
             Assert.AreEqual(symbols[5], filtered[2]);
             Assert.AreEqual(symbols[6], filtered[3]);
             Assert.AreEqual(symbols[7], filtered[4]);
+            Assert.AreEqual(true, filterUniverse.IsDynamic);
+        }
+
+        [Test]
+        public void FiltersStrikeRangeWithVaryingDistance()
+        {
+            var expiry = new DateTime(2016, 03, 04);
+            var underlying = new Tick { Value = 7.5m, Time = new DateTime(2016, 02, 26) };
+
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
+                                .Strikes(-2, 2)
+                                .Expiration(TimeSpan.Zero, TimeSpan.MaxValue);
+
+            Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
+                universe => universeFunc(universe as OptionFilterUniverse);
+
+            var filter = new FuncSecurityDerivativeFilter(func);
+            var symbols = new[]
+            {
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 2, expiry),  // 0
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 5, expiry),  // 1
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 7, expiry),  // 2
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 8, expiry),  // 3
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 9, expiry),  // 4
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 10, expiry), // 5
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 11, expiry), // 6
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 12, expiry), // 7
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 15, expiry), // 8
+                Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 20, expiry), // 9
+            };
+
+            var filterUniverse = new OptionFilterUniverse(symbols, underlying);
+            var filtered = filter.Filter(filterUniverse).ToList();
+            Assert.AreEqual(4, filtered.Count);
+            Assert.AreEqual(symbols[1], filtered[0]);
+            Assert.AreEqual(symbols[2], filtered[1]);
+            Assert.AreEqual(symbols[3], filtered[2]);
+            Assert.AreEqual(symbols[4], filtered[3]);
+            Assert.AreEqual(true, filterUniverse.IsDynamic);
         }
 
         [Test]
@@ -69,7 +109,7 @@ namespace QuantConnect.Tests.Common.Securities
             var underlying = new Tick { Value = 10m, Time = time };
 
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
-                    .Strikes(0, 0)
+                    .Strikes(-10, 10)
                     .Expiration(TimeSpan.FromDays(3), TimeSpan.FromDays(7));
 
             Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> func =
