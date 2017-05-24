@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
@@ -30,31 +29,33 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class OptionChainUniverse : Universe
     {
-        private static readonly IReadOnlyList<TickType> dataTypes = new[] { TickType.Quote, TickType.Trade, TickType.OpenInterest };
-
         private BaseData _underlying;
         private readonly Option _option;
         private readonly UniverseSettings _universeSettings;
-        private SubscriptionManager _subscriptionManager;
+        private readonly bool _liveMode;
 
         private DateTime _cacheDate;
+
+        // used for time-based removals in live mode
+        private readonly TimeSpan _minimumTimeInUniverse = TimeSpan.FromMinutes(15);
+        private readonly Dictionary<Symbol, DateTime> _addTimesBySymbol = new Dictionary<Symbol, DateTime>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OptionChainUniverse"/> class
         /// </summary>
         /// <param name="option">The canonical option chain security</param>
         /// <param name="universeSettings">The universe settings to be used for new subscriptions</param>
-        /// <param name="subscriptionManager">The subscription manager used to return available data types</param>
         /// <param name="securityInitializer">The security initializer to use on newly created securities</param>
+        /// <param name="liveMode">True if we're running in live mode, false for backtest mode</param>
         public OptionChainUniverse(Option option, 
                                    UniverseSettings universeSettings, 
-                                   SubscriptionManager subscriptionManager, 
-                                   ISecurityInitializer securityInitializer = null)
+                                   ISecurityInitializer securityInitializer,
+                                   bool liveMode)
             : base(option.SubscriptionDataConfig, securityInitializer)
         {
             _option = option;
             _universeSettings = universeSettings;
-            _subscriptionManager = subscriptionManager;
+            _liveMode = liveMode;
         }
 
         /// <summary>
@@ -87,7 +88,7 @@ namespace QuantConnect.Data.UniverseSelection
                 return Unchanged;
             }
 
-            if (_cacheDate != null && _cacheDate == data.Time.Date)
+            if (_cacheDate == data.Time.Date)
             {
                 return Unchanged;
             }
@@ -134,7 +135,14 @@ namespace QuantConnect.Data.UniverseSelection
                 Securities.TryRemove(security.Symbol, out member);
             }
 
-            return Securities.TryAdd(security.Symbol, new Member(utcTime, security));
+            var added = Securities.TryAdd(security.Symbol, new Member(utcTime, security));
+
+            if (added && _liveMode)
+            {
+                _addTimesBySymbol[security.Symbol] = utcTime;
+            }
+
+            return added;
         }
 
         /// <summary>
@@ -172,15 +180,36 @@ namespace QuantConnect.Data.UniverseSelection
                 return true;
             }
 
-            // only remove members on day changes, this prevents us from needing to
-            // fast forward contracts continuously as price moves and out filtered
-            // contracts change thoughout the day
-            var localTime = utcTime.ConvertFromUtc(security.Exchange.TimeZone);
-            if (localTime.Date != lastData.Time.Date)
+            if (_liveMode)
             {
+                // Only remove members when they have been in the universe for a minimum period of time.
+                // This prevents us from needing to move contracts in and out too fast,
+                // as price moves and filtered contracts change throughout the day.
+                DateTime timeAdded;
+
+                // get the date/time this symbol was added to the universe
+                if (!_addTimesBySymbol.TryGetValue(security.Symbol, out timeAdded))
+                {
+                    return true;
+                }
+
+                if (timeAdded.Add(_minimumTimeInUniverse) > utcTime)
+                {
+                    // minimum time span not yet elapsed, do not remove
+                    return false;
+                }
+
+                // ok to remove
+                _addTimesBySymbol.Remove(security.Symbol);
+
                 return true;
             }
-            return false;
+
+            // only remove members on day changes, this prevents us from needing to
+            // fast forward contracts continuously as price moves and out filtered
+            // contracts change throughout the day
+            var localTime = utcTime.ConvertFromUtc(security.Exchange.TimeZone);
+            return localTime.Date != lastData.Time.Date;
         }
     }
 }
