@@ -603,7 +603,8 @@ namespace QuantConnect
                     var parts = current.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     if (parts.Length != 2)
                     {
-                        throw new FormatException("The string must be splittable on space into two parts.");
+                        exception = new FormatException("The string must be splittable on space into two parts.");
+                        return false;
                     }
 
                     var symbol = parts[0];
