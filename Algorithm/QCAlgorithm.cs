@@ -1357,7 +1357,7 @@ namespace QuantConnect.Algorithm
             if (!UniverseManager.TryGetValue(canonicalSymbol, out universe))
             {
                 var settings = new UniverseSettings(resolution, leverage, true, false, TimeSpan.Zero);
-                universe = new OptionChainUniverse(canonicalSecurity, settings, SubscriptionManager, SecurityInitializer);
+                universe = new OptionChainUniverse(canonicalSecurity, settings, SecurityInitializer, LiveMode);
                 UniverseManager.Add(canonicalSymbol, universe);
             }
 
