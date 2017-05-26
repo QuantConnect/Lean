@@ -36,7 +36,8 @@
 *.sh
 
 # QC Config Files:
-# config.json
+config.json
+Launcher/config.json
 
 # QC-C-Specific
 *Engine/bin/Debug/cache/data/*.zip
