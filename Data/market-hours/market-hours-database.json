@@ -4209,7 +4209,12 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/17/2017",
+        "5/1/2017",
+        "8/15/2017",
+        "12/26/2017"
+        ]
     },
     "Cfd-fxcm-JP225JPY": {
       "dataTimeZone": "UTC",
