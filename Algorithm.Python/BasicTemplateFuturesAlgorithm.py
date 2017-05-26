@@ -20,7 +20,7 @@ from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Securities import *
-
+from datetime import timedelta
 
 class BasicTemplateFuturesAlgorithm(QCAlgorithm):
     '''This example demonstrates how to add futures for a given underlying.
@@ -34,17 +34,17 @@ It also shows how you can inspect the futures chain to pick a specific contract 
 
         # Subscribe and set our expiry filter for the futures chain
         futureES = self.AddFuture(Futures.Indices.SP500EMini)
-        futureES.SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
+        futureES.SetFilter(timedelta(0), timedelta(182))
         
         futureGC = self.AddFuture(Futures.Metals.Gold)        
-        futureGC.SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
+        futureGC.SetFilter(timedelta(0), timedelta(182))
         
 
     def OnData(self,slice):
         if not self.Portfolio.Invested:
             for chain in slice.FutureChains:           
                  # Get contracts expiring no earlier than in 90 days
-                contracts = filter(lambda x: x.Expiry > self.Time.Date.AddDays(90), chain.Value)
+                contracts = filter(lambda x: x.Expiry > self.Time + timedelta(90), chain.Value)
                 
                 # if there is any contract, trade the front contract
                 if len(contracts) == 0: continue            
