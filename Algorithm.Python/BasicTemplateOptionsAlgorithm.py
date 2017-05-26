@@ -19,7 +19,7 @@ AddReference("QuantConnect.Common")
 from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
-
+from datetime import timedelta
 
 class BasicTemplateOptionsAlgorithm(QCAlgorithm):
     '''This example demonstrates how to add options for a given underlying equity security.
@@ -36,7 +36,7 @@ It also shows how you can inspect the option chain to pick a specific option con
         self.symbol = option.Symbol
 
         # set our strike/expiry filter for this option chain
-        option.SetFilter(-2, +2, TimeSpan.Zero, TimeSpan.FromDays(180))
+        option.SetFilter(-2, +2, timedelta(0), timedelta(180))
         
         # use the underlying equity as the benchmark
         self.SetBenchmark(equity.Symbol)
