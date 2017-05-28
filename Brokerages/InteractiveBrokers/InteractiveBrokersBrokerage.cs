@@ -966,10 +966,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 _disconnected1100Fired = false;
                 OnMessage(BrokerageMessageEvent.Reconnected(errorMsg));
 
+                OnMessage(new BrokerageMessageEvent(brokerageMessageType, errorCode, errorMsg));
+
                 // With IB Gateway v960.2a in the cloud, we are not receiving order fill events after the nightly reset,
                 // so we execute the following sequence: 
                 // disconnect, kill IB Gateway, restart IB Gateway, reconnect, restore data subscriptions
-                ResetGatewayConnection(brokerageMessageType, errorCode, errorMsg);
+                ResetGatewayConnection();
 
                 return;
             }
@@ -1000,10 +1002,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Restarts the IB Gateway and restores the connection
         /// </summary>
-        private void ResetGatewayConnection(BrokerageMessageType brokerageMessageType, int errorCode, string errorMsg)
+        private void ResetGatewayConnection()
         {
-            OnMessage(new BrokerageMessageEvent(brokerageMessageType, errorCode, errorMsg));
-
             Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): Disconnecting...");
             Disconnect();
 
@@ -2463,13 +2463,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             if (!InteractiveBrokersGatewayRunner.IsRunning())
             {
                 Log.Trace("InteractiveBrokersBrokerage.CheckIbGateway(): IB Gateway not running. Restarting...");
-                InteractiveBrokersGatewayRunner.Restart();
-
-                Log.Trace("InteractiveBrokersBrokerage.CheckIbGateway(): Disconnecting...");
-                Disconnect();
-
-                Log.Trace("InteractiveBrokersBrokerage.CheckIbGateway(): Reconnecting...");
-                Connect();
+                ResetGatewayConnection();
             }
             Log.Trace("InteractiveBrokersBrokerage.CheckIbGateway(): end");
         }
