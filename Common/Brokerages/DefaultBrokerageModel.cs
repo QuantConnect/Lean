@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
@@ -187,13 +186,15 @@ namespace QuantConnect.Brokerages
                     return new ConstantFeeModel(0m);
 
                 case SecurityType.Forex:
+                case SecurityType.Cfd:
+                    return new FxcmFeeModel();
+
                 case SecurityType.Equity:
                 case SecurityType.Option:
                 case SecurityType.Future:
                     return new InteractiveBrokersFeeModel();
 
                 case SecurityType.Commodity:
-                case SecurityType.Cfd:
                 default:
                     return new ConstantFeeModel(0m);
             }
