@@ -184,16 +184,16 @@ namespace QuantConnect.Brokerages
             switch (security.Type)
             {
                 case SecurityType.Base:
+                case SecurityType.Forex:
+                case SecurityType.Cfd:
                     return new ConstantFeeModel(0m);
 
-                case SecurityType.Forex:
                 case SecurityType.Equity:
                 case SecurityType.Option:
                 case SecurityType.Future:
                     return new InteractiveBrokersFeeModel();
 
                 case SecurityType.Commodity:
-                case SecurityType.Cfd:
                 default:
                     return new ConstantFeeModel(0m);
             }
