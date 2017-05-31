@@ -104,6 +104,7 @@
     </Compile>
     <Compile Include="AlgorithmRunner.cs" />
     <Compile Include="Algorithm\AlgorithmAddDataTests.cs" />
+    <Compile Include="Algorithm\AlgorithmInitializeTests.cs" />
     <Compile Include="Algorithm\AlgorithmResolveConsolidatorTests.cs" />
     <Compile Include="Algorithm\AlgorithmSetBrokerageTests.cs" />
     <Compile Include="Algorithm\AlgorithmSetHoldingsTests.cs" />
