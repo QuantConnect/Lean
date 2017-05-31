@@ -15,18 +15,30 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Util;
 using Ionic.Zip;
+using QuantConnect.Data;
+using QuantConnect.Util;
 
-
-namespace QuantConnect.Data.Utils
+namespace QuantConnect.ToolBox
 {
+    /// <summary>
+    /// This class reads data directly from disk and returns the data without the data
+    /// entering the Lean data enumeration stack
+    /// </summary>
     public class LeanDataReader
     {
         private readonly DateTime _date;
         private readonly string _zipPath;
         private readonly SubscriptionDataConfig _config;
         
+        /// <summary>
+        /// The LeanDataReader constructor
+        /// </summary>
+        /// <param name="config">The <see cref="SubscriptionDataConfig"/></param>
+        /// <param name="symbol">The <see cref="Symbol"/> that will be read</param>
+        /// <param name="resolution">The <see cref="Resolution"/> that will be read</param>
+        /// <param name="date">The <see cref="DateTime"/> that will be read</param>
+        /// <param name="dataFolder">The root data folder</param>
         public LeanDataReader(SubscriptionDataConfig config, Symbol symbol, Resolution resolution, DateTime date, string dataFolder)
         {
             _date = date;
