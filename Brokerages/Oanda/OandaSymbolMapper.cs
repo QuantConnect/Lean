@@ -945,5 +945,19 @@ namespace QuantConnect.Brokerages.Oanda
             return leanSymbol.Insert(leanSymbol.Length - 3, "_");
         }
 
+        /// <summary>
+        /// Get the raw oanda file paths
+        /// </summary>
+        /// <param name="symbol">The symbol that is being patched</param>
+        /// <param name="date">The date that is being patched</param>
+        /// <returns>The oath to the oanda raw file</returns>
+        public static string GetCompressedRawOandaDataFileName(Symbol symbol, DateTime date)
+        {
+            var symbolMapper = new OandaSymbolMapper();
+            var brokerateSymbol = symbolMapper.GetBrokerageSymbol(symbol);
+            var rawFileName = "oanda_ticks_" + brokerateSymbol + "_" + date.ToString("yyyyMMdd") + ".txt.gz";
+
+            return rawFileName;
+        }
     }
 }
