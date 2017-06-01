@@ -132,12 +132,12 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
 
             updateOrderFields = UpdateOrderFields()
             updateOrderFields.LimitPrice = newLongLimit
-            updateOrderFields.Tag = "Update #{0}".format(longOrder.UpdateRequests.Count + 1)
+            updateOrderFields.Tag = "Update #{0}".format(len(longOrder.UpdateRequests) + 1)
             longOrder.Update(updateOrderFields)
 
             updateOrderFields = UpdateOrderFields()
             updateOrderFields.LimitPrice = newShortLimit
-            updateOrderFields.Tag = "Update #{0}".format(shortOrder.UpdateRequests.Count + 1)
+            updateOrderFields.Tag = "Update #{0}".format(len(shortOrder.UpdateRequests) + 1)
             shortOrder.Update(updateOrderFields)
 
 
@@ -183,12 +183,12 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
 
             updateOrderFields = UpdateOrderFields()
             updateOrderFields.StopPrice = newLongStop
-            updateOrderFields.Tag = "Update #{0}".format(longOrder.UpdateRequests.Count + 1)
+            updateOrderFields.Tag = "Update #{0}".format(len(longOrder.UpdateRequests) + 1)
             longOrder.Update(updateOrderFields)
 
             updateOrderFields = UpdateOrderFields()
             updateOrderFields.StopPrice = newShortStop
-            updateOrderFields.Tag = "Update #{0}".format(shortOrder.UpdateRequests.Count + 1)
+            updateOrderFields.Tag = "Update #{0}".format(len(shortOrder.UpdateRequests) + 1)
             shortOrder.Update(updateOrderFields)
             self.Log("Updated price - Long: {0} Short: {1}".format(longOrder.Get(OrderField.StopPrice), shortOrder.Get(OrderField.StopPrice)))
             
@@ -250,13 +250,13 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
             updateOrderFields = UpdateOrderFields()
             updateOrderFields.StopPrice = newLongStop
             updateOrderFields.LimitPrice = newLongLimit
-            updateOrderFields.Tag = "Update #{0}".format(longOrder.UpdateRequests.Count + 1)
+            updateOrderFields.Tag = "Update #{0}".format(len(longOrder.UpdateRequests) + 1)
             longOrder.Update(updateOrderFields)
 
             updateOrderFields = UpdateOrderFields()
             updateOrderFields.StopPrice = newShortStop
             updateOrderFields.LimitPrice = newShortLimit
-            updateOrderFields.Tag = "Update #{0}".format(shortOrder.UpdateRequests.Count + 1)
+            updateOrderFields.Tag = "Update #{0}".format(len(shortOrder.UpdateRequests) + 1)
             shortOrder.Update(updateOrderFields)
 
 
@@ -286,7 +286,7 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
             # we can update the quantity and tag
             updateOrderFields = UpdateOrderFields()
             updateOrderFields.Quantity = quantity
-            updateOrderFields.Tag = "Update #{0}".format(ticket.UpdateRequests.Count + 1)
+            updateOrderFields.Tag = "Update #{0}".format(len(ticket.UpdateRequests) + 1)
             ticket.Update(updateOrderFields)
 
         if self.TimeIs(self.EndDate.day, 12 + 3, 45):
@@ -319,7 +319,7 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
             # we can update the quantity and tag
             updateOrderFields = UpdateOrderFields()
             updateOrderFields.Quantity = quantity
-            updateOrderFields.Tag = "Update #{0}".format(ticket.UpdateRequests.Count + 1)
+            updateOrderFields.Tag = "Update #{0}".format(len(ticket.UpdateRequests) + 1)
             ticket.Update(updateOrderFields)
 
 

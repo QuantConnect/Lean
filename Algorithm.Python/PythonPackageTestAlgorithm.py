@@ -50,6 +50,9 @@ from copulalib.copulalib import Copula
 import theano 
 import xgboost
 from arch import arch_model
+from keras.models import Sequential
+from keras.layers import Dense, Activation
+import tensorflow as tf
 
 class PythonPackageTestAlgorithm(QCAlgorithm):
     '''Algorithm to test third party libraries'''
@@ -97,6 +100,13 @@ class PythonPackageTestAlgorithm(QCAlgorithm):
 
         # arch test
         arch_test()
+
+        # keras test
+        keras_test()
+
+        # tensorflow test
+        tensorflow_test()
+
 
     def OnData(self, data): pass
 
@@ -187,3 +197,26 @@ def arch_test():
     garch11 = arch_model(r, p=1, q=1)
     res = garch11.fit(update_freq=10)
     print "arch test >>>", res.summary()
+
+def keras_test():
+    # Initialize the constructor
+    model = Sequential()
+
+    # Add an input layer 
+    model.add(Dense(12, activation='relu', input_shape=(11,)))
+
+    # Add one hidden layer 
+    model.add(Dense(8, activation='relu'))
+
+    # Add an output layer 
+    model.add(Dense(1, activation='sigmoid'))
+
+    print "keras test >>>", model
+
+def tensorflow_test():
+    node1 = tf.constant(3.0, tf.float32)
+    node2 = tf.constant(4.0) # also tf.float32 implicitly
+    sess = tf.Session()
+    node3 = tf.add(node1, node2)
+    print "tensorflow test >>>", "sess.run(node3): ", sess.run(node3)
+    
