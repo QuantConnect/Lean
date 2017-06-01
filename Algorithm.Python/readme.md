@@ -1,33 +1,25 @@
 QuantConnect Python Algorithm Project:
 =============
 
-To run algorithms in Lean your primary modules must be called "main.py".
-
-Set your config "algorithm-language" property to "Python".
-Set your config "algorithm-location" property to "QuantConnect.Algorithm.Python.dll".
+Set [config](https://github.com/QuantConnect/Lean/blob/master/Launcher/config.json):
+```json
+"algorithm-type-name": "BasicTemplateAlgorithm",
+"algorithm-language": "Python",
+"algorithm-location": "../../../Algorithm.Python/BasicTemplateAlgorithm.py",
+```
 
 WINDOWS:
-1. Install Iron Python: http://ironpython.codeplex.com/releases/view/169382
+1. [Install Python 2.7](https://www.python.org/downloads/)
 
-2. Add an entry to the system path variable (C:\Program Files (x86)\IronPython 2.7)
+2. Add an entry to the system path variable (C:\Python27)
 
-3. Run the build script (build.bat).
+3. Change the extension to .dll of Lean\packages\QuantConnect.pythonnet._version_\build\Python.Runtime.win and move it to Lean\packages\QuantConnect.pythonnet._version_\lib.
 
-4. Optional: Right click on QuantConnect.Algorithm.Python project and click properties. On Build Events tab enter "build" in the post-build events.
 
 LINUX:
-To use Lean-Python on linux you'll need to install IronPython as well as Python. This is based from this guide:
-http://ironpython.codeplex.com/wikipage?title=IronPython%20on%20Mono
 
-1. Install Python(2.7): sudo apt-get install python-all zip git make
-
-2. Install Iron Python 2.7.5:
-   - Go to this website and downlaod to a local directory:
-   - wget https://github.com/IronLanguages/main/releases/download/ipy-2.7.5/IronPython-2.7.5.zip
-
-   - extract: to a base directory or your local bin.
-     unzip IronPython-2.7.5.zip 
-	
-   - Update the build.sh variable "pyc" to point towards your pyc.py file, it should be under ./IronPython-2.7.5/Tools/Scripts/pyc.py
-
-3. Run the build.sh.
+To use Lean-Python on linux you'll need to install Python:
+```
+sudo apt-get install -y python-pip
+```
+Please checkout the command to install the whitelisted packages [here](https://github.com/QuantConnect/Lean/blob/master/DockerfileLeanFoundation#L19).

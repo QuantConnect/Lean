@@ -16,7 +16,7 @@
 
   //Physical DLL location
   "algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
-  //"algorithm-location": "QuantConnect.Algorithm.Python.dll",
+  //"algorithm-location": "../../../Algorithm.Python/BasicTemplateAlgorithm.py",
   //"algorithm-location": "QuantConnect.Algorithm.FSharp.dll",
   //"algorithm-location": "QuantConnect.Algorithm.VisualBasic.dll",
   //"algorithm-location": "QuantConnect.Algorithm.Java.dll",
