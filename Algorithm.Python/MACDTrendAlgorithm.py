@@ -39,6 +39,8 @@ class MACDTrendAlgorithm(QCAlgorithm):
         # define our daily macd(12,26) with a 9 day signal
         self.__macd = self.MACD(self.spy, 9, 26, 9, MovingAverageType.Exponential, Resolution.Daily)
         self.__previous = datetime.min
+        self.PlotIndicator("MACD", True, self.__macd, self.__macd.Signal)
+        self.PlotIndicator(str(self.spy), self.__macd.Fast, self.__macd.Slow)
 
 
     def OnData(self, data):
@@ -65,10 +67,5 @@ class MACDTrendAlgorithm(QCAlgorithm):
         elif holdings >= 0 and signalDeltaPercent < -tolerance:
             self.Liquidate(self.spy)  
 
-        # plot both lines
-        self.Plot("MACD", self.__macd.Current.Value)
-        self.Plot("MACD", self.__macd.Signal.Current.Value)
-        self.Plot(str(self.spy), self.__macd.Fast.Current.Value)
-        self.Plot(str(self.spy), self.__macd.Slow.Current.Value)
-
+        
         self.__previous = self.Time
