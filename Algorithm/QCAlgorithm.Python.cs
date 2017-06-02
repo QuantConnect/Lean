@@ -27,6 +27,7 @@ using QuantConnect.Python;
 using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Data.Fundamental;
+using System.Linq;
 
 namespace QuantConnect.Algorithm
 {
@@ -215,81 +216,90 @@ namespace QuantConnect.Algorithm
         /// Plots the value of each indicator on the chart
         /// </summary>
         /// <param name="chart">The chart's name</param>
-        /// <param name="indicators">The indicatorsto plot</param>
+        /// <param name="first">The first indicator to plot</param>
+        /// <param name="second">The second indicator to plot</param>
+        /// <param name="third">The third indicator to plot</param>
+        /// <param name="fourth">The fourth indicator to plot</param>
         /// <seealso cref="Plot(string,string,decimal)"/>
-        public void Plot(string chart, params IndicatorBase<IndicatorDataPoint>[] indicators)
+        public void Plot(string chart, Indicator first, Indicator second = null, Indicator third = null, Indicator fourth = null)
         {
-            Plot<IndicatorDataPoint>(chart, indicators);
+            Plot(chart, new[] { first, second, third, fourth }.Where(x => x != null).ToArray());
         }
 
         /// <summary>
         /// Plots the value of each indicator on the chart
         /// </summary>
         /// <param name="chart">The chart's name</param>
-        /// <param name="indicators">The indicatorsto plot</param>
+        /// <param name="first">The first indicator to plot</param>
+        /// <param name="second">The second indicator to plot</param>
+        /// <param name="third">The third indicator to plot</param>
+        /// <param name="fourth">The fourth indicator to plot</param>
         /// <seealso cref="Plot(string,string,decimal)"/>
-        public void Plot(string chart, params IndicatorBase<IBaseDataBar>[] indicators)
+        public void Plot(string chart, BarIndicator first, BarIndicator second = null, BarIndicator third = null, BarIndicator fourth = null)
         {
-            Plot<IBaseDataBar>(chart, indicators);
+            Plot(chart, new[] { first, second, third, fourth }.Where(x => x != null).ToArray());
         }
 
         /// <summary>
         /// Plots the value of each indicator on the chart
         /// </summary>
         /// <param name="chart">The chart's name</param>
-        /// <param name="indicators">The indicatorsto plot</param>
+        /// <param name="first">The first indicator to plot</param>
+        /// <param name="second">The second indicator to plot</param>
+        /// <param name="third">The third indicator to plot</param>
+        /// <param name="fourth">The fourth indicator to plot</param>
         /// <seealso cref="Plot(string,string,decimal)"/>
-        public void Plot(string chart, params IndicatorBase<TradeBar>[] indicators)
+        public void Plot(string chart, TradeBarIndicator first, TradeBarIndicator second = null, TradeBarIndicator third = null, TradeBarIndicator fourth = null)
         {
-            Plot<TradeBar>(chart, indicators);
+            Plot(chart, new[] { first, second, third, fourth }.Where(x => x != null).ToArray());
         }
 
         /// <summary>
         /// Automatically plots each indicator when a new value is available
         /// </summary>
-        public void PlotIndicator(string chart, params IndicatorBase<IndicatorDataPoint>[] indicators)
+        public void PlotIndicator(string chart, Indicator first, Indicator second = null, Indicator third = null, Indicator fourth = null)
         {
-            PlotIndicator<IndicatorDataPoint>(chart, indicators);
+            PlotIndicator(chart, new[] { first, second, third, fourth }.Where(x => x != null).ToArray());
         }
 
         /// <summary>
         /// Automatically plots each indicator when a new value is available
         /// </summary>
-        public void PlotIndicator(string chart, params IndicatorBase<IBaseDataBar>[] indicators)
+        public void PlotIndicator(string chart, BarIndicator first, BarIndicator second = null, BarIndicator third = null, BarIndicator fourth = null)
         {
-            PlotIndicator<IBaseDataBar>(chart, indicators);
+            PlotIndicator(chart, new[] { first, second, third, fourth }.Where(x => x != null).ToArray());
         }
 
         /// <summary>
         /// Automatically plots each indicator when a new value is available
         /// </summary>
-        public void PlotIndicator(string chart, params IndicatorBase<TradeBar>[] indicators)
+        public void PlotIndicator(string chart, TradeBarIndicator first, TradeBarIndicator second = null, TradeBarIndicator third = null, TradeBarIndicator fourth = null)
         {
-            PlotIndicator<TradeBar>(chart, indicators);
+            PlotIndicator(chart, new[] { first, second, third, fourth }.Where(x => x != null).ToArray());
         }
 
         /// <summary>
         /// Automatically plots each indicator when a new value is available, optionally waiting for indicator.IsReady to return true
         /// </summary>
-        public void PlotIndicator(string chart, bool waitForReady, params IndicatorBase<IndicatorDataPoint>[] indicators)
+        public void PlotIndicator(string chart, bool waitForReady, Indicator first, Indicator second = null, Indicator third = null, Indicator fourth = null)
         {
-            PlotIndicator<IndicatorDataPoint>(chart, waitForReady, indicators);
+            PlotIndicator(chart, waitForReady, new[] { first, second, third, fourth }.Where(x => x != null).ToArray());
         }
 
         /// <summary>
         /// Automatically plots each indicator when a new value is available, optionally waiting for indicator.IsReady to return true
         /// </summary>
-        public void PlotIndicator(string chart, bool waitForReady, params IndicatorBase<IBaseDataBar>[] indicators)
+        public void PlotIndicator(string chart, bool waitForReady, BarIndicator first, BarIndicator second = null, BarIndicator third = null, BarIndicator fourth = null)
         {
-            PlotIndicator<IBaseDataBar>(chart, waitForReady, indicators);
+            PlotIndicator(chart, waitForReady, new[] { first, second, third, fourth }.Where(x => x != null).ToArray());
         }
 
         /// <summary>
         /// Automatically plots each indicator when a new value is available, optionally waiting for indicator.IsReady to return true
         /// </summary>
-        public void PlotIndicator(string chart, bool waitForReady, params IndicatorBase<TradeBar>[] indicators)
+        public void PlotIndicator(string chart, bool waitForReady, TradeBarIndicator first, TradeBarIndicator second = null, TradeBarIndicator third = null, TradeBarIndicator fourth = null)
         {
-            PlotIndicator<TradeBar>(chart, waitForReady, indicators);
+            PlotIndicator(chart, waitForReady, new[] { first, second, third, fourth }.Where(x => x != null).ToArray());
         }
 
         /// <summary>

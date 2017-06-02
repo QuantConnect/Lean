@@ -54,15 +54,6 @@ OSX does not fully support Visual Basic or F#. You will need to remove these pro
 sed -i -e 's/4.5/4.0/' Algorithm.VisualBasic/QuantConnect.Algorithm.VisualBasic.vbproj
 ```
 
-On OSX, you will need to change the location from where projects look for pythonnet libraries:
-```
-sed -i -e 's/UCS2/UCS4/' Common/QuantConnect.csproj
-sed -i -e 's/UCS2/UCS4/' Algorithm/QuantConnect.Algorithm.csproj
-sed -i -e 's/UCS2/UCS4/' Algorithm.Charp/QuantConnect.Algorithm.CSharp.csproj
-sed -i -e 's/UCS2/UCS4/' AlgorithmFactory/QuantConnect.AlgorithmFactory.csproj
-sed -i -e 's/UCS2/UCS4/' Tests/QuantConnect.Tests.csproj
-```
-
 Open the project in Xamarin Studio, then in the menu bar, click `Project > Update NuGet Packages`. You should also run `nuget install MathNet.Filtering -pre` to install the MathNet library. 
 
 In OS X `mdtool` is not added to the PATH environment. Either set up the PATH manually or reference the binary directly.
@@ -102,15 +93,6 @@ Like OSX, Linux does not fully support Visual Basic. You will need to remove thi
 sed -i 's/4.5/4.0/' Algorithm.VisualBasic/QuantConnect.Algorithm.VisualBasic.vbproj
 ```
 
-Like OSX, on Linux, you will need to change the location from where projects look for pythonnet libraries:
-```
-sed -i -e 's/UCS2/UCS4/' Common/QuantConnect.csproj
-sed -i -e 's/UCS2/UCS4/' Algorithm/QuantConnect.Algorithm.csproj
-sed -i -e 's/UCS2/UCS4/' Algorithm.Charp/QuantConnect.Algorithm.CSharp.csproj
-sed -i -e 's/UCS2/UCS4/' AlgorithmFactory/QuantConnect.AlgorithmFactory.csproj
-sed -i -e 's/UCS2/UCS4/' Tests/QuantConnect.Tests.csproj
-```
-
 Restore NuGet packages then compile:
 ```
 wget https://nuget.org/nuget.exe
@@ -130,7 +112,9 @@ cd Lean/Launcher/bin/Debug
 - Install [Visual Studio](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx)
 - Open `QuantConnect.Lean.sln` in Visual Studio
 - Press `ctrl-f5` to run without debugging.
-By default Visual Studio includes NuGet, if your version cannot find DLL references, install [Nuget](https://www.nuget.org/) and build again. 
+By default Visual Studio includes NuGet, if your version cannot find DLL references, install [Nuget](https://www.nuget.org/) and build again.
+
+For Python Support on Windows, you need to change the extension to .dll of Lean\packages\QuantConnect.pythonnet._version_\build\Python.Runtime.win and move it to Lean\packages\QuantConnect.pythonnet._version_\lib.
 
 ### QuantConnect plugin
 
