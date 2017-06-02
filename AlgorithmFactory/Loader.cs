@@ -20,11 +20,10 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Policy;
-using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using Python.Runtime;
-using QuantConnect.Python.Wrappers;
+using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using QuantConnect.Util;
 
 namespace QuantConnect.AlgorithmFactory
@@ -40,9 +39,6 @@ namespace QuantConnect.AlgorithmFactory
 
         // Language of the loader class.
         private readonly Language _language;
-
-        // Location of the IronPython standard library
-        private readonly string _ironPythonLibrary = Config.Get("ironpython-location", "../ironpython/Lib");
 
         // Defines how we resolve a list of type names into a single type name to be instantiated
         private readonly Func<List<string>, string> _multipleTypeNameResolverFunction;
@@ -156,13 +152,11 @@ namespace QuantConnect.AlgorithmFactory
 
             try
             {
-                //Copy the util to cache and set the 
-                var cache = new FileInfo(assemblyPath).DirectoryName;
-                var util = Path.Combine(cache, "AlgorithmPythonUtil.py");
-                if (!File.Exists(util)) File.Copy("AlgorithmPythonUtil.py", util);
+                var pythonFile = new FileInfo(assemblyPath);
+                var moduleName = pythonFile.Name.Replace(".pyc", "").Replace(".py", "");
 
                 //Help python find the module
-                Environment.SetEnvironmentVariable("PYTHONPATH", cache);
+                Environment.SetEnvironmentVariable("PYTHONPATH", pythonFile.DirectoryName);
 
                 // Initialize Python Engine
                 if (!PythonEngine.IsInitialized)
@@ -174,10 +168,6 @@ namespace QuantConnect.AlgorithmFactory
                 // Import Python module
                 using (Py.GIL())
                 {
-                    Log.Trace("Loader.TryCreatePythonAlgorithm(): Locating module name..");
-                    var pythonFile = new FileInfo(assemblyPath);
-                    var moduleName = pythonFile.Name.Replace(".pyc", "").Replace(".py", "");
-
                     Log.Trace("Loader.TryCreatePythonAlgorithm(): Importing python module " + moduleName);
                     var module = Py.Import(moduleName);
 
