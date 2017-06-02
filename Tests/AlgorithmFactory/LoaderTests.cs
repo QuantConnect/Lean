@@ -13,18 +13,15 @@
 * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.AlgorithmFactory;
 using QuantConnect.Interfaces;
+using System;
+using System.Linq;
 
 namespace QuantConnect.Tests.AlgorithmFactory
 {
-    [TestFixture]
+    [TestFixture, Ignore]
     public class LoaderTests
     {
         [Test]
