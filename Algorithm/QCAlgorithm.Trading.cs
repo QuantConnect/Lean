@@ -487,9 +487,15 @@ namespace QuantConnect.Algorithm
             }
 
             //Ordering 0 is useless.
-            if (request.Quantity == 0 || request.Symbol == null || request.Symbol == QuantConnect.Symbol.Empty || Math.Abs(request.Quantity) < security.SymbolProperties.LotSize)
+            if (request.Quantity == 0 || request.Symbol == null || request.Symbol == QuantConnect.Symbol.Empty)
             {
                 return OrderResponse.ZeroQuantity(request);
+            }
+
+            // Quantity must be a multiple of LotSize
+            if (Math.Abs(request.Quantity) % security.SymbolProperties.LotSize != 0)
+            {
+                return OrderResponse.Error(request, OrderResponseErrorCode.InvalidOrderQuantityForLotSize, "The quantity must be a multiple of LotSize: " + security.SymbolProperties.LotSize);
             }
 
             if (!security.IsTradable)
