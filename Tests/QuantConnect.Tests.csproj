@@ -102,6 +102,7 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="AlgorithmFactory\LoaderTests.cs" />
     <Compile Include="AlgorithmRunner.cs" />
     <Compile Include="Algorithm\AlgorithmAddDataTests.cs" />
     <Compile Include="Algorithm\AlgorithmInitializeTests.cs" />

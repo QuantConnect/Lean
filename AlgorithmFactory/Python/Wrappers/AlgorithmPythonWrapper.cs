@@ -14,6 +14,8 @@
 */
 
 using NodaTime;
+using Python.Runtime;
+using QuantConnect.Algorithm;
 using QuantConnect.Benchmarks;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
@@ -23,16 +25,13 @@ using QuantConnect.Notifications;
 using QuantConnect.Orders;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Future;
+using QuantConnect.Securities.Option;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using Python.Runtime;
-using ImpromptuInterface;
-using QuantConnect.Algorithm;
-using QuantConnect.Securities.Future;
-using QuantConnect.Securities.Option;
 
-namespace QuantConnect.Python.Wrappers
+namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 {
     /// <summary>
     /// Wrapper for an IAlgorithm instance created in Python.
@@ -40,8 +39,8 @@ namespace QuantConnect.Python.Wrappers
     /// </summary>
     public class AlgorithmPythonWrapper : IAlgorithm
     {
-        private readonly IAlgorithm _algorithm;
-        private readonly dynamic _pyAlgorithm;
+        private readonly PyObject _util;
+        private readonly dynamic _algorithm;
         private readonly QCAlgorithm _baseAlgorithm;
 
         /// <summary>
@@ -65,7 +64,7 @@ namespace QuantConnect.Python.Wrappers
                     var baseClass = module.GetAttr("QCAlgorithm");
 
                     // Load module with util methods
-                    var onPythonData = Py.Import("AlgorithmPythonUtil").GetAttr("OnPythonData");
+                    _util = ImportUtil();
 
                     var moduleName = module.Repr().Split('\'')[1];
 
@@ -75,13 +74,12 @@ namespace QuantConnect.Python.Wrappers
 
                         if (attr.IsSubclass(baseClass) && attr.Repr().Contains(moduleName))
                         {
-                            attr.SetAttr("OnPythonData", onPythonData);
+                            attr.SetAttr("OnPythonData", _util.GetAttr("OnPythonData"));
 
-                            _pyAlgorithm = attr.Invoke();
-                            _algorithm = Impromptu.ActLike<IAlgorithm>(_pyAlgorithm);
+                            _algorithm = attr.Invoke();
 
                             // QCAlgorithm reference for LEAN internal C# calls (without going from C# to Python and back)
-                            _baseAlgorithm = _algorithm.UndoActLike();
+                            _baseAlgorithm = (QCAlgorithm)_algorithm;
 
                             return; 
                         }
@@ -634,7 +632,7 @@ namespace QuantConnect.Python.Wrappers
             {
                 if (SubscriptionManager.HasCustomData)
                 {
-                    _pyAlgorithm.OnPythonData(slice);
+                    _algorithm.OnPythonData(slice);
                 }
                 else
                 {
@@ -869,6 +867,57 @@ namespace QuantConnect.Python.Wrappers
         public void SetParameters(Dictionary<string, string> parameters)
         {
             _baseAlgorithm.SetParameters(parameters);
+        }
+
+        /// <summary>
+        /// Creates Util module
+        /// </summary>
+        /// <returns>PyObject with utils</returns>
+        private PyObject ImportUtil()
+        {
+            var code =
+                "from clr import AddReference\n" +
+                "AddReference(\"System\")\n" +
+                "AddReference(\"QuantConnect.Common\")\n" +
+                "from QuantConnect.Python import PythonData\n" +
+                "import decimal\n" +
+
+                // OnPythonData call OnData after converting the Slice object
+                "def OnPythonData(self, data):\n" +
+                "    self.OnData(PythonSlice(data))\n" +
+
+                // PythonSlice class 
+                "class PythonSlice(dict):\n" +
+                "    def __init__(self, slice):\n" +
+                "        for data in slice:\n" +
+                "            self[data.Key] = Data(data.Value)\n" +
+
+                // Python Data class: Converts custom data (PythonData) into a python object'''
+                "class Data(object):\n" +
+                "    def __init__(self, data):\n" +
+                "        members = [attr for attr in dir(data) if not callable(attr) and not attr.startswith(\"__\")]\n" +
+                "        for member in members:\n" +
+                "            setattr(self, member, getattr(data, member))\n" +
+
+                "        if not isinstance(data, PythonData): return\n" +
+
+                "        for member in data.DynamicMembers:\n" +
+                "            val = data[member]\n" +
+                "            setattr(self, member, decimal.Decimal(val) if isinstance(val, float) else val)";
+
+            using (Py.GIL())
+            {
+                return PythonEngine.ModuleFromString("AlgorithmPythonUtil", code);
+            }
+        }
+
+        /// <summary>
+        /// Returns a <see cref = "string"/> that represents the current <see cref = "AlgorithmPythonWrapper"/> object.
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return _algorithm == null ? base.ToString() : _algorithm.Repr();
         }
     }
 }
