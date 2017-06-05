@@ -337,6 +337,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // as updating factors and symbol mapping as well as detecting aux data
                     if (instance.EndTime.Date > _tradeableDates.Current)
                     {
+                        var currentPriceScaleFactor = _config.PriceScaleFactor;
+
                         // this is fairly hacky and could be solved by removing the aux data from this class
                         // the case is with coarse data files which have many daily sized data points for the
                         // same date,
@@ -354,6 +356,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             // since we're emitting this here we need to save off the instance for next time
                             Current = _auxiliaryData.Dequeue();
                             _emittedAuxilliaryData = true;
+
+                            // with hourly resolution the first bar for the new date is received 
+                            // before the price scale factor is updated by ResolveDataEnumerator,
+                            // so we have to 'unscale' prices before emitting the bar
+                            if (_config.Resolution == Resolution.Hour &&
+                               (_config.SecurityType == SecurityType.Equity || _config.SecurityType == SecurityType.Option))
+                            {
+                                var tradeBar = instance as TradeBar;
+                                if (tradeBar != null)
+                                {
+                                    var bar = tradeBar;
+                                    bar.Open = GetRawValue(bar.Open, _config.SumOfDividends, currentPriceScaleFactor);
+                                    bar.High = GetRawValue(bar.High, _config.SumOfDividends, currentPriceScaleFactor);
+                                    bar.Low = GetRawValue(bar.Low, _config.SumOfDividends, currentPriceScaleFactor);
+                                    bar.Close = GetRawValue(bar.Close, _config.SumOfDividends, currentPriceScaleFactor);
+                                }
+                            }
+
                             _lastInstanceBeforeAuxilliaryData = instance;
                             return true;
                         }
@@ -676,10 +696,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         private decimal GetRawClose()
         {
-            if (_previous == null) return 0m;
+            return _previous == null ? 0m : GetRawValue(_previous.Value, _config.SumOfDividends, _config.PriceScaleFactor);
+        }
 
-            var close = _previous.Value;
-
+        /// <summary>
+        /// Un-normalizes a price
+        /// </summary>
+        private decimal GetRawValue(decimal price, decimal sumOfDividends, decimal priceScaleFactor)
+        {
             switch (_config.DataNormalizationMode)
             {
                 case DataNormalizationMode.Raw:
@@ -688,18 +712,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 case DataNormalizationMode.SplitAdjusted:
                 case DataNormalizationMode.Adjusted:
                     // we need to 'unscale' the price
-                    close = close / _config.PriceScaleFactor;
+                    price = price / priceScaleFactor;
                     break;
 
                 case DataNormalizationMode.TotalReturn:
                     // we need to remove the dividends since we've been accumulating them in the price
-                    close = (close - _config.SumOfDividends) / _config.PriceScaleFactor;
+                    price = (price - sumOfDividends) / priceScaleFactor;
                     break;
 
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-            return close;
+            return price;
         }
 
         /// <summary>
