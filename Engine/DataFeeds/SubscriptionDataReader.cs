@@ -359,7 +359,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                             // with hourly resolution the first bar for the new date is received 
                             // before the price scale factor is updated by ResolveDataEnumerator,
-                            // so we have to 'unscale' prices before emitting the bar
+                            // so we have to 'rescale' prices before emitting the bar
                             if (_config.Resolution == Resolution.Hour &&
                                (_config.SecurityType == SecurityType.Equity || _config.SecurityType == SecurityType.Option))
                             {
@@ -367,10 +367,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 if (tradeBar != null)
                                 {
                                     var bar = tradeBar;
-                                    bar.Open = GetRawValue(bar.Open, _config.SumOfDividends, currentPriceScaleFactor);
-                                    bar.High = GetRawValue(bar.High, _config.SumOfDividends, currentPriceScaleFactor);
-                                    bar.Low = GetRawValue(bar.Low, _config.SumOfDividends, currentPriceScaleFactor);
-                                    bar.Close = GetRawValue(bar.Close, _config.SumOfDividends, currentPriceScaleFactor);
+                                    bar.Open = _config.GetNormalizedPrice(GetRawValue(bar.Open, _config.SumOfDividends, currentPriceScaleFactor));
+                                    bar.High = _config.GetNormalizedPrice(GetRawValue(bar.High, _config.SumOfDividends, currentPriceScaleFactor));
+                                    bar.Low = _config.GetNormalizedPrice(GetRawValue(bar.Low, _config.SumOfDividends, currentPriceScaleFactor));
+                                    bar.Close = _config.GetNormalizedPrice(GetRawValue(bar.Close, _config.SumOfDividends, currentPriceScaleFactor));
                                 }
                             }
 
