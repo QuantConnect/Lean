@@ -136,6 +136,8 @@
     <Compile Include="OpeningBreakoutAlgorithm.cs" />
     <Compile Include="DropboxUniverseSelectionAlgorithm.cs" />
     <Compile Include="ParameterizedAlgorithm.cs" />
+    <Compile Include="HourReverseSplitRegressionAlgorithm.cs" />
+    <Compile Include="HourSplitRegressionAlgorithm.cs" />
     <Compile Include="UniverseSelectionDefinitionsAlgorithm.cs" />
     <Compile Include="UserDefinedUniverseAlgorithm.cs" />
     <Compile Include="WarmupAlgorithm.cs" />
