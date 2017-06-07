@@ -962,7 +962,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // begin the try wait logic
                 TryWaitForReconnect();
             }
-            else if (errorCode == 1102)
+            else if (errorCode == 1102 || errorCode == 1101)
             {
                 // we've reconnected
                 _disconnected1100Fired = false;
