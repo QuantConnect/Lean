@@ -99,6 +99,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         // IB requests made through the IB-API must be limited to a maximum of 50 messages/second
         private readonly RateGate _messagingRateLimiter = new RateGate(50, TimeSpan.FromSeconds(1));
 
+        private bool _previouslyInResetTime;
+
         /// <summary>
         /// Returns true if we're currently connected to the broker
         /// </summary>
@@ -960,7 +962,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // begin the try wait logic
                 TryWaitForReconnect();
             }
-            else if (errorCode == 1102)
+            else if (errorCode == 1102 || errorCode == 1101)
             {
                 // we've reconnected
                 _disconnected1100Fired = false;
@@ -1044,20 +1046,41 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private void TryWaitForReconnect()
         {
             // IB has server reset schedule: https://www.interactivebrokers.com/en/?f=%2Fen%2Fsoftware%2FsystemStatus.php%3Fib_entity%3Dllc
-            
-            if (_disconnected1100Fired && !IsWithinScheduledServerResetTimes())
+
+            if (!_disconnected1100Fired)
             {
-                // if we were disconnected and we're nothing within the reset times, send the error event
-                OnMessage(BrokerageMessageEvent.Disconnected("Connection with Interactive Brokers lost. " +
-                    "This could be because of internet connectivity issues or a log in from another location."
-                    ));
+                return;
             }
-            else if (_disconnected1100Fired && IsWithinScheduledServerResetTimes())
+
+            var isResetTime = IsWithinScheduledServerResetTimes();
+
+            if (!isResetTime)
+            {
+                if (_previouslyInResetTime)
+                {
+                    // reset time finished and we're still disconnected, restart IB client
+                    Log.Trace("InteractiveBrokersBrokerage.TryWaitForReconnect(): Reset time finished and still disconnected. Restarting...");
+
+                    _disconnected1100Fired = false;
+                    ResetGatewayConnection();
+                }
+                else
+                {
+                    // if we were disconnected and we're not within the reset times, send the error event
+                    OnMessage(BrokerageMessageEvent.Disconnected("Connection with Interactive Brokers lost. " +
+                                                                 "This could be because of internet connectivity issues or a log in from another location."
+                        ));
+                }
+            }
+            else
             {
                 Log.Trace("InteractiveBrokersBrokerage.TryWaitForReconnect(): Within server reset times, trying to wait for reconnect...");
+
                 // we're still not connected but we're also within the schedule reset time, so just keep polling
                 Task.Delay(TimeSpan.FromMinutes(1)).ContinueWith(_ => TryWaitForReconnect());
             }
+
+            _previouslyInResetTime = isResetTime;
         }
 
         /// <summary>
@@ -1813,11 +1836,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             else
             {
                 var timeOfDay = time.TimeOfDay;
-                // from 11:45 -> 12:45 is the IB reset times, we'll go from 11:00pm->1:30am for safety margin
-                result = timeOfDay > new TimeSpan(23, 0, 0) || timeOfDay < new TimeSpan(1, 30, 0);
+                // from 11:45 -> 12:45 is the IB reset times, we'll go from 11:30pm->1:00am for safety margin
+                result = timeOfDay > new TimeSpan(23, 30, 0) || timeOfDay < new TimeSpan(1, 0, 0);
             }
 
-            Log.Trace("InteractiveBrokersBrokerage.IsWithinScheduledServerRestTimes(): " + result);
+            Log.Trace("InteractiveBrokersBrokerage.IsWithinScheduledServerResetTimes(): " + result);
 
             return result;
         }

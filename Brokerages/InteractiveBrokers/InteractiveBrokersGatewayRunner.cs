@@ -115,20 +115,42 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 if (OS.IsWindows)
                 {
-                    foreach (var process in Process.GetProcesses())
+                    if (_useTws)
                     {
-                        try
+                        foreach (var process in Process.GetProcessesByName("java"))
                         {
-                            if (process.MainWindowTitle.ToLower().Contains("ibcontroller") ||
-                                process.MainWindowTitle.ToLower().Contains("ib gateway"))
+                            if (process.MainWindowTitle.Contains("Interactive Brokers"))
                             {
                                 process.Kill();
                                 Thread.Sleep(2500);
                             }
                         }
-                        catch (Exception)
+                        foreach (var process in Process.GetProcessesByName("cmd"))
                         {
-                            // ignored
+                            if (process.MainWindowTitle.ToLower().Contains("ibcontroller"))
+                            {
+                                process.Kill();
+                                Thread.Sleep(2500);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        foreach (var process in Process.GetProcesses())
+                        {
+                            try
+                            {
+                                if (process.MainWindowTitle.ToLower().Contains("ibcontroller") ||
+                                    process.MainWindowTitle.ToLower().Contains("ib gateway"))
+                                {
+                                    process.Kill();
+                                    Thread.Sleep(2500);
+                                }
+                            }
+                            catch (Exception)
+                            {
+                                // ignored
+                            }
                         }
                     }
                 }
