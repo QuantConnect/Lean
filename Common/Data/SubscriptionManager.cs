@@ -160,26 +160,30 @@ namespace QuantConnect.Data
         /// <param name="consolidator">The consolidator</param>
         public void AddConsolidator(Symbol symbol, IDataConsolidator consolidator)
         {
-            //Find the right subscription and add the consolidator to it
-            for (var i = 0; i < Subscriptions.Count; i++)
+            // Find the right subscription and add the consolidator to it
+            var subscriptions = Subscriptions.Where(x => x.Symbol == symbol).ToList();
+
+            if (subscriptions.Count == 0)
             {
-                if (Subscriptions[i].Symbol == symbol)
+                // If we made it here it is because we never found the symbol in the subscription list
+                throw new ArgumentException("Please subscribe to this symbol before adding a consolidator for it. Symbol: " + symbol.Value);
+            }
+
+            foreach (var subscription in subscriptions)
+            {
+                // we need to be able to pipe data directly from the data feed into the consolidator
+                if (consolidator.InputType.IsAssignableFrom(subscription.Type))
                 {
-                    // we need to be able to pipe data directly from the data feed into the consolidator
-                    if (!consolidator.InputType.IsAssignableFrom(Subscriptions[i].Type))
-                    {
-                        throw new ArgumentException(string.Format("Type mismatch found between consolidator and symbol. " +
-                            "Symbol: {0} expects type {1} but tried to register consolidator with input type {2}", 
-                            symbol, Subscriptions[i].Type.Name, consolidator.InputType.Name)
-                            );
-                    }
-                    Subscriptions[i].Consolidators.Add(consolidator);
+                    subscription.Consolidators.Add(consolidator);
                     return;
                 }
             }
 
-            //If we made it here it is because we never found the symbol in the subscription list
-            throw new ArgumentException("Please subscribe to this symbol before adding a consolidator for it. Symbol: " + symbol.Value);
+            throw new ArgumentException(string.Format("Type mismatch found between consolidator and symbol. " +
+                "Symbol: {0} does not support input type: {1}. Supported types: {2}.",
+                symbol.Value, 
+                consolidator.InputType.Name,
+                string.Join(",", subscriptions.Select(x => x.Type.Name))));
         }
 
         /// <summary>

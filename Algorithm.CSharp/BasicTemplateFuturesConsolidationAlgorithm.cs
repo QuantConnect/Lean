@@ -28,10 +28,11 @@ namespace QuantConnect.Algorithm.CSharp
         private const string RootSP500 = Futures.Indices.SP500EMini;
         public Symbol SP500 = QuantConnect.Symbol.Create(RootSP500, SecurityType.Future, Market.USA);
         private HashSet<Symbol> _futureContracts = new HashSet<Symbol>();
+
         public override void Initialize()
         {
-            SetStartDate(2016, 08, 17);
-            SetEndDate(2016, 08, 20);
+            SetStartDate(2013, 10, 8);
+            SetEndDate(2013, 10, 11);
             SetCash(1000000);
 
             var futureSP500 = AddFuture(RootSP500);
@@ -59,7 +60,6 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
         }
-
 
         public void OnDataConsolidated(object sender, QuoteBar quoteBar)
         {
