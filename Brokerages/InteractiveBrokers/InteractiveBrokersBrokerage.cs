@@ -1034,6 +1034,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 _subscribedSymbols.Clear();
                 _subscribedTickets.Clear();
+                _underlyings.Clear();
             }
 
             Subscribe(null, subscribedSymbols);
