@@ -43,23 +43,23 @@ namespace QuantConnect.ToolBox.YahooDownloader
                 Cookie = "";
                 Crumb = "";
 
-                string urlScrape = "https://finance.yahoo.com/quote/{0}?p={0}";
+                var urlScrape = "https://finance.yahoo.com/quote/{0}?p={0}";
                 //url_scrape = "https://finance.yahoo.com/quote/{0}/history"
 
-                string url = string.Format(urlScrape, symbol);
+                var url = string.Format(urlScrape, symbol);
 
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                var request = (HttpWebRequest)WebRequest.Create(url);
 
                 request.CookieContainer = new CookieContainer();
                 request.Method = "GET";
 
-                using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+                using (var response = (HttpWebResponse)request.GetResponse())
                 {
-                    string cookie = response.GetResponseHeader("Set-Cookie").Split(';')[0];
+                    var cookie = response.GetResponseHeader("Set-Cookie").Split(';')[0];
 
-                    string html = "";
+                    var html = "";
 
-                    using (Stream stream = response.GetResponseStream())
+                    using (var stream = response.GetResponseStream())
                     {
                         if (stream != null)
                         {
@@ -71,7 +71,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
                     {
                         return false;
                     }
-                    string crumb = GetCrumb(html);
+                    var crumb = GetCrumb(html);
 
                     if (crumb != null)
                     {
@@ -121,7 +121,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
                         RegexOptions.CultureInvariant | RegexOptions.Compiled);
                 }
 
-                MatchCollection matches = _regexCrumb.Matches(html);
+                var matches = _regexCrumb.Matches(html);
 
                 if (matches.Count > 0)
                 {

@@ -33,11 +33,11 @@ namespace QuantConnect.ToolBox.YahooDownloader
         /// <returns>List of history price</returns>
         public static List<HistoryPrice> Get(string symbol, DateTime start, DateTime end)
         {
-            List<HistoryPrice> historyPrices = new List<HistoryPrice>();
+            var historyPrices = new List<HistoryPrice>();
 
             try
             {
-                string csvData = GetRaw(symbol, start, end);
+                var csvData = GetRaw(symbol, start, end);
                 if (csvData != null)
                 {
                     historyPrices = Parse(csvData);
@@ -66,7 +66,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
 
             try
             {
-                string url = "https://query1.finance.yahoo.com/v7/finance/download/{0}?period1={1}&period2={2}&interval=1d&events={3}&crumb={4}";
+                var url = "https://query1.finance.yahoo.com/v7/finance/download/{0}?period1={1}&period2={2}&interval=1d&events={3}&crumb={4}";
 
                 //if no token found, refresh it
                 if (string.IsNullOrEmpty(Token.Cookie) | string.IsNullOrEmpty(Token.Crumb))
@@ -78,7 +78,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
                 }
 
                 url = string.Format(url, symbol, Math.Round(DateTimeToUnixTimestamp(start), 0), Math.Round(DateTimeToUnixTimestamp(end), 0), "history", Token.Crumb);
-                using (WebClient wc = new WebClient())
+                using (var wc = new WebClient())
                 {
                     wc.Headers.Add(HttpRequestHeader.Cookie, Token.Cookie);
                     csvData = wc.DownloadString(url);
@@ -87,7 +87,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
             }
             catch (WebException webEx)
             {
-                HttpWebResponse response = (HttpWebResponse)webEx.Response;
+                var response = (HttpWebResponse)webEx.Response;
 
                 //Re-fecthing token
                 if (response.StatusCode == HttpStatusCode.Unauthorized)
@@ -116,30 +116,30 @@ namespace QuantConnect.ToolBox.YahooDownloader
         private static List<HistoryPrice> Parse(string csvData)
         {
 
-            List<HistoryPrice> hps = new List<HistoryPrice>();
+            var hps = new List<HistoryPrice>();
 
             try
             {
-                string[] rows = csvData.Split(Convert.ToChar(10));
+                var rows = csvData.Split(Convert.ToChar(10));
 
                 //row(0) was ignored because is column names 
                 //data is read from oldest to latest
-                for (int i = 1; i <= rows.Length - 1; i++)
+                for (var i = 1; i <= rows.Length - 1; i++)
                 {
 
-                    string row = rows[i];
+                    var row = rows[i];
                     if (string.IsNullOrEmpty(row))
                     {
                         continue;
                     }
 
-                    string[] cols = row.Split(',');
+                    var cols = row.Split(',');
                     if (cols[1] == "null")
                     {
                         continue;
                     }
 
-                    HistoryPrice hp = new HistoryPrice
+                    var hp = new HistoryPrice
                     {
                         Date = DateTime.Parse(cols[0]),
                         Open = Convert.ToDecimal(cols[1]),
