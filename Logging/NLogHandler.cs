@@ -33,6 +33,7 @@ namespace QuantConnect.Logging
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NLogHandler"/> class to write messages to the specified file path.
+        /// </summary>
         public NLogHandler()
         {
             
