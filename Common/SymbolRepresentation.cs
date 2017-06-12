@@ -156,7 +156,7 @@ namespace QuantConnect
 
         /// <summary>
         /// Function returns option contract parameters (underlying name, expiration date, strike, right) from IQFeed option ticker
-        /// Symbology details: http://www.iqfeed.net/symbolguide/index.cfm?symbolguide=guide&displayaction=support%C2%A7ion=guide&web=iqfeed&guide=options&web=IQFeed&type=stock
+        /// Symbology details: http://www.iqfeed.net/symbolguide/index.cfm?symbolguide=guide&amp;displayaction=support%C2%A7ion=guide&amp;web=iqfeed&amp;guide=options&amp;web=IQFeed&amp;type=stock
         /// </summary>
         /// <param name="ticker">IQFeed option ticker</param>
         /// <returns>Results containing 1) underlying name, 2) option right, 3) option strike 4) expiration date</returns>
