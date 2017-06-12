@@ -68,7 +68,9 @@ namespace QuantConnect.ToolBox.YahooDownloader
                     }
 
                     if (html.Length < 5000)
+                    {
                         return false;
+                    }
                     string crumb = GetCrumb(html);
 
                     if (crumb != null)
@@ -114,8 +116,10 @@ namespace QuantConnect.ToolBox.YahooDownloader
             {
                 //initialize on first time use
                 if (_regexCrumb == null)
+                {
                     _regexCrumb = new Regex("CrumbStore\":{\"crumb\":\"(?<crumb>\\w+)\"}",
                         RegexOptions.CultureInvariant | RegexOptions.Compiled);
+                }
 
                 MatchCollection matches = _regexCrumb.Matches(html);
 

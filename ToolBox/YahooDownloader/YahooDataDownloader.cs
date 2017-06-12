@@ -35,13 +35,19 @@ namespace QuantConnect.ToolBox.YahooDownloader
         public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
             if (resolution != Resolution.Daily)
+            {
                 throw new ArgumentException("The YahooDataDownloader can only download daily data.");
+            }
 
             if (symbol.ID.SecurityType != SecurityType.Equity)
+            {
                 throw new NotSupportedException("SecurityType not available: " + symbol.ID.SecurityType);
+            }
 
             if (endUtc < startUtc)
+            {
                 throw new ArgumentException("The end date must be greater or equal than the start date.");
+            }
 
             // Note: Yahoo syntax requires the month zero-based (0-11)
 

@@ -39,7 +39,9 @@ namespace QuantConnect.ToolBox.YahooDownloader
             {
                 string csvData = GetRaw(symbol, start, end);
                 if (csvData != null)
+                {
                     historyPrices = Parse(csvData);
+                }
             }
             catch (Exception ex)
             {
@@ -70,7 +72,9 @@ namespace QuantConnect.ToolBox.YahooDownloader
                 if (string.IsNullOrEmpty(Token.Cookie) | string.IsNullOrEmpty(Token.Crumb))
                 {
                     if (!Token.Refresh(symbol))
+                    {
                         return GetRaw(symbol, start, end);
+                    }
                 }
 
                 url = string.Format(url, symbol, Math.Round(DateTimeToUnixTimestamp(start), 0), Math.Round(DateTimeToUnixTimestamp(end), 0), "history", Token.Crumb);
@@ -93,11 +97,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
                     Debug.Print("Re-fetch");
                     return GetRaw(symbol, start, end);
                 }
-                else
-                {
-                    throw;
-                }
-
+                throw;
             }
             catch (Exception ex)
             {
@@ -129,11 +129,15 @@ namespace QuantConnect.ToolBox.YahooDownloader
 
                     string row = rows[i];
                     if (string.IsNullOrEmpty(row))
+                    {
                         continue;
+                    }
 
                     string[] cols = row.Split(',');
                     if (cols[1] == "null")
+                    {
                         continue;
+                    }
 
                     HistoryPrice hp = new HistoryPrice
                     {
@@ -147,7 +151,9 @@ namespace QuantConnect.ToolBox.YahooDownloader
 
                     //fixed issue in some currencies quote (e.g: SGDAUD=X)
                     if (cols[6] != "null")
+                    {
                         hp.Volume = Convert.ToDecimal(cols[6]);
+                    }
 
                     hps.Add(hp);
 
