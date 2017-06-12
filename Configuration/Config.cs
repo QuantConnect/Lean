@@ -192,7 +192,7 @@ namespace QuantConnect.Configuration
             {
                 value = token.Value<string>();
             }
-            catch (Exception err)
+            catch (Exception)
             {
                 value = token.ToString();
             }
