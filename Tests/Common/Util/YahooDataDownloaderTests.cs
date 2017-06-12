@@ -37,7 +37,7 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void GetMethod_ShouldReturn_Successfully()
         {
-            var yahooData = _yahooDataDownloader.Get(_symbol, Resolution.Daily, DateTime.Parse("1/1/2017"), DateTime.Now);
+            var yahooData = _yahooDataDownloader.Get(_symbol, Resolution.Daily, new DateTime(2017,1,1), DateTime.Now);
             Assert.IsTrue(yahooData.Any());
         }
 
@@ -45,7 +45,7 @@ namespace QuantConnect.Tests.Common.Util
         public void GetMethod_WithNormalDates_ShouldReturnCorrectHistoricalData()
         {
             //Arrange
-            var yahooData = _yahooDataDownloader.Get(_symbol, Resolution.Daily, DateTime.Parse("2/1/2017"), DateTime.Parse("2/2/2017"));
+            var yahooData = _yahooDataDownloader.Get(_symbol, Resolution.Daily, new DateTime(2017,2,1), new DateTime(2017,2,2));
 
             //Assert
             Assert.AreEqual(yahooData.ElementAt(0).Value, 128.75);
@@ -55,21 +55,21 @@ namespace QuantConnect.Tests.Common.Util
         [ExpectedException(typeof(ArgumentException))]
         public void GetMethod_WithNonDailyResolution_ShouldThrowException()
         {
-            _yahooDataDownloader.Get(_symbol, Resolution.Minute, DateTime.Parse("2/1/2017"), DateTime.Parse("2/2/2017"));
+            _yahooDataDownloader.Get(_symbol, Resolution.Minute, new DateTime(2017,2,1), new DateTime(2017, 2, 2));
         }
 
         [Test]
         [ExpectedException(typeof(ArgumentException))]
         public void GetMethod_WithReveseDate_ShouldThrowException()
         {
-            _yahooDataDownloader.Get(_symbol, Resolution.Minute, DateTime.Parse("2/2/2017"), DateTime.Parse("2/1/2017"));
+            _yahooDataDownloader.Get(_symbol, Resolution.Minute, new DateTime(2017, 2, 1), new DateTime(2017, 2, 2));
         }
 
         [Test]
         [ExpectedException(typeof(NotSupportedException))]
         public void GetMethod_WithNonEquitySecurity_ShouldThrowException()
         {
-            _yahooDataDownloader.Get(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", "USA"), "EURUSD"), Resolution.Daily, DateTime.Parse("2/1/2017"), DateTime.Parse("2/2/2017"));
+            _yahooDataDownloader.Get(new Symbol(SecurityIdentifier.GenerateForex("EURUSD", "USA"), "EURUSD"), Resolution.Daily, new DateTime(2017, 2, 1), new DateTime(2017, 2, 2));
         }
 
     }
