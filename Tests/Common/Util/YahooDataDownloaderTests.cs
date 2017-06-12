@@ -62,7 +62,7 @@ namespace QuantConnect.Tests.Common.Util
         [ExpectedException(typeof(ArgumentException))]
         public void GetMethod_WithReveseDate_ShouldThrowException()
         {
-            _yahooDataDownloader.Get(_symbol, Resolution.Minute, new DateTime(2017, 2, 1), new DateTime(2017, 2, 2));
+            _yahooDataDownloader.Get(_symbol, Resolution.Daily, new DateTime(2017, 2, 2), new DateTime(2017, 2, 1));
         }
 
         [Test]
