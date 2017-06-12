@@ -124,7 +124,7 @@ namespace QuantConnect.Securities.Option
                     {
                         return (decimal)greek();
                     }
-                    catch (Exception err)
+                    catch (Exception)
                     {
                         return optionSecurity.EnableGreekApproximation ? (decimal)reevalFunc() : 0.0m;
                     }
