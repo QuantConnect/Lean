@@ -214,6 +214,7 @@
     <Compile Include="Common\Util\ReaderWriterLockSlimExtensionsTests.cs" />
     <Compile Include="Common\Util\VersionHelperTests.cs" />
     <Compile Include="Common\Util\WhoCalledMeTests.cs" />
+    <Compile Include="Common\Util\YahooDataDownloaderTests.cs" />
     <Compile Include="Compression\CompressionTests.cs" />
     <Compile Include="Configuration\ConfigTests.cs" />
     <Compile Include="Engine\BasicOptionAssignmentSimulationTests.cs" />
