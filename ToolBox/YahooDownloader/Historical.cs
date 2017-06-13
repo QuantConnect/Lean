@@ -11,7 +11,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -31,13 +31,13 @@ namespace QuantConnect.ToolBox.YahooDownloader
         /// <param name="start">Starting datetime</param>
         /// <param name="end">Ending datetime</param>
         /// <returns>List of history price</returns>
-        public static List<HistoryPrice> Get(string symbol, DateTime start, DateTime end)
+        public static List<HistoryPrice> Get(string symbol, DateTime start, DateTime end, string eventCode)
         {
             var historyPrices = new List<HistoryPrice>();
 
             try
             {
-                var csvData = GetRaw(symbol, start, end);
+                var csvData = GetRaw(symbol, start, end, eventCode);
                 if (csvData != null)
                 {
                     historyPrices = Parse(csvData);
@@ -59,7 +59,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
         /// <param name="start">Starting datetime</param>
         /// <param name="end">Ending datetime</param>
         /// <returns>Raw history price string</returns>
-        public static string GetRaw(string symbol, DateTime start, DateTime end)
+        public static string GetRaw(string symbol, DateTime start, DateTime end, string eventCode)
         {
 
             string csvData = null;
@@ -73,11 +73,11 @@ namespace QuantConnect.ToolBox.YahooDownloader
                 {
                     if (!Token.Refresh(symbol))
                     {
-                        return GetRaw(symbol, start, end);
+                        return GetRaw(symbol, start, end, eventCode);
                     }
                 }
 
-                url = string.Format(url, symbol, Math.Round(DateTimeToUnixTimestamp(start), 0), Math.Round(DateTimeToUnixTimestamp(end), 0), "history", Token.Crumb);
+                url = string.Format(url, symbol, Math.Round(Time.DateTimeToUnixTimeStamp(start), 0), Math.Round(Time.DateTimeToUnixTimeStamp(end), 0), eventCode, Token.Crumb);
                 using (var wc = new WebClient())
                 {
                     wc.Headers.Add(HttpRequestHeader.Cookie, Token.Cookie);
@@ -95,9 +95,10 @@ namespace QuantConnect.ToolBox.YahooDownloader
                     Debug.Print(webEx.Message);
                     Token.Reset();
                     Debug.Print("Re-fetch");
-                    return GetRaw(symbol, start, end);
+                    return GetRaw(symbol, start, end, eventCode);
                 }
                 throw;
+
             }
             catch (Exception ex)
             {
@@ -169,11 +170,6 @@ namespace QuantConnect.ToolBox.YahooDownloader
 
         }
 
-        private static double DateTimeToUnixTimestamp(DateTime dateTime)
-        {
-            //Unix timestamp Is seconds past epoch
-            return (dateTime.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
-        }
     }
 
     public class HistoryPrice
