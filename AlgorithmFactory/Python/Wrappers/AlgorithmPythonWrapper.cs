@@ -681,9 +681,25 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="requests"></param>
         public void OnMarginCall(List<SubmitOrderRequest> requests)
         {
-            using (Py.GIL())
+            try
             {
-                _algorithm.OnMarginCall(requests);
+                using (Py.GIL())
+                {
+                    _algorithm.OnMarginCall(requests);
+                }
+            }
+            catch (PythonException pythonException)
+            {
+                // Pythonnet generated error due to List conversion 
+                if (pythonException.Message.Equals("TypeError : No method matches given arguments"))
+                {
+                    _baseAlgorithm.OnMarginCall(requests);
+                }
+                // User code generated error
+                else
+                {
+                    throw pythonException;
+                }
             }
         }
 
