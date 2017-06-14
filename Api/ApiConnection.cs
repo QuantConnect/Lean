@@ -101,6 +101,13 @@ namespace QuantConnect.Api
                 };
 
                 //Verify success
+                if (restsharpResponse.ErrorException != null)
+                {
+                    Log.Error("Api.ApiConnection.TryRequest(): Failed to make REST request. Error: " + restsharpResponse.ErrorException);
+                    result = null;
+                    return false;
+                }
+
                 responseContent = restsharpResponse.Content;
                 result = JsonConvert.DeserializeObject<T>(responseContent);
                 if (!result.Success)
@@ -111,7 +118,7 @@ namespace QuantConnect.Api
             }
             catch (Exception err)
             {
-                Log.Error(err, "Api.ApiConnection() Failed to make REST request. Response content: " + responseContent);
+                Log.Error(err, "Api.ApiConnection.TryRequest(): Failed to make REST request. Response content: " + responseContent);
                 result = null;
                 return false;
             }
