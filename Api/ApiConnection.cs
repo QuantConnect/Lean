@@ -79,6 +79,8 @@ namespace QuantConnect.Api
         public bool TryRequest<T>(RestRequest request, out T result)
             where T : RestResponse
         {
+            var responseContent = string.Empty;
+
             try
             {
                 //Generate the hash each request
@@ -99,7 +101,8 @@ namespace QuantConnect.Api
                 };
 
                 //Verify success
-                result = JsonConvert.DeserializeObject<T>(restsharpResponse.Content);
+                responseContent = restsharpResponse.Content;
+                result = JsonConvert.DeserializeObject<T>(responseContent);
                 if (!result.Success)
                 {
                     //result;
@@ -108,7 +111,7 @@ namespace QuantConnect.Api
             }
             catch (Exception err)
             {
-                Log.Error(err, "Api.ApiConnection() Failed to make REST request.");
+                Log.Error(err, "Api.ApiConnection() Failed to make REST request. Response content: " + responseContent);
                 result = null;
                 return false;
             }
