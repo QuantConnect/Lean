@@ -11,13 +11,14 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 using System;
 using System.Diagnostics;
 using System.Net;
 using System.IO;
 using System.Text.RegularExpressions;
+using QuantConnect.Logging;
 
 namespace QuantConnect.ToolBox.YahooDownloader
 {
@@ -36,15 +37,15 @@ namespace QuantConnect.ToolBox.YahooDownloader
         /// </summary>
         /// <param name="symbol">Stock ticker symbol</param>
         /// <returns></returns>
-        public static bool Refresh(string symbol = "SPY")
+        public static bool Refresh(string symbol)
         {
+
             try
             {
                 Cookie = "";
                 Crumb = "";
 
                 var urlScrape = "https://finance.yahoo.com/quote/{0}?p={0}";
-                //url_scrape = "https://finance.yahoo.com/quote/{0}/history"
 
                 var url = string.Format(urlScrape, symbol);
 
@@ -77,7 +78,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
                     {
                         Cookie = cookie;
                         Crumb = crumb;
-                        Debug.Print("Crumb: '{0}', Cookie: '{1}'", crumb, cookie);
+                        Log.Debug(string.Format("Crumb: '{0}', Cookie: '{1}'", crumb, cookie));
                         return true;
                     }
 
@@ -86,7 +87,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
             }
             catch (Exception ex)
             {
-                Debug.Print(ex.Message);
+                Log.Error(ex.Message);
             }
 
             return false;
@@ -117,7 +118,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
                 //initialize on first time use
                 if (_regexCrumb == null)
                 {
-                    _regexCrumb = new Regex("CrumbStore\":{\"crumb\":\"(?<crumb>\\w+)\"}",
+                    _regexCrumb = new Regex("CrumbStore\":{\"crumb\":\"(?<crumb>.+?)\"}",
                         RegexOptions.CultureInvariant | RegexOptions.Compiled);
                 }
 
@@ -129,7 +130,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
                 }
                 else
                 {
-                    Debug.Print("Regex no match");
+                    Log.Debug("Regex no match");
                 }
 
                 //prevent regex memory leak
@@ -138,7 +139,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
             }
             catch (Exception ex)
             {
-                Debug.Print(ex.Message);
+                Log.Error(ex.Message);
             }
 
             GC.Collect();
