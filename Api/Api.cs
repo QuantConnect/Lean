@@ -16,13 +16,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Security.Cryptography;
-using System.Text;
 using Newtonsoft.Json;
 using QuantConnect.API;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
@@ -38,18 +35,21 @@ namespace QuantConnect.Api
     /// </summary>
     public class Api : IApi
     {
-        private ApiConnection _connection;
         private ApiWebSocketConnection _socketConnection;
         private static MarketHoursDatabase _marketHoursDatabase;
         private string _dataFolder;
 
         /// <summary>
+        /// Returns the underlying API connection
+        /// </summary>
+        protected ApiConnection ApiConnection { get; private set; }
+
+        /// <summary>
         /// Initialize the API using the config.json file.
         /// </summary>
-        
         public virtual void Initialize(int userId, string token, string dataFolder)
         {
-            _connection = new ApiConnection(userId, token);
+            ApiConnection = new ApiConnection(userId, token);
             _socketConnection = new ApiWebSocketConnection(userId, token);
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder(dataFolder);
             _dataFolder = dataFolder;
@@ -68,7 +68,7 @@ namespace QuantConnect.Api
         {
             get
             {
-                return _connection.Connected;
+                return ApiConnection.Connected;
             }
         }
 
@@ -91,7 +91,7 @@ namespace QuantConnect.Api
             }), ParameterType.RequestBody);
 
             ProjectResponse result;
-            _connection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out result);
             return result;
         }
 
@@ -109,7 +109,7 @@ namespace QuantConnect.Api
             request.AddParameter("projectId", projectId);
 
             ProjectResponse result;
-            _connection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out result);
             return result;
         }
 
@@ -123,7 +123,7 @@ namespace QuantConnect.Api
             var request = new RestRequest("projects/read", Method.GET);
             request.RequestFormat = DataFormat.Json;
             ProjectResponse result;
-            _connection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out result);
             return result;
         }
 
@@ -145,7 +145,7 @@ namespace QuantConnect.Api
             request.AddParameter("content", content);
 
             ProjectFilesResponse result;
-            _connection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out result);
             return result;
         }
 
@@ -167,7 +167,7 @@ namespace QuantConnect.Api
             request.AddParameter("newName", newFileName);
 
             RestResponse result;
-            _connection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out result);
             return result;
         }
 
@@ -189,7 +189,7 @@ namespace QuantConnect.Api
             request.AddParameter("content", newFileContents);
 
             RestResponse result;
-            _connection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out result);
             return result;
         }
 
@@ -207,7 +207,7 @@ namespace QuantConnect.Api
             request.AddParameter("projectId", projectId);
 
             ProjectFilesResponse result;
-            _connection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out result);
             return result;
         }
 
@@ -227,7 +227,7 @@ namespace QuantConnect.Api
             request.AddParameter("name", fileName);
 
             ProjectFilesResponse result;
-            _connection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out result);
             return result;
         }
 
@@ -246,7 +246,7 @@ namespace QuantConnect.Api
             request.AddParameter("name", name);
 
             RestResponse result;
-            _connection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out result);
             return result;
         }
 
@@ -265,7 +265,7 @@ namespace QuantConnect.Api
                 projectId = projectId
             }), ParameterType.RequestBody);
             RestResponse result;
-            _connection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out result);
             return result;
         }
 
@@ -283,7 +283,7 @@ namespace QuantConnect.Api
                 projectId = projectId
             }), ParameterType.RequestBody);
             Compile result;
-            _connection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out result);
             return result;
         }
 
@@ -301,7 +301,7 @@ namespace QuantConnect.Api
             request.AddParameter("projectId", projectId);
             request.AddParameter("compileId", compileId);
             Compile result;
-            _connection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out result);
             return result;
         }
 
@@ -321,7 +321,7 @@ namespace QuantConnect.Api
             request.AddParameter("compileId", compileId);
             request.AddParameter("backtestName", backtestName);
             Backtest result;
-            _connection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out result);
             return result;
         }
 
@@ -338,7 +338,7 @@ namespace QuantConnect.Api
             request.AddParameter("backtestId", backtestId);
             request.AddParameter("projectId", projectId);
             Backtest result;
-            _connection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out result);
             return result;
         }
 
@@ -363,7 +363,7 @@ namespace QuantConnect.Api
                 note = note
             }), ParameterType.RequestBody);
             Backtest result;
-            _connection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out result);
             return result;
         }
 
@@ -378,7 +378,7 @@ namespace QuantConnect.Api
             var request = new RestRequest("backtests/read", Method.GET);
             request.AddParameter("projectId", projectId);
             BacktestList result;
-            _connection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out result);
             return result;
         }
 
@@ -396,7 +396,7 @@ namespace QuantConnect.Api
             request.AddParameter("backtestId", backtestId);
             request.AddParameter("projectId", projectId);
             RestResponse result;
-            _connection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out result);
             return result;
         }
 
@@ -429,7 +429,7 @@ namespace QuantConnect.Api
             request.AddParameter("application/json", body, ParameterType.RequestBody);
 
             LiveAlgorithm result;
-            _connection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out result);
             return result;
         }
 
@@ -470,7 +470,7 @@ namespace QuantConnect.Api
             request.AddParameter("end", epochEndTime);
 
             LiveList result;
-            _connection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out result);
             return result;
         }
 
@@ -487,7 +487,7 @@ namespace QuantConnect.Api
             request.AddParameter("projectId", projectId);
             request.AddParameter("deployId", deployId);
             LiveAlgorithmResults result;
-            _connection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out result);
             return result;
         }
 
@@ -503,7 +503,7 @@ namespace QuantConnect.Api
             request.RequestFormat = DataFormat.Json;
             request.AddParameter("projectId", projectId);
             RestResponse result;
-            _connection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out result);
             return result;
         }
 
@@ -519,7 +519,7 @@ namespace QuantConnect.Api
             request.RequestFormat = DataFormat.Json;
             request.AddParameter("projectId", projectId);
             RestResponse result;
-            _connection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out result);
             return result;
         }
 
@@ -546,7 +546,7 @@ namespace QuantConnect.Api
             request.AddParameter("end", epochEndTime);
 
             LiveLog result;
-            _connection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out result);
             return result;
         }
 
@@ -570,7 +570,7 @@ namespace QuantConnect.Api
             request.AddParameter("date", date.ToString("yyyyMMdd"));
 
             Link result;
-            _connection.TryRequest(request, out result);
+            ApiConnection.TryRequest(request, out result);
             return result;
         }
 
@@ -610,10 +610,9 @@ namespace QuantConnect.Api
         /// Get the algorithm status from the user with this algorithm id.
         /// </summary>
         /// <param name="algorithmId">String algorithm id we're searching for.</param>
-        /// <param name="userId">The user id of the algorithm</param>
         /// <returns>Algorithm status enum</returns>
 
-        public virtual AlgorithmControl GetAlgorithmStatus(string algorithmId, int userId)
+        public virtual AlgorithmControl GetAlgorithmStatus(string algorithmId)
         {
             return new AlgorithmControl()
             {

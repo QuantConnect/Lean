@@ -58,7 +58,7 @@ namespace QuantConnect.Queues
         /// <summary>
         /// Initialize the job queue:
         /// </summary>
-        public void Initialize()
+        public void Initialize(IApi api)
         {
             //
         }

@@ -19,9 +19,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Api;
 using QuantConnect.API;
-using QuantConnect.Brokerages;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 
@@ -256,9 +254,8 @@ namespace QuantConnect.Interfaces
         /// Get the algorithm current status, active or cancelled from the user
         /// </summary>
         /// <param name="algorithmId"></param>
-        /// <param name="userId">The user id of the algorithm</param>
         /// <returns></returns>
-        AlgorithmControl GetAlgorithmStatus(string algorithmId, int userId);
+        AlgorithmControl GetAlgorithmStatus(string algorithmId);
 
         /// <summary>
         /// Set the algorithm status from the worker to update the UX e.g. if there was an error.
