@@ -28,7 +28,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Initialize the internal state
         /// </summary>
-        void Initialize();
+        void Initialize(IApi api);
 
         /// <summary>
         /// Request the next task to run through the engine:
