@@ -89,9 +89,7 @@ namespace QuantConnect.Api
                 Client.Authenticator = new HttpBasicAuthenticator(_userId, hash);
                 
                 // Execute the authenticated REST API Call
-                Log.Trace("Api.ApiConnection.TryRequest(): Request: " + request.Resource);
                 var restsharpResponse = Client.Execute(request);
-                Log.Trace("Api.ApiConnection.TryRequest(): ResponseStatus: " + restsharpResponse.ResponseStatus);
 
                 // Use custom converter for deserializing live results data
                 JsonConvert.DefaultSettings = () => new JsonSerializerSettings
@@ -102,7 +100,7 @@ namespace QuantConnect.Api
                 //Verify success
                 if (restsharpResponse.ErrorException != null)
                 {
-                    Log.Error("Api.ApiConnection.TryRequest(): Failed to make REST request. Error: " + restsharpResponse.ErrorException);
+                    Log.Error(restsharpResponse.ErrorException);
                     result = null;
                     return false;
                 }
