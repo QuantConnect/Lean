@@ -11,16 +11,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import clr
-clr.AddReference("System")
-clr.AddReference("QuantConnect.Algorithm")
-clr.AddReference("QuantConnect.Indicators")
-clr.AddReference("QuantConnect.Common")
+from clr import AddReference
+AddReference("System")
+AddReference("QuantConnect.Algorithm")
+AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
-from QuantConnect.Indicators import *
 import numpy as np
 
 
@@ -34,8 +32,7 @@ class BasicTemplateAlgorithm(QCAlgorithm):
         self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        equity = self.AddSecurity(SecurityType.Equity, "SPY", Resolution.Second)
-        self.spy = equity.Symbol
+        self.AddEquity("SPY", Resolution.Second)
         print "numpy test: print np.pi" , np.pi
 
     def OnData(self, data):
@@ -45,4 +42,4 @@ class BasicTemplateAlgorithm(QCAlgorithm):
             data: Slice object keyed by symbol containing the stock data
         '''
         if not self.Portfolio.Invested:
-            self.SetHoldings(self.spy, 1)
+            self.SetHoldings("SPY", 1)

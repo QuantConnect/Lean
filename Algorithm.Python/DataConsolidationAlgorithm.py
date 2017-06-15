@@ -50,9 +50,8 @@ class DataConsolidationAlgorithm(QCAlgorithm):
         self.SetStartDate(DateTime(2013, 10, 07, 9, 30, 0))  #Set Start Date
         self.SetEndDate(self.StartDate + timedelta(1))           #Set End Date
         # Find more symbols here: http://quantconnect.com/data
-        equity = self.AddEquity("SPY")
-        self.spy = equity.Symbol
-
+        self.AddEquity("SPY")
+        
         # define our 30 minute trade bar consolidator. we can
         # access the 30 minute bar from the DataConsolidated events
         thirtyMinuteConsolidator = TradeBarConsolidator(timedelta(minutes=30))
@@ -63,7 +62,7 @@ class DataConsolidationAlgorithm(QCAlgorithm):
 
         # this call adds our 30 minute consolidator to
         # the manager to receive updates from the engine
-        self.SubscriptionManager.AddConsolidator(self.spy, thirtyMinuteConsolidator)
+        self.SubscriptionManager.AddConsolidator("SPY", thirtyMinuteConsolidator)
 
         # here we'll define a slightly more complex consolidator. what we're trying to produce is
         # a 3 day bar. Now we could just use a single TradeBarConsolidator like above and pass in
@@ -86,7 +85,7 @@ class DataConsolidationAlgorithm(QCAlgorithm):
         three_oneDayBar.DataConsolidated += self.ThreeDayBarConsolidatedHandler
 
         # this call adds our 3 day to the manager to receive updates from the engine
-        self.SubscriptionManager.AddConsolidator(self.spy, three_oneDayBar)
+        self.SubscriptionManager.AddConsolidator("SPY", three_oneDayBar)
 
         self.__last = None
 
@@ -97,7 +96,7 @@ class DataConsolidationAlgorithm(QCAlgorithm):
 
     def OnEndOfDay(self):
         # close up shop each day and reset our 'last' value so we start tomorrow fresh
-        self.Liquidate(self.spy)
+        self.Liquidate("SPY")
         self.__last = None
 
 
@@ -107,12 +106,12 @@ class DataConsolidationAlgorithm(QCAlgorithm):
          will be the instance of the IDataConsolidator that invoked the event, but you'll almost never need that!''' 
 
         if self.__last is not None and bar.Close > self.__last.Close:
-            self.Log("{0} >> SPY >> LONG  >> 100 >> {1}".format(bar.Time, self.Portfolio[self.spy].Quantity))
-            self.Order(self.spy, 100)
+            self.Log("{0} >> SPY >> LONG  >> 100 >> {1}".format(bar.Time, self.Portfolio["SPY"].Quantity))
+            self.Order("SPY", 100)
 
         elif self.__last is not None and bar.Close < self.__last.Close:
-            self.Log("{0} >> SPY >> SHORT  >> 100 >> {1}".format(bar.Time, self.Portfolio[self.spy].Quantity))
-            self.Order(self.spy, -100)
+            self.Log("{0} >> SPY >> SHORT  >> 100 >> {1}".format(bar.Time, self.Portfolio["SPY"].Quantity))
+            self.Order("SPY", -100)
 
         self.__last = bar
         

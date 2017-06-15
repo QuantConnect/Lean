@@ -41,27 +41,23 @@ class CustomDataNIFTYAlgorithm(QCAlgorithm):
 
         # Define the symbol and "type" of our generic data:
         self.AddData(DollarRupee, "USDINR")
-        self.rupee = self.Securities["USDINR"].Symbol
         self.AddData(Nifty, "NIFTY")
-        self.nifty = self.Securities["NIFTY"].Symbol
-
-        self.AddEquity("SPY", Resolution.Daily)     
-
+        
         self.minimumCorrelationHistory = 50
         self.today = CorrelationPair()
         self.prices = []
         
 
     def OnData(self, data):
-        if self.rupee in data:
+        if "USDINR" in data:
             self.today = CorrelationPair(self.Time)
-            self.today.CurrencyPrice = data[self.rupee].Close
+            self.today.CurrencyPrice = data["USDINR"].Close
 
-        if self.nifty not in data: return
+        if "NIFTY" not in data: return
 
-        self.today.NiftyPrice = data[self.nifty].Close
+        self.today.NiftyPrice = data["NIFTY"].Close
 
-        if self.today.date() == data[self.nifty].Time.date():
+        if self.today.date() == data["NIFTY"].Time.date():
             self.prices.append(self.today)
             if len(self.prices) > self.minimumCorrelationHistory:
                 self.prices.pop(0)
@@ -69,17 +65,17 @@ class CustomDataNIFTYAlgorithm(QCAlgorithm):
         # Strategy
         if self.Time.weekday() != 2: return
 
-        cur_qnty = self.Portfolio[self.nifty].Quantity
-        quantity = math.floor(self.Portfolio.TotalPortfolioValue * decimal.Decimal(0.9) / data[self.nifty].Close)
+        cur_qnty = self.Portfolio["NIFTY"].Quantity
+        quantity = math.floor(self.Portfolio.MarginRemaining * decimal.Decimal(0.9) / data["NIFTY"].Close)
         hi_nifty = max(price.NiftyPrice for price in self.prices)
         lo_nifty = min(price.NiftyPrice for price in self.prices)
 
-        if data[self.nifty].Open >= hi_nifty:
-            code = self.Order(self.nifty,  quantity - cur_qnty)
-            self.Debug("LONG  {0} Time: {1} Quantity: {2} Portfolio: {3} Nifty: {4} Buying Power: {5}".format(code, self.Time.ToShortDateString(), quantity, self.Portfolio[self.nifty].Quantity, data[self.nifty].Close, self.Portfolio.TotalPortfolioValue))
-        elif data[self.nifty].Open <= lo_nifty:
-            code = self.Order(self.nifty, -quantity - cur_qnty)
-            self.Debug("SHORT {0} Time: {1} Quantity: {2} Portfolio: {3} Nifty: {4} Buying Power: {5}".format(code, self.Time.ToShortDateString(), quantity, self.Portfolio[self.nifty].Quantity, data[self.nifty].Close, self.Portfolio.TotalPortfolioValue))
+        if data["NIFTY"].Open >= hi_nifty:
+            code = self.Order("NIFTY",  quantity - cur_qnty)
+            self.Debug("LONG  {0} Time: {1} Quantity: {2} Portfolio: {3} Nifty: {4} Buying Power: {5}".format(code, self.Time, quantity, self.Portfolio["NIFTY"].Quantity, data["NIFTY"].Close, self.Portfolio.TotalPortfolioValue))
+        elif data["NIFTY"].Open <= lo_nifty:
+            code = self.Order("NIFTY", -quantity - cur_qnty)
+            self.Debug("SHORT {0} Time: {1} Quantity: {2} Portfolio: {3} Nifty: {4} Buying Power: {5}".format(code, self.Time, quantity, self.Portfolio["NIFTY"].Quantity, data["NIFTY"].Close, self.Portfolio.TotalPortfolioValue))
 
 
 class Nifty(PythonData):
@@ -149,4 +145,4 @@ class CorrelationPair:
         if len(args) > 0: self._date = args[0]
 
     def date(self):
-        return self._date
+        return self._date.date()

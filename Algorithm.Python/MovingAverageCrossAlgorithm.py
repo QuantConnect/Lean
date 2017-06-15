@@ -36,14 +36,13 @@ class MovingAverageCrossAlgorithm(QCAlgorithm):
         self.SetEndDate(2015, 01, 01)    #Set End Date
         self.SetCash(100000)             #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        equity = self.AddEquity("SPY")
-        self.spy = equity.Symbol
-
+        self.AddEquity("SPY")
+        
         # create a 15 day exponential moving average
-        self.fast = self.EMA(self.spy, 15, Resolution.Daily);
+        self.fast = self.EMA("SPY", 15, Resolution.Daily);
 
         # create a 30 day exponential moving average
-        self.slow = self.EMA(self.spy, 30, Resolution.Daily);
+        self.slow = self.EMA("SPY", 30, Resolution.Daily);
 
         self.previous = None
 
@@ -66,19 +65,19 @@ class MovingAverageCrossAlgorithm(QCAlgorithm):
         # define a small tolerance on our checks to avoid bouncing
         tolerance = 0.00015;
         
-        holdings = self.Portfolio[self.spy].Quantity
+        holdings = self.Portfolio["SPY"].Quantity
 
         # we only want to go long if we're currently short or flat
         if holdings <= 0:
             # if the fast is greater than the slow, we'll go long
             if self.fast.Current.Value > self.slow.Current.Value * d.Decimal(1 + tolerance):
-                self.Log("BUY  >> {0}".format(self.Securities[self.spy].Price))
-                self.SetHoldings(self.spy, 1.0)
+                self.Log("BUY  >> {0}".format(self.Securities["SPY"].Price))
+                self.SetHoldings("SPY", 1.0)
              
         # we only want to liquidate if we're currently long
         # if the fast is less than the slow we'll liquidate our long
         if holdings > 0 and self.fast.Current.Value < self.slow.Current.Value:
-            self.Log("SELL >> {0}".format(self.Securities[self.spy].Price))
-            self.Liquidate(self.spy)  
+            self.Log("SELL >> {0}".format(self.Securities["SPY"].Price))
+            self.Liquidate("SPY")  
 
         self.previous = self.Time

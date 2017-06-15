@@ -11,12 +11,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import clr
-clr.AddReference("System")
-clr.AddReference("System.Collections")
-clr.AddReference("QuantConnect.Algorithm")
-clr.AddReference("QuantConnect.Indicators")
-clr.AddReference("QuantConnect.Common")
+from clr import AddReference
+AddReference("System")
+AddReference("System.Collections")
+AddReference("QuantConnect.Algorithm")
+AddReference("QuantConnect.Indicators")
+AddReference("QuantConnect.Common")
 
 from System import *
 from System.Collections.Generic import List
@@ -34,7 +34,7 @@ class CustomChartingAlgorithm(QCAlgorithm):
         self.SetStartDate(2016,1,1)
         self.SetEndDate(2017,1,1)
         self.SetCash(100000)
-        self.spy = self.AddEquity("SPY", Resolution.Minute).Symbol
+        self.AddEquity("SPY", Resolution.Daily)
         
         # In your initialize method:
 		# Chart - Master Container for the Chart:
@@ -56,7 +56,11 @@ class CustomChartingAlgorithm(QCAlgorithm):
         self.resamplePeriod = (self.EndDate - self.StartDate) / 2000
         
     def OnData(self, slice):
-        self.lastPrice = slice[self.spy].Close
+        if slice["SPY"] is None:
+            self.lastPrice = 0
+            return
+
+        self.lastPrice = slice["SPY"].Close
         if self.fastMA == 0: self.fastMA = self.lastPrice
         if self.slowMA == 0: self.slowMA = self.lastPrice
         self.fastMA = (d.Decimal(0.01) * self.lastPrice) + (d.Decimal(0.99) * self.fastMA);
@@ -69,7 +73,7 @@ class CustomChartingAlgorithm(QCAlgorithm):
             
         # On the 5th days when not invested buy:
         if not self.Portfolio.Invested and self.Time.day % 13 == 0:
-        	self.Order(self.spy, (int)(self.Portfolio.MarginRemaining / self.lastPrice))
+        	self.Order("SPY", (int)(self.Portfolio.MarginRemaining / self.lastPrice))
         	self.Plot("Trade Plot", "Buy", self.lastPrice)
         elif self.Time.day % 21 == 0 and self.Portfolio.Invested:
             self.Plot("Trade Plot", "Sell", self.lastPrice)

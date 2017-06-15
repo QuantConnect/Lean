@@ -33,14 +33,13 @@ class MACDTrendAlgorithm(QCAlgorithm):
         self.SetEndDate(2015, 01, 01)    #Set End Date
         self.SetCash(100000)             #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        equity = self.AddEquity("SPY", Resolution.Daily)
-        self.spy = equity.Symbol
-
+        self.AddEquity("SPY", Resolution.Daily)
+        
         # define our daily macd(12,26) with a 9 day signal
-        self.__macd = self.MACD(self.spy, 9, 26, 9, MovingAverageType.Exponential, Resolution.Daily)
+        self.__macd = self.MACD("SPY", 9, 26, 9, MovingAverageType.Exponential, Resolution.Daily)
         self.__previous = datetime.min
         self.PlotIndicator("MACD", True, self.__macd, self.__macd.Signal)
-        self.PlotIndicator(str(self.spy), self.__macd.Fast, self.__macd.Slow)
+        self.PlotIndicator("SPY", self.__macd.Fast, self.__macd.Slow)
 
 
     def OnData(self, data):
@@ -54,18 +53,18 @@ class MACDTrendAlgorithm(QCAlgorithm):
         # define a small tolerance on our checks to avoid bouncing
         tolerance = 0.0025;
         
-        holdings = self.Portfolio[self.spy].Quantity
+        holdings = self.Portfolio["SPY"].Quantity
 
         signalDeltaPercent = (self.__macd.Current.Value - self.__macd.Signal.Current.Value)/self.__macd.Fast.Current.Value
 
         # if our macd is greater than our signal, then let's go long
         if holdings <= 0 and signalDeltaPercent > tolerance:  # 0.01%
             # longterm says buy as well
-            self.SetHoldings(self.spy, 1.0)
+            self.SetHoldings("SPY", 1.0)
 
         # of our macd is less than our signal, then let's go short
         elif holdings >= 0 and signalDeltaPercent < -tolerance:
-            self.Liquidate(self.spy)  
+            self.Liquidate("SPY")  
 
         
         self.__previous = self.Time

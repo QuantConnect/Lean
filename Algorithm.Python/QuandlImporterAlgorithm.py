@@ -35,19 +35,18 @@ class QuandlImporterAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
-
+        self.quandlCode = "YAHOO/INDEX_SPY";
+        
         self.SetStartDate(2013,1,1)                                 #Set Start Date
         self.SetEndDate(datetime.today() - timedelta(1))            #Set End Date
         self.SetCash(25000)                                         #Set Strategy Cash
-        self.AddData[Quandl]("YAHOO/INDEX_SPY", Resolution.Daily)
-        self.__quandlCode = self.Securities["YAHOO/INDEX_SPY"].Symbol
-        self.__sma = self.SMA(self.__quandlCode, 14)
-        print ">>>>>", self.EndDate
-
+        self.AddData[Quandl](self.quandlCode, Resolution.Daily)
+        self.sma = self.SMA(self.quandlCode, 14)
+        
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
         if not self.Portfolio.HoldStock:
-            self.SetHoldings(self.__quandlCode, 1)
-            self.Debug("Purchased {0} >> {1}".format(self.__quandlCode, self.Time))
+            self.SetHoldings(self.quandlCode, 1)
+            self.Debug("Purchased {0} >> {1}".format(self.quandlCode, self.Time))
 
-        self.Plot("SPY", self.__sma.Current.Value)
+        self.Plot("SPY", self.sma.Current.Value)

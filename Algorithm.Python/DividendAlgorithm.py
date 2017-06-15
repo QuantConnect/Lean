@@ -37,8 +37,7 @@ class DividendAlgorithm(QCAlgorithm):
         # Find more symbols here: http://quantconnect.com/data		
         equity = self.AddEquity("MSFT", Resolution.Daily)		
         equity.SetDataNormalizationMode(DataNormalizationMode.Raw)
-        self.msft = equity.Symbol
-
+        
         # this will use the Tradier Brokerage open order split behavior		
         # forward split will modify open order to maintain order value		
         # reverse split open orders will be cancelled		
@@ -47,14 +46,14 @@ class DividendAlgorithm(QCAlgorithm):
 
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
-        bar = data[self.msft]
+        bar = data["MSFT"]
         if self.Transactions.OrdersCount == 0:
-            self.SetHoldings(self.msft, .5)
+            self.SetHoldings("MSFT", .5)
             # place some orders that won't fill, when the split comes in they'll get modified to reflect the split
-            quantity = self.CalculateOrderQuantity(self.msft, .25)
+            quantity = self.CalculateOrderQuantity("MSFT", .25)
             self.Debug("Purchased Stock: {0}".format(bar.Price))
-            self.StopMarketOrder(self.msft, -quantity, bar.Low/2)
-            self.LimitOrder(self.msft, -quantity, bar.High*2)
+            self.StopMarketOrder("MSFT", -quantity, bar.Low/2)
+            self.LimitOrder("MSFT", -quantity, bar.High*2)
 
         for kvp in data.Dividends:   # update this to Dividends dictionary
             symbol = kvp.Key

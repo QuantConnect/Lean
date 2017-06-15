@@ -11,11 +11,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import clr
-clr.AddReference("System")
-clr.AddReference("QuantConnect.Algorithm")
-clr.AddReference("QuantConnect.Indicators")
-clr.AddReference("QuantConnect.Common")
+from clr import AddReference
+AddReference("System")
+AddReference("QuantConnect.Algorithm")
+AddReference("QuantConnect.Indicators")
+AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
@@ -33,13 +33,10 @@ class DailyAlgorithm(QCAlgorithm):
         self.SetEndDate(2014,01,01)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        spy_security = self.AddSecurity(SecurityType.Equity, "SPY", Resolution.Daily)
-        ibm_security = self.AddSecurity(SecurityType.Equity, "IBM", Resolution.Hour)
-        ibm_security.SetLeverage(1.0)
-        self.ibm = ibm_security.Symbol
-        self.spy = spy_security.Symbol
-        self.macd = self.MACD(self.spy, 12, 26, 9, MovingAverageType.Wilders, Resolution.Daily, Field.Close)
-        self.ema = self.EMA(self.ibm, 15*6, Resolution.Hour, Field.SevenBar)
+        self.AddEquity("SPY", Resolution.Daily)
+        self.AddEquity("IBM", Resolution.Hour).SetLeverage(1.0)
+        self.macd = self.MACD("SPY", 12, 26, 9, MovingAverageType.Wilders, Resolution.Daily, Field.Close)
+        self.ema = self.EMA("IBM", 15 * 6, Resolution.Hour, Field.SevenBar)
         self.lastAction = None
         
 
@@ -50,16 +47,16 @@ class DailyAlgorithm(QCAlgorithm):
             data: Slice object keyed by symbol containing the stock data
         '''
         if not self.macd.IsReady: return
-        if not data.ContainsKey(self.ibm): return
-        if data[self.ibm] is None:
+        if not data.ContainsKey("IBM"): return
+        if data["IBM"] is None:
             self.Log("Price Missing Time: %s"%str(self.Time))
             return
         if self.lastAction is not None and self.lastAction.date() == self.Time.date(): return
         
         self.lastAction = self.Time
-        holding = self.Portfolio[self.spy]
+        quantity = self.Portfolio["SPY"].Quantity
 
-        if holding.Quantity <= 0 and self.macd.Current.Value > self.macd.Signal.Current.Value and data[self.ibm].Price > self.ema.Current.Value:
-            self.SetHoldings(self.ibm, 0.25)
-        elif holding.Quantity >= 0 and self.macd.Current.Value < self.macd.Signal.Current.Value and data[self.ibm].Price < self.ema.Current.Value:
-            self.SetHoldings(self.ibm, -0.25)
+        if quantity <= 0 and self.macd.Current.Value > self.macd.Signal.Current.Value and data["IBM"].Price > self.ema.Current.Value:
+            self.SetHoldings("IBM", 0.25)
+        elif quantity >= 0 and self.macd.Current.Value < self.macd.Signal.Current.Value and data["IBM"].Price < self.ema.Current.Value:
+            self.SetHoldings("IBM", -0.25)

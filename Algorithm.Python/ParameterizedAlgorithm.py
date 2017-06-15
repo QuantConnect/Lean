@@ -33,9 +33,8 @@ class ParameterizedAlgorithm(QCAlgorithm):
         self.SetEndDate(2013, 10, 11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        equity = self.AddEquity("SPY")
-        self.spy = equity.Symbol
-
+        self.AddEquity("SPY")
+        
         # Receive parameters from the Job
         ema_fast = self.GetParameter("ema-fast")
         ema_slow = self.GetParameter("ema-slow")
@@ -44,8 +43,8 @@ class ParameterizedAlgorithm(QCAlgorithm):
         fast_period = 100 if ema_fast is None else int(ema_fast)
         slow_period = 200 if ema_slow is None else int(ema_slow)
 
-        self.fast = self.EMA(self.spy, fast_period)
-        self.slow = self.EMA(self.spy, slow_period)
+        self.fast = self.EMA("SPY", fast_period)
+        self.slow = self.EMA("SPY", slow_period)
         
         
     def OnData(self, data):
@@ -59,6 +58,6 @@ class ParameterizedAlgorithm(QCAlgorithm):
         slow = self.slow.Current.Value
 
         if fast > slow * d.Decimal(1.001):
-            self.SetHoldings(self.spy, 1)
+            self.SetHoldings("SPY", 1)
         elif fast < slow * d.Decimal(0.999):
-            self.Liquidate(self.spy)
+            self.Liquidate("SPY")
