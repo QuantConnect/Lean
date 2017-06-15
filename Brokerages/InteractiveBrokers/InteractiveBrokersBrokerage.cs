@@ -642,9 +642,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
         }
 
-        private string GetUniqueKey(Contract contract)
+        private static string GetUniqueKey(Contract contract)
         {
-            return string.Format("{0} {1} {2} {3}", contract.ToString(), contract.LastTradeDateOrContractMonth, contract.Strike, contract.Right);
+            return string.Format("{0} {1} {2} {3}", contract, contract.LastTradeDateOrContractMonth, contract.Strike, contract.Right);
         }
 
         private string GetPrimaryExchange(Contract contract)
@@ -811,7 +811,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             bool inverted = invertedSymbol == currencyPair;
             var symbol = Symbol.Create(currencyPair, SecurityType.Forex, Market.FXCM);
             var contract = CreateContract(symbol);
-            var details = GetContractDetails(contract);
+
+            ContractDetails details;
+            if (!_contractDetails.TryGetValue(GetUniqueKey(contract), out details))
+            {
+                details = GetContractDetails(contract);
+            }
+
             if (details == null)
             {
                 throw new Exception("Unable to resolve conversion for currency: " + currency);
@@ -823,6 +829,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             // we're going to request ticks first and if not present, 
             // we'll make a history request and use the latest value returned.
+
+            const int requestTimeout = 60;
 
             // define and add our tick handler for the ticks
             var marketDataTicker = GetNextTickerId();
@@ -841,7 +849,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             _client.ClientSocket.reqMktData(marketDataTicker, contract, string.Empty, true, false, new List<TagValue>());
 
-            manualResetEvent.WaitOne(2500);
+            if (!manualResetEvent.WaitOne(requestTimeout * 1000))
+            {
+                Log.Error("InteractiveBrokersBrokerage.GetUsdConversion(): failed to receive response from IB within {0} seconds", requestTimeout);
+            }
 
             _client.TickPrice -= clientOnTickPrice;
 
@@ -895,7 +906,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     _client.ClientSocket.reqHistoricalData(historicalTicker, contract, DateTime.UtcNow.ToString("yyyyMMdd HH:mm:ss UTC"), 
                         requestSpan, IB.BarSize.OneSecond, HistoricalDataType.Ask, 0, 2, false, new List<TagValue>());
 
-                    manualResetEvent.WaitOne(2500);
+                    if (!manualResetEvent.WaitOne(requestTimeout * 1000))
+                    {
+                        Log.Error("InteractiveBrokersBrokerage.GetUsdConversion(): failed to receive response from IB within {0} seconds", requestTimeout);
+                    }
 
                     if (pacingViolation)
                     {
