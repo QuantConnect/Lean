@@ -849,7 +849,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             _client.ClientSocket.reqMktData(marketDataTicker, contract, string.Empty, true, false, new List<TagValue>());
 
-            manualResetEvent.WaitOne(requestTimeout * 1000);
+            if (!manualResetEvent.WaitOne(requestTimeout * 1000))
+            {
+                Log.Error("InteractiveBrokersBrokerage.GetUsdConversion(): failed to receive response from IB within {0} seconds", requestTimeout);
+            }
 
             _client.TickPrice -= clientOnTickPrice;
 
@@ -903,7 +906,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     _client.ClientSocket.reqHistoricalData(historicalTicker, contract, DateTime.UtcNow.ToString("yyyyMMdd HH:mm:ss UTC"), 
                         requestSpan, IB.BarSize.OneSecond, HistoricalDataType.Ask, 0, 2, false, new List<TagValue>());
 
-                    manualResetEvent.WaitOne(requestTimeout * 1000);
+                    if (!manualResetEvent.WaitOne(requestTimeout * 1000))
+                    {
+                        Log.Error("InteractiveBrokersBrokerage.GetUsdConversion(): failed to receive response from IB within {0} seconds", requestTimeout);
+                    }
 
                     if (pacingViolation)
                     {
