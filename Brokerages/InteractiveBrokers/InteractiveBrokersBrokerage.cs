@@ -642,9 +642,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
         }
 
-        private string GetUniqueKey(Contract contract)
+        private static string GetUniqueKey(Contract contract)
         {
-            return string.Format("{0} {1} {2} {3}", contract.ToString(), contract.LastTradeDateOrContractMonth, contract.Strike, contract.Right);
+            return string.Format("{0} {1} {2} {3}", contract, contract.LastTradeDateOrContractMonth, contract.Strike, contract.Right);
         }
 
         private string GetPrimaryExchange(Contract contract)
@@ -811,7 +811,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             bool inverted = invertedSymbol == currencyPair;
             var symbol = Symbol.Create(currencyPair, SecurityType.Forex, Market.FXCM);
             var contract = CreateContract(symbol);
-            var details = GetContractDetails(contract);
+
+            ContractDetails details;
+            if (!_contractDetails.TryGetValue(GetUniqueKey(contract), out details))
+            {
+                details = GetContractDetails(contract);
+            }
+
             if (details == null)
             {
                 throw new Exception("Unable to resolve conversion for currency: " + currency);
