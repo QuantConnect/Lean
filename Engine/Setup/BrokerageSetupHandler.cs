@@ -64,7 +64,6 @@ namespace QuantConnect.Lean.Engine.Setup
         public int MaxOrders { get; private set; }
 
         // saves ref to algo so we can call quit if runtime error encountered
-        private IAlgorithm _algorithm;
         private IBrokerageFactory _factory;
 
         /// <summary>
@@ -145,8 +144,6 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <returns>True on successfully setting up the algorithm state, or false on error.</returns>
         public bool Setup(IAlgorithm algorithm, IBrokerage brokerage, AlgorithmNodePacket job, IResultHandler resultHandler, ITransactionHandler transactionHandler, IRealTimeHandler realTimeHandler)
         {
-            _algorithm = algorithm;
-
             // verify we were given the correct job packet type
             var liveJob = job as LiveNodePacket;
             if (liveJob == null)
@@ -199,9 +196,11 @@ namespace QuantConnect.Lean.Engine.Setup
                         //Set the source impl for the event scheduling
                         algorithm.Schedule.SetEventSchedule(realTimeHandler);
 
-                        // If we're using IB, set the default subscription limit to 100,
+                        // If we're going to receive market data from IB, 
+                        // set the default subscription limit to 100,
                         // algorithms can override this setting in the Initialize method
-                        if (brokerage is InteractiveBrokersBrokerage)
+                        if (brokerage is InteractiveBrokersBrokerage &&
+                            liveJob.DataQueueHandler.EndsWith("InteractiveBrokersBrokerage"))
                         {
                             algorithm.Settings.DataSubscriptionLimit = 100;
                         }
@@ -281,7 +280,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     foreach (var order in openOrders)
                     {
                         // be sure to assign order IDs such that we increment from the SecurityTransactionManager to avoid ID collisions
-                        Log.Trace("BrokerageSetupHandler.Setup(): Has open order: " + order.Symbol.ToString() + " - " + order.Quantity);
+                        Log.Trace("BrokerageSetupHandler.Setup(): Has open order: " + order.Symbol.Value + " - " + order.Quantity);
                         order.Id = algorithm.Transactions.GetIncrementOrderId();
                         transactionHandler.Orders.AddOrUpdate(order.Id, order, (i, o) => order);
                     }
