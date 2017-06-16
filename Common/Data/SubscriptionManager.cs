@@ -20,6 +20,7 @@ using NodaTime;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
+using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect.Data
@@ -33,7 +34,7 @@ namespace QuantConnect.Data
         private readonly TimeKeeper _timeKeeper;
 
         /// Generic Market Data Requested and Object[] Arguements to Get it:
-        public List<SubscriptionDataConfig> Subscriptions;
+        public HashSet<SubscriptionDataConfig> Subscriptions;
 
         /// <summary>
         /// Flags the existence of custom data in the subscriptions
@@ -59,7 +60,7 @@ namespace QuantConnect.Data
             _algorithmSettings = algorithmSettings;
             _timeKeeper = timeKeeper;
             //Generic Type Data Holder:
-            Subscriptions = new List<SubscriptionDataConfig>();
+            Subscriptions = new HashSet<SubscriptionDataConfig>();
 
             // Initialize the default data feeds for each security type
             AvailableDataTypes = DefaultDataTypes();
@@ -128,7 +129,13 @@ namespace QuantConnect.Data
             //Create:
             var newConfig = new SubscriptionDataConfig(dataType, symbol, resolution, dataTimeZone, exchangeTimeZone, fillDataForward, extendedMarketHours, isInternalFeed, isCustomData, isFilteredSubscription: isFilteredSubscription);
 
-            //Add to subscription list: make sure we don't have his symbol:
+            //Add to subscription list: make sure we don't have this symbol:
+            if (Subscriptions.Contains(newConfig))
+            {
+                Log.Trace("SubscriptionManager.Add(): subscription already added: " + newConfig);
+                return newConfig;
+            }
+
             Subscriptions.Add(newConfig);
 
             // count data subscriptions by symbol, ignoring multiple data types

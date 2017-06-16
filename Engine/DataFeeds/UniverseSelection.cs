@@ -23,6 +23,7 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Equity;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -78,18 +79,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var factory = new FineFundamentalSubscriptionEnumeratorFactory(_algorithm.LiveMode, x => new[] { dateTimeUtc });
                     var config = FineFundamentalUniverse.CreateConfiguration(symbol);
 
-                    Security security;
-                    if (!_algorithm.Securities.TryGetValue(symbol, out security))
-                    {
-                        security = universe.CreateSecurity(symbol, _algorithm, _marketHoursDatabase, _symbolPropertiesDatabase);
-                        _algorithm.Securities.Add(security);
-                    }
+                    var exchangeHours = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType).ExchangeHours;
+                    var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, CashBook.AccountCurrency);
+                    var quoteCash = _algorithm.Portfolio.CashBook[symbolProperties.QuoteCurrency];
+
+                    var security = new Equity(symbol, exchangeHours, quoteCash, symbolProperties);
 
                     var request = new SubscriptionRequest(true, universe, security, config, dateTimeUtc, dateTimeUtc);
-                    var enumerator = factory.CreateEnumerator(request, dataProvider);
-                    if (enumerator.MoveNext())
+                    using (var enumerator = factory.CreateEnumerator(request, dataProvider))
                     {
-                        fineCollection.Data.Add(enumerator.Current);
+                        if (enumerator.MoveNext())
+                        {
+                            fineCollection.Data.Add(enumerator.Current);
+                        }
                     }
                 }
 
