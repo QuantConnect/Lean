@@ -238,7 +238,10 @@ namespace QuantConnect.Brokerages.Oanda
 
             // request and wait for thread to stop
             _cancellationTokenSource.Cancel();
-            _connectionMonitorThread.Join();
+            if (_connectionMonitorThread != null)
+            {
+                _connectionMonitorThread.Join();
+            }
 
             _isConnected = false;
         }
