@@ -569,10 +569,6 @@ namespace QuantConnect.Brokerages.Oanda
         private Order ConvertOrder(JToken order)
         {
             var type = order["type"].ToString();
-            var instrument = order["instrument"].ToString();
-            var id = order["id"].ToString();
-            var units = Convert.ToInt32(order["units"]);
-            var createTime = order["createTime"].ToString();
 
             Order qcOrder;
             switch (type)
@@ -607,8 +603,14 @@ namespace QuantConnect.Brokerages.Oanda
                     break;
 
                 default:
-                    throw new NotSupportedException("The Oanda order type " + type + " is not supported.");
+                    throw new NotSupportedException(
+                        "An existing " + type + " working order was found and is currently unsupported. Please manually cancel the order before restarting the algorithm.");
             }
+
+            var instrument = order["instrument"].ToString();
+            var id = order["id"].ToString();
+            var units = Convert.ToInt32(order["units"]);
+            var createTime = order["createTime"].ToString();
 
             var securityType = SymbolMapper.GetBrokerageSecurityType(instrument);
             qcOrder.Symbol = SymbolMapper.GetLeanSymbol(instrument, securityType, Market.Oanda);
