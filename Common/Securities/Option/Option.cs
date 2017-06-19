@@ -15,12 +15,10 @@
 
 using System;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Orders.OptionExercise;
-using System.Collections.Generic;
 
 namespace QuantConnect.Securities.Option
 {
@@ -185,9 +183,9 @@ namespace QuantConnect.Securities.Option
         /// we may have 1 option contract with multiplier of 100 with right to buy/sell only 50 shares of underlying stock. 
         /// </summary>
         /// <returns></returns>
-        public int GetExerciseQuantity(int quantity)
+        public decimal GetExerciseQuantity(decimal quantity)
         {
-            return (int)(quantity * ContractUnitOfTrade / ContractMultiplier);
+            return quantity * ContractUnitOfTrade / ContractMultiplier;
         }
 
         /// <summary>

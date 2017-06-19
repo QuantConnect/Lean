@@ -13,11 +13,9 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using System;
-using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -39,15 +37,14 @@ namespace QuantConnect.Algorithm.CSharp
 
             SetTimeZone(NodaTime.DateTimeZone.Utc);
             var security = AddSecurity(SecurityType.Forex, "BTCUSD", Resolution.Daily, Market.Bitfinex, false, 3.3m, true);
-            TradeBarConsolidator con = new TradeBarConsolidator(1);
+            var con = new QuoteBarConsolidator(1);
             SubscriptionManager.AddConsolidator("BTCUSD", con);
             con.DataConsolidated += con_DataConsolidated;
             SetBenchmark(security.Symbol);
         }
 
-        void con_DataConsolidated(object sender, TradeBar e)
+        void con_DataConsolidated(object sender, QuoteBar e)
         {
-
             var quantity = Math.Truncate(Portfolio.Cash / Math.Abs(e.Value + 1));
             if (!Portfolio.Invested)
             {
@@ -67,16 +64,13 @@ namespace QuantConnect.Algorithm.CSharp
             }
             else if (Portfolio["BTCUSD"].Quantity == quantity + 0.09m)
             {
-
                 //should fail
-                var ticket = Order("BTCUSD", 0.001);
+                Order("BTCUSD", 0.001);
 
                 SetHoldings("BTCUSD", -2.0m);
                 SetHoldings("BTCUSD", 2.0m);
-                this.Quit();
+                Quit();
             }
-
-
         }
     }
 }

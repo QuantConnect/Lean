@@ -499,7 +499,7 @@ namespace QuantConnect.Tests
                 {"Treynor Ratio", "0.391"},
                 {"Total Fees", "$23.05"},
             };
-	    var optionExerciseAssignRegressionAlgorithmStatistics = new Dictionary<string, string>
+        var optionExerciseAssignRegressionAlgorithmStatistics = new Dictionary<string, string>
             {
                 {"Total Trades", "4"},
                 {"Average Win", "0.30%"},
@@ -590,28 +590,28 @@ namespace QuantConnect.Tests
                 {"Treynor Ratio", "0"},
                 {"Total Fees", "$1.00"}
             };
-			
+            
             var fractionalQuantityRegressionStatistics = new Dictionary<string, string>
             {
                 {"Total Trades", "6"},
-                {"Average Win", "2.57%"},
-                {"Average Loss", "-0.01%"},
-                {"Compounding Annual Return", "900.493%"},
+                {"Average Win", "1.29%"},
+                {"Average Loss", "0.0%"},
+                {"Compounding Annual Return", "920.568%"},
                 {"Drawdown", "3.300%"},
-                {"Expectancy", "86.582"},
-                {"Net Profit", "2.556%"},
-                {"Sharpe Ratio", "3.003"},
-                {"Loss Rate", "67%"},
-                {"Win Rate", "33%"},
-                {"Profit-Loss Ratio", "261.75"},
-                {"Alpha", "-0.014"},
-                {"Beta", "0.996"},
-                {"Annual Standard Deviation", "0.452"},
-                {"Annual Variance", "0.204"},
-                {"Information Ratio", "-10.05"},
+                {"Expectancy", "-0.333"},
+                {"Net Profit", "2.578%"},
+                {"Sharpe Ratio", "3.031"},
+                {"Loss Rate", "33%"},
+                {"Win Rate", "67%"},
+                {"Profit-Loss Ratio", "0"},
+                {"Alpha", "-0.001"},
+                {"Beta", "0.995"},
+                {"Annual Standard Deviation", "0.451"},
+                {"Annual Variance", "0.203"},
+                {"Information Ratio", "-3.42"},
                 {"Tracking Error", "0.002"},
-                {"Treynor Ratio", "1.361"},
-                {"Total Fees", "$22.33"},
+                {"Treynor Ratio", "1.374"},
+                {"Total Fees", "$0.00"}
             };
 
             return new List<AlgorithmStatisticsTestParameters>
