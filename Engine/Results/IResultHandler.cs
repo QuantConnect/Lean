@@ -103,6 +103,12 @@ namespace QuantConnect.Lean.Engine.Results
         void DebugMessage(string message);
 
         /// <summary>
+        /// Process system debug messages with the preconfigured settings.
+        /// </summary>
+        /// <param name="message">String debug message</param>
+        void SystemDebugMessage(string message);
+
+        /// <summary>
         /// Send a list of security types to the browser
         /// </summary>
         /// <param name="types">Security types list inside algorithm</param>

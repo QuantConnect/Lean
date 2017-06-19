@@ -47,9 +47,9 @@ namespace QuantConnect.Brokerages.Tradier
             /// <summary>
             /// Gets the account ID to be used when instantiating a brokerage
             /// </summary>
-            public static long AccountID
+            public static string AccountID
             {
-                get { return Config.GetInt("tradier-account-id"); }
+                get { return Config.Get("tradier-account-id"); }
             }
 
             /// <summary>
@@ -155,7 +155,7 @@ namespace QuantConnect.Brokerages.Tradier
         public override IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm)
         {
             var errors = new List<string>();
-            var accountID = Read<long>(job.BrokerageData, "tradier-account-id", errors);
+            var accountID = Read<string>(job.BrokerageData, "tradier-account-id", errors);
             var accessToken = Read<string>(job.BrokerageData, "tradier-access-token", errors);
             var refreshToken = Read<string>(job.BrokerageData, "tradier-refresh-token", errors);
             var issuedAt = Read<DateTime>(job.BrokerageData, "tradier-issued-at", errors);
@@ -174,6 +174,9 @@ namespace QuantConnect.Brokerages.Tradier
         
             brokerage.SetTokens(job.UserId, accessToken, refreshToken, issuedAt, lifeSpan);
 
+            //Add the brokerage to the composer to ensure its accessible to the live data feed.
+            Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
+            Composer.Instance.AddPart<IHistoryProvider>(brokerage);
             return brokerage;
         }
 
@@ -202,7 +205,7 @@ namespace QuantConnect.Brokerages.Tradier
             {
                 AccessToken = Config.Get("tradier-access-token"),
                 RefreshToken = Config.Get("tradier-refresh-token"),
-                IssuedAt = Config.GetValue<DateTime>("tradier-tokens-issued-at"),
+                IssuedAt = Config.GetValue<DateTime>("tradier-issued-at"),
                 ExpiresIn = Config.GetInt("tradier-lifespan")
             };
         }

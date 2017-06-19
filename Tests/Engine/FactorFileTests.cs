@@ -25,6 +25,27 @@ namespace QuantConnect.Tests.Engine
     public class FactorFileTests
     {
         [Test]
+        public void ReadsFactorFileWithoutInfValues()
+        {
+            var factorFile = FactorFile.Read("AAPL", "usa");
+
+            Assert.AreEqual(19, factorFile.SortedFactorFileData.Count);
+
+            Assert.IsNull(factorFile.FactorFileMinimumDate);
+        }
+
+        [Test]
+        public void ReadsFactorFileWithInfValues()
+        {
+            var factorFile = FactorFile.Read("GBSN", "usa");
+
+            Assert.AreEqual(3, factorFile.SortedFactorFileData.Count);
+
+            Assert.IsNotNull(factorFile.FactorFileMinimumDate);
+            Assert.AreEqual(new DateTime(2016, 3, 31).Ticks, factorFile.FactorFileMinimumDate.Value.Ticks);
+        }
+
+        [Test]
         public void CorrectlyDeterminesTimePriceFactors()
         {
             var reference = DateTime.Today;
@@ -71,6 +92,8 @@ namespace QuantConnect.Tests.Engine
             Assert.IsTrue(file.HasDividendEventOnNextTradingDay(reference.AddDays(-365), out priceFactorRatio));
             Assert.AreEqual(.7m / .8m, priceFactorRatio);
             Assert.IsFalse(file.HasDividendEventOnNextTradingDay(reference.AddDays(-366), out priceFactorRatio));
+
+            Assert.IsNull(file.FactorFileMinimumDate);
         }
 
         [Test]
@@ -98,6 +121,8 @@ namespace QuantConnect.Tests.Engine
             Assert.IsTrue(file.HasSplitEventOnNextTradingDay(reference.AddDays(-365), out splitFactor));
             Assert.AreEqual(.5, splitFactor);
             Assert.IsFalse(file.HasSplitEventOnNextTradingDay(reference.AddDays(-366), out splitFactor));
+
+            Assert.IsNull(file.FactorFileMinimumDate);
         }
 
         private static FactorFile GetTestFactorFile(string symbol, DateTime reference)

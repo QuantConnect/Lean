@@ -36,7 +36,7 @@ namespace QuantConnect.Indicators
     /// http://www.mesasoftware.com/papers/UsingTheFisherTransform.pdf
     /// 
     /// </summary>
-    public class FisherTransform : TradeBarIndicator
+    public class FisherTransform : BarIndicator
     {
         private double _alpha;
         private double _previous;
@@ -86,7 +86,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">IndicatorDataPoint - the time and value of the next price</param>
         /// <returns></returns>
-        protected override decimal ComputeNextValue(TradeBar input)
+        protected override decimal ComputeNextValue(IBaseDataBar input)
         {
             var x = 0.0;
             var y = 0.0;

@@ -30,6 +30,7 @@ using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
+using QuantConnect.Data;
 
 namespace QuantConnect.Lean.Engine.Setup
 {
@@ -110,20 +111,19 @@ namespace QuantConnect.Lean.Engine.Setup
         }
 
         /// <summary>
-        /// Creates a new algorithm instance. Verified there's only one defined in the assembly and requires
-        /// instantiation to take less than 10 seconds
+        /// Create a new instance of an algorithm from a physical dll path.
         /// </summary>
-        /// <param name="assemblyPath">Physical location of the assembly.</param>
-        /// <param name="language">Language of the DLL</param>
-        /// <returns>Algorithm instance.</returns>
-        public IAlgorithm CreateAlgorithmInstance(string assemblyPath, Language language)
+        /// <param name="assemblyPath">The path to the assembly's location</param>
+        /// <param name="algorithmNodePacket">Details of the task required</param>
+        /// <returns>A new instance of IAlgorithm, or throws an exception if there was an error</returns>
+        public IAlgorithm CreateAlgorithmInstance(AlgorithmNodePacket algorithmNodePacket, string assemblyPath)
         {
             string error;
             IAlgorithm algorithm;
 
-            // limit load times to 10 seconds and force the assembly to have exactly one derived type
-            var loader = new Loader(language, TimeSpan.FromSeconds(15), names => names.SingleOrDefault());
-            var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, out algorithm, out error);
+            // limit load times to 60 seconds and force the assembly to have exactly one derived type
+            var loader = new Loader(algorithmNodePacket.Language, TimeSpan.FromSeconds(60), names => names.SingleOrDefault());
+            var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, algorithmNodePacket.RamAllocation, out algorithm, out error);
             if (!complete) throw new Exception(error + " Try re-building algorithm.");
 
             return algorithm;
@@ -138,7 +138,8 @@ namespace QuantConnect.Lean.Engine.Setup
         public IBrokerage CreateBrokerage(AlgorithmNodePacket algorithmNodePacket, IAlgorithm uninitializedAlgorithm, out IBrokerageFactory factory)
         {
             factory = new BacktestingBrokerageFactory();
-            return new BacktestingBrokerage(uninitializedAlgorithm);
+            var optionMarketSimulation = new BasicOptionAssignmentSimulation();
+            return new BacktestingBrokerage(uninitializedAlgorithm, optionMarketSimulation);
         }
 
         /// <summary>
@@ -193,18 +194,24 @@ namespace QuantConnect.Lean.Engine.Setup
                 }
                 catch (Exception err)
                 {
-                    Errors.Add("Failed to initialize algorithm: Initialize(): " + err.Message);
+                    Log.Error(err);
+                    Errors.Add("Failed to initialize algorithm: Initialize(): " + err);
                 }
-            });
+            }, controls.RamAllocation);
 
             //Before continuing, detect if this is ready:
             if (!initializeComplete) return false;
 
-            algorithm.Transactions.SetOrderProcessor(transactionHandler);
             algorithm.PostInitialize();
 
             //Calculate the max runtime for the strategy
-            _maxRuntime = GetMaximumRuntime(job.PeriodStart, job.PeriodFinish, algorithm.SubscriptionManager.Count);
+            _maxRuntime = GetMaximumRuntime(job.PeriodStart, job.PeriodFinish, algorithm.SubscriptionManager, baseJob.Controls);
+
+            // Python takes forever; lets give it 10x longer to finish.
+            if (job.Language == Language.Python)
+            {
+                _maxRuntime = _maxRuntime.Add(TimeSpan.FromSeconds(_maxRuntime.TotalSeconds * 9));
+            }
 
             //Get starting capital:
             _startingCaptial = algorithm.Portfolio.Cash;
@@ -242,10 +249,35 @@ namespace QuantConnect.Lean.Engine.Setup
         /// </summary>
         /// <param name="start">State date of the algorithm</param>
         /// <param name="finish">End date of the algorithm</param>
-        /// <param name="subscriptionCount">Number of data feeds the user has requested</param>
+        /// <param name="subscriptionManager">Subscription Manager</param>
+        /// <param name="controls">Job controls instance</param>
         /// <returns>Timespan maximum run period</returns>
-        private TimeSpan GetMaximumRuntime(DateTime start, DateTime finish, int subscriptionCount)
+        private TimeSpan GetMaximumRuntime(DateTime start, DateTime finish, SubscriptionManager subscriptionManager, Controls controls)
         {
+            var derivativeSubscriptions = subscriptionManager.Subscriptions
+                                        .Where( x => x.Symbol.IsCanonical())
+                                        .Select( x => 
+                                        {
+                                            // since number of subscriptions is dynamic and is not known in advance, 
+                                            // we assume maximum use of available capacity by the enduser
+                                            switch (x.Resolution)
+                                            {
+                                                case Resolution.Tick:
+                                                    return controls.TickLimit;
+                                                case Resolution.Second:
+                                                    return controls.SecondLimit;
+                                                default:
+                                                    return controls.MinuteLimit;
+                                            }
+                                        })
+                                        .Sum();
+
+            var otherSubscriptions = subscriptionManager.Subscriptions
+                                        .Where(x => !x.Symbol.IsCanonical())
+                                        .Count();
+
+            var subscriptionCount = otherSubscriptions + derivativeSubscriptions;
+
             double maxRunTime = 0;
             var jobDays = (finish - start).TotalDays;
 
@@ -280,7 +312,6 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-            // nothing to clean up
         }
     } // End Result Handler Thread:
 

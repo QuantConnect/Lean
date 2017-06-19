@@ -21,7 +21,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
     /// <summary>
     /// Abstract base class for a candlestick pattern indicator
     /// </summary>
-    public abstract class CandlestickPattern : WindowIndicator<TradeBar>
+    public abstract class CandlestickPattern : WindowIndicator<IBaseDataBar>
     {
         /// <summary>
         /// Creates a new <see cref="CandlestickPattern"/> with the specified name
@@ -37,7 +37,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// Returns the candle color of a candle
         /// </summary>
         /// <param name="tradeBar">The input candle</param>
-        protected static CandleColor GetCandleColor(TradeBar tradeBar)
+        protected static CandleColor GetCandleColor(IBaseDataBar tradeBar)
         {
             return tradeBar.Close >= tradeBar.Open ? CandleColor.White : CandleColor.Black;
         }
@@ -46,7 +46,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// Returns the distance between the close and the open of a candle
         /// </summary>
         /// <param name="tradeBar">The input candle</param>
-        protected static decimal GetRealBody(TradeBar tradeBar)
+        protected static decimal GetRealBody(IBaseDataBar tradeBar)
         {
             return Math.Abs(tradeBar.Close - tradeBar.Open);
         }
@@ -55,7 +55,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// Returns the full range of the candle
         /// </summary>
         /// <param name="tradeBar">The input candle</param>
-        protected static decimal GetHighLowRange(TradeBar tradeBar)
+        protected static decimal GetHighLowRange(IBaseDataBar tradeBar)
         {
             return tradeBar.High - tradeBar.Low;
         }
@@ -65,7 +65,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// </summary>
         /// <param name="type">The type of setting to use</param>
         /// <param name="tradeBar">The input candle</param>
-        protected static decimal GetCandleRange(CandleSettingType type, TradeBar tradeBar)
+        protected static decimal GetCandleRange(CandleSettingType type, IBaseDataBar tradeBar)
         {
             switch (CandleSettings.Get(type).RangeType)
             {
@@ -86,7 +86,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// <summary>
         /// Returns true if the candle is higher than the previous one
         /// </summary>
-        protected static bool GetCandleGapUp(TradeBar tradeBar, TradeBar previousBar)
+        protected static bool GetCandleGapUp(IBaseDataBar tradeBar, IBaseDataBar previousBar)
         {
             return tradeBar.Low > previousBar.High;
         }
@@ -94,7 +94,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// <summary>
         /// Returns true if the candle is lower than the previous one
         /// </summary>
-        protected static bool GetCandleGapDown(TradeBar tradeBar, TradeBar previousBar)
+        protected static bool GetCandleGapDown(IBaseDataBar tradeBar, IBaseDataBar previousBar)
         {
             return tradeBar.High < previousBar.Low;
         }
@@ -102,7 +102,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// <summary>
         /// Returns true if the candle is higher than the previous one (with no body overlap)
         /// </summary>
-        protected static bool GetRealBodyGapUp(TradeBar tradeBar, TradeBar previousBar)
+        protected static bool GetRealBodyGapUp(IBaseDataBar tradeBar, IBaseDataBar previousBar)
         {
             return Math.Min(tradeBar.Open, tradeBar.Close) > Math.Max(previousBar.Open, previousBar.Close);
         }
@@ -110,7 +110,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// <summary>
         /// Returns true if the candle is lower than the previous one (with no body overlap)
         /// </summary>
-        protected static bool GetRealBodyGapDown(TradeBar tradeBar, TradeBar previousBar)
+        protected static bool GetRealBodyGapDown(IBaseDataBar tradeBar, IBaseDataBar previousBar)
         {
             return Math.Max(tradeBar.Open, tradeBar.Close) < Math.Min(previousBar.Open, previousBar.Close);
         }
@@ -119,7 +119,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// Returns the range of the candle's lower shadow
         /// </summary>
         /// <param name="tradeBar">The input candle</param>
-        protected static decimal GetLowerShadow(TradeBar tradeBar)
+        protected static decimal GetLowerShadow(IBaseDataBar tradeBar)
         {
             return (tradeBar.Close >= tradeBar.Open ? tradeBar.Open : tradeBar.Close) - tradeBar.Low;
         }
@@ -128,7 +128,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// Returns the range of the candle's upper shadow
         /// </summary>
         /// <param name="tradeBar">The input candle</param>
-        protected static decimal GetUpperShadow(TradeBar tradeBar)
+        protected static decimal GetUpperShadow(IBaseDataBar tradeBar)
         {
             return tradeBar.High - (tradeBar.Close >= tradeBar.Open ? tradeBar.Close : tradeBar.Open);
         }
@@ -139,7 +139,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// <param name="type">The type of setting to use</param>
         /// <param name="sum">The sum of the previous candles ranges</param>
         /// <param name="tradeBar">The input candle</param>
-        protected static decimal GetCandleAverage(CandleSettingType type, decimal sum, TradeBar tradeBar)
+        protected static decimal GetCandleAverage(CandleSettingType type, decimal sum, IBaseDataBar tradeBar)
         {
             var defaultSetting = CandleSettings.Get(type);
 

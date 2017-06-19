@@ -173,6 +173,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         {
             collection.Data.Add(current);
         }
+
+        /// <summary>
+        /// Adds all specified instances of <see cref="BaseData"/> to the current collection
+        /// </summary>
+        /// <param name="collection">The collection to be added to</param>
+        /// <param name="current">The data collection to be added</param>
+        protected virtual void SetData(T collection, List<BaseData> current)
+        {
+            collection.Data = current;
+        }
     }
 
     /// <summary>

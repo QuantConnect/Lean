@@ -62,6 +62,14 @@ namespace QuantConnect.Packets
         { }
 
         /// <summary>
+        /// Constructor for inherited types
+        /// </summary>
+        /// <param name="packetType">The type of packet to create</param>
+        protected DebugPacket(PacketType packetType)
+            : base(packetType)
+        { }
+
+        /// <summary>
         /// Create a new instance of the notify debug packet:
         /// </summary>
         public DebugPacket(int projectId, string algorithmId, string compileId, string message, bool toast = false)

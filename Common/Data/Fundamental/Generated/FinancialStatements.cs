@@ -150,10 +150,12 @@ namespace QuantConnect.Data.Fundamental
 		/// <param name="previous">The previous instance</param>
 		public void UpdateValues(FinancialStatements previous)
 		{
-			TotalRiskBasedCapital.UpdateValues(previous.TotalRiskBasedCapital);
-			IncomeStatement.UpdateValues(previous.IncomeStatement);
-			BalanceSheet.UpdateValues(previous.BalanceSheet);
-			CashFlowStatement.UpdateValues(previous.CashFlowStatement);
+			if (previous == null) return;
+
+			if (TotalRiskBasedCapital != null) TotalRiskBasedCapital.UpdateValues(previous.TotalRiskBasedCapital);
+			if (IncomeStatement != null) IncomeStatement.UpdateValues(previous.IncomeStatement);
+			if (BalanceSheet != null) BalanceSheet.UpdateValues(previous.BalanceSheet);
+			if (CashFlowStatement != null) CashFlowStatement.UpdateValues(previous.CashFlowStatement);
 		}
 	}
 }

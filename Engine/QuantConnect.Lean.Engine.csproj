@@ -116,42 +116,13 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\DotNetZip.1.9.3\lib\net20\Ionic.Zip.dll</HintPath>
     </Reference>
-    <Reference Include="IronPython, Version=2.7.5.0, Culture=neutral, PublicKeyToken=7f709c5b713576e1, processorArchitecture=MSIL">
-      <Private>True</Private>
-      <HintPath>..\packages\IronPython.2.7.5\lib\Net45\IronPython.dll</HintPath>
-    </Reference>
-    <Reference Include="IronPython.Modules, Version=2.7.5.0, Culture=neutral, PublicKeyToken=7f709c5b713576e1, processorArchitecture=MSIL">
-      <Private>True</Private>
-      <HintPath>..\packages\IronPython.2.7.5\lib\Net45\IronPython.Modules.dll</HintPath>
-    </Reference>
-    <Reference Include="IronPython.SQLite, Version=2.7.5.0, Culture=neutral, PublicKeyToken=7f709c5b713576e1, processorArchitecture=MSIL">
-      <HintPath>..\packages\IronPython.2.7.5\lib\Net45\IronPython.SQLite.dll</HintPath>
-    </Reference>
-    <Reference Include="IronPython.Wpf, Version=2.7.5.0, Culture=neutral, PublicKeyToken=7f709c5b713576e1, processorArchitecture=MSIL">
-      <HintPath>..\packages\IronPython.2.7.5\lib\Net45\IronPython.Wpf.dll</HintPath>
-    </Reference>
     <Reference Include="MathNet.Numerics, Version=3.7.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\MathNet.Numerics.3.7.0\lib\net40\MathNet.Numerics.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Microsoft.Dynamic, Version=1.1.0.20, Culture=neutral, PublicKeyToken=7f709c5b713576e1, processorArchitecture=MSIL">
-      <Private>True</Private>
-      <HintPath>..\packages\IronPython.2.7.5\lib\Net45\Microsoft.Dynamic.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Scripting, Version=1.1.0.20, Culture=neutral, PublicKeyToken=7f709c5b713576e1, processorArchitecture=MSIL">
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Microsoft.Scripting.AspNet, Version=1.0.0.0, Culture=neutral, PublicKeyToken=7f709c5b713576e1, processorArchitecture=MSIL">
-      <HintPath>..\packages\IronPython.2.7.5\lib\Net45\Microsoft.Scripting.AspNet.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Scripting.Metadata, Version=1.1.0.20, Culture=neutral, PublicKeyToken=7f709c5b713576e1, processorArchitecture=MSIL">
-      <Private>True</Private>
-      <HintPath>..\packages\IronPython.2.7.5\lib\Net45\Microsoft.Scripting.Metadata.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="NodaTime, Version=1.3.0.0, Culture=neutral, PublicKeyToken=4226afe0d9b296d1, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -165,6 +136,7 @@
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Xml" />
   </ItemGroup>
@@ -173,22 +145,39 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="AlgorithmManager.cs" />
+    <Compile Include="DataFeeds\ApiDataProvider.cs" />
+    <Compile Include="DataFeeds\SingleEntryDataCacheProvider.cs" />
     <Compile Include="DataFeeds\Enumerators\BaseDataCollectionAggregatorEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\EnqueueableEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\Factories\BaseDataCollectionSubscriptionEnumeratorFactory.cs" />
+    <Compile Include="DataFeeds\Enumerators\Factories\BaseDataSubscriptionEnumeratorFactory.cs" />
+    <Compile Include="DataFeeds\Enumerators\Factories\DataQueueFuturesChainUniverseDataCollectionEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\Factories\DataQueueOptionChainUniverseDataCollectionEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\Factories\FineFundamentalSubscriptionEnumeratorFactory.cs" />
+    <Compile Include="DataFeeds\Enumerators\Factories\FuturesChainUniverseSubscriptionEnumeratorFactory.cs" />
+    <Compile Include="DataFeeds\Enumerators\Factories\OptionChainUniverseSubscriptionEnumeratorFactory.cs" />
+    <Compile Include="DataFeeds\Enumerators\Factories\SubscriptionDataReaderSubscriptionEnumeratorFactory.cs" />
+    <Compile Include="DataFeeds\Enumerators\Factories\UserDefinedUniverseSubscriptionEnumeratorFactory.cs" />
     <Compile Include="DataFeeds\Enumerators\FastForwardEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\FillForwardEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\FrontierAwareEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\LiveFillForwardEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\FuturesChainUniverseDataCollectionAggregatorEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\OptionChainUniverseDataCollectionEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\OptionChainUniverseDataCollectionAggregatorEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\OpenInterestEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\RateLimitEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\RefreshEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\SubscriptionFilterEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\SynchronizingEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\QuoteBarBuilderEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\TradeBarBuilderEnumerator.cs" />
+    <Compile Include="DataFeeds\DefaultDataProvider.cs" />
     <Compile Include="DataFeeds\ISubscriptionDataSourceReader.cs" />
     <Compile Include="DataFeeds\ITimeProvider.cs" />
     <Compile Include="DataFeeds\CollectionSubscriptionDataSourceReader.cs" />
     <Compile Include="DataFeeds\ManualTimeProvider.cs" />
+    <Compile Include="DataFeeds\Queues\ApiDataQueueHandler.cs" />
     <Compile Include="DataFeeds\RealTimeProvider.cs" />
     <Compile Include="DataFeeds\DataFeedPacket.cs" />
     <Compile Include="DataFeeds\SubscriptionCollection.cs" />
@@ -206,14 +195,16 @@
     <Compile Include="DataFeeds\ReaderErrorEventArgs.cs" />
     <Compile Include="DataFeeds\SubscriptionDataReader.cs" />
     <Compile Include="DataFeeds\TimeSlice.cs" />
-    <Compile Include="DataFeeds\Transport\IStreamReader.cs" />
     <Compile Include="DataFeeds\Transport\LocalFileSubscriptionStreamReader.cs" />
     <Compile Include="DataFeeds\Transport\RemoteFileSubscriptionStreamReader.cs" />
     <Compile Include="DataFeeds\Transport\RestSubscriptionStreamReader.cs" />
     <Compile Include="DataFeeds\UniverseSelection.cs" />
     <Compile Include="DataFeeds\UpdateData.cs" />
+    <Compile Include="DataFeeds\ZipDataCacheProvider.cs" />
     <Compile Include="DataFeeds\ZipEntryNameSubscriptionDataSourceReader.cs" />
+    <Compile Include="HistoricalData\BrokerageHistoryProvider.cs" />
     <Compile Include="HistoricalData\SubscriptionDataReaderHistoryProvider.cs" />
+    <Compile Include="HistoricalData\SynchronizingHistoryProvider.cs" />
     <Compile Include="LeanEngineAlgorithmHandlers.cs" />
     <Compile Include="LeanEngineSystemHandlers.cs" />
     <Compile Include="RealTime\LiveTradingRealTimeHandler.cs" />

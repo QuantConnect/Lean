@@ -25,29 +25,25 @@ from QuantConnect.Indicators import *
 
 class WarmupHistoryAlgorithm(QCAlgorithm):
     '''This algorithm demonstrates using the history provider to
-     retrieve data to warm up indicators before data is received'''
-    def __init__(self):
-        self.__fast = None
-        self.__slow = None
-        self.__fastPeriod = 60
-        self.__slowPeriod = 3600
-        self.__symbol = Symbol.Create("EURUSD", SecurityType.Forex, "FXCM")
-
+retrieve data to warm up indicators before data is received'''
 
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2013,10,07)   #Set Start Date
-        self.SetEndDate(2013,10,11)     #Set End Date
+        self.SetStartDate(2014,5,2)   #Set Start Date
+        self.SetEndDate(2014,5,2)     #Set End Date
         self.SetCash(100000)            #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.AddSecurity(SecurityType.Forex, self.__symbol.Value, Resolution.Second)
-
+        forex = self.AddForex("EURUSD", Resolution.Second)
+        
+        self.__symbol = forex.Symbol
+        self.__fastPeriod = 60
+        self.__slowPeriod = 3600
         self.__fast = self.EMA(self.__symbol, self.__fastPeriod)
         self.__slow = self.EMA(self.__symbol, self.__slowPeriod)
-
+        
         # "self.__slowPeriod + 1" because rolling window waits for one to fall off the back to be considered ready
-        history = self.History(self.__symbol, self.__slowPeriod + 1)
+        history = map(lambda x: x[self.__symbol], self.History(self.__slowPeriod + 1))
         for bar in history:
         	datapoint = IndicatorDataPoint(bar.EndTime, bar.Close)
         	self.__fast.Update(datapoint)
@@ -58,11 +54,7 @@ class WarmupHistoryAlgorithm(QCAlgorithm):
 
 
     def OnData(self, data):
-        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-
-        Arguments:
-            data: Slice object keyed by symbol containing the stock data
-        '''
+        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
         
         if self.__fast.Current.Value > self.__slow.Current.Value:
             self.SetHoldings(self.__symbol, 1)

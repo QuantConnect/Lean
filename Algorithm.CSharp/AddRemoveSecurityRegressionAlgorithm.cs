@@ -28,6 +28,10 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private DateTime lastAction;
 
+        private Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+        private Symbol _aig = QuantConnect.Symbol.Create("AIG", SecurityType.Equity, Market.USA);
+        private Symbol _bac = QuantConnect.Symbol.Create("BAC", SecurityType.Equity, Market.USA);
+
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -51,7 +55,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (!Portfolio.Invested)
             {
-                SetHoldings("SPY", 0.5);
+                SetHoldings(_spy, 0.5);
                 lastAction = Time;
             }
             if (Time.DayOfWeek == DayOfWeek.Tuesday)
@@ -62,14 +66,14 @@ namespace QuantConnect.Algorithm.CSharp
             }
             else if (Time.DayOfWeek == DayOfWeek.Wednesday)
             {
-                SetHoldings("AIG", .25);
-                SetHoldings("BAC", .25);
+                SetHoldings(_aig, .25);
+                SetHoldings(_bac, .25);
                 lastAction = Time;
             }
             else if (Time.DayOfWeek == DayOfWeek.Thursday)
             {
-                RemoveSecurity("BAC");
-                RemoveSecurity("AIG");
+                RemoveSecurity(_bac);
+                RemoveSecurity(_aig);
                 lastAction = Time;
             }
         }

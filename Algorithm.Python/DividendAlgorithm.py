@@ -31,32 +31,30 @@ class DividendAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
+        self.SetStartDate(1998,01,01)  #Set Start Date		
+        self.SetEndDate(2006,01,21)    #Set End Date		
+        self.SetCash(100000)           #Set Strategy Cash		
+        # Find more symbols here: http://quantconnect.com/data		
+        equity = self.AddEquity("MSFT", Resolution.Daily)		
+        equity.SetDataNormalizationMode(DataNormalizationMode.Raw)
+        self.msft = equity.Symbol
 
-        self.SetStartDate(1998,01,01)  #Set Start Date
-        self.SetEndDate(2006,01,21)    #Set End Date
-        self.SetCash(100000)           #Set Strategy Cash
-        # Find more symbols here: http://quantconnect.com/data
-        self.AddSecurity(SecurityType.Equity, "MSFT", Resolution.Daily)
-        self.Securities["MSFT"].SetDataNormalizationMode(DataNormalizationMode.Raw)
-
-        # this will use the Tradier Brokerage open order split behavior
-        # forward split will modify open order to maintain order value
-        # reverse split open orders will be cancelled
+        # this will use the Tradier Brokerage open order split behavior		
+        # forward split will modify open order to maintain order value		
+        # reverse split open orders will be cancelled		
         self.SetBrokerageModel(BrokerageName.TradierBrokerage)
 
 
     def OnData(self, data):
-        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-
-        Arguments:
-            data: Slice object keyed by symbol containing the stock data
-        '''
+        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
+        bar = data[self.msft]
         if self.Transactions.OrdersCount == 0:
-            self.SetHoldings("MSFT", .5)
+            self.SetHoldings(self.msft, .5)
             # place some orders that won't fill, when the split comes in they'll get modified to reflect the split
-            self.Debug("Purchased Stock: {0}".format(self.Securities["MSFT"].Price))
-            self.StopMarketOrder("MSFT", -self.CalculateOrderQuantity("MSFT", .25), data["MSFT"].Low/2)
-            self.LimitOrder("MSFT", -self.CalculateOrderQuantity("MSFT", .25), data["MSFT"].High*2)
+            quantity = self.CalculateOrderQuantity(self.msft, .25)
+            self.Debug("Purchased Stock: {0}".format(bar.Price))
+            self.StopMarketOrder(self.msft, -quantity, bar.Low/2)
+            self.LimitOrder(self.msft, -quantity, bar.High*2)
 
         for kvp in data.Dividends:   # update this to Dividends dictionary
             symbol = kvp.Key

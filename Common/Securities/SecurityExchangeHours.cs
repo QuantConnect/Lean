@@ -23,7 +23,7 @@ namespace QuantConnect.Securities
 {
     /// <summary>
     /// Represents the schedule of a security exchange. This includes daily regular and extended market hours
-    /// as well as holidays
+    /// as well as holidays and early closes.
     /// </summary>
     /// <remarks>
     /// This type assumes that IsOpen will be called with increasingly future times, that is, the calls should never back
@@ -33,6 +33,7 @@ namespace QuantConnect.Securities
     {
         private readonly DateTimeZone _timeZone;
         private readonly HashSet<long> _holidays;
+        private readonly Dictionary<DateTime, TimeSpan> _earlyCloses;
 
         // these are listed individually for speed
         private readonly LocalMarketHours _sunday;
@@ -69,6 +70,14 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the early closes for this exchange
+        /// </summary>
+        public IReadOnlyDictionary<DateTime, TimeSpan> EarlyCloses
+        {
+            get { return _earlyCloses; }
+        }
+
+        /// <summary>
         /// Gets a <see cref="SecurityExchangeHours"/> instance that is always open
         /// </summary>
         public static SecurityExchangeHours AlwaysOpen(DateTimeZone timeZone)
@@ -76,7 +85,8 @@ namespace QuantConnect.Securities
             var dayOfWeeks = Enum.GetValues(typeof (DayOfWeek)).OfType<DayOfWeek>();
             return new SecurityExchangeHours(timeZone,
                 Enumerable.Empty<DateTime>(),
-                dayOfWeeks.Select(LocalMarketHours.OpenAllDay).ToDictionary(x => x.DayOfWeek)
+                dayOfWeeks.Select(LocalMarketHours.OpenAllDay).ToDictionary(x => x.DayOfWeek),
+                new Dictionary<DateTime, TimeSpan>()
                 );
         }
 
@@ -86,10 +96,14 @@ namespace QuantConnect.Securities
         /// <param name="timeZone">The time zone the dates and hours are represented in</param>
         /// <param name="holidayDates">The dates this exchange is closed for holiday</param>
         /// <param name="marketHoursForEachDayOfWeek">The exchange's schedule for each day of the week</param>
-        public SecurityExchangeHours(DateTimeZone timeZone, IEnumerable<DateTime> holidayDates, IReadOnlyDictionary<DayOfWeek, LocalMarketHours> marketHoursForEachDayOfWeek)
+        /// <param name="earlyCloses">The dates this exchange has an early close</param>
+        public SecurityExchangeHours(DateTimeZone timeZone, IEnumerable<DateTime> holidayDates, IReadOnlyDictionary<DayOfWeek, LocalMarketHours> marketHoursForEachDayOfWeek,
+            IReadOnlyDictionary<DateTime, TimeSpan> earlyCloses)
         {
             _timeZone = timeZone;
             _holidays = holidayDates.Select(x => x.Date.Ticks).ToHashSet();
+            _earlyCloses = earlyCloses.ToDictionary(x => x.Key.Date, x => x.Value);
+
             // make a copy of the dictionary for internal use
             _openHoursByDay = new Dictionary<DayOfWeek, LocalMarketHours>(marketHoursForEachDayOfWeek.ToDictionary());
 
@@ -110,7 +124,7 @@ namespace QuantConnect.Securities
         /// <returns>True if the exchange is considered open at the specified time, false otherwise</returns>
         public bool IsOpen(DateTime localDateTime, bool extendedMarket)
         {
-            if (_holidays.Contains(localDateTime.Date.Ticks))
+            if (_holidays.Contains(localDateTime.Date.Ticks) || IsTimeAfterEarlyClose(localDateTime))
             {
                 return false;
             }
@@ -138,7 +152,7 @@ namespace QuantConnect.Securities
             var end = new DateTime(Math.Min(endLocalDateTime.Ticks, start.Date.Ticks + Time.OneDay.Ticks - 1));
             do
             {
-                if (!_holidays.Contains(start.Date.Ticks))
+                if (!_holidays.Contains(start.Date.Ticks) && !IsTimeAfterEarlyClose(start))
                 {
                     // check to see if the market is open
                     var marketHours = GetMarketHours(start.DayOfWeek);
@@ -196,7 +210,7 @@ namespace QuantConnect.Securities
             do
             {
                 var marketHours = GetMarketHours(time.DayOfWeek);
-                if (!marketHours.IsClosedAllDay && !_holidays.Contains(time.Ticks))
+                if (!marketHours.IsClosedAllDay && !_holidays.Contains(time.Date.Ticks))
                 {
                     var marketOpenTimeOfDay = marketHours.GetMarketOpen(time.TimeOfDay, extendedMarket);
                     if (marketOpenTimeOfDay.HasValue)
@@ -229,8 +243,19 @@ namespace QuantConnect.Securities
             do
             {
                 var marketHours = GetMarketHours(time.DayOfWeek);
-                if (!marketHours.IsClosedAllDay && !_holidays.Contains(time.Ticks))
+                if (!marketHours.IsClosedAllDay && !_holidays.Contains(time.Date.Ticks))
                 {
+                    TimeSpan earlyCloseTime;
+                    if (_earlyCloses.TryGetValue(time.Date, out earlyCloseTime))
+                    {
+                        var earlyCloseDateTime = time.Date.Add(earlyCloseTime);
+                        if (time < earlyCloseDateTime)
+                            return earlyCloseDateTime;
+
+                        time = time.Date + Time.OneDay;
+                        continue;
+                    }
+
                     var marketCloseTimeOfDay = marketHours.GetMarketClose(time.TimeOfDay, extendedMarket);
                     if (marketCloseTimeOfDay.HasValue)
                     {
@@ -286,6 +311,15 @@ namespace QuantConnect.Securities
                 default:
                     throw new ArgumentOutOfRangeException("day", day, null);
             }
+        }
+
+        /// <summary>
+        /// Helper to determine if the current time is after a market early close
+        /// </summary>
+        private bool IsTimeAfterEarlyClose(DateTime localDateTime)
+        {
+            TimeSpan earlyCloseTime;
+            return _earlyCloses.TryGetValue(localDateTime.Date, out earlyCloseTime) && localDateTime.TimeOfDay >= earlyCloseTime;
         }
     }
 }

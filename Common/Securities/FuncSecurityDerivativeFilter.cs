@@ -25,26 +25,25 @@ namespace QuantConnect.Securities
     /// </summary>
     public class FuncSecurityDerivativeFilter : IDerivativeSecurityFilter
     {
-        private readonly Func<IEnumerable<Symbol>, BaseData, IEnumerable<Symbol>> _filter;
+        private readonly Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> _filter;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FuncSecurityDerivativeFilter"/> class
         /// </summary>
         /// <param name="filter">The functional implementation of the <see cref="Filter"/> method</param>
-        public FuncSecurityDerivativeFilter(Func<IEnumerable<Symbol>, BaseData, IEnumerable<Symbol>> filter)
+        public FuncSecurityDerivativeFilter(Func<IDerivativeSecurityFilterUniverse, IDerivativeSecurityFilterUniverse> filter)
         {
             _filter = filter;
         }
 
         /// <summary>
-        /// Filters the input set of symbols using the underlying price data
+        /// Filters the input set of symbols represented by the universe 
         /// </summary>
-        /// <param name="symbols">The derivative symbols to be filtered</param>
-        /// <param name="underlying">The underlying price data</param>
+        /// <param name="universe">Derivative symbols universe used in filtering</param>
         /// <returns>The filtered set of symbols</returns>
-        public IEnumerable<Symbol> Filter(IEnumerable<Symbol> symbols, BaseData underlying)
+        public IDerivativeSecurityFilterUniverse Filter(IDerivativeSecurityFilterUniverse universe)
         {
-            return _filter(symbols, underlying);
+            return _filter(universe);
         }
     }
 }

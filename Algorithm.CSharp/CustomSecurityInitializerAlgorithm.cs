@@ -31,7 +31,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             // set our initializer to our custom type
             SetBrokerageModel(BrokerageName.TradierBrokerage);
-            SetSecurityInitializer(new CustomSecurityInitializer(BrokerageModel, DataNormalizationMode.Raw));
+            SetSecurityInitializer(new CustomSecurityInitializer(BrokerageModel, new FuncSecuritySeeder(GetLastKnownPrice), DataNormalizationMode.Raw));
 
             SetStartDate(2012, 01, 01);
             SetEndDate(2013, 01, 01);
@@ -62,9 +62,10 @@ namespace QuantConnect.Algorithm.CSharp
             /// with the specified normalization mode
             /// </summary>
             /// <param name="brokerageModel">The brokerage model used to get fill/fee/slippage/settlement models</param>
+            /// <param name="securitySeeder">The security seeder to be used</param>
             /// <param name="dataNormalizationMode">The desired data normalization mode</param>
-            public CustomSecurityInitializer(IBrokerageModel brokerageModel, DataNormalizationMode dataNormalizationMode)
-                : base(brokerageModel)
+            public CustomSecurityInitializer(IBrokerageModel brokerageModel, ISecuritySeeder securitySeeder, DataNormalizationMode dataNormalizationMode)
+                : base(brokerageModel, securitySeeder)
             {
                 _dataNormalizationMode = dataNormalizationMode;
             }
@@ -73,10 +74,11 @@ namespace QuantConnect.Algorithm.CSharp
             /// Initializes the specified security by setting up the models
             /// </summary>
             /// <param name="security">The security to be initialized</param>
-            public override void Initialize(Security security)
+            /// <param name="seedSecurity">True to seed the security, false otherwise</param>
+            public override void Initialize(Security security, bool seedSecurity)
             {
                 // first call the default implementation
-                base.Initialize(security);
+                base.Initialize(security, seedSecurity);
 
                 // now apply our data normalization mode
                 security.SetDataNormalizationMode(_dataNormalizationMode);

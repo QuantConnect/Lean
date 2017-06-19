@@ -26,7 +26,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class OrderTicketDemoAlgorithm : QCAlgorithm
     {
-        private const string Symbol = "SPY";
+        private const string symbol = "SPY";
         private readonly List<OrderTicket> _openMarketOnOpenOrders = new List<OrderTicket>(); 
         private readonly List<OrderTicket> _openMarketOnCloseOrders = new List<OrderTicket>(); 
         private readonly List<OrderTicket> _openLimitOrders = new List<OrderTicket>();
@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 11);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
-            AddSecurity(SecurityType.Equity, Symbol, Resolution.Minute);
+            AddSecurity(SecurityType.Equity, symbol, Resolution.Minute);
         }
 
         /// <summary>
@@ -89,7 +89,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 // submit a market order to buy 10 shares, this function returns an OrderTicket object
                 // we submit the order with asynchronous:false, so it block until it is filled
-                var newTicket = MarketOrder(Symbol, 10, asynchronous: false);
+                var newTicket = MarketOrder(symbol, 10, asynchronous: false);
                 if (newTicket.Status != OrderStatus.Filled)
                 {
                     Log("Synchronous market order was not filled synchronously!");
@@ -100,7 +100,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // the fill before the next time events for your algorithm. here we'll submit the order
                 // asynchronously and try to cancel it, sometimes it will, sometimes it will be filled
                 // first.
-                newTicket = MarketOrder(Symbol, 10, asynchronous: true);
+                newTicket = MarketOrder(symbol, 10, asynchronous: true);
                 var response = newTicket.Cancel("Attempt to cancel async order");
                 if (response.IsSuccess)
                 {
@@ -134,12 +134,12 @@ namespace QuantConnect.Algorithm.CSharp
                 Log("Submitting LimitOrder");
 
                 // submit a limit order to buy 10 shares at .1% below the bar's close
-                var close = Securities[Symbol].Close;
-                var newTicket = LimitOrder(Symbol, 10, close * .999m);
+                var close = Securities[symbol].Close;
+                var newTicket = LimitOrder(symbol, 10, close * .999m);
                 _openLimitOrders.Add(newTicket);
 
                 // submit another limit order to sell 10 shares at .1% above the bar's close
-                newTicket = LimitOrder(Symbol, 10, close * 1.001m);
+                newTicket = LimitOrder(symbol, 10, close * 1.001m);
                 _openLimitOrders.Add(newTicket);
             }
 
@@ -201,16 +201,16 @@ namespace QuantConnect.Algorithm.CSharp
                 // a long stop is triggered when the price rises above the value
                 // so we'll set a long stop .25% above the current bar's close
 
-                var close = Securities[Symbol].Close;
+                var close = Securities[symbol].Close;
                 var stopPrice = close * 1.0025m;
-                var newTicket = StopMarketOrder(Symbol, 10, stopPrice);
+                var newTicket = StopMarketOrder(symbol, 10, stopPrice);
                 _openStopMarketOrders.Add(newTicket);
 
                 // a short stop is triggered when the price falls below the value
                 // so we'll set a short stop .25% below the current bar's close
 
                 stopPrice = close * .9975m;
-                newTicket = StopMarketOrder(Symbol, -10, stopPrice);
+                newTicket = StopMarketOrder(symbol, -10, stopPrice);
                 _openStopMarketOrders.Add(newTicket);
             }
 
@@ -276,10 +276,10 @@ namespace QuantConnect.Algorithm.CSharp
                 // to get at least the limit price for our fills, so make the limit
                 // price a little softer than the stop price
 
-                var close = Securities[Symbol].Close;
+                var close = Securities[symbol].Close;
                 var stopPrice = close * 1.001m;
                 var limitPrice = close - 0.03m;
-                var newTicket = StopLimitOrder(Symbol, 10, stopPrice, limitPrice);
+                var newTicket = StopLimitOrder(symbol, 10, stopPrice, limitPrice);
                 _openStopLimitOrders.Add(newTicket);
 
                 // a short stop is triggered when the price falls below the value
@@ -290,7 +290,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 stopPrice = close * .999m;
                 limitPrice = close + 0.03m;
-                newTicket = StopLimitOrder(Symbol, -10, stopPrice, limitPrice);
+                newTicket = StopLimitOrder(symbol, -10, stopPrice, limitPrice);
                 _openStopLimitOrders.Add(newTicket);
             }
 
@@ -345,10 +345,10 @@ namespace QuantConnect.Algorithm.CSharp
                 Log("Submitting MarketOnCloseOrder");
 
                 // open a new position or triple our existing position
-                var qty = Portfolio[Symbol].Quantity;
+                var qty = Portfolio[symbol].Quantity;
                 qty = qty == 0m ? 100m : 2m*qty;
 
-                var newTicket = MarketOnCloseOrder(Symbol, qty);
+                var newTicket = MarketOnCloseOrder(symbol, qty);
                 _openMarketOnCloseOrders.Add(newTicket);
             }
 
@@ -377,7 +377,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 Log("Submitting MarketOnCloseOrder to liquidate end of algorithm");
 
-                MarketOnCloseOrder(Symbol, -Portfolio[Symbol].Quantity, "Liquidate end of algorithm");
+                MarketOnCloseOrder(symbol, -Portfolio[symbol].Quantity, "Liquidate end of algorithm");
             }
         }
 
@@ -393,7 +393,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Log("Submitting MarketOnOpenOrder");
 
                 // its EOD, let's submit a market on open order to short even more!
-                var newTicket = MarketOnOpenOrder(Symbol, 50);
+                var newTicket = MarketOnOpenOrder(symbol, 50);
                 _openMarketOnOpenOrders.Add(newTicket);
             }
 

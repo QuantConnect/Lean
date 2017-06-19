@@ -15,6 +15,7 @@
 */
 
 using System;
+using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using RestSharp;
 

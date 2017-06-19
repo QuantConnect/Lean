@@ -59,7 +59,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsNotNull(security.PortfolioModel);
             Assert.IsInstanceOf<InteractiveBrokersFeeModel>(security.FeeModel);
             Assert.IsNotNull(security.SlippageModel);
-            Assert.IsInstanceOf<SpreadSlippageModel>(security.SlippageModel);
+            Assert.IsInstanceOf<ConstantSlippageModel>(security.SlippageModel);
             Assert.IsNotNull(security.SettlementModel);
             Assert.IsInstanceOf<ImmediateSettlementModel>(security.SettlementModel);
             Assert.IsNotNull(security.MarginModel);

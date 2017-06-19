@@ -19,6 +19,7 @@ using System.Linq;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Forex;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm
 {
@@ -212,6 +213,12 @@ namespace QuantConnect.Algorithm
             }
 
             var request = CreateSubmitOrderRequest(OrderType.Market, security, quantity, tag);
+
+            // If warming up, do not submit
+            if (IsWarmingUp)
+            {
+                return OrderTicket.InvalidWarmingUp(Transactions, request);
+            }
 
             //Initialize the Market order parameters:
             var preOrderCheckResponse = PreOrderChecks(request);
@@ -466,6 +473,152 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Send an exercise order to the transaction handler
+        /// </summary>
+        /// <param name="optionSymbol">String symbol for the option position</param>
+        /// <param name="quantity">Quantity of options contracts</param>
+        /// <param name="asynchronous">Send the order asynchrously (false). Otherwise we'll block until it fills</param>
+        /// <param name="tag">String tag for the order (optional)</param>
+        public OrderTicket ExerciseOption(Symbol optionSymbol, int quantity, bool asynchronous = false, string tag = "")
+        {
+            var option = (Option)Securities[optionSymbol];
+
+            var request = CreateSubmitOrderRequest(OrderType.OptionExercise, option, quantity, tag);
+
+            // If warming up, do not submit
+            if (IsWarmingUp)
+            {
+                return OrderTicket.InvalidWarmingUp(Transactions, request);
+            }
+
+            //Initialize the exercise order parameters
+            var preOrderCheckResponse = PreOrderChecks(request);
+            if (preOrderCheckResponse.IsError)
+            {
+                return OrderTicket.InvalidSubmitRequest(Transactions, request, preOrderCheckResponse);
+            }
+
+            //Add the order and create a new order Id.
+            var ticket = Transactions.AddOrder(request);
+
+            // Wait for the order event to process, only if the exchange is open
+            if (!asynchronous)
+            {
+                Transactions.WaitForOrder(ticket.OrderId);
+            }
+
+            return ticket;
+        }
+
+        // Support for option strategies trading
+
+        /// <summary>
+        /// Buy Option Strategy (Alias of Order)
+        /// </summary>
+        /// <param name="strategy">Specification of the strategy to trade</param>
+        /// <param name="quantity">Quantity of the strategy to trade</param>
+        /// <returns>Sequence of order ids</returns>
+        public IEnumerable<OrderTicket> Buy(OptionStrategy strategy, int quantity)
+        {
+            return Order(strategy, Math.Abs(quantity));
+        }
+
+        /// <summary>
+        /// Sell Option Strategy (alias of Order)
+        /// </summary>
+        /// <param name="strategy">Specification of the strategy to trade</param>
+        /// <param name="quantity">Quantity of the strategy to trade</param>
+        /// <returns>Sequence of order ids</returns>
+        public IEnumerable<OrderTicket> Sell(OptionStrategy strategy, int quantity)
+        {
+            return Order(strategy, Math.Abs(quantity) * -1);
+        }
+
+        /// <summary>
+        ///  Issue an order/trade for buying/selling an option strategy 
+        /// </summary>
+        /// <param name="strategy">Specification of the strategy to trade</param>
+        /// <param name="quantity">Quantity of the strategy to trade</param>
+        /// <returns>Sequence of order ids</returns>
+        public IEnumerable<OrderTicket> Order(OptionStrategy strategy, int quantity)
+        {
+            return GenerateOrders(strategy, quantity);
+        }
+
+        private IEnumerable<OrderTicket> GenerateOrders(OptionStrategy strategy, int strategyQuantity)
+        {
+            var orders = new List<OrderTicket>();
+
+            // setting up the tag text for all orders of one strategy
+            var strategyTag = strategy.Name + " (" + strategyQuantity.ToString() + ")";
+
+            // walking through all option legs and issuing orders
+            if (strategy.OptionLegs != null)
+            {
+                foreach (var optionLeg in strategy.OptionLegs)
+                {
+                    var optionSeq = Securities.Where(kv => kv.Key.Underlying == strategy.Underlying &&
+                                                            kv.Key.ID.OptionRight == optionLeg.Right &&
+                                                            kv.Key.ID.Date == optionLeg.Expiration &&
+                                                            kv.Key.ID.StrikePrice == optionLeg.Strike);
+
+                    if (optionSeq.Count() != 1)
+                    {
+                        var error = string.Format("Couldn't find the option contract in algorithm securities list. Underlying: {0}, option {1}, strike {2}, expiration: {3}",
+                                strategy.Underlying.ToString(), optionLeg.Right.ToString(), optionLeg.Strike.ToString(), optionLeg.Expiration.ToString());
+                        throw new InvalidOperationException(error);
+                    }
+
+                    var option = optionSeq.First().Key;
+
+                    switch (optionLeg.OrderType)
+                    {
+                        case OrderType.Market:
+                            var marketOrder = MarketOrder(option, optionLeg.Quantity * strategyQuantity, tag: strategyTag);
+                            orders.Add(marketOrder);
+                            break;
+                        case OrderType.Limit:
+                            var limitOrder = LimitOrder(option, optionLeg.Quantity * strategyQuantity, optionLeg.OrderPrice, tag: strategyTag);
+                            orders.Add(limitOrder);
+                            break;
+                        default:
+                            throw new InvalidOperationException("Order type is not supported in option strategy: " + optionLeg.OrderType.ToString());
+                    }
+                }
+            }
+
+            // walking through all underlying legs and issuing orders
+            if (strategy.UnderlyingLegs != null)
+            {
+                foreach (var underlyingLeg in strategy.UnderlyingLegs)
+                {
+                    if (!Securities.ContainsKey(strategy.Underlying))
+                    {
+                        var error = string.Format("Couldn't find the option contract underlying in algorithm securities list. Underlying: {0}", strategy.Underlying.ToString());
+                        throw new InvalidOperationException(error);
+                    }
+
+                    switch (underlyingLeg.OrderType)
+                    {
+                        case OrderType.Market:
+                            var marketOrder = MarketOrder(strategy.Underlying, underlyingLeg.Quantity * strategyQuantity, tag: strategyTag);
+                            orders.Add(marketOrder);
+                            break;
+                        case OrderType.Limit:
+                            var limitOrder = LimitOrder(strategy.Underlying, underlyingLeg.Quantity * strategyQuantity, underlyingLeg.OrderPrice, tag: strategyTag);
+                            orders.Add(limitOrder);
+                            break;
+                        default:
+                            throw new InvalidOperationException("Order type is not supported in option strategy: " + underlyingLeg.OrderType.ToString());
+                    }
+                }
+            }
+            return orders;
+        }
+
+
+
+        /// <summary>
         /// Perform preorder checks to ensure we have sufficient capital, 
         /// the market is open, and we haven't exceeded maximum realistic orders per day.
         /// </summary>
@@ -510,6 +663,12 @@ namespace QuantConnect.Algorithm
 
             //Check the exchange is open before sending a market on close orders
             if (request.OrderType == OrderType.MarketOnClose && !security.Exchange.ExchangeOpen)
+            {
+                return OrderResponse.Error(request, OrderResponseErrorCode.ExchangeNotOpen, request.OrderType + " order and exchange not open.");
+            }
+
+            //Check the exchange is open before sending a exercise orders
+            if (request.OrderType == OrderType.OptionExercise && !security.Exchange.ExchangeOpen)
             {
                 return OrderResponse.Error(request, OrderResponseErrorCode.ExchangeNotOpen, request.OrderType + " order and exchange not open.");
             }
@@ -559,6 +718,21 @@ namespace QuantConnect.Algorithm
                 return OrderResponse.Error(request, OrderResponseErrorCode.ExceededMaximumOrders, string.Format("You have exceeded maximum number of orders ({0}), for unlimited orders upgrade your account.", _maxOrders));
             }
 
+            if (request.OrderType == OrderType.OptionExercise)
+            {
+                if (security.Type != SecurityType.Option)
+                    return OrderResponse.Error(request, OrderResponseErrorCode.NonExercisableSecurity, "The security with symbol '" + request.Symbol.ToString() + "' is not exercisable.");
+
+                if (security.Holdings.IsShort)
+                    return OrderResponse.Error(request, OrderResponseErrorCode.UnsupportedRequestType, "The security with symbol '" + request.Symbol.ToString() + "' has a short option position. Only long option positions are exercisable.");
+                
+                if (request.Quantity > security.Holdings.Quantity)
+                    return OrderResponse.Error(request, OrderResponseErrorCode.UnsupportedRequestType, "Cannot exercise more contracts of '" + request.Symbol.ToString() + "' than is currently available in the portfolio. ");
+
+                if (request.Quantity <= 0.0m)
+                    OrderResponse.ZeroQuantity(request);
+            }
+
             if (request.OrderType == OrderType.MarketOnClose)
             {
                 var nextMarketClose = security.Exchange.Hours.GetNextMarketClose(security.LocalTime, false);
@@ -581,9 +755,10 @@ namespace QuantConnect.Algorithm
         /// Liquidate all holdings and cancel open orders. Called at the end of day for tick-strategies.
         /// </summary>
         /// <param name="symbolToLiquidate">Symbols we wish to liquidate</param>
+        /// <param name="tag">Custom tag to know who is calling this.</param>
         /// <returns>Array of order ids for liquidated symbols</returns>
         /// <seealso cref="MarketOrder"/>
-        public List<int> Liquidate(Symbol symbolToLiquidate = null)
+        public List<int> Liquidate(Symbol symbolToLiquidate = null, string tag = "Liquidated")
         {
             var orderIdList = new List<int>();
             symbolToLiquidate = symbolToLiquidate ?? QuantConnect.Symbol.Empty;
@@ -620,7 +795,7 @@ namespace QuantConnect.Algorithm
                     }
                     else
                     {
-                        Transactions.CancelOrder(order.Id);
+                        Transactions.CancelOrder(order.Id, tag);
                     }
                 }
 
@@ -764,8 +939,7 @@ namespace QuantConnect.Algorithm
 
             // this is the value in dollars that we want our holdings to have
             var targetPortfolioValue = target * Portfolio.TotalPortfolioValue;
-            var quantity = security.Holdings.Quantity;
-            var currentHoldingsValue = price * quantity;
+            var currentHoldingsValue = security.Holdings.HoldingsValue;
 
             // remove directionality, we'll work in the land of absolutes
             var targetOrderValue = Math.Abs(targetPortfolioValue - currentHoldingsValue);
@@ -773,6 +947,7 @@ namespace QuantConnect.Algorithm
 
             // determine the unit price in terms of the account currency
             var unitPrice = new MarketOrder(symbol, 1, UtcTime).GetValue(security);
+            if (unitPrice == 0) return 0;
 
             // calculate the total margin available
             var marginRemaining = Portfolio.GetMarginRemaining(symbol, direction);

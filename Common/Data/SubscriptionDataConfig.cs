@@ -20,6 +20,7 @@ using System.Runtime.CompilerServices;
 using NodaTime;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data
 {
@@ -29,7 +30,6 @@ namespace QuantConnect.Data
     public class SubscriptionDataConfig : IEquatable<SubscriptionDataConfig>
     {
         private Symbol _symbol;
-        private string _mappedSymbol;
         private readonly SecurityIdentifier _sid;
 
         /// <summary>
@@ -105,11 +105,15 @@ namespace QuantConnect.Data
         /// </summary>
         public string MappedSymbol
         {
-            get { return _mappedSymbol; }
+            get
+            {
+                return _symbol.ID.SecurityType == SecurityType.Option ? 
+                    (_symbol.HasUnderlying ? _symbol.Underlying.Value : _symbol.Value) :
+                    _symbol.Value;
+            }
             set
             {
-                _mappedSymbol = value;
-                _symbol = new Symbol(_sid, value);
+                _symbol = _symbol.UpdateMappedSymbol(value);
             }
         }
 
@@ -154,6 +158,7 @@ namespace QuantConnect.Data
         /// <param name="isCustom">True if this is user supplied custom data, false for normal QC data</param>
         /// <param name="tickType">Specifies if trade or quote data is subscribed</param>
         /// <param name="isFilteredSubscription">True if this subscription should have filters applied to it (market hours/user filters from security), false otherwise</param>
+        /// <param name="dataNormalizationMode">Specifies normalization mode used for this subscription</param>
         public SubscriptionDataConfig(Type objectType,
             Symbol symbol,
             Resolution resolution,
@@ -164,7 +169,8 @@ namespace QuantConnect.Data
             bool isInternalFeed,
             bool isCustom = false,
             TickType? tickType = null,
-            bool isFilteredSubscription = true)
+            bool isFilteredSubscription = true,
+            DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted)
         {
             if (objectType == null) throw new ArgumentNullException("objectType");
             if (symbol == null) throw new ArgumentNullException("symbol");
@@ -175,10 +181,10 @@ namespace QuantConnect.Data
             SecurityType = symbol.ID.SecurityType;
             Resolution = resolution;
             _sid = symbol.ID;
+            _symbol = symbol;
             FillDataForward = fillForward;
             ExtendedMarketHours = extendedHours;
             PriceScaleFactor = 1;
-            MappedSymbol = symbol.Value;
             IsInternalFeed = isInternalFeed;
             IsCustomData = isCustom;
             Market = symbol.ID.Market;
@@ -186,14 +192,11 @@ namespace QuantConnect.Data
             ExchangeTimeZone = exchangeTimeZone;
             IsFilteredSubscription = isFilteredSubscription;
             Consolidators = new HashSet<IDataConsolidator>();
+            DataNormalizationMode = dataNormalizationMode;
 
             if (!tickType.HasValue)
             {
-                TickType = TickType.Trade;
-                if (SecurityType == SecurityType.Forex || SecurityType == SecurityType.Cfd || SecurityType == SecurityType.Option)
-                {
-                    TickType = TickType.Quote;
-                }
+                TickType = LeanData.GetCommonTickTypeForCommonDataTypes(objectType, SecurityType);
             }
             else
             {
@@ -241,6 +244,7 @@ namespace QuantConnect.Data
         /// <param name="isCustom">True if this is user supplied custom data, false for normal QC data</param>
         /// <param name="tickType">Specifies if trade or quote data is subscribed</param>
         /// <param name="isFilteredSubscription">True if this subscription should have filters applied to it (market hours/user filters from security), false otherwise</param>
+        /// <param name="dataNormalizationMode">Specifies normalization mode used for this subscription</param>
         public SubscriptionDataConfig(SubscriptionDataConfig config,
             Type objectType = null,
             Symbol symbol = null,
@@ -252,7 +256,8 @@ namespace QuantConnect.Data
             bool? isInternalFeed = null,
             bool? isCustom = null,
             TickType? tickType = null,
-            bool? isFilteredSubscription = null)
+            bool? isFilteredSubscription = null,
+            DataNormalizationMode? dataNormalizationMode = null)
             : this(
             objectType ?? config.Type,
             symbol ?? config.Symbol,
@@ -264,7 +269,8 @@ namespace QuantConnect.Data
             isInternalFeed ?? config.IsInternalFeed,
             isCustom ?? config.IsCustomData,
             tickType ?? config.TickType,
-            isFilteredSubscription ?? config.IsFilteredSubscription
+            isFilteredSubscription ?? config.IsFilteredSubscription,
+            dataNormalizationMode ?? config.DataNormalizationMode
             )
         {
         }
@@ -381,7 +387,7 @@ namespace QuantConnect.Data
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Symbol.ToString() + "," + MappedSymbol + "," + Resolution;
+            return Symbol.Value + "," + MappedSymbol + "," + Resolution + "," + Type.Name;
         }
     }
 }

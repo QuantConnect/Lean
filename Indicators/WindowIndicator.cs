@@ -21,7 +21,7 @@ namespace QuantConnect.Indicators
     ///     Represents an indicator that acts on a rolling window of data
     /// </summary>
     public abstract class WindowIndicator<T> : IndicatorBase<T>
-        where T : BaseData
+        where T : IBaseData
     {
         // a window of data over a certain look back period
         private readonly RollingWindow<T> _window;

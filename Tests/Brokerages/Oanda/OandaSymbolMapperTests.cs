@@ -113,6 +113,17 @@ namespace QuantConnect.Tests.Brokerages.Oanda
             Assert.IsFalse(mapper.IsKnownLeanSymbol(Symbol.Create("ABCUSD", SecurityType.Forex, Market.Oanda)));
             Assert.IsFalse(mapper.IsKnownLeanSymbol(Symbol.Create("EURUSD", SecurityType.Cfd, Market.Oanda)));
             Assert.IsFalse(mapper.IsKnownLeanSymbol(Symbol.Create("DE30EUR", SecurityType.Forex, Market.Oanda)));
+
+            Assert.IsTrue(mapper.IsKnownBrokerageSymbol("GBP_USD"));
+            Assert.IsFalse(mapper.IsKnownBrokerageSymbol("USD_GBP"));
+            Assert.IsTrue(mapper.IsKnownLeanSymbol(Symbol.Create("GBPUSD", SecurityType.Forex, Market.Oanda)));
+            Assert.IsFalse(mapper.IsKnownLeanSymbol(Symbol.Create("USDGBP", SecurityType.Forex, Market.Oanda)));
+
+            Assert.IsTrue(mapper.IsKnownBrokerageSymbol("USD_JPY"));
+            Assert.IsFalse(mapper.IsKnownBrokerageSymbol("JPY_USD"));
+            Assert.IsTrue(mapper.IsKnownLeanSymbol(Symbol.Create("USDJPY", SecurityType.Forex, Market.Oanda)));
+            Assert.IsFalse(mapper.IsKnownLeanSymbol(Symbol.Create("JPYUSD", SecurityType.Forex, Market.Oanda)));
+
 #pragma warning restore 0618
         }
 

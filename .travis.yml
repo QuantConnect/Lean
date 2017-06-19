@@ -1,4 +1,6 @@
 language: csharp
+mono:
+  - latest
 solution: QuantConnect.Lean.sln
 install:
   - nuget restore QuantConnect.Lean.sln

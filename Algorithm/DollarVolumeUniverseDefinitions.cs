@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm
         public Universe Top(int count, UniverseSettings universeSettings = null)
         {
             universeSettings = universeSettings ?? _algorithm.UniverseSettings;
-            var symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA);
+            var symbol = Symbol.Create("us-equity-dollar-volume-top-" + count, SecurityType.Equity, Market.USA);
             var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, true);
             return new FuncUniverse(config, universeSettings, _algorithm.SecurityInitializer, selectionData => (
                 from c in selectionData.OfType<CoarseFundamental>()
@@ -69,7 +69,7 @@ namespace QuantConnect.Algorithm
         public Universe Bottom(int count, UniverseSettings universeSettings = null)
         {
             universeSettings = universeSettings ?? _algorithm.UniverseSettings;
-            var symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA);
+            var symbol = Symbol.Create("us-equity-dollar-volume-bottom-" + count, SecurityType.Equity, Market.USA);
             var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, true);
             return new FuncUniverse(config, universeSettings, _algorithm.SecurityInitializer, selectionData => (
                 from c in selectionData.OfType<CoarseFundamental>()
@@ -89,7 +89,7 @@ namespace QuantConnect.Algorithm
         public Universe Percentile(double percentile, UniverseSettings universeSettings = null)
         {
             universeSettings = universeSettings ?? _algorithm.UniverseSettings;
-            var symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA);
+            var symbol = Symbol.Create("us-equity-dollar-volume-percentile-" + percentile, SecurityType.Equity, Market.USA);
             var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, true);
             return new FuncUniverse(config, universeSettings, _algorithm.SecurityInitializer, selectionData =>
             {
@@ -118,7 +118,7 @@ namespace QuantConnect.Algorithm
         public Universe Percentile(double lowerPercentile, double upperPercentile, UniverseSettings universeSettings = null)
         {
             universeSettings = universeSettings ?? _algorithm.UniverseSettings;
-            var symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA);
+            var symbol = Symbol.Create("us-equity-dollar-volume-percentile-" + lowerPercentile + "-" + upperPercentile, SecurityType.Equity, Market.USA);
             var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, true);
             return new FuncUniverse(config, universeSettings, _algorithm.SecurityInitializer, selectionData =>
             {

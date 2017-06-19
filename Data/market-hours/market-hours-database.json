@@ -108,6 +108,13 @@
         "1/1/2014",
         "1/1/2015",
         "1/1/2016",
+        "1/2/2017",
+        "1/1/2018",
+        "1/1/2019",
+        "1/1/2020",
+        "1/1/2021",
+        "1/1/2022",
+        "1/2/2023",
         "1/2/2007",
         "9/11/2001",
         "9/12/2001",
@@ -135,6 +142,13 @@
         "1/20/2014",
         "1/19/2015",
         "1/18/2016",
+        "1/16/2017",
+        "1/15/2018",
+        "1/21/2019",
+        "1/20/2020",
+        "1/18/2021",
+        "1/17/2022",
+        "1/16/2023",
         "2/16/1998",
         "2/15/1999",
         "2/21/2000",
@@ -154,6 +168,13 @@
         "2/17/2014",
         "2/16/2015",
         "2/15/2016",
+        "2/20/2017",
+        "2/19/2018",
+        "2/18/2019",
+        "2/17/2020",
+        "2/15/2021",
+        "2/21/2022",
+        "2/20/2023",
         "4/10/1998",
         "4/2/1999",
         "4/21/2000",
@@ -173,6 +194,13 @@
         "4/18/2014",
         "4/3/2015",
         "3/25/2016",
+        "4/14/2017",
+        "3/30/2018",
+        "4/19/2019",
+        "4/10/2020",
+        "4/2/2021",
+        "4/15/2022",
+        "4/7/2023",
         "5/25/1998",
         "5/31/1999",
         "5/29/2000",
@@ -192,6 +220,13 @@
         "5/26/2014",
         "5/25/2015",
         "5/30/2016",
+        "5/29/2017",
+        "5/28/2018",
+        "5/27/2019",
+        "5/25/2020",
+        "5/31/2021",
+        "5/30/2022",
+        "5/29/2023",
         "7/3/1998",
         "7/5/1999",
         "7/4/2000",
@@ -211,6 +246,13 @@
         "7/4/2014",
         "7/3/2015",
         "7/4/2016",
+        "7/4/2017",
+        "7/4/2018",
+        "7/4/2019",
+        "7/4/2020",
+        "7/5/2021",
+        "7/4/2022",
+        "7/4/2023",
         "9/7/1998",
         "9/6/1999",
         "9/4/2000",
@@ -230,6 +272,13 @@
         "9/1/2014",
         "9/7/2015",
         "9/5/2016",
+        "9/4/2017",
+        "9/3/2018",
+        "9/2/2019",
+        "9/7/2020",
+        "9/6/2021",
+        "9/5/2022",
+        "9/4/2023",
         "11/26/1998",
         "11/25/1999",
         "11/23/2000",
@@ -249,6 +298,13 @@
         "11/27/2014",
         "11/26/2015",
         "11/24/2016",
+        "11/23/2017",
+        "11/22/2018",
+        "11/28/2019",
+        "11/26/2020",
+        "11/25/2021",
+        "11/24/2022",
+        "11/23/2023",
         "12/25/1998",
         "12/24/1999",
         "12/25/2000",
@@ -267,8 +323,2784 @@
         "12/25/2013",
         "12/25/2014",
         "12/25/2015",
-        "12/25/2016"
-      ]
+        "12/26/2016",
+        "12/25/2017",
+        "12/25/2018",
+        "12/25/2019",
+        "12/25/2020",
+        "12/25/2021",
+        "12/25/2022",
+        "12/25/2023"
+      ],
+      "earlyCloses": {
+        "7/3/2012": "13:00:00",
+        "7/3/2013": "13:00:00",
+        "7/3/2014": "13:00:00",
+        "7/3/2017": "13:00:00",
+        "11/24/2006": "13:00:00",
+        "11/23/2007": "13:00:00",
+        "11/28/2008": "13:00:00",
+        "11/27/2009": "13:00:00",
+        "11/26/2010": "13:00:00",
+        "11/25/2011": "13:00:00",
+        "11/23/2012": "13:00:00",
+        "11/29/2013": "13:00:00",
+        "11/28/2014": "13:00:00",
+        "11/27/2015": "13:00:00",
+        "11/25/2016": "13:00:00",
+        "11/24/2017": "13:00:00",
+        "11/23/2018": "13:00:00",
+        "12/24/2009": "13:00:00",
+        "12/24/2012": "13:00:00",
+        "12/24/2013": "13:00:00",
+        "12/24/2014": "13:00:00",
+        "12/24/2015": "13:00:00"
+      }
+    },
+
+    "Future-usa-[*]": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+
+    "Future-usa-ZW": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        },
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        },
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        },
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        },
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-ZC": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        },
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        },
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        },
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        },
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-ZS": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        },
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        },
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        },
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        },
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-ZM": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        },
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        },
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        },
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        },
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-ZL": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        },
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        },
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        },
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        },
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-ZO": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        },
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        },
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        },
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        },
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-DX": {
+      "dataTimeZone": "America/New_York",
+      "exchangeTimeZone": "America/New_York",
+      "sunday": [
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "20:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "20:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "20:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "20:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-6B": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-6C": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-6J": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-6S": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-6E": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-6A": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-6N": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-CL": {
+      "dataTimeZone": "America/New_York",
+      "exchangeTimeZone": "America/New_York",
+      "sunday": [
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-HO": {
+      "dataTimeZone": "America/New_York",
+      "exchangeTimeZone": "America/New_York",
+      "sunday": [
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-RB": {
+      "dataTimeZone": "America/New_York",
+      "exchangeTimeZone": "America/New_York",
+      "sunday": [
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-NG": {
+      "dataTimeZone": "America/New_York",
+      "exchangeTimeZone": "America/New_York",
+      "sunday": [
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-ZB": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-ZN": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-ZF": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-ZT": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-GE": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-ES": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "15:15:00",
+          "state": "market"
+        },
+        {
+          "start": "15:30:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "15:15:00",
+          "state": "market"
+        },
+        {
+          "start": "15:30:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "15:15:00",
+          "state": "market"
+        },
+        {
+          "start": "15:30:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "15:15:00",
+          "state": "market"
+        },
+        {
+          "start": "15:30:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "15:15:00",
+          "state": "market"
+        },
+        {
+          "start": "15:30:00",
+          "end": "16:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-NQ": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "15:15:00",
+          "state": "market"
+        },
+        {
+          "start": "15:30:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "15:15:00",
+          "state": "market"
+        },
+        {
+          "start": "15:30:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "15:15:00",
+          "state": "market"
+        },
+        {
+          "start": "15:30:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "15:15:00",
+          "state": "market"
+        },
+        {
+          "start": "15:30:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "15:15:00",
+          "state": "market"
+        },
+        {
+          "start": "15:30:00",
+          "end": "16:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-YM": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "15:15:00",
+          "state": "market"
+        },
+        {
+          "start": "15:30:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "15:15:00",
+          "state": "market"
+        },
+        {
+          "start": "15:30:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "15:15:00",
+          "state": "market"
+        },
+        {
+          "start": "15:30:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "15:15:00",
+          "state": "market"
+        },
+        {
+          "start": "15:30:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "15:15:00",
+          "state": "market"
+        },
+        {
+          "start": "15:30:00",
+          "end": "16:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-VX": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "start": "15:30:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "15:15:00",
+          "state": "market"
+        },
+        {
+          "start": "15:30:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "15:15:00",
+          "state": "market"
+        },
+        {
+          "start": "15:30:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "15:15:00",
+          "state": "market"
+        },
+        {
+          "start": "15:30:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "15:15:00",
+          "state": "market"
+        },
+        {
+          "start": "15:30:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "15:15:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-LE": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "08:30:00",
+          "end": "13:05:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "08:30:00",
+          "end": "13:05:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "08:30:00",
+          "end": "13:05:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "08:30:00",
+          "end": "13:05:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "08:30:00",
+          "end": "13:05:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-GF": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "08:30:00",
+          "end": "13:05:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "08:30:00",
+          "end": "13:05:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "08:30:00",
+          "end": "13:05:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "08:30:00",
+          "end": "13:05:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "08:30:00",
+          "end": "13:05:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-HE": {
+      "dataTimeZone": "America/Chicago",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "08:30:00",
+          "end": "13:05:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "08:30:00",
+          "end": "13:05:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "08:30:00",
+          "end": "13:05:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "08:30:00",
+          "end": "13:05:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "08:30:00",
+          "end": "13:05:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-GC": {
+      "dataTimeZone": "America/New_York",
+      "exchangeTimeZone": "America/New_York",
+      "sunday": [
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-SI": {
+      "dataTimeZone": "America/New_York",
+      "exchangeTimeZone": "America/New_York",
+      "sunday": [
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-PL": {
+      "dataTimeZone": "America/New_York",
+      "exchangeTimeZone": "America/New_York",
+      "sunday": [
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-PA": {
+      "dataTimeZone": "America/New_York",
+      "exchangeTimeZone": "America/New_York",
+      "sunday": [
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-CT": {
+      "dataTimeZone": "America/New_York",
+      "exchangeTimeZone": "America/New_York",
+      "sunday": [
+        {
+          "start": "21:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "14:20:00",
+          "state": "market"
+        },
+        {
+          "start": "21:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "14:20:00",
+          "state": "market"
+        },
+        {
+          "start": "21:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "14:20:00",
+          "state": "market"
+        },
+        {
+          "start": "21:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "14:20:00",
+          "state": "market"
+        },
+        {
+          "start": "21:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "14:20:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-OJ": {
+      "dataTimeZone": "America/New_York",
+      "exchangeTimeZone": "America/New_York",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "08:00:00",
+          "end": "14:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "08:00:00",
+          "end": "14:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "08:00:00",
+          "end": "14:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "08:00:00",
+          "end": "14:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "08:00:00",
+          "end": "14:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-KC": {
+      "dataTimeZone": "America/New_York",
+      "exchangeTimeZone": "America/New_York",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "04:15:00",
+          "end": "13:30:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "04:15:00",
+          "end": "13:30:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "04:15:00",
+          "end": "13:30:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "04:15:00",
+          "end": "13:30:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "04:15:00",
+          "end": "13:30:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-SB": {
+      "dataTimeZone": "America/New_York",
+      "exchangeTimeZone": "America/New_York",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "03:30:00",
+          "end": "13:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "03:30:00",
+          "end": "13:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "03:30:00",
+          "end": "13:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "03:30:00",
+          "end": "13:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "03:30:00",
+          "end": "13:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-CC": {
+      "dataTimeZone": "America/New_York",
+      "exchangeTimeZone": "America/New_York",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "04:45:00",
+          "end": "13:30:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "04:45:00",
+          "end": "13:30:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "04:45:00",
+          "end": "13:30:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "04:45:00",
+          "end": "13:30:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "04:45:00",
+          "end": "13:30:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
     },
     "Option-usa-[*]": {
       "dataTimeZone": "America/New_York",
@@ -328,6 +3160,13 @@
         "1/1/2014",
         "1/1/2015",
         "1/1/2016",
+        "1/2/2017",
+        "1/1/2018",
+        "1/1/2019",
+        "1/1/2020",
+        "1/1/2021",
+        "1/1/2022",
+        "1/2/2023",
         "1/2/2007",
         "9/11/2001",
         "9/12/2001",
@@ -355,6 +3194,13 @@
         "1/20/2014",
         "1/19/2015",
         "1/18/2016",
+        "1/16/2017",
+        "1/15/2018",
+        "1/21/2019",
+        "1/20/2020",
+        "1/18/2021",
+        "1/17/2022",
+        "1/16/2023",
         "2/16/1998",
         "2/15/1999",
         "2/21/2000",
@@ -374,6 +3220,13 @@
         "2/17/2014",
         "2/16/2015",
         "2/15/2016",
+        "2/20/2017",
+        "2/19/2018",
+        "2/18/2019",
+        "2/17/2020",
+        "2/15/2021",
+        "2/21/2022",
+        "2/20/2023",
         "4/10/1998",
         "4/2/1999",
         "4/21/2000",
@@ -393,6 +3246,13 @@
         "4/18/2014",
         "4/3/2015",
         "3/25/2016",
+        "4/14/2017",
+        "3/30/2018",
+        "4/19/2019",
+        "4/10/2020",
+        "4/2/2021",
+        "4/15/2022",
+        "4/7/2023",
         "5/25/1998",
         "5/31/1999",
         "5/29/2000",
@@ -412,6 +3272,13 @@
         "5/26/2014",
         "5/25/2015",
         "5/30/2016",
+        "5/29/2017",
+        "5/28/2018",
+        "5/27/2019",
+        "5/25/2020",
+        "5/31/2021",
+        "5/30/2022",
+        "5/29/2023",
         "7/3/1998",
         "7/5/1999",
         "7/4/2000",
@@ -431,6 +3298,13 @@
         "7/4/2014",
         "7/3/2015",
         "7/4/2016",
+        "7/4/2017",
+        "7/4/2018",
+        "7/4/2019",
+        "7/4/2020",
+        "7/5/2021",
+        "7/4/2022",
+        "7/4/2023",
         "9/7/1998",
         "9/6/1999",
         "9/4/2000",
@@ -450,6 +3324,13 @@
         "9/1/2014",
         "9/7/2015",
         "9/5/2016",
+        "9/4/2017",
+        "9/3/2018",
+        "9/2/2019",
+        "9/7/2020",
+        "9/6/2021",
+        "9/5/2022",
+        "9/4/2023",
         "11/26/1998",
         "11/25/1999",
         "11/23/2000",
@@ -469,6 +3350,13 @@
         "11/27/2014",
         "11/26/2015",
         "11/24/2016",
+        "11/23/2017",
+        "11/22/2018",
+        "11/28/2019",
+        "11/26/2020",
+        "11/25/2021",
+        "11/24/2022",
+        "11/23/2023",
         "12/25/1998",
         "12/24/1999",
         "12/25/2000",
@@ -487,7 +3375,14 @@
         "12/25/2013",
         "12/25/2014",
         "12/25/2015",
-        "12/25/2016"
+        "12/26/2016",
+        "12/25/2017",
+        "12/25/2018",
+        "12/25/2019",
+        "12/25/2020",
+        "12/25/2021",
+        "12/25/2022",
+        "12/25/2023"
       ]
     },
     "Forex-fxcm-[*]": {
@@ -536,7 +3431,57 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "1/1/2007",
+        "1/1/2008",
+        "1/1/2009",
+        "1/1/2010",
+        "1/1/2012",
+        "1/1/2013",
+        "1/1/2014",
+        "1/1/2015",
+        "1/1/2016",
+        "1/1/2017",
+        "1/1/2018",
+        "1/1/2019",
+        "1/1/2020",
+        "1/2/2007",
+        "1/2/2008",
+        "1/2/2009",
+        "1/2/2011",
+        "1/2/2012",
+        "1/2/2013",
+        "1/2/2014",
+        "1/2/2015",
+        "1/2/2017",
+        "1/2/2018",
+        "1/2/2019",
+        "1/2/2020",
+        "12/25/2007",
+        "12/25/2008",
+        "12/25/2009",
+        "12/25/2011",
+        "12/25/2012",
+        "12/25/2013",
+        "12/25/2014",
+        "12/25/2015",
+        "12/25/2016",
+        "12/25/2017",
+        "12/25/2018",
+        "12/25/2019",
+        "12/25/2020",
+        "12/26/2007",
+        "12/26/2008",
+        "12/26/2010",
+        "12/26/2011",
+        "12/26/2012",
+        "12/26/2013",
+        "12/26/2014",
+        "12/26/2016",
+        "12/26/2017",
+        "12/26/2018",
+        "12/26/2019"
+      ]
     },
     "Forex-oanda-[*]": {
       "dataTimeZone": "UTC",
@@ -725,7 +3670,56 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "1/2/2017",
+        "1/26/2017",
+        "4/14/2017",
+        "4/17/2017",
+        "4/25/2017",
+        "6/12/2017",
+        "12/25/2017",
+        "12/26/2017",
+        "1/1/2018",
+        "1/26/2018",
+        "3/30/2018",
+        "4/2/2018",
+        "4/25/2018",
+        "6/11/2018",
+        "12/25/2018",
+        "12/26/2018",
+        "1/1/2019",
+        "1/28/2019",
+        "4/19/2019",
+        "4/22/2019",
+        "4/25/2019",
+        "6/10/2019",
+        "12/25/2019",
+        "12/26/2019",
+        "1/1/2020",
+        "1/27/2020",
+        "4/10/2020",
+        "4/13/2020",
+        "4/27/2020",
+        "6/8/2020",
+        "12/25/2020",
+        "12/26/2020",
+        "1/1/2021",
+        "1/26/2021",
+        "4/2/2021",
+        "4/5/2021",
+        "4/26/2021",
+        "6/14/2021",
+        "12/27/2021",
+        "12/28/2021",
+        "1/3/2022",
+        "1/26/2022",
+        "4/15/2022",
+        "4/18/2022",
+        "4/25/2022",
+        "6/13/2022",
+        "12/26/2022",
+        "12/27/2022"
+      ]
     },
     "Cfd-fxcm-BCOUSD": {
       "dataTimeZone": "UTC",
@@ -767,7 +3761,22 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "12/25/2017",
+        "1/1/2018",
+        "3/30/2018",
+        "12/25/2018",
+        "1/1/2019",
+        "12/25/2019",
+        "1/1/2020",
+        "4/10/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "4/2/2021",
+        "4/15/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-fxcm-CH20CHF": {
       "dataTimeZone": "UTC",
@@ -809,7 +3818,54 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "1/2/2017",
+        "4/14/2017",
+        "4/17/2017",
+        "5/1/2017",
+        "5/25/2017",
+        "6/5/2017",
+        "8/1/2017",
+        "12/25/2017",
+        "12/26/2017",
+        "1/1/2018",
+        "3/30/2018",
+        "4/2/2018",
+        "5/1/2018",
+        "5/10/2018",
+        "5/21/2018",
+        "8/1/2018",
+        "12/25/2018",
+        "12/26/2018",
+        "1/1/2019",
+        "4/19/2019",
+        "4/22/2019",
+        "5/1/2019",
+        "5/30/2019",
+        "6/10/2019",
+        "8/1/2019",
+        "12/25/2019",
+        "12/26/2019",
+        "1/1/2020",
+        "4/10/2020",
+        "4/13/2020",
+        "5/1/2020",
+        "6/1/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "4/2/2021",
+        "4/5/2021",
+        "5/13/2021",
+        "5/24/2021",
+        "12/24/2021",
+        "12/31/2021",
+        "4/15/2022",
+        "4/18/2022",
+        "5/26/2022",
+        "6/6/2022",
+        "8/1/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-fxcm-DE10YBEUR": {
       "dataTimeZone": "UTC",
@@ -851,7 +3907,54 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017",
+        "5/1/2017",
+        "6/5/2017",
+        "10/3/2017",
+        "10/31/2017",
+        "12/25/2017",
+        "12/26/2017",
+        "1/1/2018",
+        "3/30/2018",
+        "4/2/2018",
+        "5/1/2018",
+        "5/21/2018",
+        "10/3/2018",
+        "10/31/2018",
+        "12/25/2018",
+        "12/26/2018",
+        "1/1/2019",
+        "4/19/2019",
+        "4/22/2019",
+        "5/1/2019",
+        "6/10/2019",
+        "10/3/2019",
+        "10/31/2019",
+        "12/25/2019",
+        "12/26/2019",
+        "1/1/2020",
+        "4/10/2020",
+        "4/13/2020",
+        "5/1/2020",
+        "6/1/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "4/2/2021",
+        "4/5/2021",
+        "5/1/2021",
+        "5/24/2021",
+        "12/24/2021",
+        "12/31/2021",
+        "4/15/2022",
+        "4/18/2022",
+        "5/1/2022",
+        "6/6/2022",
+        "10/3/2022",
+        "10/31/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-fxcm-DE30EUR": {
       "dataTimeZone": "UTC",
@@ -893,7 +3996,54 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017",
+        "5/1/2017",
+        "6/5/2017",
+        "10/3/2017",
+        "10/31/2017",
+        "12/25/2017",
+        "12/26/2017",
+        "1/1/2018",
+        "3/30/2018",
+        "4/2/2018",
+        "5/1/2018",
+        "5/21/2018",
+        "10/3/2018",
+        "10/31/2018",
+        "12/25/2018",
+        "12/26/2018",
+        "1/1/2019",
+        "4/19/2019",
+        "4/22/2019",
+        "5/1/2019",
+        "6/10/2019",
+        "10/3/2019",
+        "10/31/2019",
+        "12/25/2019",
+        "12/26/2019",
+        "1/1/2020",
+        "4/10/2020",
+        "4/13/2020",
+        "5/1/2020",
+        "6/1/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "4/2/2021",
+        "4/5/2021",
+        "5/1/2021",
+        "5/24/2021",
+        "12/24/2021",
+        "12/31/2021",
+        "4/15/2022",
+        "4/18/2022",
+        "5/1/2022",
+        "6/6/2022",
+        "10/3/2022",
+        "10/31/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-fxcm-DXYUSD": {
       "dataTimeZone": "UTC",
@@ -983,7 +4133,10 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017"
+      ]
     },
     "Cfd-fxcm-EU50EUR": {
       "dataTimeZone": "UTC",
@@ -1025,7 +4178,39 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017",
+        "5/1/2017",
+        "12/25/2017",
+        "12/26/2017",
+        "1/1/2018",
+        "3/30/2018",
+        "4/2/2018",
+        "5/1/2018",
+        "12/25/2018",
+        "12/26/2018",
+        "1/1/2019",
+        "4/19/2019",
+        "4/22/2019",
+        "5/1/2019",
+        "12/25/2019",
+        "12/26/2019",
+        "1/1/2020",
+        "4/10/2020",
+        "4/13/2020",
+        "5/1/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "4/2/2021",
+        "4/5/2021",
+        "12/24/2021",
+        "12/31/2021",
+        "4/15/2022",
+        "4/18/2022",
+        "12/26/2022"
+
+      ]
     },
     "Cfd-fxcm-FR40EUR": {
       "dataTimeZone": "UTC",
@@ -1067,7 +4252,36 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017",
+        "5/1/2017",
+        "12/25/2017",
+        "12/26/2017",
+        "1/1/2018",
+        "3/20/2018",
+        "4/2/2018",
+        "5/1/2018",
+        "12/25/2018",
+        "12/26/2018",
+        "1/1/2019",
+        "4/19/2019",
+        "4/22/2019",
+        "5/1/2019",
+        "12/25/2019",
+        "12/26/2019",
+        "1/1/2020",
+        "4/10/2020",
+        "4/13/2020",
+        "5/1/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "4/2/2021",
+        "4/5/2021",
+        "4/15/2022",
+        "4/18/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-fxcm-HK33HKD": {
       "dataTimeZone": "UTC",
@@ -1134,7 +4348,93 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "1/2/2017",
+        "1/30/2017",
+        "1/31/2017",
+        "4/4/2017",
+        "4/14/2017",
+        "4/17/2017",
+        "5/1/2017",
+        "5/3/2017",
+        "5/30/2017",
+        "10/2/2017",
+        "10/5/2017",
+        "12/25/2017",
+        "12/26/2017",
+        "1/1/2018",
+        "2/16/2018",
+        "2/19/2018",
+        "3/30/2018",
+        "4/2/2018",
+        "4/5/2018",
+        "5/1/2018",
+        "5/22/2018",
+        "6/18/2018",
+        "7/2/2018",
+        "9/25/2018",
+        "10/1/2018",
+        "10/17/2018",
+        "12/25/2018",
+        "12/26/2018",
+        "1/1/2019",
+        "2/5/2019",
+        "2/6/2019",
+        "2/7/2019",
+        "4/5/2019",
+        "4/19/2019",
+        "4/22/2019",
+        "5/1/2019",
+        "5/13/2019",
+        "6/7/2019",
+        "7/1/2019",
+        "10/1/2019",
+        "10/7/2019",
+        "12/25/2019",
+        "12/26/2019",
+        "1/1/2020",
+        "1/27/2020",
+        "1/28/2020",
+        "4/6/2020",
+        "4/10/2020",
+        "4/13/2020",
+        "4/30/2020",
+        "5/1/2020",
+        "6/25/2020",
+        "7/1/2020",
+        "10/1/2020",
+        "10/2/2020",
+        "10/26/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "2/12/2021",
+        "2/15/2021",
+        "4/2/2021",
+        "4/5/2021",
+        "4/6/2021",
+        "5/19/2021",
+        "6/14/2021",
+        "7/01/2021",
+        "9/22/2021",
+        "10/01/2021",
+        "10/14/2021",
+        "12/27/2021",
+        "2/1/2022",
+        "2/2/2022",
+        "2/3/2022",
+        "4/5/2022",
+        "4/15/2022",
+        "4/18/2022",
+        "5/2/2022",
+        "5/9/2022",
+        "6/3/2022",
+        "7/1/2022",
+        "9/12/2022",
+        "10/4/2022",
+        "12/26/2022",
+        "12/27/2022"
+
+      ]
     },
     "Cfd-fxcm-IT40EUR": {
       "dataTimeZone": "UTC",
@@ -1176,7 +4476,48 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017",
+        "5/1/2017",
+        "8/15/2017",
+        "12/25/2017",
+        "12/26/2017",
+        "1/1/2018",
+        "3/30/2018",
+        "4/2/2018",
+        "5/1/2018",
+        "8/15/2018",
+        "12/24/2018",
+        "12/25/2018",
+        "12/26/2018",
+        "12/31/2018",
+        "1/1/2019",
+        "4/19/2019",
+        "4/22/2019",
+        "5/1/2019",
+        "8/15/2019",
+        "12/24/2019",
+        "12/25/2019",
+        "12/26/2019",
+        "12/31/2019",
+        "1/1/2020",
+        "4/10/2020",
+        "4/13/2020",
+        "5/1/2020",
+        "12/24/2020",
+        "12/25/2020",
+        "12/31/2020",
+        "1/1/2021",
+        "4/2/2021",
+        "4/5/2021",
+        "12/24/2021",
+        "12/31/2021",
+        "4/15/2022",
+        "4/18/2022",
+        "8/15/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-fxcm-JP225JPY": {
       "dataTimeZone": "UTC",
@@ -1218,7 +4559,26 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "12/25/2017",
+        "1/1/2018",
+        "3/30/2018",
+        "12/25/2018",
+        "1/1/2019",
+        "4/19/2019",
+        "12/25/2019",
+        "1/1/2020",
+        "4/10/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "4/2/2021",
+        "12/24/2021",
+        "12/31/2021",
+        "4/15/2022",
+        "12/26/2022",
+        "1/2/2023"
+      ]
     },
     "Cfd-fxcm-NAS100USD": {
       "dataTimeZone": "UTC",
@@ -1286,7 +4646,26 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "12/25/2017",
+        "1/1/2018",
+        "3/30/2018",
+        "12/25/2018",
+        "1/1/2019",
+        "4/19/2019",
+        "12/25/2019",
+        "1/1/2020",
+        "4/10/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "4/2/2021",
+        "12/24/2021",
+        "12/31/2021",
+        "4/15/2022",
+        "12/26/2022",
+        "1/2/2023"
+      ]
     },
     "Cfd-fxcm-NATGASUSD": {
       "dataTimeZone": "UTC",
@@ -1354,7 +4733,59 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "1/2/2017",
+        "1/16/2017",
+        "2/20/2017",
+        "4/14/2017",
+        "5/29/2017",
+        "7/4/2017",
+        "9/4/2017",
+        "11/23/2017",
+        "12/25/2017",
+        "1/1/2018",
+        "1/15/2018",
+        "2/19/2018",
+        "3/30/2018",
+        "5/28/2018",
+        "7/4/2018",
+        "9/3/2018",
+        "11/22/2018",
+        "12/29/2018",
+        "1/1/2019",
+        "1/21/2019",
+        "2/18/2019",
+        "4/19/2019",
+        "5/27/2019",
+        "7/4/2019",
+        "9/2/2019",
+        "11/28/2019",
+        "12/25/2019",
+        "1/1/2020",
+        "1/20/2020",
+        "2/17/2020",
+        "4/10/2020",
+        "5/25/2020",
+        "9/7/2020",
+        "11/26/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "1/18/2021",
+        "2/15/2021",
+        "4/2/2021",
+        "5/31/2021",
+        "9/6/2021",
+        "11/25/2021",
+        "12/24/2021",
+        "1/17/2022",
+        "2/21/2022",
+        "4/15/2022",
+        "5/30/2022",
+        "7/4/2022",
+        "9/5/2022",
+        "11/24/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-fxcm-SPX500USD": {
       "dataTimeZone": "UTC",
@@ -1422,7 +4853,26 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "12/25/2017",
+        "1/1/2018",
+        "3/30/2018",
+        "12/25/2018",
+        "1/1/2019",
+        "4/19/2019",
+        "12/25/2019",
+        "1/1/2020",
+        "4/10/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "4/2/2021",
+        "12/24/2021",
+        "12/31/2021",
+        "4/15/2022",
+        "12/26/2022",
+        "1/2/2023"
+      ]
     },
     "Cfd-fxcm-UK100GBP": {
       "dataTimeZone": "UTC",
@@ -1464,7 +4914,36 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017",
+        "5/1/2017",
+        "12/25/2017",
+        "12/26/2017",
+        "1/1/2018",
+        "3/20/2018",
+        "4/2/2018",
+        "5/1/2018",
+        "12/25/2018",
+        "12/26/2018",
+        "1/1/2019",
+        "4/19/2019",
+        "4/22/2019",
+        "5/1/2019",
+        "12/25/2019",
+        "12/26/2019",
+        "1/1/2020",
+        "4/10/2020",
+        "4/13/2020",
+        "5/1/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "4/2/2021",
+        "4/5/2021",
+        "4/15/2022",
+        "4/18/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-fxcm-US30USD": {
       "dataTimeZone": "UTC",
@@ -1532,7 +5011,62 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "1/2/2017",
+        "1/16/2017",
+        "2/20/2017",
+        "4/14/2017",
+        "5/29/2017",
+        "7/4/2017",
+        "9/4/2017",
+        "11/23/2017",
+        "12/25/2017",
+        "1/1/2018",
+        "1/15/2018",
+        "2/19/2018",
+        "3/30/2018",
+        "5/28/2018",
+        "7/4/2018",
+        "9/3/2018",
+        "11/22/2018",
+        "12/25/2018",
+        "1/1/2019",
+        "1/21/2019",
+        "2/18/2019",
+        "4/19/2019",
+        "5/27/2019",
+        "7/4/2019",
+        "9/2/2019",
+        "11/28/2019",
+        "12/25/2019",
+        "1/1/2020",
+        "1/20/2020",
+        "2/17/2020",
+        "4/10/2020",
+        "5/25/2020",
+        "7/3/2020",
+        "9/7/2020",
+        "11/26/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "1/18/2021",
+        "2/15/2021",
+        "4/2/2021",
+        "5/31/2021",
+        "7/5/2021",
+        "9/6/2021",
+        "11/25/2021",
+        "12/24/2021",
+        "12/31/2021",
+        "1/17/2022",
+        "2/21/2022",
+        "4/15/2022",
+        "5/13/2022",
+        "7/4/2022",
+        "9/5/2022",
+        "11/24/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-fxcm-WTICOUSD": {
       "dataTimeZone": "UTC",
@@ -1600,7 +5134,59 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "1/2/2017",
+        "1/16/2017",
+        "2/20/2017",
+        "4/14/2017",
+        "5/29/2017",
+        "7/4/2017",
+        "9/4/2017",
+        "11/23/2017",
+        "12/25/2017",
+        "1/1/2018",
+        "1/15/2018",
+        "2/19/2018",
+        "3/30/2018",
+        "5/28/2018",
+        "7/4/2018",
+        "9/3/2018",
+        "11/22/2018",
+        "12/29/2018",
+        "1/1/2019",
+        "1/21/2019",
+        "2/18/2019",
+        "4/19/2019",
+        "5/27/2019",
+        "7/4/2019",
+        "9/2/2019",
+        "11/28/2019",
+        "12/25/2019",
+        "1/1/2020",
+        "1/20/2020",
+        "2/17/2020",
+        "4/10/2020",
+        "5/25/2020",
+        "9/7/2020",
+        "11/26/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "1/18/2021",
+        "2/15/2021",
+        "4/2/2021",
+        "5/31/2021",
+        "9/6/2021",
+        "11/25/2021",
+        "12/24/2021",
+        "1/17/2022",
+        "2/21/2022",
+        "4/15/2022",
+        "5/30/2022",
+        "7/4/2022",
+        "9/5/2022",
+        "11/24/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-fxcm-XAGUSD": {
       "dataTimeZone": "UTC",
@@ -1668,7 +5254,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-fxcm-XAUUSD": {
       "dataTimeZone": "UTC",
@@ -1736,7 +5324,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-fxcm-XCUUSD": {
       "dataTimeZone": "UTC",
@@ -1804,7 +5394,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-fxcm-XPDUSD": {
       "dataTimeZone": "UTC",
@@ -1872,7 +5464,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-fxcm-XPTUSD": {
       "dataTimeZone": "UTC",
@@ -1940,7 +5534,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-[*]": {
       "dataTimeZone": "UTC",
@@ -2081,7 +5677,56 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "1/2/2017",
+        "1/26/2017",
+        "4/14/2017",
+        "4/17/2017",
+        "4/25/2017",
+        "6/12/2017",
+        "12/25/2017",
+        "12/26/2017",
+        "1/1/2018",
+        "1/26/2018",
+        "3/30/2018",
+        "4/2/2018",
+        "4/25/2018",
+        "6/11/2018",
+        "12/25/2018",
+        "12/26/2018",
+        "1/1/2019",
+        "1/28/2019",
+        "4/19/2019",
+        "4/22/2019",
+        "4/25/2019",
+        "6/10/2019",
+        "12/25/2019",
+        "12/26/2019",
+        "1/1/2020",
+        "1/27/2020",
+        "4/10/2020",
+        "4/13/2020",
+        "4/27/2020",
+        "6/8/2020",
+        "12/25/2020",
+        "12/26/2020",
+        "1/1/2021",
+        "1/26/2021",
+        "4/2/2021",
+        "4/5/2021",
+        "4/26/2021",
+        "6/14/2021",
+        "12/27/2021",
+        "12/28/2021",
+        "1/3/2022",
+        "1/26/2022",
+        "4/15/2022",
+        "4/18/2022",
+        "4/25/2022",
+        "6/13/2022",
+        "12/26/2022",
+        "12/27/2022"
+      ]
     },
     "Cfd-oanda-BCOUSD": {
       "dataTimeZone": "UTC",
@@ -2149,7 +5794,22 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "12/25/2017",
+        "1/1/2018",
+        "3/30/2018",
+        "12/25/2018",
+        "1/1/2019",
+        "12/25/2019",
+        "1/1/2020",
+        "4/10/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "4/2/2021",
+        "4/15/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-oanda-CH20CHF": {
       "dataTimeZone": "UTC",
@@ -2191,7 +5851,54 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "1/2/2017",
+        "4/14/2017",
+        "4/17/2017",
+        "5/1/2017",
+        "5/25/2017",
+        "6/5/2017",
+        "8/1/2017",
+        "12/25/2017",
+        "12/26/2017",
+        "1/1/2018",
+        "3/30/2018",
+        "4/2/2018",
+        "5/1/2018",
+        "5/10/2018",
+        "5/21/2018",
+        "8/1/2018",
+        "12/25/2018",
+        "12/26/2018",
+        "1/1/2019",
+        "4/19/2019",
+        "4/22/2019",
+        "5/1/2019",
+        "5/30/2019",
+        "6/10/2019",
+        "8/1/2019",
+        "12/25/2019",
+        "12/26/2019",
+        "1/1/2020",
+        "4/10/2020",
+        "4/13/2020",
+        "5/1/2020",
+        "6/1/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "4/2/2021",
+        "4/5/2021",
+        "5/13/2021",
+        "5/24/2021",
+        "12/24/2021",
+        "12/31/2021",
+        "4/15/2022",
+        "4/18/2022",
+        "5/26/2022",
+        "6/6/2022",
+        "8/1/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-oanda-CORNUSD": {
       "dataTimeZone": "UTC",
@@ -2284,7 +5991,62 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "1/2/2017",
+        "1/16/2017",
+        "2/20/2017",
+        "4/14/2017",
+        "5/29/2017",
+        "7/4/2017",
+        "9/4/2017",
+        "11/23/2017",
+        "12/25/2017",
+        "1/1/2018",
+        "1/15/2018",
+        "2/19/2018",
+        "3/30/2018",
+        "5/28/2018",
+        "7/4/2018",
+        "9/3/2018",
+        "11/22/2018",
+        "12/25/2018",
+        "1/1/2019",
+        "1/21/2019",
+        "2/18/2019",
+        "4/19/2019",
+        "5/27/2019",
+        "7/4/2019",
+        "9/2/2019",
+        "11/28/2019",
+        "12/25/2019",
+        "1/1/2020",
+        "1/20/2020",
+        "2/17/2020",
+        "4/10/2020",
+        "5/25/2020",
+        "7/3/2020",
+        "9/7/2020",
+        "11/26/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "1/18/2021",
+        "2/15/2021",
+        "4/2/2021",
+        "5/31/2021",
+        "7/5/2021",
+        "9/6/2021",
+        "11/25/2021",
+        "12/24/2021",
+        "12/31/2021",
+        "1/17/2022",
+        "2/21/2022",
+        "4/15/2022",
+        "5/13/2022",
+        "7/4/2022",
+        "9/5/2022",
+        "11/24/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-oanda-DE10YBEUR": {
       "dataTimeZone": "UTC",
@@ -2326,7 +6088,54 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017",
+        "5/1/2017",
+        "6/5/2017",
+        "10/3/2017",
+        "10/31/2017",
+        "12/25/2017",
+        "12/26/2017",
+        "1/1/2018",
+        "3/30/2018",
+        "4/2/2018",
+        "5/1/2018",
+        "5/21/2018",
+        "10/3/2018",
+        "10/31/2018",
+        "12/25/2018",
+        "12/26/2018",
+        "1/1/2019",
+        "4/19/2019",
+        "4/22/2019",
+        "5/1/2019",
+        "6/10/2019",
+        "10/3/2019",
+        "10/31/2019",
+        "12/25/2019",
+        "12/26/2019",
+        "1/1/2020",
+        "4/10/2020",
+        "4/13/2020",
+        "5/1/2020",
+        "6/1/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "4/2/2021",
+        "4/5/2021",
+        "5/1/2021",
+        "5/24/2021",
+        "12/24/2021",
+        "12/31/2021",
+        "4/15/2022",
+        "4/18/2022",
+        "5/1/2022",
+        "6/6/2022",
+        "10/3/2022",
+        "10/31/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-oanda-DE30EUR": {
       "dataTimeZone": "UTC",
@@ -2368,7 +6177,54 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017",
+        "5/1/2017",
+        "6/5/2017",
+        "10/3/2017",
+        "10/31/2017",
+        "12/25/2017",
+        "12/26/2017",
+        "1/1/2018",
+        "3/30/2018",
+        "4/2/2018",
+        "5/1/2018",
+        "5/21/2018",
+        "10/3/2018",
+        "10/31/2018",
+        "12/25/2018",
+        "12/26/2018",
+        "1/1/2019",
+        "4/19/2019",
+        "4/22/2019",
+        "5/1/2019",
+        "6/10/2019",
+        "10/3/2019",
+        "10/31/2019",
+        "12/25/2019",
+        "12/26/2019",
+        "1/1/2020",
+        "4/10/2020",
+        "4/13/2020",
+        "5/1/2020",
+        "6/1/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "4/2/2021",
+        "4/5/2021",
+        "5/1/2021",
+        "5/24/2021",
+        "12/24/2021",
+        "12/31/2021",
+        "4/15/2022",
+        "4/18/2022",
+        "5/1/2022",
+        "6/6/2022",
+        "10/3/2022",
+        "10/31/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-oanda-EU50EUR": {
       "dataTimeZone": "UTC",
@@ -2410,7 +6266,38 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017",
+        "5/1/2017",
+        "12/25/2017",
+        "12/26/2017",
+        "1/1/2018",
+        "3/30/2018",
+        "4/2/2018",
+        "5/1/2018",
+        "12/25/2018",
+        "12/26/2018",
+        "1/1/2019",
+        "4/19/2019",
+        "4/22/2019",
+        "5/1/2019",
+        "12/25/2019",
+        "12/26/2019",
+        "1/1/2020",
+        "4/10/2020",
+        "4/13/2020",
+        "5/1/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "4/2/2021",
+        "4/5/2021",
+        "12/24/2021",
+        "12/31/2021",
+        "4/15/2022",
+        "4/18/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-oanda-FR40EUR": {
       "dataTimeZone": "UTC",
@@ -2452,7 +6339,36 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017",
+        "5/1/2017",
+        "12/25/2017",
+        "12/26/2017",
+        "1/1/2018",
+        "3/20/2018",
+        "4/2/2018",
+        "5/1/2018",
+        "12/25/2018",
+        "12/26/2018",
+        "1/1/2019",
+        "4/19/2019",
+        "4/22/2019",
+        "5/1/2019",
+        "12/25/2019",
+        "12/26/2019",
+        "1/1/2020",
+        "4/10/2020",
+        "4/13/2020",
+        "5/1/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "4/2/2021",
+        "4/5/2021",
+        "4/15/2022",
+        "4/18/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-oanda-HK33HKD": {
       "dataTimeZone": "UTC",
@@ -2544,7 +6460,92 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "1/2/2017",
+        "1/30/2017",
+        "1/31/2017",
+        "4/4/2017",
+        "4/14/2017",
+        "4/17/2017",
+        "5/1/2017",
+        "5/3/2017",
+        "5/30/2017",
+        "10/2/2017",
+        "10/5/2017",
+        "12/25/2017",
+        "12/26/2017",
+        "1/1/2018",
+        "2/16/2018",
+        "2/19/2018",
+        "3/30/2018",
+        "4/2/2018",
+        "4/5/2018",
+        "5/1/2018",
+        "5/22/2018",
+        "6/18/2018",
+        "7/2/2018",
+        "9/25/2018",
+        "10/1/2018",
+        "10/17/2018",
+        "12/25/2018",
+        "12/26/2018",
+        "1/1/2019",
+        "2/5/2019",
+        "2/6/2019",
+        "2/7/2019",
+        "4/5/2019",
+        "4/19/2019",
+        "4/22/2019",
+        "5/1/2019",
+        "5/13/2019",
+        "6/7/2019",
+        "7/1/2019",
+        "10/1/2019",
+        "10/7/2019",
+        "12/25/2019",
+        "12/26/2019",
+        "1/1/2020",
+        "1/27/2020",
+        "1/28/2020",
+        "4/6/2020",
+        "4/10/2020",
+        "4/13/2020",
+        "4/30/2020",
+        "5/1/2020",
+        "6/25/2020",
+        "7/1/2020",
+        "10/1/2020",
+        "10/2/2020",
+        "10/26/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "2/12/2021",
+        "2/15/2021",
+        "4/2/2021",
+        "4/5/2021",
+        "4/6/2021",
+        "5/19/2021",
+        "6/14/2021",
+        "7/01/2021",
+        "9/22/2021",
+        "10/01/2021",
+        "10/14/2021",
+        "12/27/2021",
+        "2/1/2022",
+        "2/2/2022",
+        "2/3/2022",
+        "4/5/2022",
+        "4/15/2022",
+        "4/18/2022",
+        "5/2/2022",
+        "5/9/2022",
+        "6/3/2022",
+        "7/1/2022",
+        "9/12/2022",
+        "10/4/2022",
+        "12/26/2022",
+        "12/27/2022"
+      ]
     },
     "Cfd-oanda-JP225USD": {
       "dataTimeZone": "UTC",
@@ -2637,7 +6638,26 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "12/25/2017",
+        "1/1/2018",
+        "3/30/2018",
+        "12/25/2018",
+        "1/1/2019",
+        "4/19/2019",
+        "12/25/2019",
+        "1/1/2020",
+        "4/10/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "4/2/2021",
+        "12/24/2021",
+        "12/31/2021",
+        "4/15/2022",
+        "12/26/2022",
+        "1/2/2023"
+      ]
     },
     "Cfd-oanda-NAS100USD": {
       "dataTimeZone": "UTC",
@@ -2730,7 +6750,26 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "12/25/2017",
+        "1/1/2018",
+        "3/30/2018",
+        "12/25/2018",
+        "1/1/2019",
+        "4/19/2019",
+        "12/25/2019",
+        "1/1/2020",
+        "4/10/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "4/2/2021",
+        "12/24/2021",
+        "12/31/2021",
+        "4/15/2022",
+        "12/26/2022",
+        "1/2/2023"
+      ]
     },
     "Cfd-oanda-NATGASUSD": {
       "dataTimeZone": "UTC",
@@ -2798,7 +6837,59 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "1/2/2017",
+        "1/16/2017",
+        "2/20/2017",
+        "4/14/2017",
+        "5/29/2017",
+        "7/4/2017",
+        "9/4/2017",
+        "11/23/2017",
+        "12/25/2017",
+        "1/1/2018",
+        "1/15/2018",
+        "2/19/2018",
+        "3/30/2018",
+        "5/28/2018",
+        "7/4/2018",
+        "9/3/2018",
+        "11/22/2018",
+        "12/29/2018",
+        "1/1/2019",
+        "1/21/2019",
+        "2/18/2019",
+        "4/19/2019",
+        "5/27/2019",
+        "7/4/2019",
+        "9/2/2019",
+        "11/28/2019",
+        "12/25/2019",
+        "1/1/2020",
+        "1/20/2020",
+        "2/17/2020",
+        "4/10/2020",
+        "5/25/2020",
+        "9/7/2020",
+        "11/26/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "1/18/2021",
+        "2/15/2021",
+        "4/2/2021",
+        "5/31/2021",
+        "9/6/2021",
+        "11/25/2021",
+        "12/24/2021",
+        "1/17/2022",
+        "2/21/2022",
+        "4/15/2022",
+        "5/30/2022",
+        "7/4/2022",
+        "9/5/2022",
+        "11/24/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-oanda-NL25EUR": {
       "dataTimeZone": "UTC",
@@ -2840,100 +6931,129 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017",
+        "5/1/2017",
+        "12/25/2017",
+        "12/26/2017",
+        "1/1/2018",
+        "3/20/2018",
+        "4/2/2018",
+        "5/1/2018",
+        "12/25/2018",
+        "12/26/2018",
+        "1/1/2019",
+        "4/19/2019",
+        "4/22/2019",
+        "5/1/2019",
+        "12/25/2019",
+        "12/26/2019",
+        "1/1/2020",
+        "4/10/2020",
+        "4/13/2020",
+        "5/1/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "4/2/2021",
+        "4/5/2021",
+        "4/15/2022",
+        "4/18/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-oanda-SG30SGD": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "Asia/Hong_Kong",
-      "sunday": [
-        {
-          "start": "18:15:00",
-          "end": "1.00:00:00",
-          "state": "market"
-        }
-      ],
+      "sunday": [],
       "monday": [
         {
-          "start": "00:00:00",
-          "end": "02:00:00",
-          "state": "market"
-        },
-        {
-          "start": "08:30:00",
-          "end": "17:10:00",
-          "state": "market"
-        },
-        {
-          "start": "18:15:00",
-          "end": "1.00:00:00",
+          "start": "09:00:00",
+          "end": "05:00:00",
           "state": "market"
         }
       ],
       "tuesday": [
         {
-          "start": "00:00:00",
-          "end": "02:00:00",
-          "state": "market"
-        },
-        {
-          "start": "08:30:00",
-          "end": "17:10:00",
-          "state": "market"
-        },
-        {
-          "start": "18:15:00",
-          "end": "1.00:00:00",
+          "start": "09:00:00",
+          "end": "05:00:00",
           "state": "market"
         }
       ],
       "wednesday": [
         {
-          "start": "00:00:00",
-          "end": "02:00:00",
-          "state": "market"
-        },
-        {
-          "start": "08:30:00",
-          "end": "17:10:00",
-          "state": "market"
-        },
-        {
-          "start": "18:15:00",
-          "end": "1.00:00:00",
+          "start": "09:00:00",
+          "end": "05:00:00",
           "state": "market"
         }
       ],
       "thursday": [
         {
-          "start": "00:00:00",
-          "end": "02:00:00",
-          "state": "market"
-        },
-        {
-          "start": "08:30:00",
-          "end": "17:10:00",
-          "state": "market"
-        },
-        {
-          "start": "18:15:00",
-          "end": "1.00:00:00",
+          "start": "09:00:00",
+          "end": "05:00:00",
           "state": "market"
         }
       ],
       "friday": [
         {
-          "start": "00:00:00",
-          "end": "02:00:00",
-          "state": "market"
-        },
-        {
-          "start": "08:30:00",
-          "end": "17:10:00",
+          "start": "09:00:00",
+          "end": "05:00:00",
           "state": "market"
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "2/15/2010",
+        "2/13/2011",
+        "1/23/2012",
+        "2/11/2013",
+        "1/31/2014",
+        "2/19/2015",
+        "2/8/2016",
+        "1/30/2017",
+        "2/16/2018",
+        "2/5/2019",
+        "1/27/2020",
+        "4/14/2017",
+        "1/2/2017",
+        "5/1/2017",
+        "5/10/2017",
+        "6/26/2017",
+        "8/9/2017",
+        "9/1/2017",
+        "10/18/2017",
+        "12/25/2017",
+        "1/1/2018",
+        "2/16/2018",
+        "3/30/2018",
+        "5/1/2018",
+        "8/9/2018",
+        "12/25/2018",
+        "1/1/2019",
+        "2/5/2019",
+        "4/19/2019",
+        "5/1/2019",
+        "8/9/2019",
+        "12/25/2019",
+        "1/1/2020",
+        "1/25/2020",
+        "4/10/2020",
+        "5/1/2020",
+        "8/10/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "2/12/2021",
+        "4/2/2021",
+        "5/1/2021",
+        "8/9/2021",
+        "12/25/2021",
+        "1/1/2022",
+        "2/1/2022",
+        "4/15/2022",
+        "5/2/2022",
+        "8/9/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-oanda-SOYBNUSD": {
       "dataTimeZone": "UTC",
@@ -3026,7 +7146,62 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "1/2/2017",
+        "1/16/2017",
+        "2/20/2017",
+        "4/14/2017",
+        "5/29/2017",
+        "7/4/2017",
+        "9/4/2017",
+        "11/23/2017",
+        "12/25/2017",
+        "1/1/2018",
+        "1/15/2018",
+        "2/19/2018",
+        "3/30/2018",
+        "5/28/2018",
+        "7/4/2018",
+        "9/3/2018",
+        "11/22/2018",
+        "12/25/2018",
+        "1/1/2019",
+        "1/21/2019",
+        "2/18/2019",
+        "4/19/2019",
+        "5/27/2019",
+        "7/4/2019",
+        "9/2/2019",
+        "11/28/2019",
+        "12/25/2019",
+        "1/1/2020",
+        "1/20/2020",
+        "2/17/2020",
+        "4/10/2020",
+        "5/25/2020",
+        "7/3/2020",
+        "9/7/2020",
+        "11/26/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "1/18/2021",
+        "2/15/2021",
+        "4/2/2021",
+        "5/31/2021",
+        "7/5/2021",
+        "9/6/2021",
+        "11/25/2021",
+        "12/24/2021",
+        "12/31/2021",
+        "1/17/2022",
+        "2/21/2022",
+        "4/15/2022",
+        "5/13/2022",
+        "7/4/2022",
+        "9/5/2022",
+        "11/24/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-oanda-SPX500USD": {
       "dataTimeZone": "UTC",
@@ -3119,7 +7294,26 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "12/25/2017",
+        "1/1/2018",
+        "3/30/2018",
+        "12/25/2018",
+        "1/1/2019",
+        "4/19/2019",
+        "12/25/2019",
+        "1/1/2020",
+        "4/10/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "4/2/2021",
+        "12/24/2021",
+        "12/31/2021",
+        "4/15/2022",
+        "12/26/2022",
+        "1/2/2023"
+      ]
     },
     "Cfd-oanda-SUGARUSD": {
       "dataTimeZone": "UTC",
@@ -3161,7 +7355,61 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "1/2/2017",
+        "1/16/2017",
+        "2/20/2017",
+        "4/14/2017",
+        "5/29/2017",
+        "7/4/2017",
+        "9/4/2017",
+        "11/23/2017",
+        "12/25/2017",
+        "1/1/2018",
+        "1/15/2018",
+        "2/19/2018",
+        "3/30/2018",
+        "5/28/2018",
+        "7/4/2018",
+        "9/3/2018",
+        "11/22/2018",
+        "12/25/2018",
+        "1/1/2019",
+        "1/21/2019",
+        "2/18/2019",
+        "4/19/2019",
+        "5/27/2019",
+        "7/4/2019",
+        "9/2/2019",
+        "11/28/2019",
+        "12/25/2019",
+        "1/1/2020",
+        "1/20/2020",
+        "2/17/2020",
+        "4/10/2020",
+        "5/25/2020",
+        "7/3/2020",
+        "9/7/2020",
+        "11/26/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "1/18/2021",
+        "2/15/2021",
+        "4/2/2021",
+        "5/31/2021",
+        "7/5/2021",
+        "9/6/2021",
+        "11/25/2021",
+        "12/24/2021",
+        "1/17/2022",
+        "2/21/2022",
+        "4/15/2022",
+        "5/30/2022",
+        "7/4/2022",
+        "9/5/2022",
+        "11/24/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-oanda-UK100GBP": {
       "dataTimeZone": "UTC",
@@ -3203,7 +7451,36 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017",
+        "5/1/2017",
+        "12/25/2017",
+        "12/26/2017",
+        "1/1/2018",
+        "3/20/2018",
+        "4/2/2018",
+        "5/1/2018",
+        "12/25/2018",
+        "12/26/2018",
+        "1/1/2019",
+        "4/19/2019",
+        "4/22/2019",
+        "5/1/2019",
+        "12/25/2019",
+        "12/26/2019",
+        "1/1/2020",
+        "4/10/2020",
+        "4/13/2020",
+        "5/1/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "4/2/2021",
+        "4/5/2021",
+        "4/15/2022",
+        "4/18/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-oanda-UK10YBGBP": {
       "dataTimeZone": "UTC",
@@ -3245,7 +7522,36 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017",
+        "4/17/2017",
+        "5/1/2017",
+        "12/25/2017",
+        "12/26/2017",
+        "1/1/2018",
+        "3/20/2018",
+        "4/2/2018",
+        "5/1/2018",
+        "12/25/2018",
+        "12/26/2018",
+        "1/1/2019",
+        "4/19/2019",
+        "4/22/2019",
+        "5/1/2019",
+        "12/25/2019",
+        "12/26/2019",
+        "1/1/2020",
+        "4/10/2020",
+        "4/13/2020",
+        "5/1/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "4/2/2021",
+        "4/5/2021",
+        "4/15/2022",
+        "4/18/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-oanda-US2000USD": {
       "dataTimeZone": "UTC",
@@ -3313,7 +7619,25 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "1/2/2017",
+        "4/14/2017",
+        "12/25/2017",
+        "1/1/2018",
+        "3/30/2018",
+        "12/25/2018",
+        "1/1/2019",
+        "4/19/2019",
+        "12/25/2019",
+        "1/1/2020",
+        "4/10/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "4/2/2021",
+        "12/24/2021",
+        "4/15/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-oanda-US30USD": {
       "dataTimeZone": "UTC",
@@ -3406,7 +7730,62 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "1/2/2017",
+        "1/16/2017",
+        "2/20/2017",
+        "4/14/2017",
+        "5/29/2017",
+        "7/4/2017",
+        "9/4/2017",
+        "11/23/2017",
+        "12/25/2017",
+        "1/1/2018",
+        "1/15/2018",
+        "2/19/2018",
+        "3/30/2018",
+        "5/28/2018",
+        "7/4/2018",
+        "9/3/2018",
+        "11/22/2018",
+        "12/25/2018",
+        "1/1/2019",
+        "1/21/2019",
+        "2/18/2019",
+        "4/19/2019",
+        "5/27/2019",
+        "7/4/2019",
+        "9/2/2019",
+        "11/28/2019",
+        "12/25/2019",
+        "1/1/2020",
+        "1/20/2020",
+        "2/17/2020",
+        "4/10/2020",
+        "5/25/2020",
+        "7/3/2020",
+        "9/7/2020",
+        "11/26/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "1/18/2021",
+        "2/15/2021",
+        "4/2/2021",
+        "5/31/2021",
+        "7/5/2021",
+        "9/6/2021",
+        "11/25/2021",
+        "12/24/2021",
+        "12/31/2021",
+        "1/17/2022",
+        "2/21/2022",
+        "4/15/2022",
+        "5/13/2022",
+        "7/4/2022",
+        "9/5/2022",
+        "11/24/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-oanda-USB02YUSD": {
       "dataTimeZone": "UTC",
@@ -3474,7 +7853,62 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "1/2/2017",
+        "1/16/2017",
+        "2/20/2017",
+        "4/14/2017",
+        "5/29/2017",
+        "7/4/2017",
+        "9/4/2017",
+        "11/23/2017",
+        "12/25/2017",
+        "1/1/2018",
+        "1/15/2018",
+        "2/19/2018",
+        "3/30/2018",
+        "5/28/2018",
+        "7/4/2018",
+        "9/3/2018",
+        "11/22/2018",
+        "12/25/2018",
+        "1/1/2019",
+        "1/21/2019",
+        "2/18/2019",
+        "4/19/2019",
+        "5/27/2019",
+        "7/4/2019",
+        "9/2/2019",
+        "11/28/2019",
+        "12/25/2019",
+        "1/1/2020",
+        "1/20/2020",
+        "2/17/2020",
+        "4/10/2020",
+        "5/25/2020",
+        "7/3/2020",
+        "9/7/2020",
+        "11/26/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "1/18/2021",
+        "2/15/2021",
+        "4/2/2021",
+        "5/31/2021",
+        "7/5/2021",
+        "9/6/2021",
+        "11/25/2021",
+        "12/24/2021",
+        "12/31/2021",
+        "1/17/2022",
+        "2/21/2022",
+        "4/15/2022",
+        "5/13/2022",
+        "7/4/2022",
+        "9/5/2022",
+        "11/24/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-oanda-USB05YUSD": {
       "dataTimeZone": "UTC",
@@ -3542,7 +7976,62 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "1/2/2017",
+        "1/16/2017",
+        "2/20/2017",
+        "4/14/2017",
+        "5/29/2017",
+        "7/4/2017",
+        "9/4/2017",
+        "11/23/2017",
+        "12/25/2017",
+        "1/1/2018",
+        "1/15/2018",
+        "2/19/2018",
+        "3/30/2018",
+        "5/28/2018",
+        "7/4/2018",
+        "9/3/2018",
+        "11/22/2018",
+        "12/25/2018",
+        "1/1/2019",
+        "1/21/2019",
+        "2/18/2019",
+        "4/19/2019",
+        "5/27/2019",
+        "7/4/2019",
+        "9/2/2019",
+        "11/28/2019",
+        "12/25/2019",
+        "1/1/2020",
+        "1/20/2020",
+        "2/17/2020",
+        "4/10/2020",
+        "5/25/2020",
+        "7/3/2020",
+        "9/7/2020",
+        "11/26/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "1/18/2021",
+        "2/15/2021",
+        "4/2/2021",
+        "5/31/2021",
+        "7/5/2021",
+        "9/6/2021",
+        "11/25/2021",
+        "12/24/2021",
+        "12/31/2021",
+        "1/17/2022",
+        "2/21/2022",
+        "4/15/2022",
+        "5/13/2022",
+        "7/4/2022",
+        "9/5/2022",
+        "11/24/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-oanda-USB10YUSD": {
       "dataTimeZone": "UTC",
@@ -3610,7 +8099,62 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "1/2/2017",
+        "1/16/2017",
+        "2/20/2017",
+        "4/14/2017",
+        "5/29/2017",
+        "7/4/2017",
+        "9/4/2017",
+        "11/23/2017",
+        "12/25/2017",
+        "1/1/2018",
+        "1/15/2018",
+        "2/19/2018",
+        "3/30/2018",
+        "5/28/2018",
+        "7/4/2018",
+        "9/3/2018",
+        "11/22/2018",
+        "12/25/2018",
+        "1/1/2019",
+        "1/21/2019",
+        "2/18/2019",
+        "4/19/2019",
+        "5/27/2019",
+        "7/4/2019",
+        "9/2/2019",
+        "11/28/2019",
+        "12/25/2019",
+        "1/1/2020",
+        "1/20/2020",
+        "2/17/2020",
+        "4/10/2020",
+        "5/25/2020",
+        "7/3/2020",
+        "9/7/2020",
+        "11/26/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "1/18/2021",
+        "2/15/2021",
+        "4/2/2021",
+        "5/31/2021",
+        "7/5/2021",
+        "9/6/2021",
+        "11/25/2021",
+        "12/24/2021",
+        "12/31/2021",
+        "1/17/2022",
+        "2/21/2022",
+        "4/15/2022",
+        "5/13/2022",
+        "7/4/2022",
+        "9/5/2022",
+        "11/24/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-oanda-USB30YUSD": {
       "dataTimeZone": "UTC",
@@ -3678,7 +8222,62 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "1/2/2017",
+        "1/16/2017",
+        "2/20/2017",
+        "4/14/2017",
+        "5/29/2017",
+        "7/4/2017",
+        "9/4/2017",
+        "11/23/2017",
+        "12/25/2017",
+        "1/1/2018",
+        "1/15/2018",
+        "2/19/2018",
+        "3/30/2018",
+        "5/28/2018",
+        "7/4/2018",
+        "9/3/2018",
+        "11/22/2018",
+        "12/25/2018",
+        "1/1/2019",
+        "1/21/2019",
+        "2/18/2019",
+        "4/19/2019",
+        "5/27/2019",
+        "7/4/2019",
+        "9/2/2019",
+        "11/28/2019",
+        "12/25/2019",
+        "1/1/2020",
+        "1/20/2020",
+        "2/17/2020",
+        "4/10/2020",
+        "5/25/2020",
+        "7/3/2020",
+        "9/7/2020",
+        "11/26/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "1/18/2021",
+        "2/15/2021",
+        "4/2/2021",
+        "5/31/2021",
+        "7/5/2021",
+        "9/6/2021",
+        "11/25/2021",
+        "12/24/2021",
+        "12/31/2021",
+        "1/17/2022",
+        "2/21/2022",
+        "4/15/2022",
+        "5/13/2022",
+        "7/4/2022",
+        "9/5/2022",
+        "11/24/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-oanda-WHEATUSD": {
       "dataTimeZone": "UTC",
@@ -3771,7 +8370,62 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "1/2/2017",
+        "1/16/2017",
+        "2/20/2017",
+        "4/14/2017",
+        "5/29/2017",
+        "7/4/2017",
+        "9/4/2017",
+        "11/23/2017",
+        "12/25/2017",
+        "1/1/2018",
+        "1/15/2018",
+        "2/19/2018",
+        "3/30/2018",
+        "5/28/2018",
+        "7/4/2018",
+        "9/3/2018",
+        "11/22/2018",
+        "12/25/2018",
+        "1/1/2019",
+        "1/21/2019",
+        "2/18/2019",
+        "4/19/2019",
+        "5/27/2019",
+        "7/4/2019",
+        "9/2/2019",
+        "11/28/2019",
+        "12/25/2019",
+        "1/1/2020",
+        "1/20/2020",
+        "2/17/2020",
+        "4/10/2020",
+        "5/25/2020",
+        "7/3/2020",
+        "9/7/2020",
+        "11/26/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "1/18/2021",
+        "2/15/2021",
+        "4/2/2021",
+        "5/31/2021",
+        "7/5/2021",
+        "9/6/2021",
+        "11/25/2021",
+        "12/24/2021",
+        "12/31/2021",
+        "1/17/2022",
+        "2/21/2022",
+        "4/15/2022",
+        "5/13/2022",
+        "7/4/2022",
+        "9/5/2022",
+        "11/24/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-oanda-WTICOUSD": {
       "dataTimeZone": "UTC",
@@ -3839,7 +8493,59 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "1/2/2017",
+        "1/16/2017",
+        "2/20/2017",
+        "4/14/2017",
+        "5/29/2017",
+        "7/4/2017",
+        "9/4/2017",
+        "11/23/2017",
+        "12/25/2017",
+        "1/1/2018",
+        "1/15/2018",
+        "2/19/2018",
+        "3/30/2018",
+        "5/28/2018",
+        "7/4/2018",
+        "9/3/2018",
+        "11/22/2018",
+        "12/29/2018",
+        "1/1/2019",
+        "1/21/2019",
+        "2/18/2019",
+        "4/19/2019",
+        "5/27/2019",
+        "7/4/2019",
+        "9/2/2019",
+        "11/28/2019",
+        "12/25/2019",
+        "1/1/2020",
+        "1/20/2020",
+        "2/17/2020",
+        "4/10/2020",
+        "5/25/2020",
+        "9/7/2020",
+        "11/26/2020",
+        "12/25/2020",
+        "1/1/2021",
+        "1/18/2021",
+        "2/15/2021",
+        "4/2/2021",
+        "5/31/2021",
+        "9/6/2021",
+        "11/25/2021",
+        "12/24/2021",
+        "1/17/2022",
+        "2/21/2022",
+        "4/15/2022",
+        "5/30/2022",
+        "7/4/2022",
+        "9/5/2022",
+        "11/24/2022",
+        "12/26/2022"
+      ]
     },
     "Cfd-oanda-XAGAUD": {
       "dataTimeZone": "UTC",
@@ -3907,7 +8613,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAGCAD": {
       "dataTimeZone": "UTC",
@@ -3975,7 +8683,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+
+      ]
     },
     "Cfd-oanda-XAGCHF": {
       "dataTimeZone": "UTC",
@@ -4043,7 +8753,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAGEUR": {
       "dataTimeZone": "UTC",
@@ -4111,7 +8823,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAGGBP": {
       "dataTimeZone": "UTC",
@@ -4179,7 +8893,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAGHKD": {
       "dataTimeZone": "UTC",
@@ -4247,7 +8963,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAGJPY": {
       "dataTimeZone": "UTC",
@@ -4315,7 +9033,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAGNZD": {
       "dataTimeZone": "UTC",
@@ -4383,7 +9103,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAGSGD": {
       "dataTimeZone": "UTC",
@@ -4451,7 +9173,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAGUSD": {
       "dataTimeZone": "UTC",
@@ -4519,7 +9243,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAUAUD": {
       "dataTimeZone": "UTC",
@@ -4587,7 +9313,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAUCAD": {
       "dataTimeZone": "UTC",
@@ -4655,7 +9383,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAUCHF": {
       "dataTimeZone": "UTC",
@@ -4723,7 +9453,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAUEUR": {
       "dataTimeZone": "UTC",
@@ -4791,7 +9523,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAUGBP": {
       "dataTimeZone": "UTC",
@@ -4859,7 +9593,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAUHKD": {
       "dataTimeZone": "UTC",
@@ -4927,7 +9663,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAUJPY": {
       "dataTimeZone": "UTC",
@@ -4995,7 +9733,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAUNZD": {
       "dataTimeZone": "UTC",
@@ -5063,7 +9803,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAUSGD": {
       "dataTimeZone": "UTC",
@@ -5131,7 +9873,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAUUSD": {
       "dataTimeZone": "UTC",
@@ -5199,7 +9943,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XAUXAG": {
       "dataTimeZone": "UTC",
@@ -5267,7 +10013,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XCUUSD": {
       "dataTimeZone": "UTC",
@@ -5335,7 +10083,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XPDUSD": {
       "dataTimeZone": "UTC",
@@ -5403,7 +10153,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]
     },
     "Cfd-oanda-XPTUSD": {
       "dataTimeZone": "UTC",
@@ -5471,7 +10223,9 @@
         }
       ],
       "saturday": [],
-      "holidays": []
+      "holidays": [
+        "4/14/2017"
+      ]    
     },
         "Forex-bitfinex-[*]": {
             "dataTimeZone": "UTC",

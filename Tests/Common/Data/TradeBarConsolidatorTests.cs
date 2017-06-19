@@ -460,6 +460,79 @@ namespace QuantConnect.Tests.Common.Data
 
             consolidator.Scan(reference + period);
             Assert.IsNotNull(consolidated);
+            Assert.AreEqual(reference, consolidated.Time);
+        }
+
+        [Test]
+        public void ConsolidatedPeriodEqualsTimeBasedConsolidatorPeriod()
+        {
+            TradeBar consolidated = null;
+            var period = TimeSpan.FromMinutes(2);
+            var consolidator = new TradeBarConsolidator(period);
+            consolidator.DataConsolidated += (sender, bar) =>
+            {
+                consolidated = bar;
+            };
+
+            var reference = new DateTime(2015, 04, 13, 10, 20, 0);
+            var time = reference;
+
+            consolidator.Update(new TradeBar { Time = time, Period = Time.OneMinute });
+            time = reference.Add(period);
+            consolidator.Scan(time);
+            Assert.IsNotNull(consolidated);
+            Assert.AreEqual(reference, consolidated.Time);
+            Assert.AreEqual(period, consolidated.Period);
+        }
+
+        [Test]
+        public void FiresEventAfterTimePassesViaScanWithMultipleResolutions()
+        {
+            TradeBar consolidated = null;
+            var period = TimeSpan.FromMinutes(2);
+            var consolidator = new TradeBarConsolidator(period);
+            consolidator.DataConsolidated += (sender, bar) =>
+            {
+                consolidated = bar;
+            };
+
+            var reference = new DateTime(2015, 04, 13, 10, 20, 0);
+            var time = reference; 
+
+            for (int i = 0; i < 10; i++)
+            {
+                consolidator.Update(new TradeBar {Time = time, Period = Time.OneSecond});
+                time = time.AddSeconds(1);
+                consolidator.Scan(time);
+                Assert.IsNull(consolidated);
+            }
+
+            consolidator.Update(new TradeBar { Time = time, Period = Time.OneMinute });
+            time = reference.Add(period);
+            consolidator.Scan(time);
+            Assert.IsNotNull(consolidated);
+            Assert.AreEqual(reference, consolidated.Time);
+            Assert.AreEqual(period, consolidated.Period);
+
+            consolidated = null;
+
+            consolidator.Update(new TradeBar { Time = time, Period = Time.OneSecond });
+            time = time.AddSeconds(1);
+            consolidator.Scan(time);
+            Assert.IsNull(consolidated);
+
+            time = time.AddSeconds(-1);
+            consolidator.Update(new TradeBar { Time = time, Period = Time.OneMinute });
+            time = time.AddMinutes(1);
+            consolidator.Scan(time);
+            Assert.IsNull(consolidated);
+
+            consolidator.Update(new TradeBar { Time = time, Period = Time.OneMinute });
+            time = time.AddMinutes(1);
+            consolidator.Scan(time);
+            Assert.IsNotNull(consolidated);
+            Assert.AreEqual(reference.AddMinutes(2), consolidated.Time);
+            Assert.AreEqual(period, consolidated.Period);
         }
 
         private readonly TimeSpan marketStop = new DateTime(2000, 1, 1, 12 + 4, 0, 0).TimeOfDay;

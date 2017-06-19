@@ -55,6 +55,14 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// The Kaufman Adaptive Moving Average
         /// </summary>
-        Kama
+        Kama,
+        /// <summary>
+        /// The Hull Moving Average
+        /// </summary>
+        Hull,
+        /// <summary>
+        /// The Arnaud Legoux Moving Average
+        /// </summary>
+        Alma
     }
 }

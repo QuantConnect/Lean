@@ -1,0 +1,128 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <!--This is the file that defines the IDs for all the commands exposed by VisualStudio. -->
+  <Extern href="stdidcmd.h" />
+
+  <!--This header contains the command ids for the menus provided by the shell. -->
+  <Extern href="vsshlids.h" />
+
+  
+
+  <Commands package="guidQuantConnectPackage">
+    <!--  Each element is identified by a command id that
+    is a unique pair of guid and numeric identifier; the guid part of the identifier is usually
+    called "command set" and is used to group different command inside a logically related
+    group; your package should define its own command set in order to avoid collisions
+    with command ids defined by other packages. -->
+
+
+    <Menus>
+      <Menu guid="guidQuantConnectToolsSet" id="ToolsSubMenu" priority="0x0100" type="Menu">  
+        <Parent guid="guidQuantConnectToolsSet" id="ToolsMenuGroup"/>  
+        <Strings>  
+          <ButtonText>QuantConnect</ButtonText>  
+          <CommandName>QuantConnect</CommandName>  
+        </Strings>  
+      </Menu>   
+    </Menus>
+
+    <Groups>
+      <Group guid="guidQuantConnectSolutionExplorerSet" id="SolutionExplorerMenuGroup" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE" />
+      </Group>
+      <Group guid="guidQuantConnectToolsSet" id="ToolsMenuGroup" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_TOOLS" />
+      </Group>
+      <Group guid="guidQuantConnectToolsSet" id="ToolsSubMenuGroup" priority="0x0600">
+        <Parent guid="guidQuantConnectToolsSet" id="ToolsSubMenu" />
+      </Group>
+    </Groups>
+
+
+    <Buttons>
+      <!--To define a menu group you have to specify its ID, the parent menu and its display priority.
+          The command is visible and enabled by default. If you need to change the visibility, status, etc, you can use
+          the CommandFlag node.
+          You can add more than one CommandFlag node e.g.:
+              <CommandFlag>DefaultInvisible</CommandFlag>
+              <CommandFlag>DynamicVisibility</CommandFlag>
+          If you do not want an image next to your command, remove the Icon node /> -->
+      <Button guid="guidQuantConnectSolutionExplorerSet" id="SendForBacktesting" priority="0x0100" type="Button">
+        <Parent guid="guidQuantConnectSolutionExplorerSet" id="SolutionExplorerMenuGroup" />
+        <Icon guid="quantConnectImages" id="bmpPic1" />
+        <Strings>
+          <ButtonText>Send for backtesting</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidQuantConnectSolutionExplorerSet" id="SaveToQuantConnect" priority="0x0101" type="Button">
+        <Parent guid="guidQuantConnectSolutionExplorerSet" id="SolutionExplorerMenuGroup" />
+        <Icon guid="quantConnectImages" id="bmpPic1" />
+        <Strings>
+          <ButtonText>Save to QuantConnect</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidQuantConnectToolsSet" id="LogInCommand" priority="0x0100" type="Button">
+        <Parent guid="guidQuantConnectToolsSet" id="ToolsSubMenuGroup" />
+        <Icon guid="quantConnectImages" id="bmpPic1" />
+        <Strings>
+          <ButtonText>Log in</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidQuantConnectToolsSet" id="LogOutCommand" priority="0x0100" type="Button">
+        <Parent guid="guidQuantConnectToolsSet" id="ToolsSubMenuGroup" />
+        <Icon guid="quantConnectImages" id="bmpPic1" />
+        <!-- A user need to log in first to enable log out button -->
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Log out</ButtonText>
+        </Strings>
+      </Button>
+    </Buttons>
+
+
+    <Bitmaps>
+      <!--  The bitmap id is defined in a way that is a little bit different from the others:
+            the declaration starts with a guid for the bitmap strip, then there is the resource id of the
+            bitmap strip containing the bitmaps and then there are the numeric ids of the elements used
+            inside a button definition. An important aspect of this declaration is that the element id
+            must be the actual index (1-based) of the bitmap inside the bitmap strip. -->
+      <Bitmap guid="quantConnectImages" href="Resources\ToolMenuCommand.png" usedList="bmpPic1, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows, bmpPicStrikethrough" />
+    </Bitmaps>
+  </Commands>
+
+  <CommandPlacements>
+    <!-- Group configuration only enables Solution Explorer menu when a single element is selected.
+         IDM_VS_CTXT_FOLDERNODE enables it when a folder is selected -->
+    <CommandPlacement guid="guidQuantConnectSolutionExplorerSet" id="SolutionExplorerMenuGroup" priority="0x0600">
+      <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_FOLDERNODE" />
+    </CommandPlacement>
+  </CommandPlacements>
+
+  <Symbols>
+    <GuidSymbol name="guidQuantConnectPackage" value="{2c9c2f3d-2cc2-437f-928c-0ef5fdfcfed3}" />
+
+    <GuidSymbol name="guidQuantConnectSolutionExplorerSet" value="{00ce2ccb-74c7-42f4-bf63-52c573fc1532}">
+      <IDSymbol name="SolutionExplorerMenuGroup" value="0x1020" />
+      <IDSymbol name="SaveToQuantConnect" value="0x0110" />
+      <IDSymbol name="SendForBacktesting" value="0x0100" />
+    </GuidSymbol>
+
+    <GuidSymbol name="guidQuantConnectToolsSet" value="{fefaf282-a478-45f4-b89a-a8f15dd8aaff}">
+      <IDSymbol name="ToolsMenuGroup" value="4128" />
+      <IDSymbol name="ToolsSubMenuGroup" value="2048" />
+      <IDSymbol name="ToolsSubMenu" value="1024" />
+      <IDSymbol name="LogOutCommand" value="512" />
+      <IDSymbol name="LogInCommand" value="256" />
+    </GuidSymbol>
+  
+    <GuidSymbol name="quantConnectImages" value="{a83a3e3f-83ce-4967-a1b6-0ef707b1830b}">
+      <IDSymbol name="bmpPic1" value="1" />
+      <IDSymbol name="bmpPic2" value="2" />
+      <IDSymbol name="bmpPicSearch" value="3" />
+      <IDSymbol name="bmpPicX" value="4" />
+      <IDSymbol name="bmpPicArrows" value="5" />
+      <IDSymbol name="bmpPicStrikethrough" value="6" />
+    </GuidSymbol>
+  </Symbols>
+</CommandTable>

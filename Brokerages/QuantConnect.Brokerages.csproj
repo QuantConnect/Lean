@@ -22,7 +22,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Debug\QuantConnect.Brokerages.XML</DocumentationFile>
+    <DocumentationFile>bin\Debug\QuantConnect.Brokerages.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -37,6 +37,9 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CSharpAPI">
+      <HintPath>InteractiveBrokers\CSharpAPI.dll</HintPath>
+    </Reference>
     <Reference Include="IKVM.OpenJDK.Beans, Version=7.2.4630.5, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\IKVM-WithExes.7.3.4830.1\tools\IKVM.OpenJDK.Beans.dll</HintPath>
@@ -128,12 +131,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\IKVM-WithExes.7.3.4830.1\tools\IKVM.Runtime.JNI.dll</HintPath>
     </Reference>
-    <Reference Include="Krs.Ats.IBNet">
-      <HintPath>..\packages\Krs.Ats.IBNet.9.66.0.31\lib\net20\Krs.Ats.IBNet.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="NodaTime, Version=1.3.0.0, Culture=neutral, PublicKeyToken=4226afe0d9b296d1, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -149,6 +148,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
@@ -163,6 +163,8 @@
     </Compile>
     <Compile Include="Backtesting\BacktestingBrokerage.cs" />
     <Compile Include="Backtesting\BacktestingBrokerageFactory.cs" />
+    <Compile Include="Backtesting\BasicOptionAssignmentSimulation.cs" />
+    <Compile Include="Backtesting\IBacktestingMarketSimulation.cs" />
     <Compile Include="Brokerage.cs" />
     <Compile Include="BrokerageException.cs" />
     <Compile Include="BrokerageFactory.cs" />
@@ -172,46 +174,326 @@
     <Compile Include="Fxcm\FxcmBrokerage.Util.cs" />
     <Compile Include="Fxcm\FxcmBrokerageFactory.cs" />
     <Compile Include="Fxcm\FxcmSymbolMapper.cs" />
+    <Compile Include="InteractiveBrokers\Client\AccountDownloadEndEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\AccountSummaryEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\ActionSide.cs" />
+    <Compile Include="InteractiveBrokers\Client\AgentDescription.cs" />
+    <Compile Include="InteractiveBrokers\Client\BarSize.cs" />
+    <Compile Include="InteractiveBrokers\Client\HistogramDataEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\HeadTimestampEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\RerouteMktDepthReqEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\RerouteMktDataReqEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\HistoricalNewsEndEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\NewsProvidersEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\NewsArticleEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\HistoricalNewsEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\TickReqParamsEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\SmartComponentsEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\TickNewsEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\MktDepthExchangesEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\SymbolSamplesEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\FamilyCodesEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\HistoricalDataUpdateEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\OrderStatus.cs" />
+    <Compile Include="InteractiveBrokers\Client\OrderType.cs" />
+    <Compile Include="InteractiveBrokers\Client\RightType.cs" />
+    <Compile Include="InteractiveBrokers\Client\SecurityType.cs" />
+    <Compile Include="InteractiveBrokers\Client\SoftDollarTiersEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\SecurityDefinitionOptionParameterEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\CommissionReportEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\ContractDetailsEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\CurrentTimeUtcEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\DeltaNeutralValidationEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\DisplayGroupUpdatedEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\ErrorEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\ExecutionDetailsEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\FundamentalDataEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\HistoricalDataEndEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\HistoricalDataEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\ManagedAccountsEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\MarketDataTypeEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\NextValidIdEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\OpenOrderEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\OrderStatusEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\PositionEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\AccountUpdateMultiEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\RealtimeBarEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\DisplayGroupListEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\PositionMultiEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\TimeInForce.cs" />
+    <Compile Include="InteractiveBrokers\Client\VerifyAndAuthCompletedEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\VerifyCompletedEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\VerifyAndAuthMessageApiEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\VerifyMessageApiEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\RequestEndEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\ReceiveFaEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\TickEfpEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\TickEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\TickGenericEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\TickOptionComputationEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\TickPriceEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\TickSizeEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\TickSnapshotEndEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\TickStringEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\UpdateAccountTimeEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\UpdateAccountValueEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\UpdateMarketDepthEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\UpdateMarketDepthLevel2EventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\UpdateNewsBulletinEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\ScannerParametersEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\ScannerDataEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\UpdatePortfolioEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\HistoricalDataType.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerage.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerageFactory.cs" />
+    <Compile Include="InteractiveBrokers\Client\InteractiveBrokersClient.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersGatewayRunner.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersSymbolMapper.cs" />
     <Compile Include="ISymbolMapper.cs" />
-    <Compile Include="Oanda\DataType\Account.cs" />
-    <Compile Include="Oanda\DataType\Communications\AccountResponse.cs" />
-    <Compile Include="Oanda\DataType\Communications\AccountsResponse.cs" />
-    <Compile Include="Oanda\DataType\Communications\InstrumentsResponse.cs" />
-    <Compile Include="Oanda\DataType\Communications\OrdersResponse.cs" />
-    <Compile Include="Oanda\DataType\Communications\PositionsResponse.cs" />
-    <Compile Include="Oanda\DataType\Communications\PostOrderResponse.cs" />
-    <Compile Include="Oanda\DataType\Communications\PricesResponse.cs" />
-    <Compile Include="Oanda\DataType\Communications\Response.cs" />
-    <Compile Include="Oanda\DataType\Communications\TradesResponse.cs" />
-    <Compile Include="Oanda\DataType\Event.cs" />
-    <Compile Include="Oanda\DataType\Heartbeat.cs" />
-    <Compile Include="Oanda\DataType\IHeartbeat.cs" />
-    <Compile Include="Oanda\DataType\Instrument.cs" />
-    <Compile Include="Oanda\DataType\Order.cs" />
-    <Compile Include="Oanda\DataType\Position.cs" />
-    <Compile Include="Oanda\DataType\Price.cs" />
-    <Compile Include="Oanda\DataType\Communications\RateStreamResponse.cs" />
-    <Compile Include="Oanda\DataType\TradeData.cs" />
-    <Compile Include="Oanda\DataType\Transaction.cs" />
+    <Compile Include="Oanda\OandaRestApiBase.cs" />
+    <Compile Include="Oanda\OandaRestApiV1.cs" />
+    <Compile Include="Oanda\OandaRestApiV20.cs" />
+    <Compile Include="Oanda\RestV1\DataType\Account.cs" />
+    <Compile Include="Oanda\RestV1\DataType\Candle.cs" />
+    <Compile Include="Oanda\RestV1\DataType\Communications\AccountResponse.cs" />
+    <Compile Include="Oanda\RestV1\DataType\Communications\AccountsResponse.cs" />
+    <Compile Include="Oanda\RestV1\DataType\Communications\CandlesResponse.cs" />
+    <Compile Include="Oanda\RestV1\DataType\Communications\InstrumentsResponse.cs" />
+    <Compile Include="Oanda\RestV1\DataType\Communications\OrdersResponse.cs" />
+    <Compile Include="Oanda\RestV1\DataType\Communications\PositionsResponse.cs" />
+    <Compile Include="Oanda\RestV1\DataType\Communications\PostOrderResponse.cs" />
+    <Compile Include="Oanda\RestV1\DataType\Communications\PricesResponse.cs" />
+    <Compile Include="Oanda\RestV1\DataType\Communications\Requests\CandlesRequest.cs" />
+    <Compile Include="Oanda\RestV1\DataType\Communications\Requests\Request.cs" />
+    <Compile Include="Oanda\RestV1\DataType\Communications\Response.cs" />
+    <Compile Include="Oanda\RestV1\DataType\Communications\TradesResponse.cs" />
+    <Compile Include="Oanda\RestV1\DataType\Event.cs" />
+    <Compile Include="Oanda\RestV1\DataType\Heartbeat.cs" />
+    <Compile Include="Oanda\RestV1\DataType\IHeartbeat.cs" />
+    <Compile Include="Oanda\RestV1\DataType\Instrument.cs" />
+    <Compile Include="Oanda\RestV1\DataType\Order.cs" />
+    <Compile Include="Oanda\RestV1\DataType\Position.cs" />
+    <Compile Include="Oanda\RestV1\DataType\Price.cs" />
+    <Compile Include="Oanda\RestV1\DataType\Communications\RateStreamResponse.cs" />
+    <Compile Include="Oanda\RestV1\DataType\TradeData.cs" />
+    <Compile Include="Oanda\RestV1\DataType\Transaction.cs" />
     <Compile Include="Oanda\Environment.cs" />
-    <Compile Include="Oanda\Framework\Common.cs" />
-    <Compile Include="Oanda\Framework\EndpointResolver.cs" />
+    <Compile Include="Oanda\RestV1\Framework\Common.cs" />
+    <Compile Include="Oanda\RestV1\Framework\EndpointResolver.cs" />
     <Compile Include="Oanda\OandaBrokerage.cs" />
-    <Compile Include="Oanda\OandaBrokerage.DataQueueHandler.cs" />
-    <Compile Include="Oanda\OandaBrokerage.Rest.cs" />
     <Compile Include="Oanda\OandaBrokerageFactory.cs" />
     <Compile Include="Oanda\OandaSymbolMapper.cs" />
+    <Compile Include="Oanda\RestV20\Api\DefaultApi.cs" />
+    <Compile Include="Oanda\RestV20\Client\ApiClient.cs" />
+    <Compile Include="Oanda\RestV20\Client\ApiException.cs" />
+    <Compile Include="Oanda\RestV20\Client\ApiResponse.cs" />
+    <Compile Include="Oanda\RestV20\Client\Configuration.cs" />
+    <Compile Include="Oanda\RestV20\Client\ExceptionFactory.cs" />
+    <Compile Include="Oanda\RestV20\Client\IApiAccessor.cs" />
+    <Compile Include="Oanda\RestV20\DefaultApiExtensions.cs" />
+    <Compile Include="Oanda\RestV20\Model\AcceptDatetimeFormat.cs" />
+    <Compile Include="Oanda\RestV20\Model\Account.cs" />
+    <Compile Include="Oanda\RestV20\Model\AccountChanges.cs" />
+    <Compile Include="Oanda\RestV20\Model\AccountChangesState.cs" />
+    <Compile Include="Oanda\RestV20\Model\AccountFinancingMode.cs" />
+    <Compile Include="Oanda\RestV20\Model\AccountID.cs" />
+    <Compile Include="Oanda\RestV20\Model\AccountProperties.cs" />
+    <Compile Include="Oanda\RestV20\Model\AccountSummary.cs" />
+    <Compile Include="Oanda\RestV20\Model\AccountUnits.cs" />
+    <Compile Include="Oanda\RestV20\Model\CalculatedPositionState.cs" />
+    <Compile Include="Oanda\RestV20\Model\CalculatedTradeState.cs" />
+    <Compile Include="Oanda\RestV20\Model\Candlestick.cs" />
+    <Compile Include="Oanda\RestV20\Model\CandlestickData.cs" />
+    <Compile Include="Oanda\RestV20\Model\CandlestickGranularity.cs" />
+    <Compile Include="Oanda\RestV20\Model\ClientComment.cs" />
+    <Compile Include="Oanda\RestV20\Model\ClientConfigureRejectTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\ClientConfigureTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\ClientExtensions.cs" />
+    <Compile Include="Oanda\RestV20\Model\ClientID.cs" />
+    <Compile Include="Oanda\RestV20\Model\ClientTag.cs" />
+    <Compile Include="Oanda\RestV20\Model\ClosePositionBody.cs" />
+    <Compile Include="Oanda\RestV20\Model\CloseTradeBody.cs" />
+    <Compile Include="Oanda\RestV20\Model\CloseTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\ConfigureAccountBody.cs" />
+    <Compile Include="Oanda\RestV20\Model\CreateOrderBody.cs" />
+    <Compile Include="Oanda\RestV20\Model\CreateTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\Currency.cs" />
+    <Compile Include="Oanda\RestV20\Model\DailyFinancingTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\DateTime.cs" />
+    <Compile Include="Oanda\RestV20\Model\DecimalNumber.cs" />
+    <Compile Include="Oanda\RestV20\Model\DelayedTradeClosureTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\DynamicOrderState.cs" />
+    <Compile Include="Oanda\RestV20\Model\FundingReason.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse200.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse2001.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse20010.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse20011.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse20012.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse20013.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse20014.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse20015.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse20016.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse20017.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse20018.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse20019.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse2002.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse20020.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse20021.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse20022.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse20023.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse20024.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse20025.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse20026.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse20027.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse20028.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse20029.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse2003.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse2004.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse2005.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse2006.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse2007.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse2008.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse2009.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse201.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse2011.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse400.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse4001.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse4002.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse4003.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse4004.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse4005.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse4006.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse4007.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse401.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse404.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse4041.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse4042.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse4043.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse4044.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse4045.cs" />
+    <Compile Include="Oanda\RestV20\Model\InlineResponse4046.cs" />
+    <Compile Include="Oanda\RestV20\Model\Instrument.cs" />
+    <Compile Include="Oanda\RestV20\Model\InstrumentName.cs" />
+    <Compile Include="Oanda\RestV20\Model\InstrumentType.cs" />
+    <Compile Include="Oanda\RestV20\Model\LimitOrder.cs" />
+    <Compile Include="Oanda\RestV20\Model\LimitOrderReason.cs" />
+    <Compile Include="Oanda\RestV20\Model\LimitOrderRejectTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\LimitOrderRequest.cs" />
+    <Compile Include="Oanda\RestV20\Model\LimitOrderTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\LiquidityRegenerationSchedule.cs" />
+    <Compile Include="Oanda\RestV20\Model\LiquidityRegenerationScheduleStep.cs" />
+    <Compile Include="Oanda\RestV20\Model\MarginCallEnterTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\MarginCallExitTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\MarginCallExtendTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\MarketIfTouchedOrder.cs" />
+    <Compile Include="Oanda\RestV20\Model\MarketIfTouchedOrderReason.cs" />
+    <Compile Include="Oanda\RestV20\Model\MarketIfTouchedOrderRejectTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\MarketIfTouchedOrderRequest.cs" />
+    <Compile Include="Oanda\RestV20\Model\MarketIfTouchedOrderTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\MarketOrder.cs" />
+    <Compile Include="Oanda\RestV20\Model\MarketOrderDelayedTradeClose.cs" />
+    <Compile Include="Oanda\RestV20\Model\MarketOrderMarginCloseout.cs" />
+    <Compile Include="Oanda\RestV20\Model\MarketOrderMarginCloseoutReason.cs" />
+    <Compile Include="Oanda\RestV20\Model\MarketOrderPositionCloseout.cs" />
+    <Compile Include="Oanda\RestV20\Model\MarketOrderReason.cs" />
+    <Compile Include="Oanda\RestV20\Model\MarketOrderRejectTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\MarketOrderRequest.cs" />
+    <Compile Include="Oanda\RestV20\Model\MarketOrderTradeClose.cs" />
+    <Compile Include="Oanda\RestV20\Model\MarketOrderTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\OpenTradeFinancing.cs" />
+    <Compile Include="Oanda\RestV20\Model\Order.cs" />
+    <Compile Include="Oanda\RestV20\Model\OrderCancelReason.cs" />
+    <Compile Include="Oanda\RestV20\Model\OrderCancelRejectTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\OrderCancelTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\OrderClientExtensionsModifyRejectTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\OrderClientExtensionsModifyTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\OrderFillReason.cs" />
+    <Compile Include="Oanda\RestV20\Model\OrderFillTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\OrderID.cs" />
+    <Compile Include="Oanda\RestV20\Model\OrderIdentifier.cs" />
+    <Compile Include="Oanda\RestV20\Model\OrderPositionFill.cs" />
+    <Compile Include="Oanda\RestV20\Model\OrderRequest.cs" />
+    <Compile Include="Oanda\RestV20\Model\OrderSpecifier.cs" />
+    <Compile Include="Oanda\RestV20\Model\OrderState.cs" />
+    <Compile Include="Oanda\RestV20\Model\OrderTriggerCondition.cs" />
+    <Compile Include="Oanda\RestV20\Model\OrderType.cs" />
+    <Compile Include="Oanda\RestV20\Model\Position.cs" />
+    <Compile Include="Oanda\RestV20\Model\PositionAggregationMode.cs" />
+    <Compile Include="Oanda\RestV20\Model\PositionFinancing.cs" />
+    <Compile Include="Oanda\RestV20\Model\PositionSide.cs" />
+    <Compile Include="Oanda\RestV20\Model\Price.cs" />
+    <Compile Include="Oanda\RestV20\Model\PriceBucket.cs" />
+    <Compile Include="Oanda\RestV20\Model\PriceStatus.cs" />
+    <Compile Include="Oanda\RestV20\Model\PriceValue.cs" />
+    <Compile Include="Oanda\RestV20\Model\PricingHeartbeat.cs" />
+    <Compile Include="Oanda\RestV20\Model\QuoteHomeConversionFactors.cs" />
+    <Compile Include="Oanda\RestV20\Model\ReopenTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\ReplaceOrderBody.cs" />
+    <Compile Include="Oanda\RestV20\Model\RequestID.cs" />
+    <Compile Include="Oanda\RestV20\Model\ResetResettablePLTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\SetOrderClientExtensionsBody.cs" />
+    <Compile Include="Oanda\RestV20\Model\SetTradeClientExtensionsBody.cs" />
+    <Compile Include="Oanda\RestV20\Model\SetTradeDependentOrdersBody.cs" />
+    <Compile Include="Oanda\RestV20\Model\StopLossDetails.cs" />
+    <Compile Include="Oanda\RestV20\Model\StopLossOrder.cs" />
+    <Compile Include="Oanda\RestV20\Model\StopLossOrderReason.cs" />
+    <Compile Include="Oanda\RestV20\Model\StopLossOrderRejectTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\StopLossOrderRequest.cs" />
+    <Compile Include="Oanda\RestV20\Model\StopLossOrderTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\StopOrder.cs" />
+    <Compile Include="Oanda\RestV20\Model\StopOrderReason.cs" />
+    <Compile Include="Oanda\RestV20\Model\StopOrderRejectTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\StopOrderRequest.cs" />
+    <Compile Include="Oanda\RestV20\Model\StopOrderTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\TakeProfitDetails.cs" />
+    <Compile Include="Oanda\RestV20\Model\TakeProfitOrder.cs" />
+    <Compile Include="Oanda\RestV20\Model\TakeProfitOrderReason.cs" />
+    <Compile Include="Oanda\RestV20\Model\TakeProfitOrderRejectTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\TakeProfitOrderRequest.cs" />
+    <Compile Include="Oanda\RestV20\Model\TakeProfitOrderTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\TimeInForce.cs" />
+    <Compile Include="Oanda\RestV20\Model\Trade.cs" />
+    <Compile Include="Oanda\RestV20\Model\TradeClientExtensionsModifyRejectTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\TradeClientExtensionsModifyTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\TradeID.cs" />
+    <Compile Include="Oanda\RestV20\Model\TradeOpen.cs" />
+    <Compile Include="Oanda\RestV20\Model\TradeReduce.cs" />
+    <Compile Include="Oanda\RestV20\Model\TradeSpecifier.cs" />
+    <Compile Include="Oanda\RestV20\Model\TradeState.cs" />
+    <Compile Include="Oanda\RestV20\Model\TradeSummary.cs" />
+    <Compile Include="Oanda\RestV20\Model\TrailingStopLossDetails.cs" />
+    <Compile Include="Oanda\RestV20\Model\TrailingStopLossOrder.cs" />
+    <Compile Include="Oanda\RestV20\Model\TrailingStopLossOrderReason.cs" />
+    <Compile Include="Oanda\RestV20\Model\TrailingStopLossOrderRejectTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\TrailingStopLossOrderRequest.cs" />
+    <Compile Include="Oanda\RestV20\Model\TrailingStopLossOrderTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\Transaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\TransactionFilter.cs" />
+    <Compile Include="Oanda\RestV20\Model\TransactionHeartbeat.cs" />
+    <Compile Include="Oanda\RestV20\Model\TransactionID.cs" />
+    <Compile Include="Oanda\RestV20\Model\TransactionRejectReason.cs" />
+    <Compile Include="Oanda\RestV20\Model\TransactionType.cs" />
+    <Compile Include="Oanda\RestV20\Model\TransferFundsRejectTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\TransferFundsTransaction.cs" />
+    <Compile Include="Oanda\RestV20\Model\UnitsAvailable.cs" />
+    <Compile Include="Oanda\RestV20\Model\UnitsAvailableDetails.cs" />
+    <Compile Include="Oanda\RestV20\Model\UserInfo.cs" />
+    <Compile Include="Oanda\RestV20\Model\UserInfoExternal.cs" />
+    <Compile Include="Oanda\RestV20\Model\UserSpecifier.cs" />
+    <Compile Include="Oanda\RestV20\Model\VWAPReceipt.cs" />
+    <Compile Include="Oanda\RestV20\Model\WeeklyAlignment.cs" />
+    <Compile Include="Oanda\RestV20\Session\PricingStreamSession.cs" />
+    <Compile Include="Oanda\RestV20\Session\StreamSession.cs" />
+    <Compile Include="Oanda\RestV20\Session\TransactionStreamSession.cs" />
     <Compile Include="Oanda\Server.cs" />
-    <Compile Include="Oanda\Session\EventsSession.cs" />
-    <Compile Include="Oanda\Session\RatesSession.cs" />
-    <Compile Include="Oanda\Session\StreamSession.cs" />
+    <Compile Include="Oanda\RestV1\Session\EventsSession.cs" />
+    <Compile Include="Oanda\RestV1\Session\RatesSession.cs" />
+    <Compile Include="Oanda\RestV1\Session\StreamSession.cs" />
     <Compile Include="Paper\PaperBrokerage.cs" />
     <Compile Include="Paper\PaperBrokerageFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tradier\TradierBrokerage.HistoryProvider.cs" />
+    <Compile Include="Tradier\TradierBrokerage.DataQueueHandler.cs" />
     <Compile Include="Tradier\TradierBrokerage.cs" />
     <Compile Include="Tradier\Balances.cs" />
     <Compile Include="Tradier\Common.cs" />
@@ -226,14 +508,19 @@
     <Compile Include="Tradier\UserProfile.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="InteractiveBrokers\IB-symbol-map.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="InteractiveBrokers\run-ib-controller.bat">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="InteractiveBrokers\run-ib-controller.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Oanda\LICENSE.md" />
-    <None Include="packages.config" />
+    <None Include="Oanda\RestV1\LICENSE.md" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\QuantConnect.csproj">
@@ -254,6 +541,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

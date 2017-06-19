@@ -2,10 +2,10 @@
 
 // common assembly attributes
 [assembly: AssemblyDescription("Lean Algorithmic Trading Engine - QuantConnect.com")]
-[assembly: AssemblyCopyright("Copyright ©  2015")]
+[assembly: AssemblyCopyright("Copyright ©  2017")]
 [assembly: AssemblyCompany("QuantConnect")]
 [assembly: AssemblyTrademark("QuantConnect")]
-[assembly: AssemblyVersion("2.2.0.2")]
+[assembly: AssemblyVersion("2.4.0.0")]
 #if DEBUG
     [assembly: AssemblyConfiguration("Debug")]
 #else

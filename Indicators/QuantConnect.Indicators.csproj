@@ -21,7 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Debug\QuantConnect.Indicators.XML</DocumentationFile>
+    <DocumentationFile>bin\Debug\QuantConnect.Indicators.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -49,6 +49,7 @@
     <Compile Include="AbsolutePriceOscillator.cs" />
     <Compile Include="AccumulationDistribution.cs" />
     <Compile Include="AccumulationDistributionOscillator.cs" />
+    <Compile Include="ArnaudLegouxMovingAverage.cs" />
     <Compile Include="AverageDirectionalIndex.cs" />
     <Compile Include="AverageDirectionalMovementIndexRating.cs" />
     <Compile Include="BalanceOfPower.cs" />
@@ -120,7 +121,11 @@
     <Compile Include="DonchianChannel.cs" />
     <Compile Include="DoubleExponentialMovingAverage.cs" />
     <Compile Include="FractalAdaptiveMovingAverage.cs" />
+    <Compile Include="FilteredIdentity.cs" />
+    <Compile Include="HullMovingAverage.cs" />
+    <Compile Include="RegressionChannel.cs" />
     <Compile Include="SwissArmyKnife.cs" />
+    <Compile Include="TradeBarIndicator.cs" />
     <Compile Include="VolumeWeightedAveragePriceIndicator.cs" />
     <Compile Include="FisherTransform.cs" />
     <Compile Include="HeikinAshi.cs" />
@@ -180,7 +185,7 @@
     <Compile Include="SimpleMovingAverage.cs" />
     <Compile Include="MovingAverageTypeExtensions.cs" />
     <Compile Include="Maximum.cs" />
-    <Compile Include="TradeBarIndicator.cs" />
+    <Compile Include="BarIndicator.cs" />
     <Compile Include="WindowIndicator.cs" />
     <Compile Include="StandardDeviation.cs" />
     <Compile Include="BollingerBands.cs" />

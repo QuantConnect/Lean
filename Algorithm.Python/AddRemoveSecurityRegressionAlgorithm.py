@@ -11,23 +11,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import clr
-clr.AddReference("System")
-clr.AddReference("QuantConnect.Common")
-clr.AddReference("QuantConnect.Algorithm")
+from clr import AddReference
+AddReference("System")
+AddReference("QuantConnect.Common")
+AddReference("QuantConnect.Algorithm")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Data.Market import *
-import QuantConnect.Orders as Orders
-clr.ImportExtensions(Orders.OrderExtensions)
+from QuantConnect.Orders import OrderStatus
+from QuantConnect.Algorithm import QCAlgorithm
 
 class AddRemoveSecurityRegressionAlgorithm(QCAlgorithm):
     '''Basic template algorithm simply initializes the date range and cash'''
-
-    def __init__(self):    
-        self._lastAction = None
 
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
@@ -36,38 +31,37 @@ class AddRemoveSecurityRegressionAlgorithm(QCAlgorithm):
         self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.AddSecurity(SecurityType.Equity, "SPY")
+        self.spy = self.AddEquity("SPY")
+        
+        self._lastAction = None
+
 
     def OnData(self, data):
-        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        
-        Arguments:
-            data: Slice object keyed by symbol containing the stock data
-        '''
-        if self._lastAction is not None and self._lastAction.Date == self.Time.Date:
+        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
+        if self._lastAction is not None and self._lastAction.date() == self.Time.date():
             return
 
         if not self.Portfolio.Invested:
-            self.SetHoldings("SPY", .5)
+            self.SetHoldings(self.spy.Symbol, .5)
             self._lastAction = self.Time
 
-        if self.Time.DayOfWeek == DayOfWeek.Tuesday:
-            self.AddSecurity(SecurityType.Equity, "AIG")
-            self.AddSecurity(SecurityType.Equity, "BAC")
+        if self.Time.weekday() == 1:
+            self.aig = self.AddEquity("AIG")
+            self.bac = self.AddEquity("BAC")
             self._lastAction = self.Time
 
-        if self.Time.DayOfWeek == DayOfWeek.Wednesday:
-            self.SetHoldings("AIG", .25)
-            self.SetHoldings("BAC", .25)
+        if self.Time.weekday() == 2:
+            self.SetHoldings(self.aig.Symbol, .25)
+            self.SetHoldings(self.bac.Symbol, .25)
             self._lastAction = self.Time
 
-        if self.Time.DayOfWeek == DayOfWeek.Thursday:
-            self.RemoveSecurity("AIG")
-            self.RemoveSecurity("BAC")
+        if self.Time.weekday() == 3:
+            self.RemoveSecurity(self.aig.Symbol)
+            self.RemoveSecurity(self.bac.Symbol)
             self._lastAction = self.Time
 
     def OnOrderEvent(self, orderEvent):
-        if orderEvent.Status == Orders.OrderStatus.Submitted:
-            print "{0}: Submitted: {1}".format(self.Time, self.Transactions.GetOrderById(orderEvent.OrderId))
-        if orderEvent.Status.IsFill():
-            print "{0}: Filled: {1}".format(self.Time, self.Transactions.GetOrderById(orderEvent.OrderId))
+        if orderEvent.Status == OrderStatus.Submitted:
+            self.Debug("{0}: Submitted: {1}".format(self.Time, self.Transactions.GetOrderById(orderEvent.OrderId)))
+        if orderEvent.Status == OrderStatus.Filled:
+            self.Debug("{0}: Filled: {1}".format(self.Time, self.Transactions.GetOrderById(orderEvent.OrderId)))

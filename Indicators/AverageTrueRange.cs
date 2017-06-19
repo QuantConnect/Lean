@@ -28,7 +28,7 @@ namespace QuantConnect.Indicators
     ///   ABS(High - PreviousClose)
     ///   ABS(Low  - PreviousClose)
     /// </summary>
-    public class AverageTrueRange : TradeBarIndicator
+    public class AverageTrueRange : BarIndicator
     {
         /// <summary>This indicator is used to smooth the TrueRange computation</summary>
         /// <remarks>This is not exposed publicly since it is the same value as this indicator, meaning
@@ -38,7 +38,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets the true range which is the more volatile calculation to be smoothed by this indicator
         /// </summary>
-        public IndicatorBase<TradeBar> TrueRange { get; private set; } 
+        public IndicatorBase<IBaseDataBar> TrueRange { get; private set; } 
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -59,8 +59,8 @@ namespace QuantConnect.Indicators
         {
             _smoother = movingAverageType.AsIndicator(string.Format("{0}_{1}", name, movingAverageType), period);
 
-            TradeBar previous = null;
-            TrueRange = new FunctionalIndicator<TradeBar>(name + "_TrueRange", currentBar =>
+            IBaseDataBar previous = null;
+            TrueRange = new FunctionalIndicator<IBaseDataBar>(name + "_TrueRange", currentBar =>
             {
                 // in our ComputeNextValue function we'll just call the ComputeTrueRange
                 var nextValue = ComputeTrueRange(previous, currentBar);
@@ -92,7 +92,7 @@ namespace QuantConnect.Indicators
         /// <param name="previous">The previous trade bar</param>
         /// <param name="current">The current trade bar</param>
         /// <returns>The true range</returns>
-        public static decimal ComputeTrueRange(TradeBar previous, TradeBar current)
+        public static decimal ComputeTrueRange(IBaseDataBar previous, IBaseDataBar current)
         {
             var range1 = current.High - current.Low;
             if (previous == null)
@@ -111,7 +111,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(TradeBar input)
+        protected override decimal ComputeNextValue(IBaseDataBar input)
         {
             // compute the true range and then send it to our smoother
             TrueRange.Update(input);

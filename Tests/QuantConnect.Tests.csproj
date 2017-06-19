@@ -33,6 +33,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AsyncIO, Version=0.1.20.0, Culture=neutral, PublicKeyToken=44a94435bd6f33f8, processorArchitecture=MSIL">
+      <HintPath>..\packages\AsyncIO.0.1.20.0\lib\net40\AsyncIO.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Castle.Core, Version=3.3.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
       <HintPath>..\packages\Castle.Core.3.3.3\lib\net45\Castle.Core.dll</HintPath>
       <Private>True</Private>
@@ -41,27 +45,34 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\CloneExtensions.1.2\lib\portable-net40+sl50+win+wp80\CloneExtensions.dll</HintPath>
     </Reference>
+    <Reference Include="CSharpAPI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Brokerages\InteractiveBrokers\CSharpAPI.dll</HintPath>
+    </Reference>
     <Reference Include="Ionic.Zip, Version=1.9.3.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\DotNetZip.1.9.3\lib\net20\Ionic.Zip.dll</HintPath>
-    </Reference>
-    <Reference Include="Krs.Ats.IBNet, Version=9.66.0.31, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Krs.Ats.IBNet.9.66.0.31\lib\net20\Krs.Ats.IBNet.dll</HintPath>
     </Reference>
     <Reference Include="Moq, Version=4.5.10.0, Culture=neutral, PublicKeyToken=69f491c39445e920, processorArchitecture=MSIL">
       <HintPath>..\packages\Moq.4.5.10\lib\net45\Moq.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="NetMQ, Version=3.3.3.4, Culture=neutral, PublicKeyToken=a6decef4ddc58b3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\NetMQ.3.3.3.4\lib\net40\NetMQ.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="NodaTime">
       <HintPath>..\packages\NodaTime.1.3.1\lib\net35-Client\NodaTime.dll</HintPath>
     </Reference>
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Python.Runtime, Version=2.4.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <HintPath>..\packages\QuantConnect.pythonnet.1.0.3.5\lib\Python.Runtime.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="QuantConnect.Fxcm, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -75,27 +86,40 @@
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="websocket-sharp, Version=1.0.4.0, Culture=neutral, PublicKeyToken=5660b08a1845a91e, processorArchitecture=MSIL">
+      <HintPath>..\packages\WebSocketSharpFork.1.0.4.0\lib\net35\websocket-sharp.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="AlgorithmFactory\LoaderTests.cs" />
     <Compile Include="AlgorithmRunner.cs" />
+    <Compile Include="Algorithm\AlgorithmAddDataTests.cs" />
+    <Compile Include="Algorithm\AlgorithmInitializeTests.cs" />
+    <Compile Include="Algorithm\AlgorithmResolveConsolidatorTests.cs" />
+    <Compile Include="Algorithm\AlgorithmSetBrokerageTests.cs" />
     <Compile Include="Algorithm\AlgorithmSetHoldingsTests.cs" />
     <Compile Include="Algorithm\AlgorithmTradingTests.cs" />
-    <Compile Include="API\Api.cs" />
+    <Compile Include="API\ApiTests.cs" />
     <Compile Include="Brokerages\BrokerageTests.cs" />
+    <Compile Include="Brokerages\Fxcm\FxcmBrokerageHistoryProviderTests.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmBrokerageDataQueueHandlerTests.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmBrokerageTests.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmLimitOrderTestParameters.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmStopMarketOrderTestParameters.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmSymbolMapperTests.cs" />
+    <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageAdditionalTests.cs" />
+    <Compile Include="Brokerages\Oanda\OandaBrokerageHistoryProviderTests.cs" />
     <Compile Include="Brokerages\SecurityProvider.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageDataQueueHandlerTest.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersOrderTests.cs" />
@@ -109,9 +133,17 @@
     <Compile Include="Brokerages\OrderTestParameters.cs" />
     <Compile Include="Brokerages\StopLimitOrderTestParameters.cs" />
     <Compile Include="Brokerages\StopMarketOrderTestParameters.cs" />
+    <Compile Include="Brokerages\Tradier\TradierBrokerageHistoryProviderTests.cs" />
     <Compile Include="Brokerages\Tradier\TradierBrokerageSerializationTests.cs" />
     <Compile Include="Brokerages\Tradier\TradierBrokerageTests.cs" />
     <Compile Include="Common\CurrenciesTests.cs" />
+    <Compile Include="Common\Data\Market\QuoteBarTests.cs" />
+    <Compile Include="Common\Orders\Slippage\SlippageModelsTests.cs" />
+    <Compile Include="Common\Securities\BrokerageModelSecurityInitializerTests.cs" />
+    <Compile Include="Common\Securities\FutureFilterTests.cs" />
+    <Compile Include="Common\Securities\Futures\FuturesExpiryFunctionsTests.cs" />
+    <Compile Include="Common\Securities\Futures\FuturesExpiryUtilityFunctionsTests.cs" />
+    <Compile Include="Common\Securities\StandardDeviationOfReturnsVolatilityModelTests.cs" />
     <Compile Include="Common\Data\Auxiliary\LocalDiskFactorFileProviderTests.cs" />
     <Compile Include="Common\Data\Auxiliary\LocalDiskMapFileProviderTests.cs" />
     <Compile Include="Common\Data\Market\BarTests.cs" />
@@ -134,27 +166,34 @@
     <Compile Include="Common\Securities\CashTests.cs" />
     <Compile Include="Common\Securities\Cfd\CfdTests.cs" />
     <Compile Include="Common\Securities\Equity\EquityTransactionModelTests.cs" />
+    <Compile Include="Common\Securities\PriceVariationModelsTests.cs" />
     <Compile Include="Common\Securities\Forex\ForexTests.cs" />
     <Compile Include="Common\Securities\Forex\ForexTransactionModelTests.cs" />
     <Compile Include="Common\Securities\DelayedSettlementModelTests.cs" />
     <Compile Include="Common\Securities\ImmediateSettlementModelTests.cs" />
     <Compile Include="Common\Securities\LocalMarketHoursTests.cs" />
     <Compile Include="Common\Securities\MarketHoursDatabaseTests.cs" />
+    <Compile Include="Common\Securities\FuturesMarginModelTests.cs" />
+    <Compile Include="Common\Securities\OptionMarginModelTests.cs" />
+    <Compile Include="Common\Securities\OptionPriceModelTests.cs" />
     <Compile Include="Common\Securities\PatternDayTradingMarginModelTests.cs" />
     <Compile Include="Common\Securities\RelativeStandardDeviationVolatilityModelTests.cs" />
     <Compile Include="Common\Securities\SecurityDatabaseKeyTests.cs" />
     <Compile Include="Common\Securities\SecurityExchangeHoursTests.cs" />
     <Compile Include="Common\Securities\SecurityIdentifierTests.cs" />
     <Compile Include="Common\Securities\SecurityManagerTests.cs" />
+    <Compile Include="Common\Securities\MarginCallModelTests.cs" />
     <Compile Include="Common\Securities\SecurityPortfolioModelTests.cs" />
     <Compile Include="Common\Securities\SecurityTests.cs" />
     <Compile Include="Common\Securities\SecurityTransactionModelTests.cs" />
     <Compile Include="Common\Securities\SubscriptionDataConfigTests.cs" />
-    <Compile Include="Common\Securities\StrikeExpiryOptionFilterTests.cs" />
+    <Compile Include="Common\Securities\OptionFilterTests.cs" />
     <Compile Include="Common\Securities\SymbolPropertiesDatabaseTests.cs" />
+    <Compile Include="Common\Securities\TradingCalendarTests.cs" />
     <Compile Include="Common\Securities\UniverseManagerTests.cs" />
     <Compile Include="Common\SeriesTests.cs" />
     <Compile Include="Common\SymbolCacheTests.cs" />
+    <Compile Include="Common\SymbolRepresentationTests.cs" />
     <Compile Include="Common\SymbolTests.cs" />
     <Compile Include="Common\Statistics\TradeStatisticsTests.cs" />
     <Compile Include="Common\Statistics\TradeBuilderTests.cs" />
@@ -164,6 +203,9 @@
     <Compile Include="Common\TimeZonesTest.cs" />
     <Compile Include="Common\Util\BusyBlockingCollectionTests.cs" />
     <Compile Include="Common\Util\ColorJsonConverterTests.cs" />
+    <Compile Include="Common\Util\DisposableExtensionsTests.cs" />
+    <Compile Include="Common\Util\FactorFileGeneratorTests.cs" />
+    <Compile Include="Common\Util\LeanDataPathComponentsTests.cs" />
     <Compile Include="Common\Util\LeanDataTests.cs" />
     <Compile Include="Common\Util\LinqExtensionsTests.cs" />
     <Compile Include="Common\Util\MarketHoursDatabaseJsonConverterTests.cs" />
@@ -173,14 +215,19 @@
     <Compile Include="Common\Util\ReaderWriterLockSlimExtensionsTests.cs" />
     <Compile Include="Common\Util\VersionHelperTests.cs" />
     <Compile Include="Common\Util\WhoCalledMeTests.cs" />
+    <Compile Include="Common\Util\YahooDataDownloaderTests.cs" />
     <Compile Include="Compression\CompressionTests.cs" />
     <Compile Include="Configuration\ConfigTests.cs" />
+    <Compile Include="Engine\BasicOptionAssignmentSimulationTests.cs" />
     <Compile Include="Engine\BrokerageTransactionHandlerTests\BrokerageTransactionHandlerTests.cs" />
+    <Compile Include="Engine\DataCacheProviders\SingleEntryDataCacheProviderTests.cs" />
     <Compile Include="Engine\DataFeeds\AlgorithmStub.cs" />
+    <Compile Include="Engine\DataFeeds\ApiDataQueueHandlerTests.cs" />
     <Compile Include="Engine\DataFeeds\Auxiliary\MapFileResolverTests.cs" />
     <Compile Include="Engine\DataFeeds\BaseDataExchangeTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\BaseDataCollectionAggregatorEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\EnqueableEnumeratorTests.cs" />
+    <Compile Include="Engine\DataFeeds\Enumerators\Factories\FineFundamentalSubscriptionEnumeratorFactoryTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\FastForwardEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\FrontierAwareEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\LiveFillForwardEnumeratorTests.cs" />
@@ -190,15 +237,18 @@
     <Compile Include="Engine\DataFeeds\Enumerators\TradeBarBuilderEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\FileSystemDataFeedTests.cs" />
     <Compile Include="Engine\DataFeeds\FillForwardEnumeratorTest.cs" />
+    <Compile Include="Engine\DataFeeds\IEXDataQueueHandlerTests.cs" />
+    <Compile Include="Engine\DataFeeds\IQFeedRealtimeDataFeedTests.cs" />
     <Compile Include="Engine\DataFeeds\RemoteFileBaseData.cs" />
     <Compile Include="Engine\DataFeeds\RestApiBaseData.cs" />
     <Compile Include="Engine\DataFeeds\FuncDataQueueHandler.cs" />
     <Compile Include="Engine\DataFeeds\LiveTradingDataFeedTests.cs" />
     <Compile Include="Engine\DataFeeds\TimeSliceTests.cs" />
-    <Compile Include="Engine\DataFeeds\Transport\LocalFileSubscriptionStreamReaderTests.cs" />
     <Compile Include="Engine\DataFeeds\ZipEntryNameSubsciptionFactoryTests.cs" />
+    <Compile Include="Engine\DataProviders\DefaultDataProviderTests.cs" />
     <Compile Include="Engine\DefaultBrokerageMessageHandler.cs" />
     <Compile Include="Engine\FactorFileTests.cs" />
+    <Compile Include="Engine\RealTimePriceUpdateTests.cs" />
     <Compile Include="Engine\RealTime\ScheduledEventTests.cs" />
     <Compile Include="Engine\TestResultHandler.cs" />
     <Compile Include="Indicators\AbsolutePriceOscillatorTests.cs" />
@@ -206,6 +256,8 @@
     <Compile Include="Indicators\AccumulationDistributionTests.cs" />
     <Compile Include="Indicators\AverageDirectionalIndexTests.cs" />
     <Compile Include="Indicators\FractalAdaptiveMovingAverageTests.cs" />
+    <Compile Include="Indicators\ArnaudLegouxMovingAverageTest.cs" />
+    <Compile Include="Indicators\HullMovingAverageTest.cs" />
     <Compile Include="Indicators\KaufmanAdaptiveMovingAverageTests.cs" />
     <Compile Include="Indicators\AverageDirectionalMovementIndexRatingTests.cs" />
     <Compile Include="Indicators\BalanceOfPowerTests.cs" />
@@ -217,6 +269,7 @@
     <Compile Include="Indicators\HeikinAshiTests.cs" />
     <Compile Include="Indicators\IchimokuKinkoHyoTests.cs" />
     <Compile Include="Indicators\KeltnerChannelsTests.cs" />
+    <Compile Include="Indicators\RegressionChannelTest.cs" />
     <Compile Include="Indicators\LeastSquaresMovingAverageTest.cs" />
     <Compile Include="Indicators\LogReturnTests.cs" />
     <Compile Include="Indicators\MidPriceTests.cs" />
@@ -242,11 +295,14 @@
     <Compile Include="Indicators\RateOfChangePercentTests.cs" />
     <Compile Include="Indicators\RateOfChangeTests.cs" />
     <Compile Include="Indicators\StochasticTests.cs" />
+    <Compile Include="Messaging\StreamingMessageHandlerTests.cs" />
     <Compile Include="Queues\FileCommandQueueHandlerTests.cs" />
     <Compile Include="RegressionTests.cs" />
     <Compile Include="Symbols.cs" />
     <Compile Include="TestExtensions.cs" />
     <Compile Include="Indicators\LinearWeightedMovingAverageTests.cs" />
+    <Compile Include="ToolBox\LeanDataWriterTests.cs" />
+    <None Include="app.config" />
     <None Include="RegressionAlgorithms\Test_Cash.cs" />
     <None Include="RegressionAlgorithms\Test_LiveAlgorithm.cs" />
     <None Include="RegressionAlgorithms\Test_MixedAssets.cs" />
@@ -297,7 +353,6 @@
     <Compile Include="Indicators\TestHelper.cs" />
     <Compile Include="Logging\FileLogHandlerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <None Include="app.config" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
@@ -307,6 +362,10 @@
     <None Include="TestData\CashTestingStrategy.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="TestData\FuturesExpiryFunctionsTestData.xml">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="TestData\eurusd_candle_patterns.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -322,6 +381,12 @@
     <None Include="TestData\multizip.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="TestData\spy_alma.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_hma.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="TestData\spy_with_ichimoku.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -331,7 +396,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Adapters\" />
-    <Folder Include="Messaging\" />
     <Folder Include="Tasks\" />
     <Folder Include="UserInterface\" />
   </ItemGroup>
@@ -391,6 +455,10 @@
     <ProjectReference Include="..\Queues\QuantConnect.Queues.csproj">
       <Project>{d6633172-1368-4df6-9444-825c3e00c819}</Project>
       <Name>QuantConnect.Queues</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ToolBox\QuantConnect.ToolBox.csproj">
+      <Project>{AC9A142C-B485-44D7-91FF-015C22C43D05}</Project>
+      <Name>QuantConnect.ToolBox</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -550,6 +618,13 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <Import Project="..\packages\QuantConnect.pythonnet.1.0.3.5\build\QuantConnect.pythonnet.targets" Condition="Exists('..\packages\QuantConnect.pythonnet.1.0.3.5\build\QuantConnect.pythonnet.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\QuantConnect.pythonnet.1.0.3.5\build\QuantConnect.pythonnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.pythonnet.1.0.3.5\build\QuantConnect.pythonnet.targets'))" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

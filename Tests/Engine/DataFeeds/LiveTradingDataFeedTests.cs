@@ -46,6 +46,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var job = new LiveNodePacket();
             // result handler is used due to dependency in SubscriptionDataReader
             var resultHandler = new BacktestingResultHandler();
+            var dataProvider = new DefaultDataProvider();
 
             var lastTime = DateTime.MinValue;
             var timeProvider = new RealTimeProvider();
@@ -59,7 +60,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var feed = new TestableLiveTradingDataFeed(dataQueueHandler, timeProvider);
             var mapFileProvider = new LocalDiskMapFileProvider();
-            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider));
+            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), dataProvider);
 
             var feedThreadStarted = new ManualResetEvent(false);
             Task.Factory.StartNew(() =>
@@ -258,7 +259,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var feed = RunDataFeed(algorithm);
 
             int count = 0;
-            bool receivedData = false;
+            //bool receivedData = false;
             var stopwatch = Stopwatch.StartNew();
             Console.WriteLine("start: " + DateTime.UtcNow.ToString("o"));
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
@@ -271,7 +272,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 if (ts.Slice.Count == 0) return;
 
                 count++;
-                receivedData = true;
+                //receivedData = true;
                 var time = ts.Slice.Min(x => x.Value.EndTime).ConvertToUtc(TimeZones.NewYork);
                 // make sure within 2 seconds
                 var delta = DateTime.UtcNow.Subtract(time);
@@ -417,7 +418,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var feed = new TestableLiveTradingDataFeed(dataQueueHandler, timeProvider);
             var mapFileProvider = new LocalDiskMapFileProvider();
-            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider));
+            var fileProvider = new DefaultDataProvider();
+            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), fileProvider);
 
             var feedThreadStarted = new ManualResetEvent(false);
             Task.Factory.StartNew(() =>

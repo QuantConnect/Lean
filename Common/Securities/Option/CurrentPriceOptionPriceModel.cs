@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
@@ -27,7 +28,7 @@ namespace QuantConnect.Securities.Option
     {
         /// <summary>
         /// Creates a new <see cref="OptionPriceModelResult"/> containing the current <see cref="Security.Price"/>
-        /// and a default, empty instance of <see cref="FirstOrderGreeks"/>
+        /// and a default, empty instance of first Order <see cref="Greeks"/>
         /// </summary>
         /// <param name="security">The option security object</param>
         /// <param name="slice">The current data slice. This can be used to access other information
@@ -37,7 +38,7 @@ namespace QuantConnect.Securities.Option
         /// price of the specified option contract</returns>
         public OptionPriceModelResult Evaluate(Security security, Slice slice, OptionContract contract)
         {
-            return new OptionPriceModelResult(security.Price, new FirstOrderGreeks());
+            return new OptionPriceModelResult(security.Price, new Greeks());
         }
     }
 }

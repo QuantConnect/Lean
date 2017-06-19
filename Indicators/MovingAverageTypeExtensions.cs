@@ -60,6 +60,12 @@ namespace QuantConnect.Indicators
                 case MovingAverageType.Kama:
                     return new KaufmanAdaptiveMovingAverage(period);
 
+                case MovingAverageType.Hull:
+                    return new HullMovingAverage(period);
+
+                case MovingAverageType.Alma:
+                    return new ArnaudLegouxMovingAverage(period);
+
                 default:
                     throw new ArgumentOutOfRangeException("movingAverageType");
             }
@@ -103,6 +109,12 @@ namespace QuantConnect.Indicators
 
                 case MovingAverageType.Kama:
                     return new KaufmanAdaptiveMovingAverage(name, period);
+
+                case MovingAverageType.Hull:
+                    return new HullMovingAverage(name, period);
+                
+                case MovingAverageType.Alma:
+                    return new ArnaudLegouxMovingAverage(name, period);
 
                 default:
                     throw new ArgumentOutOfRangeException("movingAverageType");

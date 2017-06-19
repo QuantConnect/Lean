@@ -79,6 +79,8 @@ namespace QuantConnect.Data.Consolidators
                     Bid = null,
                     Ask = null
                 };
+
+                if (Period.HasValue) workingBar.Period = Period.Value;
             }
 
             // update the bid and ask

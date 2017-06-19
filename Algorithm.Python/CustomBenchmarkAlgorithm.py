@@ -11,10 +11,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import clr
-clr.AddReference("System")
-clr.AddReference("QuantConnect.Algorithm")
-clr.AddReference("QuantConnect.Common")
+from clr import AddReference
+AddReference("System")
+AddReference("QuantConnect.Algorithm")
+AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
@@ -31,16 +31,13 @@ class CustomBenchmarkAlgorithm(QCAlgorithm):
         self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.AddSecurity(SecurityType.Equity, "SPY", Resolution.Second)
-
-        self.SetBenchmark("SPY");
+        equity = self.AddEquity("SPY", Resolution.Second)
+        
+        self.spy = equity.Symbol
+        self.SetBenchmark(self.spy);
 
     def OnData(self, data):
-        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        
-        Arguments:
-            data: Slice object keyed by symbol containing the stock data
-        '''
+        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
         if not self.Portfolio.Invested:
-            self.SetHoldings("SPY", 1)
+            self.SetHoldings(self.spy, 1)
             self.Debug("Purchased Stock");

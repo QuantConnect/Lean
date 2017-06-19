@@ -53,7 +53,8 @@ namespace QuantConnect.Securities.Equity
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
                 new SecurityMarginModel(2m),
-                new EquityDataFilter()
+                new EquityDataFilter(),
+                new AdjustedPriceVariationModel()
                 )
         {
             Holdings = new EquityHolding(this);
@@ -76,7 +77,8 @@ namespace QuantConnect.Securities.Equity
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
                 new SecurityMarginModel(2m),
-                new EquityDataFilter()
+                new EquityDataFilter(),
+                new AdjustedPriceVariationModel()
                 )
         {
             Holdings = new EquityHolding(this);

@@ -35,7 +35,11 @@ namespace QuantConnect.Tests
         
         public static readonly Symbol DE10YBEUR = CreateCfdSymbol("DE10YBEUR", Market.FXCM);
 
+        public static readonly Symbol SPY_C_192_Feb19_2016 = CreateOptionSymbol("SPY", OptionRight.Call, 192m, new DateTime(2016, 02, 19));
         public static readonly Symbol SPY_P_192_Feb19_2016 = CreateOptionSymbol("SPY", OptionRight.Put, 192m, new DateTime(2016, 02, 19));
+
+        public static readonly Symbol Fut_SPY_Feb19_2016 = CreateFutureSymbol("SPY", new DateTime(2016, 02, 19));
+        public static readonly Symbol Fut_SPY_Mar19_2016 = CreateFutureSymbol("SPY", new DateTime(2016, 03, 19));
 
         private static Symbol CreateForexSymbol(string symbol)
         {
@@ -45,6 +49,10 @@ namespace QuantConnect.Tests
         private static Symbol CreateEquitySymbol(string symbol)
         {
             return Symbol.Create(symbol, SecurityType.Equity, Market.USA);
+        }
+        private static Symbol CreateFutureSymbol(string symbol, DateTime expiry)
+        {
+            return Symbol.CreateFuture(symbol, Market.USA, expiry);
         }
 
         private static Symbol CreateCfdSymbol(string symbol, string market)

@@ -330,28 +330,30 @@ namespace QuantConnect.Data.Fundamental
 		/// <param name="previous">The previous instance</param>
 		public void UpdateValues(EarningReports previous)
 		{
-			BasicContinuousOperations.UpdateValues(previous.BasicContinuousOperations);
-			BasicDiscontinuousOperations.UpdateValues(previous.BasicDiscontinuousOperations);
-			BasicExtraordinary.UpdateValues(previous.BasicExtraordinary);
-			BasicAccountingChange.UpdateValues(previous.BasicAccountingChange);
-			BasicEPS.UpdateValues(previous.BasicEPS);
-			DilutedContinuousOperations.UpdateValues(previous.DilutedContinuousOperations);
-			DilutedDiscontinuousOperations.UpdateValues(previous.DilutedDiscontinuousOperations);
-			DilutedExtraordinary.UpdateValues(previous.DilutedExtraordinary);
-			DilutedAccountingChange.UpdateValues(previous.DilutedAccountingChange);
-			DilutedEPS.UpdateValues(previous.DilutedEPS);
-			BasicAverageShares.UpdateValues(previous.BasicAverageShares);
-			DilutedAverageShares.UpdateValues(previous.DilutedAverageShares);
-			DividendPerShare.UpdateValues(previous.DividendPerShare);
-			BasicEPSOtherGainsLosses.UpdateValues(previous.BasicEPSOtherGainsLosses);
-			ContinuingAndDiscontinuedBasicEPS.UpdateValues(previous.ContinuingAndDiscontinuedBasicEPS);
-			TaxLossCarryforwardBasicEPS.UpdateValues(previous.TaxLossCarryforwardBasicEPS);
-			DilutedEPSOtherGainsLosses.UpdateValues(previous.DilutedEPSOtherGainsLosses);
-			ContinuingAndDiscontinuedDilutedEPS.UpdateValues(previous.ContinuingAndDiscontinuedDilutedEPS);
-			TaxLossCarryforwardDilutedEPS.UpdateValues(previous.TaxLossCarryforwardDilutedEPS);
-			NormalizedBasicEPS.UpdateValues(previous.NormalizedBasicEPS);
-			NormalizedDilutedEPS.UpdateValues(previous.NormalizedDilutedEPS);
-			TotalDividendPerShare.UpdateValues(previous.TotalDividendPerShare);
+			if (previous == null) return;
+
+			if (BasicContinuousOperations != null) BasicContinuousOperations.UpdateValues(previous.BasicContinuousOperations);
+			if (BasicDiscontinuousOperations != null) BasicDiscontinuousOperations.UpdateValues(previous.BasicDiscontinuousOperations);
+			if (BasicExtraordinary != null) BasicExtraordinary.UpdateValues(previous.BasicExtraordinary);
+			if (BasicAccountingChange != null) BasicAccountingChange.UpdateValues(previous.BasicAccountingChange);
+			if (BasicEPS != null) BasicEPS.UpdateValues(previous.BasicEPS);
+			if (DilutedContinuousOperations != null) DilutedContinuousOperations.UpdateValues(previous.DilutedContinuousOperations);
+			if (DilutedDiscontinuousOperations != null) DilutedDiscontinuousOperations.UpdateValues(previous.DilutedDiscontinuousOperations);
+			if (DilutedExtraordinary != null) DilutedExtraordinary.UpdateValues(previous.DilutedExtraordinary);
+			if (DilutedAccountingChange != null) DilutedAccountingChange.UpdateValues(previous.DilutedAccountingChange);
+			if (DilutedEPS != null) DilutedEPS.UpdateValues(previous.DilutedEPS);
+			if (BasicAverageShares != null) BasicAverageShares.UpdateValues(previous.BasicAverageShares);
+			if (DilutedAverageShares != null) DilutedAverageShares.UpdateValues(previous.DilutedAverageShares);
+			if (DividendPerShare != null) DividendPerShare.UpdateValues(previous.DividendPerShare);
+			if (BasicEPSOtherGainsLosses != null) BasicEPSOtherGainsLosses.UpdateValues(previous.BasicEPSOtherGainsLosses);
+			if (ContinuingAndDiscontinuedBasicEPS != null) ContinuingAndDiscontinuedBasicEPS.UpdateValues(previous.ContinuingAndDiscontinuedBasicEPS);
+			if (TaxLossCarryforwardBasicEPS != null) TaxLossCarryforwardBasicEPS.UpdateValues(previous.TaxLossCarryforwardBasicEPS);
+			if (DilutedEPSOtherGainsLosses != null) DilutedEPSOtherGainsLosses.UpdateValues(previous.DilutedEPSOtherGainsLosses);
+			if (ContinuingAndDiscontinuedDilutedEPS != null) ContinuingAndDiscontinuedDilutedEPS.UpdateValues(previous.ContinuingAndDiscontinuedDilutedEPS);
+			if (TaxLossCarryforwardDilutedEPS != null) TaxLossCarryforwardDilutedEPS.UpdateValues(previous.TaxLossCarryforwardDilutedEPS);
+			if (NormalizedBasicEPS != null) NormalizedBasicEPS.UpdateValues(previous.NormalizedBasicEPS);
+			if (NormalizedDilutedEPS != null) NormalizedDilutedEPS.UpdateValues(previous.NormalizedDilutedEPS);
+			if (TotalDividendPerShare != null) TotalDividendPerShare.UpdateValues(previous.TotalDividendPerShare);
 		}
 	}
 }

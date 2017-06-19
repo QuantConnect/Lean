@@ -24,7 +24,6 @@ using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
 using QuantConnect.Notifications;
 using QuantConnect.Orders;
@@ -37,7 +36,8 @@ using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Option;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
-using SecurityTypeMarket = System.Tuple<QuantConnect.SecurityType, string>;
+using System.Collections.Concurrent;
+using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Algorithm
 {
@@ -57,10 +57,10 @@ namespace QuantConnect.Algorithm
         private bool _locked;
         private bool _liveMode;
         private string _algorithmId = "";
-        private List<string> _debugMessages = new List<string>();
-        private List<string> _logMessages = new List<string>();
-        private List<string> _errorMessages = new List<string>();
-        
+        private ConcurrentQueue<string> _debugMessages = new ConcurrentQueue<string>();
+        private ConcurrentQueue<string> _logMessages = new ConcurrentQueue<string>();
+        private ConcurrentQueue<string> _errorMessages = new ConcurrentQueue<string>();
+
         //Error tracking to avoid message flooding:
         private string _previousDebugMessage = "";
         private string _previousErrorMessage = "";
@@ -107,8 +107,10 @@ namespace QuantConnect.Algorithm
             // set our local time zone
             _localTimeKeeper = _timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork);
 
+            Settings = new AlgorithmSettings();
+
             //Initialise Data Manager 
-            SubscriptionManager = new SubscriptionManager(_timeKeeper);
+            SubscriptionManager = new SubscriptionManager(Settings, _timeKeeper);
 
             Securities = new SecurityManager(_timeKeeper);
             Transactions = new SecurityTransactionManager(Securities);
@@ -139,9 +141,13 @@ namespace QuantConnect.Algorithm
             // initialize the trade builder
             TradeBuilder = new TradeBuilder(FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO);
 
-            SecurityInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(AccountType.Margin));
+            SecurityInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(AccountType.Margin),
+                                                                        new FuncSecuritySeeder(GetLastKnownPrice));
 
             CandlestickPatterns = new CandlestickPatterns(this);
+
+            // initialize trading calendar 
+            TradingCalendar = new TradingCalendar(Securities, _marketHoursDatabase);
         }
 
         /// <summary>
@@ -232,7 +238,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Gets the Trade Builder to generate trades from executions
         /// </summary>
-        public TradeBuilder TradeBuilder
+        public ITradeBuilder TradeBuilder
         {
             get;
             private set;
@@ -261,6 +267,24 @@ namespace QuantConnect.Algorithm
         public TimeRules TimeRules
         {
             get { return Schedule.TimeRules; }
+        }
+
+        /// <summary>
+        /// Gets trading calendar populated with trading events
+        /// </summary>
+        public TradingCalendar TradingCalendar
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Gets the user settings for the algorithm
+        /// </summary>
+        public AlgorithmSettings Settings
+        {
+            get;
+            private set;
         }
 
         /// <summary>
@@ -371,7 +395,7 @@ namespace QuantConnect.Algorithm
         /// Storage for debugging messages before the event handler has passed control back to the Lean Engine.
         /// </summary>
         /// <seealso cref="Debug(string)"/>
-        public List<string> DebugMessages
+        public ConcurrentQueue<string> DebugMessages
         {
             get
             {
@@ -387,7 +411,7 @@ namespace QuantConnect.Algorithm
         /// Storage for log messages before the event handlers have passed control back to the Lean Engine.
         /// </summary>
         /// <seealso cref="Log(string)"/>
-        public List<string> LogMessages
+        public ConcurrentQueue<string> LogMessages
         {
             get
             {
@@ -409,7 +433,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <remarks>This method is best used within a try-catch bracket to handle any runtime errors from a user algorithm.</remarks>
         /// <see cref="Error(string)"/>
-        public List<string> ErrorMessages
+        public ConcurrentQueue<string> ErrorMessages
         {
             get
             {
@@ -455,24 +479,7 @@ namespace QuantConnect.Algorithm
                 if (!Securities.TryGetValue(_benchmarkSymbol, out security))
                 {
                     // add the security as an internal feed so the algorithm doesn't receive the data
-                    Resolution resolution;
-                    if (_liveMode)
-                    {
-                        resolution = Resolution.Second;
-                    }
-                    else
-                    {
-                        // check to see if any universes arn't the ones added via AddSecurity
-                        var hasNonAddSecurityUniverses = (
-                            from kvp in UniverseManager
-                            let config = kvp.Value.Configuration
-                            let symbol = UserDefinedUniverse.CreateSymbol(config.SecurityType, config.Market)
-                            where config.Symbol != symbol
-                            select kvp).Any();
-
-                        resolution = hasNonAddSecurityUniverses ? UniverseSettings.Resolution : Resolution.Daily;
-                    }
-                    security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer, _benchmarkSymbol, resolution, true, 1m, false, true, false);
+                    security = CreateBenchmarkSecurity();
                     AddToUserDefinedUniverse(security);
                 }
 
@@ -483,13 +490,12 @@ namespace QuantConnect.Algorithm
             // add option underlying securities if not present
             foreach (var option in Securities.Select(x => x.Value).OfType<Option>())
             {
-                var sid = option.Symbol.ID;
-                var underlying = QuantConnect.Symbol.Create(sid.Symbol, SecurityType.Equity, sid.Market);
+                var underlying = option.Symbol.Underlying;
                 Security equity;
                 if (!Securities.TryGetValue(underlying, out equity))
                 {
-                    // if it wasn't manually added, add a daily subscription for volatility calculations
-                    equity = AddEquity(underlying.Value, Resolution.Daily, underlying.ID.Market, false);
+                    // if it wasn't manually added, add a subscription for underlying updates
+                    equity = AddEquity(underlying.Value, option.Resolution, underlying.ID.Market, false);
                 }
 
                 // set the underlying property on the option chain
@@ -498,18 +504,11 @@ namespace QuantConnect.Algorithm
                 // check for the null volatility model and update it
                 if (equity.VolatilityModel == VolatilityModel.Null)
                 {
-                    const int period = 50;
-                    // define indicator for daily close to prevent multiple consolidators per indicator
-                    var dailyClose = Identity(equity.Symbol, Resolution.Daily);
-                    var meanName = CreateIndicatorName(equity.Symbol, "SMA" + period, Resolution.Daily);
-                    var stdName = CreateIndicatorName(equity.Symbol, "STD" + period, Resolution.Daily);
-                    var mean = new SimpleMovingAverage(meanName, period).Of(dailyClose);
-                    var std = new StandardDeviation(stdName, period).Of(dailyClose);
-                    // the model wants a % volatility
-                    var volatility = std.Over(mean);
-                    equity.VolatilityModel = new IndicatorVolatilityModel<IndicatorDataPoint>(volatility);
+                    const int periods = 30;
+                    equity.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(periods);
                 }
             }
+            
         }
 
         /// <summary>
@@ -543,6 +542,18 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Set the available data feeds in the <see cref="SecurityManager"/>
+        /// </summary>
+        /// <param name="availableDataTypes">The different <see cref="TickType"/> each <see cref="Security"/> supports</param>
+        public void SetAvailableDataTypes(Dictionary<SecurityType, List<TickType>> availableDataTypes)
+        {
+            foreach (var dataFeed in availableDataTypes)
+            {
+                SubscriptionManager.AvailableDataTypes[dataFeed.Key] = dataFeed.Value;
+            }
+        }
+
+        /// <summary>
         /// Sets the security initializer, used to initialize/configure securities after creation
         /// </summary>
         /// <param name="securityInitializer">The security initializer</param>
@@ -557,9 +568,18 @@ namespace QuantConnect.Algorithm
         /// Sets the security initializer function, used to initialize/configure securities after creation
         /// </summary>
         /// <param name="securityInitializer">The security initializer function</param>
-        public void SetSecurityInitializer(Action<Security> securityInitializer)
+        public void SetSecurityInitializer(Action<Security, bool> securityInitializer)
         {
             SetSecurityInitializer(new FuncSecurityInitializer(securityInitializer));
+        }
+
+        /// <summary>
+        /// Sets the security initializer function, used to initialize/configure securities after creation
+        /// </summary>
+        /// <param name="securityInitializer">The security initializer function</param>
+        public void SetSecurityInitializer(Action<Security> securityInitializer)
+        {
+            SetSecurityInitializer(new FuncSecurityInitializer((security, seedSecurity) => securityInitializer(security)));
         }
 
         /// <summary>
@@ -745,6 +765,16 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Option assignment event handler. On an option assignment event for short legs the resulting information is passed to this method.
+        /// </summary>
+        /// <param name="assignmentEvent">Option exercise event details containing details of the assignment</param>
+        /// <remarks>This method can be called asynchronously and so should only be used by seasoned C# experts. Ensure you use proper locks on thread-unsafe objects</remarks>
+        public virtual void OnAssignmentOrderEvent(OrderEvent assignmentEvent)
+        {
+
+        }
+
+        /// <summary>
         /// Brokerage message event handler. This method is called for all types of brokerage messages.
         /// </summary>
         public virtual void OnBrokerageMessage(BrokerageMessageEvent messageEvent)
@@ -851,7 +881,22 @@ namespace QuantConnect.Algorithm
             if (!_userSetSecurityInitializer)
             {
                 // purposefully use the direct setter vs Set method so we don't flip the switch :/
-                SecurityInitializer = new BrokerageModelSecurityInitializer(model);
+                SecurityInitializer = new BrokerageModelSecurityInitializer(model, new FuncSecuritySeeder(GetLastKnownPrice));
+
+                // update models on securities added earlier (before SetBrokerageModel is called)
+                foreach (var security in Securities.Values)
+                {
+                    // save the existing leverage specified in AddSecurity,
+                    // if Leverage needs to be set in a SecurityInitializer,
+                    // SetSecurityInitializer must be called before SetBrokerageModel
+                    var leverage = security.Leverage;
+
+                    // no need to seed the security, has already been done in AddSecurity
+                    SecurityInitializer.Initialize(security, false);
+
+                    // restore the saved leverage
+                    security.SetLeverage(leverage);
+                }
             }
         }
 
@@ -1178,6 +1223,15 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Set the <see cref="ITradeBuilder"/> implementation to generate trades from executions and market price updates
+        /// </summary>
+        public void SetTradeBuilder(ITradeBuilder tradeBuilder)
+        {
+            TradeBuilder = tradeBuilder;
+            TradeBuilder.SetLiveMode(LiveMode);
+        }
+
+        /// <summary>
         /// Add specified data to our data subscriptions. QuantConnect will funnel this data to the handle data routine.
         /// </summary>
         /// <param name="securityType">MarketType Type: Equity, Commodity, Future or FOREX</param>
@@ -1217,6 +1271,17 @@ namespace QuantConnect.Algorithm
         /// <param name="extendedMarketHours">ExtendedMarketHours send in data from 4am - 8pm, not used for FOREX</param>
         public Security AddSecurity(SecurityType securityType, string symbol, Resolution resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours)
         {
+            // if AddSecurity method is called to add an option or a future, we delegate a call to respective methods
+            if (securityType == SecurityType.Option)
+            {
+                return AddOption(symbol, resolution, market, fillDataForward, leverage);
+            }
+
+            if (securityType == SecurityType.Future)
+            {
+                return AddFuture(symbol, resolution, market, fillDataForward, leverage);
+            }
+
             try
             {
                 if (market == null)
@@ -1234,7 +1299,7 @@ namespace QuantConnect.Algorithm
                 }
 
                 var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer,
-                    symbolObject, resolution, fillDataForward, leverage, extendedMarketHours, false, false);
+                    symbolObject, resolution, fillDataForward, leverage, extendedMarketHours, false, false, LiveMode);
 
                 AddToUserDefinedUniverse(security);
                 return security;
@@ -1251,12 +1316,12 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="ticker">The equity ticker symbol</param>
         /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
-        /// <param name="market">The equity's market, <seealso cref="Market"/>. Default is <see cref="Market.USA"/></param>
+        /// <param name="market">The equity's market, <seealso cref="Market"/>. Default value is null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
         /// <param name="extendedMarketHours">True to send data during pre and post market sessions. Default is <value>false</value></param>
         /// <returns>The new <see cref="Equity"/> security</returns>
-        public Equity AddEquity(string ticker, Resolution resolution = Resolution.Minute, string market = Market.USA, bool fillDataForward = true, decimal leverage = 0m, bool extendedMarketHours = false)
+        public Equity AddEquity(string ticker, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m, bool extendedMarketHours = false)
         {
             return AddSecurity<Equity>(SecurityType.Equity, ticker, resolution, market, fillDataForward, leverage, extendedMarketHours);
         }
@@ -1266,11 +1331,11 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="underlying">The underlying equity symbol</param>
         /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
-        /// <param name="market">The equity's market, <seealso cref="Market"/>. Default is <see cref="Market.USA"/></param>
+        /// <param name="market">The equity's market, <seealso cref="Market"/>. Default is value null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
         /// <returns>The new <see cref="Option"/> security</returns>
-        public Option AddOption(string underlying, Resolution resolution = Resolution.Minute, string market = Market.USA, bool fillDataForward = true, decimal leverage = 0m)
+        public Option AddOption(string underlying, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m)
         {
             if (market == null)
             {
@@ -1289,9 +1354,9 @@ namespace QuantConnect.Algorithm
 
             var marketHoursEntry = _marketHoursDatabase.GetEntry(market, underlying, SecurityType.Option);
             var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(market, underlying, SecurityType.Option, CashBook.AccountCurrency);
-            var canonicalSecurity = (Option) SecurityManager.CreateSecurity(typeof (ZipEntryName), Portfolio, SubscriptionManager,
+            var canonicalSecurity = (Option) SecurityManager.CreateSecurity(new List<Type>() { typeof(ZipEntryName) }, Portfolio, SubscriptionManager,
                 marketHoursEntry.ExchangeHours, marketHoursEntry.DataTimeZone, symbolProperties, SecurityInitializer, canonicalSymbol, resolution,
-                fillDataForward, leverage, false, false, false, true, false);
+                fillDataForward, leverage, false, false, false, LiveMode, true, false);
             canonicalSecurity.IsTradable = false;
             Securities.Add(canonicalSecurity);
 
@@ -1299,8 +1364,8 @@ namespace QuantConnect.Algorithm
             Universe universe;
             if (!UniverseManager.TryGetValue(canonicalSymbol, out universe))
             {
-                var settings = new UniverseSettings(resolution, leverage, false, false, TimeSpan.Zero);
-                universe = new OptionChainUniverse(canonicalSecurity, settings, SecurityInitializer);
+                var settings = new UniverseSettings(resolution, leverage, true, false, TimeSpan.Zero);
+                universe = new OptionChainUniverse(canonicalSecurity, settings, SecurityInitializer, LiveMode);
                 UniverseManager.Add(canonicalSymbol, universe);
             }
 
@@ -1308,15 +1373,99 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates and adds a new <see cref="Future"/> security to the algorithm
+        /// </summary>
+        /// <param name="symbol">The futures contract symbol</param>
+        /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
+        /// <param name="market">The futures market, <seealso cref="Market"/>. Default is value null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
+        /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
+        /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
+        /// <returns>The new <see cref="Future"/> security</returns>
+        public Future AddFuture(string symbol, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m)
+        {
+            if (market == null)
+            {
+                if (!BrokerageModel.DefaultMarkets.TryGetValue(SecurityType.Future, out market))
+                {
+                    throw new Exception("No default market set for security type: " + SecurityType.Future);
+                }
+            }
+
+            Symbol canonicalSymbol;
+            var alias = "/" + symbol;
+            if (!SymbolCache.TryGetSymbol(alias, out canonicalSymbol))
+            {
+                canonicalSymbol = QuantConnect.Symbol.Create(symbol, SecurityType.Future, market, alias);
+            }
+
+            var marketHoursEntry = _marketHoursDatabase.GetEntry(market, symbol, SecurityType.Future);
+            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(market, symbol, SecurityType.Future, CashBook.AccountCurrency);
+            var types = SubscriptionManager.LookupSubscriptionConfigDataTypes(SecurityType.Future, resolution, canonicalSymbol.IsCanonical());
+
+            var canonicalSecurity = (Future)SecurityManager.CreateSecurity(types, Portfolio, SubscriptionManager,
+                marketHoursEntry.ExchangeHours, marketHoursEntry.DataTimeZone, symbolProperties, SecurityInitializer, canonicalSymbol, resolution,
+                fillDataForward, leverage, false, false, false, LiveMode, true, false);
+            canonicalSecurity.IsTradable = false;
+            Securities.Add(canonicalSecurity);
+
+            // add this security to the user defined universe
+            Universe universe;
+            if (!UniverseManager.TryGetValue(canonicalSymbol, out universe))
+            {
+                var settings = new UniverseSettings(resolution, leverage, true, false, TimeSpan.Zero);
+                universe = new FuturesChainUniverse(canonicalSecurity, settings, SubscriptionManager, SecurityInitializer);
+                UniverseManager.Add(canonicalSymbol, universe);
+            }
+
+            return canonicalSecurity;
+        }
+
+        /// <summary>
+        /// Creates and adds a new single <see cref="Future"/> contract to the algorithm
+        /// </summary>
+        /// <param name="symbol">The futures contract symbol</param>
+        /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
+        /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
+        /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
+        /// <returns>The new <see cref="Future"/> security</returns>
+        public Future AddFutureContract(Symbol symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true, decimal leverage = 0m)
+        {
+            var future = (Future)SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer,
+                symbol, resolution, fillDataForward, leverage, false, false, false, LiveMode);
+
+            AddToUserDefinedUniverse(future);
+
+            return future;
+        }
+
+        /// <summary>
+        /// Creates and adds a new single <see cref="Option"/> contract to the algorithm
+        /// </summary>
+        /// <param name="symbol">The option contract symbol</param>
+        /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
+        /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
+        /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
+        /// <returns>The new <see cref="Option"/> security</returns>
+        public Option AddOptionContract(Symbol symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true, decimal leverage = 0m)
+        {
+            var option = (Option)SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer,
+                symbol, resolution, fillDataForward, leverage, false, false, false, LiveMode);
+
+            AddToUserDefinedUniverse(option);
+
+            return option;
+        }
+
+        /// <summary>
         /// Creates and adds a new <see cref="Forex"/> security to the algorithm
         /// </summary>
         /// <param name="ticker">The currency pair</param>
         /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
-        /// <param name="market">The foreign exchange trading market, <seealso cref="Market"/>. Default is <see cref="Market.FXCM"/></param>
+        /// <param name="market">The foreign exchange trading market, <seealso cref="Market"/>. Default value is null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
         /// <returns>The new <see cref="Forex"/> security</returns>
-        public Forex AddForex(string ticker, Resolution resolution = Resolution.Minute, string market = Market.FXCM, bool fillDataForward = true, decimal leverage = 0m)
+        public Forex AddForex(string ticker, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m)
         {
             return AddSecurity<Forex>(SecurityType.Forex, ticker, resolution, market, fillDataForward, leverage, false);
         }
@@ -1326,11 +1475,11 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="ticker">The currency pair</param>
         /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
-        /// <param name="market">The cfd trading market, <seealso cref="Market"/>. Default is <see cref="Market.FXCM"/></param>
+        /// <param name="market">The cfd trading market, <seealso cref="Market"/>. Default value is null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
         /// <returns>The new <see cref="Cfd"/> security</returns>
-        public Cfd AddCfd(string ticker, Resolution resolution = Resolution.Minute, string market = Market.FXCM, bool fillDataForward = true, decimal leverage = 0m)
+        public Cfd AddCfd(string ticker, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m)
         {
             return AddSecurity<Cfd>(SecurityType.Cfd, ticker, resolution, market, fillDataForward, leverage, false);
         }
@@ -1354,7 +1503,20 @@ namespace QuantConnect.Algorithm
                 var universe = UniverseManager.Values.OfType<UserDefinedUniverse>().FirstOrDefault(x => x.Members.ContainsKey(symbol));
                 if (universe != null)
                 {
-                    return universe.Remove(symbol);
+                    var ret = universe.Remove(symbol);
+
+                    // if we are removing the symbol which is also the benchmark, add it back as internal feed
+                    if (symbol == _benchmarkSymbol)
+                    {
+                        Securities.Remove(symbol);
+
+                        security = CreateBenchmarkSecurity();
+                        AddToUserDefinedUniverse(security);
+                    }
+
+                    SubscriptionManager.HasCustomData = universe.Members.Any(x => x.Value.Subscriptions.Any(y => y.IsCustomData));
+
+                    return ret;
                 }
             }
             return false;
@@ -1368,10 +1530,8 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">Resolution of the data</param>
         /// <remarks>Generic type T must implement base data</remarks>
         public void AddData<T>(string symbol, Resolution resolution = Resolution.Minute)
-            where T : BaseData, new()
+            where T : IBaseData, new()
         {
-            if (_locked) return;
-
             //Add this new generic data as a tradeable security: 
             // Defaults:extended market hours"      = true because we want events 24 hours, 
             //          fillforward                 = false because only want to trigger when there's new custom data.
@@ -1389,10 +1549,8 @@ namespace QuantConnect.Algorithm
         /// <param name="leverage">Custom leverage per security</param>
         /// <remarks>Generic type T must implement base data</remarks>
         public void AddData<T>(string symbol, Resolution resolution, bool fillDataForward, decimal leverage = 1.0m)
-            where T : BaseData, new()
+            where T : IBaseData, new()
         {
-            if (_locked) return;
-
             AddData<T>(symbol, resolution, TimeZones.NewYork, fillDataForward, leverage);
         }
 
@@ -1406,10 +1564,8 @@ namespace QuantConnect.Algorithm
         /// <param name="leverage">Custom leverage per security</param>
         /// <remarks>Generic type T must implement base data</remarks>
         public void AddData<T>(string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
-            where T : BaseData, new()
+            where T : IBaseData, new()
         {
-            if (_locked) return;
-
             var marketHoursDbEntry = _marketHoursDatabase.GetEntry(Market.USA, symbol, SecurityType.Base, timeZone);
 
             //Add this to the data-feed subscriptions
@@ -1417,8 +1573,8 @@ namespace QuantConnect.Algorithm
             var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(Market.USA, symbol, SecurityType.Base, CashBook.AccountCurrency);
 
             //Add this new generic data as a tradeable security: 
-            var security = SecurityManager.CreateSecurity(typeof(T), Portfolio, SubscriptionManager, marketHoursDbEntry.ExchangeHours, marketHoursDbEntry.DataTimeZone, 
-                symbolProperties, SecurityInitializer, symbolObject, resolution, fillDataForward, leverage, true, false, true);
+            var security = SecurityManager.CreateSecurity(new List<Type>() { typeof(T) }, Portfolio, SubscriptionManager, marketHoursDbEntry.ExchangeHours, marketHoursDbEntry.DataTimeZone, 
+                symbolProperties, SecurityInitializer, symbolObject, resolution, fillDataForward, leverage, true, false, true, LiveMode);
 
             AddToUserDefinedUniverse(security);
         }
@@ -1432,7 +1588,7 @@ namespace QuantConnect.Algorithm
         public void Debug(string message)
         {
             if (!_liveMode && (message == "" || _previousDebugMessage == message)) return;
-            _debugMessages.Add(message);
+            _debugMessages.Enqueue(message);
             _previousDebugMessage = message;
         }
 
@@ -1445,7 +1601,7 @@ namespace QuantConnect.Algorithm
         public void Log(string message) 
         {
             if (!_liveMode && message == "") return;
-            _logMessages.Add(message);
+            _logMessages.Enqueue(message);
         }
 
         /// <summary>
@@ -1457,7 +1613,7 @@ namespace QuantConnect.Algorithm
         public void Error(string message)
         {
             if (!_liveMode && (message == "" || _previousErrorMessage == message)) return;
-            _errorMessages.Add(message);
+            _errorMessages.Enqueue(message);
             _previousErrorMessage = message;
         }
 
@@ -1471,7 +1627,7 @@ namespace QuantConnect.Algorithm
         {
             var message = error.Message;
             if (!_liveMode && (message == "" || _previousErrorMessage == message)) return;
-            _errorMessages.Add(message);
+            _errorMessages.Enqueue(message);
             _previousErrorMessage = message;
         }
 
@@ -1532,9 +1688,71 @@ namespace QuantConnect.Algorithm
             }
 
             var security = SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer,
-                symbol, resolution, fillDataForward, leverage, extendedMarketHours, false, false);
+                symbol, resolution, fillDataForward, leverage, extendedMarketHours, false, false, LiveMode);
             AddToUserDefinedUniverse(security);
             return (T)security;
+        }
+
+        /// <summary>
+        /// Creates and returns a <see cref="Security"/> object to be used as the benchmark
+        /// </summary>
+        private Security CreateBenchmarkSecurity()
+        {
+            // add the security as an internal feed so the algorithm doesn't receive the data
+            Resolution resolution;
+            if (_liveMode)
+            {
+                resolution = Resolution.Second;
+            }
+            else
+            {
+                // check to see if any universes arn't the ones added via AddSecurity
+                var hasNonAddSecurityUniverses = (
+                    from kvp in UniverseManager
+                    let config = kvp.Value.Configuration
+                    let symbol = UserDefinedUniverse.CreateSymbol(config.SecurityType, config.Market)
+                    where config.Symbol != symbol
+                    select kvp).Any();
+
+                resolution = hasNonAddSecurityUniverses ? UniverseSettings.Resolution : Resolution.Daily;
+            }
+            return SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer, _benchmarkSymbol, resolution, true, 1m, false, true, false, LiveMode);
+        }
+
+        /// <summary>
+        /// Set the historical data provider
+        /// </summary>
+        /// <param name="historyProvider">Historical data provider</param>
+        public void SetHistoryProvider(IHistoryProvider historyProvider)
+        {
+            if (historyProvider == null)
+            {
+                throw new ArgumentNullException("Algorithm.SetHistoryProvider(): Historical data provider cannot be null.");
+            }
+            HistoryProvider = historyProvider;
+        }
+
+        /// <summary>
+        /// Set the runtime error
+        /// </summary>
+        /// <param name="exception">Represents error that occur during execution</param>
+        public void SetRunTimeError(Exception exception)
+        {
+            if (exception == null)
+            {
+                throw new ArgumentNullException("Algorithm.SetRunTimeError(): Algorithm.RunTimeError cannot be set to null.");
+            }
+
+            RunTimeError = exception;
+        }
+
+        /// <summary>
+        /// Set the state of a live deployment
+        /// </summary>
+        /// <param name="status">Live deployment status</param>
+        public void SetStatus(AlgorithmStatus status)
+        {
+            Status = status;
         }
     }
 }

@@ -16,6 +16,8 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Brokerages;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 
@@ -31,6 +33,11 @@ namespace QuantConnect.Interfaces
         /// Event that fires each time an order is filled
         /// </summary>
         event EventHandler<OrderEvent> OrderStatusChanged;
+
+        /// <summary>
+        /// Event that fires each time a short option position is assigned
+        /// </summary>
+        event EventHandler<OrderEvent> OptionPositionAssigned;
 
         /// <summary>
         /// Event that fires each time a user's brokerage account is changed
@@ -105,5 +112,12 @@ namespace QuantConnect.Interfaces
         /// Specifies whether the brokerage will instantly update account balances
         /// </summary>
         bool AccountInstantlyUpdated { get; }
+
+        /// <summary>
+        /// Gets the history for the requested security
+        /// </summary>
+        /// <param name="request">The historical data request</param>
+        /// <returns>An enumerable of bars covering the span specified in the request</returns>
+        IEnumerable<BaseData> GetHistory(HistoryRequest request);
     }
 }

@@ -22,6 +22,8 @@ namespace QuantConnect.Algorithm.Examples
     /// </summary>
     public class BasicTemplateFillForwardAlgorithm : QCAlgorithm
     {
+        private Symbol _asur = QuantConnect.Symbol.Create("ASUR", SecurityType.Equity, Market.USA);
+        
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -42,7 +44,7 @@ namespace QuantConnect.Algorithm.Examples
         {
             if (!Portfolio.Invested)
             {
-                SetHoldings("ASUR", 1);
+                SetHoldings(_asur, 1);
                 Debug("Purchased Stock");
             }
         }

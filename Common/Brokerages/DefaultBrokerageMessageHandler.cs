@@ -49,7 +49,6 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="algorithm">The running algorithm</param>
         /// <param name="job">The job that produced the algorithm</param>
-        /// <param name="results">The result handler for the algorithm</param>
         /// <param name="api">The api for the algorithm</param>
         /// <param name="initialDelay"></param>
         /// <param name="openThreshold">Defines how long before market open to re-check for brokerage reconnect message</param>
@@ -102,6 +101,8 @@ namespace QuantConnect.Brokerages
                     // if any are open then we need to kill the algorithm
                     if (open)
                     {
+                        Log.Trace("DefaultBrokerageMessageHandler.Handle(): Disconnect when exchanges are open, trying to reconnect for " + _initialDelay.TotalMinutes + " minutes.");
+
                         // wait 15 minutes before killing algorithm
                         StartCheckReconnected(_initialDelay, message);
                     }
@@ -129,6 +130,7 @@ namespace QuantConnect.Brokerages
                         }
 
                         var timeUntilNextMarketOpen = nextMarketOpenUtc - DateTime.UtcNow - _openThreshold;
+                        Log.Trace("DefaultBrokerageMessageHandler.Handle(): TimeUntilNextMarketOpen: " + timeUntilNextMarketOpen);
 
                         // wake up 5 minutes before market open and check if we've reconnected
                         StartCheckReconnected(timeUntilNextMarketOpen, message);

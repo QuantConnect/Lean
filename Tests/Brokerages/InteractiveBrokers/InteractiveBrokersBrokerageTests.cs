@@ -21,8 +21,11 @@ using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 {
@@ -41,12 +44,18 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             InteractiveBrokersGatewayRunner.Start(Config.Get("ib-controller-dir"), 
                 Config.Get("ib-tws-dir"), 
                 Config.Get("ib-user-name"), 
-                Config.Get("ib-password"), 
+                Config.Get("ib-password"),
+                Config.Get("ib-trading-mode"),
                 Config.GetBool("ib-use-tws")
                 );
 
             // grabs account info from configuration
-            _interactiveBrokersBrokerage = new InteractiveBrokersBrokerage(new OrderProvider(_orders), new SecurityProvider());
+            var securityProvider = new SecurityProvider();
+            securityProvider[Symbols.USDJPY] = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                new SubscriptionDataConfig(typeof(TradeBar), Symbols.USDJPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, false),
+                new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+
+            _interactiveBrokersBrokerage = new InteractiveBrokersBrokerage(new OrderProvider(_orders), securityProvider);
             _interactiveBrokersBrokerage.Connect();
         }
 
@@ -531,9 +540,14 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             ib.PlaceOrder(order);
             orderEventFired.WaitOne(1500);
 
+            var stopwatch = Stopwatch.StartNew();
+
             var executions = ib.GetExecutions(null, null, null, DateTime.UtcNow.AddDays(-1), null);
 
-            Assert.IsTrue(executions.Any(x => order.BrokerId.Any(id => executions.Any(e => e.OrderId == int.Parse(id)))));
+            stopwatch.Stop();
+            Console.WriteLine("Total executions fetched: {0}, elapsed time: {1} ms", executions.Count, stopwatch.ElapsedMilliseconds);
+
+            Assert.IsTrue(executions.Any(x => order.BrokerId.Any(id => executions.Any(e => e.Execution.OrderId == int.Parse(id)))));
         }
 
         [Test]

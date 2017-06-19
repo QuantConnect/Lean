@@ -22,7 +22,7 @@ namespace QuantConnect.Indicators
     /// The Balance Of Power is calculated with the following formula:
     /// BOP = (Close - Open) / (High - Low)
     /// </summary>
-    public class BalanceOfPower : TradeBarIndicator
+    public class BalanceOfPower : BarIndicator
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="BalanceOfPower"/> class using the specified name.
@@ -46,7 +46,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(TradeBar input)
+        protected override decimal ComputeNextValue(IBaseDataBar input)
         {
             var range = input.High - input.Low;
             return range > 0 ? (input.Close - input.Open) / range : 0m;

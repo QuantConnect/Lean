@@ -30,7 +30,7 @@ namespace QuantConnect.Algorithm.Examples
     /// </summary>
     public class DisplacedMovingAverageRibbon : QCAlgorithm
     {
-        private const string Symbol = "SPY";
+        private Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
         private IndicatorBase<IndicatorDataPoint>[] _ribbon;
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace QuantConnect.Algorithm.Examples
             SetStartDate(2009, 01, 01);
             SetEndDate(2015, 01, 01);
 
-            AddSecurity(SecurityType.Equity, Symbol, Resolution.Minute);
+            AddSecurity(SecurityType.Equity, "SPY", Resolution.Minute);
 
             int count = 6;
             int offset = 5;
@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm.Examples
                 var delayedSma = delay.Of(sma);
 
                 // register our new 'delayedSma' for automaic updates on a daily resolution
-                RegisterIndicator(Symbol, delayedSma, Resolution.Daily, data => data.Value);
+                RegisterIndicator(_spy, delayedSma, Resolution.Daily, data => data.Value);
 
                 return delayedSma;
             }).ToArray();
@@ -82,21 +82,21 @@ namespace QuantConnect.Algorithm.Examples
             // only once per day
             if (_previous.Date == Time.Date) return;
 
-            Plot(Symbol, "Price", data[Symbol].Price);
-            Plot(Symbol, _ribbon);
+            Plot("Ribbon", "Price", data[_spy].Price);
+            Plot("Ribbon", _ribbon);
 
 
             // check for a buy signal
             var values = _ribbon.Select(x => x.Current.Value).ToArray();
 
-            var holding = Portfolio[Symbol];
+            var holding = Portfolio[_spy];
             if (holding.Quantity <= 0 && IsAscending(values))
             {
-                SetHoldings(Symbol, 1.0);
+                SetHoldings(_spy, 1.0);
             }
             else if (holding.Quantity > 0 && IsDescending(values))
             {
-                Liquidate(Symbol);
+                Liquidate(_spy);
             }
 
             _previous = Time;

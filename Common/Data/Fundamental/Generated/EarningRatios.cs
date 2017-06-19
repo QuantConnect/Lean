@@ -102,11 +102,13 @@ namespace QuantConnect.Data.Fundamental
 		/// <param name="previous">The previous instance</param>
 		public void UpdateValues(EarningRatios previous)
 		{
-			DilutedEPSGrowth.UpdateValues(previous.DilutedEPSGrowth);
-			DilutedContEPSGrowth.UpdateValues(previous.DilutedContEPSGrowth);
-			DPSGrowth.UpdateValues(previous.DPSGrowth);
-			EquityPerShareGrowth.UpdateValues(previous.EquityPerShareGrowth);
-			RegressionGrowthofDividends5Years.UpdateValues(previous.RegressionGrowthofDividends5Years);
+			if (previous == null) return;
+
+			if (DilutedEPSGrowth != null) DilutedEPSGrowth.UpdateValues(previous.DilutedEPSGrowth);
+			if (DilutedContEPSGrowth != null) DilutedContEPSGrowth.UpdateValues(previous.DilutedContEPSGrowth);
+			if (DPSGrowth != null) DPSGrowth.UpdateValues(previous.DPSGrowth);
+			if (EquityPerShareGrowth != null) EquityPerShareGrowth.UpdateValues(previous.EquityPerShareGrowth);
+			if (RegressionGrowthofDividends5Years != null) RegressionGrowthofDividends5Years.UpdateValues(previous.RegressionGrowthofDividends5Years);
 		}
 	}
 }

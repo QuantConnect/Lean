@@ -77,9 +77,9 @@ mono ./QuantConnect.Lean.Launcher.exe
 
 Setup Mono GPG signing key ([instructions here](http://www.mono-project.com/docs/getting-started/install/linux/)).
 
-Install dependencies, MonoDevelop, Git and NuGet:
+Install dependencies, MonoDevelop, Git, NuGet and Python:
 ```
-sudo apt-get install mono-complete mono-vbnc fsharp monodevelop monodevelop-nunit  git ca-certificates-mono
+sudo apt-get install mono-complete mono-vbnc fsharp monodevelop monodevelop-nunit git ca-certificates-mono python-pip
 mozroots --import --sync
 apt-get upgrade mono-complete
 ```
@@ -92,6 +92,7 @@ Like OSX, Linux does not fully support Visual Basic. You will need to remove thi
 ```
 sed -i 's/4.5/4.0/' Algorithm.VisualBasic/QuantConnect.Algorithm.VisualBasic.vbproj
 ```
+
 Restore NuGet packages then compile:
 ```
 wget https://nuget.org/nuget.exe
@@ -111,7 +112,20 @@ cd Lean/Launcher/bin/Debug
 - Install [Visual Studio](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx)
 - Open `QuantConnect.Lean.sln` in Visual Studio
 - Press `ctrl-f5` to run without debugging.
-By default Visual Studio includes NuGet, if your version cannot find DLL references, install [Nuget](https://www.nuget.org/) and build again. 
+By default Visual Studio includes NuGet, if your version cannot find DLL references, install [Nuget](https://www.nuget.org/) and build again.
+
+For Python Support on Windows, you need to change the extension to .dll of Lean\packages\QuantConnect.pythonnet._version_\build\Python.Runtime.win and move it to Lean\packages\QuantConnect.pythonnet._version_\lib.
+
+### QuantConnect plugin
+
+To install QuantConnect plugin build the `VisualStudioPlugin` project in `Release` mode. Then go to `VisualStudioPlugin/bin/Release` and run `QuantConnect.VisualStudioPlugin.vsix` file. Restart VisualStudio.
+In VisualStudio go to Tools -> Options -> QuantConnect and set "<Path to Lean repo>/Data" value to "Price data path".
+
+VisualStudio plugin writes log data to the VisualStudio activity log, but only if VisualStudio is started with the `/log` parameter passed to it. To debug the QuantConnect plugin start VisualStudio with the following command:
+
+```
+devenv /log <path-to-log>
+```
 
 
 ## Issues and Feature Requests ##

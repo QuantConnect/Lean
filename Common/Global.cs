@@ -19,8 +19,6 @@ using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Cfd;
-using QuantConnect.Securities.Forex;
 
 namespace QuantConnect
 {
@@ -45,6 +43,8 @@ namespace QuantConnect
         public const string US = "M/d/yyyy h:mm:ss tt";
         /// Date format of QC forex data
         public const string Forex = "yyyyMMdd HH:mm:ss.ffff";
+        /// YYYYMM Year and Month Character Date Representation (used for futures)
+        public const string YearMonth = "yyyyMM";
     }
 
     /// <summary>
@@ -74,6 +74,12 @@ namespace QuantConnect
         /// Current market conversion rate into the account currency
         public decimal ConversionRate;
 
+        /// Current market value of the holding 
+        public decimal MarketValue;
+
+        /// Current unrealized P/L of the holding 
+        public decimal UnrealizedPnL;
+
         /// Create a new default holding:
         public Holding()
         {
@@ -93,7 +99,8 @@ namespace QuantConnect
             Symbol = holding.Symbol;
             Type = holding.Type;
             Quantity = holding.Quantity;
-            CurrencySymbol = Currencies.CurrencySymbols[security.QuoteCurrency.Symbol];
+            MarketValue = holding.HoldingsValue;
+            CurrencySymbol = Currencies.GetCurrencySymbol(security.QuoteCurrency.Symbol);
             ConversionRate = security.QuoteCurrency.ConversionRate;
 
             var rounding = 2;
@@ -104,6 +111,7 @@ namespace QuantConnect
 
             AveragePrice = Math.Round(holding.AveragePrice, rounding);
             MarketPrice = Math.Round(holding.Price, rounding);
+            UnrealizedPnL = Math.Round(holding.UnrealizedProfit, 2);
         }
 
         /// <summary>
@@ -119,6 +127,8 @@ namespace QuantConnect
                 Type = Type,
                 Quantity = Quantity,
                 MarketPrice = MarketPrice,
+                MarketValue = MarketValue,
+                UnrealizedPnL = UnrealizedPnL,
                 ConversionRate  = ConversionRate,
                 CurrencySymbol = CurrencySymbol
             };
@@ -129,11 +139,14 @@ namespace QuantConnect
         /// </summary>
         public override string ToString()
         {
-            if (ConversionRate == 1.0m)
+            var value = string.Format("{0}: {1} @ {2}{3} - Market: {2}{4}", Symbol.Value, Quantity, CurrencySymbol, AveragePrice, MarketPrice);
+
+            if (ConversionRate != 1m)
             {
-                return string.Format("{0}: {1} @ {2}{3} - Market: {2}{4}", Symbol, Quantity, CurrencySymbol, AveragePrice, MarketPrice);
+                value += string.Format(" - Conversion: {0}", ConversionRate);
             }
-            return string.Format("{0}: {1} @ {2}{3} - Market: {2}{4} - Conversion: {5}", Symbol, Quantity, CurrencySymbol, AveragePrice, MarketPrice, ConversionRate);
+
+            return value;
         }
     }
 
@@ -151,6 +164,24 @@ namespace QuantConnect
         Parallel
     }
 
+    /// <summary>
+    /// Represents the types of environments supported by brokerages for trading
+    /// </summary>
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum BrokerageEnvironment
+    {
+        /// <summary>
+        /// Live trading
+        /// </summary>
+        [EnumMember(Value = "live")]
+        Live,
+
+        /// <summary>
+        /// Paper trading
+        /// </summary>
+        [EnumMember(Value = "paper")]
+        Paper
+    }
 
     /// <summary>
     /// Multilanguage support enum: which language is this project for the interop bridge converter.
@@ -302,7 +333,9 @@ namespace QuantConnect
         /// QuoteBar market data type [Bid(OHLC), Ask(OHLC) and Mid(OHLC) summary bar]
         QuoteBar,
         /// Option chain data
-        OptionChain
+        OptionChain,
+        /// Futures chain data
+        FuturesChain
     }
 
     /// <summary>
@@ -333,15 +366,17 @@ namespace QuantConnect
     }
 
     /// <summary>
-    /// Types of tick data - trades or quote ticks.
+    /// Types of tick data 
     /// </summary>
-    /// <remarks>QuantConnect currently only has trade tick data but can handle quote tick data with the same data structures.</remarks>
+    /// <remarks>QuantConnect currently only has trade, quote, open interest tick data.</remarks>
     public enum TickType
     {
         /// Trade type tick object.
         Trade,
         /// Quote type tick object.
-        Quote
+        Quote, 
+        /// Open Interest type tick object (for options, futures)
+        OpenInterest
     }
 
     /// <summary>
@@ -408,6 +443,22 @@ namespace QuantConnect
         /// European style options are able to be exercised on the expiration date only.
         /// </summary>
         European
+    }
+
+    /// <summary>
+    /// Specifies the type of settlement in derivative deals 
+    /// </summary>
+    public enum SettlementType
+    {
+        /// <summary>
+        /// Physical delivery of the underlying security 
+        /// </summary>
+        PhysicalDelivery, 
+        
+        /// <summary>
+        /// Cash is paid/received on settlement
+        /// </summary>
+        Cash
     }
 
     /// <summary>
@@ -577,7 +628,8 @@ namespace QuantConnect
             {"W", "Chicago Board Options Exchange"},
             {"X", "Philadelphia Stock Exchange"},
             {"Y", "BATS Y-Exchange, Inc"},
-            {"Z", "BATS Exchange, Inc"}
+            {"Z", "BATS Exchange, Inc"},
+            {"IEX", "Investors Exchange"},
         };
 
         /// Canada Market Short Codes:
@@ -631,6 +683,13 @@ namespace QuantConnect
             new DateTime(2014, 01, 01),
             new DateTime(2015, 01, 01),
             new DateTime(2016, 01, 01),
+            new DateTime(2017, 01, 02),
+            new DateTime(2018, 01, 01),
+            new DateTime(2019, 01, 01),
+            new DateTime(2020, 01, 01),
+            new DateTime(2021, 01, 01),
+            new DateTime(2022, 01, 01),
+            new DateTime(2023, 01, 02),
 
             /* Day of Mouring */
             new DateTime(2007, 01, 02),
@@ -668,6 +727,13 @@ namespace QuantConnect
             new DateTime(2014, 01, 20),
             new DateTime(2015, 01, 19),
             new DateTime(2016, 01, 18),
+            new DateTime(2017, 01, 16),
+            new DateTime(2018, 01, 15),
+            new DateTime(2019, 01, 21),
+            new DateTime(2020, 01, 20),
+            new DateTime(2021, 01, 18),
+            new DateTime(2022, 01, 17),
+            new DateTime(2023, 01, 16),
 
             /* Washington / Presidents Day */
             new DateTime(1998, 02, 16),
@@ -689,6 +755,13 @@ namespace QuantConnect
             new DateTime(2014, 02, 17),
             new DateTime(2015, 02, 16),
             new DateTime(2016, 02, 15),
+            new DateTime(2017, 02, 20),
+            new DateTime(2018, 02, 19),
+            new DateTime(2019, 02, 18),
+            new DateTime(2020, 02, 17),
+            new DateTime(2021, 02, 15),
+            new DateTime(2022, 02, 21),
+            new DateTime(2023, 02, 20),
 
             /* Good Friday */
             new DateTime(1998, 04, 10),
@@ -710,6 +783,13 @@ namespace QuantConnect
             new DateTime(2014, 04, 18),
             new DateTime(2015, 04, 03),
             new DateTime(2016, 03, 25),
+            new DateTime(2017, 04, 14),
+            new DateTime(2018, 03, 30),
+            new DateTime(2019, 04, 19),
+            new DateTime(2020, 04, 10),
+            new DateTime(2021, 04, 02),
+            new DateTime(2022, 04, 15),
+            new DateTime(2023, 04, 07),
 
             /* Memorial Day */
             new DateTime(1998, 05, 25),
@@ -731,6 +811,13 @@ namespace QuantConnect
             new DateTime(2014, 05, 26),
             new DateTime(2015, 05, 25),
             new DateTime(2016, 05, 30),
+            new DateTime(2017, 05, 29),
+            new DateTime(2018, 05, 28),
+            new DateTime(2019, 05, 27),
+            new DateTime(2020, 05, 25),
+            new DateTime(2021, 05, 31),
+            new DateTime(2022, 05, 30),
+            new DateTime(2023, 05, 29),
 
             /* Independence Day */
             new DateTime(1998, 07, 03),
@@ -753,6 +840,13 @@ namespace QuantConnect
             new DateTime(2014, 07, 04),
             new DateTime(2015, 07, 03),
             new DateTime(2016, 07, 04),
+            new DateTime(2017, 07, 04),
+            new DateTime(2018, 07, 04),
+            new DateTime(2019, 07, 04),
+            new DateTime(2020, 07, 04),
+            new DateTime(2021, 07, 05),
+            new DateTime(2022, 07, 04),
+            new DateTime(2023, 07, 04),
 
             /* Labor Day */
             new DateTime(1998, 09, 07),
@@ -774,6 +868,13 @@ namespace QuantConnect
             new DateTime(2014, 09, 01),
             new DateTime(2015, 09, 07),
             new DateTime(2016, 09, 05),
+            new DateTime(2017, 09, 04),
+            new DateTime(2018, 09, 03),
+            new DateTime(2019, 09, 02),
+            new DateTime(2020, 09, 07),
+            new DateTime(2021, 09, 06),
+            new DateTime(2022, 09, 05),
+            new DateTime(2023, 09, 04),
 
             /* Thanksgiving Day */
             new DateTime(1998, 11, 26),
@@ -795,6 +896,13 @@ namespace QuantConnect
             new DateTime(2014, 11, 27),
             new DateTime(2015, 11, 26),
             new DateTime(2016, 11, 24),
+            new DateTime(2017, 11, 23),
+            new DateTime(2018, 11, 22),
+            new DateTime(2019, 11, 28),
+            new DateTime(2020, 11, 26),
+            new DateTime(2021, 11, 25),
+            new DateTime(2022, 11, 24),
+            new DateTime(2023, 11, 23),
 
             /* Christmas */
             new DateTime(1998, 12, 25),
@@ -815,7 +923,14 @@ namespace QuantConnect
             new DateTime(2013, 12, 25),
             new DateTime(2014, 12, 25),
             new DateTime(2015, 12, 25),
-            new DateTime(2016, 12, 25)
+            new DateTime(2016, 12, 26),
+            new DateTime(2017, 12, 25),
+            new DateTime(2018, 12, 25),
+            new DateTime(2019, 12, 25),
+            new DateTime(2020, 12, 25),
+            new DateTime(2021, 12, 24),
+            new DateTime(2022, 12, 26),
+            new DateTime(2023, 12, 25)
         };
     }
 }

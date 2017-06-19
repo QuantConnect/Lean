@@ -22,7 +22,7 @@ namespace QuantConnect.Indicators
     /// This indicator creates a moving average (middle band) with an upper band and lower band
     /// fixed at k average true range multiples away from the middle band.  
     /// </summary>
-    public class KeltnerChannels : TradeBarIndicator
+    public class KeltnerChannels : BarIndicator
     {
         private readonly decimal _k;
 
@@ -37,7 +37,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets the upper band of the channel
         /// </summary>
-        public IndicatorBase<TradeBar> UpperBand
+        public IndicatorBase<IBaseDataBar> UpperBand
         {
             get; private set;
         }
@@ -45,7 +45,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets the lower band of the channel
         /// </summary>
-        public IndicatorBase<TradeBar> LowerBand
+        public IndicatorBase<IBaseDataBar> LowerBand
         {
             get; private set;
         }
@@ -53,7 +53,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets the average true range
         /// </summary>
-        public IndicatorBase<TradeBar> AverageTrueRange
+        public IndicatorBase<IBaseDataBar> AverageTrueRange
         {
             get; private set;
         }
@@ -87,14 +87,14 @@ namespace QuantConnect.Indicators
             MiddleBand = movingAverageType.AsIndicator(name + "_MiddleBand", period);
 
             //Compute Lower Band
-            LowerBand = new FunctionalIndicator<TradeBar>(name + "_LowerBand",
+            LowerBand = new FunctionalIndicator<IBaseDataBar>(name + "_LowerBand",
                 input => ComputeLowerBand(),
                 lowerBand => MiddleBand.IsReady,
                 () => MiddleBand.Reset()
                 );
 
             //Compute Upper Band
-            UpperBand = new FunctionalIndicator<TradeBar>(name + "_UpperBand",
+            UpperBand = new FunctionalIndicator<IBaseDataBar>(name + "_UpperBand",
                 input => ComputeUpperBand(),
                 upperBand => MiddleBand.IsReady,
                 () => MiddleBand.Reset()
@@ -126,7 +126,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="input">The TradeBar to this indicator on this time step</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(TradeBar input)
+        protected override decimal ComputeNextValue(IBaseDataBar input)
         {
             AverageTrueRange.Update(input);
 

@@ -21,6 +21,7 @@ from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
+import numpy as np
 
 
 class BasicTemplateAlgorithm(QCAlgorithm):
@@ -33,7 +34,9 @@ class BasicTemplateAlgorithm(QCAlgorithm):
         self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.AddSecurity(SecurityType.Equity, "SPY", Resolution.Second)
+        equity = self.AddSecurity(SecurityType.Equity, "SPY", Resolution.Second)
+        self.spy = equity.Symbol
+        print "numpy test: print np.pi" , np.pi
 
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
@@ -42,4 +45,4 @@ class BasicTemplateAlgorithm(QCAlgorithm):
             data: Slice object keyed by symbol containing the stock data
         '''
         if not self.Portfolio.Invested:
-            self.SetHoldings("SPY", 1)
+            self.SetHoldings(self.spy, 1)

@@ -446,6 +446,8 @@ namespace QuantConnect.Data.Fundamental
 		/// <param name="previous">The previous instance</param>
 		public void UpdateValues(ValuationRatios previous)
 		{
+			if (previous == null) return;
+
 		}
 	}
 }

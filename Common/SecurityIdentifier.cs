@@ -20,6 +20,7 @@ using System.Numerics;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect
@@ -38,6 +39,7 @@ namespace QuantConnect
         #region Empty, DefaultDate Fields
 
         private static readonly string MapFileProviderTypeName = Config.Get("map-file-provider", "LocalDiskMapFileProvider");
+        private static readonly char[] InvalidCharacters = {'|', ' '};
 
         /// <summary>
         /// Gets an instance of <see cref="SecurityIdentifier"/> that is empty, that is, one with no symbol specified
@@ -48,6 +50,11 @@ namespace QuantConnect
         /// Gets the date to be used when it does not apply.
         /// </summary>
         public static readonly DateTime DefaultDate = DateTime.FromOADate(0);
+
+        /// <summary>
+        /// Gets the set of invalids symbol characters
+        /// </summary>
+        public static readonly HashSet<char> InvalidSymbolCharacters = new HashSet<char>(InvalidCharacters);
 
         #endregion
 
@@ -87,10 +94,36 @@ namespace QuantConnect
 
         private readonly string _symbol;
         private readonly ulong _properties;
+        private readonly SidBox _underlying;
 
         #endregion
 
         #region Properties
+
+        /// <summary>
+        /// Gets whether or not this <see cref="SecurityIdentifier"/> is a derivative,
+        /// that is, it has a valid <see cref="Underlying"/> property
+        /// </summary>
+        public bool HasUnderlying
+        {
+            get { return _underlying != null; }
+        }
+
+        /// <summary>
+        /// Gets the underlying security identifier for this security identifier. When there is
+        /// no underlying, this property will return a value of <see cref="Empty"/>.
+        /// </summary>
+        public SecurityIdentifier Underlying
+        {
+            get
+            {
+                if (_underlying == null)
+                {
+                    throw new InvalidOperationException("No underlying specified for this identifier. Check that HasUnderlying is true before accessing the Underlying property.");
+                }
+                return _underlying.SecurityIdentifier;
+            }
+        }
 
         /// <summary>
         /// Gets the date component of this identifier. For equities this
@@ -222,8 +255,35 @@ namespace QuantConnect
             {
                 throw new ArgumentNullException("symbol", "SecurityIdentifier requires a non-null string 'symbol'");
             }
+            if (symbol.IndexOfAny(InvalidCharacters) != -1)
+            {
+                throw new ArgumentException("symbol must not contain the characters '|' or ' '.", "symbol");
+            }
             _symbol = symbol;
             _properties = properties;
+            _underlying = null;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SecurityIdentifier"/> class
+        /// </summary>
+        /// <param name="symbol">The base36 string encoded as a long using alpha [0-9A-Z]</param>
+        /// <param name="properties">Other data defining properties of the symbol including market,
+        /// security type, listing or expiry date, strike/call/put/style for options, ect...</param>
+        /// <param name="underlying">Specifies a <see cref="SecurityIdentifier"/> that represents the underlying security</param>
+        public SecurityIdentifier(string symbol, ulong properties, SecurityIdentifier underlying)
+            : this(symbol, properties)
+        {
+            if (symbol == null)
+            {
+                throw new ArgumentNullException("symbol", "SecurityIdentifier requires a non-null string 'symbol'");
+            }
+            _symbol = symbol;
+            _properties = properties;
+            if (underlying != Empty)
+            {
+                _underlying = new SidBox(underlying);
+            }
         }
 
         #endregion
@@ -241,13 +301,27 @@ namespace QuantConnect
         /// <param name="optionStyle">The option style, American or European</param>
         /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified option security</returns>
         public static SecurityIdentifier GenerateOption(DateTime expiry,
-            string underlying,
+            SecurityIdentifier underlying,
             string market,
             decimal strike,
             OptionRight optionRight,
             OptionStyle optionStyle)
         {
-            return Generate(expiry, underlying, SecurityType.Option, market, strike, optionRight, optionStyle);
+            return Generate(expiry, underlying.Symbol, SecurityType.Option, market, strike, optionRight, optionStyle, underlying);
+        }
+
+        /// <summary>
+        /// Generates a new <see cref="SecurityIdentifier"/> for a future
+        /// </summary>
+        /// <param name="expiry">The date the future expires</param>
+        /// <param name="symbol">The security's symbol</param>
+        /// <param name="market">The market</param>
+        /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified futures security</returns>
+        public static SecurityIdentifier GenerateFuture(DateTime expiry,
+            string symbol,
+            string market)
+        {
+            return Generate(expiry, symbol, SecurityType.Future, market);
         }
 
         /// <summary>
@@ -256,18 +330,27 @@ namespace QuantConnect
         /// </summary>
         /// <param name="symbol">The symbol as it is known today</param>
         /// <param name="market">The market</param>
+        /// <param name="mapSymbol">Specifies if symbol should be mapped using map file provider</param>
         /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified symbol today</returns>
-        public static SecurityIdentifier GenerateEquity(string symbol, string market)
+        public static SecurityIdentifier GenerateEquity(string symbol, string market, bool mapSymbol = true)
         {
-            var provider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(MapFileProviderTypeName);
-            var resolver = provider.Get(market);
-            var mapFile = resolver.ResolveMapFile(symbol, DateTime.Today);
-            var firstDate = mapFile.FirstDate;
-            if (mapFile.Any())
+            if (mapSymbol)
             {
-                symbol = mapFile.OrderBy(x => x.Date).First().MappedSymbol;
+                var provider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(MapFileProviderTypeName);
+                var resolver = provider.Get(market);
+                var mapFile = resolver.ResolveMapFile(symbol, DateTime.Today);
+                var firstDate = mapFile.FirstDate;
+                if (mapFile.Any())
+                {
+                    symbol = mapFile.OrderBy(x => x.Date).First().MappedSymbol;
+                }
+                return GenerateEquity(firstDate, symbol, market);
             }
-            return GenerateEquity(firstDate, symbol, market);
+            else
+            {
+                return GenerateEquity(DefaultDate, symbol, market);
+            }
+            
         }
 
         /// <summary>
@@ -325,7 +408,8 @@ namespace QuantConnect
             string market,
             decimal strike = 0,
             OptionRight optionRight = 0,
-            OptionStyle optionStyle = 0)
+            OptionStyle optionStyle = 0,
+            SecurityIdentifier? underlying = null)
         {
             if ((ulong)securityType >= SecurityTypeWidth || securityType < 0)
             {
@@ -347,18 +431,18 @@ namespace QuantConnect
                     "You can add markets by calling QuantConnect.Market.AddMarket(string,ushort)", market));
             }
 
-            var days = ((ulong)date.ToOADate()) * DaysOffset;
+            var days = (ulong)date.ToOADate() * DaysOffset;
             var marketCode = (ulong)marketIdentifier * MarketOffset;
 
             ulong strikeScale;
             var strk = NormalizeStrike(strike, out strikeScale) * StrikeOffset;
             strikeScale *= StrikeScaleOffset;
-            var style = ((ulong)optionStyle) * OptionStyleOffset;
-            var putcall = (ulong)(optionRight) * PutCallOffset;
+            var style = (ulong)optionStyle * OptionStyleOffset;
+            var putcall = (ulong)optionRight * PutCallOffset;
 
             var otherData = putcall + days + style + strk + strikeScale + marketCode + (ulong)securityType;
 
-            return new SecurityIdentifier(symbol, otherData);
+            return new SecurityIdentifier(symbol, otherData, underlying ?? Empty);
         }
 
         /// <summary>
@@ -489,49 +573,55 @@ namespace QuantConnect
         /// </summary>
         private static bool TryParse(string value, out SecurityIdentifier identifier, out Exception exception)
         {
-            ulong props;
-            string symbol;
-            identifier = default(SecurityIdentifier);
-            if (!TryParseProperties(value, out exception, out props, out symbol))
+            if (!TryParseProperties(value, out exception, out identifier))
             {
                 return false;
             }
 
-            identifier = new SecurityIdentifier(symbol, props);
             return true;
         }
 
         /// <summary>
         /// Parses the string into its component ulong pieces
         /// </summary>
-        private static bool TryParseProperties(string value, out Exception exception, out ulong props, out string symbol)
+        private static bool TryParseProperties(string value, out Exception exception, out SecurityIdentifier identifier)
         {
-            props = ulong.MaxValue;
-            symbol = string.Empty;
             exception = null;
-
-            if (value == null)
-            {
-                return false;
-            }
+            identifier = Empty;
 
             if (string.IsNullOrWhiteSpace(value))
             {
-                props = 0;
                 return true;
             }
 
-            var parts = value.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length != 2)
+            try
             {
-                exception = new FormatException("The string must be splittable on space into two parts.");
+                var sids = value.Split('|');
+                for (var i = sids.Length - 1; i > -1; i--)
+                {
+                    var current = sids[i];
+                    var parts = current.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length != 2)
+                    {
+                        exception = new FormatException("The string must be splittable on space into two parts.");
+                        return false;
+                    }
+
+                    var symbol = parts[0];
+                    var otherData = parts[1];
+                    var props = DecodeBase36(otherData);
+
+                    // toss the previous in as the underlying, if Empty, ignored by ctor
+                    identifier = new SecurityIdentifier(symbol, props, identifier);
+                }
+            }
+            catch (Exception error)
+            {
+                exception = error;
+                Log.Error("SecurityIdentifier.TryParseProperties(): Error parsing SecurityIdentifier: '{0}', Exception: {1}", value, exception);
                 return false;
             }
 
-            symbol = parts[0];
-            var otherData = parts[1];
-
-            props = DecodeBase36(otherData);
             return true;
         }
 
@@ -556,7 +646,9 @@ namespace QuantConnect
         /// <param name="other">An object to compare with this object.</param>
         public bool Equals(SecurityIdentifier other)
         {
-            return _properties == other._properties && _symbol == other._symbol;
+            return _properties == other._properties 
+                && _symbol == other._symbol 
+                && _underlying == other._underlying;
         }
 
         /// <summary>
@@ -611,9 +703,50 @@ namespace QuantConnect
         public override string ToString()
         {
             var props = EncodeBase36(_properties);
+            if (HasUnderlying)
+            {
+                return _symbol + ' ' + props + '|' + _underlying.SecurityIdentifier;
+            }
             return _symbol + ' ' + props;
         }
 
         #endregion
+
+        /// <summary>
+        /// Provides a reference type container for a security identifier instance.
+        /// This is used to maintain a reference to an underlying
+        /// </summary>
+        private sealed class SidBox : IEquatable<SidBox>
+        {
+            public readonly SecurityIdentifier SecurityIdentifier;
+            public SidBox(SecurityIdentifier securityIdentifier)
+            {
+                SecurityIdentifier = securityIdentifier;
+            }
+            public bool Equals(SidBox other)
+            {
+                if (ReferenceEquals(null, other)) return false;
+                if (ReferenceEquals(this, other)) return true;
+                return SecurityIdentifier.Equals(other.SecurityIdentifier);
+            }
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                return obj is SidBox && Equals((SidBox)obj);
+            }
+            public override int GetHashCode()
+            {
+                return SecurityIdentifier.GetHashCode();
+            }
+            public static bool operator ==(SidBox left, SidBox right)
+            {
+                return Equals(left, right);
+            }
+            public static bool operator !=(SidBox left, SidBox right)
+            {
+                return !Equals(left, right);
+            }
+        }
     }
 }

@@ -27,6 +27,8 @@ namespace QuantConnect.Algorithm.Examples
         private DateTime lastAction;
         private MovingAverageConvergenceDivergence macd;
         private ExponentialMovingAverage ema;
+        private Symbol _ibm = QuantConnect.Symbol.Create("IBM", SecurityType.Equity, Market.USA);
+        private Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -41,10 +43,10 @@ namespace QuantConnect.Algorithm.Examples
             AddSecurity(SecurityType.Equity, "IBM", Resolution.Hour);
             AddSecurity(SecurityType.Equity, "SPY", Resolution.Daily);
 
-            macd = MACD("SPY", 12, 26, 9, MovingAverageType.Wilders, Resolution.Daily, Field.Close);
-            ema = EMA("IBM", 15*6, Resolution.Hour, Field.SevenBar);
+            macd = MACD(_spy, 12, 26, 9, MovingAverageType.Wilders, Resolution.Daily, Field.Close);
+            ema = EMA(_ibm, 15*6, Resolution.Hour, Field.SevenBar);
 
-            Securities["IBM"].SetLeverage(1.0m);
+            Securities[_ibm].SetLeverage(1.0m);
         }
 
         /// <summary>
@@ -54,18 +56,18 @@ namespace QuantConnect.Algorithm.Examples
         public void OnData(TradeBars data)
         {
             if (!macd.IsReady) return;
-            if (!data.ContainsKey("IBM")) return;
+            if (!data.ContainsKey(_ibm)) return;
             if (lastAction.Date == Time.Date) return;
             lastAction = Time;
 
-            var holding = Portfolio["SPY"];
-            if (holding.Quantity <= 0 && macd > macd.Signal && data["IBM"].Price > ema)
+            var holding = Portfolio[_spy];
+            if (holding.Quantity <= 0 && macd > macd.Signal && data[_ibm].Price > ema)
             {
-                SetHoldings("IBM", 0.25m);
+                SetHoldings(_ibm, 0.25m);
             }
-            else if (holding.Quantity >= 0 && macd < macd.Signal && data["IBM"].Price < ema)
+            else if (holding.Quantity >= 0 && macd < macd.Signal && data[_ibm].Price < ema)
             {
-                SetHoldings("IBM", -0.25m);
+                SetHoldings(_ibm, -0.25m);
             }
         }
     }

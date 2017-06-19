@@ -54,7 +54,7 @@ namespace QuantConnect.ToolBox
         /// Invoked for each piece of data from the source file
         /// </summary>
         /// <param name="data">The data to be processed</param>
-        public void Process(BaseData data)
+        public void Process(IBaseData data)
         {
             Writer writer;
             if (!_writers.TryGetValue(data.Symbol, out writer))
@@ -87,7 +87,7 @@ namespace QuantConnect.ToolBox
         /// <summary>
         /// Creates the <see cref="TextWriter"/> that writes data to csv files
         /// </summary>
-        private Writer CreateTextWriter(BaseData data)
+        private Writer CreateTextWriter(IBaseData data)
         {
             var entry = LeanData.GenerateZipEntryName(data.Symbol, data.Time.Date, _resolution, _tickType);
             var relativePath = LeanData.GenerateRelativeZipFilePath(data.Symbol, data.Time.Date, _resolution, _tickType)

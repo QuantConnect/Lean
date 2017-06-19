@@ -39,10 +39,12 @@ namespace QuantConnect.Algorithm.CSharp
         private const decimal LimitPercentage = 0.025m;
         private const decimal LimitPercentageDelta = 0.005m;
 
-        private const string Symbol = "SPY";
+        private const string symbol = "SPY";
         private const SecurityType SecType = SecurityType.Equity;
 
-        private readonly CircularQueue<OrderType> _orderTypesQueue = new CircularQueue<OrderType>(Enum.GetValues(typeof(OrderType)).OfType<OrderType>());
+        private readonly CircularQueue<OrderType> _orderTypesQueue = new CircularQueue<OrderType>(Enum.GetValues(typeof(OrderType))
+                                                                        .OfType<OrderType>()
+                                                                        .Where (x => x != OrderType.OptionExercise));
         private readonly List<OrderTicket> _tickets = new List<OrderTicket>(); 
 
         /// <summary>
@@ -54,8 +56,8 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2015, 01, 01);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
-            AddSecurity(SecType, Symbol, Resolution.Daily);
-            Security = Securities[Symbol];
+            AddSecurity(SecType, symbol, Resolution.Daily);
+            Security = Securities[symbol];
 
             _orderTypesQueue.CircleCompleted += (sender, args) =>
             {
@@ -70,7 +72,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            if (!data.Bars.ContainsKey(Symbol)) return;
+            if (!data.Bars.ContainsKey(symbol)) return;
 
             // each month make an action
             if (Time.Month != LastMonth)
@@ -83,13 +85,13 @@ namespace QuantConnect.Algorithm.CSharp
                 LastMonth = Time.Month;
                 Log("ORDER TYPE:: " + orderType);
                 var isLong = Quantity > 0;
-                var stopPrice = isLong ? (1 + StopPercentage)*data.Bars[Symbol].High : (1 - StopPercentage)*data.Bars[Symbol].Low;
+                var stopPrice = isLong ? (1 + StopPercentage)*data.Bars[symbol].High : (1 - StopPercentage)*data.Bars[symbol].Low;
                 var limitPrice = isLong ? (1 - LimitPercentage)*stopPrice : (1 + LimitPercentage)*stopPrice;
                 if (orderType == OrderType.Limit)
                 {
-                    limitPrice = !isLong ? (1 + LimitPercentage) * data.Bars[Symbol].High : (1 - LimitPercentage) * data.Bars[Symbol].Low;
+                    limitPrice = !isLong ? (1 + LimitPercentage) * data.Bars[symbol].High : (1 - LimitPercentage) * data.Bars[symbol].Low;
                 }
-                var request = new SubmitOrderRequest(orderType, SecType, Symbol, Quantity, stopPrice, limitPrice, Time, orderType.ToString());
+                var request = new SubmitOrderRequest(orderType, SecType, symbol, Quantity, stopPrice, limitPrice, Time, orderType.ToString());
                 var ticket = Transactions.AddOrder(request);
                 _tickets.Add(ticket);
             }

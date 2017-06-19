@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Consolidators
     /// <typeparam name="T">The input type of the consolidator</typeparam>
     /// <typeparam name="TConsolidated">The output type of the consolidator</typeparam>
     public abstract class PeriodCountConsolidatorBase<T, TConsolidated> : DataConsolidator<T>
-        where T : class, IBaseData
+        where T : IBaseData
         where TConsolidated : BaseData
     {
         //The minimum timespan between creating new bars.
@@ -80,7 +80,7 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Gets a clone of the data being currently consolidated
         /// </summary>
-        public override BaseData WorkingData
+        public override IBaseData WorkingData
         {
             get { return _workingBar != null ? _workingBar.Clone() : null; }
         }
@@ -129,13 +129,13 @@ namespace QuantConnect.Data.Consolidators
             if (!_lastEmit.HasValue)
             {
                 // initialize this value for period computations
-                _lastEmit = data.Time;
+                _lastEmit = IsTimeBased ? DateTime.MinValue : data.Time;
             }
 
             if (_period.HasValue)
             {
                 // we're in time span mode and initialized
-                if (_workingBar != null && data.Time - _workingBar.Time >= _period.Value)
+                if (_workingBar != null && data.Time - _workingBar.Time >= _period.Value && GetRoundedBarTime(data.Time) > _lastEmit)
                 {
                     fireDataConsolidated = true;
                 }
@@ -150,7 +150,10 @@ namespace QuantConnect.Data.Consolidators
 
             if (aggregateBeforeFire)
             {
-                AggregateBar(ref _workingBar, data);
+                if (data.Time >= _lastEmit)
+                {
+                    AggregateBar(ref _workingBar, data);
+                }
             }
 
             //Fire the event
@@ -172,13 +175,16 @@ namespace QuantConnect.Data.Consolidators
                 }
 
                 OnDataConsolidated(_workingBar);
-                _lastEmit = data.Time;
+                _lastEmit = IsTimeBased && _workingBar != null ? _workingBar.Time.Add(Period ?? TimeSpan.Zero) : data.Time;
                 _workingBar = null;
             }
 
             if (!aggregateBeforeFire)
             {
-                AggregateBar(ref _workingBar, data);
+                if (data.Time >= _lastEmit)
+                {
+                    AggregateBar(ref _workingBar, data);
+                }
             }
         }
 
@@ -192,12 +198,9 @@ namespace QuantConnect.Data.Consolidators
             {
                 if (_workingBar != null)
                 {
-                    var fireDataConsolidated = _period.Value == TimeSpan.Zero;
-                    if (!fireDataConsolidated && currentLocalTime - _workingBar.Time >= _period.Value)
-                    {
-                        fireDataConsolidated = true;
-                    }
-                    if (fireDataConsolidated)
+                    currentLocalTime = GetRoundedBarTime(currentLocalTime);
+
+                    if (_period.Value != TimeSpan.Zero && currentLocalTime - _workingBar.Time >= _period.Value && currentLocalTime > _lastEmit)
                     {
                         OnDataConsolidated(_workingBar);
                         _lastEmit = currentLocalTime;
@@ -205,6 +208,22 @@ namespace QuantConnect.Data.Consolidators
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns true if this consolidator is time-based, false otherwise
+        /// </summary>
+        protected bool IsTimeBased
+        {
+            get { return !_maxCount.HasValue; }
+        }
+
+        /// <summary>
+        /// Gets the time period for this consolidator
+        /// </summary>
+        protected TimeSpan? Period
+        {
+            get { return _period; }
         }
 
         /// <summary>
@@ -242,9 +261,9 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="e">The consolidated data</param>
         protected virtual void OnDataConsolidated(TConsolidated e)
         {
+            base.OnDataConsolidated(e);
             var handler = DataConsolidated;
             if (handler != null) handler(this, e);
-            base.OnDataConsolidated(e);
         }
     }
 }

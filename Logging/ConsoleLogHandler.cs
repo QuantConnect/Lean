@@ -23,19 +23,30 @@ namespace QuantConnect.Logging
     /// </summary>
     public class ConsoleLogHandler : ILogHandler
     {
-        private const string DateFormat = "yyyyMMdd HH:mm:ss";
+        private const string DefaultDateFormat = "yyyyMMdd HH:mm:ss";
         private readonly TextWriter _trace;
         private readonly TextWriter _error;
+        private readonly string _dateFormat;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="QuantConnect.Logging.ConsoleLogHandler"/> class.
         /// </summary>
         public ConsoleLogHandler()
+            : this(DefaultDateFormat)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="QuantConnect.Logging.ConsoleLogHandler"/> class.
+        /// </summary>
+        /// <param name="dateFormat">Specifies the date format to use when writing log messages to the console window</param>
+        public ConsoleLogHandler(string dateFormat = DefaultDateFormat)
         {
             // saves references to the real console text writer since in a deployed state we may overwrite this in order
             // to redirect messages from algorithm to result handler
             _trace = Console.Out;
             _error = Console.Error;
+            _dateFormat = dateFormat;
         }
 
         /// <summary>
@@ -45,7 +56,7 @@ namespace QuantConnect.Logging
         public void Error(string text)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            _error.WriteLine(DateTime.Now.ToString(DateFormat) + " ERROR:: " + text);
+            _error.WriteLine(DateTime.Now.ToString(_dateFormat) + " ERROR:: " + text);
             Console.ResetColor();
         }
 
@@ -55,7 +66,7 @@ namespace QuantConnect.Logging
         /// <param name="text">The debug text to log</param>
         public void Debug(string text)
         {
-            _trace.WriteLine(DateTime.Now.ToString(DateFormat) + " DEBUG:: " + text);
+            _trace.WriteLine(DateTime.Now.ToString(_dateFormat) + " DEBUG:: " + text);
         }
 
         /// <summary>
@@ -64,7 +75,7 @@ namespace QuantConnect.Logging
         /// <param name="text">The trace text to log</param>
         public void Trace(string text)
         {
-            _trace.WriteLine(DateTime.Now.ToString(DateFormat) + " Trace:: " + text);
+            _trace.WriteLine(DateTime.Now.ToString(_dateFormat) + " Trace:: " + text);
         }
 
         /// <summary>

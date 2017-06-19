@@ -7,7 +7,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class WarmupAlgorithm : QCAlgorithm
     {
         private bool first = true;
-        private const string Symbol = "SPY";
+        private const string symbol = "SPY";
         private const int FastPeriod = 60;
         private const int SlowPeriod = 3600;
         private ExponentialMovingAverage fast, slow;
@@ -18,10 +18,10 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 11);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
-            AddSecurity(SecurityType.Equity, Symbol, Resolution.Second);
+            AddSecurity(SecurityType.Equity, symbol, Resolution.Second);
 
-            fast = EMA(Symbol, FastPeriod);
-            slow = EMA(Symbol, SlowPeriod);
+            fast = EMA(symbol, FastPeriod);
+            slow = EMA(symbol, SlowPeriod);
 
             SetWarmup(SlowPeriod);
         }
@@ -39,11 +39,11 @@ namespace QuantConnect.Algorithm.CSharp
             }
             if (fast > slow)
             {
-                SetHoldings(Symbol, 1);
+                SetHoldings(symbol, 1);
             }
             else
             {
-                SetHoldings(Symbol, -1);
+                SetHoldings(symbol, -1);
             }
         }
     }
