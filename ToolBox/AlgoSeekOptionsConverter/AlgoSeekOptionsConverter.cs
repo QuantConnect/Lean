@@ -161,6 +161,9 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                         Log.Trace("AlgoSeekOptionsConverter.Convert(): Performing final flush to disk... ");
                         Flush(processors, DateTime.MaxValue, true);
                         WriteToDisk(processors, waitForFlush, DateTime.MaxValue, flushStep, true);
+
+                        Log.Trace("AlgoSeekOptionsConverter.Convert(): Cleaning up extracted options file {0}", csvFile);
+                        File.Delete(csvFile);
                     }
 
                     processors = null;
