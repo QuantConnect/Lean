@@ -278,7 +278,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                 .GroupBy(x => Directory.GetParent(x).FullName);
 
             //Zip each file massively in parallel.
-            Parallel.ForEach(files, parallelOptionsZipping, file =>
+            Parallel.ForEach(files, file =>
             {
                 try
                 {
