@@ -34,7 +34,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
     /// </summary>
     public class AlgoSeekOptionsConverter
     {
-        private const int execTimeout = 300;// sec
+        private const int execTimeout = 3000;// sec
 
         private string _source;
         private string _remote;
