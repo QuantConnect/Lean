@@ -460,6 +460,11 @@ namespace QuantConnect.Brokerages.Oanda
             }
             catch (WebException ex)
             {
+                if (ex.Response == null)
+                {
+                    throw;
+                }
+
                 var stream = GetResponseStream(ex.Response);
                 using (var reader = new StreamReader(stream))
                 {
@@ -507,6 +512,11 @@ namespace QuantConnect.Brokerages.Oanda
             }
             catch (WebException ex)
             {
+                if (ex.Response == null)
+                {
+                    throw;
+                }
+
                 var stream = GetResponseStream(ex.Response);
                 using (var reader = new StreamReader(stream))
                 {
@@ -542,6 +552,11 @@ namespace QuantConnect.Brokerages.Oanda
             }
             catch (WebException ex)
             {
+                if (ex.Response == null)
+                {
+                    throw;
+                }
+
                 var stream = GetResponseStream(ex.Response);
                 using (var reader = new StreamReader(stream))
                 {
@@ -575,6 +590,11 @@ namespace QuantConnect.Brokerages.Oanda
             }
             catch (WebException ex)
             {
+                if (ex.Response == null)
+                {
+                    throw;
+                }
+
                 var stream = GetResponseStream(ex.Response);
                 using (var reader = new StreamReader(stream))
                 {
