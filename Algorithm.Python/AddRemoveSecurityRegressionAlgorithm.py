@@ -31,7 +31,7 @@ class AddRemoveSecurityRegressionAlgorithm(QCAlgorithm):
         self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.spy = self.AddEquity("SPY")
+        self.AddEquity("SPY")
         
         self._lastAction = None
 
@@ -42,22 +42,22 @@ class AddRemoveSecurityRegressionAlgorithm(QCAlgorithm):
             return
 
         if not self.Portfolio.Invested:
-            self.SetHoldings(self.spy.Symbol, .5)
+            self.SetHoldings("SPY", .5)
             self._lastAction = self.Time
 
         if self.Time.weekday() == 1:
-            self.aig = self.AddEquity("AIG")
-            self.bac = self.AddEquity("BAC")
+            self.AddEquity("AIG")
+            self.AddEquity("BAC")
             self._lastAction = self.Time
 
         if self.Time.weekday() == 2:
-            self.SetHoldings(self.aig.Symbol, .25)
-            self.SetHoldings(self.bac.Symbol, .25)
+            self.SetHoldings("AIG", .25)
+            self.SetHoldings("BAC", .25)
             self._lastAction = self.Time
 
         if self.Time.weekday() == 3:
-            self.RemoveSecurity(self.aig.Symbol)
-            self.RemoveSecurity(self.bac.Symbol)
+            self.RemoveSecurity("AIG")
+            self.RemoveSecurity("BAC")
             self._lastAction = self.Time
 
     def OnOrderEvent(self, orderEvent):

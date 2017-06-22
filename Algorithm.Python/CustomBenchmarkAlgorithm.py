@@ -31,13 +31,12 @@ class CustomBenchmarkAlgorithm(QCAlgorithm):
         self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        equity = self.AddEquity("SPY", Resolution.Second)
+        self.AddEquity("SPY", Resolution.Second)
         
-        self.spy = equity.Symbol
-        self.SetBenchmark(self.spy);
+        self.SetBenchmark("SPY");
 
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
         if not self.Portfolio.Invested:
-            self.SetHoldings(self.spy, 1)
+            self.SetHoldings("SPY", 1)
             self.Debug("Purchased Stock");

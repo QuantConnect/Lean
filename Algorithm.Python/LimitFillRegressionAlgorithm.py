@@ -30,18 +30,17 @@ class LimitFillRegressionAlgorithm(QCAlgorithm):
         self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        equity = self.AddEquity("SPY", Resolution.Second)
-        self.spy = equity.Symbol
-
+        self.AddEquity("SPY", Resolution.Second)
+        
         self.mid_datetime = self.StartDate + (self.EndDate - self.StartDate)/2
 
 
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
-        if data.ContainsKey(self.spy):
+        if data.ContainsKey("SPY"):
             if self.IsRoundHour(self.Time):
                 negative = 1 if self.Time < self.mid_datetime else -1
-                self.LimitOrder(self.spy, negative*10, data[self.spy].Price)
+                self.LimitOrder("SPY", negative*10, data["SPY"].Price)
 
 
     def IsRoundHour(self, dateTime):

@@ -907,6 +907,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                 "    def __init__(self, slice):\n" +
                 "        for data in slice:\n" +
                 "            self[data.Key] = Data(data.Value)\n" +
+                "            self[data.Key.Value] = Data(data.Value)\n" +
 
                 // Python Data class: Converts custom data (PythonData) into a python object'''
                 "class Data(object):\n" +

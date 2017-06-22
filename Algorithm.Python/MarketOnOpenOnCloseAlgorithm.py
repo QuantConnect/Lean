@@ -43,12 +43,12 @@ class MarketOnOpenOnCloseAlgorithm(QCAlgorithm):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
         if self.Time.date() != self.__last.date():   # each morning submit a market on open order
             self.__submittedMarketOnCloseToday = False
-            self.MarketOnOpenOrder(self.equity.Symbol, 100)
+            self.MarketOnOpenOrder("SPY", 100)
             self.__last = self.Time
 
         if not self.__submittedMarketOnCloseToday and self.equity.Exchange.ExchangeOpen:   # once the exchange opens submit a market on close order
             self.__submittedMarketOnCloseToday = True
-            self.MarketOnCloseOrder(self.equity.Symbol, -100)
+            self.MarketOnCloseOrder("SPY", -100)
 
 
     def OnOrderEvent(self, fill):

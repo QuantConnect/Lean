@@ -41,61 +41,60 @@ class UpdateOrderRegressionAlgorithm(QCAlgorithm):
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
 
-        self.__Security = self.AddEquity("SPY", Resolution.Daily)
-        self.__Symbol = self.__Security.Symbol;
+        self.security = self.AddEquity("SPY", Resolution.Daily)
+        
+        self.last_month = -1
+        self.quantity = 100
+        self.delta_quantity = 10
 
-        self.__LastMonth = -1
-        self.__Quantity = 100
-        self.__DeltaQuantity = 10
-
-        self.__StopPercentage = 0.025
-        self.__StopPercentageDelta = 0.005
-        self.__LimitPercentage = 0.025
-        self.__LimitPercentageDelta = 0.005
+        self.stop_percentage = 0.025
+        self.stop_percentage_delta = 0.005
+        self.limit_percentage = 0.025
+        self.limit_percentage_delta = 0.005
 
         OrderTypeEnum = [OrderType.Market, OrderType.Limit, OrderType.StopMarket, OrderType.StopLimit, OrderType.MarketOnOpen, OrderType.MarketOnClose]
-        self.__orderTypesQueue = CircularQueue[OrderType](OrderTypeEnum)
-        self.__orderTypesQueue.CircleCompleted += self.onCircleCompleted
-        self.__tickets = []
+        self.order_types_queue = CircularQueue[OrderType](OrderTypeEnum)
+        self.order_types_queue.CircleCompleted += self.onCircleCompleted
+        self.tickets = []
 
 
     def onCircleCompleted(self, sender, event):
         '''Flip our signs when we've gone through all the order types'''
-        self.__Quantity *= -1
+        self.quantity *= -1
         
 
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
-        if not data.ContainsKey(self.__Symbol):
+        if not data.ContainsKey("SPY"):
             return
 
-        if self.Time.month != self.__LastMonth:
+        if self.Time.month != self.last_month:
             # we'll submit the next type of order from the queue
-            orderType = self.__orderTypesQueue.Dequeue();
+            orderType = self.order_types_queue.Dequeue();
             #Log("");
             self.Log("\r\n--------------MONTH: {0}:: {1}\r\n".format(self.Time.strftime("%B"), orderType))
             #Log("")
-            self.__LastMonth = self.Time.month
+            self.last_month = self.Time.month
             self.Log("ORDER TYPE:: {0}".format(orderType))
-            isLong = self.__Quantity > 0
-            stopPrice = d.Decimal(1 + self.__StopPercentage)*data[self.__Symbol].High if isLong else d.Decimal(1 - self.__StopPercentage)*data[self.__Symbol].Low
-            limitPrice = d.Decimal(1 - self.__LimitPercentage)*stopPrice if isLong else d.Decimal(1 + self.__LimitPercentage)*stopPrice
+            isLong = self.quantity > 0
+            stopPrice = d.Decimal(1 + self.stop_percentage)*data["SPY"].High if isLong else d.Decimal(1 - self.stop_percentage)*data["SPY"].Low
+            limitPrice = d.Decimal(1 - self.limit_percentage)*stopPrice if isLong else d.Decimal(1 + self.limit_percentage)*stopPrice
             
             if orderType == OrderType.Limit:
-                limitPrice = d.Decimal(1 + self.__LimitPercentage)*data[self.__Symbol].High if not isLong else d.Decimal(1 - self.__LimitPercentage)*data[self.__Symbol].Low
+                limitPrice = d.Decimal(1 + self.limit_percentage)*data["SPY"].High if not isLong else d.Decimal(1 - self.limit_percentage)*data["SPY"].Low
 
-            request = SubmitOrderRequest(orderType, self.__Symbol.SecurityType, self.__Symbol, self.__Quantity, stopPrice, limitPrice, self.Time, str(orderType))
+            request = SubmitOrderRequest(orderType, self.security.Symbol.SecurityType, "SPY", self.quantity, stopPrice, limitPrice, self.Time, str(orderType))
             ticket = self.Transactions.AddOrder(request)
-            self.__tickets.append(ticket)
+            self.tickets.append(ticket)
 
-        elif len(self.__tickets) > 0:
-            ticket = self.__tickets[-1]
+        elif len(self.tickets) > 0:
+            ticket = self.tickets[-1]
                     
             if self.Time.day > 8 and self.Time.day < 14:
                 if len(ticket.UpdateRequests) == 0 and ticket.Status is not OrderStatus.Filled:
                     self.Log("TICKET:: {0}".format(ticket))
                     updateOrderFields = UpdateOrderFields()
-                    updateOrderFields.Quantity = ticket.Quantity + copysign(self.__DeltaQuantity, self.__Quantity)
+                    updateOrderFields.Quantity = ticket.Quantity + copysign(self.delta_quantity, self.quantity)
                     updateOrderFields.Tag = "Change quantity: {0}".format(self.Time)
                     ticket.Update(updateOrderFields)
                     
@@ -103,8 +102,8 @@ class UpdateOrderRegressionAlgorithm(QCAlgorithm):
                 if len(ticket.UpdateRequests) == 1 and ticket.Status is not OrderStatus.Filled:
                     self.Log("TICKET:: {0}".format(ticket))
                     updateOrderFields = UpdateOrderFields()
-                    updateOrderFields.LimitPrice = self.__Security.Price*d.Decimal(1 - copysign(self.__LimitPercentageDelta, ticket.Quantity))
-                    updateOrderFields.StopPrice = self.__Security.Price*d.Decimal(1 + copysign(self.__StopPercentageDelta, ticket.Quantity))
+                    updateOrderFields.LimitPrice = self.security.Price*d.Decimal(1 - copysign(self.limit_percentage_delta, ticket.Quantity))
+                    updateOrderFields.StopPrice = self.security.Price*d.Decimal(1 + copysign(self.stop_percentage_delta, ticket.Quantity))
                     updateOrderFields.Tag = "Change prices: {0}".format(self.Time)
                     ticket.Update(updateOrderFields)
             else:
@@ -119,4 +118,4 @@ class UpdateOrderRegressionAlgorithm(QCAlgorithm):
             self.Log("FILLED:: {0} FILL PRICE:: {1}".format(self.Transactions.GetOrderById(orderEvent.OrderId), orderEvent.FillPrice))
         else:
             self.Log(orderEvent.ToString())
-            self.Log("TICKET:: {0}".format(self.__tickets[-1]))
+            self.Log("TICKET:: {0}".format(self.tickets[-1]))

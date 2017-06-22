@@ -36,12 +36,9 @@ class UniverseSelectionRegressionAlgorithm(QCAlgorithm):
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
         # security that exists with no mappings
-        equity_spy = self.AddEquity("SPY", Resolution.Daily)
+        self.AddEquity("SPY", Resolution.Daily)
         # security that doesn't exist until half way in backtest (comes in as GOOCV)
-        equity_goog = self.AddSecurity(SecurityType.Equity, "GOOG", Resolution.Daily)
-
-        self.spy = equity_spy.Symbol
-        self.goog = equity_goog.Symbol        
+        self.AddEquity("GOOG", Resolution.Daily)
 
         self.UniverseSettings.Resolution = Resolution.Daily                
         self.AddUniverse(self.CoarseSelectionFunction)
@@ -61,7 +58,7 @@ class UniverseSelectionRegressionAlgorithm(QCAlgorithm):
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
         if self.Transactions.OrdersCount == 0:
-            self.MarketOrder(self.spy, 100)
+            self.MarketOrder("SPY", 100)
 
         for kvp in data.Delistings:
             self.__delistedSymbols.append(kvp.Key)

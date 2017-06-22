@@ -41,18 +41,17 @@ class CustomDataBitcoinAlgorithm(QCAlgorithm):
 
         # Define the symbol and "type" of our generic data:
         self.AddData(Bitcoin, "BTC")
-        self.btc = self.Securities["BTC"].Symbol
-
+        
 
     def OnData(self, data):
-        if self.btc not in data: return
+        if "BTC" not in data: return
 
-        close = data[self.btc].Close
+        close = data["BTC"].Close
         
         # If we don't have any weather "SHARES" -- invest"
         if not self.Portfolio.Invested:
             # Weather used as a tradable asset, like stocks, futures etc. 
-            self.SetHoldings(self.btc, 1)
+            self.SetHoldings("BTC", 1)
             self.Debug("Buying BTC 'Shares': BTC: {0}".format(close))
         
         self.Debug("Time: {0} {1}".format(datetime.now(), close))

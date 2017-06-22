@@ -34,27 +34,26 @@ class WarmupAlgorithm(QCAlgorithm):
         self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        equity = self.AddEquity("SPY", Resolution.Second)
-        self.__symbol = equity.Symbol
+        self.AddEquity("SPY", Resolution.Second)
         
-        self.__first = True       
-        self.__fastPeriod = 60
-        self.__slowPeriod = 3600
+        fast_period = 60
+        slow_period = 3600
 
-        self.__fast = self.EMA(self.__symbol, self.__fastPeriod)
-        self.__slow = self.EMA(self.__symbol, self.__slowPeriod)
-
-        self.SetWarmup(self.__slowPeriod)
-
+        self.fast = self.EMA("SPY", fast_period)
+        self.slow = self.EMA("SPY", slow_period)
+        
+        self.SetWarmup(slow_period)
+        self.first = True       
+        
 
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
-        if self.__first and not self.IsWarmingUp:
-            self.__first = False
-            self.Log("Fast: {0}".format(self.__fast.Samples))
-            self.Log("Slow: {0}".format(self.__slow.Samples))
+        if self.first and not self.IsWarmingUp:
+            self.first = False
+            self.Log("Fast: {0}".format(self.fast.Samples))
+            self.Log("Slow: {0}".format(self.slow.Samples))
 
-        if self.__fast.Current.Value > self.__slow.Current.Value:
-            self.SetHoldings(self.__symbol, 1)
+        if self.fast.Current.Value > self.slow.Current.Value:
+            self.SetHoldings("SPY", 1)
         else:
-            self.SetHoldings(self.__symbol, -1)
+            self.SetHoldings("SPY", -1)

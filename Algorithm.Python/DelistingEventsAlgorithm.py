@@ -35,11 +35,9 @@ class DelistingEventsAlgorithm(QCAlgorithm):
         self.SetEndDate(2007, 05, 25)    #Set End Date
         self.SetCash(100000)             #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        aaa = self.AddEquity("AAA", Resolution.Daily)
-        spy = self.AddEquity("SPY", Resolution.Daily)
-        self.aaa = aaa.Symbol
-        self.spy = spy.Symbol
-
+        self.AddEquity("AAA", Resolution.Daily)
+        self.AddEquity("SPY", Resolution.Daily)
+        
 
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
@@ -48,7 +46,7 @@ class DelistingEventsAlgorithm(QCAlgorithm):
             data: Slice object keyed by symbol containing the stock data
         '''
         if self.Transactions.OrdersCount == 0:
-            self.SetHoldings(self.aaa, 1)
+            self.SetHoldings("AAA", 1)
             self.Debug("Purchased stock")
 
         for kvp in data.Bars:
