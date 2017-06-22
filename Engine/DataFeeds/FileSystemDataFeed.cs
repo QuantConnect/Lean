@@ -471,7 +471,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 catch (Exception err)
                 {
                     Log.Error(err);
-                    continue;
+
+                    // notify the algorithm about the error, so it can be reported to the user
+                    _algorithm.RunTimeError = err;
+                    _algorithm.Status = AlgorithmStatus.RuntimeError;
+
+                    break;
                 }
                 
                 // syncer returns MaxValue on failure/end of data
