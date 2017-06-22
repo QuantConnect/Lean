@@ -32,7 +32,7 @@ namespace QuantConnect.Commands
         /// <summary>
         /// Gets or sets the new quantity, specify null to not update the quantity
         /// </summary>
-        public int? Quantity { get; set; }
+        public decimal? Quantity { get; set; }
 
         /// <summary>
         /// Gets or sets the new limit price, specify null to not update the limit price.

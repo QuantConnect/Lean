@@ -123,7 +123,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public decimal Value
         {
-            get { return Quantity*Price; }
+            get { return Quantity * Price; }
         }
 
         /// <summary>

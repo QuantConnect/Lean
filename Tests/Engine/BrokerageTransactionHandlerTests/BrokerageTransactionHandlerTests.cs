@@ -70,7 +70,6 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         [Test]
         public void OrderQuantityIsFlooredToNearestMultipleOfLotSizeWhenLongOrderIsRounded()
         {
-
             //Initializes the transaction handler
             var transactionHandler = new BrokerageTransactionHandler();
             transactionHandler.Initialize(_algorithm, new BacktestingBrokerage(_algorithm), new BacktestingResultHandler());
@@ -262,7 +261,6 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         [Test]
         public void RoundOff_Long_Fractional_Orders()
         {
-
             var algo = new QCAlgorithm();
             algo.SetBrokerageModel(BrokerageName.Default);
             algo.SetCash(100000);
@@ -279,14 +277,12 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             var order = Order.CreateOrder(orderRequest);
             var actual = transactionHandler.RoundOffOrder(order, security);
 
-            Assert.AreEqual(123.45, actual);
-
+            Assert.AreEqual(123.45m, actual);
         }
 
         [Test]
         public void RoundOff_Short_Fractional_Orders()
         {
-
             var algo = new QCAlgorithm();
             algo.SetBrokerageModel(BrokerageName.Default);
             algo.SetCash(100000);
@@ -303,7 +299,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             var order = Order.CreateOrder(orderRequest);
             var actual = transactionHandler.RoundOffOrder(order, security);
 
-            Assert.AreEqual(-123.45, actual);
+            Assert.AreEqual(-123.45m, actual);
         }
 
         [Test]
@@ -327,7 +323,5 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             Assert.AreEqual(0, actual);
         }
-
-
     }
 }
