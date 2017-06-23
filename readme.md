@@ -35,86 +35,71 @@ Lean outsourced key infrastructure management to plugins. The most important plu
 
 For more information on the system design and contributing please see the Lean Website Documentation.
 
-## Spinup Instructions ##
+## Installation Instructions ##
 
-### OS X
+Download the zip file with the [lastest master](https://github.com/QuantConnect/Lean/archive/master.zip) and unzip it to your favorite location.
 
-Install [Mono for Mac](http://www.mono-project.com/docs/getting-started/install/mac/)
-
-Install [MonoDevelop](http://www.monodevelop.com/download/) or [Xamarin Studio](http://xamarin.com/studio) for your IDE. If you use MonoDevelop also install its [FSharp Plugin](http://addins.monodevelop.com/Project/Index/48).
-
-Clone the repo:
-```
-git clone git@github.com:QuantConnect/Lean.git
-cd Lean
-```
-
-OSX does not fully support Visual Basic or F#. You will need to remove these projects from the solution for them to build properly. Alternatively for Visual Basic modify the target framework as shown [here](https://groups.google.com/forum/#!topic/lean-engine/uR94evlM01g). Alternatively modify the target framework:
-```
-sed -i -e 's/4.5/4.0/' Algorithm.VisualBasic/QuantConnect.Algorithm.VisualBasic.vbproj
-```
-
-Open the project in Xamarin Studio, then in the menu bar, click `Project > Update NuGet Packages`. You should also run `nuget install MathNet.Filtering -pre` to install the MathNet library. 
-
-In OS X `mdtool` is not added to the PATH environment. Either set up the PATH manually or reference the binary directly.
-
-If you are running Xamarin Studio:
-```
-/Applications/Xamarin\ Studio.app/Contents/MacOS/mdtool build
-```
-
-If you are running MonoDevelop:
-```
-/Applications/MonoDevelop.app/Contents/MacOS/mdtool build
-```
-
-Run the compiled `exe` file. For the time being you need to run the `exe` in the same path as your current working directory:
-```
-cd Lean/Launcher/bin/Debug
-mono ./QuantConnect.Lean.Launcher.exe
-```
-### Linux (Debian, Ubuntu)
-
-Setup Mono GPG signing key ([instructions here](http://www.mono-project.com/docs/getting-started/install/linux/)).
-
-Install dependencies, MonoDevelop, Git, NuGet and Python:
-```
-sudo apt-get install mono-complete mono-vbnc fsharp monodevelop monodevelop-nunit git ca-certificates-mono python-pip
-mozroots --import --sync
-apt-get upgrade mono-complete
-```
-Clone the repo:
+Alternatively, install [Git](https://git-scm.com/downloads) and clone the repo:
 ```
 git clone https://github.com/QuantConnect/Lean.git
 cd Lean
 ```
-Like OSX, Linux does not fully support Visual Basic. You will need to remove this project from the solution for them to build properly. Alternatively modify the target framework:
-```
-sed -i 's/4.5/4.0/' Algorithm.VisualBasic/QuantConnect.Algorithm.VisualBasic.vbproj
-```
 
-Restore NuGet packages then compile:
-```
-wget https://nuget.org/nuget.exe
-mono nuget.exe restore QuantConnect.Lean.sln
-xbuild
-```
-If you get: "Error initializing task Fsc: Not registered task Fsc." -> apt-get upgrade mono-complete
-If you get: "XX not found" -> Make sure Nuget ran successfully, and re-run if neccessary.
+### macOS 
 
-Run the compiled `exe` file. For the time being you need to run the `exe` in the same path as your current working directory:
+- Install [Visual Studio for Mac](https://www.visualstudio.com/vs/visual-studio-mac/)
+- Open `QuantConnect.Lean.sln` in Visual Studio
+
+Visual Studio will automatically start to restore the Nuget packages. If not, in the menu bar, click `Project > Restore NuGet Packages`.
+
+- In the menu bar, click `Run > Start Debugging`.
+
+Alternatively, run the compiled `exe` file. First, in the menu bar, click `Build > Build All`, then:
 ```
 cd Lean/Launcher/bin/Debug
-./QuantConnect.Lean.Launcher.exe
+mono QuantConnect.Lean.Launcher.exe
+```
+
+### Linux (Debian, Ubuntu)
+
+- Install [Mono](http://www.mono-project.com/docs/getting-started/install/linux/):
+```
+sudo apt-get update && rm -rf /var/lib/apt/lists/*
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
+echo "deb http://download.mono-project.com/repo/debian wheezy/snapshots/4.6.1.5 main" > sudo /etc/apt/sources.list.d/mono-xamarin.list
+sudo apt-get update
+sudo apt-get install -y binutils mono-complete ca-certificates-mono referenceassemblies-pcl fsharp
+```
+- Install Nuget and Python
+```
+sudo apt-get update && apt-get install -y nuget python-pip
+```
+- Restore NuGet packages then compile:
+```
+nuget restore QuantConnect.Lean.sln
+xbuild
+```
+If you get: "Error initializing task Fsc: Not registered task Fsc." -> `sudo apt-get upgrade mono-complete`
+
+If you get: "XX not found" -> Make sure Nuget ran successfully, and re-run if neccessary.
+
+- Run the compiled `exe` file:
+```
+cd Lean/Launcher/bin/Debug
+mono ./QuantConnect.Lean.Launcher.exe
 ```
 ### Windows
 
 - Install [Visual Studio](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx)
 - Open `QuantConnect.Lean.sln` in Visual Studio
-- Press `ctrl-f5` to run without debugging.
+- Press `F5` to run
+
 By default Visual Studio includes NuGet, if your version cannot find DLL references, install [Nuget](https://www.nuget.org/) and build again.
 
-For Python Support on Windows, you need to change the extension to .dll of Lean\packages\QuantConnect.pythonnet._version_\build\Python.Runtime.win and move it to Lean\packages\QuantConnect.pythonnet._version_\lib.
+### Python Support
+
+- Windows: rename `Lean\packages\QuantConnect.pythonnet._version_\build\Python.Runtime.win` to `Lean\packages\QuantConnect.pythonnet._version_\lib\Python.Runtime.dll`
+- macOs: rename `Lean\packages\QuantConnect.pythonnet._version_\build\Python.Runtime.mac` to `Lean\packages\QuantConnect.pythonnet._version_\lib\Python.Runtime.dll`
 
 ### QuantConnect plugin
 
