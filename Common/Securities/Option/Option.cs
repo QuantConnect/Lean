@@ -65,6 +65,7 @@ namespace QuantConnect.Securities.Option
                 )
         {
             ExerciseSettlement = SettlementType.PhysicalDelivery;
+            SetDataNormalizationMode(DataNormalizationMode.Raw);
             OptionExerciseModel = new DefaultExerciseModel();
             PriceModel = new CurrentPriceOptionPriceModel();
             Holdings = new OptionHolding(this);
@@ -97,6 +98,7 @@ namespace QuantConnect.Securities.Option
                )
         {
             ExerciseSettlement = SettlementType.PhysicalDelivery;
+            SetDataNormalizationMode(DataNormalizationMode.Raw);
             OptionExerciseModel = new DefaultExerciseModel();
             PriceModel = new CurrentPriceOptionPriceModel();
             Holdings = new OptionHolding(this);
