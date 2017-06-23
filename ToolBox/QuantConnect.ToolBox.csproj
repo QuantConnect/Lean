@@ -172,6 +172,7 @@
     <Compile Include="FileStreamProvider.cs" />
     <Compile Include="FilteredDataProcessor.cs" />
     <Compile Include="ForexVolume\ForexVolumeDownloader.cs" />
+    <Compile Include="ForexVolume\Program.cs" />
     <Compile Include="FxcmDownloader\FxcmDataDownloader.cs" />
     <Compile Include="FxcmDownloader\Program.cs" />
     <Compile Include="GoogleDownloader\GoogleDataDownloader.cs" />

@@ -13,14 +13,13 @@
  * limitations under the License.
 */
 
+using QuantConnect.Data;
+using QuantConnect.Data.Custom;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net;
-using QuantConnect.Data;
-using QuantConnect.Data.Custom;
-using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.ToolBox.ForexVolumeDownloader
 {
@@ -64,12 +63,12 @@ namespace QuantConnect.ToolBox.ForexVolumeDownloader
         /// <summary>
         ///     The columns index which should be added to obtain the transactions.
         /// </summary>
-        private readonly int[] _transactionsIdx = {29, 31, 33, 35};
+        private readonly int[] _transactionsIdx = { 29, 31, 33, 35 };
 
         /// <summary>
         ///     The columns index which should be added to obtain the volume.
         /// </summary>
-        private readonly int[] _volumeIdx = {28, 30, 32, 34};
+        private readonly int[] _volumeIdx = { 28, 30, 32, 34 };
 
         /// <summary>
         ///     The request base URL.
@@ -80,22 +79,8 @@ namespace QuantConnect.ToolBox.ForexVolumeDownloader
 
         public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
-            var symbolId = GetFxcmIDFromSymbol(symbol);
-            var interval = GetIntervalFromResolution(resolution);
-            var startDate = startUtc.ToString("yyyyMMddhhmm");
-            var endDate = endUtc.ToString("yyyyMMddhhmm");
+            var lines = RequestData(symbol, resolution, startUtc, endUtc);
 
-            var request = string.Format("{0}&ver={1}&sid={2}&interval={3}&offerID={4}&timeFrom={5}&timeTo={6}",
-                _baseUrl, _ver, _sid, interval, symbolId, startDate, endDate);
-
-            // Download the data from Google.
-            string[] lines;
-            using (var client = new WebClient())
-            {
-                var data = client.DownloadString(request);
-                lines = data.Split('\n');
-            }
-            
             var requestedData = new List<BaseData>();
             foreach (var line in lines)
             {
@@ -106,7 +91,7 @@ namespace QuantConnect.ToolBox.ForexVolumeDownloader
                     DateTimeFormatInfo.InvariantInfo);
                 var volume = _volumeIdx.Select(x => int.Parse(obs[x])).Sum();
                 var transactions = _transactionsIdx.Select(x => int.Parse(obs[x])).Sum();
-                requestedData.Add(new ForexVolume
+                requestedData.Add(new Data.Custom.ForexVolume
                 {
                     Time = obsTime,
                     Value = volume,
@@ -129,7 +114,7 @@ namespace QuantConnect.ToolBox.ForexVolumeDownloader
             int symbolId;
             try
             {
-                symbolId = (int) Enum.Parse(typeof(FxcmSymbolId), symbol.Value);
+                symbolId = (int)Enum.Parse(typeof(FxcmSymbolId), symbol.Value);
             }
             catch (ArgumentException)
             {
@@ -169,6 +154,26 @@ namespace QuantConnect.ToolBox.ForexVolumeDownloader
                         "tick or second resolution are not supported for Forex Volume.");
             }
             return interval;
+        }
+
+        private string[] RequestData(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
+        {
+            var symbolId = GetFxcmIDFromSymbol(symbol);
+            var interval = GetIntervalFromResolution(resolution);
+            var startDate = startUtc.ToString("yyyyMMddhhmm");
+            var endDate = endUtc.ToString("yyyyMMddhhmm");
+
+            var request = string.Format("{0}&ver={1}&sid={2}&interval={3}&offerID={4}&timeFrom={5}&timeTo={6}",
+                _baseUrl, _ver, _sid, interval, symbolId, startDate, endDate);
+
+            // Download the data from Google.
+            string[] lines;
+            using (var client = new WebClient())
+            {
+                var data = client.DownloadString(request);
+                lines = data.Split('\n');
+            }
+            return lines;
         }
 
         #endregion Private Methods
