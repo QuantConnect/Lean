@@ -63,12 +63,12 @@ namespace QuantConnect.ToolBox.ForexVolumeDownloader
         /// <summary>
         ///     The columns index which should be added to obtain the transactions.
         /// </summary>
-        private readonly int[] _transactionsIdx = { 29, 31, 33, 35 };
+        private readonly int[] _transactionsIdx = { 27, 29, 31, 33 };
 
         /// <summary>
         ///     The columns index which should be added to obtain the volume.
         /// </summary>
-        private readonly int[] _volumeIdx = { 28, 30, 32, 34 };
+        private readonly int[] _volumeIdx = { 26, 28, 30, 32 };
 
         /// <summary>
         ///     The request base URL.
@@ -86,13 +86,15 @@ namespace QuantConnect.ToolBox.ForexVolumeDownloader
             {
                 var obs = line.Split(';');
                 // Skip the first line
-                if (obs.Length == 2) continue;
-                var obsTime = DateTime.ParseExact(obs[0].Substring(startIndex: 3), "yyyyMMddhhmm",
+                if (obs.Length != 35) continue;
+                var stringDate = obs[0].Substring(startIndex: 3);
+                var obsTime = DateTime.ParseExact(stringDate, "yyyyMMddHHmm",
                     DateTimeFormatInfo.InvariantInfo);
                 var volume = _volumeIdx.Select(x => int.Parse(obs[x])).Sum();
                 var transactions = _transactionsIdx.Select(x => int.Parse(obs[x])).Sum();
                 requestedData.Add(new Data.Custom.ForexVolume
                 {
+                    Symbol = symbol,
                     Time = obsTime,
                     Value = volume,
                     Transanctions = transactions
@@ -160,8 +162,8 @@ namespace QuantConnect.ToolBox.ForexVolumeDownloader
         {
             var symbolId = GetFxcmIDFromSymbol(symbol);
             var interval = GetIntervalFromResolution(resolution);
-            var startDate = startUtc.ToString("yyyyMMddhhmm");
-            var endDate = endUtc.ToString("yyyyMMddhhmm");
+            var startDate = startUtc.ToString("yyyyMMdd") + "2100";
+            var endDate = endUtc.ToString("yyyyMMdd") + "2100";
 
             var request = string.Format("{0}&ver={1}&sid={2}&interval={3}&offerID={4}&timeFrom={5}&timeTo={6}",
                 _baseUrl, _ver, _sid, interval, symbolId, startDate, endDate);
