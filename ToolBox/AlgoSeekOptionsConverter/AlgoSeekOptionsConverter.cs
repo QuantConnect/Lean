@@ -279,18 +279,16 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                     var outputFileName = file.Key + ".zip";
                     // Create and open a new ZIP file
                     var filesToCompress = Directory.GetFiles(file.Key, "*.csv", SearchOption.AllDirectories);
-                    var zip = ZipFile.Open(outputFileName, ZipArchiveMode.Create);
-
-                    Log.Trace("AlgoSeekOptionsConverter.Package(): Zipping " + outputFileName);
-
-                    foreach (var fileToCompress in filesToCompress)
+                    using (var zip = ZipFile.Open(outputFileName, ZipArchiveMode.Create))
                     {
-                        // Add the entry for each file
-                        zip.CreateEntryFromFile(fileToCompress, Path.GetFileName(fileToCompress), CompressionLevel.Optimal);
-                    }
+                        Log.Trace("AlgoSeekOptionsConverter.Package(): Zipping " + outputFileName);
 
-                    // Dispose of the object when we are done
-                    zip.Dispose();
+                        foreach (var fileToCompress in filesToCompress)
+                        {
+                            // Add the entry for each file
+                            zip.CreateEntryFromFile(fileToCompress, Path.GetFileName(fileToCompress), CompressionLevel.Optimal);
+                        }
+                    }
 
                     try
                     {
