@@ -129,7 +129,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Get the current bid size
         /// </summary>
-        public decimal BidSize
+        public long BidSize
         {
             get; set;
         }
@@ -145,7 +145,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Gets the current ask size
         /// </summary>
-        public decimal AskSize
+        public long AskSize
         {
             get; set;
         }
