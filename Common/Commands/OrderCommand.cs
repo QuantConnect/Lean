@@ -43,7 +43,7 @@ namespace QuantConnect.Commands
         /// <summary>
         /// Gets or sets the number of units to be ordered (directional)
         /// </summary>
-        public int Quantity { get; set; }
+        public decimal Quantity { get; set; }
 
         /// <summary>
         /// Gets or sets the limit price. Only applies to <see cref="QuantConnect.Orders.OrderType.Limit"/> and <see cref="QuantConnect.Orders.OrderType.StopLimit"/>

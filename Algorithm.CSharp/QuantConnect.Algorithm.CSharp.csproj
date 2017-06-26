@@ -107,6 +107,7 @@
     <Compile Include="CoarseUniverseTop5DollarVolumeAlgorithm.cs" />
     <Compile Include="CustomBenchmarkAlgorithm.cs" />
     <Compile Include="CustomBrokerageMessageHandlerAlgorithm.cs" />
+    <Compile Include="FractionalQuantityRegressionAlgorithm.cs" />
     <Compile Include="CustomDataRegressionAlgorithm.cs" />
     <Compile Include="CustomDataUniverseAlgorithm.cs" />
     <Compile Include="CustomModelsAlgorithm.cs" />

@@ -294,7 +294,7 @@ namespace QuantConnect.Algorithm.CSharp
             //var shares = (int) (MaximumLeverage*MaximumPorfolioRiskPercentPerPosition*Portfolio.TotalPortfolioValue/(0.4m*ATR14));
 
             // max out at a little below our stated max, prevents margin calls and such
-            var maxShare = CalculateOrderQuantity(symbol, MaximumLeverage);
+            var maxShare = (int) CalculateOrderQuantity(symbol, MaximumLeverage);
             shares = Math.Min(shares, maxShare);
 
             // min out at 1x leverage

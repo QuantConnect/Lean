@@ -644,7 +644,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             if (order.Type == OrderType.OptionExercise)
             {
-                _client.ClientSocket.exerciseOptions(ibOrderId, contract, 1, order.Quantity, _account, 0);
+                _client.ClientSocket.exerciseOptions(ibOrderId, contract, 1, decimal.ToInt32(order.Quantity), _account, 0);
             }
             else
             {
@@ -1369,7 +1369,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 OrderId = ibOrderId,
                 Account = _account,
                 Action = ConvertOrderDirection(order.Direction),
-                TotalQuantity = Math.Abs(order.Quantity),
+                TotalQuantity = (int)Math.Abs(order.Quantity),
                 OrderType = ConvertOrderType(order.Type),
                 AllOrNone = false,
                 Tif = IB.TimeInForce.GoodTillCancel,

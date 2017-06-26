@@ -79,10 +79,10 @@ namespace QuantConnect.Securities
 
             // compute the number of shares required for the order, rounding up
             var unitPriceInQuoteCurrency = security.Price * security.SymbolProperties.ContractMultiplier;
-            int quantity = (int)(Math.Round(deltaInQuoteCurrency / unitPriceInQuoteCurrency, MidpointRounding.AwayFromZero) / maintenanceMarginRequirement);
+            var quantity = Math.Round(deltaInQuoteCurrency / unitPriceInQuoteCurrency, MidpointRounding.AwayFromZero) / maintenanceMarginRequirement;
 
-            // don't try and liquidate more share than we currently hold, minimum value of 1, maximum value for absolute quantity
-            quantity = Math.Max(1, Math.Min((int)security.Holdings.AbsoluteQuantity, quantity));
+            // don't try and liquidate more share than we currently hold, minimum value of LotSize, maximum value for absolute quantity
+            quantity = Math.Max(security.SymbolProperties.LotSize, Math.Min(security.Holdings.AbsoluteQuantity, quantity));
             if (security.Holdings.IsLong)
             {
                 // adjust to a sell for long positions

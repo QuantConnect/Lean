@@ -70,7 +70,6 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         [Test]
         public void OrderQuantityIsFlooredToNearestMultipleOfLotSizeWhenLongOrderIsRounded()
         {
-
             //Initializes the transaction handler
             var transactionHandler = new BrokerageTransactionHandler();
             transactionHandler.Initialize(_algorithm, new BacktestingBrokerage(_algorithm), new BacktestingResultHandler());
@@ -257,6 +256,72 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.IsTrue(cancelRequest.Response.IsSuccess);
             Assert.IsTrue(cancelRequest.Status == OrderRequestStatus.Processed);
             Assert.IsTrue(orderTicket.Status == OrderStatus.Canceled);
+        }
+
+        [Test]
+        public void RoundOff_Long_Fractional_Orders()
+        {
+            var algo = new QCAlgorithm();
+            algo.SetBrokerageModel(BrokerageName.Default);
+            algo.SetCash(100000);
+
+            // Sets the Security
+            var security = algo.AddSecurity(SecurityType.Forex, "BTCUSD", Resolution.Hour, Market.Bitfinex, false, 3.3m, true);
+
+            //Initializes the transaction handler
+            var transactionHandler = new BrokerageTransactionHandler();
+            transactionHandler.Initialize(algo, new BacktestingBrokerage(algo), new BacktestingResultHandler());
+
+            // Creates the order
+            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 123.456m, 0, 0, DateTime.Now, "");
+            var order = Order.CreateOrder(orderRequest);
+            var actual = transactionHandler.RoundOffOrder(order, security);
+
+            Assert.AreEqual(123.45m, actual);
+        }
+
+        [Test]
+        public void RoundOff_Short_Fractional_Orders()
+        {
+            var algo = new QCAlgorithm();
+            algo.SetBrokerageModel(BrokerageName.Default);
+            algo.SetCash(100000);
+
+            // Sets the Security
+            var security = algo.AddSecurity(SecurityType.Forex, "BTCUSD", Resolution.Hour, Market.Bitfinex, false, 3.3m, true);
+
+            //Initializes the transaction handler
+            var transactionHandler = new BrokerageTransactionHandler();
+            transactionHandler.Initialize(algo, new BacktestingBrokerage(algo), new BacktestingResultHandler());
+
+            // Creates the order
+            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, -123.454m, 0, 0, DateTime.Now, "");
+            var order = Order.CreateOrder(orderRequest);
+            var actual = transactionHandler.RoundOffOrder(order, security);
+
+            Assert.AreEqual(-123.45m, actual);
+        }
+
+        [Test]
+        public void RoundOff_LessThanLotSize_Fractional_Orders()
+        {
+            var algo = new QCAlgorithm();
+            algo.SetBrokerageModel(BrokerageName.Default);
+            algo.SetCash(100000);
+
+            // Sets the Security
+            var security = algo.AddSecurity(SecurityType.Forex, "BTCUSD", Resolution.Hour, Market.Bitfinex, false, 3.3m, true);
+
+            //Initializes the transaction handler
+            var transactionHandler = new BrokerageTransactionHandler();
+            transactionHandler.Initialize(algo, new BacktestingBrokerage(algo), new BacktestingResultHandler());
+
+            // Creates the order
+            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 0.009m, 0, 0, DateTime.Now, "");
+            var order = Order.CreateOrder(orderRequest);
+            var actual = transactionHandler.RoundOffOrder(order, security);
+
+            Assert.AreEqual(0, actual);
         }
     }
 }
