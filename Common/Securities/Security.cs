@@ -649,13 +649,8 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Sets the data normalization mode to be used by this security
         /// </summary>
-        public void SetDataNormalizationMode(DataNormalizationMode mode)
+        public virtual void SetDataNormalizationMode(DataNormalizationMode mode)
         {
-            if (Symbol.SecurityType == SecurityType.Option && mode != DataNormalizationMode.Raw)
-            {
-                throw new ArgumentException("DataNormalizationMode.Raw must be used with options");
-            }
-
             foreach (var subscription in SubscriptionsBag)
             {
                 subscription.DataNormalizationMode = mode;
