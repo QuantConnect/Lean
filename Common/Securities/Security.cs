@@ -655,18 +655,6 @@ namespace QuantConnect.Securities
             {
                 subscription.DataNormalizationMode = mode;
             }
-
-            if (Type == SecurityType.Equity)
-            {
-                if (mode == DataNormalizationMode.Adjusted)
-                {
-                    PriceVariationModel = new AdjustedPriceVariationModel();
-                }
-                else
-                {
-                    PriceVariationModel = new EquityPriceVariationModel();
-                }
-            }
         }
 
         /// <summary>

@@ -325,10 +325,7 @@ namespace QuantConnect.Securities.Option
                 throw new ArgumentException("DataNormalizationMode.Raw must be used with options");
             }
 
-            foreach (var subscription in SubscriptionsBag)
-            {
-                subscription.DataNormalizationMode = mode;
-            }
+            base.SetDataNormalizationMode(mode);
         }
     }
 }
