@@ -29,6 +29,7 @@ namespace QuantConnect.ToolBox
     {
         private readonly DateTime _date;
         private readonly string _zipPath;
+        private readonly string _zipentry;
         private readonly SubscriptionDataConfig _config;
         
         /// <summary>
@@ -42,7 +43,8 @@ namespace QuantConnect.ToolBox
         public LeanDataReader(SubscriptionDataConfig config, Symbol symbol, Resolution resolution, DateTime date, string dataFolder)
         {
             _date = date;
-            _zipPath = LeanData.GenerateZipFilePath(dataFolder, symbol, date,  resolution, LeanData.GetCommonTickType(symbol.SecurityType));
+            _zipPath = LeanData.GenerateZipFilePath(dataFolder, symbol, date,  resolution, config.TickType);
+            _zipentry = LeanData.GenerateZipEntryName(symbol, date, resolution, config.TickType);
             _config = config;
         }
 
@@ -54,8 +56,10 @@ namespace QuantConnect.ToolBox
         {
             var factory = (BaseData) ObjectActivator.GetActivator(_config.Type).Invoke(new object[0]);
             ZipFile zipFile;
-            using (var unzipped = Compression.Unzip(_zipPath, out zipFile))
+            using (var unzipped = Compression.Unzip(_zipPath,_zipentry, out zipFile))
             {
+                if (unzipped == null)
+                    yield break;
                 string line;
                 while ((line = unzipped.ReadLine()) != null)
                 {
