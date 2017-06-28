@@ -83,5 +83,22 @@ namespace QuantConnect.Securities.Equity
         {
             Holdings = new EquityHolding(this);
         }
+
+        /// <summary>
+        /// Sets the data normalization mode to be used by this security
+        /// </summary>
+        public override void SetDataNormalizationMode(DataNormalizationMode mode)
+        {
+            base.SetDataNormalizationMode(mode);
+
+            if (mode == DataNormalizationMode.Adjusted)
+            {
+                PriceVariationModel = new AdjustedPriceVariationModel();
+            }
+            else
+            {
+                PriceVariationModel = new EquityPriceVariationModel();
+            }
+        }
     }
 }

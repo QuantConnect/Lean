@@ -15,6 +15,7 @@
 
 using System;
 using System.Linq;
+using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -22,6 +23,7 @@ using QuantConnect.Securities;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Slippage;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -146,6 +148,40 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.That(() => security.SetLeverage(0.1m),
                 Throws.TypeOf<ArgumentException>().With.Message.EqualTo("Leverage must be greater than or equal to 1."));
         }
+
+        [Test]
+        public void DefaultDataNormalizationModeForOptionsIsRaw()
+        {
+            var option = new Option(SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY_P_192_Feb19_2016, Resolution.Minute, DateTimeZone.Utc, DateTimeZone.Utc, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)));
+
+            Assert.AreEqual(option.DataNormalizationMode, DataNormalizationMode.Raw);
+        }
+
+        [Test]
+        public void SetDataNormalizationForOptions()
+        {
+            var option = new Option(SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY_P_192_Feb19_2016, Resolution.Minute, DateTimeZone.Utc, DateTimeZone.Utc, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)));
+
+            Assert.DoesNotThrow(() => { option.SetDataNormalizationMode(DataNormalizationMode.Raw); });
+
+            Assert.Throws(typeof(ArgumentException), () => { option.SetDataNormalizationMode(DataNormalizationMode.Adjusted); });
+            Assert.Throws(typeof(ArgumentException), () => { option.SetDataNormalizationMode(DataNormalizationMode.SplitAdjusted); });
+            Assert.Throws(typeof(ArgumentException), () => { option.SetDataNormalizationMode(DataNormalizationMode.Adjusted); });
+            Assert.Throws(typeof(ArgumentException), () => { option.SetDataNormalizationMode(DataNormalizationMode.TotalReturn); });
+        }
+
+        [Test]
+        public void SetDataNormalizationForEquities()
+        {
+            var equity = new QuantConnect.Securities.Equity.Equity(SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, DateTimeZone.Utc, DateTimeZone.Utc, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+
+            Assert.DoesNotThrow(() => { equity.SetDataNormalizationMode(DataNormalizationMode.Raw); });
+            Assert.DoesNotThrow(() => { equity.SetDataNormalizationMode(DataNormalizationMode.Adjusted); });
+            Assert.DoesNotThrow(() => { equity.SetDataNormalizationMode(DataNormalizationMode.SplitAdjusted); });
+            Assert.DoesNotThrow(() => { equity.SetDataNormalizationMode(DataNormalizationMode.Adjusted); });
+            Assert.DoesNotThrow(() => { equity.SetDataNormalizationMode(DataNormalizationMode.TotalReturn); });
+        }
+
         private Security GetSecurity()
         {
             return new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), CreateTradeBarConfig(), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
