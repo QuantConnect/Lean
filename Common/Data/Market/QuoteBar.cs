@@ -32,12 +32,12 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Average bid size
         /// </summary>
-        public long LastBidSize { get; set; }
+        public decimal LastBidSize { get; set; }
         
         /// <summary>
         /// Average ask size
         /// </summary>
-        public long LastAskSize { get; set; }
+        public decimal LastAskSize { get; set; }
 
         /// <summary>
         /// Bid OHLC
@@ -215,7 +215,7 @@ namespace QuantConnect.Data.Market
         /// <param name="ask">Ask OLHC bar</param>
         /// <param name="lastAskSize">Average ask size over period</param>
         /// <param name="period">The period of this bar, specify null for default of 1 minute</param>
-        public QuoteBar(DateTime time, Symbol symbol, IBar bid, long lastBidSize, IBar ask, long lastAskSize, TimeSpan? period = null)
+        public QuoteBar(DateTime time, Symbol symbol, IBar bid, decimal lastBidSize, IBar ask, decimal lastAskSize, TimeSpan? period = null)
         {
             Symbol = symbol;
             Time = time;
@@ -248,12 +248,12 @@ namespace QuantConnect.Data.Market
 
             if (bidSize > 0) 
             {
-                LastBidSize = (long) bidSize;
+                LastBidSize = bidSize;
             }
             
             if (askSize > 0)
             {
-                LastAskSize = (long) askSize;
+                LastAskSize = askSize;
             }
 
             // be prepared for updates without trades
@@ -476,7 +476,7 @@ namespace QuantConnect.Data.Market
                     Low = config.GetNormalizedPrice(csv[3].ToDecimal() * scaleFactor),
                     Close = config.GetNormalizedPrice(csv[4].ToDecimal() * scaleFactor)
                 };
-                quoteBar.LastBidSize = csv[5].ToInt64();
+                quoteBar.LastBidSize = csv[5].ToDecimal();
             }
             else
             {
@@ -493,7 +493,7 @@ namespace QuantConnect.Data.Market
                     Low = config.GetNormalizedPrice(csv[8].ToDecimal() * scaleFactor),
                     Close = config.GetNormalizedPrice(csv[9].ToDecimal() * scaleFactor)
                 };
-                quoteBar.LastAskSize = csv[10].ToInt64();
+                quoteBar.LastAskSize = csv[10].ToDecimal();
             }
             else
             {

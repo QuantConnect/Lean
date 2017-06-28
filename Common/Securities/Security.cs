@@ -532,7 +532,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Access to the volume of the equity today
         /// </summary>
-        public virtual long Volume
+        public virtual decimal Volume
         {
             get { return Cache.Volume; }
         }
@@ -548,7 +548,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the most recent bid size if available
         /// </summary>
-        public virtual long BidSize
+        public virtual decimal BidSize
         {
             get { return Cache.BidSize; }
         }
@@ -564,7 +564,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the most recent ask size if available
         /// </summary>
-        public virtual long AskSize
+        public virtual decimal AskSize
         {
             get { return Cache.AskSize; }
         }
