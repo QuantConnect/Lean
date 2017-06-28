@@ -21,7 +21,7 @@ namespace QuantConnect.Tests.ToolBox
 
         #region futures
 
-        string _datadir = "../../../Data/";
+        string _dataDirectory = "../../../Data/";
         DateTime _fromDate = new DateTime(2013, 10, 7);
         DateTime _toDate = new DateTime(2013, 10, 11);
 
@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.ToolBox
         [Test]
         public void ReadFutureChainData()
         {           
-            var canonical_futures = new Dictionary<Symbol,string>()
+            var canonicalFutures = new Dictionary<Symbol,string>()
             {
                 { Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.USA),
                 "ESZ13|ESH14|ESM14|ESU14|ESZ14" },
@@ -37,27 +37,27 @@ namespace QuantConnect.Tests.ToolBox
                 "GCV13|GCX13|GCZ13|GCG14|GCJ14|GCM14|GCQ14|GCV14|GCZ14|GCG15|GCJ15|GCM15|GCQ15|GCZ15|GCM16|GCZ16|GCM17|GCZ17|GCM18|GCZ18|GCM19"},
             };
                                                       
-            var ticktypes = new[] { TickType.Trade, TickType.Quote, TickType.OpenInterest };
+            var tickTypes = new[] { TickType.Trade, TickType.Quote, TickType.OpenInterest };
 
             var resolutions = new[] {Resolution.Hour, Resolution.Daily };
 
 
-            foreach (var canonical in canonical_futures)
+            foreach (var canonical in canonicalFutures)
             {
                 foreach (var res in resolutions)
                 {
-                    foreach (var ticktype in ticktypes)
+                    foreach (var tickType in tickTypes)
                     {
-                        var futures = LoadFutureChain(canonical.Key,_fromDate, ticktype, res);
+                        var futures = LoadFutureChain(canonical.Key,_fromDate, tickType, res);
 
                         string chain = string.Join("|", futures.Select(f => f.Value));
 
-                        if (ticktype==TickType.Quote) //only quotes have the full chain!
+                        if (tickType==TickType.Quote) //only quotes have the full chain!
                             Assert.AreEqual(canonical.Value, chain);
 
                         foreach (var future in futures)
                         {
-                            string csv = LoadFutureData(future, ticktype, res);
+                            string csv = LoadFutureData(future, tickType, res);
                             Assert.IsTrue(!string.IsNullOrEmpty(csv));
                         }
                     }
@@ -65,13 +65,13 @@ namespace QuantConnect.Tests.ToolBox
             }
         }
 
-        List<Symbol> LoadFutureChain(Symbol basefuture, DateTime date, TickType ticktype, Resolution res)
+        List<Symbol> LoadFutureChain(Symbol baseFuture, DateTime date, TickType tickType, Resolution res)
         {
-            var filePath = LeanData.GenerateZipFilePath(_datadir, basefuture, date, res, ticktype);
+            var filePath = LeanData.GenerateZipFilePath(_dataDirectory, baseFuture, date, res, tickType);
 
             //load future chain first
-            var config = new SubscriptionDataConfig(typeof(ZipEntryName), basefuture, res,
-                TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, ticktype);
+            var config = new SubscriptionDataConfig(typeof(ZipEntryName), baseFuture, res,
+                TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, tickType);
 
             var dataProvider = new DefaultDataProvider();
             var dataCacheProvider = new SingleEntryDataCacheProvider(dataProvider);
@@ -81,11 +81,11 @@ namespace QuantConnect.Tests.ToolBox
                    .Select(s => s.Symbol).ToList();
         }
 
-        string LoadFutureData(Symbol future, TickType ticktype, Resolution res)
+        string LoadFutureData(Symbol future, TickType tickType, Resolution res)
         {
-            var datatype = LeanData.GetDataType(res, ticktype);
+            var datatype = LeanData.GetDataType(res, tickType);
             var config = new SubscriptionDataConfig(datatype, future, res,
-                TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, ticktype);
+                TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, tickType);
 
             var date = _fromDate;
 
@@ -93,7 +93,7 @@ namespace QuantConnect.Tests.ToolBox
 
             while (date <= _toDate)
             {
-                var leanDataReader = new LeanDataReader(config, future, res, date, _datadir);
+                var leanDataReader = new LeanDataReader(config, future, res, date, _dataDirectory);
 
                 var data = leanDataReader.Parse().ToList();
                 foreach (var bar in data)
@@ -108,10 +108,10 @@ namespace QuantConnect.Tests.ToolBox
         }
 
         [Test]
-        public void GenerateDailyAndHourlyDataTest()
+        public void GenerateDailyAndHourlyFutureDataFromMinutes()
         {
             
-            var ticktypes = new[] {TickType.Trade, TickType.Quote, TickType.OpenInterest };
+            var tickTypes = new[] {TickType.Trade, TickType.Quote, TickType.OpenInterest };
 
             var futures = new[] { Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.USA),
                         Symbol.Create(Futures.Metals.Gold, SecurityType.Future, Market.USA)};
@@ -119,63 +119,64 @@ namespace QuantConnect.Tests.ToolBox
 
             foreach (var future in futures)
                 foreach (var res in resolutions)
-                    foreach (var ticktype in ticktypes)
-                        ConvertMinuteFuturesData(future, ticktype, res);
+                    foreach (var tickType in tickTypes)
+                        ConvertMinuteFuturesData(future, tickType, res);
         }
 
-        void ConvertMinuteFuturesData(Symbol canonical, TickType ticktype, Resolution res_output, Resolution res_input = Resolution.Minute)
+        void ConvertMinuteFuturesData(Symbol canonical, TickType tickType, Resolution outputResolution, Resolution inputResolution = Resolution.Minute)
         {
 
-            var timespans = new Dictionary<Resolution, TimeSpan>()
+            var timeSpans = new Dictionary<Resolution, TimeSpan>()
             {
                 { Resolution.Daily, TimeSpan.FromHours(24)},
                 { Resolution.Hour, TimeSpan.FromHours(1)},
             };
 
-            var timespan = timespans[res_output];
+            var timeSpan = timeSpans[outputResolution];
 
-            var consolidators = new Dictionary<TickType, Func<IDataConsolidator>>()
+            var consolidatorTimeSpanMap = new Dictionary<TickType, Func<IDataConsolidator>>()
             {
-                {TickType.Quote, () => new QuoteBarConsolidator(timespan)},
-                {TickType.OpenInterest, ()=> new OpenInterestConsolidator(timespan)},
-                {TickType.Trade, ()=> new TradeBarConsolidator(timespan) }
+                {TickType.Quote, () => new QuoteBarConsolidator(timeSpan)},
+                {TickType.OpenInterest, ()=> new OpenInterestConsolidator(timeSpan)},
+                {TickType.Trade, ()=> new TradeBarConsolidator(timeSpan) }
 
             };
 
-            var cons = new Dictionary<string, IDataConsolidator>();
+            var consolidators = new Dictionary<string, IDataConsolidator>();
             var configs = new Dictionary<string, SubscriptionDataConfig>();
-            var outputfiles = new Dictionary<string, StringBuilder>();
-            var allfutures = new Dictionary<string, Symbol>();
+            var outputFiles = new Dictionary<string, StringBuilder>();
+            var futures = new Dictionary<string, Symbol>();
 
             var date = _fromDate;
             while (date <= _toDate)
             {
-                var futures = LoadFutureChain(canonical, date, ticktype, res_input);
-                foreach (var future in futures)
+                var futureChain = LoadFutureChain(canonical, date, tickType, inputResolution);
+
+                foreach (var future in futureChain)
                 {
-                    if (!allfutures.ContainsKey(future.Value))
+                    if (!futures.ContainsKey(future.Value))
                     {
-                        allfutures[future.Value] = future;
-                        var config = new SubscriptionDataConfig(LeanData.GetDataType(res_output, ticktype),
-                                future, res_input,TimeZones.NewYork, TimeZones.NewYork, 
-                                false, false, false, false, ticktype);
+                        futures[future.Value] = future;
+                        var config = new SubscriptionDataConfig(LeanData.GetDataType(outputResolution, tickType),
+                                future, inputResolution,TimeZones.NewYork, TimeZones.NewYork, 
+                                false, false, false, false, tickType);
                         configs[future.Value] = config;
 
-                        cons[future.Value] = consolidators[ticktype].Invoke();
+                        consolidators[future.Value] = consolidatorTimeSpanMap[tickType].Invoke();
                         
                         var sb = new StringBuilder();
-                        outputfiles[future.Value] = sb;
+                        outputFiles[future.Value] = sb;
 
-                        cons[future.Value].DataConsolidated += (sender, bar) =>
+                        consolidators[future.Value].DataConsolidated += (sender, bar) =>
                         {
-                            sb.Append(LeanData.GenerateLine(bar, SecurityType.Future, res_output) + Environment.NewLine);
+                            sb.Append(LeanData.GenerateLine(bar, SecurityType.Future, outputResolution) + Environment.NewLine);
                         };
                     }
 
-                    var leanDataReader = new LeanDataReader(configs[future.Value], future, res_input, date, _datadir);
+                    var leanDataReader = new LeanDataReader(configs[future.Value], future, inputResolution, date, _dataDirectory);
 
                     var data = leanDataReader.Parse().ToList();
-                    var consolidator = cons[future.Value];
+                    var consolidator = consolidators[future.Value];
 
                     foreach (var bar in data)
                     {
@@ -186,25 +187,25 @@ namespace QuantConnect.Tests.ToolBox
             }
 
             //write all results
-            foreach (var con in cons.Values)
-                con.Scan(date);
+            foreach (var consolidator in consolidators.Values)
+                consolidator.Scan(date);
 
-            var zip = LeanData.GenerateRelativeZipFilePath(canonical, _fromDate, res_output, ticktype);
-            var zippath = Path.Combine(_datadir, zip);
-            var fi = new FileInfo(zippath);
+            var zip = LeanData.GenerateRelativeZipFilePath(canonical, _fromDate, outputResolution, tickType);
+            var zipPath = Path.Combine(_dataDirectory, zip);
+            var fi = new FileInfo(zipPath);
 
             if (!fi.Directory.Exists)
                 fi.Directory.Create();
 
-            foreach (var future in allfutures.Values)
+            foreach (var future in futures.Values)
             {
-                var zipentry = LeanData.GenerateZipEntryName(future, _fromDate, res_output, ticktype);
-                var sb = outputfiles[future.Value];
+                var zipEntry = LeanData.GenerateZipEntryName(future, _fromDate, outputResolution, tickType);
+                var sb = outputFiles[future.Value];
+
                 //Uncomment to write zip files              
-                //QuantConnect.Compression.ZipCreateAppendData(zippath, zipentry, sb.ToString());
+                //QuantConnect.Compression.ZipCreateAppendData(zipPath, zipEntry, sb.ToString());
 
                 Assert.IsTrue(sb.Length > 0);
-
             }
         }
 
