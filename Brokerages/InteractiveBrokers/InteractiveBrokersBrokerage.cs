@@ -1106,6 +1106,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     Log.Trace("InteractiveBrokersBrokerage.TryWaitForReconnect(): Reset time finished and still disconnected. Restarting...");
 
                     _disconnected1100Fired = false;
+
+                    // notify the BrokerageMessageHandler before the restart, so it can stop polling
+                    OnMessage(BrokerageMessageEvent.Reconnected(string.Empty));
+
                     ResetGatewayConnection();
                 }
                 else
