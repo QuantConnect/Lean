@@ -83,8 +83,8 @@ namespace QuantConnect.Tests.ToolBox
 
         string LoadFutureData(Symbol future, TickType tickType, Resolution res)
         {
-            var datatype = LeanData.GetDataType(res, tickType);
-            var config = new SubscriptionDataConfig(datatype, future, res,
+            var dataType = LeanData.GetDataType(res, tickType);
+            var config = new SubscriptionDataConfig(dataType, future, res,
                 TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, tickType);
 
             var date = _fromDate;
@@ -134,7 +134,7 @@ namespace QuantConnect.Tests.ToolBox
 
             var timeSpan = timeSpans[outputResolution];
 
-            var consolidatorTimeSpanMap = new Dictionary<TickType, Func<IDataConsolidator>>()
+            var tickTypeConsolidatorMap = new Dictionary<TickType, Func<IDataConsolidator>>()
             {
                 {TickType.Quote, () => new QuoteBarConsolidator(timeSpan)},
                 {TickType.OpenInterest, ()=> new OpenInterestConsolidator(timeSpan)},
@@ -162,7 +162,7 @@ namespace QuantConnect.Tests.ToolBox
                                 false, false, false, false, tickType);
                         configs[future.Value] = config;
 
-                        consolidators[future.Value] = consolidatorTimeSpanMap[tickType].Invoke();
+                        consolidators[future.Value] = tickTypeConsolidatorMap[tickType].Invoke();
                         
                         var sb = new StringBuilder();
                         outputFiles[future.Value] = sb;
