@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Ionic.Zip;
 using Oanda.RestV20.Model;
 using DateTime = System.DateTime;
 
@@ -25,20 +26,6 @@ namespace QuantConnect.Tests.ToolBox.ForexVolume
     [TestFixture]
     public class ForexVolumeDownloaderTest
     {
-        public void SaveCsv(IEnumerable<IBaseData> data, string fileName)
-        {
-            var sb = new StringBuilder("DateTime,Volume,Transactions\n");
-
-            foreach (var obs in data)
-            {
-                sb.AppendLine(string.Format("{0:yyyy/MM/dd HH:mm},{1},{2}", obs.Time, obs.Value, ((Data.Custom.ForexVolume)obs).Transanctions));
-            }
-            var filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
-                fileName);
-            File.WriteAllText(filePath, sb.ToString());
-        }
-
-
         [TestCase]
         public void DailyDataIsCorrectlyRetrieved()
         {
@@ -72,23 +59,66 @@ namespace QuantConnect.Tests.ToolBox.ForexVolume
             Assert.Fail("WIP");
         }
 
-        //[Ignore("WIP")]
         [TestCase]
-        public void RetrievedDataIsCorrectlySaved()
+        public void RetrievedDailyDataIsCorrectlySaved()
         {
+            // Arrange
             var resolution = Resolution.Daily;
             var symbol = Symbol.Create("EURUSD", SecurityType.Base, Market.Decode(code: 20));
             var downloader = new ForexVolumeDownloader();
             var data = downloader.Get(symbol, resolution, new DateTime(year: 2017, month: 04, day: 02),
                 new DateTime(year: 2017, month: 04, day: 22));
-            var asd = data.First().DataType;
-
+            // Create a temporary folder to save testing data
             var rndName = Guid.NewGuid().ToString().Substring(startIndex: 0, length: 8);
             var testingTempFolder = Path.Combine(Path.GetTempPath(), rndName);
 
+            // Act
             var writer = new LeanDataWriter(resolution, symbol, testingTempFolder);
             writer.Write(data);
-            Assert.Fail("WIP");
+
+            // Assert
+            var expectedData = data.Cast<Data.Custom.ForexVolume>().ToArray();
+            var outputFile = Path.Combine(testingTempFolder, "base\\fxcmforexvolume\\daily\\eurusd.zip");
+
+            var actualdata = ReadZipFileData(outputFile);
+            var lines = actualdata.Count;
+            for (int i = 0; i < lines-1; i++)
+            {
+                Assert.AreEqual(expectedData[i].Value, int.Parse(actualdata[i][1]));
+                Assert.AreEqual(expectedData[i].Transanctions, int.Parse(actualdata[i][2]));
+            }
         }
+
+        #region Auxiliary methods
+
+        private static List<string[]> ReadZipFileData(string dataZipFile)
+        {
+            List<string[]> actualdata = new List<string[]>();
+            ZipFile zipFile;
+            using (var unzipped = QuantConnect.Compression.Unzip(dataZipFile, out zipFile))
+            {
+                string line;
+                while ((line = unzipped.ReadLine()) != null)
+                {
+                    actualdata.Add(line.Split(','));
+                }
+            }
+            return actualdata;
+        }
+
+        void SaveCsv(IEnumerable<IBaseData> data, string fileName)
+        {
+            var sb = new StringBuilder("DateTime,Volume,Transactions\n");
+
+            foreach (var obs in data)
+            {
+                sb.AppendLine(string.Format("{0:yyyy/MM/dd HH:mm},{1},{2}", obs.Time, obs.Value, ((Data.Custom.ForexVolume)obs).Transanctions));
+            }
+            var filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
+                fileName);
+            File.WriteAllText(filePath, sb.ToString());
+        }
+
+        #endregion
     }
 }

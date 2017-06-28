@@ -59,11 +59,11 @@ namespace QuantConnect.ToolBox
             {
                 _dataType = TickType.Quote;
             }
-
+            
             // Can only process Fx and equity for now
             if (_securityType != SecurityType.Equity && _securityType != SecurityType.Forex && _securityType != SecurityType.Cfd)
             {
-                throw new Exception("Sorry this security type is not yet supported by the LEAN data writer: " + _securityType);
+                //throw new Exception("Sorry this security type is not yet supported by the LEAN data writer: " + _securityType);
             }
         }
 
