@@ -96,6 +96,7 @@ namespace QuantConnect.ToolBox.ForexVolumeDownloader
                 {
                     Symbol = symbol,
                     Time = obsTime,
+                    DataType = MarketDataType.ForexVolume,
                     Value = volume,
                     Transanctions = transactions
                 });
