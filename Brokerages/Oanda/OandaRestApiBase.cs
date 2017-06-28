@@ -220,7 +220,7 @@ namespace QuantConnect.Brokerages.Oanda
                 {
                     Log.Error(exception);
                 }
-            });
+            }) { IsBackground = true };
             _connectionMonitorThread.Start();
             while (!_connectionMonitorThread.IsAlive)
             {

@@ -87,7 +87,7 @@ namespace QuantConnect.Lean.Engine
 
             //Start monitoring the backtest active status:
             var statusPing = new StateCheck.Ping(algorithmManager, _systemHandlers.Api, _algorithmHandlers.Results, _systemHandlers.Notify, job);
-            var statusPingThread = new Thread(statusPing.Run);
+            var statusPingThread = new Thread(statusPing.Run) { IsBackground = true };
             statusPingThread.Start();
 
             try
@@ -105,7 +105,7 @@ namespace QuantConnect.Lean.Engine
                 //-> Set the result handler type for this algorithm job, and launch the associated result thread.
                 _algorithmHandlers.Results.Initialize(job, _systemHandlers.Notify, _systemHandlers.Api, _algorithmHandlers.DataFeed, _algorithmHandlers.Setup, _algorithmHandlers.Transactions);
 
-                threadResults = new Thread(_algorithmHandlers.Results.Run, 0) {Name = "Result Thread"};
+                threadResults = new Thread(_algorithmHandlers.Results.Run, 0) { IsBackground = true, Name = "Result Thread" };
                 threadResults.Start();
 
                 IBrokerage brokerage = null;
@@ -227,9 +227,9 @@ namespace QuantConnect.Lean.Engine
                     _algorithmHandlers.Results.SendStatusUpdate(AlgorithmStatus.Running);
 
                     //Launch the data, transaction and realtime handlers into dedicated threads
-                    threadFeed = new Thread(_algorithmHandlers.DataFeed.Run) {Name = "DataFeed Thread"};
-                    threadTransactions = new Thread(_algorithmHandlers.Transactions.Run) {Name = "Transaction Thread"};
-                    threadRealTime = new Thread(_algorithmHandlers.RealTime.Run) {Name = "RealTime Thread"};
+                    threadFeed = new Thread(_algorithmHandlers.DataFeed.Run) { IsBackground = true, Name = "DataFeed Thread" };
+                    threadTransactions = new Thread(_algorithmHandlers.Transactions.Run) { IsBackground = true, Name = "Transaction Thread" };
+                    threadRealTime = new Thread(_algorithmHandlers.RealTime.Run) { IsBackground = true, Name = "RealTime Thread" };
 
                     //Launch the data feed, result sending, and transaction models/handlers in separate threads.
                     threadFeed.Start(); // Data feed pushing data packets into thread bridge; 

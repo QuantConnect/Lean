@@ -104,7 +104,7 @@ namespace QuantConnect.Util
 
             }, CancellationToken.None);
 
-            _processQueueThread = new Thread(() => ProcessHoldQueue(token));
+            _processQueueThread = new Thread(() => ProcessHoldQueue(token)) { IsBackground = true };
             _processQueueThread.Start();
         }
 
