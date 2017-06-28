@@ -200,7 +200,7 @@ namespace QuantConnect.Lean.Engine.Setup
             //Before continuing, detect if this is ready:
             if (!initializeComplete) return false;
 
-            //TODO: Refactor the BacktestResultHandler to use algorithm not job to set times
+            // TODO: Refactor the BacktestResultHandler to use algorithm not job to set times
             job.PeriodStart = algorithm.StartDate;
             job.PeriodFinish = algorithm.EndDate;
 
