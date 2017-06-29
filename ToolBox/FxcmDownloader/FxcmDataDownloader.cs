@@ -91,7 +91,7 @@ namespace QuantConnect.ToolBox.FxcmDownloader
         public bool HasSymbol(string symbol)
         {
             return _symbolMapper.IsKnownLeanSymbol(Symbol.Create(symbol, GetSecurityType(symbol), Market.FXCM));
-        }
+        }  
 
         /// <summary>
         /// Gets the security type for the specified Lean symbol

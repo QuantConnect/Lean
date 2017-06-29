@@ -21,7 +21,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 
-namespace QuantConnect.ToolBox.ForexVolumeDownloader
+namespace QuantConnect.ToolBox.FxVolumeDownloader
 {
     public enum FxcmSymbolId
     {
@@ -63,7 +63,7 @@ namespace QuantConnect.ToolBox.ForexVolumeDownloader
         /// <summary>
         ///     The columns index which should be added to obtain the transactions.
         /// </summary>
-        private readonly int[] _transactionsIdx = { 27, 29, 31, 33 };
+        private readonly long[] _transactionsIdx = { 27, 29, 31, 33 };
 
         /// <summary>
         ///     The columns index which should be added to obtain the volume.
@@ -90,7 +90,8 @@ namespace QuantConnect.ToolBox.ForexVolumeDownloader
                 var stringDate = obs[0].Substring(startIndex: 3);
                 var obsTime = DateTime.ParseExact(stringDate, "yyyyMMddHHmm",
                     DateTimeFormatInfo.InvariantInfo);
-                var volume = _volumeIdx.Select(x => int.Parse(obs[x])).Sum();
+                var volume = _volumeIdx.Select(x => long.Parse(obs[x])).Sum();
+
                 var transactions = _transactionsIdx.Select(x => int.Parse(obs[x])).Sum();
                 requestedData.Add(new Data.Custom.ForexVolume
                 {
