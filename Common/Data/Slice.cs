@@ -320,6 +320,7 @@ namespace QuantConnect.Data
                 switch (datum.DataType)
                 {
                     case MarketDataType.Base:
+                    case MarketDataType.ForexVolume:
                         symbolData.Type = SubscriptionType.Custom;
                         symbolData.Custom = datum;
                         break;

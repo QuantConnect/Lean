@@ -29,7 +29,7 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
 #if DEBUG
                 Console.WriteLine("Press enter to close...");
                 Console.ReadLine();
-                args = new string[] { "EURUSD,GBPJPY", "Minute", "20120601", "20120701"};
+                args = new string[] { "EURUSD,GBPJPY", "All", "20131001", "20130201" };
 #else
                 Environment.Exit(1);
 #endif
@@ -58,11 +58,10 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
 
                 // Load settings from config.json
 
-                //var dataDirectory = Config.Get("data-directory", "../../../Data");
-                var dataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
-                    "TestingFXVolumeData");
-                // Download the data
+                var dataDirectory = Config.Get("data-directory", "../../../Data");
+                //var dataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "TestingFXVolumeData");
 
+                // Download the data
                 Market.Add("FXCMForexVolume", identifier: 20);
 
                 var downloader = new ForexVolumeDownloader();

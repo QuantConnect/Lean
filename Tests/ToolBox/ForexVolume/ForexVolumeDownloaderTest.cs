@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Ionic.Zip;
+using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom;
@@ -58,6 +59,61 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             SaveCsv(data, "MinuteData_6month.csv");
             Assert.Fail("WIP");
         }
+
+        [TestCase]
+        public void SavedDailyDataIsCorrectlyRead()
+        {
+            // Arrange
+            var resolution = Resolution.Daily;
+            var startDate = new DateTime(year: 2017, month: 04, day: 02);
+            var data = _downloader.Get(_symbol, resolution, startDate, new DateTime(year: 2017, month: 04, day: 22));
+            var writer = new LeanDataWriter(resolution, _symbol, _dataDirectory);
+            writer.Write(data);
+
+            var config = new SubscriptionDataConfig(typeof(ForexVolume), _symbol, resolution, DateTimeZone.Utc,
+                DateTimeZone.Utc, false, false, true, true, TickType.Trade, false, DataNormalizationMode.Raw);
+
+            // Act
+            var reader = new LeanDataReader(config, _symbol, resolution, startDate, _dataDirectory);
+
+            // Assert
+            var expectedData = data.Cast<ForexVolume>().ToArray();
+            var actualData = reader.Parse().Cast<ForexVolume>().ToArray();
+            var lines = actualData.Length;
+            for (var i = 0; i < lines - 1; i++)
+            {
+                Assert.AreEqual(expectedData[i].Value, actualData[i].Value);
+                Assert.AreEqual(expectedData[i].Transanctions, actualData[i].Transanctions);
+            }
+        }
+
+        [TestCase]
+        public void SavedMinuteDataIsCorrectlyRead()
+        {
+            // Arrange
+            var resolution = Resolution.Minute;
+            var startDate = new DateTime(year: 2017, month: 04, day: 02);
+            var data = _downloader.Get(_symbol, resolution, startDate, new DateTime(year: 2017, month: 04, day: 7));
+            var writer = new LeanDataWriter(resolution, _symbol, _dataDirectory);
+            writer.Write(data);
+
+            var config = new SubscriptionDataConfig(typeof(ForexVolume), _symbol, resolution, DateTimeZone.Utc,
+                DateTimeZone.Utc, false, false, true, true, TickType.Trade, false, DataNormalizationMode.Raw);
+
+            // Act
+            var reader = new LeanDataReader(config, _symbol, resolution, startDate, _dataDirectory);
+
+            // Assert
+            var expectedData = data.Cast<ForexVolume>().ToArray();
+            var actualData = reader.Parse().Cast<ForexVolume>().ToArray();
+            var lines = actualData.Length;
+            for (var i = 0; i < lines - 1; i++)
+            {
+                Assert.AreEqual(expectedData[i].Value, actualData[i].Value);
+                Assert.AreEqual(expectedData[i].Transanctions, actualData[i].Transanctions);
+            }
+        }
+
 
         [TestCase]
         public void RetrievedDailyDataIsCorrectlySaved()
@@ -134,6 +190,8 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             }
         }
 
+        #region Auxiliary methods
+
         private List<string[]> ReadZipFolderData(string outputFolder)
         {
             var actualdata = new List<string[]>();
@@ -173,5 +231,7 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
                 fileName);
             File.WriteAllText(filePath, sb.ToString());
         }
+
+        #endregion
     }
 }

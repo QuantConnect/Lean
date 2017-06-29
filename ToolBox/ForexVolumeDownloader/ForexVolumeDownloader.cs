@@ -23,26 +23,30 @@ using System.Net;
 
 namespace QuantConnect.ToolBox.FxVolumeDownloader
 {
-    public enum FxcmSymbolId
-    {
-        EURUSD = 1,
-        USDJPY = 2,
-        GBPUSD = 3,
-        USDCHF = 4,
-        EURCHF = 5,
-        AUDUSD = 6,
-        USDCAD = 7,
-        NZDUSD = 8,
-        EURGBP = 9,
-        EURJPY = 10,
-        GBPJPY = 11,
-        EURAUD = 14,
-        EURCAD = 15,
-        AUDJPY = 17
-    }
-
+    /// <summary>
+    /// FXCM Real FOREX Volume/Transactions Downloader Toolbox Project For LEAN Algorithmic Trading Engine.
+    /// </summary>
+    /// <seealso cref="QuantConnect.ToolBox.IDataDownloader" />
     public class ForexVolumeDownloader : IDataDownloader
     {
+        enum FxcmSymbolId
+        {
+            EURUSD = 1,
+            USDJPY = 2,
+            GBPUSD = 3,
+            USDCHF = 4,
+            EURCHF = 5,
+            AUDUSD = 6,
+            USDCAD = 7,
+            NZDUSD = 8,
+            EURGBP = 9,
+            EURJPY = 10,
+            GBPJPY = 11,
+            EURAUD = 14,
+            EURCAD = 15,
+            AUDJPY = 17
+        }
+
         #region Fields
 
         /// <summary>

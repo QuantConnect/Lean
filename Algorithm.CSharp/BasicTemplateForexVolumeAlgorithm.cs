@@ -34,7 +34,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);             //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
             AddForex("EURUSD", Resolution.Daily);
-            AddData<ForexVolume>("EURUSD", Resolution.Daily);
+            AddData<ForexVolume>("EURUSD", Resolution.Minute);
         }
 
         /// <summary>
@@ -52,7 +52,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         public void OnData(ForexVolume fxVolume)
         {
-            var testing = fxVolume.Transanctions;
+            Log(string.Format("{0:g} Transactions: {1:N}\t|\tVolume: {2:N}", Time, fxVolume.Transanctions, fxVolume.Value));
+
         }
     }
 }
