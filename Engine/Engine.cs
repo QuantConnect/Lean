@@ -134,7 +134,7 @@ namespace QuantConnect.Lean.Engine
                         (historyProvider as BrokerageHistoryProvider).SetBrokerage(brokerage);
                     }
 
-                    var historyDataCacheProvider = new SingleEntryDataCacheProvider(_algorithmHandlers.DataProvider);
+                    var historyDataCacheProvider = new ZipDataCacheProvider(_algorithmHandlers.DataProvider);
                     historyProvider.Initialize(job, _algorithmHandlers.DataProvider, historyDataCacheProvider, _algorithmHandlers.MapFileProvider, _algorithmHandlers.FactorFileProvider, progress =>
                     {
                         // send progress updates to the result handler only during initialization

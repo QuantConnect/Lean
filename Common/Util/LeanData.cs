@@ -230,7 +230,7 @@ namespace QuantConnect.Util
                             var bigOpenInterest = data as OpenInterest;
                             if (bigOpenInterest != null)
                             {
-                                return ToCsv(milliseconds, bigOpenInterest.Value);
+                                return ToCsv(longTime, bigOpenInterest.Value);
                             }
                             break;
 
@@ -585,10 +585,20 @@ namespace QuantConnect.Util
                     break;
 
                 case SecurityType.Future:
-                    var expiryYearMonth = DateTime.ParseExact(parts[4], DateFormat.YearMonth, null);
-                    var futureExpiryFunc = FuturesExpiryFunctions.FuturesExpiryFunction(parts[1]);
-                    var futureExpiry = futureExpiryFunc(expiryYearMonth);
-                    return Symbol.CreateFuture(parts[1], Market.USA, futureExpiry);
+                    if (isHourlyOrDaily)
+                    {
+                        var expiryYearMonth = DateTime.ParseExact(parts[2], DateFormat.YearMonth, null);
+                        var futureExpiryFunc = FuturesExpiryFunctions.FuturesExpiryFunction(parts[1]);
+                        var futureExpiry = futureExpiryFunc(expiryYearMonth);
+                        return Symbol.CreateFuture(parts[0], Market.USA, futureExpiry);
+                    }
+                    else
+                    {
+                        var expiryYearMonth = DateTime.ParseExact(parts[4], DateFormat.YearMonth, null);
+                        var futureExpiryFunc = FuturesExpiryFunctions.FuturesExpiryFunction(parts[1]);
+                        var futureExpiry = futureExpiryFunc(expiryYearMonth);
+                        return Symbol.CreateFuture(parts[1], Market.USA, futureExpiry);
+                    }
 
                 default:
                     throw new NotImplementedException("ReadSymbolFromZipEntry is not implemented for " + symbol.ID.SecurityType + " " + resolution);

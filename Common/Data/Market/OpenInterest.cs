@@ -66,7 +66,16 @@ namespace QuantConnect.Data.Market
             DataType = MarketDataType.Tick;
             TickType = TickType.OpenInterest;
             Symbol = symbol;
-            Time = baseDate.Date.AddMilliseconds(csv[0].ToInt32()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+
+            Time = (config.Resolution == Resolution.Daily || config.Resolution == Resolution.Hour) ?
+                // hourly and daily have different time format, and can use slow, robust c# parser.
+                DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, 
+                    System.Globalization.CultureInfo.InvariantCulture)
+                    .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone)
+                :
+                // Using custom "ToDecimal" conversion for speed on high resolution data.
+                baseDate.Date.AddMilliseconds(csv[0].ToInt32()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+            
             Value = csv[1].ToDecimal();
         }
 
