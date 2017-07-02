@@ -577,8 +577,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         public override void Disconnect()
         {
-            if (!IsConnected) return;
-
             _client.ClientSocket.eDisconnect();
         }
 
@@ -1008,7 +1006,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             else if (errorCode == 1102 || errorCode == 1101)
             {
                 // we've reconnected
-                _disconnected1100Fired = false;
                 OnMessage(BrokerageMessageEvent.Reconnected(errorMsg));
 
                 OnMessage(new BrokerageMessageEvent(brokerageMessageType, errorCode, errorMsg));
@@ -1047,8 +1044,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Restarts the IB Gateway and restores the connection
         /// </summary>
-        private void ResetGatewayConnection()
+        public void ResetGatewayConnection()
         {
+            _disconnected1100Fired = false;
+
             Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): Disconnecting...");
             Disconnect();
 
@@ -1104,8 +1103,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 {
                     // reset time finished and we're still disconnected, restart IB client
                     Log.Trace("InteractiveBrokersBrokerage.TryWaitForReconnect(): Reset time finished and still disconnected. Restarting...");
-
-                    _disconnected1100Fired = false;
 
                     // notify the BrokerageMessageHandler before the restart, so it can stop polling
                     OnMessage(BrokerageMessageEvent.Reconnected(string.Empty));
@@ -2532,7 +2529,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Check if IB Gateway running, restart if not
         /// </summary>
-        private void CheckIbGateway()
+        public void CheckIbGateway()
         {
             Log.Trace("InteractiveBrokersBrokerage.CheckIbGateway(): start");
             if (!InteractiveBrokersGatewayRunner.IsRunning())
