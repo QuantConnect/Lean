@@ -118,6 +118,8 @@
     <Compile Include="Brokerages\Fxcm\FxcmLimitOrderTestParameters.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmStopMarketOrderTestParameters.cs" />
     <Compile Include="Brokerages\Fxcm\FxcmSymbolMapperTests.cs" />
+    <Compile Include="Brokerages\GDAX\GDAXBrokerageTests.cs" />
+    <Compile Include="Brokerages\GDAX\GDAXTestHelpers.cs" />
     <Compile Include="Brokerages\InteractiveBrokers\InteractiveBrokersBrokerageAdditionalTests.cs" />
     <Compile Include="Brokerages\Oanda\OandaBrokerageHistoryProviderTests.cs" />
     <Compile Include="Brokerages\SecurityProvider.cs" />
@@ -373,6 +375,15 @@
     <Content Include="TestData\ewz_candle_patterns.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="TestData\gdax_match.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\gdax_openOrders.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\gdax_tick.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="TestData\SampleMarketHoursDatabase.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -382,6 +393,9 @@
     <None Include="TestData\multizip.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="TestData\gdax_order.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="TestData\spy_alma.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
