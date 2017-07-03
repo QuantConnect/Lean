@@ -812,7 +812,6 @@ namespace QuantConnect.Lean.Engine
             if (!algorithm.LiveMode || historyRequests.Count == 0)
             {
                 algorithm.SetFinishedWarmingUp();
-                results.SendStatusUpdate(AlgorithmStatus.Running);
                 if (historyRequests.Count != 0)
                 {
                     algorithm.Debug("Algorithm finished warming up.");
@@ -858,7 +857,6 @@ namespace QuantConnect.Lean.Engine
                     if (timeSlice.Time > DateTime.UtcNow.Subtract(minimumIncrement))
                     {
                         algorithm.SetFinishedWarmingUp();
-                        results.SendStatusUpdate(AlgorithmStatus.Running);
                         algorithm.Debug("Algorithm finished warming up.");
                         Log.Trace("AlgorithmManager.Stream(): Finished warmup");
                     }
