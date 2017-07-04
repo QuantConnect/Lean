@@ -66,9 +66,8 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (fastVWMA < slowVWMA)
                 {
-                    //Liquidate(EURUSD);
                     SetHoldings(EURUSD, -1);
-                    Log(Time.ToString("g") + " Close Long Position.");
+                    Log(Time.ToString("g") + " Take a Short Position.");
                 }
             }
         }
