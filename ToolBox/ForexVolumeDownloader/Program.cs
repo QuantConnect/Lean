@@ -29,14 +29,16 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
 #if DEBUG
                 Console.WriteLine("Press enter to close...");
                 Console.ReadLine();
-                args = new string[] { "EURUSD,GBPJPY", "All", "20131001", "20130201" };
+                args = new string[] { "EURUSD", "All", "20140501", "20140515" };
 #else
-                Environment.Exit(1);
+                args = new string[] { "EURUSD", "Minute", "20140101", "20150101" };
+                //Environment.Exit(1);
 #endif
             }
 
             try
             {
+                var timer = DateTime.Now;
                 Log.DebuggingEnabled = true;
                 var logHandlers = new ILogHandler[] { new ConsoleLogHandler(), new FileLogHandler("FxcmFxVolumeDownloader.log", false) };
 
@@ -64,7 +66,7 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
                 // Download the data
                 Market.Add("FXCMForexVolume", identifier: 20);
 
-                var downloader = new ForexVolumeDownloader();
+                var downloader = new ForexVolumeDownloader(dataDirectory);
                 foreach (var ticker in tickers)
                 {
                     var symbol = Symbol.Create(ticker, SecurityType.Base, Market.Decode(code: 20));
@@ -78,7 +80,7 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
                         Log.Trace("\t=> Successfully saved!");
                     }
                 }
-
+                Console.WriteLine("\n => Timer: {0} milliseconds.", (DateTime.Now - timer).TotalMilliseconds);
             }
             catch (Exception err)
             {

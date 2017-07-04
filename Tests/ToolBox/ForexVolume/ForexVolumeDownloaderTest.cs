@@ -26,9 +26,17 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
     [TestFixture]
     public class ForexVolumeDownloaderTest
     {
+        private string _dataDirectory;
+        private ForexVolumeDownloader _downloader;
         private readonly Symbol _symbol = Symbol.Create("EURUSD", SecurityType.Base, Market.Decode(code: 20));
-        private readonly ForexVolumeDownloader _downloader = new ForexVolumeDownloader();
-        private readonly string _dataDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+
+        [SetUp]
+        public void SetUpTemporatyFolder()
+        {
+            var randomFolder = "ForexVolumeTesting_" + Guid.NewGuid().ToString("N").Substring(0, 6);
+            _dataDirectory = Path.Combine(Path.GetTempPath(), randomFolder);
+            _downloader = new ForexVolumeDownloader(_dataDirectory);
+        }
 
         [Ignore("WIP")]
         [TestCase]
@@ -56,8 +64,81 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
         {
             var data = _downloader.Get(_symbol, Resolution.Minute, new DateTime(year: 2012, month: 01, day: 01),
                 new DateTime(year: 2012, month: 07, day: 01));
-            SaveCsv(data, "MinuteData_6month.csv");
             Assert.Fail("WIP");
+        }
+
+        [TestCase]
+        public void RetrievedDailyDataIsCorrectlySaved()
+        {
+            // Arrange
+            var resolution = Resolution.Daily;
+            var data = _downloader.Get(_symbol, resolution, new DateTime(year: 2017, month: 04, day: 02),
+                new DateTime(year: 2017, month: 04, day: 22));
+
+            // Act
+            var writer = new LeanDataWriter(resolution, _symbol, _dataDirectory);
+            writer.Write(data);
+
+            // Assert
+            var expectedData = data.Cast<ForexVolume>().ToArray();
+            var outputFile = Path.Combine(_dataDirectory, "base/fxcmforexvolume/daily/eurusd.zip");
+
+            var actualdata = ReadZipFileData(outputFile);
+            var lines = actualdata.Count;
+            for (var i = 0; i < lines - 1; i++)
+            {
+                Assert.AreEqual(expectedData[i].Value, int.Parse(actualdata[i][1]));
+                Assert.AreEqual(expectedData[i].Transanctions, int.Parse(actualdata[i][2]));
+            }
+        }
+
+        [TestCase]
+        public void RetrievedHourDataIsCorrectlySaved()
+        {
+            // Arrange
+            var resolution = Resolution.Hour;
+            var symbol = Symbol.Create("EURUSD", SecurityType.Base, Market.Decode(code: 20));
+            var data = _downloader.Get(symbol, resolution, new DateTime(year: 2017, month: 04, day: 02),
+                new DateTime(year: 2017, month: 04, day: 17));
+            // Act
+            var writer = new LeanDataWriter(resolution, symbol, _dataDirectory);
+            writer.Write(data);
+
+            // Assert
+            var expectedData = data.Cast<ForexVolume>().ToArray();
+            var outputFile = Path.Combine(_dataDirectory, "base/fxcmforexvolume/hour/eurusd.zip");
+
+            var actualdata = ReadZipFileData(outputFile);
+            var lines = actualdata.Count;
+            for (var i = 0; i < lines - 1; i++)
+            {
+                Assert.AreEqual(expectedData[i].Value, int.Parse(actualdata[i][1]));
+                Assert.AreEqual(expectedData[i].Transanctions, int.Parse(actualdata[i][2]));
+            }
+        }
+
+        [TestCase]
+        public void RetrievedMinuteDataIsCorrectlySaved()
+        {
+            // Arrange
+            var resolution = Resolution.Minute;
+            var data = _downloader.Get(_symbol, resolution, new DateTime(year: 2012, month: 01, day: 01),
+                new DateTime(year: 2012, month: 01, day: 07));
+            // Act
+            var writer = new LeanDataWriter(resolution, _symbol, _dataDirectory);
+            writer.Write(data);
+
+            // Assert
+            var expectedData = data.Cast<ForexVolume>().ToArray();
+            var outputFolder = Path.Combine(_dataDirectory, "base/fxcmforexvolume/minute");
+
+            var actualdata = ReadZipFolderData(outputFolder);
+            var lines = actualdata.Count;
+            for (var i = 0; i < lines - 1; i++)
+            {
+                Assert.AreEqual(expectedData[i].Value, int.Parse(actualdata[i][1]));
+                Assert.AreEqual(expectedData[i].Transanctions, int.Parse(actualdata[i][2]));
+            }
         }
 
         [TestCase]
@@ -116,16 +197,17 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
 
 
         [TestCase]
-        public void RetrievedDailyDataIsCorrectlySaved()
+        public void RetrievedDailyDataIsCorrectlySavedUsingRunMethod()
         {
             // Arrange
             var resolution = Resolution.Daily;
-            var data = _downloader.Get(_symbol, resolution, new DateTime(year: 2017, month: 04, day: 02),
-                new DateTime(year: 2017, month: 04, day: 22));
+
+            var startDate = new DateTime(year: 2014, month: 04, day: 01);
+            var endDate = startDate.AddMonths(1);
+            var data = _downloader.Get(_symbol, resolution, startDate, endDate);
 
             // Act
-            var writer = new LeanDataWriter(resolution, _symbol, _dataDirectory);
-            writer.Write(data);
+            _downloader.Run(_symbol, resolution, startDate, endDate);
 
             // Assert
             var expectedData = data.Cast<ForexVolume>().ToArray();
@@ -135,59 +217,40 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             var lines = actualdata.Count;
             for (var i = 0; i < lines - 1; i++)
             {
-                Assert.AreEqual(expectedData[i].Value, int.Parse(actualdata[i][1]));
+                Assert.AreEqual(expectedData[i].Value, long.Parse(actualdata[i][1]));
                 Assert.AreEqual(expectedData[i].Transanctions, int.Parse(actualdata[i][2]));
             }
         }
 
         [TestCase]
-        public void RetrievedHourDataIsCorrectlySaved()
-        {
-            // Arrange
-            var resolution = Resolution.Hour;
-            var symbol = Symbol.Create("EURUSD", SecurityType.Base, Market.Decode(code: 20));
-            var downloader = new ForexVolumeDownloader();
-            var data = downloader.Get(symbol, resolution, new DateTime(year: 2017, month: 04, day: 02),
-                new DateTime(year: 2017, month: 04, day: 15));
-            // Act
-            var writer = new LeanDataWriter(resolution, symbol, _dataDirectory);
-            writer.Write(data);
-
-            // Assert
-            var expectedData = data.Cast<ForexVolume>().ToArray();
-            var outputFile = Path.Combine(_dataDirectory, "base/fxcmforexvolume/hour/eurusd.zip");
-
-            var actualdata = ReadZipFileData(outputFile);
-            var lines = actualdata.Count;
-            for (var i = 0; i < lines - 1; i++)
-            {
-                Assert.AreEqual(expectedData[i].Value, int.Parse(actualdata[i][1]));
-                Assert.AreEqual(expectedData[i].Transanctions, int.Parse(actualdata[i][2]));
-            }
-        }
-
-        [TestCase]
-        public void RetrievedMinuteDataIsCorrectlySaved()
+        public void RequestWithMoreThan10KMinuteObservationAreCorrectlySaved()
         {
             // Arrange
             var resolution = Resolution.Minute;
-            var data = _downloader.Get(_symbol, resolution, new DateTime(year: 2012, month: 01, day: 01),
-                new DateTime(year: 2012, month: 01, day: 07));
+            var startDate = new DateTime(year: 2013, month: 04, day: 01);
+            var endDate = startDate.AddMonths(1);
             // Act
-            var writer = new LeanDataWriter(resolution, _symbol, _dataDirectory);
-            writer.Write(data);
-
+            _downloader.Run(_symbol, resolution, startDate, endDate);
             // Assert
-            var expectedData = data.Cast<ForexVolume>().ToArray();
             var outputFolder = Path.Combine(_dataDirectory, "base/fxcmforexvolume/minute");
+            var files = Directory.GetFiles(outputFolder, "*.zip", SearchOption.AllDirectories);
+            Assert.AreEqual(28, files.Length);
+        }
 
-            var actualdata = ReadZipFolderData(outputFolder);
-            var lines = actualdata.Count;
-            for (var i = 0; i < lines - 1; i++)
-            {
-                Assert.AreEqual(expectedData[i].Value, int.Parse(actualdata[i][1]));
-                Assert.AreEqual(expectedData[i].Transanctions, int.Parse(actualdata[i][2]));
-            }
+        [TestCase]
+        public void RequestWithMoreThan10KHourlyObservationAreCorrectlySaved()
+        {
+            // Arrange
+            var resolution = Resolution.Hour;
+            var startDate = new DateTime(year: 2014, month: 01, day: 01);
+            var endDate = startDate.AddYears(2);
+            // Act
+            _downloader.Run(_symbol, resolution, startDate, endDate);
+            // Assert
+            var outputFile = Path.Combine(_dataDirectory, "base/fxcmforexvolume/hour/eurusd.zip");
+            var observationsCount = ReadZipFileData(outputFile).Count;
+            // 2 years x 52 weeks x 5 days x 24 hours = 12480 hours
+            Assert.True(observationsCount >= 12480, string.Format("Actual observations: {0}", observationsCount));
         }
 
         #region Auxiliary methods
@@ -225,7 +288,7 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             foreach (var obs in data)
             {
                 sb.AppendLine(string.Format("{0:yyyy/MM/dd HH:mm},{1},{2}", obs.Time, obs.Value,
-                    ((ForexVolume) obs).Transanctions));
+                    ((ForexVolume)obs).Transanctions));
             }
             var filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
                 fileName);

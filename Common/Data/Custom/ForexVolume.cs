@@ -29,7 +29,6 @@ namespace QuantConnect.Data.Custom
 
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            // TODO: check datetime is correctly parsed.
             DateTime time;
             var obs = line.Split(',');
             if (config.Resolution == Resolution.Minute)

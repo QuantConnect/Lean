@@ -79,13 +79,57 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
         /// </summary>
         private readonly string _baseUrl = "http://marketsummary.fxcorporate.com/ssisa/servlet?RT=SSI";
 
+        private string _dataDirectory;
+
         #endregion Fields
+
+        public ForexVolumeDownloader(string dataDirectory)
+        {
+            _dataDirectory = dataDirectory;
+        }
+
+        public void Run(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
+        {
+            var data = new List<BaseData>();
+            var requestDayInterval = 0;
+            DateTime intermediateStartDate = startUtc;
+            DateTime intermediateEndDate = endUtc;
+
+            // As the responses has a Limit of 10000 lines, hourly data the minute data request should be sliced.
+            if (resolution == Resolution.Minute && (endUtc - startUtc).TotalMinutes > 10000)
+            {
+                requestDayInterval = 6;
+            }
+            else if (resolution == Resolution.Hour && (endUtc - startUtc).TotalHours > 10000)
+            {
+                requestDayInterval = 410;
+            }
+
+            var isFirst = true;
+            do
+            {
+                if (requestDayInterval != 0)
+                {
+                    if (!isFirst)
+                    {
+                        intermediateStartDate = intermediateEndDate.AddDays(1);
+                    }
+                    intermediateEndDate = intermediateStartDate.AddDays(requestDayInterval);
+                    if (intermediateEndDate > endUtc) intermediateEndDate = endUtc;
+                }
+                data.AddRange(this.Get(symbol, resolution, intermediateStartDate, intermediateEndDate));
+                isFirst = false;
+            } while (intermediateEndDate != endUtc);
+
+            var writer = new LeanDataWriter(resolution, symbol, _dataDirectory);
+            writer.Write(data);
+        }
 
         public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
-            var lines = RequestData(symbol, resolution, startUtc, endUtc);
-
+            startUtc = startUtc.AddDays(-1);
             var requestedData = new List<BaseData>();
+            var lines = RequestData(symbol, resolution, startUtc, endUtc);
             foreach (var line in lines)
             {
                 var obs = line.Split(';');

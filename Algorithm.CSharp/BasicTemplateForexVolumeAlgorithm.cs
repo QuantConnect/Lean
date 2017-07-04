@@ -15,6 +15,7 @@
 
 using QuantConnect.Data;
 using System.Linq;
+using NodaTime;
 using QuantConnect.Data.Custom;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -24,17 +25,18 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class BasicTemplateForexVolumeAlgorithm : QCAlgorithm
     {
+        private Symbol _eurusd;
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
+            SetStartDate(2014, 05, 07);  //Set Start Date
+            SetEndDate(2014, 05, 15);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
-            AddForex("EURUSD", Resolution.Daily);
-            AddData<ForexVolume>("EURUSD", Resolution.Minute);
+            _eurusd = AddForex("EURUSD", Resolution.Minute, Market.FXCM).Symbol;
+            AddData<ForexVolume>("EURUSD", Resolution.Minute, DateTimeZone.Utc);
         }
 
         /// <summary>
@@ -43,16 +45,19 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            // Print to console to verify that data is coming in
-            foreach (var key in data.Keys)
-            {
-                Log(key.Value + ": " + data[key].Time + " > " + data[key].Value);
-            }
+            var algorithmTime = Time;
+
+            Log(string.Format("\nPair Data:\nAlgorithm Time {0:g}\nData Time {1:g}\n" +
+                              "\tAsk: {2:F5}\t|\tBid: {3:F5}\n",
+                              Time, data.Time, data.QuoteBars[_eurusd].Ask.Close, data.QuoteBars[_eurusd].Bid.Close));
+
         }
 
         public void OnData(ForexVolume fxVolume)
         {
-            Log(string.Format("{0:g} Transactions: {1:N}\t|\tVolume: {2:N}", Time, fxVolume.Transanctions, fxVolume.Value));
+            Log(string.Format("\nVolume Data:\nAlgorithm Time {0:g}\nData Time {1:g}\n" +
+                              "\tTransactions: {2:N}\t|\tVolume: {3:N}",
+                              Time, fxVolume.Time, fxVolume.Transanctions, fxVolume.Value));
 
         }
     }
