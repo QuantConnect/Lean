@@ -63,7 +63,6 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
                 //var dataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "TestingFXVolumeData");
 
-                // Download the data
                 Market.Add("FXCMForexVolume", identifier: 20);
 
                 var downloader = new ForexVolumeDownloader(dataDirectory);
@@ -72,12 +71,7 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
                     var symbol = Symbol.Create(ticker, SecurityType.Base, Market.Decode(code: 20));
                     foreach (var resolution in resolutions)
                     {
-                        Log.Trace(string.Format("Requesting {0} volume data with {1} resolution.", symbol.Value, resolution.ToString()));
-                        var data = downloader.Get(symbol, resolution, startDate, endDate);
-                        Log.Trace(string.Format("\t=> {0} observations retrieved.", data.Count()));
-                        var writer = new LeanDataWriter(resolution, symbol, dataDirectory);
-                        writer.Write(data);
-                        Log.Trace("\t=> Successfully saved!");
+                        downloader.Run(symbol, resolution, startDate, endDate);
                     }
                 }
                 Console.WriteLine("\n => Timer: {0} milliseconds.", (DateTime.Now - timer).TotalMilliseconds);

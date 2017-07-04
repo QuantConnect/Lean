@@ -26,17 +26,17 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
     [TestFixture]
     public class ForexVolumeDownloaderTest
     {
-        private string _dataDirectory;
-        private ForexVolumeDownloader _downloader;
-        private readonly Symbol _symbol = Symbol.Create("EURUSD", SecurityType.Base, Market.Decode(code: 20));
-
         [SetUp]
         public void SetUpTemporatyFolder()
         {
-            var randomFolder = "ForexVolumeTesting_" + Guid.NewGuid().ToString("N").Substring(0, 6);
+            var randomFolder = "ForexVolumeTesting_" + Guid.NewGuid().ToString("N").Substring(startIndex: 0, length: 6);
             _dataDirectory = Path.Combine(Path.GetTempPath(), randomFolder);
             _downloader = new ForexVolumeDownloader(_dataDirectory);
         }
+
+        private string _dataDirectory;
+        private ForexVolumeDownloader _downloader;
+        private readonly Symbol _symbol = Symbol.Create("EURUSD", SecurityType.Base, Market.Decode(code: 20));
 
         [Ignore("WIP")]
         [TestCase]
@@ -45,7 +45,6 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             var data = _downloader.Get(_symbol, Resolution.Daily, new DateTime(year: 2017, month: 04, day: 02),
                 new DateTime(year: 2017, month: 04, day: 22));
             //SaveCsv(data, "DailyData.csv");
-            Assert.Fail("WIP");
         }
 
         [Ignore("WIP")]
@@ -55,7 +54,6 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             var data = _downloader.Get(_symbol, Resolution.Hour, new DateTime(year: 2017, month: 04, day: 02),
                 new DateTime(year: 2017, month: 04, day: 10));
             //SaveCsv(data, "HourData.csv");
-            Assert.Fail("WIP");
         }
 
         [Ignore("WIP")]
@@ -64,7 +62,6 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
         {
             var data = _downloader.Get(_symbol, Resolution.Minute, new DateTime(year: 2012, month: 01, day: 01),
                 new DateTime(year: 2012, month: 07, day: 01));
-            Assert.Fail("WIP");
         }
 
         [TestCase]
@@ -152,7 +149,9 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             writer.Write(data);
 
             var config = new SubscriptionDataConfig(typeof(ForexVolume), _symbol, resolution, DateTimeZone.Utc,
-                DateTimeZone.Utc, false, false, true, true, TickType.Trade, false, DataNormalizationMode.Raw);
+                DateTimeZone.Utc, fillForward: false, extendedHours: false, isInternalFeed: true, isCustom: true,
+                tickType: TickType.Trade, isFilteredSubscription: false,
+                dataNormalizationMode: DataNormalizationMode.Raw);
 
             // Act
             var reader = new LeanDataReader(config, _symbol, resolution, startDate, _dataDirectory);
@@ -179,7 +178,9 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             writer.Write(data);
 
             var config = new SubscriptionDataConfig(typeof(ForexVolume), _symbol, resolution, DateTimeZone.Utc,
-                DateTimeZone.Utc, false, false, true, true, TickType.Trade, false, DataNormalizationMode.Raw);
+                DateTimeZone.Utc, fillForward: false, extendedHours: false, isInternalFeed: true, isCustom: true,
+                tickType: TickType.Trade, isFilteredSubscription: false,
+                dataNormalizationMode: DataNormalizationMode.Raw);
 
             // Act
             var reader = new LeanDataReader(config, _symbol, resolution, startDate, _dataDirectory);
@@ -195,7 +196,6 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             }
         }
 
-
         [TestCase]
         public void RetrievedDailyDataIsCorrectlySavedUsingRunMethod()
         {
@@ -203,7 +203,7 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             var resolution = Resolution.Daily;
 
             var startDate = new DateTime(year: 2014, month: 04, day: 01);
-            var endDate = startDate.AddMonths(1);
+            var endDate = startDate.AddMonths(months: 1);
             var data = _downloader.Get(_symbol, resolution, startDate, endDate);
 
             // Act
@@ -222,28 +222,30 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             }
         }
 
+        //[Ignore("Long test")]
         [TestCase]
         public void RequestWithMoreThan10KMinuteObservationAreCorrectlySaved()
         {
             // Arrange
             var resolution = Resolution.Minute;
             var startDate = new DateTime(year: 2013, month: 04, day: 01);
-            var endDate = startDate.AddMonths(1);
+            var endDate = startDate.AddMonths(months: 1);
             // Act
             _downloader.Run(_symbol, resolution, startDate, endDate);
             // Assert
             var outputFolder = Path.Combine(_dataDirectory, "base/fxcmforexvolume/minute");
             var files = Directory.GetFiles(outputFolder, "*.zip", SearchOption.AllDirectories);
-            Assert.AreEqual(28, files.Length);
+            Assert.AreEqual(expected: 28, actual: files.Length);
         }
 
+        //[Ignore("Long test")]
         [TestCase]
         public void RequestWithMoreThan10KHourlyObservationAreCorrectlySaved()
         {
             // Arrange
             var resolution = Resolution.Hour;
             var startDate = new DateTime(year: 2014, month: 01, day: 01);
-            var endDate = startDate.AddYears(2);
+            var endDate = startDate.AddYears(value: 2);
             // Act
             _downloader.Run(_symbol, resolution, startDate, endDate);
             // Assert
@@ -252,8 +254,6 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             // 2 years x 52 weeks x 5 days x 24 hours = 12480 hours
             Assert.True(observationsCount >= 12480, string.Format("Actual observations: {0}", observationsCount));
         }
-
-        #region Auxiliary methods
 
         private List<string[]> ReadZipFolderData(string outputFolder)
         {
@@ -288,13 +288,11 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             foreach (var obs in data)
             {
                 sb.AppendLine(string.Format("{0:yyyy/MM/dd HH:mm},{1},{2}", obs.Time, obs.Value,
-                    ((ForexVolume)obs).Transanctions));
+                    ((ForexVolume) obs).Transanctions));
             }
             var filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
                 fileName);
             File.WriteAllText(filePath, sb.ToString());
         }
-
-        #endregion
     }
 }
