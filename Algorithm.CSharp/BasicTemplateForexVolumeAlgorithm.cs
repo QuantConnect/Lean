@@ -44,7 +44,7 @@ namespace QuantConnect.Algorithm.CSharp
             AddData<ForexVolume>("EURUSD", Resolution.Minute, DateTimeZone.Utc, fillDataForward: true);
             var _price = Identity(EURUSD);
             fastVWMA = _price.WeightedBy(volume, period: 15);
-            slowVWMA = _price.WeightedBy(volume, period: 120);
+            slowVWMA = _price.WeightedBy(volume, period: 300);
         }
 
         /// <summary>
@@ -53,20 +53,29 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-#if DEBUG
-            Log(string.Format("\nPair Data:\nAlgorithm Time {0:g}\nData Time {1:g}\n" +
-                              "\tAsk: {2:F5}\t|\tBid: {3:F5}\n",
-                Time, data.Time, data.QuoteBars[EURUSD].Ask.Close, data.QuoteBars[EURUSD].Bid.Close));
-#endif
+            if (!slowVWMA.IsReady) return;
+            if (!Portfolio.Invested || Portfolio[EURUSD].IsShort)
+            {
+                if (fastVWMA > slowVWMA)
+                {
+                    SetHoldings(EURUSD, 1);
+                    Log(Time.ToString("g") + " Take a Long Position.");
+                }
+            }
+            else
+            {
+                if (fastVWMA < slowVWMA)
+                {
+                    //Liquidate(EURUSD);
+                    SetHoldings(EURUSD, -1);
+                    Log(Time.ToString("g") + " Close Long Position.");
+                }
+            }
         }
 
         public void OnData(ForexVolume fxVolume)
         {
-#if DEBUG
-            Log(string.Format("\nVolume Data:\nAlgorithm Time {0:g}\nData Time {1:g}\n" +
-                              "\tTransactions: {2:N}\t|\tVolume: {3:N}",
-                Time, fxVolume.Time, fxVolume.Transanctions, fxVolume.Value));
-#endif
+
             volume.Update(new IndicatorDataPoint
             {
                 Time = Time,
