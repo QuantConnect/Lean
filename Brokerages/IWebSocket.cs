@@ -65,12 +65,24 @@ namespace QuantConnect.Brokerages
         /// </summary>
         Uri Url { get; }
 
+        /// <summary>
+        /// Ready state property
+        /// </summary>
         WebSocketState ReadyState { get; }
 
+        /// <summary>
+        /// on message event
+        /// </summary>
         event EventHandler<MessageEventArgs> OnMessage;
 
+        /// <summary>
+        /// On error event
+        /// </summary>
         event EventHandler<ErrorEventArgs> OnError;
 
+        /// <summary>
+        /// On Open event
+        /// </summary>
         event EventHandler OnOpen;
     }
 }

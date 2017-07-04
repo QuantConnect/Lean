@@ -28,8 +28,10 @@ using System.Net;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using QuantConnect.Orders;
+using QuantConnect.Brokerages.GDAX;
+using QuantConnect.Brokerages;
 
-namespace QuantConnect.Brokerages.GDAX.Tests
+namespace QuantConnect.Tests.Brokerages.GDAX
 {
 
     [TestFixture()]
@@ -42,7 +44,8 @@ namespace QuantConnect.Brokerages.GDAX.Tests
         string _orderData;
         string _openOrderData;
         string _matchData;
-        string _tickData;
+        string _accountsData;
+        string _holdingData;
         Symbol _symbol;
 
         [SetUp()]
@@ -52,14 +55,21 @@ namespace QuantConnect.Brokerages.GDAX.Tests
             _orderData = File.ReadAllText("TestData\\gdax_order.txt");
             _matchData = File.ReadAllText("TestData\\gdax_match.txt");
             _openOrderData = File.ReadAllText("TestData\\gdax_openOrders.txt");
-            _tickData = File.ReadAllText("TestData\\gdax_tick.txt");
+            _accountsData = File.ReadAllText("TestData\\gdax_accounts.txt");
+            _holdingData = File.ReadAllText("TestData\\gdax_holding.txt");
+
             _symbol = Symbol.Create("BTCUSD", SecurityType.Forex, Market.GDAX);
-            SetupResponse(_tickData);
+
+            _rest.Setup(m => m.Execute(It.Is<IRestRequest>(r => r.Resource.StartsWith("/products/")))).Returns(new RestSharp.RestResponse
+            {
+                Content = File.ReadAllText("TestData\\gdax_tick.txt"),
+                StatusCode = HttpStatusCode.OK
+            });
         }
 
         private void SetupResponse(string body, HttpStatusCode httpStatus = HttpStatusCode.OK)
         {
-            _rest.Setup(m => m.Execute(It.IsAny<IRestRequest>())).Returns(new RestSharp.RestResponse
+            _rest.Setup(m => m.Execute(It.Is<IRestRequest>(r => !r.Resource.StartsWith("/products/")))).Returns(new RestSharp.RestResponse
             {
                 Content = body,
                 StatusCode = httpStatus
@@ -223,6 +233,68 @@ namespace QuantConnect.Brokerages.GDAX.Tests
             //todo: int conversion
             Assert.AreEqual(5957, actual.Quantity);
             //Assert.AreEqual(5957.11914015, actual.Quantity);
+        }
+
+        [Test()]
+        public void GetCashBalanceTest()
+        {
+            SetupResponse(_accountsData);
+
+            var actual = unit.GetCashBalance();
+
+            Assert.AreEqual(2, actual.Count());
+
+            var usd = actual.Single(a => a.Symbol == "USD");
+            var btc = actual.Single(a => a.Symbol == "BTC");
+
+            Assert.AreEqual(80.2301373066930000m, usd.Amount);
+            Assert.AreEqual(1, usd.ConversionRate);
+            Assert.AreEqual(1.1, btc.Amount);
+            Assert.AreEqual(333.985m, btc.ConversionRate);
+        }
+
+        [Test()]
+        public void GetAccountHoldingsTest()
+        {
+            SetupResponse(_holdingData);
+
+            unit.CachedOrderIDs.TryAdd(1, new Orders.MarketOrder { BrokerId = new List<string> { "1" }, Price = 123 });
+
+            var actual = unit.GetAccountHoldings();
+
+            Assert.AreEqual(2, actual.Count());
+            Assert.AreEqual(0.005m, actual.First().Quantity);
+            Assert.AreEqual(10m, actual.First().AveragePrice);
+
+            Assert.AreEqual(-0.5m, actual.Last().Quantity);
+            Assert.AreEqual(1000m, actual.Last().AveragePrice);
+
+        }
+
+        [TestCase(HttpStatusCode.OK, HttpStatusCode.NotFound, false)]
+        [TestCase(HttpStatusCode.OK, HttpStatusCode.OK, true)]
+        public void CancelOrderTest(HttpStatusCode code, HttpStatusCode code2, bool expected)
+        {
+            _rest.Setup(m => m.Execute(It.Is<IRestRequest>(r => !r.Resource.EndsWith("1")))).Returns(new RestSharp.RestResponse
+            {
+                StatusCode = code
+            });
+
+            _rest.Setup(m => m.Execute(It.Is<IRestRequest>(r => !r.Resource.EndsWith("2")))).Returns(new RestSharp.RestResponse
+            {
+                StatusCode = code2
+            });
+
+            var actual = unit.CancelOrder(new Orders.LimitOrder { BrokerId = new List<string> { "1", "2" } });
+
+            Assert.AreEqual(expected, actual);
+        }
+
+
+        [Test]
+        public void UpdateOrderTest()
+        {
+            Assert.Throws<NotSupportedException>(() => unit.UpdateOrder(new LimitOrder()));
         }
 
     }

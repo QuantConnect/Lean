@@ -86,23 +86,35 @@ namespace QuantConnect.Brokerages
             get { return wrapped.Url; }
         }
 
+        /// <summary>
+        /// Wraps read state property
+        /// </summary>
         public WebSocketState ReadyState
         {
             get { return wrapped.ReadyState; }
         }
 
+        /// <summary>
+        /// Wraps message event
+        /// </summary>
         public event EventHandler<MessageEventArgs> OnMessage
         {
             add { wrapped.OnMessage += value; }
             remove { wrapped.OnMessage -= value; }
         }
 
+        /// <summary>
+        /// Wraps error event
+        /// </summary>
         public event EventHandler<ErrorEventArgs> OnError
         {
             add { wrapped.OnError += value; }
             remove { wrapped.OnError -= value; }
         }
 
+        /// <summary>
+        /// Wraps open method
+        /// </summary>
         public event EventHandler OnOpen
         {
             add { wrapped.OnOpen += value; }

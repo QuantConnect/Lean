@@ -144,7 +144,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="security">The security's whose leverage we seek</param>
         /// <returns>The leverage for the specified security</returns>
-        public decimal GetLeverage(Security security)
+        public virtual decimal GetLeverage(Security security)
         {
             switch (security.Type)
             {

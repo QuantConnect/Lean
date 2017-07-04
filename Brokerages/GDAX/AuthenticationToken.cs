@@ -14,11 +14,26 @@
  */
 namespace QuantConnect.Brokerages.GDAX
 {
+    /// <summary>
+    /// Contains data used for authentication
+    /// </summary>
     public class AuthenticationToken
     {
+        /// <summary>
+        /// The key
+        /// </summary>
         public string Key { get; set; }
+        /// <summary>
+        /// The hashed signature
+        /// </summary>
         public string Signature { get; set; }
+        /// <summary>
+        /// The timestamp
+        /// </summary>
         public string Timestamp { get; set; }
+        /// <summary>
+        /// The pass phrase
+        /// </summary>
         public string Passphrase { get; set; }
     }
 }

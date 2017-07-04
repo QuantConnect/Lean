@@ -57,12 +57,22 @@ namespace QuantConnect.Brokerages.GDAX
             throw new Exception("Unsupported order type:" + orderType.ToString());
         }
 
+        /// <summary>
+        /// Converts a product id to a symbol
+        /// </summary>
+        /// <param name="productId"></param>
+        /// <returns></returns>
         public static Symbol ConvertProductId(string productId)
         {
             return Symbol.Create(productId.Replace("-", ""), SecurityType.Forex, Market.GDAX);
         }
 
-        public static string ConvertSymbol(Symbol symbol)
+        /// <summary>
+        /// Converts a symbol to a product id
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <returns></returns>
+        protected static string ConvertSymbol(Symbol symbol)
         {
             return symbol.Value.Substring(0, 3).ToLower() + "-" + symbol.Value.Substring(3, 3).ToLower();
         }

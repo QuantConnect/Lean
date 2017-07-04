@@ -19,11 +19,19 @@ namespace QuantConnect.Brokerages.GDAX
     {
 
         #region IBrokerage
+        /// <summary>
+        /// Checks if the websocket connection is connected or in the process of connecting
+        /// </summary>
         public override bool IsConnected
         {
             get { return WebSocket.ReadyState == WebSocketState.Connecting || WebSocket.ReadyState == WebSocketState.Open; }
         }
 
+        /// <summary>
+        /// Creates a new order
+        /// </summary>
+        /// <param name="order"></param>
+        /// <returns></returns>
         public override bool PlaceOrder(Orders.Order order)
         {
             var req = new RestRequest("/orders", Method.POST);
@@ -64,28 +72,55 @@ namespace QuantConnect.Brokerages.GDAX
 
         }
 
+        /// <summary>
+        /// This operation is not supported
+        /// </summary>
+        /// <param name="order"></param>
+        /// <returns></returns>
         public override bool UpdateOrder(Orders.Order order)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException("Order update not supported. Please cancel and re-create.");
         }
 
+        /// <summary>
+        /// Cancels an order
+        /// </summary>
+        /// <param name="order"></param>
+        /// <returns></returns>
         public override bool CancelOrder(Orders.Order order)
         {
-            throw new NotImplementedException();
+            List<bool> success = new List<bool>();
+
+            foreach (var id in order.BrokerId)
+            {
+                var req = new RestRequest("/orders/" + id, Method.DELETE);
+                var response = RestClient.Execute(req);
+
+                success.Add(response.StatusCode == System.Net.HttpStatusCode.OK);
+            }
+
+            return success.All(a => a);
         }
 
+        /// <summary>
+        /// Closes the websockets connection
+        /// </summary>
         public override void Disconnect()
         {
             WebSocket.Close();
         }
 
+        /// <summary>
+        /// Gets all orders not yet closed
+        /// </summary>
+        /// <returns></returns>
         public override List<Orders.Order> GetOpenOrders()
         {
             var list = new List<Order>();
 
             try
             {
-                var req = new RestRequest("/orders", Method.GET);
+                var req = new RestRequest("/orders?status=open&status=pending", Method.GET);
                 var response = RestClient.Execute(req);
 
                 if (response != null)
@@ -115,7 +150,7 @@ namespace QuantConnect.Brokerages.GDAX
                         order.Quantity = item.Side == "sell" ? -item.Size : item.Size;
                         order.BrokerId = new List<string> { item.Id.ToString() };
                         order.Symbol = ConvertProductId(item.ProductId);
-                        order.Time = DateTime.UtcNow;                        
+                        order.Time = DateTime.UtcNow;
                         order.Status = ConvertOrderStatus(item);
                         order.Price = item.Price;
                         list.Add(order);
@@ -141,19 +176,62 @@ namespace QuantConnect.Brokerages.GDAX
 
             return list;
 
-
         }
 
+        /// <summary>
+        /// Gets all open positions
+        /// </summary>
+        /// <returns></returns>
         public override List<Holding> GetAccountHoldings()
         {
-            throw new NotImplementedException();
+            var list = new List<Holding>();
+
+            var req = new RestRequest("/orders?status=active", Method.GET);
+            var response = RestClient.Execute(req);
+            if (response != null)
+            {
+                foreach (var item in JsonConvert.DeserializeObject<Messages.Order[]>(response.Content))
+                {
+                    decimal conversionRate;
+                    if (!item.ProductId.EndsWith("USD", StringComparison.InvariantCultureIgnoreCase))
+                    {
+
+                        var baseSymbol = (item.ProductId.Substring(0, 3) + "USD").ToLower();
+                        var tick = this.GetTick(Symbol.Create(baseSymbol, SecurityType.Forex, Market.GDAX));
+                        conversionRate = tick.Price;
+                    }
+                    else
+                    {
+                        var tick = this.GetTick(ConvertProductId(item.ProductId));
+                        conversionRate = tick.Price;
+                    }
+
+                    list.Add(new Holding
+                    {
+                        Symbol = ConvertProductId(item.ProductId),
+                        Quantity = item.Side == "sell" ? -item.FilledSize : item.FilledSize,
+                        Type = SecurityType.Forex,
+                        CurrencySymbol = item.ProductId.Substring(0, 3).ToUpper(),
+                        ConversionRate = conversionRate,
+                        MarketPrice = item.Price,
+                        //todo: check this
+                        AveragePrice = item.ExecutedValue / item.FilledSize
+                    });
+                }
+
+            }
+            return list;
         }
 
+        /// <summary>
+        /// Gets the total account cash balance
+        /// </summary>
+        /// <returns></returns>
         public override List<Cash> GetCashBalance()
         {
             var list = new List<Securities.Cash>();
 
-            var req = new RestRequest("/accounts/"+ _accountId, Method.GET);
+            var req = new RestRequest("/accounts/" + _accountId, Method.GET);
             var response = RestClient.Execute(req);
 
             foreach (var item in JsonConvert.DeserializeObject<Messages.Account[]>(response.Content))

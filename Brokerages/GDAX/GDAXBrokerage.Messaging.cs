@@ -37,16 +37,35 @@ namespace QuantConnect.Brokerages.GDAX
     public partial class GDAXBrokerage : BaseWebsocketsBrokerage, IDataQueueHandler
     {
 
+        /// <summary>
+        /// Collection of ask prices for subscribed symbols
+        /// </summary>
         public Dictionary<Symbol, ConcurrentDictionary<string, decimal>> AskPrices { get; private set; }
+        /// <summary>
+        /// Collection of bid prices for subscribed symbols
+        /// </summary>
         public Dictionary<Symbol, ConcurrentDictionary<string, decimal>> BidPrices { get; private set; }
         private object tickLocker = new object();
         private ConcurrentDictionary<Symbol, Tick> previousTick = new ConcurrentDictionary<Symbol, Tick>();
         CancellationTokenSource canceller = new CancellationTokenSource();
+        /// <summary>
+        /// Collection of partial split messages
+        /// </summary>
         public ConcurrentDictionary<long, GDAXFill> FillSplit { get; set; }
         private string _passPhrase;
         private string _wssUrl;
         private string _accountId;
 
+        /// <summary>
+        /// Constructor for brokerage
+        /// </summary>
+        /// <param name="wssUrl">websockets url</param>
+        /// <param name="websocket">instance of websockets client</param>
+        /// <param name="restClient">instance of rest client</param>
+        /// <param name="apiKey">api key</param>
+        /// <param name="apiSecret">api secret</param>
+        /// <param name="passPhrase">pass phrase</param>
+        /// <param name="accountId">account id</param>
         public GDAXBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, string accountId)
             : base(wssUrl, websocket, restClient, apiKey, apiSecret, Market.GDAX, "GDAX")
         {
@@ -143,7 +162,6 @@ namespace QuantConnect.Brokerages.GDAX
             }
             else if (message.Side == "buy")
             {
-                decimal bid;
                 BidPrices[symbol].TryRemove(message.OrderId, out removed);
             }
 
@@ -198,6 +216,11 @@ namespace QuantConnect.Brokerages.GDAX
             EmitTick(message.ProductId);
         }
 
+        /// <summary>
+        /// Retrieves a price tick for a given symbol
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <returns></returns>
         public Tick GetTick(Symbol symbol)
         {
             var req = new RestRequest(string.Format("/products/{0}/ticker", ConvertSymbol(symbol)), Method.GET);
@@ -264,6 +287,11 @@ namespace QuantConnect.Brokerages.GDAX
         }
 
         #region IDataQueueHandler
+        /// <summary>
+        /// Creates websocket message subscriptions for the supplied symbols
+        /// </summary>
+        /// <param name="job"></param>
+        /// <param name="symbols"></param>
         public override void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
             if (!this.IsConnected)
@@ -316,6 +344,11 @@ namespace QuantConnect.Brokerages.GDAX
 
         }
 
+        /// <summary>
+        /// Cancels the ticker polling task
+        /// </summary>
+        /// <param name="job"></param>
+        /// <param name="symbols"></param>
         public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
             canceller.Cancel();
