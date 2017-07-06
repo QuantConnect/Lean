@@ -514,7 +514,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     // max out at 5 attempts to connect ~1 minute
                     if (attempt++ < maxAttempts)
                     {
-                        Thread.Sleep(1000);
+                        Thread.Sleep(15000);
                         continue;
                     }
 
