@@ -449,7 +449,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                     var messageProcessingThread = new Thread(() =>
                     {
-                        Log.Trace("IB message processing thread started.");
+                        Log.Trace("IB message processing thread started: #" + Thread.CurrentThread.ManagedThreadId);
 
                         while (_client.ClientSocket.IsConnected())
                         {
@@ -461,11 +461,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                             catch (Exception error)
                             {
                                 // error in message processing thread, log error and disconnect
-                                Log.Error("Error in message processing thread: " + error);
+                                Log.Error("Error in message processing thread #" + Thread.CurrentThread.ManagedThreadId + ": " + error);
                             }
                         }
 
-                        Log.Trace("IB message processing thread ended.");
+                        Log.Trace("IB message processing thread ended: #" + Thread.CurrentThread.ManagedThreadId);
                     }) { IsBackground = true };
 
                     messageProcessingThread.Start();
@@ -514,7 +514,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     // max out at 5 attempts to connect ~1 minute
                     if (attempt++ < maxAttempts)
                     {
-                        Thread.Sleep(1000);
+                        Thread.Sleep(15000);
                         continue;
                     }
 
@@ -1006,8 +1006,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             else if (errorCode == 1102 || errorCode == 1101)
             {
                 // we've reconnected
-                OnMessage(BrokerageMessageEvent.Reconnected(errorMsg));
-
                 OnMessage(new BrokerageMessageEvent(brokerageMessageType, errorCode, errorMsg));
 
                 // With IB Gateway v960.2a in the cloud, we are not receiving order fill events after the nightly reset,
@@ -1048,6 +1046,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             _disconnected1100Fired = false;
 
+            // notify the BrokerageMessageHandler before the restart, so it can stop polling
+            OnMessage(BrokerageMessageEvent.Reconnected(string.Empty));
+
             Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): Disconnecting...");
             Disconnect();
 
@@ -1062,6 +1063,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): Restoring data subscriptions...");
             RestoreDataSubscriptions();
+
+            // notify the BrokerageMessageHandler after the restart, because
+            // it could have received a disconnect event during the steps above
+            OnMessage(BrokerageMessageEvent.Reconnected(string.Empty));
         }
 
         /// <summary>
@@ -1103,9 +1108,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 {
                     // reset time finished and we're still disconnected, restart IB client
                     Log.Trace("InteractiveBrokersBrokerage.TryWaitForReconnect(): Reset time finished and still disconnected. Restarting...");
-
-                    // notify the BrokerageMessageHandler before the restart, so it can stop polling
-                    OnMessage(BrokerageMessageEvent.Reconnected(string.Empty));
 
                     ResetGatewayConnection();
                 }
@@ -1881,8 +1883,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             else
             {
                 var timeOfDay = time.TimeOfDay;
-                // from 11:45 -> 12:45 is the IB reset times, we'll go from 11:30pm->1:00am for safety margin
-                result = timeOfDay > new TimeSpan(23, 30, 0) || timeOfDay < new TimeSpan(1, 0, 0);
+                // from 11:45 -> 12:45 is the IB reset times, we'll go from 11:00pm->1:30am for safety margin
+                result = timeOfDay > new TimeSpan(23, 0, 0) || timeOfDay < new TimeSpan(1, 30, 0);
             }
 
             Log.Trace("InteractiveBrokersBrokerage.IsWithinScheduledServerResetTimes(): " + result);
