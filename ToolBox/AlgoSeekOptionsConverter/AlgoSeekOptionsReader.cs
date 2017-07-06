@@ -49,6 +49,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         private readonly int _columnPremium = -1;
         private readonly int _columnExchange = -1;
         private readonly int _columnsCount = -1;
+        private string _file;
 
         /// <summary>
         /// Enumerate through the lines of the algoseek files.
@@ -61,6 +62,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             _underlyingCache = new Dictionary<string, Symbol>();
 
             var streamProvider = StreamProvider.ForExtension(Path.GetExtension(file));
+            _file = file;
             _stream = streamProvider.Open(file).First();
             _streamReader = new StreamReader(_stream);
             _symbolFilter = symbolFilter;
@@ -295,7 +297,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             catch(Exception err)
             {
                 Log.Error(err);
-                Log.Trace("Line: {0}", line);
+                Log.Trace("Line: {0}, File: {1}", line, _file);
                 return null;
             }
         }
