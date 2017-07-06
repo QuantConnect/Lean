@@ -1883,8 +1883,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             else
             {
                 var timeOfDay = time.TimeOfDay;
-                // from 11:45 -> 12:45 is the IB reset times, we'll go from 11:30pm->1:00am for safety margin
-                result = timeOfDay > new TimeSpan(23, 30, 0) || timeOfDay < new TimeSpan(1, 0, 0);
+                // from 11:45 -> 12:45 is the IB reset times, we'll go from 11:00pm->1:30am for safety margin
+                result = timeOfDay > new TimeSpan(23, 0, 0) || timeOfDay < new TimeSpan(1, 30, 0);
             }
 
             Log.Trace("InteractiveBrokersBrokerage.IsWithinScheduledServerResetTimes(): " + result);
