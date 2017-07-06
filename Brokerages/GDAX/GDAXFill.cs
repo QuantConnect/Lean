@@ -73,16 +73,6 @@ namespace QuantConnect.Brokerages.GDAX
         }
 
         /// <summary>
-        /// The total fee across all fills
-        /// </summary>
-        /// <returns></returns>
-        public decimal TotalFee()
-        {
-            //todo: fee
-            return 0;
-        }
-
-        /// <summary>
         /// Total amount executed across all fills
         /// </summary>
         /// <returns></returns>

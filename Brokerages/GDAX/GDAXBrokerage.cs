@@ -44,6 +44,8 @@ namespace QuantConnect.Brokerages.GDAX
                 product_id = ConvertSymbol(order.Symbol),
                 overdraft_enabled = true
             });
+
+            GetAuthenticationToken(req);
             var response = RestClient.Execute(req);
 
             if (response.StatusCode == System.Net.HttpStatusCode.OK && response.Content != null)
@@ -54,14 +56,15 @@ namespace QuantConnect.Brokerages.GDAX
                 {
                     if (CachedOrderIDs.ContainsKey(order.Id))
                     {
-                        CachedOrderIDs[order.Id].BrokerId.Add(raw.order_id);
+                        CachedOrderIDs[order.Id].BrokerId.Add((string)raw.order_id);
                     }
                     else
                     {
+                        order.BrokerId.Add((string)raw.order_id);
                         CachedOrderIDs.TryAdd(order.Id, order);
                     }
                 }
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Bitfinex Order Event") { Status = OrderStatus.Submitted });
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Bitfinex Order Event") { Status = OrderStatus.Submitted, OrderFee = raw.fill_fees });
                 Log.Trace("BitfinexBrokerage.PlaceOrder(): Order completed successfully orderid:" + order.Id.ToString());
                 return true;
             }
@@ -94,6 +97,7 @@ namespace QuantConnect.Brokerages.GDAX
             foreach (var id in order.BrokerId)
             {
                 var req = new RestRequest("/orders/" + id, Method.DELETE);
+                GetAuthenticationToken(req);
                 var response = RestClient.Execute(req);
 
                 success.Add(response.StatusCode == System.Net.HttpStatusCode.OK);
@@ -121,6 +125,7 @@ namespace QuantConnect.Brokerages.GDAX
             try
             {
                 var req = new RestRequest("/orders?status=open&status=pending", Method.GET);
+                GetAuthenticationToken(req);
                 var response = RestClient.Execute(req);
 
                 if (response != null)
@@ -187,6 +192,7 @@ namespace QuantConnect.Brokerages.GDAX
             var list = new List<Holding>();
 
             var req = new RestRequest("/orders?status=active", Method.GET);
+            GetAuthenticationToken(req);
             var response = RestClient.Execute(req);
             if (response != null)
             {
@@ -232,6 +238,7 @@ namespace QuantConnect.Brokerages.GDAX
             var list = new List<Securities.Cash>();
 
             var req = new RestRequest("/accounts/" + _accountId, Method.GET);
+            GetAuthenticationToken(req);
             var response = RestClient.Execute(req);
 
             foreach (var item in JsonConvert.DeserializeObject<Messages.Account[]>(response.Content))
@@ -267,6 +274,28 @@ namespace QuantConnect.Brokerages.GDAX
             }
         }
         #endregion
+
+        /// <summary>
+        /// Reteives the fee for a given order
+        /// </summary>
+        /// <param name="order"></param>
+        /// <returns></returns>
+        public decimal GetFee(Orders.Order order)
+        {
+            var totalFee = 0m;
+
+            foreach (var item in order.BrokerId)
+            {
+                var req = new RestRequest("/orders/" + item, Method.GET);
+                var response = RestClient.Execute(req);
+                GetAuthenticationToken(req);
+                var fill = JsonConvert.DeserializeObject<dynamic>(response.Content);
+
+                totalFee += (decimal)fill.fill_fees;
+            }
+
+            return totalFee;
+        }
 
     }
 }

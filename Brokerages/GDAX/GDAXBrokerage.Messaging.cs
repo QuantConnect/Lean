@@ -136,13 +136,12 @@ namespace QuantConnect.Brokerages.GDAX
             var split = this.FillSplit[cached.First().Key];
             split.Add(message);
 
-            //todo: fee
             var orderEvent = new OrderEvent
             (
                 cached.First().Key, ConvertProductId(message.ProductId), message.Time, OrderStatus.PartiallyFilled,
                 message.Side == "sell" ? OrderDirection.Sell : OrderDirection.Buy,
                 message.Price, message.Size,
-                0, "GDAX Match Event"
+                GetFee(cached.First().Value), "GDAX Match Event"
             );
 
             OnOrderEvent(orderEvent);
@@ -182,13 +181,12 @@ namespace QuantConnect.Brokerages.GDAX
 
             var split = this.FillSplit[cached.First().Key];
 
-            //todo: fee
             var orderEvent = new OrderEvent
             (
                 cached.First().Key, ConvertProductId(message.ProductId), message.Time, OrderStatus.Filled,
                 message.Side == "sell" ? OrderDirection.Sell : OrderDirection.Buy,
                 message.Price, split.OrderQuantity - split.TotalQuantity(),
-                0, "GDAX Fill Event"
+                GetFee(cached.First().Value), "GDAX Fill Event"
             );
 
             Orders.Order outOrder = null;

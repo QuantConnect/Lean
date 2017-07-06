@@ -12,15 +12,37 @@ using WebSocketSharp;
 
 namespace QuantConnect.Brokerages.GDAX
 {
+
+    /// <summary>
+    /// Utility methods for GDAX brokerage
+    /// </summary>
     public partial class GDAXBrokerage : BaseWebsocketsBrokerage, IDataQueueHandler
     {
 
+        private const string _header = "CB-ACCESS-SIGN";
+
+
+        /// <summary>
+        /// Creates an auth token and adds to the request
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         public AuthenticationToken GetAuthenticationToken(IRestRequest request)
         {
             var body = request.Parameters.SingleOrDefault(b => b.Type == ParameterType.RequestBody);
-            return GetAuthenticationToken(body == null ? "" : body.Value.ToString(), request.Method.ToString().ToUpper(), request.Resource);
+            var token = GetAuthenticationToken(body == null ? "" : body.Value.ToString(), request.Method.ToString().ToUpper(), request.Resource);
+            request.AddHeader(_header, token.Signature);
+
+            return token;
         }
 
+        /// <summary>
+        /// Creates an auth token to sign a request
+        /// </summary>
+        /// <param name="body">the request cody as json</param>
+        /// <param name="method">the http method</param>
+        /// <param name="url">the request url</param>
+        /// <returns></returns>
         public AuthenticationToken GetAuthenticationToken(string body, string method, string url)
         {
             var token = new AuthenticationToken

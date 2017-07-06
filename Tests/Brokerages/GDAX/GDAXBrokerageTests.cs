@@ -38,38 +38,51 @@ namespace QuantConnect.Tests.Brokerages.GDAX
     public class GDAXBrokerageTests
     {
 
-        GDAXBrokerage unit;
+        GDAXBrokerage _unit;
         Mock<IWebSocket> _wss = new Mock<IWebSocket>();
         Mock<IRestClient> _rest = new Mock<IRestClient>();
         string _orderData;
+        string _orderByIdData;
         string _openOrderData;
         string _matchData;
         string _accountsData;
         string _holdingData;
         Symbol _symbol;
+        const string _brokerId = "d0c5340b-6d6c-49d9-b567-48c4bfca13d2";
+        const string _matchBrokerId = "132fb6ae-456b-4654-b4e0-d681ac05cea1";
 
         [SetUp()]
         public void Setup()
         {
-            unit = new GDAXBrokerage("wss://localhost", _wss.Object, _rest.Object, "abc", "MTIz", "pass", "123");
+            _unit = new GDAXBrokerage("wss://localhost", _wss.Object, _rest.Object, "abc", "MTIz", "pass", "123");
             _orderData = File.ReadAllText("TestData\\gdax_order.txt");
             _matchData = File.ReadAllText("TestData\\gdax_match.txt");
             _openOrderData = File.ReadAllText("TestData\\gdax_openOrders.txt");
             _accountsData = File.ReadAllText("TestData\\gdax_accounts.txt");
             _holdingData = File.ReadAllText("TestData\\gdax_holding.txt");
+            _orderByIdData = File.ReadAllText("TestData\\gdax_orderById.txt");
 
             _symbol = Symbol.Create("BTCUSD", SecurityType.Forex, Market.GDAX);
+
+
 
             _rest.Setup(m => m.Execute(It.Is<IRestRequest>(r => r.Resource.StartsWith("/products/")))).Returns(new RestSharp.RestResponse
             {
                 Content = File.ReadAllText("TestData\\gdax_tick.txt"),
                 StatusCode = HttpStatusCode.OK
             });
+
+            _rest.Setup(m => m.Execute(It.Is<IRestRequest>(r => r.Resource.StartsWith("/orders/" + _brokerId) || r.Resource.StartsWith("/orders/" + _matchBrokerId))))
+            .Returns(new RestSharp.RestResponse
+            {
+                Content = File.ReadAllText("TestData\\gdax_orderById.txt"),
+                StatusCode = HttpStatusCode.OK
+            });
         }
 
         private void SetupResponse(string body, HttpStatusCode httpStatus = HttpStatusCode.OK)
         {
-            _rest.Setup(m => m.Execute(It.Is<IRestRequest>(r => !r.Resource.StartsWith("/products/")))).Returns(new RestSharp.RestResponse
+            _rest.Setup(m => m.Execute(It.Is<IRestRequest>(r => !r.Resource.StartsWith("/products/") && !r.Resource.StartsWith("/orders/" + _brokerId)))).Returns(new RestSharp.RestResponse
             {
                 Content = body,
                 StatusCode = httpStatus
@@ -80,9 +93,9 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         public void IsConnectedTest()
         {
             _wss.Setup(w => w.ReadyState).Returns(WebSocketState.Open);
-            Assert.IsTrue(unit.IsConnected);
+            Assert.IsTrue(_unit.IsConnected);
             _wss.Setup(w => w.ReadyState).Returns(WebSocketState.Closed);
-            Assert.IsFalse(unit.IsConnected);
+            Assert.IsFalse(_unit.IsConnected);
         }
 
         [Test()]
@@ -90,7 +103,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         {
             _wss.Setup(m => m.Connect()).Verifiable();
 
-            unit.Connect();
+            _unit.Connect();
             _wss.Verify();
         }
 
@@ -98,8 +111,8 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         public void DisconnectTest()
         {
             _wss.Setup(m => m.Close()).Verifiable();
-            unit.Connect();
-            unit.Disconnect();
+            _unit.Connect();
+            _unit.Disconnect();
             _wss.Verify();
         }
 
@@ -112,16 +125,16 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             string json = _orderData.Replace("type_value", type).Replace("side_value", side);
             string orderId = "d50ec984-77a8-460a-b958-66f114b0de9b";
 
-            unit.Subscribe(null, new[] { _symbol });
+            _unit.Subscribe(null, new[] { _symbol });
 
-            unit.AskPrices[_symbol].TryAdd(orderId, 124m);
-            unit.BidPrices[_symbol].TryAdd(orderId, 122m);
+            _unit.AskPrices[_symbol].TryAdd(orderId, 124m);
+            _unit.BidPrices[_symbol].TryAdd(orderId, 122m);
 
-            unit.OnMessage(unit, GDAXTestsHelpers.GetArgs(json));
-            var actual = unit.Ticks.First();
+            _unit.OnMessage(_unit, GDAXTestsHelpers.GetArgs(json));
+            var actual = _unit.Ticks.First();
 
             Assert.AreEqual(123.45m, side == "buy" ? actual.BidPrice : actual.AskPrice);
-            var mid = (unit.AskPrices[_symbol].Min(a => a.Value) + unit.BidPrices[_symbol].Max(b => b.Value)) / 2m;
+            var mid = (_unit.AskPrices[_symbol].Min(a => a.Value) + _unit.BidPrices[_symbol].Max(b => b.Value)) / 2m;
             Assert.AreEqual(mid, actual.Price);
             Assert.AreEqual("BTCUSD", actual.Symbol.Value.ToString());
         }
@@ -140,14 +153,13 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             }
 
             decimal orderQuantity = 6.1m;
-            GDAXTestsHelpers.AddOrder(unit, 1, id, orderQuantity);
+            GDAXTestsHelpers.AddOrder(_unit, 1, id, orderQuantity);
             ManualResetEvent raised = new ManualResetEvent(false);
 
-            decimal expectedFee = 0;
             decimal actualFee = 0;
             decimal actualQuantity = 0;
 
-            unit.OrderStatusChanged += (s, e) =>
+            _unit.OrderStatusChanged += (s, e) =>
             {
                 Assert.AreEqual("BTCUSD", e.Symbol.Value);
                 actualFee += e.OrderFee;
@@ -155,12 +167,11 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
                 Assert.AreEqual(actualQuantity != orderQuantity ? Orders.OrderStatus.PartiallyFilled : Orders.OrderStatus.Filled, e.Status);
                 Assert.AreEqual(5.23512m, actualQuantity);
-                //todo: fee
-                Assert.AreEqual(expectedFee, Math.Round(actualFee, 8));
+                Assert.AreEqual(0.01m, Math.Round(actualFee, 8));
                 raised.Set();
             };
 
-            unit.OnMessage(unit, GDAXTestsHelpers.GetArgs(json));
+            _unit.OnMessage(_unit, GDAXTestsHelpers.GetArgs(json));
 
             //if not our order should get no event
             Assert.AreEqual(raised.WaitOne(1000), expectedQuantity != 99);
@@ -169,7 +180,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         [Test]
         public void GetAuthenticationTokenTest()
         {
-            var actual = unit.GetAuthenticationToken("", "POST", "http://localhost");
+            var actual = _unit.GetAuthenticationToken("", "POST", "http://localhost");
 
             Assert.IsFalse(string.IsNullOrEmpty(actual.Signature));
             Assert.IsFalse(string.IsNullOrEmpty(actual.Timestamp));
@@ -184,21 +195,25 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         {
             var response = new
             {
-                order_id = 1,
+                order_id = _brokerId,
+                fill_fees = "0.11"
             };
             SetupResponse(JsonConvert.SerializeObject(response), httpStatus);
 
             ManualResetEvent raised = new ManualResetEvent(false);
-            unit.OrderStatusChanged += (s, e) =>
+            _unit.OrderStatusChanged += (s, e) =>
             {
-                Assert.AreEqual("BTCUSD", e.Symbol.Value);
-                //todo: fee
-                Assert.AreEqual(0, e.OrderFee);
                 Assert.AreEqual(status, e.Status);
-                Assert.That((quantity > 0 && e.Direction == Orders.OrderDirection.Buy) || (quantity < 0 && e.Direction == Orders.OrderDirection.Sell));
+                if (orderId != null)
+                {
+                    Assert.AreEqual("BTCUSD", e.Symbol.Value);
+                    Assert.AreEqual(0.11, e.OrderFee);
+                    Assert.That((quantity > 0 && e.Direction == Orders.OrderDirection.Buy) || (quantity < 0 && e.Direction == Orders.OrderDirection.Sell));
+                    Assert.IsTrue(orderId == null || _unit.CachedOrderIDs.SelectMany(c => c.Value.BrokerId.Where(b => b == _brokerId)).Any());
+                }
                 raised.Set();
             };
-            bool actual = unit.PlaceOrder(new Orders.LimitOrder(_symbol, quantity, price, DateTime.UtcNow));
+            bool actual = _unit.PlaceOrder(new Orders.LimitOrder(_symbol, quantity, price, DateTime.UtcNow));
 
             Assert.IsTrue(actual || (orderId == null && !actual));
             Assert.IsTrue(raised.WaitOne(1000));
@@ -209,9 +224,9 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         {
             SetupResponse(_openOrderData);
 
-            unit.CachedOrderIDs.TryAdd(1, new Orders.MarketOrder { BrokerId = new List<string> { "1" }, Price = 123 });
+            _unit.CachedOrderIDs.TryAdd(1, new Orders.MarketOrder { BrokerId = new List<string> { "1" }, Price = 123 });
 
-            var actual = unit.GetOpenOrders();
+            var actual = _unit.GetOpenOrders();
 
             Assert.AreEqual(2, actual.Count());
             Assert.AreEqual(0.01, actual.First().Quantity);
@@ -227,7 +242,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         [Test()]
         public void GetTickTest()
         {
-            var actual = unit.GetTick(_symbol);
+            var actual = _unit.GetTick(_symbol);
             Assert.AreEqual(333.98m, actual.BidPrice);
             Assert.AreEqual(333.99m, actual.AskPrice);
             //todo: int conversion
@@ -240,7 +255,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         {
             SetupResponse(_accountsData);
 
-            var actual = unit.GetCashBalance();
+            var actual = _unit.GetCashBalance();
 
             Assert.AreEqual(2, actual.Count());
 
@@ -258,9 +273,9 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         {
             SetupResponse(_holdingData);
 
-            unit.CachedOrderIDs.TryAdd(1, new Orders.MarketOrder { BrokerId = new List<string> { "1" }, Price = 123 });
+            _unit.CachedOrderIDs.TryAdd(1, new Orders.MarketOrder { BrokerId = new List<string> { "1" }, Price = 123 });
 
-            var actual = unit.GetAccountHoldings();
+            var actual = _unit.GetAccountHoldings();
 
             Assert.AreEqual(2, actual.Count());
             Assert.AreEqual(0.005m, actual.First().Quantity);
@@ -285,7 +300,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
                 StatusCode = code2
             });
 
-            var actual = unit.CancelOrder(new Orders.LimitOrder { BrokerId = new List<string> { "1", "2" } });
+            var actual = _unit.CancelOrder(new Orders.LimitOrder { BrokerId = new List<string> { "1", "2" } });
 
             Assert.AreEqual(expected, actual);
         }
@@ -294,7 +309,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         [Test]
         public void UpdateOrderTest()
         {
-            Assert.Throws<NotSupportedException>(() => unit.UpdateOrder(new LimitOrder()));
+            Assert.Throws<NotSupportedException>(() => _unit.UpdateOrder(new LimitOrder()));
         }
 
     }
