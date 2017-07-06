@@ -1006,8 +1006,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             else if (errorCode == 1102 || errorCode == 1101)
             {
                 // we've reconnected
-                OnMessage(BrokerageMessageEvent.Reconnected(errorMsg));
-
                 OnMessage(new BrokerageMessageEvent(brokerageMessageType, errorCode, errorMsg));
 
                 // With IB Gateway v960.2a in the cloud, we are not receiving order fill events after the nightly reset,
@@ -1048,6 +1046,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             _disconnected1100Fired = false;
 
+            // notify the BrokerageMessageHandler before the restart, so it can stop polling
+            OnMessage(BrokerageMessageEvent.Reconnected(string.Empty));
+
             Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): Disconnecting...");
             Disconnect();
 
@@ -1062,6 +1063,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): Restoring data subscriptions...");
             RestoreDataSubscriptions();
+
+            // notify the BrokerageMessageHandler after the restart, because
+            // it could have received a disconnect event during the steps above
+            OnMessage(BrokerageMessageEvent.Reconnected(string.Empty));
         }
 
         /// <summary>
@@ -1103,9 +1108,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 {
                     // reset time finished and we're still disconnected, restart IB client
                     Log.Trace("InteractiveBrokersBrokerage.TryWaitForReconnect(): Reset time finished and still disconnected. Restarting...");
-
-                    // notify the BrokerageMessageHandler before the restart, so it can stop polling
-                    OnMessage(BrokerageMessageEvent.Reconnected(string.Empty));
 
                     ResetGatewayConnection();
                 }
