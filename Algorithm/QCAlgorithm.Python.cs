@@ -33,6 +33,26 @@ namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
+        private dynamic _pandas;
+
+        /// <summary>
+        /// Sets pandas library
+        /// </summary>
+        public void SetPandas()
+        {
+            try
+            {
+                using (Py.GIL())
+                {
+                    _pandas = Py.Import("pandas");
+                }
+            }
+            catch (PythonException pythonException)
+            {
+                Error("QCAlgorithm.SetPandas(): Failed to import pandas module: " + pythonException);
+            }
+        }
+
         /// <summary>
         /// AddData a new user defined data source, requiring only the minimum config options.
         /// The data is added with a default time zone of NewYork (Eastern Daylight Savings Time)
@@ -300,6 +320,124 @@ namespace QuantConnect.Algorithm
         public void PlotIndicator(string chart, bool waitForReady, TradeBarIndicator first, TradeBarIndicator second = null, TradeBarIndicator third = null, TradeBarIndicator fourth = null)
         {
             PlotIndicator(chart, waitForReady, new[] { first, second, third, fourth }.Where(x => x != null).ToArray());
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbol. The exact number of bars will be returned. 
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="tickers">The symbols to retrieve historical data for</param>
+        /// <param name="periods">The number of bars to request</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>A python dictionary with pandas DataFrame containing the requested historical data</returns>
+        public PyObject History(PyObject tickers, int periods, Resolution? resolution = null)
+        {
+            var symbols = GetSymbolsFromPyObject(tickers);
+            if (symbols == null) return null;
+
+            return CreatePandasDataFrame(symbols, History(symbols, periods, resolution));
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbols over the requested span.
+        /// The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="tickers">The symbols to retrieve historical data for</param>
+        /// <param name="span">The span over which to retrieve recent historical data</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>A python dictionary with pandas DataFrame containing the requested historical data</returns>
+        public PyObject History(PyObject tickers, TimeSpan span, Resolution? resolution = null)
+        {
+            var symbols = GetSymbolsFromPyObject(tickers);
+            if (symbols == null) return null;
+            
+            return CreatePandasDataFrame(symbols, History(symbols, span, resolution));
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbol between the specified dates. The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="tickers">The symbols to retrieve historical data for</param>
+        /// <param name="start">The start time in the algorithm's time zone</param>
+        /// <param name="end">The end time in the algorithm's time zone</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>A python dictionary with pandas DataFrame containing the requested historical data</returns>
+        public PyObject History(PyObject tickers, DateTime start, DateTime end, Resolution? resolution = null)
+        {
+            var symbols = GetSymbolsFromPyObject(tickers);
+            if (symbols == null) return null;
+
+            return CreatePandasDataFrame(symbols, History(symbols, start, end, resolution));
+        }
+
+        /// <summary>
+        /// Creates a pandas DataFrame from an enumerable of slice containing the requested historical data
+        /// </summary>
+        /// <param name="symbols">The symbols to retrieve historical data for</param>
+        /// <param name="history">an enumerable of slice containing the requested historical data</param>
+        /// <returns>A python dictionary with pandas DataFrame containing the requested historical data</returns>
+        private PyObject CreatePandasDataFrame(List<Symbol> symbols, IEnumerable<Slice> history)
+        {
+            // If pandas is null (cound not be imported), return null
+            if (_pandas == null)
+            {
+                return null;
+            }
+
+            using (Py.GIL())
+            {
+                var pyDict = new PyDict();
+
+                foreach (var symbol in symbols)
+                {
+                    var index = Securities[symbol].Type == SecurityType.Equity
+                        ? history.Get<TradeBar>(symbol).Select(x => x.Time)
+                        : history.Get<QuoteBar>(symbol).Select(x => x.Time);
+
+                    var dataframe = new PyDict();
+                    dataframe.SetItem("open", _pandas.Series(history.Get(symbol, Field.Open).ToList(), index));
+                    dataframe.SetItem("high", _pandas.Series(history.Get(symbol, Field.High).ToList(), index));
+                    dataframe.SetItem("low", _pandas.Series(history.Get(symbol, Field.Low).ToList(), index));
+                    dataframe.SetItem("close", _pandas.Series(history.Get(symbol, Field.Close).ToList(), index));
+                    dataframe.SetItem("volume", _pandas.Series(history.Get(symbol, Field.Volume).ToList(), index));
+
+                    pyDict.SetItem(symbol.Value, _pandas.DataFrame(dataframe, columns: new[] { "open", "high", "low", "close", "volume" }.ToList()));
+                }
+
+                return pyDict;
+            }
+        }
+
+        /// <summary>
+        /// Gets the symbols/string from a PyObject
+        /// </summary>
+        /// <param name="pyObject">PyObject containing symbols</param>
+        /// <returns>List of symbols</returns>
+        private List<Symbol> GetSymbolsFromPyObject(PyObject pyObject)
+        {
+            using (Py.GIL())
+            {
+                if (PyString.IsStringType(pyObject))
+                {
+                    Security security;
+                    if (Securities.TryGetValue(pyObject.ToString(), out security))
+                    {
+                        return new List<Symbol> { security.Symbol };
+                    }
+                    return null;
+                }
+
+                var symbols = new List<Symbol>();
+                foreach (var item in pyObject)
+                {
+                    Security security;
+                    if (Securities.TryGetValue(item.ToString(), out security))
+                    {
+                        symbols.Add(security.Symbol);
+                    }
+                }
+                return symbols.Count == 0 ? null : symbols;
+            }
         }
 
         /// <summary>

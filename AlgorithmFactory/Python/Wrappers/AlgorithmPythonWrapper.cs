@@ -81,6 +81,9 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                             // QCAlgorithm reference for LEAN internal C# calls (without going from C# to Python and back)
                             _baseAlgorithm = (QCAlgorithm)_algorithm;
 
+                            // Set pandas
+                            _baseAlgorithm.SetPandas();
+
                             return; 
                         }
                     }
