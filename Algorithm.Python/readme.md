@@ -26,3 +26,6 @@ Please checkout the command to install the whitelisted packages [here](https://g
 By default, macOS has python installed.
 
 Rename `Lean\packages\QuantConnect.pythonnet._version_\build\Python.Runtime.mac` to `Lean\packages\QuantConnect.pythonnet._version_\lib\Python.Runtime.dll`
+
+### pandas
+Install [pandas](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
