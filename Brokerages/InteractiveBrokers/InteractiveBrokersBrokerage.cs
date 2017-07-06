@@ -449,7 +449,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                     var messageProcessingThread = new Thread(() =>
                     {
-                        Log.Trace("IB message processing thread started.");
+                        Log.Trace("IB message processing thread started: #" + Thread.CurrentThread.ManagedThreadId);
 
                         while (_client.ClientSocket.IsConnected())
                         {
@@ -461,11 +461,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                             catch (Exception error)
                             {
                                 // error in message processing thread, log error and disconnect
-                                Log.Error("Error in message processing thread: " + error);
+                                Log.Error("Error in message processing thread #" + Thread.CurrentThread.ManagedThreadId + ": " + error);
                             }
                         }
 
-                        Log.Trace("IB message processing thread ended.");
+                        Log.Trace("IB message processing thread ended: #" + Thread.CurrentThread.ManagedThreadId);
                     }) { IsBackground = true };
 
                     messageProcessingThread.Start();
