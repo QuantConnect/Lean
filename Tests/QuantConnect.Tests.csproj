@@ -42,9 +42,8 @@
     <Reference Include="Castle.Core, Version=4.1.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
       <HintPath>..\packages\Castle.Core.4.1.0\lib\net45\Castle.Core.dll</HintPath>
     </Reference>
-    <Reference Include="CloneExtensions, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\CloneExtensions.1.2\lib\portable-net40+sl50+win+wp80\CloneExtensions.dll</HintPath>
+    <Reference Include="CloneExtensions, Version=1.3.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\CloneExtensions.1.3.0\lib\net45\CloneExtensions.dll</HintPath>
     </Reference>
     <Reference Include="CSharpAPI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
