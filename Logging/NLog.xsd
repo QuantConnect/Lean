@@ -326,12 +326,18 @@
       <xs:extension base="WrapperTargetBase">
         <xs:choice minOccurs="0" maxOccurs="unbounded">
           <xs:element name="name" minOccurs="0" maxOccurs="1" type="xs:string" />
+          <xs:element name="asyncFlush" minOccurs="0" maxOccurs="1" type="xs:boolean" />
           <xs:element name="condition" minOccurs="0" maxOccurs="1" type="Condition" />
           <xs:element name="optimizeBufferReuse" minOccurs="0" maxOccurs="1" type="xs:boolean" />
         </xs:choice>
         <xs:attribute name="name" type="xs:string">
           <xs:annotation>
             <xs:documentation>Name of the target.</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="asyncFlush" type="xs:boolean">
+          <xs:annotation>
+            <xs:documentation>Delay the flush until the LogEvent has been confirmed as written</xs:documentation>
           </xs:annotation>
         </xs:attribute>
         <xs:attribute name="condition" type="Condition">
@@ -403,13 +409,14 @@
           <xs:element name="address" minOccurs="0" maxOccurs="1" type="Layout" />
           <xs:element name="maxQueueSize" minOccurs="0" maxOccurs="1" type="xs:integer" />
           <xs:element name="parameter" minOccurs="0" maxOccurs="unbounded" type="NLog.Targets.NLogViewerParameterInfo" />
-          <xs:element name="includeMdc" minOccurs="0" maxOccurs="1" type="xs:boolean" />
+          <xs:element name="includeNdc" minOccurs="0" maxOccurs="1" type="xs:boolean" />
           <xs:element name="includeSourceInfo" minOccurs="0" maxOccurs="1" type="xs:boolean" />
           <xs:element name="includeNLogData" minOccurs="0" maxOccurs="1" type="xs:boolean" />
-          <xs:element name="includeNdc" minOccurs="0" maxOccurs="1" type="xs:boolean" />
+          <xs:element name="includeMdc" minOccurs="0" maxOccurs="1" type="xs:boolean" />
           <xs:element name="includeCallSite" minOccurs="0" maxOccurs="1" type="xs:boolean" />
           <xs:element name="appInfo" minOccurs="0" maxOccurs="1" type="xs:string" />
           <xs:element name="ndcItemSeparator" minOccurs="0" maxOccurs="1" type="xs:string" />
+          <xs:element name="includeMdlc" minOccurs="0" maxOccurs="1" type="xs:boolean" />
           <xs:element name="optimizeBufferReuse" minOccurs="0" maxOccurs="1" type="xs:boolean" />
         </xs:choice>
         <xs:attribute name="name" type="xs:string">
@@ -477,9 +484,9 @@
             <xs:documentation>Maximum queue size.</xs:documentation>
           </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="includeMdc" type="xs:boolean">
+        <xs:attribute name="includeNdc" type="xs:boolean">
           <xs:annotation>
-            <xs:documentation>Indicates whether to include  dictionary contents.</xs:documentation>
+            <xs:documentation>Indicates whether to include  stack contents.</xs:documentation>
           </xs:annotation>
         </xs:attribute>
         <xs:attribute name="includeSourceInfo" type="xs:boolean">
@@ -492,9 +499,9 @@
             <xs:documentation>Indicates whether to include NLog-specific extensions to log4j schema.</xs:documentation>
           </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="includeNdc" type="xs:boolean">
+        <xs:attribute name="includeMdc" type="xs:boolean">
           <xs:annotation>
-            <xs:documentation>Indicates whether to include  stack contents.</xs:documentation>
+            <xs:documentation>Indicates whether to include  dictionary contents.</xs:documentation>
           </xs:annotation>
         </xs:attribute>
         <xs:attribute name="includeCallSite" type="xs:boolean">
@@ -510,6 +517,11 @@
         <xs:attribute name="ndcItemSeparator" type="xs:string">
           <xs:annotation>
             <xs:documentation>NDC item separator.</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="includeMdlc" type="xs:boolean">
+          <xs:annotation>
+            <xs:documentation>Indicates whether to include  dictionary contents.</xs:documentation>
           </xs:annotation>
         </xs:attribute>
         <xs:attribute name="optimizeBufferReuse" type="xs:boolean">
@@ -1001,6 +1013,7 @@
           <xs:element name="source" minOccurs="0" maxOccurs="1" type="Layout" />
           <xs:element name="onOverflow" minOccurs="0" maxOccurs="1" type="NLog.Targets.EventLogTargetOverflowAction" />
           <xs:element name="entryType" minOccurs="0" maxOccurs="1" type="Layout" />
+          <xs:element name="maxKilobytes" minOccurs="0" maxOccurs="1" type="xs:long" />
           <xs:element name="maxMessageLength" minOccurs="0" maxOccurs="1" type="xs:integer" />
           <xs:element name="optimizeBufferReuse" minOccurs="0" maxOccurs="1" type="xs:boolean" />
         </xs:choice>
@@ -1047,6 +1060,11 @@
         <xs:attribute name="entryType" type="SimpleLayoutAttribute">
           <xs:annotation>
             <xs:documentation>Optional entrytype. When not set, or when not convertable to  then determined by </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="maxKilobytes" type="xs:long">
+          <xs:annotation>
+            <xs:documentation>Maximum Event log size in kilobytes. If null, the value won't be set. Default is 512 Kilobytes as specified by Eventlog API</xs:documentation>
           </xs:annotation>
         </xs:attribute>
         <xs:attribute name="maxMessageLength" type="xs:integer">
@@ -1587,6 +1605,7 @@
     <xs:choice minOccurs="0" maxOccurs="unbounded">
       <xs:element name="layout" minOccurs="0" maxOccurs="1" type="Layout" />
       <xs:element name="name" minOccurs="0" maxOccurs="1" type="xs:string" />
+      <xs:element name="parameterType" minOccurs="0" maxOccurs="1" type="xs:string" />
       <xs:element name="type" minOccurs="0" maxOccurs="1" type="xs:string" />
     </xs:choice>
     <xs:attribute name="layout" type="SimpleLayoutAttribute">
@@ -1599,9 +1618,14 @@
         <xs:documentation>Name of the parameter.</xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="type" type="xs:string">
+    <xs:attribute name="parameterType" type="xs:string">
       <xs:annotation>
         <xs:documentation>Type of the parameter.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="type" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>Type of the parameter. Obsolete alias for </xs:documentation>
       </xs:annotation>
     </xs:attribute>
   </xs:complexType>
@@ -2020,13 +2044,14 @@
           <xs:element name="address" minOccurs="0" maxOccurs="1" type="Layout" />
           <xs:element name="maxQueueSize" minOccurs="0" maxOccurs="1" type="xs:integer" />
           <xs:element name="parameter" minOccurs="0" maxOccurs="unbounded" type="NLog.Targets.NLogViewerParameterInfo" />
-          <xs:element name="includeMdc" minOccurs="0" maxOccurs="1" type="xs:boolean" />
+          <xs:element name="includeNdc" minOccurs="0" maxOccurs="1" type="xs:boolean" />
           <xs:element name="includeSourceInfo" minOccurs="0" maxOccurs="1" type="xs:boolean" />
           <xs:element name="includeNLogData" minOccurs="0" maxOccurs="1" type="xs:boolean" />
-          <xs:element name="includeNdc" minOccurs="0" maxOccurs="1" type="xs:boolean" />
+          <xs:element name="includeMdc" minOccurs="0" maxOccurs="1" type="xs:boolean" />
           <xs:element name="includeCallSite" minOccurs="0" maxOccurs="1" type="xs:boolean" />
           <xs:element name="appInfo" minOccurs="0" maxOccurs="1" type="xs:string" />
           <xs:element name="ndcItemSeparator" minOccurs="0" maxOccurs="1" type="xs:string" />
+          <xs:element name="includeMdlc" minOccurs="0" maxOccurs="1" type="xs:boolean" />
           <xs:element name="optimizeBufferReuse" minOccurs="0" maxOccurs="1" type="xs:boolean" />
         </xs:choice>
         <xs:attribute name="name" type="xs:string">
@@ -2094,9 +2119,9 @@
             <xs:documentation>Maximum queue size.</xs:documentation>
           </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="includeMdc" type="xs:boolean">
+        <xs:attribute name="includeNdc" type="xs:boolean">
           <xs:annotation>
-            <xs:documentation>Indicates whether to include  dictionary contents.</xs:documentation>
+            <xs:documentation>Indicates whether to include  stack contents.</xs:documentation>
           </xs:annotation>
         </xs:attribute>
         <xs:attribute name="includeSourceInfo" type="xs:boolean">
@@ -2109,9 +2134,9 @@
             <xs:documentation>Indicates whether to include NLog-specific extensions to log4j schema.</xs:documentation>
           </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="includeNdc" type="xs:boolean">
+        <xs:attribute name="includeMdc" type="xs:boolean">
           <xs:annotation>
-            <xs:documentation>Indicates whether to include  stack contents.</xs:documentation>
+            <xs:documentation>Indicates whether to include  dictionary contents.</xs:documentation>
           </xs:annotation>
         </xs:attribute>
         <xs:attribute name="includeCallSite" type="xs:boolean">
@@ -2127,6 +2152,11 @@
         <xs:attribute name="ndcItemSeparator" type="xs:string">
           <xs:annotation>
             <xs:documentation>NDC item separator.</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="includeMdlc" type="xs:boolean">
+          <xs:annotation>
+            <xs:documentation>Indicates whether to include  dictionary contents.</xs:documentation>
           </xs:annotation>
         </xs:attribute>
         <xs:attribute name="optimizeBufferReuse" type="xs:boolean">
@@ -2677,8 +2707,10 @@
           <xs:element name="attribute" minOccurs="0" maxOccurs="unbounded" type="NLog.Layouts.JsonAttribute" />
           <xs:element name="excludeProperties" minOccurs="0" maxOccurs="1" type="xs:string" />
           <xs:element name="includeAllProperties" minOccurs="0" maxOccurs="1" type="xs:boolean" />
+          <xs:element name="includeMdc" minOccurs="0" maxOccurs="1" type="xs:boolean" />
           <xs:element name="renderEmptyObject" minOccurs="0" maxOccurs="1" type="xs:boolean" />
           <xs:element name="suppressSpaces" minOccurs="0" maxOccurs="1" type="xs:boolean" />
+          <xs:element name="includeMdlc" minOccurs="0" maxOccurs="1" type="xs:boolean" />
         </xs:choice>
         <xs:attribute name="excludeProperties" type="xs:string">
           <xs:annotation>
@@ -2688,6 +2720,11 @@
         <xs:attribute name="includeAllProperties" type="xs:boolean">
           <xs:annotation>
             <xs:documentation>Option to include all properties from the log events</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="includeMdc" type="xs:boolean">
+          <xs:annotation>
+            <xs:documentation>Indicates whether to include contents of the  dictionary.</xs:documentation>
           </xs:annotation>
         </xs:attribute>
         <xs:attribute name="renderEmptyObject" type="xs:boolean">
@@ -2700,18 +2737,29 @@
             <xs:documentation>Option to suppress the extra spaces in the output json</xs:documentation>
           </xs:annotation>
         </xs:attribute>
+        <xs:attribute name="includeMdlc" type="xs:boolean">
+          <xs:annotation>
+            <xs:documentation>Indicates whether to include contents of the  dictionary.</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
   <xs:complexType name="NLog.Layouts.JsonAttribute">
     <xs:choice minOccurs="0" maxOccurs="unbounded">
       <xs:element name="encode" minOccurs="0" maxOccurs="1" type="xs:boolean" />
+      <xs:element name="escapeUnicode" minOccurs="0" maxOccurs="1" type="xs:boolean" />
       <xs:element name="layout" minOccurs="0" maxOccurs="1" type="Layout" />
       <xs:element name="name" minOccurs="0" maxOccurs="1" type="xs:string" />
     </xs:choice>
     <xs:attribute name="encode" type="xs:boolean">
       <xs:annotation>
         <xs:documentation>Determines wether or not this attribute will be Json encoded.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="escapeUnicode" type="xs:boolean">
+      <xs:annotation>
+        <xs:documentation>Indicates whether to escape non-ascii characters</xs:documentation>
       </xs:annotation>
     </xs:attribute>
     <xs:attribute name="layout" type="SimpleLayoutAttribute">
@@ -2754,7 +2802,26 @@
   <xs:complexType name="Log4JXmlEventLayout">
     <xs:complexContent>
       <xs:extension base="Layout">
-        <xs:choice minOccurs="0" maxOccurs="unbounded" />
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+          <xs:element name="includeAllProperties" minOccurs="0" maxOccurs="1" type="xs:boolean" />
+          <xs:element name="includeMdc" minOccurs="0" maxOccurs="1" type="xs:boolean" />
+          <xs:element name="includeMdlc" minOccurs="0" maxOccurs="1" type="xs:boolean" />
+        </xs:choice>
+        <xs:attribute name="includeAllProperties" type="xs:boolean">
+          <xs:annotation>
+            <xs:documentation>Option to include all properties from the log events</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="includeMdc" type="xs:boolean">
+          <xs:annotation>
+            <xs:documentation>Indicates whether to include contents of the  dictionary.</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="includeMdlc" type="xs:boolean">
+          <xs:annotation>
+            <xs:documentation>Indicates whether to include contents of the  dictionary.</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
