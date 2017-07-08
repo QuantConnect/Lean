@@ -7,7 +7,28 @@ namespace QuantConnect.Data.Custom
 {
     public class ForexVolume : BaseData
     {
-        public int Transanctions { get; set; }
+
+        /// <summary>
+        /// Gets or sets the transactions.
+        /// </summary>
+        /// <value>
+        /// The transactions.
+        /// </value>
+        public int Transactions { get; set; }
+
+        /// <summary>
+        /// The volume measured in the QUOTE CURRENCY.
+        /// </summary>
+        /// <remarks>Please remember to convert this data to a common currency before making comparison between different pairs.</remarks>
+        public new long Value { get; set; }
+
+        /// <summary>
+        /// The volume measured in the QUOTE CURRENCY.
+        /// </summary>
+        public new long Price
+        {
+            get { return Value; }
+        }
 
         /// <summary>
         ///     Return the URL string source of the file. This will be converted to a stream
@@ -56,7 +77,7 @@ namespace QuantConnect.Data.Custom
                 Symbol = config.Symbol,
                 Time = time,
                 Value = long.Parse(obs[1]),
-                Transanctions = int.Parse(obs[2]),
+                Transactions = int.Parse(obs[2]),
             };
         }
     }

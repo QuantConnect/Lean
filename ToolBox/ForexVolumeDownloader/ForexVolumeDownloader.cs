@@ -177,7 +177,7 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
                     Time = obsTime,
                     DataType = MarketDataType.ForexVolume,
                     Value = volume,
-                    Transanctions = transactions
+                    Transactions = transactions
                 });
             }
             return requestedData;

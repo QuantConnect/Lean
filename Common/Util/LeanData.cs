@@ -247,10 +247,10 @@ namespace QuantConnect.Util
                         switch (resolution)
                         {
                             case Resolution.Minute:
-                                return ToCsv(milliseconds, vol.Value, vol.Transanctions);
+                                return ToCsv(milliseconds, vol.Value, vol.Transactions);
                             case Resolution.Hour:
                             case Resolution.Daily:
-                                return ToCsv(longTime, vol.Value, vol.Transanctions);
+                                return ToCsv(longTime, vol.Value, vol.Transactions);
                             default:
                                 throw new ArgumentOutOfRangeException("resolution", resolution, null);
                         }

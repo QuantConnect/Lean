@@ -85,7 +85,7 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             for (var i = 0; i < lines - 1; i++)
             {
                 Assert.AreEqual(expectedData[i].Value, int.Parse(actualdata[i][1]));
-                Assert.AreEqual(expectedData[i].Transanctions, int.Parse(actualdata[i][2]));
+                Assert.AreEqual(expectedData[i].Transactions, int.Parse(actualdata[i][2]));
             }
         }
 
@@ -110,7 +110,7 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             for (var i = 0; i < lines - 1; i++)
             {
                 Assert.AreEqual(expectedData[i].Value, int.Parse(actualdata[i][1]));
-                Assert.AreEqual(expectedData[i].Transanctions, int.Parse(actualdata[i][2]));
+                Assert.AreEqual(expectedData[i].Transactions, int.Parse(actualdata[i][2]));
             }
         }
 
@@ -134,7 +134,7 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             for (var i = 0; i < lines - 1; i++)
             {
                 Assert.AreEqual(expectedData[i].Value, int.Parse(actualdata[i][1]));
-                Assert.AreEqual(expectedData[i].Transanctions, int.Parse(actualdata[i][2]));
+                Assert.AreEqual(expectedData[i].Transactions, int.Parse(actualdata[i][2]));
             }
         }
 
@@ -163,7 +163,7 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             for (var i = 0; i < lines - 1; i++)
             {
                 Assert.AreEqual(expectedData[i].Value, actualData[i].Value);
-                Assert.AreEqual(expectedData[i].Transanctions, actualData[i].Transanctions);
+                Assert.AreEqual(expectedData[i].Transactions, actualData[i].Transactions);
             }
         }
 
@@ -192,7 +192,7 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             for (var i = 0; i < lines - 1; i++)
             {
                 Assert.AreEqual(expectedData[i].Value, actualData[i].Value);
-                Assert.AreEqual(expectedData[i].Transanctions, actualData[i].Transanctions);
+                Assert.AreEqual(expectedData[i].Transactions, actualData[i].Transactions);
             }
         }
 
@@ -218,7 +218,7 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             for (var i = 0; i < lines - 1; i++)
             {
                 Assert.AreEqual(expectedData[i].Value, long.Parse(actualdata[i][1]));
-                Assert.AreEqual(expectedData[i].Transanctions, int.Parse(actualdata[i][2]));
+                Assert.AreEqual(expectedData[i].Transactions, int.Parse(actualdata[i][2]));
             }
         }
 
@@ -288,7 +288,7 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             foreach (var obs in data)
             {
                 sb.AppendLine(string.Format("{0:yyyy/MM/dd HH:mm},{1},{2}", obs.Time, obs.Value,
-                    ((ForexVolume) obs).Transanctions));
+                    ((ForexVolume) obs).Transactions));
             }
             var filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
                 fileName);
