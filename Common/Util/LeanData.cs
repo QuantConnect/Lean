@@ -373,6 +373,16 @@ namespace QuantConnect.Util
                 case SecurityType.Equity:
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
+                    if (resolution == Resolution.Tick && symbol.SecurityType == SecurityType.Equity)
+                    {
+                        return string.Format("{0}_{1}_{2}_{3}.csv",
+                            formattedDate,
+                            symbol.Value.ToLower(),
+                            tickType,
+                            resolution
+                        );
+                    }
+
                     if (isHourOrDaily)
                     {
                         return string.Format("{0}.csv", 
