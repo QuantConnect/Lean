@@ -142,6 +142,18 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
                     data.Clear();
                 }
             } while (intermediateEndDate != endUtc);
+            // Seems the data has som duplicate values! this makes the writer throw an error.
+            var duplicates = data.GroupBy(x => x.Time)
+                .Where(g => g.Count() > 1)
+                .Select(g => g.Key)
+                .ToList();
+            if (duplicates.Count != 0)
+            {
+                foreach (var duplicate in duplicates)
+                {
+                    data.RemoveAll(o => o.Time == duplicate);
+                }
+            }
             writer.Write(data);
         }
 

@@ -245,14 +245,14 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             // Arrange
             var resolution = Resolution.Hour;
             var startDate = new DateTime(year: 2014, month: 01, day: 01);
-            var endDate = startDate.AddYears(value: 2);
+            var endDate = startDate.AddYears(value: 3);
             // Act
             _downloader.Run(_symbol, resolution, startDate, endDate);
             // Assert
             var outputFile = Path.Combine(_dataDirectory, "base/fxcmforexvolume/hour/eurusd.zip");
             var observationsCount = ReadZipFileData(outputFile).Count;
             // 2 years x 52 weeks x 5 days x 24 hours = 12480 hours
-            Assert.True(observationsCount >= 12480, string.Format("Actual observations: {0}", observationsCount));
+            Assert.True(observationsCount >= 18720, string.Format("Actual observations: {0}", observationsCount));
         }
 
         private List<string[]> ReadZipFolderData(string outputFolder)
