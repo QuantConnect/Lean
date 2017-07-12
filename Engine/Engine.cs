@@ -85,11 +85,6 @@ namespace QuantConnect.Lean.Engine
             var algorithm = default(IAlgorithm);
             var algorithmManager = manager;
 
-            //Start monitoring the backtest active status:
-            var statusPing = new StateCheck.Ping(algorithmManager, _systemHandlers.Api, _algorithmHandlers.Results, _systemHandlers.Notify, job);
-            var statusPingThread = new Thread(statusPing.Run) { IsBackground = true };
-            statusPingThread.Start();
-
             try
             {
                 //Reset thread holders.
