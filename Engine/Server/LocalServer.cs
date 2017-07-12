@@ -1,4 +1,5 @@
-﻿using QuantConnect.Packets;
+﻿using QuantConnect.Interfaces;
+using QuantConnect.Packets;
 
 namespace QuantConnect.Lean.Engine.Server
 {
@@ -19,8 +20,27 @@ namespace QuantConnect.Lean.Engine.Server
             // NOP
         }
 
+        /// <summary>
+        /// Sets the IAlgorithm instance in the IServer
+        /// </summary>
+        /// <param name="algorithm">The IAlgorithm instance being run</param>
+        public void SetAlgorithm(IAlgorithm algorithm)
+        {
+            // NOP
+        }
+
+        /// <summary>
+        /// Update IServer with the IAlgorithm instance
+        /// </summary>
+        public void Update()
+        {
+            // NOP
+        }
+
+        /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
         public void Dispose()
         {
+            // NOP
         }
     }
 }

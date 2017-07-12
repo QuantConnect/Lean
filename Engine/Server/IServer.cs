@@ -15,6 +15,7 @@
 
 using System;
 using System.ComponentModel.Composition;
+using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Lean.Engine.Server
@@ -34,5 +35,16 @@ namespace QuantConnect.Lean.Engine.Server
         /// <param name="job">The job packet representing either a live or backtest Lean instance</param>
         /// <param name="algorithmManager">The Algorithm manager</param>
         void Initialize(LeanEngineSystemHandlers systemHandlers, LeanEngineAlgorithmHandlers algorithmHandlers, AlgorithmNodePacket job, AlgorithmManager algorithmManager);
+
+        /// <summary>
+        /// Sets the IAlgorithm instance in the IServer
+        /// </summary>
+        /// <param name="algorithm">The IAlgorithm instance being run</param>
+        void SetAlgorithm(IAlgorithm algorithm);
+
+        /// <summary>
+        /// Update IServer with the IAlgorithm instance
+        /// </summary>
+        void Update();
     }
 }
