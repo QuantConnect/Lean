@@ -75,7 +75,8 @@ namespace QuantConnect.Tests
                     {
                         string algorithmPath;
                         var job = systemHandlers.JobQueue.NextJob(out algorithmPath);
-                        engine.Run(job, algorithmPath);
+                        var algorithmManager = new AlgorithmManager(false);
+                        engine.Run(algorithmManager, job, algorithmPath);
                     }).Wait();
 
                     var backtestingResultHandler = (BacktestingResultHandler)algorithmHandlers.Results;

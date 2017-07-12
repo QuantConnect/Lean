@@ -80,10 +80,10 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         /// <param name="job">The algorithm job to be processed</param>
         /// <param name="assemblyPath">The path to the algorithm's assembly</param>
-        public void Run(AlgorithmNodePacket job, string assemblyPath)
+        public void Run(AlgorithmManager manager, AlgorithmNodePacket job, string assemblyPath)
         {
             var algorithm = default(IAlgorithm);
-            var algorithmManager = new AlgorithmManager(_liveMode);
+            var algorithmManager = manager;
 
             //Start monitoring the backtest active status:
             var statusPing = new StateCheck.Ping(algorithmManager, _systemHandlers.Api, _algorithmHandlers.Results, _systemHandlers.Notify, job);

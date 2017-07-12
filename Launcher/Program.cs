@@ -119,8 +119,9 @@ namespace QuantConnect.Lean.Launcher
 
             try
             {
+                var algorithmManager  = new AlgorithmManager(liveMode);
                 var engine = new Engine.Engine(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, liveMode);
-                engine.Run(job, assemblyPath);
+                engine.Run(algorithmManager, job, assemblyPath);
             }
             finally
             {
