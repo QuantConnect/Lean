@@ -122,8 +122,7 @@ namespace QuantConnect.Lean.Launcher
             {
                 var algorithmManager = new AlgorithmManager(liveMode);
 
-                var server = Composer.Instance.GetExportedValueByTypeName<IServer>(Config.Get("sever-type", "LocalServer"));
-                server.Run(algorithmManager, leanEngineSystemHandlers, leanEngineAlgorithmHandlers);
+                leanEngineSystemHandlers.Server.Run(algorithmManager, leanEngineSystemHandlers, leanEngineAlgorithmHandlers, job);
 
                 var engine = new Engine.Engine(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, liveMode);
                 engine.Run(algorithmManager, job, assemblyPath);

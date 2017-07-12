@@ -18,6 +18,7 @@ using System;
 using System.ComponentModel.Composition;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.Environment;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine
@@ -30,6 +31,7 @@ namespace QuantConnect.Lean.Engine
         private readonly IApi _api;
         private readonly IMessagingHandler _notify;
         private readonly IJobQueueHandler _jobQueue;
+        private IServer _server;
 
         /// <summary>
         /// Gets the api instance used for communicating algorithm limits, status, and storing of log data
@@ -57,12 +59,21 @@ namespace QuantConnect.Lean.Engine
         }
 
         /// <summary>
+        /// Gets the job queue responsible for acquiring and acknowledging an algorithm job
+        /// </summary>
+        public IServer Server
+        {
+            get { return _server; }
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="LeanEngineSystemHandlers"/> class with the specified handles
         /// </summary>
         /// <param name="jobQueue">The job queue used to acquire algorithm jobs</param>
         /// <param name="api">The api instance used for communicating limits and status</param>
         /// <param name="notify">The messaging handler user for passing messages from the algorithm to listeners</param>
-        public LeanEngineSystemHandlers(IJobQueueHandler jobQueue, IApi api, IMessagingHandler notify)
+        /// <param name="server"></param>
+        public LeanEngineSystemHandlers(IJobQueueHandler jobQueue, IApi api, IMessagingHandler notify, IServer server)
         {
             if (jobQueue == null)
             {
@@ -79,6 +90,7 @@ namespace QuantConnect.Lean.Engine
             _api = api;
             _jobQueue = jobQueue;
             _notify = notify;
+            _server = server;
         }
 
         /// <summary>
@@ -92,8 +104,8 @@ namespace QuantConnect.Lean.Engine
             return new LeanEngineSystemHandlers(
                 composer.GetExportedValueByTypeName<IJobQueueHandler>(Config.Get("job-queue-handler")),
                 composer.GetExportedValueByTypeName<IApi>(Config.Get("api-handler")),
-                composer.GetExportedValueByTypeName<IMessagingHandler>(Config.Get("messaging-handler"))
-                );
+                composer.GetExportedValueByTypeName<IMessagingHandler>(Config.Get("messaging-handler")), 
+                composer.GetExportedValueByTypeName<IServer>(Config.Get("sever-type", "LocalServer")));
         }
 
         /// <summary>
