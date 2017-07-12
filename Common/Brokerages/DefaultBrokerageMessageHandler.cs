@@ -77,7 +77,6 @@ namespace QuantConnect.Brokerages
                 
                 case BrokerageMessageType.Warning:
                     _algorithm.Error("Brokerage Warning: " + message.Message);
-                    _api.SendUserEmail(_job.AlgorithmId, "Brokerage Warning", message.Message);
                     break;
 
                 case BrokerageMessageType.Error:
