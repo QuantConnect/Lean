@@ -79,8 +79,9 @@ namespace QuantConnect.Lean.Engine
         /// Runs a single backtest/live job from the job queue
         /// </summary>
         /// <param name="job">The algorithm job to be processed</param>
+        /// <param name="manager"></param>
         /// <param name="assemblyPath">The path to the algorithm's assembly</param>
-        public void Run(AlgorithmManager manager, AlgorithmNodePacket job, string assemblyPath)
+        public void Run(AlgorithmNodePacket job, AlgorithmManager manager, string assemblyPath)
         {
             var algorithm = default(IAlgorithm);
             var algorithmManager = manager;
@@ -359,7 +360,6 @@ namespace QuantConnect.Lean.Engine
 
                 //Close result handler:
                 _algorithmHandlers.Results.Exit();
-                statusPing.Exit();
 
                 //Wait for the threads to complete:
                 var ts = Stopwatch.StartNew();
@@ -377,7 +377,6 @@ namespace QuantConnect.Lean.Engine
                 if (threadFeed != null && threadFeed.IsAlive) threadFeed.Abort();
                 if (threadTransactions != null && threadTransactions.IsAlive) threadTransactions.Abort();
                 if (threadResults != null && threadResults.IsAlive) threadResults.Abort();
-                if (statusPingThread != null && statusPingThread.IsAlive) statusPingThread.Abort();
 
                 if (brokerage != null)
                 {

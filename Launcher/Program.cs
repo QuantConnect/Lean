@@ -23,7 +23,6 @@ using System.Windows.Forms;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine;
-using QuantConnect.Lean.Engine.Environment;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Util;
@@ -122,10 +121,10 @@ namespace QuantConnect.Lean.Launcher
             {
                 var algorithmManager = new AlgorithmManager(liveMode);
 
-                leanEngineSystemHandlers.Server.Run(algorithmManager, leanEngineSystemHandlers, leanEngineAlgorithmHandlers, job);
+                leanEngineSystemHandlers.Server.Initialize(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, job, algorithmManager);
 
                 var engine = new Engine.Engine(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, liveMode);
-                engine.Run(algorithmManager, job, assemblyPath);
+                engine.Run(job, algorithmManager, assemblyPath);
             }
             finally
             {

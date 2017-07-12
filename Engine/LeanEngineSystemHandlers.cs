@@ -18,7 +18,7 @@ using System;
 using System.ComponentModel.Composition;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.Environment;
+using QuantConnect.Lean.Engine.Server;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine
@@ -59,7 +59,7 @@ namespace QuantConnect.Lean.Engine
         }
 
         /// <summary>
-        /// Gets the job queue responsible for acquiring and acknowledging an algorithm job
+        /// 
         /// </summary>
         public IServer Server
         {
@@ -87,6 +87,10 @@ namespace QuantConnect.Lean.Engine
             {
                 throw new ArgumentNullException("notify");
             }
+            if (server == null)
+            {
+                throw new ArgumentNullException("server");
+            }
             _api = api;
             _jobQueue = jobQueue;
             _notify = notify;
@@ -105,7 +109,7 @@ namespace QuantConnect.Lean.Engine
                 composer.GetExportedValueByTypeName<IJobQueueHandler>(Config.Get("job-queue-handler")),
                 composer.GetExportedValueByTypeName<IApi>(Config.Get("api-handler")),
                 composer.GetExportedValueByTypeName<IMessagingHandler>(Config.Get("messaging-handler")), 
-                composer.GetExportedValueByTypeName<IServer>(Config.Get("sever-type", "LocalServer")));
+                composer.GetExportedValueByTypeName<IServer>(Config.Get("server-type", "LocalServer")));
         }
 
         /// <summary>
@@ -125,6 +129,7 @@ namespace QuantConnect.Lean.Engine
         public void Dispose()
         {
             Api.Dispose();
+            Server.Dispose();
         }
     }
 }
