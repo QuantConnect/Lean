@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using QuantConnect.Commands;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Interfaces

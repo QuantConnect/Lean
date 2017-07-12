@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -13,19 +13,19 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Commands
+using QuantConnect.Packets;
+
+namespace QuantConnect.Interfaces
 {
     /// <summary>
-    /// Represents a command that will terminate the algorithm
+    /// Represents a command that can be run against a single algorithm
     /// </summary>
-    public sealed class QuitCommand : AlgorithmStatusCommand
+    public interface ICommand
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="QuitCommand"/>
+        /// Runs this command against the specified algorithm instance
         /// </summary>
-        public QuitCommand()
-            : base(AlgorithmStatus.Stopped)
-        {
-        }
+        /// <param name="algorithm">The algorithm to run this command against</param>
+        CommandResultPacket Run(IAlgorithm algorithm);
     }
 }

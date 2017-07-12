@@ -31,7 +31,7 @@ namespace QuantConnect.Lean.Engine
         private readonly IApi _api;
         private readonly IMessagingHandler _notify;
         private readonly IJobQueueHandler _jobQueue;
-        private IServer _server;
+        private readonly IServer _server;
 
         /// <summary>
         /// Gets the api instance used for communicating algorithm limits, status, and storing of log data
@@ -59,7 +59,7 @@ namespace QuantConnect.Lean.Engine
         }
 
         /// <summary>
-        /// 
+        /// Gets the IServer implementation using to enhance the hosting environment
         /// </summary>
         public IServer Server
         {

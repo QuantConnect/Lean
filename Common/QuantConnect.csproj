@@ -155,14 +155,7 @@
     <Compile Include="Brokerages\InteractiveBrokersBrokerageModel.cs" />
     <Compile Include="Brokerages\OandaBrokerageModel.cs" />
     <Compile Include="Brokerages\TradierBrokerageModel.cs" />
-    <Compile Include="Commands\AddSecurityCommand.cs" />
-    <Compile Include="Commands\AlgorithmStatusCommand.cs" />
-    <Compile Include="Commands\CancelOrderCommand.cs" />
-    <Compile Include="Commands\ICommand.cs" />
-    <Compile Include="Commands\LiquidateCommand.cs" />
-    <Compile Include="Commands\OrderCommand.cs" />
-    <Compile Include="Commands\QuitCommand.cs" />
-    <Compile Include="Commands\UpdateOrderCommand.cs" />
+    <Compile Include="Interfaces\ICommand.cs" />
     <Compile Include="Data\Market\IBaseDataBar.cs" />
     <Compile Include="Data\Consolidators\OpenInterestConsolidator.cs" />
     <Compile Include="Data\Market\OpenInterest.cs" />

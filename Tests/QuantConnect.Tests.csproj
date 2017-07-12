@@ -294,7 +294,6 @@
     <Compile Include="Indicators\RateOfChangeTests.cs" />
     <Compile Include="Indicators\StochasticTests.cs" />
     <Compile Include="Messaging\StreamingMessageHandlerTests.cs" />
-    <Compile Include="Queues\FileCommandQueueHandlerTests.cs" />
     <Compile Include="RegressionTests.cs" />
     <Compile Include="Symbols.cs" />
     <Compile Include="TestExtensions.cs" />

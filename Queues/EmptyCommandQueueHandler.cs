@@ -15,7 +15,6 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Commands;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 
