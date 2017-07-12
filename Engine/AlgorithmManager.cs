@@ -130,10 +130,10 @@ namespace QuantConnect.Lean.Engine
         /// <param name="realtime">Realtime processing object</param>
         /// <param name="commands">The command queue for relaying extenal commands to the algorithm</param>
         /// <param name="systemHandlersServer"></param>
-        /// <param name="server">IServer implementation that is updated periodically with the IAlgorithm instance</param>
+        /// <param name="leanManagement">ILeanManagement implementation that is updated periodically with the IAlgorithm instance</param>
         /// <param name="token">Cancellation token</param>
         /// <remarks>Modify with caution</remarks>
-        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, IDataFeed feed, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, IServer server, CancellationToken token) 
+        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, IDataFeed feed, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManagement leanManagement, CancellationToken token) 
         {
             //Initialize:
             _dataPointCount = 0;
@@ -219,8 +219,8 @@ namespace QuantConnect.Lean.Engine
                     return;
                 }
 
-                // Update the IServer 
-                server.Update();
+                // Update the ILeanManagement 
+                leanManagement.Update();
 
                 var time = timeSlice.Time;
                 _dataPointCount += timeSlice.DataPointCount;

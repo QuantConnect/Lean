@@ -21,14 +21,13 @@ using QuantConnect.Packets;
 namespace QuantConnect.Lean.Engine.Server
 {
     /// <summary>
-    /// Provides an outer scope to Lean and Lean.Engine that is convenient
-    /// for specializing logic around the server hosting Lean
+    /// Provides scope into Lean that is convenient for managing a lean instance
     /// </summary>
-    [InheritedExport(typeof(IServer))]
-    public interface IServer : IDisposable
+    [InheritedExport(typeof(ILeanManagement))]
+    public interface ILeanManagement : IDisposable
     {
         /// <summary>
-        /// Initialize the IServer implementation
+        /// Initialize the ILeanManagement implementation
         /// </summary>
         /// <param name="systemHandlers">Exposes lean engine system handlers running LEAN</param>
         /// <param name="algorithmHandlers">Exposes the lean algorithm handlers running lean</param>
@@ -37,13 +36,13 @@ namespace QuantConnect.Lean.Engine.Server
         void Initialize(LeanEngineSystemHandlers systemHandlers, LeanEngineAlgorithmHandlers algorithmHandlers, AlgorithmNodePacket job, AlgorithmManager algorithmManager);
 
         /// <summary>
-        /// Sets the IAlgorithm instance in the IServer
+        /// Sets the IAlgorithm instance in the ILeanManagement
         /// </summary>
         /// <param name="algorithm">The IAlgorithm instance being run</param>
         void SetAlgorithm(IAlgorithm algorithm);
 
         /// <summary>
-        /// Update IServer with the IAlgorithm instance
+        /// Update ILeanManagement with the IAlgorithm instance
         /// </summary>
         void Update();
     }

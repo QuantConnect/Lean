@@ -31,7 +31,7 @@ namespace QuantConnect.Lean.Engine
         private readonly IApi _api;
         private readonly IMessagingHandler _notify;
         private readonly IJobQueueHandler _jobQueue;
-        private readonly IServer _server;
+        private readonly ILeanManagement _leanManagement;
 
         /// <summary>
         /// Gets the api instance used for communicating algorithm limits, status, and storing of log data
@@ -59,11 +59,11 @@ namespace QuantConnect.Lean.Engine
         }
 
         /// <summary>
-        /// Gets the IServer implementation using to enhance the hosting environment
+        /// Gets the ILeanManagement implementation using to enhance the hosting environment
         /// </summary>
-        public IServer Server
+        public ILeanManagement LeanManagement
         {
-            get { return _server; }
+            get { return _leanManagement; }
         }
 
         /// <summary>
@@ -72,8 +72,8 @@ namespace QuantConnect.Lean.Engine
         /// <param name="jobQueue">The job queue used to acquire algorithm jobs</param>
         /// <param name="api">The api instance used for communicating limits and status</param>
         /// <param name="notify">The messaging handler user for passing messages from the algorithm to listeners</param>
-        /// <param name="server"></param>
-        public LeanEngineSystemHandlers(IJobQueueHandler jobQueue, IApi api, IMessagingHandler notify, IServer server)
+        /// <param name="leanManagement"></param>
+        public LeanEngineSystemHandlers(IJobQueueHandler jobQueue, IApi api, IMessagingHandler notify, ILeanManagement leanManagement)
         {
             if (jobQueue == null)
             {
@@ -87,14 +87,14 @@ namespace QuantConnect.Lean.Engine
             {
                 throw new ArgumentNullException("notify");
             }
-            if (server == null)
+            if (leanManagement == null)
             {
-                throw new ArgumentNullException("server");
+                throw new ArgumentNullException("leanManagement");
             }
             _api = api;
             _jobQueue = jobQueue;
             _notify = notify;
-            _server = server;
+            _leanManagement = leanManagement;
         }
 
         /// <summary>
@@ -109,7 +109,7 @@ namespace QuantConnect.Lean.Engine
                 composer.GetExportedValueByTypeName<IJobQueueHandler>(Config.Get("job-queue-handler")),
                 composer.GetExportedValueByTypeName<IApi>(Config.Get("api-handler")),
                 composer.GetExportedValueByTypeName<IMessagingHandler>(Config.Get("messaging-handler")), 
-                composer.GetExportedValueByTypeName<IServer>(Config.Get("server-type", "LocalServer")));
+                composer.GetExportedValueByTypeName<ILeanManagement>(Config.Get("lean-management-type", "LocalLeanManagement")));
         }
 
         /// <summary>
@@ -129,7 +129,7 @@ namespace QuantConnect.Lean.Engine
         public void Dispose()
         {
             Api.Dispose();
-            Server.Dispose();
+            LeanManagement.Dispose();
         }
     }
 }
