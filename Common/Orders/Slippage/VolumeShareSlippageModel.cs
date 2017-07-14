@@ -70,7 +70,7 @@ namespace QuantConnect.Orders.Slippage
             if (barVolume <= 0)
             {
                 var securityType = asset.Symbol.ID.SecurityType;
-                if (securityType == SecurityType.Cfd || securityType == SecurityType.Forex)
+                if (securityType == SecurityType.Cfd || securityType == SecurityType.Forex || securityType == SecurityType.Crypto)
                 {
                     Log.Error("VolumeShareSlippageModel.GetSlippageApproximation: " +
                         securityType + " security type often does not report volume. " +

@@ -73,7 +73,7 @@ namespace QuantConnect.Securities
                 {
                     security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, quoteCash.Symbol, -fill.FillQuantity * fill.FillPrice * security.SymbolProperties.ContractMultiplier);
                 }
-                if (security.Type == SecurityType.Forex)
+                if (security.Type == SecurityType.Forex || security.Type == SecurityType.Crypto)
                 {
                     // model forex fills as currency swaps
                     var forex = (Forex.Forex) security;

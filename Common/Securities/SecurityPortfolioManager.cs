@@ -362,18 +362,18 @@ namespace QuantConnect.Securities
             {
                 // we can't include forex in this calculation since we would be double accounting with respect to the cash book
                 // we exclude futures as they are calculated separately
-                decimal totalHoldingsValueWithoutForex = 0;
+                decimal totalHoldingsValueWithoutForexAndCrypto = 0;
                 foreach (var kvp in Securities)
                 {
                     var position = kvp.Value;
-                    if (position.Type != SecurityType.Forex &&
-                        position.Type != SecurityType.Future) totalHoldingsValueWithoutForex += position.Holdings.HoldingsValue;
+                    if (position.Type != SecurityType.Forex && position.Type != SecurityType.Crypto &&
+                        position.Type != SecurityType.Future) totalHoldingsValueWithoutForexAndCrypto += position.Holdings.HoldingsValue;
                 }
 
                 var totalFuturesHoldingsValue = Securities.Where(x => x.Value.Type == SecurityType.Future)
                                                            .Sum(x => x.Value.Holdings.UnrealizedProfit);
 
-                return CashBook.TotalValueInAccountCurrency + UnsettledCashBook.TotalValueInAccountCurrency + totalHoldingsValueWithoutForex + totalFuturesHoldingsValue;
+                return CashBook.TotalValueInAccountCurrency + UnsettledCashBook.TotalValueInAccountCurrency + totalHoldingsValueWithoutForexAndCrypto + totalFuturesHoldingsValue;
             }
         }
 

@@ -251,7 +251,7 @@ namespace QuantConnect.Algorithm
             var start = GetStartTimeAlgoTz(symbol, periods, resolution);
 
             var securityType = symbol.ID.SecurityType;
-            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
+            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd || securityType == SecurityType.Crypto)
             {
                 Error("Calling this method on a Forex or CFD security will return an empty result. Please use the generic version with QuoteBar type parameter.");
             }
@@ -321,7 +321,7 @@ namespace QuantConnect.Algorithm
         public IEnumerable<TradeBar> History(Symbol symbol, TimeSpan span, Resolution? resolution = null)
         {
             var securityType = symbol.ID.SecurityType;
-            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
+            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd || securityType == SecurityType.Crypto)
             {
                 Error("Calling this method on a Forex or CFD security will return an empty result. Please use the generic version with QuoteBar type parameter.");
             }
@@ -340,7 +340,7 @@ namespace QuantConnect.Algorithm
         public IEnumerable<TradeBar> History(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null)
         {
             var securityType = symbol.ID.SecurityType;
-            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
+            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd || securityType == SecurityType.Crypto)
             {
                 Error("Calling this method on a Forex or CFD security will return an empty result. Please use the generic version with QuoteBar type parameter.");
             }

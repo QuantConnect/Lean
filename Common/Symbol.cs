@@ -72,6 +72,10 @@ namespace QuantConnect
                     sid = SecurityIdentifier.GenerateFuture(SecurityIdentifier.DefaultDate, ticker, market);
                     break;
 
+                case SecurityType.Crypto:
+                    sid = SecurityIdentifier.GenerateCrypto(ticker, market);
+                    break;
+
                 case SecurityType.Commodity:
                 default:
                     throw new NotImplementedException("The security type has not been implemented yet: " + securityType);

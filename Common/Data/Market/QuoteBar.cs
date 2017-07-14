@@ -296,6 +296,9 @@ namespace QuantConnect.Data.Market
 
                         case SecurityType.Future:
                             return ParseFuture(config, line, date);
+
+                        case SecurityType.Crypto:
+                            return ParseForex(config, line, date);
                     }
                 }
 

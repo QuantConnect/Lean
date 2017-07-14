@@ -104,7 +104,11 @@ namespace QuantConnect.Orders
             order.ContingentId = jObject["ContingentId"].Value<int>();
 
             var market = Market.USA;
+
+            //todo: can't safely derive market from security type
             if (securityType == SecurityType.Forex) market = Market.FXCM;
+
+            if (securityType == SecurityType.Crypto) market = Market.GDAX;
 
             if (jObject.SelectTokens("Symbol.ID").Any())
             {

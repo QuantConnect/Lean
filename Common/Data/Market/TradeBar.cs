@@ -213,6 +213,9 @@ namespace QuantConnect.Data.Market
 
                     case SecurityType.Future:
                         return ParseFuture(config, line, date);
+
+                    case SecurityType.Crypto:
+                        return ParseForex<TradeBar>(config, line, date);
                 }
             }
             catch (Exception err)
@@ -236,6 +239,9 @@ namespace QuantConnect.Data.Market
                     return ParseEquity(config, line, baseDate);
 
                 case SecurityType.Forex:
+                    return ParseForex(config, line, baseDate);
+
+                case SecurityType.Crypto:
                     return ParseForex(config, line, baseDate);
 
                 case SecurityType.Cfd:

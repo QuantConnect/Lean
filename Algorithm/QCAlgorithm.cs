@@ -38,6 +38,7 @@ using QuantConnect.Statistics;
 using QuantConnect.Util;
 using System.Collections.Concurrent;
 using QuantConnect.Securities.Future;
+using QuantConnect.Securities.Crypto;
 
 namespace QuantConnect.Algorithm
 {
@@ -928,6 +929,7 @@ namespace QuantConnect.Algorithm
         public void SetBenchmark(SecurityType securityType, string symbol)
         {
             var market = securityType == SecurityType.Forex ? Market.FXCM : Market.USA;
+            market = securityType == SecurityType.Crypto ? Market.GDAX : market;
             _benchmarkSymbol = QuantConnect.Symbol.Create(symbol, securityType, market);
         }
 
@@ -1482,6 +1484,11 @@ namespace QuantConnect.Algorithm
         public Cfd AddCfd(string ticker, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m)
         {
             return AddSecurity<Cfd>(SecurityType.Cfd, ticker, resolution, market, fillDataForward, leverage, false);
+        }
+
+        public Crypto AddCrypto(string ticker, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m)
+        {
+            return AddSecurity<Crypto>(SecurityType.Crypto, ticker, resolution, market, fillDataForward, leverage, false);
         }
 
         /// <summary>

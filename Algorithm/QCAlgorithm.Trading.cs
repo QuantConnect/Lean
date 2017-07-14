@@ -691,7 +691,7 @@ namespace QuantConnect.Algorithm
             }
 
             // need to also check base currency existence/conversion rate on forex orders
-            if (security.Type == SecurityType.Forex)
+            if (security.Type == SecurityType.Forex || security.Type == SecurityType.Crypto)
             {
                 Cash baseCash;
                 var baseCurrency = ((Forex)security).BaseCurrencySymbol;

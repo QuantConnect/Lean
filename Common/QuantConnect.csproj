@@ -339,6 +339,9 @@
     <Compile Include="Securities\Cfd\CfdHolding.cs" />
     <Compile Include="Securities\CompositeSecurityInitializer.cs" />
     <Compile Include="Securities\ConstantFeeTransactionModel.cs" />
+    <Compile Include="Securities\Crypto\Crypto.cs" />
+    <Compile Include="Securities\Crypto\CryptoExchange.cs" />
+    <Compile Include="Securities\Crypto\CryptoHolding.cs" />
     <Compile Include="Securities\DelayedSettlementModel.cs" />
     <Compile Include="Securities\AdjustedPriceVariationModel.cs" />
     <Compile Include="Securities\FuncSecuritySeeder.cs" />
