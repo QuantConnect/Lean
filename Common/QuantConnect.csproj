@@ -155,14 +155,6 @@
     <Compile Include="Brokerages\InteractiveBrokersBrokerageModel.cs" />
     <Compile Include="Brokerages\OandaBrokerageModel.cs" />
     <Compile Include="Brokerages\TradierBrokerageModel.cs" />
-    <Compile Include="Commands\AddSecurityCommand.cs" />
-    <Compile Include="Commands\AlgorithmStatusCommand.cs" />
-    <Compile Include="Commands\CancelOrderCommand.cs" />
-    <Compile Include="Commands\ICommand.cs" />
-    <Compile Include="Commands\LiquidateCommand.cs" />
-    <Compile Include="Commands\OrderCommand.cs" />
-    <Compile Include="Commands\QuitCommand.cs" />
-    <Compile Include="Commands\UpdateOrderCommand.cs" />
     <Compile Include="Data\Market\IBaseDataBar.cs" />
     <Compile Include="Data\Consolidators\OpenInterestConsolidator.cs" />
     <Compile Include="Data\Market\OpenInterest.cs" />
@@ -266,7 +258,6 @@
     <Compile Include="Interfaces\IBrokerageFactory.cs" />
     <Compile Include="Interfaces\IDataCacheProvider.cs" />
     <Compile Include="Interfaces\IDataQueueUniverseProvider.cs" />
-    <Compile Include="Interfaces\ICommandQueueHandler.cs" />
     <Compile Include="Interfaces\IDataQueueHandler.cs" />
     <Compile Include="Interfaces\IFactorFileProvider.cs" />
     <Compile Include="Interfaces\IDataProvider.cs" />
@@ -313,7 +304,6 @@
     <Compile Include="Orders\SubmitOrderRequest.cs" />
     <Compile Include="Orders\UpdateOrderFields.cs" />
     <Compile Include="Orders\UpdateOrderRequest.cs" />
-    <Compile Include="Packets\CommandResultPacket.cs" />
     <Compile Include="Packets\Controls.cs" />
     <Compile Include="Packets\HandledErrorPacket.cs" />
     <Compile Include="Packets\HistoryPacket.cs" />

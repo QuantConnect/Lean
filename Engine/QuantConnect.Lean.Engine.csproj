@@ -201,9 +201,11 @@
     <Compile Include="DataFeeds\UpdateData.cs" />
     <Compile Include="DataFeeds\ZipDataCacheProvider.cs" />
     <Compile Include="DataFeeds\ZipEntryNameSubscriptionDataSourceReader.cs" />
+    <Compile Include="Server\LocalLeanManagement.cs" />
     <Compile Include="HistoricalData\BrokerageHistoryProvider.cs" />
     <Compile Include="HistoricalData\SubscriptionDataReaderHistoryProvider.cs" />
     <Compile Include="HistoricalData\SynchronizingHistoryProvider.cs" />
+    <Compile Include="Server\ILeanManagement.cs" />
     <Compile Include="LeanEngineAlgorithmHandlers.cs" />
     <Compile Include="LeanEngineSystemHandlers.cs" />
     <Compile Include="RealTime\LiveTradingRealTimeHandler.cs" />
@@ -213,7 +215,6 @@
     <Compile Include="Results\DesktopResultHandler.cs" />
     <Compile Include="Results\IResultHandler.cs" />
     <Compile Include="Setup\BrokerageSetupHandler.cs" />
-    <Compile Include="StateCheck.cs" />
     <Compile Include="Setup\ConsoleSetupHandler.cs" />
     <Compile Include="Setup\BacktestingSetupHandler.cs" />
     <Compile Include="Setup\ISetupHandler.cs" />
@@ -271,14 +272,6 @@
     <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj">
       <Project>{01911409-86be-4e7d-9947-df714138610d}</Project>
       <Name>QuantConnect.Logging</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Messaging\QuantConnect.Messaging.csproj">
-      <Project>{f2e90e2d-ba25-40e2-b39a-0ba31e68f7f8}</Project>
-      <Name>QuantConnect.Messaging</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Queues\QuantConnect.Queues.csproj">
-      <Project>{d6633172-1368-4df6-9444-825c3e00c819}</Project>
-      <Name>QuantConnect.Queues</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -28,6 +28,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Lean.Engine.Server;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -128,9 +129,11 @@ namespace QuantConnect.Lean.Engine
         /// <param name="results">Result handler object</param>
         /// <param name="realtime">Realtime processing object</param>
         /// <param name="commands">The command queue for relaying extenal commands to the algorithm</param>
+        /// <param name="systemHandlersServer"></param>
+        /// <param name="leanManagement">ILeanManagement implementation that is updated periodically with the IAlgorithm instance</param>
         /// <param name="token">Cancellation token</param>
         /// <remarks>Modify with caution</remarks>
-        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, IDataFeed feed, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ICommandQueueHandler commands, CancellationToken token) 
+        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, IDataFeed feed, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManagement leanManagement, CancellationToken token) 
         {
             //Initialize:
             _dataPointCount = 0;
@@ -216,26 +219,8 @@ namespace QuantConnect.Lean.Engine
                     return;
                 }
 
-                // before doing anything, check our command queue
-                foreach (var command in commands.GetCommands())
-                {
-                    if (command == null) continue;
-                    Log.Trace("AlgorithmManager.Run(): Executing {0}", command);
-                    CommandResultPacket result;
-                    try
-                    {
-                        result = command.Run(algorithm);
-                    }
-                    catch (Exception err)
-                    {
-                        Log.Error(err);
-                        algorithm.Error(string.Format("{0} Error: {1}", command.GetType().Name, err.Message));
-                        result = new CommandResultPacket(command, false);
-                    }
-
-                    // send the result of the command off to the result handler
-                    results.Messages.Enqueue(result);
-                }
+                // Update the ILeanManagement 
+                leanManagement.Update();
 
                 var time = timeSlice.Time;
                 _dataPointCount += timeSlice.DataPointCount;
