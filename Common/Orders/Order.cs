@@ -63,7 +63,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Number of shares to execute.
         /// </summary>
-        public int Quantity { get; internal set; }
+        public decimal Quantity { get; internal set; }
 
         /// <summary>
         /// Order Type
@@ -123,7 +123,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public decimal Value
         {
-            get { return Quantity*Price; }
+            get { return Quantity * Price; }
         }
 
         /// <summary>
@@ -151,7 +151,7 @@ namespace QuantConnect.Orders
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
         /// <param name="time">Time the order was placed</param>
         /// <param name="tag">User defined data tag for this order</param>
-        protected Order(Symbol symbol, int quantity, DateTime time, string tag = "")
+        protected Order(Symbol symbol, decimal quantity, DateTime time, string tag = "")
         {
             Time = time;
             Price = 0;

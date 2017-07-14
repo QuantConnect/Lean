@@ -177,7 +177,7 @@ namespace QuantConnect.Securities
             }
 
             //Set the results back to the vehicle.
-            security.Holdings.SetHoldings(averageHoldingsPrice, Convert.ToInt32(quantityHoldings));
+            security.Holdings.SetHoldings(averageHoldingsPrice, quantityHoldings);
         }
     }
 }

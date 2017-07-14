@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using IBApi;
+
 namespace QuantConnect.Brokerages.InteractiveBrokers.Client
 {
     /// <summary>
@@ -26,18 +28,18 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         public double Price { get; private set; }
 
         /// <summary>
-        /// Specifies whether the price tick is available for automatic execution.
+        /// The tick attributes.
         /// </summary>
-        public int CanAutoExecute { get; private set; }
+        public TickAttrib TickAttributes { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TickPriceEventArgs"/> class
         /// </summary>
-        public TickPriceEventArgs(int tickerId, int field, double price, int canAutoExecute)
+        public TickPriceEventArgs(int tickerId, int field, double price, TickAttrib attribs)
             : base(tickerId, field)
         {
             Price = price;
-            CanAutoExecute = canAutoExecute;
+            TickAttributes = attribs;
         }
     }
 }

@@ -448,7 +448,7 @@ namespace QuantConnect.Algorithm
             // Get the config with the largest resolution
             var subscriptionDataConfig = GetMatchingSubscription(security, typeof(BaseData));
 
-            var request = new HistoryRequest()
+            var request = new HistoryRequest
             {
                 StartTimeUtc = startTime.ConvertToUtc(_localTimeKeeper.TimeZone),
                 EndTimeUtc = endTime.ConvertToUtc(_localTimeKeeper.TimeZone),
@@ -456,9 +456,7 @@ namespace QuantConnect.Algorithm
                 Resolution = resolution,
                 FillForwardResolution = resolution,
                 Symbol = security.Symbol,
-                Market = security.Symbol.ID.Market,
-                ExchangeHours = security.Exchange.Hours,
-                SecurityType = security.Type
+                ExchangeHours = security.Exchange.Hours
             };
 
             var history = History(new List<HistoryRequest> { request });
@@ -518,7 +516,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         private IEnumerable<HistoryRequest> CreateDateRangeHistoryRequests(IEnumerable<Symbol> symbols, DateTime startAlgoTz, DateTime endAlgoTz, Resolution? resolution = null, bool? fillForward = null, bool? extendedMarket = null)
         {
-            return symbols.Select(x =>
+            return symbols.Where(x => !x.IsCanonical()).Select(x =>
             {
                 var security = Securities[x];
                 var config = GetMatchingSubscription(security, typeof (BaseData));
@@ -537,7 +535,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         private IEnumerable<HistoryRequest> CreateBarCountHistoryRequests(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null)
         {
-            return symbols.Select(x =>
+            return symbols.Where(x => !x.IsCanonical()).Select(x =>
             {
                 var security = Securities[x];
                 Resolution? res = resolution ?? security.Resolution;
@@ -550,12 +548,17 @@ namespace QuantConnect.Algorithm
         private HistoryRequest CreateHistoryRequest(Security security, SubscriptionDataConfig subscription, DateTime startAlgoTz, DateTime endAlgoTz, Resolution? resolution)
         {
             resolution = resolution ?? security.Resolution;
+
+            // find the correct data type for the history request
+            var dataType = subscription.IsCustomData ? subscription.Type : LeanData.GetDataType(resolution.Value, subscription.TickType);
+
             var request = new HistoryRequest(subscription, security.Exchange.Hours, startAlgoTz.ConvertToUtc(TimeZone), endAlgoTz.ConvertToUtc(TimeZone))
             {
-                DataType = subscription.IsCustomData || resolution != Resolution.Tick ? subscription.Type : typeof(Tick),
+                DataType = dataType,
                 Resolution = resolution.Value,
                 FillForwardResolution = subscription.FillDataForward ? resolution : null
             };
+
             return request;
         }
 

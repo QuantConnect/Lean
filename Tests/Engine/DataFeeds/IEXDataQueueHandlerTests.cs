@@ -39,7 +39,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                             callback.Invoke(tick);
                         }
                     }
-                    catch (AssertionException ase)
+                    catch (AssertionException)
                     {
                         throw;
                     }

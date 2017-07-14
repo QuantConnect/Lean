@@ -20,6 +20,7 @@ from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Data import *
+from datetime import timedelta
 
 
 class ScheduledEventsAlgorithm(QCAlgorithm):
@@ -32,8 +33,8 @@ class ScheduledEventsAlgorithm(QCAlgorithm):
         self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.AddSecurity(SecurityType.Equity, "SPY", Resolution.Second)
-
+        self.AddEquity("SPY")
+        
         # events are scheduled using date and time rules
         # date rules specify on what dates and event will fire
         # time rules specify at what time on thos dates the event will fire
@@ -58,7 +59,7 @@ class ScheduledEventsAlgorithm(QCAlgorithm):
 
         # the scheduling methods return the ScheduledEvent object which can be used for other things here I set
         # the event up to check the portfolio value every 10 minutes, and liquidate if we have too many losses
-        self.Schedule.On(self.DateRules.EveryDay(), self.TimeRules.Every(TimeSpan.FromMinutes(10)), Action(self.LiquidateUnrealizedLosses))
+        self.Schedule.On(self.DateRules.EveryDay(), self.TimeRules.Every(timedelta(minutes=10)), Action(self.LiquidateUnrealizedLosses))
 
         # schedule an event to fire at the beginning of the month, the symbol is optional
         # if specified, it will fire the first trading day for that symbol of the month,
@@ -67,11 +68,7 @@ class ScheduledEventsAlgorithm(QCAlgorithm):
 
 
     def OnData(self, data):
-        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        
-        Arguments:
-            data: Slice object keyed by symbol containing the stock data
-        '''
+        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
         if not self.Portfolio.Invested:
             self.SetHoldings("SPY", 1)
 

@@ -42,7 +42,7 @@ namespace QuantConnect.Data.Consolidators
         private readonly decimal _barSize;
         private readonly bool _evenBars;
         private readonly Func<IBaseData, decimal> _selector;
-        private readonly Func<IBaseData, long> _volumeSelector;
+        private readonly Func<IBaseData, decimal> _volumeSelector;
         private DataConsolidatedHandler _dataConsolidatedHandler;
 
         private bool _firstTick = true;
@@ -96,7 +96,7 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does 
         /// not aggregate volume per bar.</param>
         /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
-        public RenkoConsolidator(decimal barSize, Func<IBaseData, decimal> selector, Func<IBaseData, long> volumeSelector = null, bool evenBars = true)
+        public RenkoConsolidator(decimal barSize, Func<IBaseData, decimal> selector, Func<IBaseData, decimal> volumeSelector = null, bool evenBars = true)
         {
             if (barSize < Extensions.GetDecimalEpsilon())
             {
@@ -377,8 +377,8 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="volumeSelector">Extracts the volume from a data instance. The default value is null which does 
         /// not aggregate volume per bar.</param>
         /// <param name="evenBars">When true bar open/close will be a multiple of the barSize</param>
-        public RenkoConsolidator(decimal barSize, Func<TInput, decimal> selector, Func<TInput, long> volumeSelector = null, bool evenBars = true)
-            : base(barSize, x => selector((TInput)x), volumeSelector == null ? (Func<IBaseData, long>) null : x => volumeSelector((TInput)x), evenBars)
+        public RenkoConsolidator(decimal barSize, Func<TInput, decimal> selector, Func<TInput, decimal> volumeSelector = null, bool evenBars = true)
+            : base(barSize, x => selector((TInput)x), volumeSelector == null ? (Func<IBaseData, decimal>) null : x => volumeSelector((TInput)x), evenBars)
         {
         }
 

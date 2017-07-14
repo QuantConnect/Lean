@@ -61,12 +61,12 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Number of shares of the order that was filled in this event.
         /// </summary>
-        public int FillQuantity;
+        public decimal FillQuantity;
 
         /// <summary>
         /// Public Property Absolute Getter of Quantity -Filled
         /// </summary>
-        public int AbsoluteFillQuantity 
+        public decimal AbsoluteFillQuantity 
         {
             get 
             {
@@ -104,7 +104,7 @@ namespace QuantConnect.Orders
         /// <param name="fillQuantity">Fill quantity</param>
         /// <param name="orderFee">The order fee</param>
         /// <param name="message">Message from the exchange</param>
-        public OrderEvent(int orderId, Symbol symbol, DateTime utcTime, OrderStatus status, OrderDirection direction, decimal fillPrice, int fillQuantity, decimal orderFee, string message = "")
+        public OrderEvent(int orderId, Symbol symbol, DateTime utcTime, OrderStatus status, OrderDirection direction, decimal fillPrice, decimal fillQuantity, decimal orderFee, string message = "")
         {
             OrderId = orderId;
             Symbol = symbol;
@@ -159,7 +159,13 @@ namespace QuantConnect.Orders
 
             // attach the order fee so it ends up in logs properly
             if (OrderFee != 0m) message += string.Format(" OrderFee: {0} {1}", OrderFee, CashBook.AccountCurrency);
-            
+
+            // add message from brokerage
+            if (!string.IsNullOrEmpty(Message))
+            {
+                message += string.Format(" Message: {0}", Message);
+            } 
+
             return message;
         }
 

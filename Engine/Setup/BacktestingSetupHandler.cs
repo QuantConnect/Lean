@@ -185,8 +185,6 @@ namespace QuantConnect.Lean.Engine.Setup
                     algorithm.SetParameters(job.Parameters);
                     //Algorithm is backtesting, not live:
                     algorithm.SetLiveMode(false);
-                    //Set the algorithm time before we even initialize:
-                    algorithm.SetDateTime(job.PeriodStart.ConvertToUtc(algorithm.TimeZone));
                     //Set the source impl for the event scheduling
                     algorithm.Schedule.SetEventSchedule(realTimeHandler);
                     //Initialise the algorithm, get the required data:
@@ -202,12 +200,20 @@ namespace QuantConnect.Lean.Engine.Setup
             //Before continuing, detect if this is ready:
             if (!initializeComplete) return false;
 
-            algorithm.Transactions.SetOrderProcessor(transactionHandler);
+            // TODO: Refactor the BacktestResultHandler to use algorithm not job to set times
+            job.PeriodStart = algorithm.StartDate;
+            job.PeriodFinish = algorithm.EndDate;
+
             algorithm.PostInitialize();
 
-            
             //Calculate the max runtime for the strategy
             _maxRuntime = GetMaximumRuntime(job.PeriodStart, job.PeriodFinish, algorithm.SubscriptionManager, baseJob.Controls);
+
+            // Python takes forever; lets give it 10x longer to finish.
+            if (job.Language == Language.Python)
+            {
+                _maxRuntime = _maxRuntime.Add(TimeSpan.FromSeconds(_maxRuntime.TotalSeconds * 9));
+            }
 
             //Get starting capital:
             _startingCaptial = algorithm.Portfolio.Cash;

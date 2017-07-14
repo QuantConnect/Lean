@@ -102,7 +102,7 @@ usa,HO,future,,USD,42000,0.0001,1
 usa,RB,future,,USD,42000,0.0001,1
 usa,NG,future,,USD,10000,0.001,1
 usa,AC,future,,USD,29000,0.001,1
-usa,ZB,future,,USD,1000,0.03125,1 
+usa,ZB,future,,USD,1000,0.03125,1
 usa,ZN,future,,USD,1000,0.015625,1
 usa,ZF,future,,USD,1000,0.0078125,1
 usa,GE,future,,USD,2500,0.005,1
@@ -235,3 +235,5 @@ oanda,USDTHB,forex,USD/THB,THB,1,0.001,1
 oanda,USDTRY,forex,USD/TRY,TRY,1,0.00001,1
 oanda,USDZAR,forex,USD/ZAR,ZAR,1,0.00001,1
 oanda,ZARJPY,forex,ZAR/JPY,JPY,1,0.001,1
+
+bitfinex,BTCUSD,forex,BTCUSD,USD,1,0.01,0.01

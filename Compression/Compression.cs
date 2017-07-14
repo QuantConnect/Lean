@@ -832,5 +832,18 @@ namespace QuantConnect
                 tarIn.Close();
             }
         }
+
+        /// <summary>
+        /// Validates whether the zip is corrupted or not
+        /// </summary>
+        /// <param name="path">Path to the zip file</param>
+        /// <returns>true if archive tests ok; false otherwise.</returns>
+        public static bool ValidateZip(string path)
+        {
+            using (var zip = new ICSharpCode.SharpZipLib.Zip.ZipFile(path))
+            {
+                return zip.TestArchive(true);
+            }
+        }
     }
 }

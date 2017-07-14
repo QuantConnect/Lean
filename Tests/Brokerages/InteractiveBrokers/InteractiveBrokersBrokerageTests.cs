@@ -131,6 +131,33 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         }
 
         [Test]
+        public void IsConnectedUpdatesCorrectly()
+        {
+            var ib = _interactiveBrokersBrokerage;
+            Assert.IsTrue(ib.IsConnected);
+
+            ib.Disconnect();
+            Assert.IsFalse(ib.IsConnected);
+
+            ib.Connect();
+            Assert.IsTrue(ib.IsConnected);
+        }
+
+        [Test]
+        public void IsConnectedAfterReset()
+        {
+            var ib = _interactiveBrokersBrokerage;
+            Assert.IsTrue(ib.IsConnected);
+
+            ib.ResetGatewayConnection();
+            Assert.IsTrue(InteractiveBrokersGatewayRunner.IsRunning());
+            Assert.IsTrue(ib.IsConnected);
+
+            ib.CheckIbGateway();
+            Assert.IsTrue(ib.IsConnected);
+        }
+
+        [Test]
         public void PlacedOrderHasNewBrokerageOrderID()
         {
             var ib = _interactiveBrokersBrokerage;

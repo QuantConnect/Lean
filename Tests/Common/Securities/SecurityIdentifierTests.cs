@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -28,16 +29,10 @@ namespace QuantConnect.Tests.Common.Securities
             get { return SecurityIdentifier.GenerateEquity(new DateTime(1998, 01, 02), "SPY", Market.USA); }
         }
 
-        private static SecurityIdentifier ED
-        {
-            get { return SecurityIdentifier.GenerateBase("ED", Market.USA); }
-        }
-
-
         // this is really not european style, but I'd prefer to test a value of 1 vs a value of 0
         private readonly SecurityIdentifier SPY_Put_19550 = SecurityIdentifier.GenerateOption(new DateTime(2015, 09, 18), SPY, Market.USA, 195.50m, OptionRight.Put, OptionStyle.European);
         // this is euro-dollar futures contract (for tests)
-        private readonly SecurityIdentifier ED_Dec_2020 = SecurityIdentifier.GenerateFuture(new DateTime(2020, 12, 15), ED, Market.USA);
+        private readonly SecurityIdentifier ED_Dec_2020 = SecurityIdentifier.GenerateFuture(new DateTime(2020, 12, 15), "ED", Market.USA);
 
         [Test]
         public void GenerateEquityProperlyResolvesFirstDate()

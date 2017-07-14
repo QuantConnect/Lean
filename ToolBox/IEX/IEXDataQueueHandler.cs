@@ -129,7 +129,8 @@ namespace QuantConnect.ToolBox.IEX
                 var tick = new Tick()
                 {
                     Symbol = symbol,
-                    TickType = TickType.Quote,
+                    Time = lastUpdatedDatetime.ConvertFromUtc(TimeZones.NewYork),
+                    TickType = lastUpdatedDatetime == lastSaleDateTime ? TickType.Trade : TickType.Quote,
                     Exchange = "IEX",
                     BidSize = bidSize,
                     BidPrice = bidPrice,

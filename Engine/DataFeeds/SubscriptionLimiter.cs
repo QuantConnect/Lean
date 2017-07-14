@@ -58,11 +58,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public int GetResolutionCount(Resolution resolution)
         {
             return (from subscription in _subscriptionsProvider()
-                    let security = subscription.Security
-                    where security.Resolution == resolution
                     // don't count feeds we auto add
                     where !subscription.Configuration.IsInternalFeed
-                    select security.Resolution).Count();
+                    group subscription by subscription.Security into g
+                    let security = g.Key
+                    where security.Resolution == resolution
+                    select security).Count();
         }
 
         /// <summary>

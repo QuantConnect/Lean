@@ -21,7 +21,6 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
@@ -162,6 +161,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var count = 0;
                 while (enumerator.MoveNext())
                 {
+                    // subscription has been removed, no need to continue enumerating
+                    if (enqueueable.HasFinished)
+                    {
+                        enumerator.Dispose();
+                        return;
+                    }
+
                     // drop the data into the back of the enqueueable
                     enqueueable.Enqueue(enumerator.Current);
 
@@ -465,7 +471,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 catch (Exception err)
                 {
                     Log.Error(err);
-                    continue;
+
+                    // notify the algorithm about the error, so it can be reported to the user
+                    _algorithm.RunTimeError = err;
+                    _algorithm.Status = AlgorithmStatus.RuntimeError;
+
+                    break;
                 }
                 
                 // syncer returns MaxValue on failure/end of data

@@ -20,6 +20,7 @@ using System.Numerics;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect
@@ -312,15 +313,15 @@ namespace QuantConnect
         /// <summary>
         /// Generates a new <see cref="SecurityIdentifier"/> for a future
         /// </summary>
-        /// <param name="expiry">The date the option expires</param>
-        /// <param name="underlying">The underlying security's symbol</param>
+        /// <param name="expiry">The date the future expires</param>
+        /// <param name="symbol">The security's symbol</param>
         /// <param name="market">The market</param>
         /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified futures security</returns>
         public static SecurityIdentifier GenerateFuture(DateTime expiry,
-            SecurityIdentifier underlying,
+            string symbol,
             string market)
         {
-            return Generate(expiry, underlying.Symbol, SecurityType.Future, market, 0, 0, 0, underlying);
+            return Generate(expiry, symbol, SecurityType.Future, market);
         }
 
         /// <summary>
@@ -593,23 +594,32 @@ namespace QuantConnect
                 return true;
             }
 
-            var sids = value.Split('|');
-            for (var i = sids.Length - 1; i > -1; i--)
+            try
             {
-                var current = sids[i];
-                var parts = current.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                if (parts.Length != 2)
+                var sids = value.Split('|');
+                for (var i = sids.Length - 1; i > -1; i--)
                 {
-                    exception = new FormatException("The string must be splittable on space into two parts.");
-                    return false;
+                    var current = sids[i];
+                    var parts = current.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length != 2)
+                    {
+                        exception = new FormatException("The string must be splittable on space into two parts.");
+                        return false;
+                    }
+
+                    var symbol = parts[0];
+                    var otherData = parts[1];
+                    var props = DecodeBase36(otherData);
+
+                    // toss the previous in as the underlying, if Empty, ignored by ctor
+                    identifier = new SecurityIdentifier(symbol, props, identifier);
                 }
-
-                var symbol = parts[0];
-                var otherData = parts[1];
-                var props = DecodeBase36(otherData);
-
-                // toss the previous in as the underlying, if Empty, ignored by ctor
-                identifier = new SecurityIdentifier(symbol, props, identifier);
+            }
+            catch (Exception error)
+            {
+                exception = error;
+                Log.Error("SecurityIdentifier.TryParseProperties(): Error parsing SecurityIdentifier: '{0}', Exception: {1}", value, exception);
+                return false;
             }
 
             return true;

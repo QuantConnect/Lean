@@ -112,6 +112,7 @@ namespace QuantConnect.Lean.Engine
                 {
                     return "Algorithm took longer than 10 minutes on a single time loop.";
                 }
+                
                 return null;
             };
             _liveMode = liveMode;
@@ -262,6 +263,14 @@ namespace QuantConnect.Lean.Engine
                             results.SamplePerformance(_previousTime.Date, Math.Round((algorithm.Portfolio.TotalPortfolioValue - portfolioValue) * 100 / portfolioValue, 10));
                         }
                         portfolioValue = algorithm.Portfolio.TotalPortfolioValue;
+                    }
+
+                    if (portfolioValue <= 0)
+                    {
+                        string logMessage = "AlgorithmManager.Run(): Portfolio value is less than or equal to zero";
+                        Log.Trace(logMessage);
+                        results.SystemDebugMessage(logMessage);
+                        break;
                     }
                 }
                 else
@@ -480,7 +489,8 @@ namespace QuantConnect.Lean.Engine
                                 var algorithmTimeSpan = resolutionTimeSpan == TimeSpan.FromTicks(0)
                                     ? TimeSpan.FromTicks(0)
                                     : TimeSpan.FromSeconds(1);
-                                if (algorithm.UtcTime.RoundDown(algorithmTimeSpan) == dataPoint.EndTime.RoundUp(resolutionTimeSpan).ConvertToUtc(update.Target.ExchangeTimeZone))
+                                if (update.Target.Resolution == Resolution.Tick ||
+                                    algorithm.UtcTime.RoundDown(algorithmTimeSpan) == dataPoint.EndTime.RoundUp(resolutionTimeSpan).ConvertToUtc(update.Target.ExchangeTimeZone))
                                 {
                                     consolidator.Update(dataPoint);
                                 }
@@ -802,7 +812,6 @@ namespace QuantConnect.Lean.Engine
             if (!algorithm.LiveMode || historyRequests.Count == 0)
             {
                 algorithm.SetFinishedWarmingUp();
-                results.SendStatusUpdate(AlgorithmStatus.Running);
                 if (historyRequests.Count != 0)
                 {
                     algorithm.Debug("Algorithm finished warming up.");
@@ -848,7 +857,6 @@ namespace QuantConnect.Lean.Engine
                     if (timeSlice.Time > DateTime.UtcNow.Subtract(minimumIncrement))
                     {
                         algorithm.SetFinishedWarmingUp();
-                        results.SendStatusUpdate(AlgorithmStatus.Running);
                         algorithm.Debug("Algorithm finished warming up.");
                         Log.Trace("AlgorithmManager.Stream(): Finished warmup");
                     }

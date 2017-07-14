@@ -161,9 +161,10 @@ namespace QuantConnect.Securities
         /// Added alias for RemoveOrder - 
         /// </summary>
         /// <param name="orderId">Order id we wish to cancel</param>
-        public OrderTicket CancelOrder(int orderId)
+        /// <param name="orderTag">Tag to indicate from where this method was called</param>
+        public OrderTicket CancelOrder(int orderId, string orderTag = null)
         {
-            return RemoveOrder(orderId);
+            return RemoveOrder(orderId, orderTag);
         }
 
         /// <summary>
@@ -186,9 +187,10 @@ namespace QuantConnect.Securities
         /// Remove this order from outstanding queue: user is requesting a cancel.
         /// </summary>
         /// <param name="orderId">Specific order id to remove</param>
-        public OrderTicket RemoveOrder(int orderId)
+        /// <param name="tag">Tag request</param>
+        public OrderTicket RemoveOrder(int orderId, string tag = null)
         {
-            return ProcessRequest(new CancelOrderRequest(_securities.UtcTime, orderId, string.Empty));
+            return ProcessRequest(new CancelOrderRequest(_securities.UtcTime, orderId, tag ?? string.Empty));
         }
 
         /// <summary>

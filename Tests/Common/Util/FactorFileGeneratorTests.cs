@@ -82,7 +82,7 @@ namespace QuantConnect.Tests.Common.Util
             var newFactorFileInstance = _factorFileGenerator.CreateFactorFile(yahooEvents.ToList());
 
             var earliestDate = originalFactorFileInstance.SortedFactorFileData.First().Key;
-            var latestDate   = originalFactorFileInstance.SortedFactorFileData.Last().Key;
+            var latestDate = originalFactorFileInstance.SortedFactorFileData.Last().Key;
 
             // Assert
             Assert.AreEqual(originalFactorFileInstance.SortedFactorFileData.Count,

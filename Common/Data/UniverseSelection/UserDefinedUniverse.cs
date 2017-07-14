@@ -131,8 +131,7 @@ namespace QuantConnect.Data.UniverseSelection
                     break;
 
                 case SecurityType.Future:
-                    underlying = SecurityIdentifier.GenerateBase(ticker, market);
-                    sid = SecurityIdentifier.GenerateFuture(SecurityIdentifier.DefaultDate, underlying, market);
+                    sid = SecurityIdentifier.GenerateFuture(SecurityIdentifier.DefaultDate, ticker, market);
                     break;
 
                 case SecurityType.Commodity:

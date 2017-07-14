@@ -16,7 +16,6 @@
 
 using System;
 using Newtonsoft.Json;
-using System.Collections.Generic;
 
 namespace QuantConnect
 {
@@ -47,33 +46,38 @@ namespace QuantConnect
         public static Symbol Create(string ticker, SecurityType securityType, string market, string alias = null)
         {
             SecurityIdentifier sid;
-            Symbol underlyingSumbol = null;
+
             switch (securityType)
             {
                 case SecurityType.Base:
                     sid = SecurityIdentifier.GenerateBase(ticker, market);
                     break;
+
                 case SecurityType.Equity:
                     sid = SecurityIdentifier.GenerateEquity(ticker, market);
                     break;
+
                 case SecurityType.Forex:
                     sid = SecurityIdentifier.GenerateForex(ticker, market);
                     break;
+
                 case SecurityType.Cfd:
                     sid = SecurityIdentifier.GenerateCfd(ticker, market);
                     break;
+
                 case SecurityType.Option:
                     return CreateOption(ticker, market, default(OptionStyle), default(OptionRight), 0, SecurityIdentifier.DefaultDate);
 
-                case SecurityType.Commodity:
                 case SecurityType.Future:
-                    return CreateFuture(ticker, market, SecurityIdentifier.DefaultDate);
+                    sid = SecurityIdentifier.GenerateFuture(SecurityIdentifier.DefaultDate, ticker, market);
+                    break;
 
+                case SecurityType.Commodity:
                 default:
                     throw new NotImplementedException("The security type has not been implemented yet: " + securityType);
             }
 
-            return new Symbol(sid, alias ?? ticker, underlyingSumbol);
+            return new Symbol(sid, alias ?? ticker);
         }
 
         /// <summary>
@@ -129,23 +133,21 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Provides a convenience method for creating a futures Symbol.
+        /// Provides a convenience method for creating a future Symbol.
         /// </summary>
-        /// <param name="underlying">The underlying ticker</param>
-        /// <param name="market">The market the underlying resides in</param>
-        /// <param name="expiry">The option expiry date</param>
+        /// <param name="ticker">The ticker</param>
+        /// <param name="market">The market the future resides in</param>
+        /// <param name="expiry">The future expiry date</param>
         /// <param name="alias">An alias to be used for the symbol cache. Required when 
         /// adding the same security from different markets</param>
-        /// <returns>A new Symbol object for the specified option contract</returns>
-        public static Symbol CreateFuture(string underlying, string market, DateTime expiry, string alias = null)
+        /// <returns>A new Symbol object for the specified future contract</returns>
+        public static Symbol CreateFuture(string ticker, string market, DateTime expiry, string alias = null)
         {
-            var underlyingSid = SecurityIdentifier.GenerateBase(underlying, market);
-            var sid = SecurityIdentifier.GenerateFuture(expiry, underlyingSid, market);
-            var underlyingSymbol = new Symbol(underlyingSid, underlying);
+            var sid = SecurityIdentifier.GenerateFuture(expiry, ticker, market);
 
             if (expiry == SecurityIdentifier.DefaultDate)
             {
-                alias = alias ?? "/" + underlying.ToUpper();
+                alias = alias ?? "/" + ticker.ToUpper();
             }
             else
             {
@@ -153,9 +155,8 @@ namespace QuantConnect
                 alias = alias ?? SymbolRepresentation.GenerateFutureTicker(sym, sid.Date);
             }
 
-            return new Symbol(sid, alias, underlyingSymbol);
+            return new Symbol(sid, alias);
         }
-
 
         /// <summary>
         /// Method returns true, if symbol is a derivative canonical symbol
@@ -163,9 +164,10 @@ namespace QuantConnect
         /// <returns>true, if symbol is a derivative canonical symbol</returns>
         public bool IsCanonical()
         {
-            return (ID.SecurityType == SecurityType.Future || ID.SecurityType == SecurityType.Option) &&
-                   HasUnderlying && 
-                   ID.Date == SecurityIdentifier.DefaultDate;
+            return 
+                (ID.SecurityType == SecurityType.Future ||
+                (ID.SecurityType == SecurityType.Option && HasUnderlying)) &&
+                ID.Date == SecurityIdentifier.DefaultDate;
         }
 
         #region Properties

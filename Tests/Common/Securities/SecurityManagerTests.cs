@@ -17,12 +17,12 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
+using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Tests.Common.Securities
@@ -45,7 +45,7 @@ namespace QuantConnect.Tests.Common.Securities
             _securityManager = new SecurityManager(timeKeeper);
             _securityTransactionManager = new SecurityTransactionManager(_securityManager);
             _securityPortfolioManager = new SecurityPortfolioManager(_securityManager, _securityTransactionManager);
-            _subscriptionManager = new SubscriptionManager(timeKeeper);
+            _subscriptionManager = new SubscriptionManager(new AlgorithmSettings(), timeKeeper);
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             _securityInitializer = SecurityInitializer.Null;
@@ -178,7 +178,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual(option.Subscriptions.Count(), 1);
             Assert.AreEqual(option.Subscriptions.First().Type, typeof(ZipEntryName));
-            Assert.AreEqual(option.Subscriptions.First().TickType, TickType.Trade);
+            Assert.AreEqual(option.Subscriptions.First().TickType, TickType.Quote);
         }
 
 
@@ -309,8 +309,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void SecurityManagerCanCreate_ConcreteFutures_WithCorrectSubscriptions()
         {
-            var ed = SecurityIdentifier.GenerateBase("ED", Market.USA);
-            var identifier = SecurityIdentifier.GenerateFuture(new DateTime(2020, 12, 15), ed, Market.USA);
+            var identifier = SecurityIdentifier.GenerateFuture(new DateTime(2020, 12, 15), "ED", Market.USA);
             var symbol = new Symbol(identifier, "ED", Symbol.Empty);
             var marketHoursDbEntry = _marketHoursDatabase.GetEntry(Market.USA, "ED", SecurityType.Equity, TimeZones.NewYork);
             var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, "ED", symbol.ID.SecurityType, CashBook.AccountCurrency);
@@ -339,6 +338,21 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsTrue(subscriptions.Subscriptions.Any(x => x.TickType == TickType.OpenInterest && x.Type == typeof(OpenInterest)));
             Assert.IsTrue(subscriptions.Subscriptions.Any(x => x.TickType == TickType.Quote && x.Type == typeof(QuoteBar)));
             Assert.IsTrue(subscriptions.Subscriptions.Any(x => x.TickType == TickType.Trade && x.Type == typeof(TradeBar)));
+        }
+
+        [Test]
+        public void Option_SubscriptionDataConfigList_CanOnlyHave_RawDataNormalization()
+        {
+            var option = new Symbol(SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, Symbols.SPY.ID, Market.USA, 0, default(OptionRight), default(OptionStyle)), "?SPY");
+
+            var subscriptionDataConfigList = new SubscriptionDataConfigList(option);
+
+            Assert.DoesNotThrow(() => { subscriptionDataConfigList.SetDataNormalizationMode(DataNormalizationMode.Raw); });
+
+            Assert.Throws(typeof(ArgumentException), () => { subscriptionDataConfigList.SetDataNormalizationMode(DataNormalizationMode.Adjusted); });
+            Assert.Throws(typeof(ArgumentException), () => { subscriptionDataConfigList.SetDataNormalizationMode(DataNormalizationMode.SplitAdjusted); });
+            Assert.Throws(typeof(ArgumentException), () => { subscriptionDataConfigList.SetDataNormalizationMode(DataNormalizationMode.Adjusted); });
+            Assert.Throws(typeof(ArgumentException), () => { subscriptionDataConfigList.SetDataNormalizationMode(DataNormalizationMode.TotalReturn); });
         }
 
         private SubscriptionDataConfig CreateTradeBarConfig()

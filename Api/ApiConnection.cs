@@ -14,13 +14,10 @@
 */
 
 using System;
-using System.Security.Cryptography;
-using System.Text;
 using Newtonsoft.Json;
 using QuantConnect.API;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
-using QuantConnect.Util;
 using RestSharp;
 using RestSharp.Authenticators;
 
@@ -79,6 +76,8 @@ namespace QuantConnect.Api
         public bool TryRequest<T>(RestRequest request, out T result)
             where T : RestResponse
         {
+            var responseContent = string.Empty;
+
             try
             {
                 //Generate the hash each request
@@ -99,7 +98,15 @@ namespace QuantConnect.Api
                 };
 
                 //Verify success
-                result = JsonConvert.DeserializeObject<T>(restsharpResponse.Content);
+                if (restsharpResponse.ErrorException != null)
+                {
+                    Log.Error(restsharpResponse.ErrorException);
+                    result = null;
+                    return false;
+                }
+
+                responseContent = restsharpResponse.Content;
+                result = JsonConvert.DeserializeObject<T>(responseContent);
                 if (!result.Success)
                 {
                     //result;
@@ -108,7 +115,7 @@ namespace QuantConnect.Api
             }
             catch (Exception err)
             {
-                Log.Error(err, "Api.ApiConnection() Failed to make REST request.");
+                Log.Error("Api.ApiConnection.TryRequest(): Failed to make REST request. Response content: " + responseContent + ", Error: " + err);
                 result = null;
                 return false;
             }

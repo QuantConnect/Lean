@@ -64,7 +64,7 @@ namespace QuantConnect.Lean.Engine
                         if (_algorithmManager.AlgorithmId != "" && _algorithmManager.QuitState == false)
                         {
                             //Get the state from the central server:
-                            var state = _api.GetAlgorithmStatus(_algorithmManager.AlgorithmId, _job.UserId);
+                            var state = _api.GetAlgorithmStatus(_algorithmManager.AlgorithmId);
 
                             //Set state via get/set method:
                             _algorithmManager.SetStatus(state.Status);

@@ -59,7 +59,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Gets the volume of trades during the bar.
         /// </summary>
-        public long Volume { get; private set; }
+        public decimal Volume { get; private set; }
 
         /// <summary>
         /// Gets the end time of this renko bar or the most recent update time if it <see cref="IsClosed"/>
@@ -133,7 +133,7 @@ namespace QuantConnect.Data.Market
         /// <param name="open">The opening price for the new bar</param>
         /// <param name="volume">Any initial volume associated with the data</param>
         public RenkoBar(Symbol symbol, DateTime time, decimal brickSize, 
-            decimal open, long volume)
+            decimal open, decimal volume)
         {
             Type = RenkoType.Classic;
 
@@ -149,7 +149,7 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="WickoBar"/> class with the specified values
+        /// Initializes a new instance of the <see cref="RenkoBar"/> class with the specified values
         /// </summary>
         /// <param name="symbol">The symbol of this data</param>
         /// <param name="start">The start time of the bar</param>
@@ -182,7 +182,7 @@ namespace QuantConnect.Data.Market
         /// <param name="currentValue">The current value</param>
         /// <param name="volumeSinceLastUpdate">The volume since the last update called on this instance</param>
         /// <returns>True if this bar <see cref="IsClosed"/></returns>
-        public bool Update(DateTime time, decimal currentValue, long volumeSinceLastUpdate)
+        public bool Update(DateTime time, decimal currentValue, decimal volumeSinceLastUpdate)
         {
             if (Type == RenkoType.Wicked)
                 throw new InvalidOperationException("A \"Wicked\" RenkoBar cannot be updated!");

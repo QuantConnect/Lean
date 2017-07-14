@@ -83,7 +83,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
             if (symbol.ID.SecurityType == SecurityType.Future)
             {
-                return GetBrokerageRootSymbol(symbol.Underlying.Value);
+                return GetBrokerageRootSymbol(symbol.ID.Symbol);
             }
 
             return symbol.Value;

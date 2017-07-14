@@ -52,7 +52,7 @@ namespace QuantConnect
             SetCash(25000);
 
             //Add as many securities as you like. All the data will be passed into the event handler:
-            AddSecurity(SecurityType.Equity, _symbol, Resolution.Minute);
+            AddSecurity(SecurityType.Equity, _symbol, Resolution.Daily);
 
             //Add the Custom Data:
             AddData<Bitcoin>("BTC");

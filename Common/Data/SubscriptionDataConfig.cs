@@ -19,7 +19,6 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using NodaTime;
 using QuantConnect.Data.Consolidators;
-using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 
@@ -106,7 +105,12 @@ namespace QuantConnect.Data
         /// </summary>
         public string MappedSymbol
         {
-            get { return _symbol.ID.SecurityType == SecurityType.Option ? _symbol.Underlying.Value : _symbol.Value; }
+            get
+            {
+                return _symbol.ID.SecurityType == SecurityType.Option ? 
+                    (_symbol.HasUnderlying ? _symbol.Underlying.Value : _symbol.Value) :
+                    _symbol.Value;
+            }
             set
             {
                 _symbol = _symbol.UpdateMappedSymbol(value);

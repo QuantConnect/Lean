@@ -14,46 +14,41 @@
 */
 
 using System;
-using System.IO;
-using System.Linq;
-using QuantConnect.Logging;
-using System.Diagnostics;
-using System.Threading.Tasks;
 using System.Collections.Generic;
-using System.Text;
+using System.Diagnostics;
+using System.IO;
+using System.IO.Compression;
+using System.Linq;
 using System.Threading;
-using QuantConnect.Data;
+using System.Threading.Tasks;
 using QuantConnect.Data.Market;
-using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
-using QuantConnect.Orders;
-using QuantConnect.Util;
+using QuantConnect.Logging;
 
 namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 {
     using Processors = Dictionary<Symbol, List<List<AlgoSeekFuturesProcessor>>>;
+    
     /// <summary>
     /// Process a directory of algoseek futures files into separate resolutions.
     /// </summary>
     public class AlgoSeekFuturesConverter
     {
-        private const int execTimeout = 60;// sec
-        private string _source;
-        private string _remote;
-        private string _remoteMask;
-        private string _destination;
-        private List<Resolution> _resolutions;
-        private DateTime _referenceDate;
-
-        private readonly ParallelOptions parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount * 5 };
+        private const int ExecTimeout = 60;// sec
+        private readonly string _source;
+        private readonly string _remote;
+        private readonly string _remoteMask;
+        private readonly string _destination;
+        private readonly List<Resolution> _resolutions;
+        private readonly DateTime _referenceDate;
 
         /// <summary>
         /// Create a new instance of the AlgoSeekFutures Converter. Parse a single input directory into an output.
         /// </summary>
         /// <param name="resolutions">Convert this resolution</param>
         /// <param name="referenceDate">Datetime to be added to the milliseconds since midnight. Algoseek data is stored in channel files (XX.bz2) and in a source directory</param>
-        /// <param name="source">Remote directory of the .bz algoseek files</param>
+        /// <param name="remote">Remote directory of the .bz algoseek files</param>
         /// <param name="source">Source directory of the .csv algoseek files</param>
-        /// <param name="destination">Data directory of LEAN</param>
+        /// <param name="destination">Destination directory of the processed future files</param>
         public AlgoSeekFuturesConverter(List<Resolution> resolutions, DateTime referenceDate, string remote, string remoteMask, string source, string destination)
         {
             _source = source;
@@ -82,12 +77,11 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             var start = DateTime.MinValue;
 
             var zipper = OS.IsWindows ? "C:/Program Files/7-Zip/7z.exe" : "7z";
-            var random = new Random((int)DateTime.Now.Ticks);
 
             var symbolMultipliers = LoadSymbolMultipliers();
 
             //Extract each file massively in parallel.
-            Parallel.ForEach(files, parallelOptions, file =>
+            Parallel.ForEach(files, file =>
             {
                 try
                 {
@@ -99,6 +93,10 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 
                     if (!File.Exists(csvFile))
                     {
+                        // create the directory first or else 7z will fail
+                        var csvFileInfo = new FileInfo(csvFile);
+                        Directory.CreateDirectory(csvFileInfo.DirectoryName);
+
                         Log.Trace("AlgoSeekFuturesConverter.Convert(): Extracting " + file);
                         var psi = new ProcessStartInfo(zipper, " e " + file + " -o" + _source)
                         {
@@ -117,7 +115,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                             process.StandardOutput.ReadLine();
                         }
 
-                        if (!process.WaitForExit(execTimeout * 1000))
+                        if (!process.WaitForExit(ExecTimeout * 1000))
                         {
                             Log.Error("7Zip timed out: " + file);
                         }
@@ -132,11 +130,6 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 
                     // setting up local processors 
                     var processors = new Processors();
-
-                    // symbol filters 
-                    // var symbolFilterNames = new string[] { "AAPL", "TWX", "NWSA", "FOXA", "AIG", "EGLE", "EGEC" };
-                    // var symbolFilter = symbolFilterNames.SelectMany(name => new[] { name, name + "1", name + ".1" }).ToHashSet();
-                    // var reader = new AlgoSeekFuturesReader(csvFile, symbolFilter);
 
                     var reader = new AlgoSeekFuturesReader(csvFile, symbolMultipliers);
                     if (start == DateTime.MinValue)
@@ -216,7 +209,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             return File.ReadAllLines("AlgoSeekFuturesConverter/AlgoSeek.US.Futures.PriceMultipliers.1.1.csv")
                     .Select(line => line.ToCsvData())
                     // skipping empty fields
-                    .Where(line => !string.IsNullOrEmpty(line[columnUnderlying]) && 
+                    .Where(line => !string.IsNullOrEmpty(line[columnUnderlying]) &&
                                    !string.IsNullOrEmpty(line[columnMultipleFactor]))
                     // skipping header
                     .Skip(1)
@@ -242,6 +235,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             Log.Trace("AlgoSeekFuturesConverter.Package(): Zipping all files ...");
 
             var destination = Path.Combine(_destination, "future");
+            Directory.CreateDirectory(destination);
             var dateMask = date.ToString(DateFormat.EightCharacter);
 
             var files =
@@ -249,43 +243,26 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 .GroupBy(x => Directory.GetParent(x).FullName)
                 .ToList();
 
-            //Zip each file massively in parallel.
-            Parallel.ForEach(files, parallelOptions, file =>
+            // Zip each file massively in parallel
+            Parallel.ForEach(files, file =>
+                //foreach (var file in files)
             {
                 try
                 {
                     var outputFileName = file.Key + ".zip";
-                    var inputFileNames = Path.Combine(file.Key, "*.csv");
-                    var cmdArgs = " a " + outputFileName + " " + inputFileNames;
 
-                    Log.Trace("AlgoSeekFuturesConverter.Convert(): Zipping " + outputFileName);
-                    var psi = new ProcessStartInfo(zipper, cmdArgs)
-                    {
-                        CreateNoWindow = true,
-                        WindowStyle = ProcessWindowStyle.Hidden,
-                        UseShellExecute = false,
-                        RedirectStandardOutput = true
-                    };
-                    var process = new Process();
-                    process.StartInfo = psi;
-                    process.Start();
+                    // Create and open a new ZIP file
+                    var filesToCompress = Directory.GetFiles(file.Key, "*.csv", SearchOption.AllDirectories);
+                    var zip = ZipFile.Open(outputFileName, ZipArchiveMode.Create);
 
-                    while (!process.StandardOutput.EndOfStream)
+                    foreach (var fileToCompress in filesToCompress)
                     {
-                        process.StandardOutput.ReadLine();
+                        // Add the entry for each file
+                        zip.CreateEntryFromFile(fileToCompress, Path.GetFileName(fileToCompress), CompressionLevel.Optimal);
                     }
 
-                    if (!process.WaitForExit(execTimeout * 1000))
-                    {
-                        Log.Error("7Zip timed out: " + outputFileName);
-                    }
-                    else
-                    {
-                        if (process.ExitCode > 0)
-                        {
-                            Log.Error("7Zip Exited Unsuccessfully: " + outputFileName);
-                        }
-                    }
+                    // Dispose of the object when we are done
+                    zip.Dispose();
 
                     try
                     {

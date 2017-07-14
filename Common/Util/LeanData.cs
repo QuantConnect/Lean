@@ -14,18 +14,16 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net.Sockets;
-using Fasterflect;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Util
 {
@@ -86,18 +84,21 @@ namespace QuantConnect.Util
 
                         case Resolution.Second:
                         case Resolution.Minute:
-                            var bar = (TradeBar) data;
-                            return ToCsv(milliseconds, bar.Open, bar.High, bar.Low, bar.Close);
+                            var bar = (QuoteBar) data;
+                            return ToCsv(milliseconds,
+                                ToNonScaledCsv(bar.Bid), bar.LastBidSize,
+                                ToNonScaledCsv(bar.Ask), bar.LastAskSize);
 
                         case Resolution.Hour:
                         case Resolution.Daily:
-                            var bigBar = (TradeBar) data;
-                            return ToCsv(longTime, bigBar.Open, bigBar.High, bigBar.Low, bigBar.Close);
+                            var bigBar = (QuoteBar) data;
+                            return ToCsv(longTime,
+                                ToNonScaledCsv(bigBar.Bid), bigBar.LastBidSize,
+                                ToNonScaledCsv(bigBar.Ask), bigBar.LastAskSize);
                     }
                     break;
 
                 case SecurityType.Option:
-                case SecurityType.Future:
                     switch (resolution)
                     {
                         case Resolution.Tick:
@@ -105,7 +106,7 @@ namespace QuantConnect.Util
                             if (tick.TickType == TickType.Trade)
                             {
                                 return ToCsv(milliseconds,
-                                    Scale(tick.LastPrice), tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1": "0");
+                                    Scale(tick.LastPrice), tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1" : "0");
                             }
                             if (tick.TickType == TickType.Quote)
                             {
@@ -125,8 +126,8 @@ namespace QuantConnect.Util
                             if (quoteBar != null)
                             {
                                 return ToCsv(milliseconds,
-                                    ToCsv(quoteBar.Bid), quoteBar.LastBidSize, 
-                                    ToCsv(quoteBar.Ask), quoteBar.LastAskSize);
+                                    ToScaledCsv(quoteBar.Bid), quoteBar.LastBidSize,
+                                    ToScaledCsv(quoteBar.Ask), quoteBar.LastAskSize);
                             }
                             var tradeBar = data as TradeBar;
                             if (tradeBar != null)
@@ -148,19 +149,88 @@ namespace QuantConnect.Util
                             if (bigQuoteBar != null)
                             {
                                 return ToCsv(longTime,
-                                    ToCsv(bigQuoteBar.Bid), bigQuoteBar.LastBidSize,
-                                    ToCsv(bigQuoteBar.Ask), bigQuoteBar.LastAskSize);
+                                    ToScaledCsv(bigQuoteBar.Bid), bigQuoteBar.LastBidSize,
+                                    ToScaledCsv(bigQuoteBar.Ask), bigQuoteBar.LastAskSize);
                             }
                             var bigTradeBar = data as TradeBar;
                             if (bigTradeBar != null)
                             {
-                                return ToCsv(longTime,
-                                    ToCsv(bigTradeBar), bigTradeBar.Volume);
+                                return ToCsv(longTime, ToScaledCsv(bigTradeBar), bigTradeBar.Volume);
                             }
                             var bigOpenInterest = data as OpenInterest;
                             if (bigOpenInterest != null)
                             {
                                 return ToCsv(milliseconds, bigOpenInterest.Value);
+                            }
+                            break;
+
+                        default:
+                            throw new ArgumentOutOfRangeException("resolution", resolution, null);
+                    }
+                    break;
+                case SecurityType.Future:
+                    switch (resolution)
+                    {
+                        case Resolution.Tick:
+                            var tick = (Tick)data;
+                            if (tick.TickType == TickType.Trade)
+                            {
+                                return ToCsv(milliseconds,
+                                             tick.LastPrice, tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1": "0");
+                            }
+                            if (tick.TickType == TickType.Quote)
+                            {
+                                return ToCsv(milliseconds,
+                                             tick.BidPrice, tick.BidSize, tick.AskPrice, tick.AskSize, tick.Exchange, tick.Suspicious ? "1" : "0");
+                            }
+                            if (tick.TickType == TickType.OpenInterest)
+                            {
+                                return ToCsv(milliseconds, tick.Value);
+                            }
+                            break;
+
+                        case Resolution.Second:
+                        case Resolution.Minute:
+                            // option and future data can be quote or trade bars
+                            var quoteBar = data as QuoteBar;
+                            if (quoteBar != null)
+                            {
+                                return ToCsv(milliseconds,
+                                    ToNonScaledCsv(quoteBar.Bid), quoteBar.LastBidSize,
+                                    ToNonScaledCsv(quoteBar.Ask), quoteBar.LastAskSize);
+                            }
+                            var tradeBar = data as TradeBar;
+                            if (tradeBar != null)
+                            {
+                                return ToCsv(milliseconds,
+                                             tradeBar.Open, tradeBar.High, tradeBar.Low, tradeBar.Close, tradeBar.Volume);
+                            }
+                            var openInterest = data as OpenInterest;
+                            if (openInterest != null)
+                            {
+                                return ToCsv(milliseconds, openInterest.Value);
+                            }
+                            break;
+
+                        case Resolution.Hour:
+                        case Resolution.Daily:
+                            // option and future data can be quote or trade bars
+                            var bigQuoteBar = data as QuoteBar;
+                            if (bigQuoteBar != null)
+                            {
+                                return ToCsv(longTime,
+                                    ToNonScaledCsv(bigQuoteBar.Bid), bigQuoteBar.LastBidSize,
+                                    ToNonScaledCsv(bigQuoteBar.Ask), bigQuoteBar.LastAskSize);
+                            }
+                            var bigTradeBar = data as TradeBar;
+                            if (bigTradeBar != null)
+                            {
+                                return ToCsv(longTime, ToNonScaledCsv(bigTradeBar), bigTradeBar.Volume);
+                            }
+                            var bigOpenInterest = data as OpenInterest;
+                            if (bigOpenInterest != null)
+                            {
+                                return ToCsv(longTime, bigOpenInterest.Value);
                             }
                             break;
 
@@ -242,10 +312,12 @@ namespace QuantConnect.Util
                 case SecurityType.Cfd:
                     return !isHourOrDaily ? Path.Combine(directory, symbol.Value.ToLower()) : directory;
 
-                case SecurityType.Future:
                 case SecurityType.Option:
                     // options uses the underlying symbol for pathing
                     return !isHourOrDaily ? Path.Combine(directory, symbol.Underlying.Value.ToLower()) : directory;
+
+                case SecurityType.Future:
+                    return !isHourOrDaily ? Path.Combine(directory, symbol.ID.Symbol.ToLower()) : directory;
 
                 case SecurityType.Commodity:
                 default:
@@ -264,6 +336,7 @@ namespace QuantConnect.Util
                                         "factor_files",
                                         symbol.Value.ToLower() + ".csv");
         }
+
         /// <summary>
         /// Generates the relative zip file path rooted in the /Data directory
         /// </summary>
@@ -300,6 +373,16 @@ namespace QuantConnect.Util
                 case SecurityType.Equity:
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
+                    if (resolution == Resolution.Tick && symbol.SecurityType == SecurityType.Equity)
+                    {
+                        return string.Format("{0}_{1}_{2}_{3}.csv",
+                            formattedDate,
+                            symbol.Value.ToLower(),
+                            tickType,
+                            resolution
+                        );
+                    }
+
                     if (isHourOrDaily)
                     {
                         return string.Format("{0}.csv", 
@@ -342,7 +425,7 @@ namespace QuantConnect.Util
                     if (isHourOrDaily)
                     {
                         return string.Join("_",
-                            symbol.Underlying.Value.ToLower(), // underlying
+                            symbol.ID.Symbol.ToLower(),
                             tickType.ToLower(),
                             symbol.ID.Date.ToString(DateFormat.YearMonth)
                             ) + ".csv";
@@ -350,7 +433,7 @@ namespace QuantConnect.Util
 
                     return string.Join("_",
                         formattedDate,
-                        symbol.Underlying.Value.ToLower(), // underlying
+                        symbol.ID.Symbol.ToLower(),
                         resolution.ToLower(),
                         tickType.ToLower(),
                         symbol.ID.Date.ToString(DateFormat.YearMonth)
@@ -435,7 +518,7 @@ namespace QuantConnect.Util
                     if (isHourOrDaily)
                     {
                         return string.Format("{0}_{1}.zip",
-                            symbol.Underlying.Value.ToLower(), // underlying
+                            symbol.ID.Symbol.ToLower(),
                             tickTypeString);
                     }
 
@@ -512,9 +595,20 @@ namespace QuantConnect.Util
                     break;
 
                 case SecurityType.Future:
-                    var expiryYearMonth = DateTime.ParseExact(parts[4], DateFormat.YearMonth, null);
-                    expiryYearMonth = new DateTime(expiryYearMonth.Year, expiryYearMonth.Month, DateTime.DaysInMonth(expiryYearMonth.Year, expiryYearMonth.Month));
-                    return Symbol.CreateFuture(parts[1], Market.USA, expiryYearMonth);
+                    if (isHourlyOrDaily)
+                    {
+                        var expiryYearMonth = DateTime.ParseExact(parts[2], DateFormat.YearMonth, null);
+                        var futureExpiryFunc = FuturesExpiryFunctions.FuturesExpiryFunction(parts[1]);
+                        var futureExpiry = futureExpiryFunc(expiryYearMonth);
+                        return Symbol.CreateFuture(parts[0], Market.USA, futureExpiry);
+                    }
+                    else
+                    {
+                        var expiryYearMonth = DateTime.ParseExact(parts[4], DateFormat.YearMonth, null);
+                        var futureExpiryFunc = FuturesExpiryFunctions.FuturesExpiryFunction(parts[1]);
+                        var futureExpiry = futureExpiryFunc(expiryYearMonth);
+                        return Symbol.CreateFuture(parts[1], Market.USA, futureExpiry);
+                    }
 
                 default:
                     throw new NotImplementedException("ReadSymbolFromZipEntry is not implemented for " + symbol.ID.SecurityType + " " + resolution);
@@ -540,7 +634,7 @@ namespace QuantConnect.Util
                 var value = args[i];
                 if (value is decimal)
                 {
-                    args[i] = ((decimal) value).ToString(CultureInfo.InvariantCulture);
+                    args[i] = ((decimal) value).Normalize().ToString(CultureInfo.InvariantCulture);
                 }
             }
 
@@ -548,15 +642,30 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// Creates a csv line for the bar, if null fills in empty strings
+        /// Creates a scaled csv line for the bar, if null fills in empty strings
         /// </summary>
-        private static string ToCsv(IBar bar)
+        private static string ToScaledCsv(IBar bar)
         {
             if (bar == null)
             {
                 return ToCsv(string.Empty, string.Empty, string.Empty, string.Empty);
             }
+
             return ToCsv(Scale(bar.Open), Scale(bar.High), Scale(bar.Low), Scale(bar.Close));
+        }
+
+
+        /// <summary>
+        /// Creates a non scaled csv line for the bar, if null fills in empty strings
+        /// </summary>
+        private static string ToNonScaledCsv(IBar bar)
+        {
+            if (bar == null)
+            {
+                return ToCsv(string.Empty, string.Empty, string.Empty, string.Empty);
+            }
+
+            return ToCsv(bar.Open, bar.High, bar.Low, bar.Close);
         }
 
         /// <summary>
@@ -582,7 +691,7 @@ namespace QuantConnect.Util
             }
             if (type == typeof(ZipEntryName))
             {
-                return TickType.Trade;
+                return TickType.Quote;
             }
             if (type == typeof(Tick))
             {

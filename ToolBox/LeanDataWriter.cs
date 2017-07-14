@@ -54,7 +54,6 @@ namespace QuantConnect.ToolBox
             _symbol = symbol;
             _market = symbol.ID.Market.ToLower();
             _dataType = dataType;
-
             // All fx data is quote data.
             if (_securityType == SecurityType.Forex || _securityType == SecurityType.Cfd)
             {
@@ -205,22 +204,32 @@ namespace QuantConnect.ToolBox
         }
 
         /// <summary>
-        /// Write this file to disk
+        /// Write this file to disk.
         /// </summary>
-        private void WriteFile(string fileName, string data, DateTime time)
+        /// <param name="filePath">The full path to the new file</param>
+        /// <param name="data">The data to write as a string</param>
+        /// <param name="date">The date the data represents</param>
+        private void WriteFile(string filePath, string data, DateTime date)
         {
+            var tempFilePath = filePath + ".tmp";
+
             data = data.TrimEnd();
-            if (File.Exists(fileName))
+            if (File.Exists(filePath))
             {
-                File.Delete(fileName);
-                Log.Trace("LeanDataWriter.Write(): Existing deleted: " + fileName);
+                File.Delete(filePath);
+                Log.Trace("LeanDataWriter.Write(): Existing deleted: " + filePath);
             }
+
             // Create the directory if it doesnt exist
-            Directory.CreateDirectory(Path.GetDirectoryName(fileName));
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
 
             // Write out this data string to a zip file
-            Compression.Zip(data, fileName, LeanData.GenerateZipEntryName(_symbol.Value, _securityType, time, _resolution, _dataType));
-            Log.Trace("LeanDataWriter.Write(): Created: " + fileName);
+            Compression.Zip(data, tempFilePath, LeanData.GenerateZipEntryName(_symbol.Value, _securityType, date, _resolution, _dataType));
+
+            // Move temp file to the final destination with the appropriate name
+            File.Move(tempFilePath, filePath);
+
+            Log.Trace("LeanDataWriter.Write(): Created: " + filePath);
         }
 
         /// <summary>

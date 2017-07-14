@@ -625,7 +625,7 @@ namespace QuantConnect.ToolBox.IQFeed
                     end = null;
                 }
 
-                Log.Trace(string.Format("HistoryPort.ProcessHistoryJob(): Submitting request: {0}-{1}: {2} {3}->{4}", request.SecurityType, ticker, request.Resolution, start, end ?? DateTime.UtcNow.AddMinutes(-1)));
+                Log.Trace(string.Format("HistoryPort.ProcessHistoryJob(): Submitting request: {0}-{1}: {2} {3}->{4}", request.Symbol.SecurityType, ticker, request.Resolution, start, end ?? DateTime.UtcNow.AddMinutes(-1)));
 
                 int id;
                 var reqid = string.Empty;
@@ -737,7 +737,7 @@ namespace QuantConnect.ToolBox.IQFeed
             /// <returns>BaseData object</returns>
             private BaseData GetData(LookupEventArgs e, HistoryRequest requestData)
             {
-                var isEquity = requestData.SecurityType == SecurityType.Equity;
+                var isEquity = requestData.Symbol.SecurityType == SecurityType.Equity;
                 try
                 {
                     switch (e.Type)

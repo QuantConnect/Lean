@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Securities;
@@ -105,6 +106,22 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         [Test]
+        public void ConvertsDecimalFromStringWithExtraWhiteSpace()
+        {
+            const string input = " 123.45678 ";
+            var value = input.ToDecimal();
+            Assert.AreEqual(123.45678m, value);
+        }
+
+        [Test]
+        public void ConvertsDecimalFromIntStringWithExtraWhiteSpace()
+        {
+            const string input = " 12345678 ";
+            var value = input.ToDecimal();
+            Assert.AreEqual(12345678m, value);
+        }
+
+        [Test]
         public void ConvertsZeroDecimalFromString()
         {
             const string input = "0.45678";
@@ -118,6 +135,22 @@ namespace QuantConnect.Tests.Common.Util
             const string input = "1.45678";
             var value = input.ToDecimal();
             Assert.AreEqual(1.45678m, value);
+        }
+
+        [Test]
+        public void ConvertsZeroDecimalValueFromString()
+        {
+            const string input = "0";
+            var value = input.ToDecimal();
+            Assert.AreEqual(0m, value);
+        }
+
+        [Test]
+        public void ConvertsEmptyDecimalValueFromString()
+        {
+            const string input = "";
+            var value = input.ToDecimal();
+            Assert.AreEqual(0m, value);
         }
 
         [Test]
@@ -182,6 +215,16 @@ namespace QuantConnect.Tests.Common.Util
             var input = (double) decimal.MinValue;
             var output = input.SafeDecimalCast();
             Assert.AreEqual(decimal.MinValue, output);
+        }
+
+        [Test]
+        [TestCase(1.200, "1.2")]
+        [TestCase(1200, "1200")]
+        [TestCase(123.456, "123.456")]
+        public void NormalizeDecimalReturnsNoTrailingZeros(decimal input, string expectedOutput)
+        {
+            var output = input.Normalize();
+            Assert.AreEqual(expectedOutput, output.ToString(CultureInfo.InvariantCulture));
         }
 
         private class Super<T>

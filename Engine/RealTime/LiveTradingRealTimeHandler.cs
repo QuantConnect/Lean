@@ -146,8 +146,8 @@ namespace QuantConnect.Lean.Engine.RealTime
                 var marketHours = _api.MarketToday(date, security.Symbol);
                 security.Exchange.SetMarketHours(marketHours, date.DayOfWeek);
                 var localMarketHours = security.Exchange.Hours.MarketHours[date.DayOfWeek];
-                Log.Trace(string.Format("LiveTradingRealTimeHandler.SetupEvents({0}): Market hours set: Symbol: {1} {2}",
-                        security.Type, security.Symbol, localMarketHours));
+                Log.Trace(string.Format("LiveTradingRealTimeHandler.RefreshMarketHoursToday({0}): Market hours set: Symbol: {1} {2} ({3})",
+                        security.Type, security.Symbol, localMarketHours, security.Exchange.Hours.TimeZone));
             }
         }
 

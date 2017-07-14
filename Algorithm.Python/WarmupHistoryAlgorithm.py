@@ -25,46 +25,44 @@ from QuantConnect.Indicators import *
 
 class WarmupHistoryAlgorithm(QCAlgorithm):
     '''This algorithm demonstrates using the history provider to
-     retrieve data to warm up indicators before data is received'''
-    def __init__(self):
-        self.__fast = None
-        self.__slow = None
-        self.__fastPeriod = 60
-        self.__slowPeriod = 3600
-        self.__symbol = Symbol.Create("EURUSD", SecurityType.Forex, "FXCM")
-
+retrieve data to warm up indicators before data is received'''
 
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
-        self.SetStartDate(2013,10,07)   #Set Start Date
-        self.SetEndDate(2013,10,11)     #Set End Date
-        self.SetCash(100000)            #Set Strategy Cash
+        self.SetStartDate(2014,5,2)   #Set Start Date
+        self.SetEndDate(2014,5,2)     #Set End Date
+        self.SetCash(100000)          #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.AddSecurity(SecurityType.Forex, self.__symbol.Value, Resolution.Second)
+        forex = self.AddForex("EURUSD", Resolution.Second)
+        forex = self.AddForex("NZDUSD", Resolution.Second)
+        
+        fast_period = 60
+        slow_period = 3600
+        self.fast = self.EMA("EURUSD", fast_period)
+        self.slow = self.EMA("EURUSD", slow_period)
+        
+        # "slow_period + 1" because rolling window waits for one to fall off the back to be considered ready
+        # History method returns a dict with a pandas.DataFrame
+        history = self.History(["EURUSD", "NZDUSD"], slow_period + 1)
+        
+        # prints out the tail of the dataframe
+        self.Log(str(history["EURUSD"].tail()))
+        self.Log(str(history["NZDUSD"].tail()))
 
-        self.__fast = self.EMA(self.__symbol, self.__fastPeriod)
-        self.__slow = self.EMA(self.__symbol, self.__slowPeriod)
+        for index, row in history["EURUSD"].iterrows():
+            datapoint = IndicatorDataPoint(index, row["close"])
+            self.fast.Update(datapoint)
+            self.slow.Update(datapoint)
 
-        # "self.__slowPeriod + 1" because rolling window waits for one to fall off the back to be considered ready
-        history = self.History(self.__symbol, self.__slowPeriod + 1)
-        for bar in history:
-        	datapoint = IndicatorDataPoint(bar.EndTime, bar.Close)
-        	self.__fast.Update(datapoint)
-        	self.__slow.Update(datapoint)
-
-        self.Log("FAST IS {0} READY. Samples: {1}".format("" if self.__fast.IsReady else "NOT", self.__fast.Samples))
-        self.Log("SLOW IS {0} READY. Samples: {1}".format("" if self.__slow.IsReady else "NOT", self.__slow.Samples))
+        self.Log("FAST {0} READY. Samples: {1}".format("IS" if self.fast.IsReady else "IS NOT", self.fast.Samples))
+        self.Log("SLOW {0} READY. Samples: {1}".format("IS" if self.slow.IsReady else "IS NOT", self.slow.Samples))
 
 
     def OnData(self, data):
-        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-
-        Arguments:
-            data: Slice object keyed by symbol containing the stock data
-        '''
+        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
         
-        if self.__fast.Current.Value > self.__slow.Current.Value:
-            self.SetHoldings(self.__symbol, 1)
+        if self.fast.Current.Value > self.slow.Current.Value:
+            self.SetHoldings("EURUSD", 1)
         else:
-            self.SetHoldings(self.__symbol, -1)
+            self.SetHoldings("EURUSD", -1)

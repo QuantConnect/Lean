@@ -21,6 +21,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 {
@@ -66,9 +67,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <returns>An enumerator reading the subscription request</returns>
         public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataProvider dataProvider)
         {
-            _dataCacheProvider = new SingleEntryDataCacheProvider(dataProvider);
 
-            var sourceFactory = (BaseData)Activator.CreateInstance(request.Configuration.Type);
+            var sourceFactory = (BaseData)ObjectActivator.GetActivator(request.Configuration.Type).Invoke(new object[] { request.Configuration.Type });
+
+            _dataCacheProvider = new SingleEntryDataCacheProvider(dataProvider);
 
             foreach (var date in _tradableDaysProvider(request))
             {

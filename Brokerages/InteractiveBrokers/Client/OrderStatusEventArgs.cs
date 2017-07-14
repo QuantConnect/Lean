@@ -94,5 +94,18 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
             ClientId = clientId;
             WhyHeld = whyHeld;
         }
+
+        /// <summary>
+        /// Returns a string that represents the current object.
+        /// </summary>
+        /// <returns>
+        /// A string that represents the current object.
+        /// </returns>
+        public override string ToString()
+        {
+            return string.Format(
+                "OrderId: {0}, Status: {1}, Filled: {2}, Remaining: {3}, AverageFillPrice: {4}, PermId: {5}, ParentId: {6}, LastFillPrice: {7}, ClientId: {8}, WhyHeld: {9}", 
+                OrderId, Status, Filled, Remaining, AverageFillPrice, PermId, ParentId, LastFillPrice, ClientId, WhyHeld);
+        }
     }
 }

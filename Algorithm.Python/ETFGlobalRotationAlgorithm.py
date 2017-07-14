@@ -11,8 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from datetime import datetime, timedelta
-
 from clr import AddReference
 AddReference("System.Core")
 AddReference("QuantConnect.Common")
@@ -24,66 +22,60 @@ from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
 from QuantConnect.Data.Market import *
+from datetime import datetime, timedelta
 
 
 class ETFGlobalRotationAlgorithm(QCAlgorithm):
     '''ETF Global Rotation Strategy'''
-    
-    # these are the growth symbols we'll rotate through
-    GrowthSymbols = [
-    	"MDY",    # US S&P mid cap 400
-    	"IEV",    # iShares S&P europe 350
-    	"EEM",    # iShared MSCI emerging markets
-    	"ILF",    # iShares S&P latin america
-    	"EPP" ]   # iShared MSCI Pacific ex-Japan
-            
-    # these are the safety symbols we go to when things are looking bad for growth
-    SafetySymbols = [
-    	"EDV",    # Vangaurd TSY 25yr+
-    	"SHY" ]   # Barclays Low Duration TSY
-
-
-    def __init__(self):
-        # we'll hold some computed data in these guys
-        self.SymbolData = [ ]
-		# we'll use this to tell us when the month has ended
-        self.__first = True
-        self.__lastRotationTime = datetime.min
-        self.__rotationInternal = timedelta(days=30)
-        
 
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
         
         self.SetStartDate(2007,01,01)  #Set Start Date
         self.SetCash(25000)            #Set Strategy Cash
-        
-        for symbol in self.GrowthSymbols + self.SafetySymbols:
-            # ideally we would use daily data
-            self.AddSecurity(SecurityType.Equity, symbol, Resolution.Minute)
-            oneMonthPerformance = self.MOM(symbol, 30, Resolution.Daily)
-            threeMonthPerformance = self.MOM(symbol, 90, Resolution.Daily)
 
-            self.SymbolData.append(SymbolData(symbol, oneMonthPerformance, threeMonthPerformance))
+        # we'll use this to tell us when the month has ended
+        self.__first = True
+        self.__lastRotationTime = datetime.min
+        self.__rotationInternal = timedelta(days=30)
+
+        # these are the growth symbols we'll rotate through
+        self.GrowthSymbols = [
+    	    "MDY",    # US S&P mid cap 400
+    	    "IEV",    # iShares S&P europe 350
+    	    "EEM",    # iShared MSCI emerging markets
+    	    "ILF",    # iShares S&P latin america
+    	    "EPP" ]   # iShared MSCI Pacific ex-Japan
+            
+        # these are the safety symbols we go to when things are looking bad for growth
+        self.SafetySymbols = [
+    	    "EDV",    # Vangaurd TSY 25yr+
+    	    "SHY" ]   # Barclays Low Duration TSY
+
+        # we'll hold some computed data in these guys
+        self.SymbolData = [ ]
+            
+        for ticker in self.GrowthSymbols + self.SafetySymbols:
+            # ideally we would use daily data
+            equity = self.AddEquity(ticker)
+            oneMonthPerformance = self.MOM(equity.Symbol, 30, Resolution.Daily)
+            threeMonthPerformance = self.MOM(equity.Symbol, 90, Resolution.Daily)
+
+            self.SymbolData.append(SymbolData(equity.Symbol, oneMonthPerformance, threeMonthPerformance))
         
     def OnData(self, data):
-        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        
-        Arguments:
-            data: Slice object keyed by symbol containing the stock data
-        '''
+        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
         try:
-            pyTime = datetime(self.Time)
             # the first time we come through here we'll need to do some 
             # things such as allocation and initializing our symbol data
             if self.__first:
                 self.__first = False
-                self.__lastRotationTime = pyTime
+                self.__lastRotationTime = self.Time
                 return
 
-            delta = pyTime - self.__lastRotationTime
+            delta = self.Time - self.__lastRotationTime
             if delta > self.__rotationInternal:
-                self.__lastRotationTime = pyTime
+                self.__lastRotationTime = self.Time
                 for x in self.SymbolData: x.Update()
             
                 # pick which one is best from growth and safety symbols

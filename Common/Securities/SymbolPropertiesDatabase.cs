@@ -72,12 +72,10 @@ namespace QuantConnect.Securities
         /// <returns>The symbol properties matching the specified market/symbol/security-type or null if not found</returns>
         public SymbolProperties GetSymbolProperties(string market, Symbol symbol, SecurityType securityType, string defaultQuoteCurrency)
         {
-            var stringSymbol = symbol == null ?
-                               string.Empty :
-                                (symbol.ID.SecurityType == SecurityType.Future ||
-                                 symbol.ID.SecurityType == SecurityType.Option ?
-                                    symbol.Underlying.Value :
-                                    symbol.Value);
+            var stringSymbol = symbol == null ? string.Empty :
+                (symbol.ID.SecurityType == SecurityType.Option ? symbol.Underlying.Value :
+                (symbol.ID.SecurityType == SecurityType.Future ? symbol.ID.Symbol :
+                 symbol.Value));
 
             return GetSymbolProperties(market, stringSymbol, securityType, defaultQuoteCurrency);
         }

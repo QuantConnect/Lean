@@ -395,7 +395,7 @@ namespace QuantConnect.Tests.Brokerages
         {
             var manualResetEvent = new ManualResetEvent(false);
 
-            var qty = 1000000;
+            var qty = 1000000m;
             var remaining = qty;
             var sync = new object();
             Brokerage.OrderStatusChanged += (sender, orderEvent) =>
@@ -522,7 +522,7 @@ namespace QuantConnect.Tests.Brokerages
                 Assert.Fail("Brokerage failed to place the order: " + order);
             }
             requiredStatusEvent.WaitOneAssertFail((int) (1000*secondsTimeout), "Expected every order to fire a submitted or invalid status event");
-            desiredStatusEvent.WaitOneAssertFail((int) (1000*secondsTimeout), "OrderStatus " + expectedStatus + " was not encountered within the timeout.");
+            desiredStatusEvent.WaitOneAssertFail((int) (1000*secondsTimeout), "OrderStatus " + expectedStatus + " was not encountered within the timeout. Order Id:" + order.Id);
 
             Brokerage.OrderStatusChanged -= brokerageOnOrderStatusChanged;
 

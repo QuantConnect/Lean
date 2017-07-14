@@ -47,5 +47,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
             Contract = contract;
             Execution = execution;
         }
+
+        /// <summary>
+        /// Returns a string that represents the current object.
+        /// </summary>
+        public override string ToString()
+        {
+            return string.Format(
+                "RequestId: {0}, Symbol: {1}, OrderId: {2}, Time: {3}, Side: {4}, Shares: {5}, Price: {6}, CumQty: {7}, PermId: {8}",
+                RequestId, Contract.Symbol, Execution.OrderId, Execution.Time, Execution.Side, Execution.Shares, Execution.Price, Execution.CumQty, Execution.PermId);
+        }
     }
 }

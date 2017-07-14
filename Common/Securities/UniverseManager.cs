@@ -219,7 +219,7 @@ namespace QuantConnect.Securities
                 Universe existing;
                 if (_universes.TryGetValue(symbol, out existing) && existing != value)
                 {
-                    throw new ArgumentException("Unable to over write existing Universe: " + symbol.ToString());
+                    throw new ArgumentException("Unable to over write existing Universe: " + symbol.Value);
                 }
 
                 // no security exists for the specified symbol key, add it now

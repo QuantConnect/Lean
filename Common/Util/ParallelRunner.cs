@@ -104,7 +104,7 @@ namespace QuantConnect.Util
 
             }, CancellationToken.None);
 
-            _processQueueThread = new Thread(() => ProcessHoldQueue(token));
+            _processQueueThread = new Thread(() => ProcessHoldQueue(token)) { IsBackground = true };
             _processQueueThread.Start();
         }
 
@@ -152,6 +152,10 @@ namespace QuantConnect.Util
             {
                 if (_holdQueue != null) _holdQueue.Dispose();
                 if (_processQueue != null) _processQueue.Dispose();
+
+                // Wait for _holdQueue disposal be completed
+                Thread.Sleep(10000);
+
                 if (_processQueueThread != null && _processQueueThread.IsAlive) _processQueueThread.Abort();
 
                 foreach (var worker in _workers)

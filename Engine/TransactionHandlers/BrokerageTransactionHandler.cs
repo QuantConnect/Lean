@@ -45,7 +45,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private long _lastFillTimeTicks;
         private long _lastSyncTimeTicks;
         private readonly object _performCashSyncReentranceGuard = new object();
-        private static readonly TimeSpan _liveBrokerageCashSyncTime = new TimeSpan(7, 45, 0); // 7:45 am
+
+        // 7:45 AM (New York time zone)
+        private static readonly TimeSpan LiveBrokerageCashSyncTime = new TimeSpan(7, 45, 0);
 
         /// <summary>
         /// OrderQueue holds the newly updated orders from the user algorithm waiting to be processed. Once
@@ -101,7 +103,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // we don't need to do this today because we just initialized/synced
             _resultHandler = resultHandler;
             _syncedLiveBrokerageCashToday = true;
-            _lastSyncTimeTicks = DateTime.Now.Ticks;
+            _lastSyncTimeTicks = DateTime.UtcNow.Ticks;
 
             _brokerage = brokerage;
             _brokerage.OrderStatusChanged += (sender, fill) =>
@@ -456,13 +458,14 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             Log.Debug("BrokerageTransactionHandler.ProcessSynchronousEvents(): Enter");
 
             // every morning flip this switch back
-            if (_syncedLiveBrokerageCashToday && DateTime.Now.Date != LastSyncDate)
+            var currentTimeNewYork = DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork);
+            if (_syncedLiveBrokerageCashToday && currentTimeNewYork.Date != LastSyncDate)
             {
                 _syncedLiveBrokerageCashToday = false;
             }
 
             // we want to sync up our cash balance before market open
-            if (_algorithm.LiveMode && !_syncedLiveBrokerageCashToday && DateTime.Now.TimeOfDay >= _liveBrokerageCashSyncTime)
+            if (_algorithm.LiveMode && !_syncedLiveBrokerageCashToday && currentTimeNewYork.TimeOfDay >= LiveBrokerageCashSyncTime)
             {
                 try
                 {
@@ -584,7 +587,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 }
                 else
                 {
-                    _lastSyncTimeTicks = DateTime.Now.Ticks;
+                    _lastSyncTimeTicks = DateTime.UtcNow.Ticks;
                     Log.Trace("BrokerageTransactionHandler.PerformCashSync(): Verified cash sync.");
                 }
             });
@@ -886,7 +889,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             //Apply the filled order to our portfolio:
             if (fill.Status == OrderStatus.Filled || fill.Status == OrderStatus.PartiallyFilled)
             {
-                Interlocked.Exchange(ref _lastFillTimeTicks, DateTime.Now.Ticks);
+                Interlocked.Exchange(ref _lastFillTimeTicks, DateTime.UtcNow.Ticks);
                 
                 // check if the fill currency and the order currency match the symbol currency
                 var security = _algorithm.Securities[fill.Symbol];
@@ -987,23 +990,23 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         private TimeSpan TimeSinceLastFill
         {
-            get { return DateTime.Now - new DateTime(Interlocked.Read(ref _lastFillTimeTicks)); }
+            get { return DateTime.UtcNow - new DateTime(Interlocked.Read(ref _lastFillTimeTicks)); }
         }
 
         /// <summary>
-        /// Gets the date of the last sync
+        /// Gets the date of the last sync (New York time zone)
         /// </summary>
         private DateTime LastSyncDate
         {
-            get { return new DateTime(Interlocked.Read(ref _lastSyncTimeTicks)).Date; }
+            get { return new DateTime(Interlocked.Read(ref _lastSyncTimeTicks)).ConvertFromUtc(TimeZones.NewYork).Date; }
         }
 
         /// <summary>
         /// Rounds off the order towards 0 to the nearest multiple of Lot Size
         /// </summary>
-        private int RoundOffOrder(Order order, Security security)
+        public decimal RoundOffOrder(Order order, Security security)
         {
-            var orderLotMod = order.Quantity%Convert.ToInt32(security.SymbolProperties.LotSize);
+            var orderLotMod = order.Quantity % security.SymbolProperties.LotSize;
 
             if (orderLotMod != 0)
             {
@@ -1014,7 +1017,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     _algorithm.Error(
                         string.Format(
                             "Warning: Due to brokerage limitations, orders will be rounded to the nearest lot size of {0}",
-                            Convert.ToInt32(security.SymbolProperties.LotSize)));
+                            security.SymbolProperties.LotSize));
                     _firstRoundOffMessage = true;
                 }
                 return order.Quantity;

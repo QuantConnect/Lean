@@ -33,12 +33,12 @@ namespace QuantConnect
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 1, 1);
-            SetEndDate(DateTime.Now.Date.AddDays(-1));
+            SetStartDate(2013, 10, 7);
+            SetEndDate(2013, 10, 11);
             SetCash(25000);
 
             //Equity Data for US Markets:
-            AddSecurity(SecurityType.Equity, "AAPL", Resolution.Second);
+            AddSecurity(SecurityType.Equity, "IBM", Resolution.Second);
 
             //FOREX Data for Weekends: 24/6
             AddSecurity(SecurityType.Forex, "EURUSD", Resolution.Minute);
@@ -76,11 +76,11 @@ namespace QuantConnect
         /// <param name="data">Data.</param>
         public void OnData(TradeBars data)
         {
-            if (!Portfolio.HoldStock && data.ContainsKey("AAPL"))
+            if (!Portfolio["IBM"].HoldStock && data.ContainsKey("IBM"))
             {
-                int quantity = (int)Math.Floor(Portfolio.Cash / data["AAPL"].Close);
-                Order("AAPL", quantity);
-                Debug("Purchased SPY on " + Time.ToShortDateString());
+                int quantity = (int)Math.Floor(Portfolio.MarginRemaining / data["IBM"].Close);
+                Order("IBM", quantity);
+                Debug("Purchased IBM on " + Time.ToShortDateString());
                 Notify.Email("myemail@gmail.com", "Test", "Test Body", "test attachment");
             }
         }

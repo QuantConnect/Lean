@@ -103,7 +103,7 @@ namespace QuantConnect.Lean.Engine
         {
             Api.Initialize(Config.GetInt("job-user-id", 0), Config.Get("api-access-token", ""), Config.Get("data-folder"));
             Notify.Initialize();
-            JobQueue.Initialize();
+            JobQueue.Initialize(Api);
         }
 
         /// <summary>

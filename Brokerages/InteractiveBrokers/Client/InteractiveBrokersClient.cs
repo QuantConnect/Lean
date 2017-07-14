@@ -177,6 +177,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         public event EventHandler<HistoricalDataEventArgs> HistoricalData;
 
         /// <summary>
+        /// HistoricalDataUpdate event handler
+        /// </summary>
+        public event EventHandler<HistoricalDataUpdateEventArgs> HistoricalDataUpdate;
+
+        /// <summary>
         /// HistoricalDataEnd event handler
         /// </summary>
         public event EventHandler<HistoricalDataEndEventArgs> HistoricalDataEnd;
@@ -306,6 +311,76 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         public event EventHandler<SoftDollarTiersEventArgs> SoftDollarTiers;
 
+        /// <summary>
+        /// FamilyCodes event handler
+        /// </summary>
+        public event EventHandler<FamilyCodesEventArgs> FamilyCodes;
+
+        /// <summary>
+        /// SymbolSamples event handler
+        /// </summary>
+        public event EventHandler<SymbolSamplesEventArgs> SymbolSamples;
+
+        /// <summary>
+        /// MktDepthExchanges event handler
+        /// </summary>
+        public event EventHandler<MktDepthExchangesEventArgs> MktDepthExchanges;
+
+        /// <summary>
+        /// TickNews event handler
+        /// </summary>
+        public event EventHandler<TickNewsEventArgs> TickNews;
+
+        /// <summary>
+        /// SmartComponents event handler
+        /// </summary>
+        public event EventHandler<SmartComponentsEventArgs> SmartComponents;
+
+        /// <summary>
+        /// TickReqParams event handler
+        /// </summary>
+        public event EventHandler<TickReqParamsEventArgs> TickReqParams;
+
+        /// <summary>
+        /// NewsProviders event handler
+        /// </summary>
+        public event EventHandler<NewsProvidersEventArgs> NewsProviders;
+
+        /// <summary>
+        /// NewsArticle event handler
+        /// </summary>
+        public event EventHandler<NewsArticleEventArgs> NewsArticle;
+
+        /// <summary>
+        /// HistoricalNews event handler
+        /// </summary>
+        public event EventHandler<HistoricalNewsEventArgs> HistoricalNews;
+
+        /// <summary>
+        /// HistoricalNewsEnd event handler
+        /// </summary>
+        public event EventHandler<HistoricalNewsEndEventArgs> HistoricalNewsEnd;
+
+        /// <summary>
+        /// HeadTimestamp event handler
+        /// </summary>
+        public event EventHandler<HeadTimestampEventArgs> HeadTimestamp;
+
+        /// <summary>
+        /// HistogramData event handler
+        /// </summary>
+        public event EventHandler<HistogramDataEventArgs> HistogramData;
+
+        /// <summary>
+        /// RerouteMktDataReq event handler
+        /// </summary>
+        public event EventHandler<RerouteMktDataReqEventArgs> RerouteMktDataReq;
+
+        /// <summary>
+        /// RerouteMktDepthReq event handler
+        /// </summary>
+        public event EventHandler<RerouteMktDepthReqEventArgs> RerouteMktDepthReq;
+
         #endregion
 
         /// <summary>
@@ -327,9 +402,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// <summary>
         /// Initializes a new instance of the <see cref="InteractiveBrokersClient"/> class
         /// </summary>
-        public InteractiveBrokersClient()
+        public InteractiveBrokersClient(EReaderSignal signal)
         {
-            ClientSocket = new EClientSocket(this, new EReaderMonitorSignal());
+            ClientSocket = new EClientSocket(this, signal);
         }
 
         /// <summary>
@@ -388,10 +463,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// <param name="tickerId">The request's unique identifier.</param>
         /// <param name="field">Specifies the type of price.</param>
         /// <param name="price">The actual price.</param>
-        /// <param name="canAutoExecute">Specifies whether the price tick is available for automatic execution.</param>
-        public void tickPrice(int tickerId, int field, double price, int canAutoExecute)
+        /// <param name="attribs">Tick attributes.</param>
+        public void tickPrice(int tickerId, int field, double price, TickAttrib attribs)
         {
-            OnTickPrice(new TickPriceEventArgs(tickerId, field, price, canAutoExecute));
+            OnTickPrice(new TickPriceEventArgs(tickerId, field, price, attribs));
         }
 
         /// <summary>
@@ -702,27 +777,20 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// Receives the historical data in response to reqHistoricalData().
         /// </summary>
         /// <param name="reqId">The request's identifier.</param>
-        /// <param name="date">The date-time stamp of the start of the bar. The format is determined by the reqHistoricalData() formatDate parameter (either as a yyyymmss hh:mm:ss formatted string or as system time according to the request).</param>
-        /// <param name="open">The bar opening price.</param>
-        /// <param name="high">The high price during the time covered by the bar.</param>
-        /// <param name="low">The low price during the time covered by the bar.</param>
-        /// <param name="close">The bar closing price.</param>
-        /// <param name="volume">The volume during the time covered by the bar.</param>
-        /// <param name="count">When TRADES historical data is returned, represents the number of trades that occurred during the time period the bar covers.</param>
-        /// <param name="wap">The weighted average price during the time covered by the bar.</param>
-        /// <param name="hasGaps">Whether or not there are gaps in the data.</param>
-        public void historicalData(int reqId,
-            string date,
-            double open,
-            double high,
-            double low,
-            double close,
-            int volume,
-            int count,
-            double wap,
-            bool hasGaps)
+        /// <param name="bar">The bar data.</param>
+        public void historicalData(int reqId, Bar bar)
         {
-            OnHistoricalData(new HistoricalDataEventArgs(reqId, date, open, high, low, close, volume, count, wap, hasGaps));
+            OnHistoricalData(new HistoricalDataEventArgs(reqId, bar));
+        }
+
+        /// <summary>
+        /// Receives historical data updates to reqHistoricalData().
+        /// </summary>
+        /// <param name="reqId">The request's identifier.</param>
+        /// <param name="bar">The bar data.</param>
+        public void historicalDataUpdate(int reqId, Bar bar)
+        {
+            OnHistoricalDataUpdate(new HistoricalDataUpdateEventArgs(reqId, bar));
         }
 
         /// <summary>
@@ -1020,6 +1088,155 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
             OnSoftDollarTiers(new SoftDollarTiersEventArgs(reqId, tiers));
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="familyCodes"></param>
+        public void familyCodes(FamilyCode[] familyCodes)
+        {
+            OnFamilyCodes(new FamilyCodesEventArgs(familyCodes));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="reqId"></param>
+        /// <param name="contractDescriptions"></param>
+        public void symbolSamples(int reqId, ContractDescription[] contractDescriptions)
+        {
+            OnSymbolSamples(new SymbolSamplesEventArgs(reqId, contractDescriptions));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="depthMktDataDescriptions"></param>
+        public void mktDepthExchanges(DepthMktDataDescription[] depthMktDataDescriptions)
+        {
+            OnMktDepthExchanges(new MktDepthExchangesEventArgs(depthMktDataDescriptions));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tickerId"></param>
+        /// <param name="timeStamp"></param>
+        /// <param name="providerCode"></param>
+        /// <param name="articleId"></param>
+        /// <param name="headline"></param>
+        /// <param name="extraData"></param>
+        public void tickNews(int tickerId, long timeStamp, string providerCode, string articleId, string headline, string extraData)
+        {
+            OnTickNews(new TickNewsEventArgs(tickerId, timeStamp, providerCode, articleId, headline, extraData));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="reqId"></param>
+        /// <param name="theMap"></param>
+        public void smartComponents(int reqId, Dictionary<int, KeyValuePair<string, char>> theMap)
+        {
+            OnSmartComponents(new SmartComponentsEventArgs(reqId, theMap));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tickerId"></param>
+        /// <param name="minTick"></param>
+        /// <param name="bboExchange"></param>
+        /// <param name="snapshotPermissions"></param>
+        public void tickReqParams(int tickerId, double minTick, string bboExchange, int snapshotPermissions)
+        {
+            OnTickReqParams(new TickReqParamsEventArgs(tickerId, minTick, bboExchange, snapshotPermissions));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="newsProviders"></param>
+        public void newsProviders(NewsProvider[] newsProviders)
+        {
+            OnNewsProviders(new NewsProvidersEventArgs(newsProviders));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="requestId"></param>
+        /// <param name="articleType"></param>
+        /// <param name="articleText"></param>
+        public void newsArticle(int requestId, int articleType, string articleText)
+        {
+            OnNewsArticle(new NewsArticleEventArgs(requestId, articleType, articleText));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="requestId"></param>
+        /// <param name="time"></param>
+        /// <param name="providerCode"></param>
+        /// <param name="articleId"></param>
+        /// <param name="headline"></param>
+        public void historicalNews(int requestId, string time, string providerCode, string articleId, string headline)
+        {
+            OnHistoricalNews(new HistoricalNewsEventArgs(requestId, time, providerCode, articleId, headline));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="requestId"></param>
+        /// <param name="hasMore"></param>
+        public void historicalNewsEnd(int requestId, bool hasMore)
+        {
+            OnHistoricalNewsEnd(new HistoricalNewsEndEventArgs(requestId, hasMore));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="reqId"></param>
+        /// <param name="headTimestamp"></param>
+        public void headTimestamp(int reqId, string headTimestamp)
+        {
+            OnHeadTimestamp(new HeadTimestampEventArgs(reqId, headTimestamp));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="reqId"></param>
+        /// <param name="data"></param>
+        public void histogramData(int reqId, HistogramEntry[] data)
+        {
+            OnHistogramData(new HistogramDataEventArgs(reqId, data));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="reqId"></param>
+        /// <param name="conId"></param>
+        /// <param name="exchange"></param>
+        public void rerouteMktDataReq(int reqId, int conId, string exchange)
+        {
+            OnRerouteMktDataReq(new RerouteMktDataReqEventArgs(reqId, conId, exchange));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="reqId"></param>
+        /// <param name="conId"></param>
+        /// <param name="exchange"></param>
+        public void rerouteMktDepthReq(int reqId, int conId, string exchange)
+        {
+            OnRerouteMktDepthReq(new RerouteMktDepthReqEventArgs(reqId, conId, exchange));
+        }
+
         #endregion
 
         #region Event Invocators
@@ -1295,6 +1512,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         }
 
         /// <summary>
+        /// HistoricalDataUpdate event invocator
+        /// </summary>
+        protected virtual void OnHistoricalDataUpdate(HistoricalDataUpdateEventArgs e)
+        {
+            var handler = HistoricalDataUpdate;
+            if (handler != null) handler(this, e);
+        }
+
+        /// <summary>
         /// HistoricalDataEnd event invocator
         /// </summary>
         protected virtual void OnHistoricalDataEnd(HistoricalDataEndEventArgs e)
@@ -1525,6 +1751,132 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         protected virtual void OnSoftDollarTiers(SoftDollarTiersEventArgs e)
         {
             var handler = SoftDollarTiers;
+            if (handler != null) handler(this, e);
+        }
+
+        /// <summary>
+        /// FamilyCodes event invocator
+        /// </summary>
+        protected virtual void OnFamilyCodes(FamilyCodesEventArgs e)
+        {
+            var handler = FamilyCodes;
+            if (handler != null) handler(this, e);
+        }
+
+        /// <summary>
+        /// SymbolSamples event invocator
+        /// </summary>
+        protected virtual void OnSymbolSamples(SymbolSamplesEventArgs e)
+        {
+            var handler = SymbolSamples;
+            if (handler != null) handler(this, e);
+        }
+
+        /// <summary>
+        /// MktDepthExchanges event invocator
+        /// </summary>
+        protected virtual void OnMktDepthExchanges(MktDepthExchangesEventArgs e)
+        {
+            var handler = MktDepthExchanges;
+            if (handler != null) handler(this, e);
+        }
+
+        /// <summary>
+        /// TickNews event invocator
+        /// </summary>
+        protected virtual void OnTickNews(TickNewsEventArgs e)
+        {
+            var handler = TickNews;
+            if (handler != null) handler(this, e);
+        }
+
+        /// <summary>
+        /// SmartComponents event invocator
+        /// </summary>
+        protected virtual void OnSmartComponents(SmartComponentsEventArgs e)
+        {
+            var handler = SmartComponents;
+            if (handler != null) handler(this, e);
+        }
+
+        /// <summary>
+        /// TickReqParams event invocator
+        /// </summary>
+        protected virtual void OnTickReqParams(TickReqParamsEventArgs e)
+        {
+            var handler = TickReqParams;
+            if (handler != null) handler(this, e);
+        }
+
+        /// <summary>
+        /// NewsProviders event invocator
+        /// </summary>
+        protected virtual void OnNewsProviders(NewsProvidersEventArgs e)
+        {
+            var handler = NewsProviders;
+            if (handler != null) handler(this, e);
+        }
+
+        /// <summary>
+        /// NewsArticle event invocator
+        /// </summary>
+        protected virtual void OnNewsArticle(NewsArticleEventArgs e)
+        {
+            var handler = NewsArticle;
+            if (handler != null) handler(this, e);
+        }
+
+        /// <summary>
+        /// HistoricalNews event invocator
+        /// </summary>
+        protected virtual void OnHistoricalNews(HistoricalNewsEventArgs e)
+        {
+            var handler = HistoricalNews;
+            if (handler != null) handler(this, e);
+        }
+
+        /// <summary>
+        /// HistoricalNewsEnd event invocator
+        /// </summary>
+        protected virtual void OnHistoricalNewsEnd(HistoricalNewsEndEventArgs e)
+        {
+            var handler = HistoricalNewsEnd;
+            if (handler != null) handler(this, e);
+        }
+
+        /// <summary>
+        /// HeadTimestamp event invocator
+        /// </summary>
+        protected virtual void OnHeadTimestamp(HeadTimestampEventArgs e)
+        {
+            var handler = HeadTimestamp;
+            if (handler != null) handler(this, e);
+        }
+
+        /// <summary>
+        /// HistogramData event invocator
+        /// </summary>
+        protected virtual void OnHistogramData(HistogramDataEventArgs e)
+        {
+            var handler = HistogramData;
+            if (handler != null) handler(this, e);
+        }
+
+        /// <summary>
+        /// RerouteMktDataReq event invocator
+        /// </summary>
+        protected virtual void OnRerouteMktDataReq(RerouteMktDataReqEventArgs e)
+        {
+            var handler = RerouteMktDataReq;
+            if (handler != null) handler(this, e);
+        }
+
+        /// <summary>
+        /// RerouteMktDepthReq event invocator
+        /// </summary>
+        protected virtual void OnRerouteMktDepthReq(RerouteMktDepthReqEventArgs e)
+        {
+            var handler = RerouteMktDepthReq;
             if (handler != null) handler(this, e);
         }
 

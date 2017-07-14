@@ -115,7 +115,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="utcTime">The time to convert from utc</param>
         /// <returns>The same instant in time represented in the <see cref="TimeZone"/></returns>
-        public DateTime ConvertFromUtc(DateTime utcTime)
+        public virtual DateTime ConvertFromUtc(DateTime utcTime)
         {
             return new DateTime(utcTime.Ticks + GetOffsetTicks(utcTime));
         }
