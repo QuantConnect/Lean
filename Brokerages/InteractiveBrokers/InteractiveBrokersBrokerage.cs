@@ -64,6 +64,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly IB.InteractiveBrokersClient _client;
         private readonly string _agentDescription;
 
+        private Thread _messageProcessingThread;
+        private readonly AutoResetEvent _resetEventRestartGateway = new AutoResetEvent(false);
+        private readonly CancellationTokenSource _ctsRestartGateway = new CancellationTokenSource();
+
         // Notifies the thread reading information from Gateway/TWS whenever there are messages ready to be consumed
         private readonly EReaderSignal _signal = new EReaderMonitorSignal();
 
@@ -195,6 +199,26 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 }
                 Log.Trace("InteractiveBrokersBrokerage.HandleNextValidID(): " + e.OrderId);
             };
+
+            // handle requests to restart the IB gateway
+            new Thread(() =>
+            {
+                Log.Trace("InteractiveBrokersBrokerage.ResetHandler(): thread started.");
+
+                while (!_ctsRestartGateway.IsCancellationRequested)
+                {
+                    if (_resetEventRestartGateway.WaitOne(1000, _ctsRestartGateway.Token))
+                    {
+                        Log.Trace("InteractiveBrokersBrokerage.ResetHandler(): Reset sequence start.");
+
+                        ResetGatewayConnection();
+
+                        Log.Trace("InteractiveBrokersBrokerage.ResetHandler(): Reset sequence end.");
+                    }
+                }
+
+                Log.Trace("InteractiveBrokersBrokerage.ResetHandler(): thread ended.");
+            }) { IsBackground = true }.Start();
         }
 
         /// <summary>
@@ -440,6 +464,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 {
                     Log.Trace("InteractiveBrokersBrokerage.Connect(): Attempting to connect ({0}/{1}) ...", attempt, maxAttempts);
 
+                    // if message processing thread is still running, wait until it terminates
+                    if (_messageProcessingThread != null)
+                    {
+                        _messageProcessingThread.Join();
+                        _messageProcessingThread = null;
+                    }
+
                     // we're going to try and connect several times, if successful break
                     _client.ClientSocket.eConnect(_host, _port, _clientId);
 
@@ -447,7 +478,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     var reader = new EReader(_client.ClientSocket, _signal);
                     reader.Start();
 
-                    var messageProcessingThread = new Thread(() =>
+                    _messageProcessingThread = new Thread(() =>
                     {
                         Log.Trace("IB message processing thread started: #" + Thread.CurrentThread.ManagedThreadId);
 
@@ -468,7 +499,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         Log.Trace("IB message processing thread ended: #" + Thread.CurrentThread.ManagedThreadId);
                     }) { IsBackground = true };
 
-                    messageProcessingThread.Start();
+                    _messageProcessingThread.Start();
 
                     // pause for a moment to receive next valid ID message from gateway
                     if (!_waitForNextValidId.WaitOne(15000))
@@ -478,7 +509,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         // no response, disconnect and retry
                         _client.ClientSocket.eDisconnect();
                         _signal.issueSignal();
-                        messageProcessingThread.Join();
+                        _messageProcessingThread.Join();
 
                         // if existing session detected from IBController log file, log error and throw exception
                         if (ExistingSessionDetected())
@@ -592,6 +623,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             _messagingRateLimiter.Dispose();
+
+            _ctsRestartGateway.Cancel(false);
         }
 
         /// <summary>
@@ -1011,7 +1044,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // With IB Gateway v960.2a in the cloud, we are not receiving order fill events after the nightly reset,
                 // so we execute the following sequence: 
                 // disconnect, kill IB Gateway, restart IB Gateway, reconnect, restore data subscriptions
-                ResetGatewayConnection();
+                _resetEventRestartGateway.Set();
 
                 return;
             }
@@ -1109,7 +1142,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     // reset time finished and we're still disconnected, restart IB client
                     Log.Trace("InteractiveBrokersBrokerage.TryWaitForReconnect(): Reset time finished and still disconnected. Restarting...");
 
-                    ResetGatewayConnection();
+                    _resetEventRestartGateway.Set();
                 }
                 else
                 {
@@ -2537,7 +2570,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             if (!InteractiveBrokersGatewayRunner.IsRunning())
             {
                 Log.Trace("InteractiveBrokersBrokerage.CheckIbGateway(): IB Gateway not running. Restarting...");
-                ResetGatewayConnection();
+                _resetEventRestartGateway.Set();
             }
             Log.Trace("InteractiveBrokersBrokerage.CheckIbGateway(): end");
         }
