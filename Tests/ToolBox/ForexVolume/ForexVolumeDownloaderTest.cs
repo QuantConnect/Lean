@@ -38,30 +38,72 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
         private ForexVolumeDownloader _downloader;
         private readonly Symbol _symbol = Symbol.Create("EURUSD", SecurityType.Base, Market.Decode(code: 20));
 
-        [Ignore("WIP")]
         [TestCase]
         public void DailyDataIsCorrectlyRetrieved()
         {
-            var data = _downloader.Get(_symbol, Resolution.Daily, new DateTime(year: 2017, month: 04, day: 02),
-                new DateTime(year: 2017, month: 04, day: 22));
-            //SaveCsv(data, "DailyData.csv");
+            //Arrange
+            var testingFilePath = "./TestData/fxVolumeDaily.csv";
+            var expectedData = File.ReadAllLines(testingFilePath)
+                .Skip(count: 1) // Skip headers.
+                .Select(x => x.Split(','))
+                .ToArray();
+            //Act
+            var actualData = _downloader.Get(_symbol, Resolution.Daily, new DateTime(year: 2016, month: 12, day: 01),
+                new DateTime(year: 2017, month: 01, day: 31)).Cast<ForexVolume>().ToArray();
+            //Assert
+            Assert.AreEqual(expectedData.Length, actualData.Length);
+            for (var i = 0; i < expectedData.Length - 1; i++)
+            {
+                Assert.AreEqual(expectedData[i][0], actualData[i].Time.ToString("yyyy/MM/dd HH:mm"));
+                Assert.AreEqual(expectedData[i][1], actualData[i].Value.ToString());
+                Assert.AreEqual(expectedData[i][2], actualData[i].Transactions.ToString());
+            }
         }
 
-        [Ignore("WIP")]
         [TestCase]
         public void HourlyDataIsCorrectlyRetrieved()
         {
-            var data = _downloader.Get(_symbol, Resolution.Hour, new DateTime(year: 2017, month: 04, day: 02),
-                new DateTime(year: 2017, month: 04, day: 10));
-            //SaveCsv(data, "HourData.csv");
+            //Arrange
+            var testingFilePath = "./TestData/fxVolumeHourly.csv";
+            var expectedData = File.ReadAllLines(testingFilePath)
+                .Skip(count: 1) // Skip headers.
+                .Select(x => x.Split(','))
+                .ToArray();
+            var symbol = Symbol.Create("USDJPY", SecurityType.Base, Market.Decode(code: 20));
+            // Act
+            var actualData = _downloader.Get(symbol, Resolution.Hour, new DateTime(year: 2014, month: 12, day: 20),
+                new DateTime(year: 2015, month: 01, day: 02)).Cast<ForexVolume>().ToArray();
+            //Assert
+            Assert.AreEqual(expectedData.Length, actualData.Length);
+            for (var i = 0; i < expectedData.Length - 1; i++)
+            {
+                Assert.AreEqual(expectedData[i][0], actualData[i].Time.ToString("yyyy/MM/dd HH:mm"));
+                Assert.AreEqual(expectedData[i][1], actualData[i].Value.ToString());
+                Assert.AreEqual(expectedData[i][2], actualData[i].Transactions.ToString());
+            }
         }
 
-        [Ignore("WIP")]
         [TestCase]
         public void MinuteDataIsCorrectlyRetrieved()
         {
-            var data = _downloader.Get(_symbol, Resolution.Minute, new DateTime(year: 2012, month: 01, day: 01),
-                new DateTime(year: 2012, month: 07, day: 01));
+            //Arrange
+            var testingFilePath = "./TestData/fxVolumeMinute.csv";
+            var expectedData = File.ReadAllLines(testingFilePath)
+                .Skip(count: 1) // Skip headers.
+                .Select(x => x.Split(','))
+                .ToArray();
+            // Act
+            var actualData = _downloader.Get(_symbol, Resolution.Minute, new DateTime(year: 2011, month: 12, day: 23),
+                new DateTime(year: 2012, month: 12, day: 02)).Cast<ForexVolume>().ToArray();
+            ;
+            //Assert
+            Assert.AreEqual(expectedData.Length, actualData.Length);
+            for (var i = 0; i < expectedData.Length - 1; i++)
+            {
+                Assert.AreEqual(expectedData[i][0], actualData[i].Time.ToString("yyyy/MM/dd HH:mm"));
+                Assert.AreEqual(expectedData[i][1], actualData[i].Value.ToString());
+                Assert.AreEqual(expectedData[i][2], actualData[i].Transactions.ToString());
+            }
         }
 
         [TestCase]
@@ -84,7 +126,7 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             var lines = actualdata.Count;
             for (var i = 0; i < lines - 1; i++)
             {
-                Assert.AreEqual(expectedData[i].Value, int.Parse(actualdata[i][1]));
+                Assert.AreEqual(expectedData[i].Value, long.Parse(actualdata[i][1]));
                 Assert.AreEqual(expectedData[i].Transactions, int.Parse(actualdata[i][2]));
             }
         }
@@ -109,7 +151,7 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             var lines = actualdata.Count;
             for (var i = 0; i < lines - 1; i++)
             {
-                Assert.AreEqual(expectedData[i].Value, int.Parse(actualdata[i][1]));
+                Assert.AreEqual(expectedData[i].Value, long.Parse(actualdata[i][1]));
                 Assert.AreEqual(expectedData[i].Transactions, int.Parse(actualdata[i][2]));
             }
         }
@@ -133,7 +175,7 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             var lines = actualdata.Count;
             for (var i = 0; i < lines - 1; i++)
             {
-                Assert.AreEqual(expectedData[i].Value, int.Parse(actualdata[i][1]));
+                Assert.AreEqual(expectedData[i].Value, long.Parse(actualdata[i][1]));
                 Assert.AreEqual(expectedData[i].Transactions, int.Parse(actualdata[i][2]));
             }
         }
@@ -224,7 +266,7 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
 
         //[Ignore("Long test")]
         [TestCase]
-        public void RequestWithMoreThan10KMinuteObservationAreCorrectlySaved()
+        public void RequestWithMoreThan10KMinuteObservationIsCorrectlySaved()
         {
             // Arrange
             var resolution = Resolution.Minute;
@@ -240,7 +282,7 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
 
         //[Ignore("Long test")]
         [TestCase]
-        public void RequestWithMoreThan10KHourlyObservationAreCorrectlySaved()
+        public void RequestWithMoreThan10KHourlyObservationIsCorrectlySaved()
         {
             // Arrange
             var resolution = Resolution.Hour;
@@ -251,7 +293,7 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             // Assert
             var outputFile = Path.Combine(_dataDirectory, "base/fxcmforexvolume/hour/eurusd.zip");
             var observationsCount = ReadZipFileData(outputFile).Count;
-            // 2 years x 52 weeks x 5 days x 24 hours = 12480 hours
+            // 3 years x 52 weeks x 5 days x 24 hours = 18720 hours at least.
             Assert.True(observationsCount >= 18720, string.Format("Actual observations: {0}", observationsCount));
         }
 
@@ -285,10 +327,12 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
         {
             var sb = new StringBuilder("DateTime,Volume,Transactions\n");
 
-            foreach (var obs in data)
+            var volData = data.Cast<ForexVolume>();
+
+            foreach (var obs in volData)
             {
                 sb.AppendLine(string.Format("{0:yyyy/MM/dd HH:mm},{1},{2}", obs.Time, obs.Value,
-                    ((ForexVolume) obs).Transactions));
+                    obs.Transactions));
             }
             var filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
                 fileName);

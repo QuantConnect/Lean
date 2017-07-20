@@ -4,10 +4,19 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Data.Custom
 {
+    /// <summary>
+    /// FXCM Real FOREX Volume and Transaction data from its clients base, available for the following pairs:
+    ///     - EURUSD, USDJPY, GBPUSD, USDCHF, EURCHF, AUDUSD, USDCAD,
+    ///       NZDUSD, EURGBP, EURJPY, GBPJPY, EURAUD, EURCAD, AUDJPY
+    /// FXCM only provides support for FX symbols which produced over 110 million average daily volume (ADV) during 2013.
+    /// This limit is imposed to ensure we do not highlight low volume/low ticket symbols in addition to other financial reporting concerns.
+    /// 
+    /// </summary>
+    /// <seealso cref="QuantConnect.Data.BaseData" />
     public class ForexVolume : BaseData
     {
         /// <summary>
-        ///     Gets or sets the transactions.
+        ///     Sum of opening and closing Transactions for the entire time interval.
         /// </summary>
         /// <value>
         ///     The transactions.
@@ -15,6 +24,7 @@ namespace QuantConnect.Data.Custom
         public int Transactions { get; set; }
 
         /// <summary>
+        ///     Sum of opening and closing Volume for the entire time interval.
         ///     The volume measured in the QUOTE CURRENCY.
         /// </summary>
         /// <remarks>Please remember to convert this data to a common currency before making comparison between different pairs.</remarks>
