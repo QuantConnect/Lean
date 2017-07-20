@@ -278,7 +278,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <summary>
         /// Wrapper for <see cref = "IAlgorithm.RuntimeStatistics" /> in Python
         /// </summary>
-        public Dictionary<string, string> RuntimeStatistics
+        public ConcurrentDictionary<string, string> RuntimeStatistics
         {
             get
             {
