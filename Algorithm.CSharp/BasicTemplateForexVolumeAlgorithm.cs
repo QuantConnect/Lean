@@ -25,13 +25,13 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class BasicTemplateForexVolumeAlgorithm : QCAlgorithm
     {
+        private readonly Identity volume = new Identity("volIdentity");
         private Symbol EURUSD;
         private CompositeIndicator<IndicatorDataPoint> fastVWMA;
         private CompositeIndicator<IndicatorDataPoint> slowVWMA;
-        private readonly Identity volume = new Identity("volIdentity");
 
         /// <summary>
-        ///     Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All
+        ///     Initialize the data and resolution required, as well as the cash and start-end dates for your algorithm. All
         ///     algorithms must initialized.
         /// </summary>
         public override void Initialize()
@@ -58,7 +58,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (fastVWMA > slowVWMA)
                 {
-                    SetHoldings(EURUSD, 1);
+                    SetHoldings(EURUSD, percentage: 1);
                     Log(Time.ToString("g") + " Take a Long Position.");
                 }
             }
@@ -66,7 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (fastVWMA < slowVWMA)
                 {
-                    SetHoldings(EURUSD, -1);
+                    SetHoldings(EURUSD, percentage: -1);
                     Log(Time.ToString("g") + " Take a Short Position.");
                 }
             }
@@ -74,7 +74,6 @@ namespace QuantConnect.Algorithm.CSharp
 
         public void OnData(ForexVolume fxVolume)
         {
-
             volume.Update(new IndicatorDataPoint
             {
                 Time = Time,

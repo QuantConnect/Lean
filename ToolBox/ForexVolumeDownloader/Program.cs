@@ -1,20 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using javax.print.attribute.standard;
-using org.apache.log4j;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
 
 namespace QuantConnect.ToolBox.FxVolumeDownloader
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             if (args.Length != 4)
             {
@@ -26,29 +19,30 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
                 Console.WriteLine("RESOLUTION = Minute/Hour/Daily/All");
                 Console.WriteLine("FROMDATE = yyyymmdd");
                 Console.WriteLine("TODATE = yyyymmdd");
+
 #if DEBUG
-                Console.WriteLine("Press enter to close...");
-                Console.ReadLine();
-                args = new string[] { "EURUSD", "Minute", "20140101", "20150101" };
-#else
                 args = new string[] { "EURJPY,GBPJPY,EURAUD,AUDJPY", "Hour", "20140101", "20170101" };
-                //Environment.Exit(1);
 #endif
+
+                Environment.Exit(exitCode: 1);
             }
 
             try
             {
                 var timer = DateTime.Now;
                 Log.DebuggingEnabled = true;
-                var logHandlers = new ILogHandler[] { new ConsoleLogHandler(), new FileLogHandler("FxcmFxVolumeDownloader.log", false) };
+                var logHandlers = new ILogHandler[]
+                {
+                    new ConsoleLogHandler(), new FileLogHandler("FxcmFxVolumeDownloader.log", useTimestampPrefix: false)
+                };
 
                 // Load settings from command line
                 var tickers = args[0].Split(',');
-                var resolutions = new[] { Resolution.Daily};
+                var resolutions = new[] {Resolution.Daily};
 
                 if (args[1].ToLower() == "all")
                 {
-                    resolutions = new[] { Resolution.Daily, Resolution.Hour , Resolution.Minute };
+                    resolutions = new[] {Resolution.Daily, Resolution.Hour, Resolution.Minute};
                 }
                 else
                 {
