@@ -31,7 +31,7 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
                 Console.ReadLine();
                 args = new string[] { "EURUSD", "Minute", "20140101", "20150101" };
 #else
-                args = new string[] { "USDJPY,GBPUSD,USDCHF,EURCHF,AUDUSD", "Hour", "20140101", "20170101" };
+                args = new string[] { "EURJPY,GBPJPY,EURAUD,AUDJPY", "Hour", "20140101", "20170101" };
                 //Environment.Exit(1);
 #endif
             }

@@ -57,12 +57,7 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
         /// <summary>
         ///     FXCM session id.
         /// </summary>
-        private readonly int _sid = 1;
-
-        /// <summary>
-        ///     The specifies direction and offset relatively to time.
-        /// </summary>
-        private double _offset = 0;
+        private readonly string _sid = "quantconnect";
 
         /// <summary>
         ///     The columns index which should be added to obtain the transactions.
@@ -77,7 +72,7 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
         /// <summary>
         ///     The request base URL.
         /// </summary>
-        private readonly string _baseUrl = "http://marketsummary.fxcorporate.com/ssisa/servlet?RT=SSI";
+        private readonly string _baseUrl = " http://marketsummary2.fxcorporate.com/ssisa/servlet?RT=SSI";
 
         private readonly string _dataDirectory;
 
