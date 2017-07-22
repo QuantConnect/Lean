@@ -19,7 +19,6 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -57,15 +56,16 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">The current slice of data keyed by symbol string</param>
         public override void OnData(Slice slice)
         {
-            if (!Portfolio.Invested)
+            if (!Portfolio.Invested && IsMarketOpen(OptionSymbol))
             {
                 OptionChain chain;
                 if (slice.OptionChains.TryGetValue(OptionSymbol, out chain))
                 {
-                    // we find at the money (ATM) contract with farthest expiration
+                    // we find at the money (ATM) put contract with farthest expiration
                     var atmContract = chain
                         .OrderByDescending(x => x.Expiry)
                         .ThenBy(x => Math.Abs(chain.Underlying.Price - x.Strike))
+                        .ThenByDescending(x => x.Right)
                         .FirstOrDefault();
 
                     if (atmContract != null)

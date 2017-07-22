@@ -1044,6 +1044,22 @@ namespace QuantConnect.Algorithm
             return Order(symbol, (decimal)quantity);
         }
 
+        /// <summary>
+        /// Determines if the exchange for the specified symbol is open at the current time.
+        /// </summary>
+        /// <param name="symbol">The symbol</param>
+        /// <returns>True if the exchange is considered open at the current time, false otherwise</returns>
+        public bool IsMarketOpen(Symbol symbol)
+        {
+            var exchangeHours = MarketHoursDatabase
+                .FromDataFolder()
+                .GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+
+            var time = UtcTime.ConvertFromUtc(exchangeHours.TimeZone);
+
+            return exchangeHours.IsOpen(time, false);
+        }
+
         private SubmitOrderRequest CreateSubmitOrderRequest(OrderType orderType, Security security, decimal quantity, string tag, decimal stopPrice = 0m, decimal limitPrice = 0m)
         {
             return new SubmitOrderRequest(orderType, security.Type, security.Symbol, quantity, stopPrice, limitPrice, UtcTime, tag);
