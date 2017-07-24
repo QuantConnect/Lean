@@ -218,7 +218,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     }
                     catch (Exception err)
                     {
-                        AddInitializationError(err.Message);
+                        AddInitializationError(err.ToString());
                     }
                 }, controls.RamAllocation);
 
@@ -364,7 +364,7 @@ namespace QuantConnect.Lean.Engine.Setup
             }
             catch (Exception err)
             {
-                AddInitializationError(err.Message);
+                AddInitializationError(err.ToString());
             }
             finally
             {
