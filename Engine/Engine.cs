@@ -307,7 +307,10 @@ namespace QuantConnect.Lean.Engine
                             // make sure we've taken samples for these series before just blindly requesting them
                             if (charts.ContainsKey(strategyEquityKey) &&
                                 charts[strategyEquityKey].Series.ContainsKey(equityKey) &&
-                                charts[strategyEquityKey].Series.ContainsKey(dailyPerformanceKey))
+                                charts[strategyEquityKey].Series.ContainsKey(dailyPerformanceKey) &&
+                                charts.ContainsKey(benchmarkKey) &&
+                                charts[benchmarkKey].Series.ContainsKey(benchmarkKey)
+                            )
                             {
                                 var equity = charts[strategyEquityKey].Series[equityKey].Values;
                                 var performance = charts[strategyEquityKey].Series[dailyPerformanceKey].Values;
