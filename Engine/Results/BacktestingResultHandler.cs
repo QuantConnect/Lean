@@ -38,7 +38,7 @@ namespace QuantConnect.Lean.Engine.Results
     /// <summary>
     /// Backtesting result handler passes messages back from the Lean to the User.
     /// </summary>
-    public class BacktestingResultHandler : IResultHandler
+    public class BacktestingResultHandler : BaseResultsHandler, IResultHandler
     {
         private bool _exitTriggered = false;
         private BacktestNodePacket _job;

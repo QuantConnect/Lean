@@ -252,5 +252,11 @@ namespace QuantConnect.Lean.Engine.Results
         /// Process any synchronous events in here that are primarily triggered from the algorithm loop
         /// </summary>
         void ProcessSynchronousEvents(bool forceProcess = false);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="logs"></param>
+        void SaveLogs(string logs);
     }
 }

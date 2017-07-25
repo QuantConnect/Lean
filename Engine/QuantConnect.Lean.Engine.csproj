@@ -201,6 +201,7 @@
     <Compile Include="DataFeeds\UpdateData.cs" />
     <Compile Include="DataFeeds\ZipDataCacheProvider.cs" />
     <Compile Include="DataFeeds\ZipEntryNameSubscriptionDataSourceReader.cs" />
+    <Compile Include="Results\BaseResultsHandler.cs" />
     <Compile Include="Server\LocalLeanManagement.cs" />
     <Compile Include="HistoricalData\BrokerageHistoryProvider.cs" />
     <Compile Include="HistoricalData\SubscriptionDataReaderHistoryProvider.cs" />

@@ -151,7 +151,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
 
         // this implementation is provided solely for the data reader's dependency,
         // in the future we can refactor the data reader to not use the result handler
-        private class ResultHandlerStub : IResultHandler
+        private class ResultHandlerStub : BaseResultsHandler, IResultHandler
         {
             public static readonly IResultHandler Instance = new ResultHandlerStub();
 
