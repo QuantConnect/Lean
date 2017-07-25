@@ -241,9 +241,10 @@ namespace QuantConnect.Util
                     break;
 
                 case SecurityType.Base:
-                    if (data.DataType == MarketDataType.ForexVolume)
+
+                    var vol = data as ForexVolume;
+                    if (vol != null)
                     {
-                        var vol = (ForexVolume)data;
                         switch (resolution)
                         {
                             case Resolution.Minute:

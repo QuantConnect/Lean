@@ -1,15 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using Ionic.Zip;
+﻿using Ionic.Zip;
 using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom;
 using QuantConnect.ToolBox;
 using QuantConnect.ToolBox.FxVolumeDownloader;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
 
 namespace QuantConnect.Tests.ToolBox.FxVolume
 {
@@ -83,6 +83,7 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             }
         }
 
+        [Ignore("Long Test")]
         [TestCase]
         public void MinuteDataIsCorrectlyRetrieved()
         {
@@ -95,7 +96,6 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             // Act
             var actualData = _downloader.Get(_symbol, Resolution.Minute, new DateTime(year: 2011, month: 12, day: 23),
                 new DateTime(year: 2012, month: 12, day: 02)).Cast<ForexVolume>().ToArray();
-            ;
             //Assert
             Assert.AreEqual(expectedData.Length, actualData.Length);
             for (var i = 0; i < expectedData.Length - 1; i++)
@@ -264,7 +264,7 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             }
         }
 
-        //[Ignore("Long test")]
+        [Ignore("Long test")]
         [TestCase]
         public void RequestWithMoreThan10KMinuteObservationIsCorrectlySaved()
         {
@@ -280,7 +280,7 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             Assert.AreEqual(expected: 28, actual: files.Length);
         }
 
-        //[Ignore("Long test")]
+        [Ignore("Long test")]
         [TestCase]
         public void RequestWithMoreThan10KHourlyObservationIsCorrectlySaved()
         {

@@ -13,13 +13,13 @@
  * limitations under the License.
 */
 
+using QuantConnect.Data;
+using QuantConnect.Data.Custom;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net;
-using QuantConnect.Data;
-using QuantConnect.Data.Custom;
 
 namespace QuantConnect.ToolBox.FxVolumeDownloader
 {
@@ -62,12 +62,12 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
         /// <summary>
         ///     The columns index which should be added to obtain the transactions.
         /// </summary>
-        private readonly long[] _transactionsIdx = {27, 29, 31, 33};
+        private readonly long[] _transactionsIdx = { 27, 29, 31, 33 };
 
         /// <summary>
         ///     The columns index which should be added to obtain the volume.
         /// </summary>
-        private readonly int[] _volumeIdx = {26, 28, 30, 32};
+        private readonly int[] _volumeIdx = { 26, 28, 30, 32 };
 
         /// <summary>
         ///     The request base URL.
@@ -182,7 +182,6 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
                 {
                     Symbol = symbol,
                     Time = obsTime,
-                    DataType = MarketDataType.ForexVolume,
                     Value = volume,
                     Transactions = transactions
                 });
@@ -205,7 +204,7 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
             int symbolId;
             try
             {
-                symbolId = (int) Enum.Parse(typeof(FxcmSymbolId), symbol.Value);
+                symbolId = (int)Enum.Parse(typeof(FxcmSymbolId), symbol.Value);
             }
             catch (ArgumentException)
             {

@@ -336,8 +336,6 @@ namespace QuantConnect
         OptionChain,
         /// Futures chain data
         FuturesChain,
-        /// Forex Volume
-        ForexVolume
     }
 
     /// <summary>

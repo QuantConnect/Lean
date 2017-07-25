@@ -1,7 +1,7 @@
-﻿using System;
-using System.Globalization;
-using QuantConnect.Configuration;
+﻿using QuantConnect.Configuration;
 using QuantConnect.Logging;
+using System;
+using System.Globalization;
 
 namespace QuantConnect.ToolBox.FxVolumeDownloader
 {
@@ -38,15 +38,15 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
 
                 // Load settings from command line
                 var tickers = args[0].Split(',');
-                var resolutions = new[] {Resolution.Daily};
+                var resolutions = new[] { Resolution.Daily };
 
                 if (args[1].ToLower() == "all")
                 {
-                    resolutions = new[] {Resolution.Daily, Resolution.Hour, Resolution.Minute};
+                    resolutions = new[] { Resolution.Daily, Resolution.Hour, Resolution.Minute };
                 }
                 else
                 {
-                    resolutions[0] = (Resolution) Enum.Parse(typeof(Resolution), args[1]);
+                    resolutions[0] = (Resolution)Enum.Parse(typeof(Resolution), args[1]);
                 }
 
                 var startDate = DateTime.ParseExact(args[2], "yyyyMMdd", CultureInfo.InvariantCulture);

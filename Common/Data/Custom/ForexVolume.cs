@@ -1,6 +1,6 @@
-﻿using System;
+﻿using QuantConnect.Util;
+using System;
 using System.Globalization;
-using QuantConnect.Util;
 
 namespace QuantConnect.Data.Custom
 {
@@ -10,7 +10,7 @@ namespace QuantConnect.Data.Custom
     ///       NZDUSD, EURGBP, EURJPY, GBPJPY, EURAUD, EURCAD, AUDJPY
     /// FXCM only provides support for FX symbols which produced over 110 million average daily volume (ADV) during 2013.
     /// This limit is imposed to ensure we do not highlight low volume/low ticket symbols in addition to other financial reporting concerns.
-    /// 
+    ///
     /// </summary>
     /// <seealso cref="QuantConnect.Data.BaseData" />
     public class ForexVolume : BaseData
@@ -83,7 +83,7 @@ namespace QuantConnect.Data.Custom
             }
             return new ForexVolume
             {
-                DataType = MarketDataType.ForexVolume,
+                DataType = MarketDataType.Base,
                 Symbol = config.Symbol,
                 Time = time,
                 Value = long.Parse(obs[1]),
