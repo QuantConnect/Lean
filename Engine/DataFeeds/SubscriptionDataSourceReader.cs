@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.IO;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 
@@ -49,6 +50,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 default:
                     throw new NotImplementedException("SubscriptionFactory.ForSource(" + source + ") has not been implemented yet.");
+            }
+        }
+
+        /// <summary>
+        /// Creates cache directory if not existing and deletes old files from the cache
+        /// </summary>
+        public static void CheckRemoteFileCache()
+        {
+            // create cache directory if not existing
+            if (!Directory.Exists(Globals.Cache)) Directory.CreateDirectory(Globals.Cache);
+
+            // clean old files out of the cache
+            foreach (var file in Directory.EnumerateFiles(Globals.Cache))
+            {
+                if (File.GetCreationTime(file) < DateTime.Now.AddHours(-24)) File.Delete(file);
             }
         }
     }

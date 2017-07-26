@@ -70,6 +70,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>An <see cref="IEnumerable{BaseData}"/> that contains the data in the source</returns>
         public IEnumerable<BaseData> Read(SubscriptionDataSource source)
         {
+            SubscriptionDataSourceReader.CheckRemoteFileCache();
+
             IStreamReader reader = null;
             var instances = new BaseDataCollection();
             try
