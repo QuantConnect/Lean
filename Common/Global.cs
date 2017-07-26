@@ -335,7 +335,7 @@ namespace QuantConnect
         /// Option chain data
         OptionChain,
         /// Futures chain data
-        FuturesChain,
+        FuturesChain
     }
 
     /// <summary>
