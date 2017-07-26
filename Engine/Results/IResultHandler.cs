@@ -258,5 +258,9 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <param name="logs"></param>
         void SaveLogs(string logs);
+
+        void SaveCharts(string chartName, Dictionary<string, Chart> charts);
+
+        void SaveResults(string name, Result result);
     }
 }
