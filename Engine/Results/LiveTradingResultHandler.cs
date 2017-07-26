@@ -811,7 +811,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             try
             {
-                SaveLogs(logs);
+                SaveLogs(logs.Select(x => x.Message));
             }
             catch (Exception err)
             {

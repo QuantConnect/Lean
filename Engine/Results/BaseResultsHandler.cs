@@ -10,9 +10,10 @@ namespace QuantConnect.Lean.Engine.Results
 {
     public class BaseResultsHandler
     {
-        public virtual void SaveLogs(IEnumerable<LogEntry> logs)
+        public virtual string SaveLogs(IEnumerable<string> logs)
         {
-            var joined = string.Join("\r\n", logs.Select(x => x.Message));
+            var joined = string.Join("\r\n", logs);
+            return Path.Combine(Directory.GetCurrentDirectory(), "log.txt");
         }
 
         public virtual void SaveCharts(string chartName, Dictionary<string, Chart> charts)

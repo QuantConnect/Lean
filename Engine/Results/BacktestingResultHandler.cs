@@ -32,6 +32,7 @@ using QuantConnect.Packets;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
 using System.Diagnostics;
+using System.IO;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -425,7 +426,8 @@ namespace QuantConnect.Lean.Engine.Results
                     }
 
                     //Upload Results Portion
-                    _api.Store(serialized, key, StoragePermissions.Authenticated, async);
+                    //_api.Store(serialized, key, StoragePermissions.Authenticated, async);
+                    SaveResults(key, result.Results);
                 }
             }
             catch (Exception err)
@@ -726,7 +728,7 @@ namespace QuantConnect.Lean.Engine.Results
             // Only process the logs once
             if (!_exitTriggered)
             {
-                var logLocation = ProcessLogMessages(_job);
+                var logLocation = ProcessLogMessages();
                 SystemDebugMessage("Your log was successfully created and can be retrieved from: " + logLocation);
             }
 
@@ -794,9 +796,9 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <param name="job">Algorithm job/task packet</param>
         /// <returns>String URL of log</returns>
-        private string ProcessLogMessages(AlgorithmNodePacket job)
+        private string ProcessLogMessages()
         {
-            return _api.StoreLogs(_log, job, StoragePermissions.Public, false);
+            return SaveLogs(_log);
         }
 
         /// <summary>
