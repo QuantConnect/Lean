@@ -811,11 +811,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             try
             {
-                //Concatenate and upload the log file:
-                var joined = string.Join("\r\n", logs.Select(x=>x.Message));
-                //var key = "live/" + _job.UserId + "/" + _job.ProjectId + "/" + _job.DeployId + "-" + DateTime.UtcNow.ToString("yyyy-MM-dd-HH") + "-log.txt";
-                //_api.Store(joined, key, StoragePermissions.Authenticated);
-                base.SaveLogs(joined);
+                SaveLogs(logs);
             }
             catch (Exception err)
             {
@@ -834,13 +830,6 @@ namespace QuantConnect.Lean.Engine.Results
         /// </remarks>
         public void StoreResult(Packet packet, bool async = true)
         {
-            // this will hold all the serialized data and the keys to be stored
-            //var data_keys = Enumerable.Range(0, 0).Select(x => new
-            //{
-            //    Key = (string)null,
-            //    Serialized = (string)null
-            //}).ToList();
-
             try
             {
                 Log.Debug("LiveTradingResultHandler.StoreResult(): Begin store result sampling");
@@ -869,11 +858,6 @@ namespace QuantConnect.Lean.Engine.Results
 
                         // swap out our charts with the sampeld data
                         live.Results.Charts = minuteCharts;
-                        //data_keys.Add(new
-                        //{
-                        //    Key = CreateKey("minute"),
-                        //    Serialized = JsonConvert.SerializeObject(live.Results)
-                        //});
                         SaveCharts(CreateKey("minute"), minuteCharts);
 
                         // 10 minute resolution data, save today
@@ -881,11 +865,6 @@ namespace QuantConnect.Lean.Engine.Results
                         var tenminuteCharts = tenminuteSampler.SampleCharts(live.Results.Charts, start, stop);
 
                         live.Results.Charts = tenminuteCharts;
-                        //data_keys.Add(new
-                        //{
-                        //    Key = CreateKey("10minute"),
-                        //    Serialized = JsonConvert.SerializeObject(live.Results)
-                        //});
                         SaveCharts(CreateKey("10minute"), tenminuteCharts);
 
                         // high resolution data, we only want to save an hour
@@ -904,11 +883,6 @@ namespace QuantConnect.Lean.Engine.Results
                             result.Charts.Add(name, live.Results.Charts[name]);
 
                             SaveResults(CreateKey("second_" + Uri.EscapeUriString(name), "yyyy-MM-dd-HH"), result);
-                            //data_keys.Add(new
-                            //{
-                            //    Key = CreateKey("second_" + Uri.EscapeUriString(name), "yyyy-MM-dd-HH"),
-                            //    Serialized = JsonConvert.SerializeObject(newPacket)
-                            //});
                         }
                     }
                     else
