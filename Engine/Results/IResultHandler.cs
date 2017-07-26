@@ -255,13 +255,23 @@ namespace QuantConnect.Lean.Engine.Results
         void ProcessSynchronousEvents(bool forceProcess = false);
 
         /// <summary>
-        /// 
+        /// Save the logs
         /// </summary>
-        /// <param name="logs"></param>
+        /// <param name="logs">The logs to save</param>
         string SaveLogs(IEnumerable<string> logs);
 
+        /// <summary>
+        /// Save the charts
+        /// </summary>
+        /// <param name="chartName">The name of the chart</param>
+        /// <param name="charts">The charts to save</param>
         void SaveCharts(string chartName, Dictionary<string, Chart> charts);
 
+        /// <summary>
+        /// Save the results
+        /// </summary>
+        /// <param name="name">The name of the results</param>
+        /// <param name="result">The results to save</param>
         void SaveResults(string name, Result result);
     }
 }

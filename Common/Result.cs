@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using QuantConnect.Orders;
+using QuantConnect.Packets;
 
 namespace QuantConnect
 {
+    /// <summary>
+    /// Base class for backtesting and live results that packages result data.
+    /// <see cref="LiveResult"/>
+    /// <see cref="BacktestResult"/>
+    /// </summary>
     public class Result
     {
         /// <summary>

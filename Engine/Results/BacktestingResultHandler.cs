@@ -78,7 +78,6 @@ namespace QuantConnect.Lean.Engine.Results
         private DateTime _startTime;
         private DateTime _nextSample;
         private IMessagingHandler _messagingHandler;
-        private IApi _api;
         private ITransactionHandler _transactionHandler;
         private ISetupHandler _setupHandler;
 
@@ -207,7 +206,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="transactionHandler"></param>
         public void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, IDataFeed dataFeed, ISetupHandler setupHandler, ITransactionHandler transactionHandler)
         {
-            _api = api;
+            Log.Trace("BacktestingResultHandler.Initialize(): Initializing BacktestingResultHanlder.");
             _messagingHandler = messagingHandler;
             _transactionHandler = transactionHandler;
             _setupHandler = setupHandler;
@@ -398,10 +397,6 @@ namespace QuantConnect.Lean.Engine.Results
         /// <remarks>Async creates crashes in Mono 3.10 if the thread disappears before the upload is complete so it is disabled for now.</remarks>
         public void StoreResult(Packet packet, bool async = false)
         {
-            //Initialize:
-            var serialized = "";
-            var key = "";
-
             try
             {
                 lock (_chartLock)
@@ -415,19 +410,15 @@ namespace QuantConnect.Lean.Engine.Results
                     if (result != null)
                     {
                         //3. Get Storage Location:
-                        key = "backtests/" + _job.UserId + "/" + _job.ProjectId + "/" + _job.BacktestId + ".json";
+                        var key = _job.BacktestId + ".json";
 
-                        //4. Serialize to JSON:
-                        serialized = JsonConvert.SerializeObject(result.Results);
+                        //4. Save results
+                        SaveResults(key, result.Results);
                     }
                     else 
                     {
                         Log.Error("BacktestingResultHandler.StoreResult(): Result Null.");
                     }
-
-                    //Upload Results Portion
-                    //_api.Store(serialized, key, StoragePermissions.Authenticated, async);
-                    SaveResults(key, result.Results);
                 }
             }
             catch (Exception err)
