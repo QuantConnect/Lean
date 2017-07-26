@@ -65,7 +65,7 @@ namespace QuantConnect.Algorithm
         {
             AddData(type, symbol, Resolution.Minute, TimeZones.NewYork, false, 1m);
         }
-        
+
 
         /// <summary>
         /// AddData a new user defined data source, requiring only the minimum config options.
@@ -78,8 +78,7 @@ namespace QuantConnect.Algorithm
         /// <param name="leverage">Custom leverage per security</param>
         public void AddData(PyObject type, string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
-            var objectType = CreateType(type.Repr().Split('.')[1].Replace("\'>", ""));
-            AddData(objectType, symbol, resolution, timeZone, fillDataForward, leverage);
+            AddData(CreateType(type), symbol, resolution, timeZone, fillDataForward, leverage);
         }
 
         /// <summary>
@@ -129,7 +128,7 @@ namespace QuantConnect.Algorithm
             var fine = ToFunc<FineFundamental>(pyfine);
             AddUniverse(coarse, fine);
         }
-        
+
         /// <summary>
         /// Registers the consolidator to receive automatic updates as well as configures the indicator to receive updates
         /// from the consolidator.
@@ -350,7 +349,7 @@ namespace QuantConnect.Algorithm
         {
             var symbols = GetSymbolsFromPyObject(tickers);
             if (symbols == null) return null;
-            
+
             return CreatePandasDataFrame(symbols, History(symbols, span, resolution));
         }
 
@@ -443,22 +442,26 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Creates a type with a given name
         /// </summary>
-        /// <param name="typeName">Name of the new type</param>
+        /// <param name="type">Python object</param>
         /// <returns>Type object</returns>
-        private Type CreateType(string typeName)
+        private Type CreateType(PyObject type)
         {
-            var an = new AssemblyName(typeName);
-            var assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(an, AssemblyBuilderAccess.Run);
-            var moduleBuilder = assemblyBuilder.DefineDynamicModule("MainModule");
-            return moduleBuilder.DefineType(typeName,
-                    TypeAttributes.Public |
-                    TypeAttributes.Class |
-                    TypeAttributes.AutoClass |
-                    TypeAttributes.AnsiClass |
-                    TypeAttributes.BeforeFieldInit |
-                    TypeAttributes.AutoLayout,
-                    typeof(PythonData))
-                .CreateType();
+            using (Py.GIL())
+            {
+                var an = new AssemblyName(type.Repr().Split('.')[1].Replace("\'>", ""));
+                var assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(an, AssemblyBuilderAccess.Run);
+                var moduleBuilder = assemblyBuilder.DefineDynamicModule("MainModule");
+                return moduleBuilder.DefineType(an.Name,
+                        TypeAttributes.Public |
+                        TypeAttributes.Class |
+                        TypeAttributes.AutoClass |
+                        TypeAttributes.AnsiClass |
+                        TypeAttributes.BeforeFieldInit |
+                        TypeAttributes.AutoLayout,
+                        // If the type has IsAuthCodeSet member, it is a PythonQuandl
+                        type.HasAttr("IsAuthCodeSet") ? typeof(PythonQuandl) : typeof(PythonData))
+                    .CreateType();
+            }
         }
 
         /// <summary>

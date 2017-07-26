@@ -311,6 +311,7 @@
     <Compile Include="Parameters\ParameterAttribute.cs" />
     <Compile Include="Properties\SharedAssemblyInfo.cs" />
     <Compile Include="Python\PythonData.cs" />
+    <Compile Include="Python\PythonQuandl.cs" />
     <Compile Include="Scheduling\CompositeTimeRule.cs" />
     <Compile Include="Scheduling\DateRules.cs" />
     <Compile Include="Scheduling\FluentScheduledEventBuilder.cs" />
