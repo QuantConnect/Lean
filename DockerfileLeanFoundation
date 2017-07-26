@@ -69,3 +69,9 @@ RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz \
     && make \
     && make install \ 
     && pip install TA-lib
+
+# Install R
+RUN apt-get update \
+    && apt-get install -y r-base \
+    && apt-get install -y pandoc \
+    && apt-get install -y libcurl4-openssl-dev
