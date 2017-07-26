@@ -101,7 +101,7 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
         {
             var data = new List<BaseData>();
             var requestDayInterval = 0;
-            var writer = new LeanDataWriter(resolution, symbol, _dataDirectory);
+            var writer = new ForexVolumeWriter(resolution, symbol, _dataDirectory);
             var intermediateStartDate = startUtc;
             var intermediateEndDate = endUtc;
 
