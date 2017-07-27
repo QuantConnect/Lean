@@ -112,7 +112,7 @@ For Linux users:
 sudo apt-get update && apt-get install -y r-base && apt-get install -y pandoc && apt-get install -y libcurl4-openssl-dev
 ```
 For Windows and macOs users:
-Please visit the official R website to download R. https://www.r-project.org/
+Please visit the official [R website](https://www.r-project.org/) to download R. 
 
 ### QuantConnect plugin
 
