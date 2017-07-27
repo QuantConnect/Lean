@@ -28,15 +28,7 @@ namespace QuantConnect.Data.Custom
         ///     The volume measured in the QUOTE CURRENCY.
         /// </summary>
         /// <remarks>Please remember to convert this data to a common currency before making comparison between different pairs.</remarks>
-        public new long Value { get; set; }
-
-        /// <summary>
-        ///     The volume measured in the QUOTE CURRENCY.
-        /// </summary>
-        public new long Price
-        {
-            get { return Value; }
-        }
+        public long Value { get; set; }
 
         /// <summary>
         ///     Return the URL string source of the file. This will be converted to a stream

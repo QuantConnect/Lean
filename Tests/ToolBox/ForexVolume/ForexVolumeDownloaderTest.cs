@@ -10,30 +10,45 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
+using System.Reflection;
 
 namespace QuantConnect.Tests.ToolBox.FxVolume
 {
+    /// <summary>
+    /// The rationality is to test the main functionalities:
+    ///     - Data is correctly parsed.
+    ///     - Data is correctly saved.
+    ///     - Lean can read the saved data.
+    /// </summary>
     [TestFixture]
     public class ForexVolumeDownloaderTest
     {
         private string _dataDirectory;
+        private List<string> _testingTempFolders = new List<string>();
+
         private ForexVolumeDownloader _downloader;
         private readonly Symbol _eurusd = Symbol.Create("EURUSD", SecurityType.Base, Market.FXCM);
 
         [SetUp]
         public void SetUpTemporatyFolder()
         {
-            var randomFolder = "ForexVolumeTesting_" + Guid.NewGuid().ToString("N").Substring(startIndex: 0, length: 6);
-            _dataDirectory = Path.Combine(Path.GetTempPath(), randomFolder);
+            var randomFolder = Guid.NewGuid().ToString("N").Substring(startIndex: 0, length: 8);
+            var assemblyFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            _dataDirectory = Path.Combine(assemblyFolder, randomFolder);
             _downloader = new ForexVolumeDownloader(_dataDirectory);
+            _testingTempFolders.Add(_dataDirectory);
         }
 
-        [TearDown]
+        [TestFixtureTearDown]
         public void CleanTemporaryFolder()
         {
-            //TODO: CLEAN!
-            //if(Directory.Exists(_dataDirectory)) Directory.Delete(_dataDirectory, true);
+            foreach (var testingTempFolder in _testingTempFolders)
+            {
+                if (Directory.Exists(testingTempFolder))
+                {
+                    Directory.Delete(testingTempFolder, true);
+                }
+            }
         }
 
         [TestCase("./TestData/fxVolumeDaily.csv", "EURUSD", Resolution.Daily, "2016-12-01", 61)]
@@ -146,7 +161,7 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
         }
 
         //[Ignore("Long test")]
-        [TestCase]
+        [Test]
         public void RequestWithMoreThan10KMinuteObservationIsCorrectlySaved()
         {
             // Arrange
@@ -160,9 +175,9 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             var files = Directory.GetFiles(outputFolder, "*.zip", SearchOption.AllDirectories);
             Assert.AreEqual(expected: 28, actual: files.Length);
         }
-        
+
         //[Ignore("Long test")]
-        [TestCase]
+        [Test]
         public void RequestWithMoreThan10KHourlyObservationIsCorrectlySaved()
         {
             // Arrange
@@ -206,6 +221,6 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             return actualdata;
         }
 
-        #endregion
+        #endregion Auxiliary Methods
     }
 }

@@ -34,30 +34,36 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
             if (!Directory.Exists(_folderPath)) Directory.CreateDirectory(_folderPath);
             if (_resolution == Resolution.Minute)
             {
-                var sb = new StringBuilder();
-                var volData = data.Cast<ForexVolume>();
-                var dataByDay = volData.GroupBy(o => o.Time.Date);
-                foreach (var dayOfData in dataByDay)
-                {
-                    foreach (var obs in dayOfData)
-                    {
-                        sb.AppendLine(string.Format("{0},{1},{2}", obs.Time.TimeOfDay.TotalMilliseconds, obs.Value, obs.Transactions));
-                    }
-                    var filename = string.Format("{0:yyyyMMdd}_trade.csv", dayOfData.Key);
-                    var filePath = Path.Combine(_folderPath, filename);
-                    File.WriteAllText(filePath, sb.ToString());
-                    // Write out this data string to a zip file
-                    Compression.Zip(filePath, filename);
-                    sb.Clear();
-                }
+                WriteMinuteData(data);
             }
             else
             {
-                WriteHourAndDailyData(data, _folderPath);
+                WriteHourAndDailyData(data);
             }
         }
 
-        private void WriteHourAndDailyData(IEnumerable<BaseData> data, string folderPath)
+        private void WriteMinuteData(IEnumerable<BaseData> data)
+        {
+            var sb = new StringBuilder();
+            var volData = data.Cast<ForexVolume>();
+            var dataByDay = volData.GroupBy(o => o.Time.Date);
+            foreach (var dayOfData in dataByDay)
+            {
+                foreach (var obs in dayOfData)
+                {
+                    sb.AppendLine(string.Format("{0},{1},{2}", obs.Time.TimeOfDay.TotalMilliseconds, obs.Value,
+                        obs.Transactions));
+                }
+                var filename = string.Format("{0:yyyyMMdd}_trade.csv", dayOfData.Key);
+                var filePath = Path.Combine(_folderPath, filename);
+                File.WriteAllText(filePath, sb.ToString());
+                // Write out this data string to a zip file
+                Compression.Zip(filePath, filename);
+                sb.Clear();
+            }
+        }
+
+        private void WriteHourAndDailyData(IEnumerable<BaseData> data)
         {
             var sb = new StringBuilder();
 
@@ -69,7 +75,7 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
             }
 
             var filename = _symbol.Value.ToLower() + ".csv";
-            var filePath = Path.Combine(folderPath, filename);
+            var filePath = Path.Combine(_folderPath, filename);
             File.WriteAllText(filePath, sb.ToString());
             // Write out this data string to a zip file
             Compression.Zip(filePath, filename);
