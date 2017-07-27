@@ -87,6 +87,8 @@ If you get: "Error initializing task Fsc: Not registered task Fsc." -> `sudo apt
 
 If you get: "XX not found" -> Make sure Nuget ran successfully, and re-run if neccessary.
 
+If you get other errors that lead to the failure of your building, please refer to the commands in "DockerfileLeanFoundation" file for help.
+
 - Run the compiled `exe` file:
 ```
 cd Lean/Launcher/bin/Debug
