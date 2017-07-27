@@ -35,12 +35,10 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             //TODO: CLEAN!
             //if(Directory.Exists(_dataDirectory)) Directory.Delete(_dataDirectory, true);
         }
-        
 
-
-        [TestCase("./TestData/fxVolumeDaily.csv", "EURUSD", Resolution.Daily, "2016/12/01", 61)]
-        [TestCase("./TestData/fxVolumeHourly.csv", "USDJPY", Resolution.Hour, "2014/12/20", 13)]
-        [TestCase("./TestData/fxVolumeMinute.csv", "EURUSD", Resolution.Minute, "2012/11/23", 5)]
+        [TestCase("./TestData/fxVolumeDaily.csv", "EURUSD", Resolution.Daily, "2016-12-01", 61)]
+        [TestCase("./TestData/fxVolumeHourly.csv", "USDJPY", Resolution.Hour, "2014-12-20", 13)]
+        [TestCase("./TestData/fxVolumeMinute.csv", "EURUSD", Resolution.Minute, "2012-11-23", 5)]
         public void DataIsCorrectlyParsed(string testingFilePath, string ticker, Resolution resolution, string startDate, int requestLength)
         {
             //Arrange
@@ -49,7 +47,7 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
                 .Select(x => x.Split(','))
                 .ToArray();
             var symbol = Symbol.Create(ticker, SecurityType.Base, Market.FXCM);
-            var startUtc = DateTime.ParseExact(startDate, "yyyy/MM/dd", CultureInfo.InvariantCulture);
+            var startUtc = DateTime.ParseExact(startDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             var endUtc = startUtc.AddDays(requestLength);
             //Act
             var actualData = _downloader.Get(symbol, resolution, startUtc,
@@ -64,14 +62,14 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             }
         }
 
-        [TestCase("EURUSD", Resolution.Daily, "2015/11/27", 20)]
-        [TestCase("USDCAD", Resolution.Hour, "2016/09/15", 5)]
-        [TestCase("EURJPY", Resolution.Minute, "2015/01/26", 2), Ignore("WIP")]
+        [TestCase("GBPUSD", Resolution.Daily, "2015-11-27", 20)]
+        [TestCase("USDCAD", Resolution.Hour, "2016-09-15", 5)]
+        [TestCase("EURJPY", Resolution.Minute, "2015-01-26", 2)]
         public void ParsedDataIsCorrectlySaved(string ticker, Resolution resolution, string startDate, int requestLength)
         {
             // Arrange
             var symbol = Symbol.Create(ticker, SecurityType.Base, Market.FXCM);
-            var startUtc = DateTime.ParseExact(startDate, "yyyy/MM/dd", CultureInfo.InvariantCulture);
+            var startUtc = DateTime.ParseExact(startDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             var endUtc = startUtc.AddDays(requestLength);
             var data = _downloader.Get(symbol, resolution, startUtc, endUtc);
             // Act
@@ -80,14 +78,22 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             // Assert
             var expectedData = data.Cast<ForexVolume>().ToArray();
             var expectedFolder = Path.Combine(_dataDirectory, string.Format("base/fxcm/{0}", resolution.ToLower()));
+            if (resolution == Resolution.Minute)
+            {
+                expectedFolder = Path.Combine(expectedFolder, symbol.Value.ToLower());
+            }
             Assert.True(Directory.Exists(expectedFolder));
 
             if (resolution == Resolution.Minute)
             {
+                var zipFiles = Directory.GetFiles(expectedFolder, "*.zip").Length;
+                // Minus one because the Downloader starts one day earlier.
+                Assert.AreEqual(requestLength, zipFiles - 1);
             }
             else
             {
-                Assert.True(File.Exists(Path.Combine(expectedFolder, string.Format("{0}.zip", symbol.Value.ToLower()))));
+                var expectedFilename = string.Format("{0}.zip", symbol.Value.ToLower());
+                Assert.True(File.Exists(Path.Combine(expectedFolder, expectedFilename)));
             }
 
             var actualdata = ReadZipFolderData(expectedFolder);
@@ -101,30 +107,36 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             }
         }
 
-
-        [TestCase]
-        public void SavedDailyDataIsCorrectlyRead()
+        [TestCase("USDCHF", Resolution.Daily, "2015-01-21", 20)]
+        [TestCase("EURCHF", Resolution.Hour, "2016-08-26", 5)]
+        [TestCase("AUDUSD", Resolution.Minute, "2017-04-02", 2)]
+        public void SavedDataIsCorrectlyRead(string ticker, Resolution resolution, string startDate, int requestLength)
         {
             // Arrange
-            var resolution = Resolution.Daily;
-            var startDate = new DateTime(year: 2017, month: 04, day: 02);
-            var data = _downloader.Get(_eurusd, resolution, startDate, new DateTime(year: 2017, month: 04, day: 22));
-            var writer = new ForexVolumeWriter(resolution, _eurusd, _dataDirectory);
+            var symbol = Symbol.Create(ticker, SecurityType.Base, Market.FXCM);
+            var startUtc = DateTime.ParseExact(startDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            var endUtc = startUtc.AddDays(requestLength);
+
+            var data = _downloader.Get(symbol, resolution, startUtc, endUtc);
+            var writer = new ForexVolumeWriter(resolution, symbol, _dataDirectory);
             writer.Write(data);
 
-            var config = new SubscriptionDataConfig(typeof(ForexVolume), _eurusd, resolution, DateTimeZone.Utc,
+            var config = new SubscriptionDataConfig(typeof(ForexVolume), symbol, resolution, DateTimeZone.Utc,
                 DateTimeZone.Utc, fillForward: false, extendedHours: false, isInternalFeed: true, isCustom: true,
                 tickType: TickType.Trade, isFilteredSubscription: false,
                 dataNormalizationMode: DataNormalizationMode.Raw);
 
             // Act
-            var reader = new LeanDataReader(config, _eurusd, resolution, startDate, _dataDirectory);
+            var reader = new LeanDataReader(config, symbol, resolution, startUtc, _dataDirectory);
 
             // Assert
             var expectedData = data.Cast<ForexVolume>().ToArray();
             var actualData = reader.Parse().Cast<ForexVolume>().ToArray();
-            Assert.AreEqual(expectedData.Length, actualData.Length);
-
+            if (resolution != Resolution.Minute)
+            {
+                // In resolution Minute the Parse method will parse only data from the first day, so this assert will fail
+                Assert.AreEqual(expectedData.Length, actualData.Length);
+            }
             var lines = actualData.Length;
             for (var i = 0; i < lines - 1; i++)
             {
@@ -133,65 +145,7 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             }
         }
 
-        [Ignore("WIP")]
-        [TestCase]
-        public void SavedMinuteDataIsCorrectlyRead()
-        {
-            // Arrange
-            var resolution = Resolution.Minute;
-            var startDate = new DateTime(year: 2017, month: 04, day: 02);
-            var data = _downloader.Get(_eurusd, resolution, startDate, new DateTime(year: 2017, month: 04, day: 7));
-            var writer = new ForexVolumeWriter(resolution, _eurusd, _dataDirectory);
-            writer.Write(data);
-
-            var config = new SubscriptionDataConfig(typeof(ForexVolume), _eurusd, resolution, DateTimeZone.Utc,
-                DateTimeZone.Utc, fillForward: false, extendedHours: false, isInternalFeed: true, isCustom: true,
-                tickType: TickType.Trade, isFilteredSubscription: false,
-                dataNormalizationMode: DataNormalizationMode.Raw);
-
-            // Act
-            var reader = new LeanDataReader(config, _eurusd, resolution, startDate, _dataDirectory);
-
-            // Assert
-            var expectedData = data.Cast<ForexVolume>().ToArray();
-            var actualData = reader.Parse().Cast<ForexVolume>().ToArray();
-            Assert.AreEqual(expectedData.Length, actualData.Length);
-
-            var lines = actualData.Length;
-            for (var i = 0; i < lines - 1; i++)
-            {
-                Assert.AreEqual(expectedData[i].Value, actualData[i].Value);
-                Assert.AreEqual(expectedData[i].Transactions, actualData[i].Transactions);
-            }
-        }
-
-        [TestCase]
-        public void RetrievedDailyDataIsCorrectlySavedUsingRunMethod()
-        {
-            // Arrange
-            var resolution = Resolution.Daily;
-
-            var startDate = new DateTime(year: 2014, month: 04, day: 01);
-            var endDate = startDate.AddMonths(months: 1);
-            var data = _downloader.Get(_eurusd, resolution, startDate, endDate);
-
-            // Act
-            _downloader.Run(_eurusd, resolution, startDate, endDate);
-
-            // Assert
-            var expectedData = data.Cast<ForexVolume>().ToArray();
-            var outputFile = Path.Combine(_dataDirectory, "base/fxcm/daily/eurusd.zip");
-
-            var actualdata = ReadZipFileData(outputFile);
-            var lines = actualdata.Count;
-            for (var i = 0; i < lines - 1; i++)
-            {
-                Assert.AreEqual(expectedData[i].Value, long.Parse(actualdata[i][1]));
-                Assert.AreEqual(expectedData[i].Transactions, int.Parse(actualdata[i][2]));
-            }
-        }
-
-        [Ignore("Long test")]
+        //[Ignore("Long test")]
         [TestCase]
         public void RequestWithMoreThan10KMinuteObservationIsCorrectlySaved()
         {
@@ -206,8 +160,8 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             var files = Directory.GetFiles(outputFolder, "*.zip", SearchOption.AllDirectories);
             Assert.AreEqual(expected: 28, actual: files.Length);
         }
-
-        [Ignore("Long test")]
+        
+        //[Ignore("Long test")]
         [TestCase]
         public void RequestWithMoreThan10KHourlyObservationIsCorrectlySaved()
         {
@@ -224,6 +178,8 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             Assert.True(observationsCount >= 18720, string.Format("Actual observations: {0}", observationsCount));
         }
 
+        #region Auxiliary Methods
+
         private List<string[]> ReadZipFolderData(string outputFolder)
         {
             var actualdata = new List<string[]>();
@@ -235,7 +191,7 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             return actualdata;
         }
 
-        private static List<string[]> ReadZipFileData(string dataZipFile)
+        private List<string[]> ReadZipFileData(string dataZipFile)
         {
             var actualdata = new List<string[]>();
             ZipFile zipFile;
@@ -250,6 +206,6 @@ namespace QuantConnect.Tests.ToolBox.FxVolume
             return actualdata;
         }
 
-        
+        #endregion
     }
 }

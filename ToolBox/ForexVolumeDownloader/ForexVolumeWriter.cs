@@ -23,6 +23,10 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
             _dataDirectory = dataDirectory;
             _market = _symbol.ID.Market;
             _folderPath = Path.Combine(new[] {_dataDirectory, "base", _market.ToLower(), _resolution.ToString().ToLower()});
+            if (resolution == Resolution.Minute)
+            {
+                _folderPath = Path.Combine(_folderPath, symbol.Value.ToLower());
+            }
         }
 
         public void Write(IEnumerable<BaseData> data)
@@ -30,6 +34,22 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
             if (!Directory.Exists(_folderPath)) Directory.CreateDirectory(_folderPath);
             if (_resolution == Resolution.Minute)
             {
+                var sb = new StringBuilder();
+                var volData = data.Cast<ForexVolume>();
+                var dataByDay = volData.GroupBy(o => o.Time.Date);
+                foreach (var dayOfData in dataByDay)
+                {
+                    foreach (var obs in dayOfData)
+                    {
+                        sb.AppendLine(string.Format("{0},{1},{2}", obs.Time.TimeOfDay.TotalMilliseconds, obs.Value, obs.Transactions));
+                    }
+                    var filename = string.Format("{0:yyyyMMdd}_trade.csv", dayOfData.Key);
+                    var filePath = Path.Combine(_folderPath, filename);
+                    File.WriteAllText(filePath, sb.ToString());
+                    // Write out this data string to a zip file
+                    Compression.Zip(filePath, filename);
+                    sb.Clear();
+                }
             }
             else
             {
