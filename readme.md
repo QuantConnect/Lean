@@ -74,10 +74,6 @@ sudo apt-get install -y binutils mono-complete ca-certificates-mono referenceass
 ```
 sudo apt-get update && apt-get install -y nuget python-pip
 ```
-- Install R-base
-```
-sudo apt-get update && apt-get install -y r-base && apt-get install -y pandoc && apt-get install -y libcurl4-openssl-dev
-```
 - Restore NuGet packages then compile:
 ```
 nuget restore QuantConnect.Lean.sln
@@ -107,6 +103,16 @@ By default Visual Studio includes NuGet, if your version cannot find DLL referen
 - Install [pandas](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
 - Windows: rename `Lean\packages\QuantConnect.pythonnet._version_\build\Python.Runtime.win` to `Lean\packages\QuantConnect.pythonnet._version_\lib\Python.Runtime.dll`
 - macOs: rename `Lean\packages\QuantConnect.pythonnet._version_\build\Python.Runtime.mac` to `Lean\packages\QuantConnect.pythonnet._version_\lib\Python.Runtime.dll`
+
+### R Support
+
+- Install R-base if you need to call R in your algorithm.
+For Linux users:
+```
+sudo apt-get update && apt-get install -y r-base && apt-get install -y pandoc && apt-get install -y libcurl4-openssl-dev
+```
+For Windows and macOs users:
+Please visit the official R website to download R. https://www.r-project.org/
 
 ### QuantConnect plugin
 
