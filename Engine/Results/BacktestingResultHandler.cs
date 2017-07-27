@@ -718,7 +718,7 @@ namespace QuantConnect.Lean.Engine.Results
             // Only process the logs once
             if (!_exitTriggered)
             {
-                var logLocation = ProcessLogMessages();
+                var logLocation = SaveLogs(_job.BacktestId, _log);
                 SystemDebugMessage("Your log was successfully created and can be retrieved from: " + logLocation);
             }
 
@@ -779,16 +779,6 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 _runtimeStatistics[key] = value;
             }
-        }
-
-        /// <summary>
-        /// Process log messages and return a string indicating the location of the logs
-        /// </summary>
-        /// <param name="job">Algorithm job/task packet</param>
-        /// <returns>String URL of log</returns>
-        private string ProcessLogMessages()
-        {
-            return SaveLogs(_log);
         }
 
         /// <summary>

@@ -478,6 +478,7 @@
     <Compile Include="Statistics\TradeBuilder.cs" />
     <Compile Include="Statistics\TradeEnums.cs" />
     <Compile Include="SymbolCache.cs" />
+    <Compile Include="Result.cs" />
     <Compile Include="SymbolJsonConverter.cs" />
     <Compile Include="SymbolRepresentation.cs" />
     <Compile Include="SymbolValueJsonConverter.cs" />

@@ -22,7 +22,6 @@ using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Lean.Engine.TransactionHandlers;
-using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Statistics;
@@ -257,15 +256,9 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Save the logs
         /// </summary>
+        /// <param name="id">Id that will be incorporated into the algorithm log name</param>
         /// <param name="logs">The logs to save</param>
-        string SaveLogs(IEnumerable<string> logs);
-
-        /// <summary>
-        /// Save the charts
-        /// </summary>
-        /// <param name="chartName">The name of the chart</param>
-        /// <param name="charts">The charts to save</param>
-        void SaveCharts(string chartName, Dictionary<string, Chart> charts);
+        string SaveLogs(string id, IEnumerable<string> logs);
 
         /// <summary>
         /// Save the results

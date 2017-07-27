@@ -12,23 +12,14 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Returns the location of the logs
         /// </summary>
+        /// <param name="id">Id that will be incorporated into the algorithm log name</param>
         /// <param name="logs">The logs to save</param>
         /// <returns>The path to the logs</returns>
-        public virtual string SaveLogs(IEnumerable<string> logs)
+        public virtual string SaveLogs(string id, IEnumerable<string> logs)
         {
-            // When running lean locally, the logs are written to disk by the LogHandler
-            // Just return the location of this log file
-            return Path.Combine(Directory.GetCurrentDirectory(), "log.txt");
-        }
-
-        /// <summary>
-        /// Save the charts to disk
-        /// </summary>
-        /// <param name="chartName">The name of the chart</param>
-        /// <param name="charts">The charts to save</param>
-        public virtual void SaveCharts(string chartName, Dictionary<string, Chart> charts)
-        {
-            File.WriteAllText(chartName, JsonConvert.SerializeObject(charts));
+            var path = $"{id}-log.txt";
+            File.WriteAllLines(path, logs);
+            return Path.Combine(Directory.GetCurrentDirectory(), path);
         }
 
         /// <summary>

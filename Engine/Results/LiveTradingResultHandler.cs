@@ -180,7 +180,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="dataFeed"></param>
         /// <param name="setupHandler"></param>
         /// <param name="transactionHandler"></param>
-        public void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, IDataFeed dataFeed, ISetupHandler setupHandler, ITransactionHandler transactionHandler)
+        public virtual void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, IDataFeed dataFeed, ISetupHandler setupHandler, ITransactionHandler transactionHandler)
         {
             _api = api;
             _dataFeed = dataFeed;
@@ -811,7 +811,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             try
             {
-                SaveLogs(logs.Select(x => x.Message));
+                SaveLogs(_job.DeployId, logs.Select(x => x.Message));
             }
             catch (Exception err)
             {
@@ -858,14 +858,14 @@ namespace QuantConnect.Lean.Engine.Results
 
                         // swap out our charts with the sampeld data
                         live.Results.Charts = minuteCharts;
-                        SaveCharts(CreateKey("minute"), minuteCharts);
+                        SaveResults(CreateKey("minute"), live.Results);
 
                         // 10 minute resolution data, save today
                         var tenminuteSampler = new SeriesSampler(TimeSpan.FromMinutes(10));
                         var tenminuteCharts = tenminuteSampler.SampleCharts(live.Results.Charts, start, stop);
 
                         live.Results.Charts = tenminuteCharts;
-                        SaveCharts(CreateKey("10minute"), tenminuteCharts);
+                        SaveResults(CreateKey("10minute"), live.Results);
 
                         // high resolution data, we only want to save an hour
                         live.Results.Charts = highResolutionCharts;
@@ -982,7 +982,7 @@ namespace QuantConnect.Lean.Engine.Results
 
         private string CreateKey(string suffix, string dateFormat = "yyyy-MM-dd")
         {
-            return string.Format("{2}-{3}_{4}.json", _job.DeployId, DateTime.UtcNow.ToString(dateFormat), suffix);
+            return string.Format("{0}-{1}_{2}.json", _job.DeployId, DateTime.UtcNow.ToString(dateFormat), suffix);
         }
 
 
