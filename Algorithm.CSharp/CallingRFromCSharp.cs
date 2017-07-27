@@ -25,7 +25,6 @@ namespace QuantConnect.Algorithm.CSharp
     public class CallingRFromCSharp : QCAlgorithm
     {
         private Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-        REngine engine = REngine.GetInstance();
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -37,6 +36,21 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);             //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
             AddEquity("SPY", Resolution.Second);
+            
+            REngine engine = REngine.GetInstance();
+            engine.Evaluate("print('This is from R command.')");
+            // .NET Framework array to R vector.
+            NumericVector group1 = engine.CreateNumericVector(new double[] { 30.02, 29.99, 30.11, 29.97, 30.01, 29.99 });
+            engine.SetSymbol("group1", group1);
+            // Direct parsing from R script.
+            NumericVector group2 = engine.Evaluate("group2 <- c(29.89, 29.93, 29.72, 29.98, 30.02, 29.98)").AsNumeric();
+            // Test difference of mean and get the P-value.
+            GenericVector testResult = engine.Evaluate("t.test(group1, group2)").AsList();
+            double p = testResult["p.value"].AsNumeric().First();
+            // you should always dispose of the REngine properly.
+            // After disposing of the engine, you cannot reinitialize nor reuse it
+            engine.Dispose();
+            
         }
 
         /// <summary>
@@ -47,20 +61,6 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                engine.Evaluate("print('This is from R command.')");
-                // .NET Framework array to R vector.
-                NumericVector group1 = engine.CreateNumericVector(new double[] { 30.02, 29.99, 30.11, 29.97, 30.01, 29.99 });
-                engine.SetSymbol("group1", group1);
-                // Direct parsing from R script.
-                NumericVector group2 = engine.Evaluate("group2 <- c(29.89, 29.93, 29.72, 29.98, 30.02, 29.98)").AsNumeric();
-                // Test difference of mean and get the P-value.
-                GenericVector testResult = engine.Evaluate("t.test(group1, group2)").AsList();
-
-                double p = testResult["p.value"].AsNumeric().First();
-                // you should always dispose of the REngine properly.
-                // After disposing of the engine, you cannot reinitialize nor reuse it
-                engine.Dispose();
-
                 SetHoldings(_spy, 1);
             }
         }
