@@ -35,6 +35,7 @@ class QCUQuandlFutures(QCAlgorithm):
         self.SetEndDate(datetime.now().date() - timedelta(1))
         self.SetCash(25000);
 
+        # Symbol corresponding to the quandl code
         self.crude = "SCF/CME_CL1_ON"
         self.AddData(QuandlFuture, self.crude, Resolution.Daily)
 
@@ -50,4 +51,7 @@ class QCUQuandlFutures(QCAlgorithm):
 class QuandlFuture(PythonQuandl):
     '''Custom quandl data type for setting customized value column name. Value column is used for the primary trading calculations and charting.'''
     def __init__(self):
+        # Define ValueColumnName: cannot be None, Empty or non-existant column name
+        # If ValueColumnName is "Close", do not use PythonQuandl, use Quandl:
+        # self.AddData[QuandlFuture](self.crude, Resolution.Daily)
         self.ValueColumnName = "Settle"
