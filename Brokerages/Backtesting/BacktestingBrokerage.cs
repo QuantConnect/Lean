@@ -16,30 +16,34 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Backtesting
 {
     /// <summary>
     /// Represents a brokerage to be used during backtesting. This is intended to be only be used with the BacktestingTransactionHandler
     /// </summary>
-    public class BacktestingBrokerage : Brokerage
+    public class BacktestingBrokerage : Brokerage, IOptionChainProvider
     {
         // flag used to indicate whether or not we need to scan for
         // fills, this is purely a performance concern is ConcurrentDictionary.IsEmpty
         // is not exactly the fastest operation and Scan gets called at least twice per
         // time loop
         private bool _needsScan;
-        // this is the algorithm under test
-        protected readonly IAlgorithm Algorithm;
         private readonly ConcurrentDictionary<int, Order> _pending;
         private readonly object _needsScanLock = new object();
 
+        /// <summary>
+        /// This is the algorithm under test
+        /// </summary>
+        protected readonly IAlgorithm Algorithm;
 
         /// <summary>
         /// Creates a new BacktestingBrokerage for the specified algorithm
@@ -68,6 +72,7 @@ namespace QuantConnect.Brokerages.Backtesting
         /// Creates a new BacktestingBrokerage for the specified algorithm. Adds market simulation to BacktestingBrokerage;
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
+        /// <param name="marketSimulation">The backtesting market simulation instance</param>
         public BacktestingBrokerage(IAlgorithm algorithm, IBacktestingMarketSimulation marketSimulation)
             : base("Backtesting Brokerage")
         {
@@ -423,5 +428,44 @@ namespace QuantConnect.Brokerages.Backtesting
             // only save off clones!
             _pending[order.Id] = order.Clone();
         }
+
+        #region Implementation of IOptionChainProvider
+
+        /// <summary>
+        /// Gets the list of option contracts for a given underlying symbol
+        /// </summary>
+        /// <param name="symbol">The underlying symbol</param>
+        /// <param name="date">The date for which to request the option chain (only used in backtesting)</param>
+        /// <returns>The list of option contracts</returns>
+        public IEnumerable<Symbol> GetOptionContractList(Symbol symbol, DateTime date)
+        {
+            if (symbol.SecurityType != SecurityType.Equity)
+            {
+                throw new NotSupportedException($"BacktestingBrokerage.GetOptionContractList(): SecurityType.Equity is expected but was {symbol.SecurityType}");
+            }
+
+            // build the option contract list from the open interest zip file entry names
+
+            // create a canonical option symbol for the given underlying
+            var canonicalSymbol = Symbol.CreateOption(symbol.Value, symbol.ID.Market, default(OptionStyle), default(OptionRight), 0, SecurityIdentifier.DefaultDate);
+
+            // build the zip file name for open interest data
+            var zipFileName = LeanData.GenerateZipFilePath(Globals.DataFolder, canonicalSymbol, date, Resolution.Minute, TickType.OpenInterest);
+
+            if (!File.Exists(zipFileName))
+            {
+                Log.Trace($"BacktestingBrokerage.GetOptionContractList(): File not found: {zipFileName}");
+                yield break;
+            }
+
+            // generate and return the contract symbol for each zip entry
+            var zipEntryNames = Compression.GetZipEntryFileNames(zipFileName);
+            foreach (var zipEntryName in zipEntryNames)
+            {
+                yield return LeanData.ReadSymbolFromZipEntry(canonicalSymbol, Resolution.Minute, zipEntryName);
+            }
+        }
+
+        #endregion
     }
 }
