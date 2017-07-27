@@ -18,7 +18,6 @@ using System.Linq;
 using System.Text;
 using Ionic.Zip;
 using NUnit.Framework;
-using System.IO.Compression;
 
 namespace QuantConnect.Tests.Compression
 {
@@ -61,6 +60,27 @@ namespace QuantConnect.Tests.Compression
             {
                 var text = entryStream.ReadToEnd();
                 Assert.AreEqual("2", text);
+            }
+        }
+
+        [Test]
+        public void ReadsZipEntryFileNames()
+        {
+            var zipFileName = Path.Combine("TestData", "20151224_quote_american.zip");
+            var entryFileNames = QuantConnect.Compression.GetZipEntryFileNames(zipFileName).ToList();
+
+            var expectedFileNames = new[]
+            {
+                "20151224_xlre_tick_quote_american_call_210000_20160819.csv",
+                "20151224_xlre_tick_quote_american_call_220000_20160819.csv",
+                "20151224_xlre_tick_quote_american_put_370000_20160819.csv"
+            };
+
+            Assert.AreEqual(expectedFileNames.Length, entryFileNames.Count);
+
+            for (var i = 0; i < entryFileNames.Count; i++)
+            {
+                Assert.AreEqual(expectedFileNames[i], entryFileNames[i]);
             }
         }
     }
