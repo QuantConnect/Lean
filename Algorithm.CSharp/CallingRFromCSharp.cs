@@ -25,7 +25,6 @@
      public class CallingRFromCSharp : QCAlgorithm		
      {		
          private Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);		
-         REngine engine = REngine.GetInstance();		
  		
          /// <summary>		
          /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.		
@@ -38,6 +37,7 @@
              // Find more symbols here: http://quantconnect.com/data		
              AddEquity("SPY", Resolution.Second);		
              		
+             REngine engine = REngine.GetInstance();		
              engine.Evaluate("print('This is from R command.')");		
              // .NET Framework array to R vector.		
              NumericVector group1 = engine.CreateNumericVector(new double[] { 30.02, 29.99, 30.11, 29.97, 30.01, 29.99 });		
