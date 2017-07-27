@@ -14,6 +14,7 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
         private readonly string _market;
         private readonly string _dataDirectory;
         private readonly Resolution _resolution;
+        private readonly string _folderPath;
 
         public ForexVolumeWriter(Resolution resolution, Symbol symbol, string dataDirectory)
         {
@@ -21,11 +22,23 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
             _resolution = resolution;
             _dataDirectory = dataDirectory;
             _market = _symbol.ID.Market;
+            _folderPath = Path.Combine(new[] {_dataDirectory, "base", _market.ToLower(), _resolution.ToString().ToLower()});
         }
 
         public void Write(IEnumerable<BaseData> data)
         {
-            //var sb = new StringBuilder("DateTime,Volume,Transactions\n");
+            if (!Directory.Exists(_folderPath)) Directory.CreateDirectory(_folderPath);
+            if (_resolution == Resolution.Minute)
+            {
+            }
+            else
+            {
+                WriteHourAndDailyData(data, _folderPath);
+            }
+        }
+
+        private void WriteHourAndDailyData(IEnumerable<BaseData> data, string folderPath)
+        {
             var sb = new StringBuilder();
 
             var volData = data.Cast<ForexVolume>();
@@ -34,9 +47,6 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
                 sb.AppendLine(string.Format("{0:yyyyMMdd HH:mm},{1},{2}", obs.Time, obs.Value,
                     obs.Transactions));
             }
-            // base/fxcmforexvolume/daily/eurusd.zip
-            var folderPath = Path.Combine(new[] {_dataDirectory, "base", _market.ToLower(), _resolution.ToString().ToLower()});
-            if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
 
             var filename = _symbol.Value.ToLower() + ".csv";
             var filePath = Path.Combine(folderPath, filename);
