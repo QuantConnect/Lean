@@ -36,6 +36,7 @@ using Order = QuantConnect.Orders.Order;
 using IB = QuantConnect.Brokerages.InteractiveBrokers.Client;
 using IBApi;
 using NodaTime;
+using QuantConnect.Securities.Option;
 using Bar = QuantConnect.Data.Market.Bar;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
@@ -44,7 +45,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
     /// <summary>
     /// The Interactive Brokers brokerage
     /// </summary>
-    public sealed class InteractiveBrokersBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider
+    public sealed class InteractiveBrokersBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider, IOptionChainProvider
     {
         // next valid order id for this client
         private int _nextValidId;
@@ -2332,6 +2333,26 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // returning results
             return filteredResults != null ? filteredResults.Select(MapSymbol) : Enumerable.Empty<Symbol>();
         }
+
+        #region Implementation of IOptionChainProvider
+
+        /// <summary>
+        /// Gets the list of option contracts for a given underlying symbol
+        /// </summary>
+        /// <param name="symbol">The underlying symbol</param>
+        /// <param name="date">The date for which to request the option chain (only used in backtesting)</param>
+        /// <returns>The list of option contracts</returns>
+        public IEnumerable<Symbol> GetOptionContractList(Symbol symbol, DateTime date)
+        {
+            if (symbol.SecurityType != SecurityType.Equity)
+            {
+                throw new NotSupportedException($"BacktestingBrokerage.GetOptionContractList(): SecurityType.Equity is expected but was {symbol.SecurityType}");
+            }
+
+            return FindOptionContracts(symbol.Value);
+        }
+
+        #endregion
 
         /// <summary>
         /// Retrieve the list of option contracts for an underlying symbol from the OCC website
