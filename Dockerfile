@@ -33,5 +33,11 @@ CMD [ "mono", "QuantConnect.Lean.Launcher.exe"] # Run app
 
 # Usage: 
 # docker build -t quantconnect/lean:foundation -f DockerfileLeanFoundation .
-# docker build -t quantconnect/lean:algorithm -f DockerfileLeanAlgorithm .
-# docker run -v "(absolute to your data folder):/root/Lean/Data" quantconnect/lean:algorithm 
+# docker run -i -t -v ~/Lean:/root/Lean/ quantconnect/lean:foundation /bin/bash
+# Note: '~' means Home, for example "C:\Users\YourName\". Here we assume Lean is in "C:\Users\YourName\Lean". You could change that.
+#        This command will get you inside the container 'quantconnect/lean:foundation', using '/bin/bash' as you terminal, and mapping your Lean in Windows '~/Lean' to Lean in the docker '/root/Lean/'.
+# After compiling Lean, you can run it by executing ./Launcher/bin/Debug/QuantConnect.Lean.Launcher.exe
+
+# Please clean up Docker images by the following command and rebuild the Docker in case commands did not run correctly.
+# docker stop $(docker ps -a -q) && docker rm $(docker ps -a -q) && docker rmi $(docker images -a -q)
+
