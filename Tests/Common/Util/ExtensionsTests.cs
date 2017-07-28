@@ -154,6 +154,54 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         [Test]
+        public void ConvertsNegativeDecimalFromString()
+        {
+            const string input = "-123.45678";
+            var value = input.ToDecimal();
+            Assert.AreEqual(-123.45678m, value);
+        }
+
+        [Test]
+        public void ConvertsNegativeDecimalFromStringWithExtraWhiteSpace()
+        {
+            const string input = " -123.45678 ";
+            var value = input.ToDecimal();
+            Assert.AreEqual(-123.45678m, value);
+        }
+
+        [Test]
+        public void ConvertsNegativeDecimalFromIntStringWithExtraWhiteSpace()
+        {
+            const string input = " -12345678 ";
+            var value = input.ToDecimal();
+            Assert.AreEqual(-12345678m, value);
+        }
+
+        [Test]
+        public void ConvertsNegativeZeroDecimalFromString()
+        {
+            const string input = "-0.45678";
+            var value = input.ToDecimal();
+            Assert.AreEqual(-0.45678m, value);
+        }
+
+        [Test]
+        public void ConvertsNegavtiveOneNumberDecimalFromString()
+        {
+            const string input = "-1.45678";
+            var value = input.ToDecimal();
+            Assert.AreEqual(-1.45678m, value);
+        }
+
+        [Test]
+        public void ConvertsNegativeZeroDecimalValueFromString()
+        {
+            const string input = "-0";
+            var value = input.ToDecimal();
+            Assert.AreEqual(-0m, value);
+        }
+        
+        [Test]
         public void ConvertsTimeSpanFromString()
         {
             const string input = "16:00";
