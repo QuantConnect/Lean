@@ -40,3 +40,4 @@ CMD [ "mono", "QuantConnect.Lean.Launcher.exe"] # Run app
 
 # Please clean up Docker images by the following command and rebuild the Docker in case commands did not run correctly.
 # docker stop $(docker ps -a -q) && docker rm $(docker ps -a -q) && docker rmi $(docker images -a -q)
+
