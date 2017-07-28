@@ -29,6 +29,7 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
 
@@ -146,6 +147,13 @@ namespace QuantConnect.Lean.Engine
                     // initialize the default brokerage message handler
                     algorithm.BrokerageMessageHandler = factory.CreateBrokerageMessageHandler(algorithm, job, _systemHandlers.Api);
                     
+                    // set the option chain provider
+                    var optionChainProvider = brokerage as IOptionChainProvider;
+                    if (optionChainProvider != null)
+                    {
+                        algorithm.SetOptionChainProvider(new CachingOptionChainProvider(optionChainProvider));
+                    }
+
                     //Initialize the internal state of algorithm and job: executes the algorithm.Initialize() method.
                     initializeComplete = _algorithmHandlers.Setup.Setup(algorithm, brokerage, job, _algorithmHandlers.Results, _algorithmHandlers.Transactions, _algorithmHandlers.RealTime);
 

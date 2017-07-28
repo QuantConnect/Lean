@@ -387,6 +387,15 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.SetOptionChainProvider" /> in Python
+        /// </summary>
+        /// <param name="optionChainProvider"></param>
+        public void SetOptionChainProvider(IOptionChainProvider optionChainProvider)
+        {
+            _baseAlgorithm.SetOptionChainProvider(optionChainProvider);
+        }
+
+        /// <summary>
         /// Wrapper for <see cref = "IAlgorithm.SubscriptionManager" /> in Python
         /// </summary>
         public SubscriptionManager SubscriptionManager
