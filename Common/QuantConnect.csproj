@@ -150,6 +150,7 @@
     <Compile Include="Brokerages\FxcmBrokerageModel.cs" />
     <Compile Include="Securities\Option\CachingOptionChainProvider.cs" />
     <Compile Include="Securities\Option\DefaultOptionChainProvider.cs" />
+    <Compile Include="Securities\Option\EmptyOptionChainProvider.cs" />
     <Compile Include="Securities\Option\IOptionChainProvider.cs" />
     <Compile Include="Brokerages\OandaTransactionModel.cs" />
     <Compile Include="Brokerages\FxcmTransactionModel.cs" />
