@@ -19,6 +19,7 @@ using System.ComponentModel.Composition;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Server;
+using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine
@@ -130,6 +131,7 @@ namespace QuantConnect.Lean.Engine
         {
             Api.Dispose();
             LeanManagement.Dispose();
+            Log.Trace("LeanEngineSystemHandlers.Dispose(): Disposed of system handlers.");
         }
     }
 }

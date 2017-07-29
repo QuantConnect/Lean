@@ -137,6 +137,8 @@ namespace QuantConnect.Lean.Launcher
                 leanEngineAlgorithmHandlers.Dispose();
                 Log.LogHandler.Dispose();
 
+                Log.Trace("Program.Main(): Exiting Lean...");
+
                 Environment.Exit(0);
             }
         }
