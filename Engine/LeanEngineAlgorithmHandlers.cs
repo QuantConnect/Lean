@@ -23,6 +23,7 @@ using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Lean.Engine.TransactionHandlers;
+using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine
@@ -205,6 +206,8 @@ namespace QuantConnect.Lean.Engine
         public void Dispose()
         {
             Setup.Dispose();
+
+            Log.Trace("LeanEngineAlgorithmHandlers.Dispose(): Disposed of algorithm handlers.");
         }
     }
 }
