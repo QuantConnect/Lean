@@ -465,11 +465,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     Log.Trace("InteractiveBrokersBrokerage.Connect(): Attempting to connect ({0}/{1}) ...", attempt, maxAttempts);
 
                     // if message processing thread is still running, wait until it terminates
-                    if (_messageProcessingThread != null)
-                    {
-                        _messageProcessingThread.Join();
-                        _messageProcessingThread = null;
-                    }
+                    Disconnect();
 
                     // we're going to try and connect several times, if successful break
                     _client.ClientSocket.eConnect(_host, _port, _clientId);
@@ -507,9 +503,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         Log.Trace("InteractiveBrokersBrokerage.Connect(): Operation took longer than 15 seconds.");
 
                         // no response, disconnect and retry
-                        _client.ClientSocket.eDisconnect();
-                        _signal.issueSignal();
-                        _messageProcessingThread.Join();
+                        Disconnect();
 
                         // if existing session detected from IBController log file, log error and throw exception
                         if (ExistingSessionDetected())
@@ -642,6 +636,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         public override void Disconnect()
         {
             _client.ClientSocket.eDisconnect();
+
+            if (_messageProcessingThread != null)
+            {
+                _signal.issueSignal();
+                _messageProcessingThread.Join();
+                _messageProcessingThread = null;
+            }
         }
 
         /// <summary>
@@ -651,7 +652,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             if (_client != null)
             {
-                _client.ClientSocket.eDisconnect();
+                Disconnect();
                 _client.Dispose();
             }
 
