@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Transport;
@@ -186,12 +185,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         private IStreamReader HandleRemoteSourceFile(SubscriptionDataSource source)
         {
-            // clean old files out of the cache
-            if (!Directory.Exists(Globals.Cache)) Directory.CreateDirectory(Globals.Cache);
-            foreach (var file in Directory.EnumerateFiles(Globals.Cache))
-            {
-                if (File.GetCreationTime(file) < DateTime.Now.AddHours(-24)) File.Delete(file);
-            }
+            SubscriptionDataSourceReader.CheckRemoteFileCache();
 
             try
             {
