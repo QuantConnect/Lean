@@ -169,7 +169,7 @@ namespace QuantConnect.API
                                                 string account)
             : base(user, password, environment, account)
         {
-            Id = "QuantConnectBrokerage";
+            Id = BrokerageName.QuantConnectBrokerage.ToString();
         }
     }
 
