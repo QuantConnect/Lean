@@ -342,6 +342,17 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.OptionChainProvider" /> in Python
+        /// </summary>
+        public IOptionChainProvider OptionChainProvider
+        {
+            get
+            {
+                return _baseAlgorithm.OptionChainProvider;
+            }
+        }
+
+        /// <summary>
         /// Wrapper for <see cref = "IAlgorithm.StartDate" /> in Python
         /// </summary>
         public DateTime StartDate

@@ -23,6 +23,7 @@ using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
@@ -184,17 +185,25 @@ namespace QuantConnect.Lean.Engine.Setup
                     {
                         //Set the default brokerage model before initialize
                         algorithm.SetBrokerageModel(_factory.BrokerageModel);
+
                         //Margin calls are disabled by default in live mode
                         algorithm.Portfolio.MarginCallModel = MarginCallModel.Null;
+
                         //Set our parameters
                         algorithm.SetParameters(job.Parameters);
                         algorithm.SetAvailableDataTypes(GetConfiguredDataFeeds());
+
                         //Algorithm is live, not backtesting:
                         algorithm.SetLiveMode(true);
+
                         //Initialize the algorithm's starting date
                         algorithm.SetDateTime(DateTime.UtcNow);
+
                         //Set the source impl for the event scheduling
                         algorithm.Schedule.SetEventSchedule(realTimeHandler);
+
+                        // set the option chain provider
+                        algorithm.SetOptionChainProvider(new CachingOptionChainProvider(new LiveOptionChainProvider()));
 
                         // If we're going to receive market data from IB, 
                         // set the default subscription limit to 100,

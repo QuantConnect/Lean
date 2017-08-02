@@ -19,7 +19,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using NUnit.Framework;
-using QuantConnect.Securities.Option;
+using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Securities.Options
 {

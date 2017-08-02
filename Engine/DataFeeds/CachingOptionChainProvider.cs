@@ -17,8 +17,9 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Interfaces;
 
-namespace QuantConnect.Securities.Option
+namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
     /// An implementation of <see cref="IOptionChainProvider"/> that will cache by date option contracts returned by another option chain provider.

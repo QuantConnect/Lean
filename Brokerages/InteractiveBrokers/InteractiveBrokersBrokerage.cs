@@ -45,7 +45,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
     /// <summary>
     /// The Interactive Brokers brokerage
     /// </summary>
-    public sealed class InteractiveBrokersBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider, IOptionChainProvider
+    public sealed class InteractiveBrokersBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider
     {
         // next valid order id for this client
         private int _nextValidId;
@@ -60,6 +60,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly string _account;
         private readonly string _host;
         private readonly int _clientId;
+        private readonly IAlgorithm _algorithm;
         private readonly IOrderProvider _orderProvider;
         private readonly ISecurityProvider _securityProvider;
         private readonly IB.InteractiveBrokersClient _client;
@@ -127,10 +128,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         ///     ib-port (optional, defaults to 4001)
         ///     ib-agent-description (optional, defaults to Individual)
         /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
         /// <param name="orderProvider">An instance of IOrderProvider used to fetch Order objects by brokerage ID</param>
         /// <param name="securityProvider">The security provider used to give access to algorithm securities</param>
-        public InteractiveBrokersBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
+        public InteractiveBrokersBrokerage(IAlgorithm algorithm, IOrderProvider orderProvider, ISecurityProvider securityProvider)
             : this(
+                algorithm,
                 orderProvider,
                 securityProvider,
                 Config.Get("ib-account"),
@@ -144,11 +147,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Creates a new InteractiveBrokersBrokerage for the specified account
         /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
         /// <param name="orderProvider">An instance of IOrderProvider used to fetch Order objects by brokerage ID</param>
         /// <param name="securityProvider">The security provider used to give access to algorithm securities</param>
         /// <param name="account">The account used to connect to IB</param>
-        public InteractiveBrokersBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string account)
-            : this(orderProvider,
+        public InteractiveBrokersBrokerage(IAlgorithm algorithm, IOrderProvider orderProvider, ISecurityProvider securityProvider, string account)
+            : this(
+                algorithm,
+                orderProvider,
                 securityProvider,
                 account,
                 Config.Get("ib-host", "LOCALHOST"),
@@ -161,15 +167,17 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Creates a new InteractiveBrokersBrokerage from the specified values
         /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
         /// <param name="orderProvider">An instance of IOrderProvider used to fetch Order objects by brokerage ID</param>
         /// <param name="securityProvider">The security provider used to give access to algorithm securities</param>
         /// <param name="account">The Interactive Brokers account name</param>
         /// <param name="host">host name or IP address of the machine where TWS is running. Leave blank to connect to the local host.</param>
         /// <param name="port">must match the port specified in TWS on the Configure&gt;API&gt;Socket Port field.</param>
         /// <param name="agentDescription">Used for Rule 80A describes the type of trader.</param>
-        public InteractiveBrokersBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string account, string host, int port, string agentDescription = IB.AgentDescription.Individual)
+        public InteractiveBrokersBrokerage(IAlgorithm algorithm, IOrderProvider orderProvider, ISecurityProvider securityProvider, string account, string host, int port, string agentDescription = IB.AgentDescription.Individual)
             : base("Interactive Brokers Brokerage")
         {
+            _algorithm = algorithm;
             _orderProvider = orderProvider;
             _securityProvider = securityProvider;
             _account = account;
@@ -2310,7 +2318,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // IB requests for full option chains are rate limited and responses can be delayed up to a minute for each underlying,
                 // so we fetch them from the OCC website instead of using the IB API.
 
-                var symbols = FindOptionContracts(contract.Symbol);
+                var underlyingSymbol = Symbol.Create(contract.Symbol, SecurityType.Equity, Market.USA);
+                var symbols = _algorithm.OptionChainProvider.GetOptionContractList(underlyingSymbol, DateTime.Today).ToList();
 
                 Log.Trace("InteractiveBrokersBrokerage.LookupSymbols(): Returning {0} contracts for {1}", symbols.Count, contract.Symbol);
 
@@ -2332,69 +2341,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             // returning results
             return filteredResults != null ? filteredResults.Select(MapSymbol) : Enumerable.Empty<Symbol>();
-        }
-
-        #region Implementation of IOptionChainProvider
-
-        /// <summary>
-        /// Gets the list of option contracts for a given underlying symbol
-        /// </summary>
-        /// <param name="symbol">The underlying symbol</param>
-        /// <param name="date">The date for which to request the option chain (only used in backtesting)</param>
-        /// <returns>The list of option contracts</returns>
-        public IEnumerable<Symbol> GetOptionContractList(Symbol symbol, DateTime date)
-        {
-            if (symbol.SecurityType != SecurityType.Equity)
-            {
-                throw new NotSupportedException($"BacktestingBrokerage.GetOptionContractList(): SecurityType.Equity is expected but was {symbol.SecurityType}");
-            }
-
-            return FindOptionContracts(symbol.Value);
-        }
-
-        #endregion
-
-        /// <summary>
-        /// Retrieve the list of option contracts for an underlying symbol from the OCC website
-        /// </summary>
-        private IList<Symbol> FindOptionContracts(string underlyingSymbol)
-        {
-            var symbols = new List<Symbol>();
-
-            using (var client = new WebClient())
-            {
-                // download the text file
-                var url = "https://www.theocc.com/webapps/series-search?symbolType=U&symbol=" + underlyingSymbol;
-                var fileContent = client.DownloadString(url);
-
-                // read the lines, skipping the headers
-                var lines = fileContent.Split(new[] { "\r\n" }, StringSplitOptions.None).Skip(7);
-
-                // parse the lines, creating the Lean option symbols
-                foreach (var line in lines)
-                {
-                    var fields = line.Split('\t');
-
-                    var ticker = fields[0].Trim();
-                    if (ticker != underlyingSymbol)
-                        continue;
-
-                    var expiryDate = new DateTime(fields[2].ToInt32(), fields[3].ToInt32(), fields[4].ToInt32());
-                    var strike = (fields[5] + "." + fields[6]).ToDecimal();
-
-                    if (fields[7].Contains("C"))
-                    {
-                        symbols.Add(_symbolMapper.GetLeanSymbol(underlyingSymbol, SecurityType.Option, Market.USA, expiryDate, strike, OptionRight.Call));
-                    }
-
-                    if (fields[7].Contains("P"))
-                    {
-                        symbols.Add(_symbolMapper.GetLeanSymbol(underlyingSymbol, SecurityType.Option, Market.USA, expiryDate, strike, OptionRight.Put));
-                    }
-                }
-            }
-
-            return symbols;
         }
 
         /// <summary>

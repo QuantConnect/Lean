@@ -16,12 +16,12 @@
 using System;
 using System.Collections.Generic;
 
-namespace QuantConnect.Securities.Option
+namespace QuantConnect.Interfaces
 {
     /// <summary>
-    /// A default implementation of <see cref="IOptionChainProvider"/>.
+    /// Provides the full option chain for a given underlying.
     /// </summary>
-    public sealed class DefaultOptionChainProvider : IOptionChainProvider
+    public interface IOptionChainProvider
     {
         /// <summary>
         /// Gets the list of option contracts for a given underlying symbol
@@ -29,9 +29,6 @@ namespace QuantConnect.Securities.Option
         /// <param name="symbol">The underlying symbol</param>
         /// <param name="date">The date for which to request the option chain (only used in backtesting)</param>
         /// <returns>The list of option contracts</returns>
-        public IEnumerable<Symbol> GetOptionContractList(Symbol symbol, DateTime date)
-        {
-            throw new NotSupportedException("GetOptionContractList is not supposed to be called on the DefaultOptionChainProvider.");
-        }
+        IEnumerable<Symbol> GetOptionContractList(Symbol symbol, DateTime date);
     }
 }

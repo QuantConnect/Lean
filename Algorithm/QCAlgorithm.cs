@@ -149,7 +149,7 @@ namespace QuantConnect.Algorithm
             // initialize trading calendar 
             TradingCalendar = new TradingCalendar(Securities, _marketHoursDatabase);
 
-            OptionChainProvider = new DefaultOptionChainProvider();
+            OptionChainProvider = new EmptyOptionChainProvider();
         }
 
         /// <summary>
