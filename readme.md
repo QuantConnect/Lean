@@ -81,6 +81,8 @@ If you get: "Error initializing task Fsc: Not registered task Fsc." -> `sudo apt
 
 If you get: "XX not found" -> Make sure Nuget ran successfully, and re-run if neccessary.
 
+If you get other errors that lead to the failure of your building, please refer to the commands in "DockerfileLeanFoundation" file for help.
+
 - Run the compiled `exe` file:
 ```
 cd Lean/Launcher/bin/Debug
@@ -100,7 +102,17 @@ By default Visual Studio includes NuGet, if your version cannot find DLL referen
 - Windows: rename `Lean\packages\QuantConnect.pythonnet._version_\build\Python.Runtime.win` to `Lean\packages\QuantConnect.pythonnet._version_\lib\Python.Runtime.dll`
 - macOs: rename `Lean\packages\QuantConnect.pythonnet._version_\build\Python.Runtime.mac` to `Lean\packages\QuantConnect.pythonnet._version_\lib\Python.Runtime.dll`
 
-### QuantConnect Plugin
+### R Support
+
+- Install R-base if you need to call R in your algorithm.
+For Linux users:
+```
+sudo apt-get update && apt-get install -y r-base && apt-get install -y pandoc && apt-get install -y libcurl4-openssl-dev
+```
+For Windows and macOs users:
+Please visit the official [R website](https://www.r-project.org/) to download R. 
+
+### QuantConnect plugin
 
 To install QuantConnect plugin build the `VisualStudioPlugin` project in `Release` mode. Then go to `VisualStudioPlugin/bin/Release` and run `QuantConnect.VisualStudioPlugin.vsix` file. Restart VisualStudio.
 In VisualStudio go to Tools -> Options -> QuantConnect and set "<Path to Lean repo>/Data" value to "Price data path".
