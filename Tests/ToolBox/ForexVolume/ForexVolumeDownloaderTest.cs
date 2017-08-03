@@ -4,7 +4,6 @@ using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom;
 using QuantConnect.ToolBox;
-using QuantConnect.ToolBox.FxVolumeDownloader;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -12,7 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace QuantConnect.Tests.ToolBox.FxVolume
+namespace QuantConnect.Tests.ToolBox
 {
     /// <summary>
     /// The rationality is to test the main functionalities:

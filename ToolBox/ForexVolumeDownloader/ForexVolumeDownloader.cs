@@ -21,7 +21,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 
-namespace QuantConnect.ToolBox.FxVolumeDownloader
+namespace QuantConnect.ToolBox
 {
     /// <summary>
     ///     FXCM Real FOREX Volume/Transactions Downloader Toolbox Project For LEAN Algorithmic Trading Engine.

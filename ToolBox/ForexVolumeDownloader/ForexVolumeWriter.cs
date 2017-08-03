@@ -1,12 +1,11 @@
-﻿using QuantConnect.Data.Custom;
+﻿using QuantConnect.Data;
+using QuantConnect.Data.Custom;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using QuantConnect.Data;
-using QuantConnect.Util;
 
-namespace QuantConnect.ToolBox.FxVolumeDownloader
+namespace QuantConnect.ToolBox
 {
     public class ForexVolumeWriter
     {
@@ -22,7 +21,7 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
             _resolution = resolution;
             _dataDirectory = dataDirectory;
             _market = _symbol.ID.Market;
-            _folderPath = Path.Combine(new[] {_dataDirectory, "base", _market.ToLower(), _resolution.ToString().ToLower()});
+            _folderPath = Path.Combine(new[] { _dataDirectory, "base", _market.ToLower(), _resolution.ToString().ToLower() });
             if (resolution == Resolution.Minute)
             {
                 _folderPath = Path.Combine(_folderPath, symbol.Value.ToLower());

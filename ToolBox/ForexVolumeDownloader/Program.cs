@@ -3,11 +3,11 @@ using QuantConnect.Logging;
 using System;
 using System.Globalization;
 
-namespace QuantConnect.ToolBox.FxVolumeDownloader
+namespace QuantConnect.ToolBox
 {
-    internal class Program
+    public class Program
     {
-        private static void Main(string[] args)
+        public static void Main(string[] args)
         {
             if (args.Length != 4)
             {
@@ -19,11 +19,6 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
                 Console.WriteLine("RESOLUTION = Minute/Hour/Daily/All");
                 Console.WriteLine("FROMDATE = yyyymmdd");
                 Console.WriteLine("TODATE = yyyymmdd");
-
-#if DEBUG
-                args = new string[] { "EURJPY,GBPJPY,EURAUD,AUDJPY", "Hour", "20140101", "20170101" };
-#endif
-
                 Environment.Exit(exitCode: 1);
             }
 
@@ -55,7 +50,6 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
                 // Load settings from config.json
 
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
-                //var dataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "TestingFXVolumeData");
 
                 Market.Add("FXCMForexVolume", identifier: 20);
 
@@ -68,7 +62,6 @@ namespace QuantConnect.ToolBox.FxVolumeDownloader
                         downloader.Run(symbol, resolution, startDate, endDate);
                     }
                 }
-                Console.WriteLine("\n => Timer: {0} milliseconds.", (DateTime.Now - timer).TotalMilliseconds);
             }
             catch (Exception err)
             {
