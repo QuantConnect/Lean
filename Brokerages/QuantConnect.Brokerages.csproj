@@ -183,6 +183,9 @@
     <Compile Include="InteractiveBrokers\Client\BarSize.cs" />
     <Compile Include="InteractiveBrokers\Client\HistogramDataEventArgs.cs" />
     <Compile Include="InteractiveBrokers\Client\HeadTimestampEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\PnlSingleEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\PnlEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\Client\MarketRuleEventArgs.cs" />
     <Compile Include="InteractiveBrokers\Client\RerouteMktDepthReqEventArgs.cs" />
     <Compile Include="InteractiveBrokers\Client\RerouteMktDataReqEventArgs.cs" />
     <Compile Include="InteractiveBrokers\Client\HistoricalNewsEndEventArgs.cs" />
