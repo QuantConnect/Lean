@@ -130,7 +130,7 @@ namespace QuantConnect.ToolBox
                     if (intermediateEndDate > endUtc) intermediateEndDate = endUtc;
                 }
                 data.AddRange(Get(symbol, resolution, intermediateStartDate, intermediateEndDate));
-                // If we have 300k observations in memory, write it.
+                // For every 300k observations in memory, write it.
                 if (resolution == Resolution.Minute && counter % 30 == 0)
                 {
                     writer.Write(data);

@@ -1,6 +1,7 @@
 ﻿using QuantConnect.Util;
 using System;
 using System.Globalization;
+using System.Linq;
 
 namespace QuantConnect.Data.Custom
 {
@@ -15,6 +16,12 @@ namespace QuantConnect.Data.Custom
     /// <seealso cref="QuantConnect.Data.BaseData" />
     public class ForexVolume : BaseData
     {
+        private string[] _availableSymbols =
+        {
+            "EURUSD", "USDJPY", "GBPUSD", "USDCHF", "EURCHF", "AUDUSD", "USDCAD", "NZDUSD", "EURGBP", "EURJPY",
+            "GBPJPY", "EURAUD", "EURCAD", "AUDJPY"
+        };
+
         /// <summary>
         ///     Sum of opening and closing Transactions for the entire time interval.
         /// </summary>
@@ -43,6 +50,8 @@ namespace QuantConnect.Data.Custom
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             if (isLiveMode) throw new NotImplementedException("FOREX Volume data is not available in live mode, yet.");
+            CheckResolution(config.Resolution);
+            CheckForexPair(config.Symbol.Value);
             var source = LeanData.GenerateZipFilePath(Globals.DataFolder, config.Symbol, SecurityType.Base,
                 "FXCMForexVolume",
                 date, config.Resolution);
@@ -81,6 +90,24 @@ namespace QuantConnect.Data.Custom
                 Value = long.Parse(obs[1]),
                 Transactions = int.Parse(obs[2])
             };
+        }
+
+        private void CheckForexPair(string symbol)
+        {
+            if (!_availableSymbols.Contains(symbol))
+            {
+                throw new ArgumentException("Volume data is not available for the selected symbol.\nAvailable pairs:\n\t" + 
+                    string.Join(", ", _availableSymbols), "symbol");
+            }
+        }
+
+        private void CheckResolution(Resolution resolution)
+        {
+            if (resolution != Resolution.Minute && resolution != Resolution.Hour && resolution != Resolution.Daily)
+            {
+                throw new ArgumentOutOfRangeException("resolution", resolution,
+                    "Available resolutions for FXCM Forex Volume data are Minute, Hour and Daily.");
+            }
         }
     }
 }
