@@ -15,6 +15,7 @@
 
 using Python.Runtime;
 using QuantConnect.Api;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -42,6 +43,9 @@ namespace QuantConnect.Jupyter
                 {
                     _pandas = Py.Import("pandas");
                 }
+
+                // Set the data-folder
+                Config.Set("data-folder", "/root/Lean/Data");
 
                 _api = new Api.Api();
                 _api.Initialize(userId, apiAcessToken, Globals.DataFolder);

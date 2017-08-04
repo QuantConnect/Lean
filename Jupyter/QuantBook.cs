@@ -53,9 +53,12 @@ namespace QuantConnect.Jupyter
                     _pandas = Py.Import("pandas");
                 }
 
+                // Set the data-folder
+                Config.Set("data-folder", "/root/Lean/Data");
+                
                 // Set the plugin-directory to current
                 Config.Set("plugin-directory", "/usr/lib/python2.7/Lean");
-
+                
                 var composer = new Composer();
                 var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(composer);
                 _dataCacheProvider = new SingleEntryDataCacheProvider(algorithmHandlers.DataProvider);
@@ -77,7 +80,7 @@ namespace QuantConnect.Jupyter
         /// <param name="type">The asset security type</param>
         /// <param name="market">The asset market</param>
         /// <returns><see cref = "Symbol"/> object wrapped in a <see cref = "PyObject"/></returns>
-        public PyObject get_symbol(string ticker, string type = "Equity", string market = null)
+        public PyObject GetSymbol(string ticker, string type = "Equity", string market = null)
         {
             var securityType = (SecurityType)Enum.Parse(typeof(SecurityType), type, true);
 
@@ -111,7 +114,7 @@ namespace QuantConnect.Jupyter
         /// </summary>
         /// <param name="pyObject">The tickers to retrieve information for</param>
         /// <returns>A pandas.DataFrame containing the symbol information</returns>
-        public PyObject print_symbols(PyObject pyObject)
+        public PyObject PrintSymbols(PyObject pyObject)
         {
             var symbols = GetSymbolsFromPyObject(pyObject);
             if (symbols == null)
@@ -222,6 +225,14 @@ namespace QuantConnect.Jupyter
             return CreateDataFrame(requests, _historyProvider.GetHistory(requests, TimeZones.NewYork), selector);
         }
 
+        /// <summary>
+        /// Get fundamental data from given symbols
+        /// </summary>
+        /// <param name="pyObject">The symbols to retrieve fundamental data for</param>
+        /// <param name="selector">Selects a value from the Fundamental data to filter the request output</param>
+        /// <param name="start">The start date of selected data</param>
+        /// <param name="end">The end date of selected data</param>
+        /// <returns></returns>
         public PyObject GetFundamental(PyObject pyObject, string selector, DateTime? start = null, DateTime? end = null)
         {
             if (string.IsNullOrWhiteSpace(selector))

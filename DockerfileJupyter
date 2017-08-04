@@ -1,6 +1,6 @@
 #
-#	LEAN Jupyter Docker Container 20170802
-#	
+#	LEAN Jupyter Docker Container 20170803
+#
 
 # Use base system for cleaning up wayward processes
 FROM quantconnect/lean:foundation
@@ -13,21 +13,17 @@ RUN wget --quiet https://github.com/krallin/tini/releases/download/v0.10.0/tini 
     mv tini /usr/local/bin/tini && \
     chmod +x /usr/local/bin/tini
 
-#Install Jupyter
-RUN pip install jupyter
-	
-# Install Python.NET
-RUN apt-get update && apt-get install -y libglib2.0-dev \
-  && wget --quiet https://github.com/QuantConnect/pythonnet/archive/master.zip \
-  && unzip master.zip && cd pythonnet-master && python setup.py install
+#Install Jupyter and Python.NET
+RUN apt-get update && apt-get install -y git libglib2.0-dev && \
+    pip install jupyter git+https://github.com/QuantConnect/pythonnet
 
 # Setting some environment variables
-ENV WORK /root/Lean/Jupyter/bin/Release
+ENV WORK /root/Lean/Jupyter/bin/Debug
 ENV LEAN /usr/lib/python2.7/Lean
 ENV PYTHONPATH=${LEAN}:${PYTHONPATH}
 
 # Copy Lean files to convinient locations
-COPY ./Jupyter/bin/Release ${LEAN}
+COPY ./Jupyter/bin/Debug ${LEAN}
 COPY ./Jupyter/*.ipynb ${WORK}/Examples/
 RUN rm -irf ${LEAN}/*Python*
 
@@ -38,5 +34,5 @@ CMD jupyter notebook --ip='*' --port=8888 --no-browser --allow-root
 
 # Usage: 
 # docker build -t quantconnect/lean:foundation -f DockerfileLeanFoundation .
-# docker build -t quantconnect/lean:jupyter -f DockerfileJupyter .
-# docker run -v "(absolute to your data folder):/root/Lean/Data" quantconnect/lean:jupyter 
+# docker build -t quantconnect/jupyter -f DockerfileJupyter .
+# docker run -v (absolute to your data folder):/root/Lean/Data:ro quantconnect/jupyter 
