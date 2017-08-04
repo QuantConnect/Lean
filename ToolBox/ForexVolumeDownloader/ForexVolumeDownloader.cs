@@ -164,7 +164,6 @@ namespace QuantConnect.ToolBox
         /// </returns>
         public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
-            startUtc = startUtc.AddDays(value: -1);
             var requestedData = new List<BaseData>();
             var lines = RequestData(symbol, resolution, startUtc, endUtc);
             foreach (var line in lines)
@@ -192,6 +191,49 @@ namespace QuantConnect.ToolBox
         #endregion Public Methods
 
         #region Private Methods
+
+        /// <summary>
+        ///     Generates the API Requests.
+        /// </summary>
+        /// <param name="symbol">The symbol.</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="startUtc">The start date in UTC.</param>
+        /// <param name="endUtc">The end date in UTC.</param>
+        /// <returns></returns>
+        private string[] RequestData(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
+        {
+            var startDate = string.Empty;
+            var endDate = string.Empty;
+            var symbolId = GetFxcmIDFromSymbol(symbol);
+            var interval = GetIntervalFromResolution(resolution);
+            switch (resolution)
+            {
+                case Resolution.Minute:
+                    startDate = startUtc.ToString("yyyyMMdd") + "0000";
+                    endDate = endUtc.ToString("yyyyMMdd") + "2100";
+                    break;
+                case Resolution.Hour:
+                    startDate = startUtc.ToString("yyyyMMdd") + "0000";
+                    endDate = endUtc.AddDays(1).ToString("yyyyMMdd") + "2100";
+                    break;
+                case Resolution.Daily:
+                    startDate = startUtc.AddDays(1).ToString("yyyyMMdd") + "2100";
+                    endDate = endUtc.ToString("yyyyMMdd") + "2100";
+                    break;
+            }
+            
+
+            var request = string.Format("{0}&ver={1}&sid={2}&interval={3}&offerID={4}&timeFrom={5}&timeTo={6}",
+                _baseUrl, _ver, _sid, interval, symbolId, startDate, endDate);
+
+            string[] lines;
+            using (var client = new WebClient())
+            {
+                var data = client.DownloadString(request);
+                lines = data.Split('\n');
+            }
+            return lines;
+        }
 
         /// <summary>
         ///     Gets the FXCM identifier from a FOREX pair symbol.
@@ -244,33 +286,6 @@ namespace QuantConnect.ToolBox
                         "tick or second resolution are not supported for Forex Volume.");
             }
             return interval;
-        }
-
-        /// <summary>
-        ///     Generates the API Requests.
-        /// </summary>
-        /// <param name="symbol">The symbol.</param>
-        /// <param name="resolution">The resolution.</param>
-        /// <param name="startUtc">The start date in UTC.</param>
-        /// <param name="endUtc">The end date in UTC.</param>
-        /// <returns></returns>
-        private string[] RequestData(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
-        {
-            var symbolId = GetFxcmIDFromSymbol(symbol);
-            var interval = GetIntervalFromResolution(resolution);
-            var startDate = startUtc.ToString("yyyyMMdd") + "2100";
-            var endDate = endUtc.ToString("yyyyMMdd") + "2100";
-
-            var request = string.Format("{0}&ver={1}&sid={2}&interval={3}&offerID={4}&timeFrom={5}&timeTo={6}",
-                _baseUrl, _ver, _sid, interval, symbolId, startDate, endDate);
-
-            string[] lines;
-            using (var client = new WebClient())
-            {
-                var data = client.DownloadString(request);
-                lines = data.Split('\n');
-            }
-            return lines;
         }
 
         #endregion Private Methods
