@@ -50,10 +50,10 @@ namespace QuantConnect.Tests.ToolBox
             }
         }
 
-        [TestCase("./TestData/fxVolumeDaily.csv", "EURUSD", Resolution.Daily, "2016-12-01", 61)]
-        [TestCase("./TestData/fxVolumeHourly.csv", "USDJPY", Resolution.Hour, "2014-12-24", 12)]
-        [TestCase("./TestData/fxVolumeMinute.csv", "EURUSD", Resolution.Minute, "2012-11-23", 5)]
-        public void DataIsCorrectlyParsed(string testingFilePath, string ticker, Resolution resolution, string startDate, int requestLength)
+        [TestCase("./TestData/fxVolumeDaily.csv", "EURUSD", Resolution.Daily, "2016-12-01", "2017-01-30")]
+        [TestCase("./TestData/fxVolumeHourly.csv", "USDJPY", Resolution.Hour, "2014-12-24", "2015-01-05")]
+        [TestCase("./TestData/fxVolumeMinute.csv", "EURUSD", Resolution.Minute, "2012-11-23", "2012-11-27")]
+        public void DataIsCorrectlyParsed(string testingFilePath, string ticker, Resolution resolution, string startDate, string endDate)
         {
             //Arrange
             var expectedData = File.ReadAllLines(testingFilePath)
@@ -62,7 +62,7 @@ namespace QuantConnect.Tests.ToolBox
                 .ToArray();
             var symbol = Symbol.Create(ticker, SecurityType.Base, Market.FXCM);
             var startUtc = DateTime.ParseExact(startDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            var endUtc = startUtc.AddDays(requestLength);
+            var endUtc = DateTime.ParseExact(endDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             //Act
             var actualData = _downloader.Get(symbol, resolution, startUtc,
                 endUtc).Cast<ForexVolume>().ToArray();
@@ -102,7 +102,7 @@ namespace QuantConnect.Tests.ToolBox
             {
                 var zipFiles = Directory.GetFiles(expectedFolder, "*.zip").Length;
                 // Minus one because the Downloader starts one day earlier.
-                Assert.AreEqual(requestLength, zipFiles);
+                Assert.AreEqual(requestLength + 1, zipFiles);
             }
             else
             {
@@ -172,7 +172,7 @@ namespace QuantConnect.Tests.ToolBox
             // Assert
             var outputFolder = Path.Combine(_dataDirectory, "base/fxcm/minute");
             var files = Directory.GetFiles(outputFolder, "*.zip", SearchOption.AllDirectories);
-            Assert.AreEqual(expected: 23, actual: files.Length);
+            Assert.AreEqual(expected: 27, actual: files.Length);
         }
 
         //[Ignore("Long test")]

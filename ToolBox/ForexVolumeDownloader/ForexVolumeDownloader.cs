@@ -164,15 +164,17 @@ namespace QuantConnect.ToolBox
         /// </returns>
         public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
+            var idx = 0;
+            var obsTime = startUtc;
             var requestedData = new List<BaseData>();
             var lines = RequestData(symbol, resolution, startUtc, endUtc);
-            foreach (var line in lines)
+
+            do
             {
+                var line = lines[idx++];
                 var obs = line.Split(';');
-                // Skip the first line
-                if (obs.Length != 35) continue;
                 var stringDate = obs[0].Substring(startIndex: 3);
-                var obsTime = DateTime.ParseExact(stringDate, "yyyyMMddHHmm",
+                obsTime = DateTime.ParseExact(stringDate, "yyyyMMddHHmm",
                     DateTimeFormatInfo.InvariantInfo);
                 var volume = _volumeIdx.Select(x => long.Parse(obs[x])).Sum();
 
@@ -184,8 +186,8 @@ namespace QuantConnect.ToolBox
                     Value = volume,
                     Transactions = transactions
                 });
-            }
-            return requestedData;
+            } while (obsTime.Date <= endUtc.Date && idx < lines.Length - 1);
+            return requestedData.Where(o => o.Time.Date >= startUtc.Date && o.Time.Date <= endUtc.Date);
         }
 
         #endregion Public Methods
@@ -203,25 +205,20 @@ namespace QuantConnect.ToolBox
         private string[] RequestData(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
             var startDate = string.Empty;
-            var endDate = string.Empty;
+            var endDate = endUtc.AddDays(2).ToString("yyyyMMdd") + "2100";
             var symbolId = GetFxcmIDFromSymbol(symbol);
             var interval = GetIntervalFromResolution(resolution);
             switch (resolution)
             {
                 case Resolution.Minute:
-                    startDate = startUtc.ToString("yyyyMMdd") + "0000";
-                    endDate = endUtc.ToString("yyyyMMdd") + "2100";
-                    break;
                 case Resolution.Hour:
                     startDate = startUtc.ToString("yyyyMMdd") + "0000";
-                    endDate = endUtc.AddDays(1).ToString("yyyyMMdd") + "2100";
                     break;
+
                 case Resolution.Daily:
                     startDate = startUtc.AddDays(1).ToString("yyyyMMdd") + "2100";
-                    endDate = endUtc.ToString("yyyyMMdd") + "2100";
                     break;
             }
-            
 
             var request = string.Format("{0}&ver={1}&sid={2}&interval={3}&offerID={4}&timeFrom={5}&timeTo={6}",
                 _baseUrl, _ver, _sid, interval, symbolId, startDate, endDate);
@@ -232,7 +229,8 @@ namespace QuantConnect.ToolBox
                 var data = client.DownloadString(request);
                 lines = data.Split('\n');
             }
-            return lines;
+            // Removes the HTML head and tail.
+            return lines.Skip(2).Take(lines.Length - 4).ToArray();
         }
 
         /// <summary>

@@ -96,7 +96,7 @@ namespace QuantConnect.Data.Custom
         {
             if (!_availableSymbols.Contains(symbol))
             {
-                throw new ArgumentException("Volume data is not available for the selected symbol.\nAvailable pairs:\n\t" + 
+                throw new ArgumentException("Volume data is not available for the selected symbol.\nAvailable pairs:\n\t" +
                     string.Join(", ", _availableSymbols), "symbol");
             }
         }
