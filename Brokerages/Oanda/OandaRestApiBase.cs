@@ -99,6 +99,21 @@ namespace QuantConnect.Brokerages.Oanda
         protected string AccountId;
 
         /// <summary>
+        /// The Oanda agent string
+        /// </summary>
+        protected string Agent;
+
+        /// <summary>
+        /// The HTTP header key for Oanda agent
+        /// </summary>
+        protected const string OandaAgentKey = "OANDA-Agent";
+
+        /// <summary>
+        /// The default HTTP header value for Oanda agent
+        /// </summary>
+        public const string OandaAgentDefaultValue = "QuantConnect/0.0.0 (LEAN)";
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="OandaRestApiBase"/> class.
         /// </summary>
         /// <param name="symbolMapper">The symbol mapper.</param>
@@ -107,7 +122,8 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="environment">The Oanda environment (Trade or Practice)</param>
         /// <param name="accessToken">The Oanda access token (can be the user's personal access token or the access token obtained with OAuth by QC on behalf of the user)</param>
         /// <param name="accountId">The account identifier.</param>
-        protected OandaRestApiBase(OandaSymbolMapper symbolMapper, IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, string accountId)
+        /// <param name="agent">The Oanda agent string</param>
+        protected OandaRestApiBase(OandaSymbolMapper symbolMapper, IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, string accountId, string agent)
             : base("Oanda Brokerage")
         {
             SymbolMapper = symbolMapper;
@@ -116,6 +132,7 @@ namespace QuantConnect.Brokerages.Oanda
             Environment = environment;
             AccessToken = accessToken;
             AccountId = accountId;
+            Agent = agent;
         }
 
         /// <summary>

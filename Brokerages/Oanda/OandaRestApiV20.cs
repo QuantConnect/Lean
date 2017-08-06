@@ -60,8 +60,9 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="environment">The Oanda environment (Trade or Practice)</param>
         /// <param name="accessToken">The Oanda access token (can be the user's personal access token or the access token obtained with OAuth by QC on behalf of the user)</param>
         /// <param name="accountId">The account identifier.</param>
-        public OandaRestApiV20(OandaSymbolMapper symbolMapper, IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, string accountId)
-            : base(symbolMapper, orderProvider, securityProvider, environment, accessToken, accountId)
+        /// <param name="agent">The Oanda agent string</param>
+        public OandaRestApiV20(OandaSymbolMapper symbolMapper, IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, string accountId, string agent)
+            : base(symbolMapper, orderProvider, securityProvider, environment, accessToken, accountId, agent)
         {
             var basePathRest = environment == Environment.Trade ? 
                 "https://api-fxtrade.oanda.com/v3" : 
@@ -72,6 +73,8 @@ namespace QuantConnect.Brokerages.Oanda
                 "https://stream-fxpractice.oanda.com/v3";
 
             _apiRest = new DefaultApi(basePathRest);
+            _apiRest.Configuration.AddDefaultHeader(OandaAgentKey, Agent);
+
             _apiStreaming = new DefaultApi(basePathStreaming);
         }
 
@@ -414,6 +417,7 @@ namespace QuantConnect.Brokerages.Oanda
             var request = WebRequest.CreateHttp(requestString);
             request.Method = "GET";
             request.Headers[HttpRequestHeader.Authorization] = Authorization;
+            request.Headers[OandaAgentKey] = Agent;
 
             try
             {
@@ -445,6 +449,7 @@ namespace QuantConnect.Brokerages.Oanda
             var request = WebRequest.CreateHttp(requestString);
             request.Method = "GET";
             request.Headers[HttpRequestHeader.Authorization] = Authorization;
+            request.Headers[OandaAgentKey] = Agent;
 
             try
             {
