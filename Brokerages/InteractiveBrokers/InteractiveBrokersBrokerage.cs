@@ -203,21 +203,35 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // handle requests to restart the IB gateway
             new Thread(() =>
             {
-                Log.Trace("InteractiveBrokersBrokerage.ResetHandler(): thread started.");
-
-                while (!_ctsRestartGateway.IsCancellationRequested)
+                try
                 {
-                    if (_resetEventRestartGateway.WaitOne(1000, _ctsRestartGateway.Token))
+                    Log.Trace("InteractiveBrokersBrokerage.ResetHandler(): thread started.");
+
+                    while (!_ctsRestartGateway.IsCancellationRequested)
                     {
-                        Log.Trace("InteractiveBrokersBrokerage.ResetHandler(): Reset sequence start.");
+                        if (_resetEventRestartGateway.WaitOne(1000, _ctsRestartGateway.Token))
+                        {
+                            Log.Trace("InteractiveBrokersBrokerage.ResetHandler(): Reset sequence start.");
 
-                        ResetGatewayConnection();
+                            try
+                            {
+                                ResetGatewayConnection();
+                            }
+                            catch (Exception exception)
+                            {
+                                Log.Error("InteractiveBrokersBrokerage.ResetHandler(): Error in ResetGatewayConnection: " + exception);
+                            }
 
-                        Log.Trace("InteractiveBrokersBrokerage.ResetHandler(): Reset sequence end.");
+                            Log.Trace("InteractiveBrokersBrokerage.ResetHandler(): Reset sequence end.");
+                        }
                     }
-                }
 
-                Log.Trace("InteractiveBrokersBrokerage.ResetHandler(): thread ended.");
+                    Log.Trace("InteractiveBrokersBrokerage.ResetHandler(): thread ended.");
+                }
+                catch (Exception exception)
+                {
+                    Log.Error("InteractiveBrokersBrokerage.ResetHandler(): Error in reset handler thread: " + exception);
+                }
             }) { IsBackground = true }.Start();
         }
 
@@ -525,6 +539,22 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     Log.Trace("IB next valid id received.");
 
                     if (!_client.Connected) throw new Exception("InteractiveBrokersBrokerage.Connect(): Connection returned but was not in connected state.");
+
+                    if (!DownloadAccount())
+                    {
+                        Log.Trace("InteractiveBrokersBrokerage.Connect(): DownloadAccount failed. Operation took longer than 15 seconds.");
+
+                        Disconnect();
+
+                        if (attempt++ < maxAttempts)
+                        {
+                            Thread.Sleep(1000);
+                            continue;
+                        }
+
+                        throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): DownloadAccount failed.");
+                    }
+
                     break;
                 }
                 catch (Exception err)
@@ -558,76 +588,58 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     throw;
                 }
             }
-
-            DownloadAccount();
         }
 
         /// <summary>
         /// Downloads the account information and subscribes to account updates.
         /// This method is called upon successful connection.
         /// </summary>
-        private void DownloadAccount()
+        private bool DownloadAccount()
         {
-            // for some obscure reason, the reqAccountUpdates call will occasionally timeout
-            // so we have retry logic for when it happens
-
-            const int maxAttempts = 5;
-            var attempt = 0;
-
-            while (true)
+            // define our event handler, this acts as stop to make sure when we leave Connect we have downloaded the full account
+            EventHandler<IB.AccountDownloadEndEventArgs> clientOnAccountDownloadEnd = (sender, args) =>
             {
-                // define our event handler, this acts as stop to make sure when we leave Connect we have downloaded the full account
-                EventHandler<IB.AccountDownloadEndEventArgs> clientOnAccountDownloadEnd = (sender, args) =>
-                {
-                    Log.Trace("InteractiveBrokersBrokerage.AccountDownloadEnd(): Finished account download for " + args.Account);
-                    _accountHoldingsResetEvent.Set();
-                };
-                _client.AccountDownloadEnd += clientOnAccountDownloadEnd;
+                Log.Trace("InteractiveBrokersBrokerage.DownloadAccount(): Finished account download for " + args.Account);
+                _accountHoldingsResetEvent.Set();
+            };
+            _client.AccountDownloadEnd += clientOnAccountDownloadEnd;
 
-                // we'll wait to get our first account update, we need to be absolutely sure we 
-                // have downloaded the entire account before leaving this function
-                var firstAccountUpdateReceived = new ManualResetEvent(false);
-                EventHandler<IB.UpdateAccountValueEventArgs> clientOnUpdateAccountValue = (sender, args) =>
-                {
-                    firstAccountUpdateReceived.Set();
-                };
+            // we'll wait to get our first account update, we need to be absolutely sure we 
+            // have downloaded the entire account before leaving this function
+            var firstAccountUpdateReceived = new ManualResetEvent(false);
+            EventHandler<IB.UpdateAccountValueEventArgs> clientOnUpdateAccountValue = (sender, args) =>
+            {
+                firstAccountUpdateReceived.Set();
+            };
 
-                _client.UpdateAccountValue += clientOnUpdateAccountValue;
+            _client.UpdateAccountValue += clientOnUpdateAccountValue;
 
-                // first we won't subscribe, wait for this to finish, below we'll subscribe for continuous updates
-                _client.ClientSocket.reqAccountUpdates(true, _account);
+            // first we won't subscribe, wait for this to finish, below we'll subscribe for continuous updates
+            _client.ClientSocket.reqAccountUpdates(true, _account);
 
-                // wait to see the first account value update
-                firstAccountUpdateReceived.WaitOne(2500);
+            // wait to see the first account value update
+            firstAccountUpdateReceived.WaitOne(2500);
 
-                // take pause to ensure the account is downloaded before continuing, this was added because running in
-                // linux there appears to be different behavior where the account download end fires immediately.
-                Thread.Sleep(2500);
+            // take pause to ensure the account is downloaded before continuing, this was added because running in
+            // linux there appears to be different behavior where the account download end fires immediately.
+            Thread.Sleep(2500);
 
-                attempt++;
-
-                if (!_accountHoldingsResetEvent.WaitOne(15000))
-                {
-                    // remove our event handler
-                    _client.AccountDownloadEnd -= clientOnAccountDownloadEnd;
-                    _client.UpdateAccountValue -= clientOnUpdateAccountValue;
-
-                    Log.Trace("InteractiveBrokersBrokerage.GetAccountHoldings(): Operation took longer than 15 seconds. Attempt: " + attempt + "/" + maxAttempts);
-
-                    if (attempt >= maxAttempts)
-                    {
-                        throw new TimeoutException("InteractiveBrokersBrokerage.GetAccountHoldings(): Operation took longer than 15 seconds.");
-                    }
-
-                    continue;
-                }
-
-                // remove our end handler
+            if (!_accountHoldingsResetEvent.WaitOne(15000))
+            {
+                // remove our event handlers
                 _client.AccountDownloadEnd -= clientOnAccountDownloadEnd;
                 _client.UpdateAccountValue -= clientOnUpdateAccountValue;
 
-                break;
+                Log.Trace("InteractiveBrokersBrokerage.DownloadAccount(): Operation took longer than 15 seconds.");
+
+                return false;
             }
+
+            // remove our event handlers
+            _client.AccountDownloadEnd -= clientOnAccountDownloadEnd;
+            _client.UpdateAccountValue -= clientOnUpdateAccountValue;
+
+            return true;
         }
 
         /// <summary>
@@ -1078,6 +1090,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // With IB Gateway v960.2a in the cloud, we are not receiving order fill events after the nightly reset,
                 // so we execute the following sequence: 
                 // disconnect, kill IB Gateway, restart IB Gateway, reconnect, restore data subscriptions
+                Log.Trace("InteractiveBrokersBrokerage.HandleError(): Reconnect message received. Restarting...");
+
                 _resetEventRestartGateway.Set();
 
                 return;
