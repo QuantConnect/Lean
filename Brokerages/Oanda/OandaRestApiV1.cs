@@ -55,8 +55,9 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="environment">The Oanda environment (Trade or Practice)</param>
         /// <param name="accessToken">The Oanda access token (can be the user's personal access token or the access token obtained with OAuth by QC on behalf of the user)</param>
         /// <param name="accountId">The account identifier.</param>
-        public OandaRestApiV1(OandaSymbolMapper symbolMapper, IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, string accountId)
-            : base(symbolMapper, orderProvider, securityProvider, environment, accessToken, accountId)
+        /// <param name="agent">The Oanda agent string</param>
+        public OandaRestApiV1(OandaSymbolMapper symbolMapper, IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, string accountId, string agent)
+            : base(symbolMapper, orderProvider, securityProvider, environment, accessToken, accountId, agent)
         {
         }
 
@@ -444,6 +445,7 @@ namespace QuantConnect.Brokerages.Oanda
             var request = WebRequest.CreateHttp(requestString);
             request.Headers[HttpRequestHeader.Authorization] = "Bearer " + AccessToken;
             request.Headers[HttpRequestHeader.AcceptEncoding] = "gzip";
+            request.Headers[OandaAgentKey] = Agent;
             request.Method = method;
 
             try
@@ -488,6 +490,7 @@ namespace QuantConnect.Brokerages.Oanda
             var requestBody = CreateParamString(requestParams);
             var request = WebRequest.CreateHttp(requestString);
             request.Headers[HttpRequestHeader.Authorization] = "Bearer " + AccessToken;
+            request.Headers[OandaAgentKey] = Agent;
             request.Method = method;
             request.ContentType = "application/x-www-form-urlencoded";
 
@@ -544,6 +547,7 @@ namespace QuantConnect.Brokerages.Oanda
             var request = WebRequest.CreateHttp(requestString);
             request.Method = "GET";
             request.Headers[HttpRequestHeader.Authorization] = "Bearer " + AccessToken;
+            request.Headers[OandaAgentKey] = Agent;
 
             try
             {
@@ -582,6 +586,7 @@ namespace QuantConnect.Brokerages.Oanda
             var request = WebRequest.CreateHttp(requestString);
             request.Method = "GET";
             request.Headers[HttpRequestHeader.Authorization] = "Bearer " + AccessToken;
+            request.Headers[OandaAgentKey] = Agent;
 
             try
             {

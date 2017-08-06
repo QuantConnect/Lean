@@ -50,7 +50,8 @@ namespace QuantConnect.Brokerages.Oanda
         /// <param name="environment">The Oanda environment (Trade or Practice)</param>
         /// <param name="accessToken">The Oanda access token (can be the user's personal access token or the access token obtained with OAuth by QC on behalf of the user)</param>
         /// <param name="accountId">The account identifier.</param>
-        public OandaBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, string accountId)
+        /// <param name="agent">The Oanda agent string</param>
+        public OandaBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, Environment environment, string accessToken, string accountId, string agent = OandaRestApiBase.OandaAgentDefaultValue)
             : base("Oanda Brokerage")
         {
             if (environment != Environment.Trade && environment != Environment.Practice)
@@ -59,8 +60,8 @@ namespace QuantConnect.Brokerages.Oanda
             // Use v20 REST API only if you have a v20 account
             // Use v1 REST API if your account id contains only digits(ie. 2534253) as it is a legacy account
             _api = IsLegacyAccount(accountId) ? (OandaRestApiBase)
-                new OandaRestApiV1(_symbolMapper, orderProvider, securityProvider, environment, accessToken, accountId) :
-                new OandaRestApiV20(_symbolMapper, orderProvider, securityProvider, environment, accessToken, accountId);
+                new OandaRestApiV1(_symbolMapper, orderProvider, securityProvider, environment, accessToken, accountId, agent) :
+                new OandaRestApiV20(_symbolMapper, orderProvider, securityProvider, environment, accessToken, accountId, agent);
 
             // forward events received from API
             _api.OrderStatusChanged += (sender, orderEvent) => OnOrderEvent(orderEvent);
