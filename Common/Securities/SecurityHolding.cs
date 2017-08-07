@@ -25,7 +25,7 @@ namespace QuantConnect.Securities
     {
         //Working Variables
         private decimal _averagePrice;
-        private int     _quantity;
+        private decimal _quantity;
         private decimal _price;
         private decimal _totalSaleVolume;
         private decimal _profit;
@@ -93,7 +93,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>Positive indicates long holdings, negative quantity indicates a short holding</remarks>
         /// <seealso cref="AbsoluteQuantity"/>
-        public int Quantity
+        public decimal Quantity
         {
             get
             {
@@ -201,7 +201,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual decimal HoldingsValue
         {
-            get { return _price*Convert.ToDecimal(Quantity)*_security.QuoteCurrency.ConversionRate*_security.SymbolProperties.ContractMultiplier; }
+            get { return _price * Quantity * _security.QuoteCurrency.ConversionRate * _security.SymbolProperties.ContractMultiplier; }
         }
 
         /// <summary>
@@ -382,6 +382,15 @@ namespace QuantConnect.Securities
         /// Set the quantity of holdings and their average price after processing a portfolio fill.
         /// </summary>
         public virtual void SetHoldings(decimal averagePrice, int quantity) 
+        {
+            _averagePrice = averagePrice;
+            _quantity = quantity;
+        }
+
+        /// <summary>
+        /// Set the quantity of holdings and their average price after processing a portfolio fill.
+        /// </summary>
+        public virtual void SetHoldings(decimal averagePrice, decimal quantity)
         {
             _averagePrice = averagePrice;
             _quantity = quantity;

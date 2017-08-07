@@ -154,7 +154,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public static OrderResponse ZeroQuantity(OrderRequest request)
         {
-            const string format = "Unable to {0} order with id {1} that have zero quantity.";
+            const string format = "Unable to {0} order with id {1} that has zero quantity.";
             return Error(request, OrderResponseErrorCode.OrderQuantityZero,
                 string.Format(format, request.OrderRequestType.ToString().ToLower(), request.OrderId));
         }

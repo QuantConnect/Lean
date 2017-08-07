@@ -251,7 +251,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Customizable dynamic statistics displayed during live trading:
         /// </summary>
-        Dictionary<string, string> RuntimeStatistics
+        ConcurrentDictionary<string, string> RuntimeStatistics
         {
             get;
         }

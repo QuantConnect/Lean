@@ -125,6 +125,16 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
+        /// Gets the storage dictionary
+        /// Python algorithms need this information since DynamicMetaObject does not work
+        /// </summary>
+        /// <returns>Dictionary that stores the paramenters names and values</returns>
+        public IDictionary<string, object> GetStorageDictionary()
+        {
+            return _storage;
+        }
+
+        /// <summary>
         /// Return a new instance clone of this object, used in fill forward
         /// </summary>
         /// <remarks>

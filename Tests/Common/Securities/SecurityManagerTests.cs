@@ -17,11 +17,13 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
+using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -336,6 +338,21 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsTrue(subscriptions.Subscriptions.Any(x => x.TickType == TickType.OpenInterest && x.Type == typeof(OpenInterest)));
             Assert.IsTrue(subscriptions.Subscriptions.Any(x => x.TickType == TickType.Quote && x.Type == typeof(QuoteBar)));
             Assert.IsTrue(subscriptions.Subscriptions.Any(x => x.TickType == TickType.Trade && x.Type == typeof(TradeBar)));
+        }
+
+        [Test]
+        public void Option_SubscriptionDataConfigList_CanOnlyHave_RawDataNormalization()
+        {
+            var option = new Symbol(SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, Symbols.SPY.ID, Market.USA, 0, default(OptionRight), default(OptionStyle)), "?SPY");
+
+            var subscriptionDataConfigList = new SubscriptionDataConfigList(option);
+
+            Assert.DoesNotThrow(() => { subscriptionDataConfigList.SetDataNormalizationMode(DataNormalizationMode.Raw); });
+
+            Assert.Throws(typeof(ArgumentException), () => { subscriptionDataConfigList.SetDataNormalizationMode(DataNormalizationMode.Adjusted); });
+            Assert.Throws(typeof(ArgumentException), () => { subscriptionDataConfigList.SetDataNormalizationMode(DataNormalizationMode.SplitAdjusted); });
+            Assert.Throws(typeof(ArgumentException), () => { subscriptionDataConfigList.SetDataNormalizationMode(DataNormalizationMode.Adjusted); });
+            Assert.Throws(typeof(ArgumentException), () => { subscriptionDataConfigList.SetDataNormalizationMode(DataNormalizationMode.TotalReturn); });
         }
 
         private SubscriptionDataConfig CreateTradeBarConfig()

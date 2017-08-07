@@ -39,7 +39,7 @@ namespace QuantConnect.Orders
         /// <param name="quantity">Quantity of the option we're seeking to exercise. Must be a positive value.</param>
         /// <param name="time">Time the order was placed</param>
         /// <param name="tag">User defined data tag for this order</param>
-        public OptionExerciseOrder(Symbol symbol, int quantity, DateTime time, string tag = "")
+        public OptionExerciseOrder(Symbol symbol, decimal quantity, DateTime time, string tag = "")
             : base(symbol, quantity, time, tag)
         {
             Price = Symbol.ID.StrikePrice;
@@ -63,7 +63,6 @@ namespace QuantConnect.Orders
 
             return option.GetExerciseQuantity(Quantity) * Price  / option.SymbolProperties.ContractMultiplier;
         }
-
 
         /// <summary>
         /// Creates a deep-copy clone of this order

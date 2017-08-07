@@ -45,7 +45,7 @@ namespace QuantConnect.Orders
         /// <param name="quantity">The number of units to order</param>
         /// <param name="time">The current time</param>
         /// <param name="tag">A user defined tag for the order</param>
-        public MarketOnCloseOrder(Symbol symbol, int quantity, DateTime time, string tag = "")
+        public MarketOnCloseOrder(Symbol symbol, decimal quantity, DateTime time, string tag = "")
             : base(symbol, quantity, time, tag)
         {
         }

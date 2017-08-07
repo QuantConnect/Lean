@@ -1,46 +1,45 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
 */
 
-using QuantConnect.Commands;
+using QuantConnect.Data;
+using QuantConnect.Data.Custom;
+using System;
+using System.Collections.Generic;
 
-namespace QuantConnect.Packets
+namespace QuantConnect.Python
 {
     /// <summary>
-    /// Contains data held as the result of executing a command
+    /// Dynamic data class for Python algorithms.
     /// </summary>
-    public class CommandResultPacket : Packet
+    public class PythonQuandl : Quandl
     {
         /// <summary>
-        /// Gets or sets the command that produced this packet
+        /// Constructor for initialising the PythonQuandl class
         /// </summary>
-        public string CommandName { get; set; }
-
-        /// <summary>
-        /// Gets or sets whether or not the
-        /// </summary>
-        public bool Success { get; set; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CommandResultPacket"/> class
-        /// </summary>
-        public CommandResultPacket(ICommand command, bool success)
-            : base(PacketType.CommandResult)
+        public PythonQuandl() : base("Close")
         {
-            Success = success;
-            CommandName = command.GetType().Name;
+            //Empty constructor required for fast-reflection initialization
+        }
+
+        /// <summary>
+        /// Constructor for creating customized quandl instance which doesn't use "Close" as its value item.
+        /// </summary>
+        /// <param name="valueColumnName"></param>
+        public PythonQuandl(string valueColumnName) : base(valueColumnName)
+        {
+            //
         }
     }
 }

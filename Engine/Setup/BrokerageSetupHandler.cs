@@ -218,7 +218,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     }
                     catch (Exception err)
                     {
-                        AddInitializationError(err.Message);
+                        AddInitializationError(err.ToString());
                     }
                 }, controls.RamAllocation);
 
@@ -335,7 +335,7 @@ namespace QuantConnect.Lean.Engine.Setup
                             }
                         }
 
-                        algorithm.Portfolio[holding.Symbol].SetHoldings(holding.AveragePrice, (int) holding.Quantity);
+                        algorithm.Portfolio[holding.Symbol].SetHoldings(holding.AveragePrice, holding.Quantity);
                         algorithm.Securities[holding.Symbol].SetMarketPrice(new TradeBar
                         {
                             Time = DateTime.Now,
@@ -364,7 +364,7 @@ namespace QuantConnect.Lean.Engine.Setup
             }
             catch (Exception err)
             {
-                AddInitializationError(err.Message);
+                AddInitializationError(err.ToString());
             }
             finally
             {

@@ -1004,9 +1004,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <summary>
         /// Rounds off the order towards 0 to the nearest multiple of Lot Size
         /// </summary>
-        private int RoundOffOrder(Order order, Security security)
+        public decimal RoundOffOrder(Order order, Security security)
         {
-            var orderLotMod = order.Quantity%Convert.ToInt32(security.SymbolProperties.LotSize);
+            var orderLotMod = order.Quantity % security.SymbolProperties.LotSize;
 
             if (orderLotMod != 0)
             {
@@ -1017,7 +1017,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     _algorithm.Error(
                         string.Format(
                             "Warning: Due to brokerage limitations, orders will be rounded to the nearest lot size of {0}",
-                            Convert.ToInt32(security.SymbolProperties.LotSize)));
+                            security.SymbolProperties.LotSize));
                     _firstRoundOffMessage = true;
                 }
                 return order.Quantity;

@@ -347,9 +347,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     Time = baseData.EndTime,
                     LastPrice = security.Close,
                     BidPrice = security.BidPrice,
-                    BidSize = security.BidSize,
+                    BidSize = (long)security.BidSize,
                     AskPrice = security.AskPrice,
-                    AskSize = security.AskSize,
+                    AskSize = (long)security.AskSize,
                     OpenInterest = security.OpenInterest,
                     UnderlyingLastPrice = chain.Underlying.Price 
                 };
@@ -423,9 +423,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     Time = baseData.EndTime,
                     LastPrice = security.Close,
                     BidPrice = security.BidPrice,
-                    BidSize = security.BidSize,
+                    BidSize = (long)security.BidSize,
                     AskPrice = security.AskPrice,
-                    AskSize = security.AskSize,
+                    AskSize = (long)security.AskSize,
                     OpenInterest = security.OpenInterest
                 };
                 chain.Contracts[baseData.Symbol] = contract;
@@ -464,12 +464,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (quote.Ask != null && quote.Ask.Close != 0m)
             {
                 contract.AskPrice = quote.Ask.Close;
-                contract.AskSize = quote.LastAskSize;
+                contract.AskSize = (long)quote.LastAskSize;
             }
             if (quote.Bid != null && quote.Bid.Close != 0m)
             {
                 contract.BidPrice = quote.Bid.Close;
-                contract.BidSize = quote.LastBidSize;
+                contract.BidSize = (long)quote.LastBidSize;
             }
         }
 
@@ -506,12 +506,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (quote.Ask != null && quote.Ask.Close != 0m)
             {
                 contract.AskPrice = quote.Ask.Close;
-                contract.AskSize = quote.LastAskSize;
+                contract.AskSize = (long)quote.LastAskSize;
             }
             if (quote.Bid != null && quote.Bid.Close != 0m)
             {
                 contract.BidPrice = quote.Bid.Close;
-                contract.BidSize = quote.LastBidSize;
+                contract.BidSize = (long)quote.LastBidSize;
             }
         }
 

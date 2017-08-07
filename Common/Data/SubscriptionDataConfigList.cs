@@ -12,6 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -54,6 +56,11 @@ namespace QuantConnect.Data
         /// <param name="normalizationMode"></param>
         public void SetDataNormalizationMode(DataNormalizationMode normalizationMode)
         {
+            if (Symbol.SecurityType == SecurityType.Option && normalizationMode != DataNormalizationMode.Raw)
+            {
+                throw new ArgumentException("DataNormalizationMode.Raw must be used with options");
+            }
+
             foreach (var config in this)
             {
                 config.DataNormalizationMode = normalizationMode;

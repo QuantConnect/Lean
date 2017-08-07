@@ -149,7 +149,7 @@ namespace QuantConnect.Brokerages.Fxcm
                             Log.Error(exception);
                         }
                     }
-                });
+                }) { IsBackground = true };
                 _orderEventThread.Start();
                 while (!_orderEventThread.IsAlive)
                 {
@@ -262,7 +262,7 @@ namespace QuantConnect.Brokerages.Fxcm
                     {
                         Log.Error(exception);
                     }
-                });
+                }) { IsBackground = true };
                 _connectionMonitorThread.Start();
                 while (!_connectionMonitorThread.IsAlive)
                 {

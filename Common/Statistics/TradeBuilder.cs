@@ -193,7 +193,7 @@ namespace QuantConnect.Statistics
             else
             {
                 // execution has opposite direction of trade
-                var totalExecutedQuantity = 0;
+                var totalExecutedQuantity = 0m;
                 var orderFeeAssigned = false;
                 while (position.PendingTrades.Count > 0 && Math.Abs(totalExecutedQuantity) < fill.AbsoluteFillQuantity)
                 {
@@ -306,8 +306,8 @@ namespace QuantConnect.Statistics
                     var index = _matchingMethod == FillMatchingMethod.FIFO ? 0 : position.PendingFills.Count - 1;
 
                     var entryTime = position.PendingFills[0].UtcTime;
-                    var totalEntryQuantity = 0;
-                    var totalExitQuantity = 0;
+                    var totalEntryQuantity = 0m;
+                    var totalExitQuantity = 0m;
                     var entryAveragePrice = 0m;
                     var exitAveragePrice = 0m;
 
@@ -401,7 +401,7 @@ namespace QuantConnect.Statistics
             {
                 // execution has opposite direction of trade
                 var entryTime = position.PendingFills[index].UtcTime;
-                var totalExecutedQuantity = 0;
+                var totalExecutedQuantity = 0m;
                 var entryPrice = 0m;
                 position.TotalFees += orderFee;
 

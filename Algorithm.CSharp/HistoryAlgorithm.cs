@@ -43,9 +43,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             // Find more symbols here: http://quantconnect.com/data
             AddSecurity(SecurityType.Equity, "SPY", Resolution.Daily);
-            AddData<Quandl>("YAHOO/INDEX_SPY", Resolution.Daily);
+            AddData<QuandlFuture>("CHRIS/CME_SP1", Resolution.Daily);
             // specifying the exchange will allow the history methods that accept a number of bars to return to work properly
-            Securities["YAHOO/INDEX_SPY"].Exchange = new EquityExchange();
+            Securities["CHRIS/CME_SP1"].Exchange = new EquityExchange();
 
             // we can get history in initialize to set up indicators and such
             spyDailySma = new SimpleMovingAverage(14);
@@ -74,66 +74,66 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             // get the last calendar year's worth of quandl data at the configured resolution (daily)
-            var quandlHistory = History<Quandl>("YAHOO/INDEX_SPY", TimeSpan.FromDays(365));
-            AssertHistoryCount("History<Quandl>(\"YAHOO/INDEX_SPY\", TimeSpan.FromDays(365))", quandlHistory, 250);
+            var quandlHistory = History<QuandlFuture>("CHRIS/CME_SP1", TimeSpan.FromDays(365));
+            AssertHistoryCount("History<Quandl>(\"CHRIS/CME_SP1\", TimeSpan.FromDays(365))", quandlHistory, 250);
 
             // get the last 14 bars of SPY at the configured resolution (daily)
-            quandlHistory = History<Quandl>("YAHOO/INDEX_SPY", 14);
-            AssertHistoryCount("History<Quandl>(\"YAHOO/INDEX_SPY\", 14)", quandlHistory, 14);
+            quandlHistory = History<QuandlFuture>("CHRIS/CME_SP1", 14);
+            AssertHistoryCount("History<Quandl>(\"CHRIS/CME_SP1\", 14)", quandlHistory, 14);
 
             // get the last 14 minute bars of SPY
 
             // we can loop over the return values from these functions and we'll get Quandl data
             // this can be used in much the same way as the tradeBarHistory above
             spyDailySma.Reset();
-            foreach (Quandl quandl in quandlHistory)
+            foreach (QuandlFuture quandl in quandlHistory)
             {
                 spyDailySma.Update(quandl.EndTime, quandl.Value);
             }
 
             // get the last year's worth of all configured Quandl data at the configured resolution (daily)
-            var allQuandlData = History<Quandl>(TimeSpan.FromDays(365));
-            AssertHistoryCount("History<Quandl>(TimeSpan.FromDays(365))", allQuandlData, 250);
+            var allQuandlData = History<QuandlFuture>(TimeSpan.FromDays(365));
+            AssertHistoryCount("History<QuandlFuture>(TimeSpan.FromDays(365))", allQuandlData, 250);
 
             // get the last 14 bars worth of Quandl data for the specified symbols at the configured resolution (daily)
-            allQuandlData = History<Quandl>(Securities.Keys, 14);
-            AssertHistoryCount("History<Quandl>(Securities.Keys, 14)", allQuandlData, 14);
+            allQuandlData = History<QuandlFuture>(Securities.Keys, 14);
+            AssertHistoryCount("History<QuandlFuture>(Securities.Keys, 14)", allQuandlData, 14);
 
             // NOTE: using different resolutions require that they are properly implemented in your data type, since
             //  Quandl doesn't support minute data, this won't actually work, but if your custom data source has
             //  different resolutions, it would need to be implemented in the GetSource and Reader methods properly
-            //quandlHistory = History<Quandl>("YAHOO/INDEX_SPY", TimeSpan.FromDays(7), Resolution.Minute);
-            //quandlHistory = History<Quandl>("YAHOO/INDEX_SPY", 14, Resolution.Minute);
-            //allQuandlData = History<Quandl>(TimeSpan.FromDays(365), Resolution.Minute);
-            //allQuandlData = History<Quandl>(Securities.Keys, 14, Resolution.Minute);
-            //allQuandlData = History<Quandl>(Securities.Keys, TimeSpan.FromDays(1), Resolution.Minute);
-            //allQuandlData = History<Quandl>(Securities.Keys, 14, Resolution.Minute);
+            //quandlHistory = History<QuandlFuture>("CHRIS/CME_SP1", TimeSpan.FromDays(7), Resolution.Minute);
+            //quandlHistory = History<QuandlFuture>("CHRIS/CME_SP1", 14, Resolution.Minute);
+            //allQuandlData = History<QuandlFuture>(TimeSpan.FromDays(365), Resolution.Minute);
+            //allQuandlData = History<QuandlFuture>(Securities.Keys, 14, Resolution.Minute);
+            //allQuandlData = History<QuandlFuture>(Securities.Keys, TimeSpan.FromDays(1), Resolution.Minute);
+            //allQuandlData = History<QuandlFuture>(Securities.Keys, 14, Resolution.Minute);
 
             // get the last calendar year's worth of all quandl data
-            allQuandlData = History<Quandl>(Securities.Keys, TimeSpan.FromDays(365));
-            AssertHistoryCount("History<Quandl>(Securities.Keys, TimeSpan.FromDays(365))", allQuandlData, 250);
+            allQuandlData = History<QuandlFuture>(Securities.Keys, TimeSpan.FromDays(365));
+            AssertHistoryCount("History<QuandlFuture>(Securities.Keys, TimeSpan.FromDays(365))", allQuandlData, 250);
 
             // the return is a series of dictionaries containing all quandl data at each time
             // we can loop over it to get the individual dictionaries
-            foreach (DataDictionary<Quandl> quandlsDataDictionary in allQuandlData)
+            foreach (DataDictionary<QuandlFuture> quandlsDataDictionary in allQuandlData)
             {
                 // we can access the dictionary to get the quandl data we want
-                var quandl = quandlsDataDictionary["YAHOO/INDEX_SPY"];
+                var quandl = quandlsDataDictionary["CHRIS/CME_SP1"];
             }
 
             // we can also access the return value from the multiple symbol functions to request a single
             // symbol and then loop over it
-            var singleSymbolQuandl = allQuandlData.Get("YAHOO/INDEX_SPY");
-            AssertHistoryCount("allQuandlData.Get(\"YAHOO/INDEX_SPY\")", singleSymbolQuandl, 250);
-            foreach (Quandl quandl in singleSymbolQuandl)
+            var singleSymbolQuandl = allQuandlData.Get("CHRIS/CME_SP1");
+            AssertHistoryCount("allQuandlData.Get(\"CHRIS/CME_SP1\")", singleSymbolQuandl, 250);
+            foreach (QuandlFuture quandl in singleSymbolQuandl)
             {
-                // do something with 'YAHOO/INDEX_SPY' quandl data
+                // do something with 'CHRIS/CME_SP1' quandl data
             }
 
             // we can also access individual properties on our data, this will
-            // get the 'YAHOO/INDEX_SPY' quandls like above, but then only return the Low properties
-            var quandlSpyLows = allQuandlData.Get("YAHOO/INDEX_SPY", "Low");
-            AssertHistoryCount("allQuandlData.Get(\"YAHOO/INDEX_SPY\", \"Low\")", quandlSpyLows, 250);
+            // get the 'CHRIS/CME_SP1' quandls like above, but then only return the Low properties
+            var quandlSpyLows = allQuandlData.Get("CHRIS/CME_SP1", "Low");
+            AssertHistoryCount("allQuandlData.Get(\"CHRIS/CME_SP1\", \"Low\")", quandlSpyLows, 250);
             foreach (decimal low in quandlSpyLows)
             {
                 // do something we each low value

@@ -81,6 +81,9 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                             // QCAlgorithm reference for LEAN internal C# calls (without going from C# to Python and back)
                             _baseAlgorithm = (QCAlgorithm)_algorithm;
 
+                            // Set pandas
+                            _baseAlgorithm.SetPandas();
+
                             return; 
                         }
                     }
@@ -275,7 +278,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <summary>
         /// Wrapper for <see cref = "IAlgorithm.RuntimeStatistics" /> in Python
         /// </summary>
-        public Dictionary<string, string> RuntimeStatistics
+        public ConcurrentDictionary<string, string> RuntimeStatistics
         {
             get
             {
@@ -895,7 +898,6 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                 "from clr import AddReference\n" +
                 "AddReference(\"System\")\n" +
                 "AddReference(\"QuantConnect.Common\")\n" +
-                "from QuantConnect.Python import PythonData\n" +
                 "import decimal\n" +
 
                 // OnPythonData call OnData after converting the Slice object
@@ -916,11 +918,12 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                 "        for member in members:\n" +
                 "            setattr(self, member, getattr(data, member))\n" +
 
-                "        if not isinstance(data, PythonData): return\n" +
+                "        if not hasattr(data, 'GetStorageDictionary'): return\n" +
 
-                "        for member in data.DynamicMembers:\n" +
-                "            val = data[member]\n" +
-                "            setattr(self, member, decimal.Decimal(val) if isinstance(val, float) else val)";
+                "        for kvp in data.GetStorageDictionary():\n" +
+                "           name = kvp.Key.replace('-',' ').replace('.',' ').title().replace(' ', '')\n" +
+                "           value = decimal.Decimal(kvp.Value) if isinstance(kvp.Value, float) else kvp.Value\n" +
+                "           setattr(self, name, value)";
 
             using (Py.GIL())
             {
