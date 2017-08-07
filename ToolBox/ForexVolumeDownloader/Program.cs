@@ -50,13 +50,10 @@ namespace QuantConnect.ToolBox
                 // Load settings from config.json
 
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
-
-                Market.Add("FXCMForexVolume", identifier: 20);
-
                 var downloader = new ForexVolumeDownloader(dataDirectory);
                 foreach (var ticker in tickers)
                 {
-                    var symbol = Symbol.Create(ticker, SecurityType.Base, Market.Decode(code: 20));
+                    var symbol = Symbol.Create(ticker, SecurityType.Base, Market.FXCM);
                     foreach (var resolution in resolutions)
                     {
                         downloader.Run(symbol, resolution, startDate, endDate);
