@@ -3,11 +3,11 @@ using QuantConnect.Logging;
 using System;
 using System.Globalization;
 
-namespace QuantConnect.ToolBox
+namespace QuantConnect.ToolBox.FxcmForexVolumeDownloader
 {
-    public class Program
+    class Program
     {
-        public static void Main(string[] args)
+        static void Main(string[] args)
         {
             if (args.Length != 4)
             {
