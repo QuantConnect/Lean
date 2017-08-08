@@ -9,6 +9,9 @@ namespace QuantConnect.ToolBox.FxcmForexVolumeDownloader
     {
         static void Main(string[] args)
         {
+
+            args = new string[] { "EURUSD", "Minute", "20140507", "20140515" };
+
             if (args.Length != 4)
             {
                 Console.WriteLine("Usage: ForexVolumeDownloader SYMBOLS RESOLUTION FROMDATE TODATE");
@@ -24,12 +27,8 @@ namespace QuantConnect.ToolBox.FxcmForexVolumeDownloader
 
             try
             {
-                var timer = DateTime.Now;
                 Log.DebuggingEnabled = true;
-                var logHandlers = new ILogHandler[]
-                {
-                    new ConsoleLogHandler(), new FileLogHandler("FxcmFxVolumeDownloader.log", useTimestampPrefix: false)
-                };
+                Log.LogHandler = new CompositeLogHandler(new ConsoleLogHandler(), new FileLogHandler("FxcmFxVolumeDownloader.log", useTimestampPrefix: false));
 
                 // Load settings from command line
                 var tickers = args[0].Split(',');

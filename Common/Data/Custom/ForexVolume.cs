@@ -1,6 +1,7 @@
 ﻿using QuantConnect.Util;
 using System;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 
 namespace QuantConnect.Data.Custom
@@ -52,10 +53,26 @@ namespace QuantConnect.Data.Custom
             if (isLiveMode) throw new NotImplementedException("FOREX Volume data is not available in live mode, yet.");
             CheckResolution(config.Resolution);
             CheckForexPair(config.Symbol.Value);
-            var source = LeanData.GenerateZipFilePath(Globals.DataFolder, config.Symbol, SecurityType.Base,
-                "FXCMForexVolume",
-                date, config.Resolution);
+            var source = GenerateZipFilePath(config, date);
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile);
+        }
+
+        private static string GenerateZipFilePath(SubscriptionDataConfig config, DateTime date)
+        {
+            var source = Path.Combine(new[] {Globals.DataFolder, "forex", "fxcm", config.Resolution.ToLower()});
+            string filename;
+
+            if (config.Resolution == Resolution.Minute)
+            {
+                filename = string.Format("{0:yyyyMMdd}_volume.zip", date);
+                source = Path.Combine(source, config.Symbol.Value.ToLower(), filename);
+            }
+            else
+            {
+                filename = string.Format("{0}_volume.zip", config.Symbol.Value.ToLower());
+                source = Path.Combine(source, filename);
+            }
+            return source;
         }
 
         /// <summary>
@@ -88,7 +105,7 @@ namespace QuantConnect.Data.Custom
                 Symbol = config.Symbol,
                 Time = time,
                 Value = long.Parse(obs[1]),
-                Transactions = int.Parse(obs[2])
+                Transactions = int.Parse(obs[2]),
             };
         }
 

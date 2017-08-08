@@ -21,7 +21,7 @@ namespace QuantConnect.ToolBox
             _resolution = resolution;
             _dataDirectory = dataDirectory;
             _market = _symbol.ID.Market;
-            _folderPath = Path.Combine(new[] { _dataDirectory, "base", _market.ToLower(), _resolution.ToString().ToLower() });
+            _folderPath = Path.Combine(new[] { _dataDirectory, "forex", _market.ToLower(), _resolution.ToString().ToLower() });
             if (resolution == Resolution.Minute)
             {
                 _folderPath = Path.Combine(_folderPath, symbol.Value.ToLower());
@@ -53,7 +53,7 @@ namespace QuantConnect.ToolBox
                     sb.AppendLine(string.Format("{0},{1},{2}", obs.Time.TimeOfDay.TotalMilliseconds, obs.Value,
                         obs.Transactions));
                 }
-                var filename = string.Format("{0:yyyyMMdd}_trade.csv", dayOfData.Key);
+                var filename = string.Format("{0:yyyyMMdd}_volume.csv", dayOfData.Key);
                 var filePath = Path.Combine(_folderPath, filename);
                 File.WriteAllText(filePath, sb.ToString());
                 // Write out this data string to a zip file
@@ -73,7 +73,7 @@ namespace QuantConnect.ToolBox
                     obs.Transactions));
             }
 
-            var filename = _symbol.Value.ToLower() + ".csv";
+            var filename = _symbol.Value.ToLower() + "_volume.csv";
             var filePath = Path.Combine(_folderPath, filename);
             File.WriteAllText(filePath, sb.ToString());
             // Write out this data string to a zip file
