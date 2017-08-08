@@ -289,21 +289,6 @@ namespace QuantConnect.Interfaces
         IEnumerable<MarketHoursSegment> MarketToday(DateTime time, Symbol symbol);
 
         /// <summary>
-        /// Store logs in the cloud
-        /// </summary>
-        /// <param name="logs">The list of individual logs to be stored</param>
-        /// <param name="job">The <see cref="AlgorithmNodePacket"/> used to generate the url to the logs</param>
-        /// <param name="permissions">The <see cref="StoragePermissions"/> for the file</param>
-        /// <param name="async">Bool indicating whether the method to <see cref="Store"/> should be async</param>
-        /// <returns>The url where the logs can be accessed</returns>
-        string StoreLogs(List<string> logs, AlgorithmNodePacket job, StoragePermissions permissions, bool async = false);
-
-        /// <summary>
-        /// Store data in the cloud
-        /// </summary>
-        void Store(string data, string location, StoragePermissions permissions, bool async = false);
-
-        /// <summary>
         /// Send an email to the user associated with the specified algorithm id
         /// </summary>
         /// <param name="algorithmId">The algorithm id</param>
