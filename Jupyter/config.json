@@ -1,0 +1,7 @@
+{
+  // In this configuration file, the data folder and the plugin directory are defined
+  // We use absolute paths to be able to load notebooks across different folders
+  
+  "data-folder": "/root/Lean/Data/",
+  "plugin-directory" : "/usr/lib/python2.7/Lean"
+}
