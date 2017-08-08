@@ -290,6 +290,14 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
+        /// Gets the option chain provider, used to get the list of option contracts for an underlying symbol
+        /// </summary>
+        IOptionChainProvider OptionChainProvider
+        {
+            get;
+        }
+
+        /// <summary>
         /// Initialise the Algorithm and Prepare Required Data:
         /// </summary>
         void Initialize();
@@ -570,5 +578,11 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="availableDataTypes">>The different <see cref="TickType"/> each <see cref="Security"/> supports</param>
         void SetAvailableDataTypes(Dictionary<SecurityType, List<TickType>> availableDataTypes);
+
+        /// <summary>
+        /// Sets the option chain provider, used to get the list of option contracts for an underlying symbol
+        /// </summary>
+        /// <param name="optionChainProvider">The option chain provider</param>
+        void SetOptionChainProvider(IOptionChainProvider optionChainProvider);
     }
 }

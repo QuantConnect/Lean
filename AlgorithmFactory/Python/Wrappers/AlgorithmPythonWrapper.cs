@@ -342,6 +342,17 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.OptionChainProvider" /> in Python
+        /// </summary>
+        public IOptionChainProvider OptionChainProvider
+        {
+            get
+            {
+                return _baseAlgorithm.OptionChainProvider;
+            }
+        }
+
+        /// <summary>
         /// Wrapper for <see cref = "IAlgorithm.StartDate" /> in Python
         /// </summary>
         public DateTime StartDate
@@ -384,6 +395,15 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public void SetAvailableDataTypes(Dictionary<SecurityType, List<TickType>> availableDataTypes)
         {
             _baseAlgorithm.SetAvailableDataTypes(availableDataTypes);
+        }
+
+        /// <summary>
+        /// Wrapper for <see cref = "IAlgorithm.SetOptionChainProvider" /> in Python
+        /// </summary>
+        /// <param name="optionChainProvider"></param>
+        public void SetOptionChainProvider(IOptionChainProvider optionChainProvider)
+        {
+            _baseAlgorithm.SetOptionChainProvider(optionChainProvider);
         }
 
         /// <summary>

@@ -35,11 +35,13 @@ namespace QuantConnect.Brokerages.Backtesting
         // is not exactly the fastest operation and Scan gets called at least twice per
         // time loop
         private bool _needsScan;
-        // this is the algorithm under test
-        protected readonly IAlgorithm Algorithm;
         private readonly ConcurrentDictionary<int, Order> _pending;
         private readonly object _needsScanLock = new object();
 
+        /// <summary>
+        /// This is the algorithm under test
+        /// </summary>
+        protected readonly IAlgorithm Algorithm;
 
         /// <summary>
         /// Creates a new BacktestingBrokerage for the specified algorithm
@@ -68,6 +70,7 @@ namespace QuantConnect.Brokerages.Backtesting
         /// Creates a new BacktestingBrokerage for the specified algorithm. Adds market simulation to BacktestingBrokerage;
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
+        /// <param name="marketSimulation">The backtesting market simulation instance</param>
         public BacktestingBrokerage(IAlgorithm algorithm, IBacktestingMarketSimulation marketSimulation)
             : base("Backtesting Brokerage")
         {
