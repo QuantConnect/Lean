@@ -146,7 +146,7 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         public Type InputType
         {
-            get { return typeof (IBaseDataBar); }
+            get { return typeof (IBaseData); }
         }
 
         /// <summary>
