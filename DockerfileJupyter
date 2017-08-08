@@ -24,7 +24,8 @@ ENV PYTHONPATH=${LEAN}:${PYTHONPATH}
 
 # Copy Lean files to convinient locations
 COPY ./Jupyter/bin/Debug ${LEAN}
-COPY ./Jupyter/*.ipynb ${WORK}/Examples/
+COPY ./Jupyter/*.ipynb ${WORK}/
+COPY ./Jupyter/config.json ${WORK}
 RUN rm -irf ${LEAN}/*Python*
 
 WORKDIR $WORK

@@ -52,12 +52,6 @@ namespace QuantConnect.Jupyter
                 {
                     _pandas = Py.Import("pandas");
                 }
-
-                // Set the data-folder
-                Config.Set("data-folder", "/root/Lean/Data");
-                
-                // Set the plugin-directory to current
-                Config.Set("plugin-directory", "/usr/lib/python2.7/Lean");
                 
                 var composer = new Composer();
                 var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(composer);
