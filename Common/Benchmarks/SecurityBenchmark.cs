@@ -41,7 +41,7 @@ namespace QuantConnect.Benchmarks
         /// <returns>The value of the benchmark at the specified time</returns>
         public decimal Evaluate(DateTime time)
         {
-            return _security.Close;
+            return _security.Price;
         }
     }
 }
