@@ -23,11 +23,11 @@ namespace QuantConnect.Lean.Engine.Server
     /// <summary>
     /// Provides scope into Lean that is convenient for managing a lean instance
     /// </summary>
-    [InheritedExport(typeof(ILeanManagement))]
-    public interface ILeanManagement : IDisposable
+    [InheritedExport(typeof(ILeanManager))]
+    public interface ILeanManager : IDisposable
     {
         /// <summary>
-        /// Initialize the ILeanManagement implementation
+        /// Initialize the ILeanManager implementation
         /// </summary>
         /// <param name="systemHandlers">Exposes lean engine system handlers running LEAN</param>
         /// <param name="algorithmHandlers">Exposes the lean algorithm handlers running lean</param>
@@ -36,13 +36,13 @@ namespace QuantConnect.Lean.Engine.Server
         void Initialize(LeanEngineSystemHandlers systemHandlers, LeanEngineAlgorithmHandlers algorithmHandlers, AlgorithmNodePacket job, AlgorithmManager algorithmManager);
 
         /// <summary>
-        /// Sets the IAlgorithm instance in the ILeanManagement
+        /// Sets the IAlgorithm instance in the ILeanManager
         /// </summary>
         /// <param name="algorithm">The IAlgorithm instance being run</param>
         void SetAlgorithm(IAlgorithm algorithm);
 
         /// <summary>
-        /// Update ILeanManagement with the IAlgorithm instance
+        /// Update ILeanManager with the IAlgorithm instance
         /// </summary>
         void Update();
     }

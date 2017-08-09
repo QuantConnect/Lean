@@ -4,12 +4,12 @@ using QuantConnect.Packets;
 namespace QuantConnect.Lean.Engine.Server
 {
     /// <summary>
-    /// NOP implementation of the ILeanManagement interface
+    /// NOP implementation of the ILeanManager interface
     /// </summary>
-    public class LocalLeanManagement : ILeanManagement
+    public class LocalLeanManager : ILeanManager
     {
         /// <summary>
-        /// Empty implementation of the ILeanManagement interface
+        /// Empty implementation of the ILeanManager interface
         /// </summary>
         /// <param name="systemHandlers">Exposes lean engine system handlers running LEAN</param>
         /// <param name="algorithmHandlers">Exposes the lean algorithm handlers running lean</param>
@@ -21,7 +21,7 @@ namespace QuantConnect.Lean.Engine.Server
         }
 
         /// <summary>
-        /// Sets the IAlgorithm instance in the ILeanManagement
+        /// Sets the IAlgorithm instance in the ILeanManager
         /// </summary>
         /// <param name="algorithm">The IAlgorithm instance being run</param>
         public void SetAlgorithm(IAlgorithm algorithm)
@@ -30,7 +30,7 @@ namespace QuantConnect.Lean.Engine.Server
         }
 
         /// <summary>
-        /// Update ILeanManagement with the IAlgorithm instance
+        /// Update ILeanManager with the IAlgorithm instance
         /// </summary>
         public void Update()
         {
