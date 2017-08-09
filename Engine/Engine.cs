@@ -110,8 +110,8 @@ namespace QuantConnect.Lean.Engine
                     // Save algorithm to cache, load algorithm instance:
                     algorithm = _algorithmHandlers.Setup.CreateAlgorithmInstance(job, assemblyPath);
 
-                    // Set algorithm in ILeanManagement
-                    _systemHandlers.LeanManagement.SetAlgorithm(algorithm);
+                    // Set algorithm in ILeanManager
+                    _systemHandlers.LeanManager.SetAlgorithm(algorithm);
 
                     // Initialize the brokerage
                     IBrokerageFactory factory;
@@ -248,7 +248,7 @@ namespace QuantConnect.Lean.Engine
                                 // -> Using this Data Feed, 
                                 // -> Send Orders to this TransactionHandler, 
                                 // -> Send Results to ResultHandler.
-                                algorithmManager.Run(job, algorithm, _algorithmHandlers.DataFeed, _algorithmHandlers.Transactions, _algorithmHandlers.Results, _algorithmHandlers.RealTime, _systemHandlers.LeanManagement, isolator.CancellationToken);
+                                algorithmManager.Run(job, algorithm, _algorithmHandlers.DataFeed, _algorithmHandlers.Transactions, _algorithmHandlers.Results, _algorithmHandlers.RealTime, _systemHandlers.LeanManager, isolator.CancellationToken);
                             }
                             catch (Exception err)
                             {
