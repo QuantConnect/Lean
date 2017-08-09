@@ -433,7 +433,6 @@ namespace QuantConnect.Algorithm
         /// <returns>A single <see cref="BaseData"/> object with the last known price</returns>
         public BaseData GetLastKnownPrice(Security security)
         {
-            
             if (security.Symbol.IsCanonical())
             {
                 return null;
@@ -448,11 +447,18 @@ namespace QuantConnect.Algorithm
             // Get the config with the largest resolution
             var subscriptionDataConfig = GetMatchingSubscription(security, typeof(BaseData));
 
+            // if subscription resolution is Tick, we also need to update the data type from Tick to TradeBar/QuoteBar
+            if (subscriptionDataConfig != null && subscriptionDataConfig.Resolution == Resolution.Tick)
+            {
+                var dataType = LeanData.GetDataType(resolution, subscriptionDataConfig.TickType);
+                subscriptionDataConfig = new SubscriptionDataConfig(subscriptionDataConfig, dataType, resolution: resolution);
+            }
+
             var request = new HistoryRequest
             {
                 StartTimeUtc = startTime.ConvertToUtc(_localTimeKeeper.TimeZone),
                 EndTimeUtc = endTime.ConvertToUtc(_localTimeKeeper.TimeZone),
-                DataType = subscriptionDataConfig != null ? subscriptionDataConfig.Type :  typeof(TradeBar),
+                DataType = subscriptionDataConfig != null ? subscriptionDataConfig.Type : typeof(TradeBar),
                 Resolution = resolution,
                 FillForwardResolution = resolution,
                 Symbol = security.Symbol,
@@ -465,7 +471,6 @@ namespace QuantConnect.Algorithm
             {
                 return history.First().Values.First();
             }
-            
 
             return null;
         }
