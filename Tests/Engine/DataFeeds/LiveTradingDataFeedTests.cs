@@ -398,6 +398,49 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
 
+        [Test]
+        public void FastExitsDoNotThrowUnhandledExceptions()
+        {
+            var algorithm = new AlgorithmStub(Resolution.Tick, Enumerable.Range(0, 20).Select(x => x.ToString()).ToList());
+            var getNextTicksFunction = Enumerable.Range(0, 20).Select(x => new Tick { Symbol = SymbolCache.GetSymbol(x.ToString()) }).ToList();
+
+            // job is used to send into DataQueueHandler
+            var job = new LiveNodePacket();
+            
+            // result handler is used due to dependency in SubscriptionDataReader
+            var resultHandler = new BacktestingResultHandler();
+
+            var dataQueueHandler = new FuncDataQueueHandler(handler => getNextTicksFunction);
+
+            var feed = new TestableLiveTradingDataFeed(dataQueueHandler, null);
+            var mapFileProvider = new LocalDiskMapFileProvider();
+            var fileProvider = new DefaultDataProvider();
+            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), fileProvider);
+
+            var feedThreadStarted = new ManualResetEvent(false);
+
+            var unhandledExceptionWasThrown = false;
+            Task.Run(() =>
+            {
+                try
+                {
+                    feedThreadStarted.Set();
+                    feed.Run();
+                }
+                catch(Exception ex)
+                {
+                    QuantConnect.Logging.Log.Error(ex.ToString());
+                    unhandledExceptionWasThrown = true;
+                }
+            });
+
+            feedThreadStarted.WaitOne();
+            feed.Exit();
+
+            Thread.Sleep(1000);
+
+            Assert.IsFalse(unhandledExceptionWasThrown);
+        }
 
         private IDataFeed RunDataFeed(IAlgorithm algorithm, Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction = null)
         {
