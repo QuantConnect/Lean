@@ -9,9 +9,6 @@ namespace QuantConnect.ToolBox.FxcmForexVolumeDownloader
     {
         static void Main(string[] args)
         {
-
-            args = new string[] { "EURUSD", "Minute", "20140507", "20140515" };
-
             if (args.Length != 4)
             {
                 Console.WriteLine("Usage: ForexVolumeDownloader SYMBOLS RESOLUTION FROMDATE TODATE");
