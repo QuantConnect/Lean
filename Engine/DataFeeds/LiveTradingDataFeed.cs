@@ -331,9 +331,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // so the algorithm manager has a chance to detect the runtime error
                 // and exit showing the correct error instead of a timeout
                 nextEmit = _frontierUtc.RoundDown(Time.OneSecond).Add(Time.OneSecond);
-                _bridge.Add(
-                    TimeSlice.Create(nextEmit, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, new List<DataFeedPacket>(), SecurityChanges.None),
-                    _cancellationTokenSource.Token);
+
+                if (!_cancellationTokenSource.IsCancellationRequested)
+                {
+                    _bridge.Add(
+                        TimeSlice.Create(nextEmit, _algorithm.TimeZone, _algorithm.Portfolio.CashBook, new List<DataFeedPacket>(), SecurityChanges.None),
+                        _cancellationTokenSource.Token);
+                }
             }
 
             Log.Trace("LiveTradingDataFeed.Run(): Exited thread.");
