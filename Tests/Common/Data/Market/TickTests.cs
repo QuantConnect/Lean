@@ -15,7 +15,9 @@
 
 using System;
 using NUnit.Framework;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Data.Market
 {
@@ -36,6 +38,25 @@ namespace QuantConnect.Tests.Common.Data.Market
             Assert.AreEqual(100, tick.Quantity);
             Assert.AreEqual("P", tick.Exchange);
             Assert.AreEqual("T", tick.SaleCondition);
+            Assert.AreEqual(false, tick.Suspicious);
+        }
+
+        [Test]
+        public void ReadsFuturesTickFromLine()
+        {
+            const string line = "86399572,52.62,5,usa,,0,False";
+
+            var baseDate = new DateTime(2013, 10, 08);
+            var symbol = Symbol.CreateFuture(Futures.Energies.CrudeOilWTI, QuantConnect.Market.USA, new DateTime(2017, 2, 28));
+            var config = new SubscriptionDataConfig(typeof(Tick), symbol, Resolution.Tick, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+            var tick = new Tick(config, line, baseDate);
+
+            var ms = (tick.Time - baseDate).TotalMilliseconds;
+            Assert.AreEqual(86399572, ms);
+            Assert.AreEqual(52.62, tick.LastPrice);
+            Assert.AreEqual(5, tick.Quantity);
+            Assert.AreEqual("usa", tick.Exchange);
+            Assert.AreEqual("", tick.SaleCondition);
             Assert.AreEqual(false, tick.Suspicious);
         }
     }
