@@ -15,7 +15,6 @@
 
 using System;
 using System.Globalization;
-using System.IO;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 
@@ -152,7 +151,6 @@ namespace QuantConnect.Data.Market
             AskPrice = ask;
         }
 
-
         /// <summary>
         /// Initializer for a last-trade equity tick with bid or ask prices. 
         /// </summary>
@@ -201,14 +199,13 @@ namespace QuantConnect.Data.Market
             DataType = MarketDataType.Tick;
             Symbol = symbol;
             Time = baseDate.Date.AddMilliseconds(csv[0].ToInt32());
-            Value = csv[1].ToDecimal()/10000m;
+            Value = csv[1].ToDecimal() / GetScaleFactor(symbol.SecurityType);
             TickType = TickType.Trade;
             Quantity = csv[2].ToInt32();
             Exchange = csv[3].Trim();
             SaleCondition = csv[4];
             Suspicious = csv[5].ToInt32() == 1;
         }
-
 
         /// <summary>
         /// Parse a tick data line from quantconnect zip source files.
@@ -223,7 +220,8 @@ namespace QuantConnect.Data.Market
                 DataType = MarketDataType.Tick;
 
                 // Which security type is this data feed:
-                const decimal scaleFactor = 10000m;
+                var scaleFactor = GetScaleFactor(config.SecurityType);
+
                 switch (config.SecurityType)
                 {
                     case SecurityType.Equity:
@@ -361,7 +359,6 @@ namespace QuantConnect.Data.Market
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
 
-
         /// <summary>
         /// Update the tick price information - not used.
         /// </summary>
@@ -399,6 +396,11 @@ namespace QuantConnect.Data.Market
         public override BaseData Clone()
         {
             return new Tick(this);
+        }
+
+        private static decimal GetScaleFactor(SecurityType securityType)
+        {
+            return securityType == SecurityType.Equity || securityType == SecurityType.Option ? 10000m : 1;
         }
 
     } // End Tick Class:
