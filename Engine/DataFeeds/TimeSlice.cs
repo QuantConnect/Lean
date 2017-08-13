@@ -380,6 +380,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 case MarketDataType.QuoteBar:
                     var quote = (QuoteBar)baseData;
+
+                    // if fill-forward enabled, copy previous bid/ask when current values are null
+                    if (security.IsFillDataForward)
+                    {
+                        if (quote.Bid == null)
+                        {
+                            quote.Bid = new Bar(contract.BidPrice, contract.BidPrice, contract.BidPrice, contract.BidPrice);
+                        }
+                        if (quote.Ask == null)
+                        {
+                            quote.Ask = new Bar(contract.AskPrice, contract.AskPrice, contract.AskPrice, contract.AskPrice);
+                        }
+                    }
+
                     chain.QuoteBars[symbol] = quote;
                     UpdateContract(contract, quote);
                     break;
@@ -448,6 +462,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 case MarketDataType.QuoteBar:
                     var quote = (QuoteBar)baseData;
+
+                    // if fill-forward enabled, copy previous bid/ask when current values are null
+                    if (security.IsFillDataForward)
+                    {
+                        if (quote.Bid == null)
+                        {
+                            quote.Bid = new Bar(contract.BidPrice, contract.BidPrice, contract.BidPrice, contract.BidPrice);
+                        }
+                        if (quote.Ask == null)
+                        {
+                            quote.Ask = new Bar(contract.AskPrice, contract.AskPrice, contract.AskPrice, contract.AskPrice);
+                        }
+                    }
+
                     chain.QuoteBars[symbol] = quote;
                     UpdateContract(contract, quote);
                     break;
