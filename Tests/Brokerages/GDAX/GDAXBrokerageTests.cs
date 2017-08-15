@@ -54,7 +54,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         [SetUp()]
         public void Setup()
         {
-            _unit = new GDAXBrokerage("wss://localhost", _wss.Object, _rest.Object, "abc", "MTIz", "pass", "123");
+            _unit = new GDAXBrokerage("wss://localhost", _wss.Object, _rest.Object, "abc", "MTIz", "pass");
             _orderData = File.ReadAllText("TestData\\gdax_order.txt");
             _matchData = File.ReadAllText("TestData\\gdax_match.txt");
             _openOrderData = File.ReadAllText("TestData\\gdax_openOrders.txt");
