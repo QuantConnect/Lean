@@ -92,7 +92,7 @@ namespace QuantConnect.Brokerages.GDAX.Messages
 
     public class Order
     {
-        public Guid Id { get; set; }
+        public string Id { get; set; }
         public decimal Price { get; set; }
         public decimal Size { get; set; }
         [JsonProperty("product_id")]
@@ -112,17 +112,13 @@ namespace QuantConnect.Brokerages.GDAX.Messages
 
     public class Account
     {
-        public Guid Id { get; set; }
+        public string Id { get; set; }
         public string Currency { get; set; }
         public decimal Balance { get; set; }
         public decimal Hold { get; set; }
         public decimal Available { get; set; }
-        [JsonProperty("margin_enabled")]
-        public bool MarginEnabled { get; set; }
-        [JsonProperty("funded_amount")]
-        public decimal FundedAmount { get; set; }
-        [JsonProperty("default_amount")]
-        public decimal DefaultAmount { get; set; }
+        [JsonProperty("profile_id")]
+        public string ProfileId { get; set; }
     }
 
     public class Tick

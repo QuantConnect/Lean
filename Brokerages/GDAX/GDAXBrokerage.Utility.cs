@@ -19,8 +19,10 @@ namespace QuantConnect.Brokerages.GDAX
     public partial class GDAXBrokerage : BaseWebsocketsBrokerage, IDataQueueHandler
     {
 
-        private const string _header = "CB-ACCESS-SIGN";
-
+        private const string SignHeader = "CB-ACCESS-SIGN";
+        private const string KeyHeader = "CB-ACCESS-KEY";
+        private const string TimeHeader = "CB-ACCESS-TIMESTAMP";
+        private const string PassHeader = "CB-ACCESS-PASSPHRASE";
 
         /// <summary>
         /// Creates an auth token and adds to the request
@@ -31,7 +33,11 @@ namespace QuantConnect.Brokerages.GDAX
         {
             var body = request.Parameters.SingleOrDefault(b => b.Type == ParameterType.RequestBody);
             var token = GetAuthenticationToken(body == null ? "" : body.Value.ToString(), request.Method.ToString().ToUpper(), request.Resource);
-            request.AddHeader(_header, token.Signature);
+
+            request.AddHeader(SignHeader, token.Signature);
+            request.AddHeader(KeyHeader, ApiKey);
+            request.AddHeader(TimeHeader, token.Timestamp);
+            request.AddHeader(PassHeader, _passPhrase);
 
             return token;
         }

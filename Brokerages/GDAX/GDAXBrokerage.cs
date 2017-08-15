@@ -237,7 +237,7 @@ namespace QuantConnect.Brokerages.GDAX
         {
             var list = new List<Securities.Cash>();
 
-            var req = new RestRequest("/accounts/" + _accountId, Method.GET);
+            var req = new RestRequest("/accounts", Method.GET);
             GetAuthenticationToken(req);
             var response = RestClient.Execute(req);
 

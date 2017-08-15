@@ -55,8 +55,7 @@ namespace QuantConnect.Brokerages.GDAX
                     { "gdax-url" , Config.Get("gdax-url", "wss://ws-feed.gdax.com")},
                     { "gdax-api-secret", Config.Get("gdax-api-secret")},
                     { "gdax-api-key", Config.Get("gdax-api-key")},
-                    { "gdax-passphrase", Config.Get("gdax-passphrase")},
-                    { "gdax-account-id", Config.Get("gdax-account-id")},
+                    { "gdax-passphrase", Config.Get("gdax-passphrase")}
                 };
             }
         }
@@ -77,7 +76,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// <returns></returns>
         public override Interfaces.IBrokerage CreateBrokerage(Packets.LiveNodePacket job, Interfaces.IAlgorithm algorithm)
         {
-            var required = new[] { "gdax-url", "gdax-api-secret", "gdax-api-key", "gdax-passphrase", "gdax-account-id" };
+            var required = new[] { "gdax-url", "gdax-api-secret", "gdax-api-key", "gdax-passphrase" };
 
             foreach (var item in required)
             {
@@ -85,12 +84,12 @@ namespace QuantConnect.Brokerages.GDAX
                     throw new Exception(string.Format("Missing {0} in config.json", item));
             }
 
-            var restClient = new RestClient();
+            var restClient = new RestClient("https://api.gdax.com");
             var webSocketClient = new WebSocketWrapper();
 
             //string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, string accountId
             var brokerage = new GDAXBrokerage(job.BrokerageData["gdax-url"], webSocketClient, restClient, job.BrokerageData["gdax-api-key"], job.BrokerageData["gdax-api-secret"],
-                job.BrokerageData["gdax-passphrase"], job.BrokerageData["gdax-account-id"]);
+                job.BrokerageData["gdax-passphrase"]);
 
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
 

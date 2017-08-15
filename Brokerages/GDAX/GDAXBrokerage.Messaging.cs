@@ -54,7 +54,6 @@ namespace QuantConnect.Brokerages.GDAX
         public ConcurrentDictionary<long, GDAXFill> FillSplit { get; set; }
         private string _passPhrase;
         private string _wssUrl;
-        private string _accountId;
 
         /// <summary>
         /// Constructor for brokerage
@@ -65,8 +64,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="apiKey">api key</param>
         /// <param name="apiSecret">api secret</param>
         /// <param name="passPhrase">pass phrase</param>
-        /// <param name="accountId">account id</param>
-        public GDAXBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, string accountId)
+        public GDAXBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase)
             : base(wssUrl, websocket, restClient, apiKey, apiSecret, Market.GDAX, "GDAX")
         {
             FillSplit = new ConcurrentDictionary<long, GDAXFill>();
@@ -74,7 +72,6 @@ namespace QuantConnect.Brokerages.GDAX
             BidPrices = new Dictionary<Symbol, ConcurrentDictionary<string, decimal>>();
             _passPhrase = passPhrase;
             _wssUrl = wssUrl;
-            _accountId = accountId;
         }
 
         /// <summary>
