@@ -268,7 +268,7 @@ namespace QuantConnect.Tests.Brokerages
         /// <summary>
         /// Gets the default order quantity
         /// </summary>
-        protected virtual int GetDefaultQuantity()
+        protected virtual decimal GetDefaultQuantity()
         {
             return 1; 
         }

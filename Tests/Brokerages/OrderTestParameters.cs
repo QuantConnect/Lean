@@ -33,11 +33,11 @@ namespace QuantConnect.Tests.Brokerages
             SecurityType = symbol.ID.SecurityType;
         }
 
-        public MarketOrder CreateLongMarketOrder(int quantity)
+        public MarketOrder CreateLongMarketOrder(decimal quantity)
         {
             return new MarketOrder(Symbol, Math.Abs(quantity), DateTime.Now);
         }
-        public MarketOrder CreateShortMarketOrder(int quantity)
+        public MarketOrder CreateShortMarketOrder(decimal quantity)
         {
             return new MarketOrder(Symbol, -Math.Abs(quantity), DateTime.Now);
         }
@@ -45,11 +45,11 @@ namespace QuantConnect.Tests.Brokerages
         /// <summary>
         /// Creates a sell order of this type
         /// </summary>
-        public abstract Order CreateShortOrder(int quantity);
+        public abstract Order CreateShortOrder(decimal quantity);
         /// <summary>
         /// Creates a long order of this type
         /// </summary>
-        public abstract Order CreateLongOrder(int quantity);
+        public abstract Order CreateLongOrder(decimal quantity);
         /// <summary>
         /// Modifies the order so it is more likely to fill
         /// </summary>
