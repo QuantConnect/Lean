@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using NodaTime;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
@@ -110,6 +111,12 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             // optionally apply fill forward behavior
             if (request.FillForwardResolution.HasValue)
             {
+                // copy forward Bid/Ask bars for QuoteBars
+                if (request.DataType == typeof(QuoteBar))
+                {
+                    reader = new QuoteBarFillForwardEnumerator(reader);
+                }
+
                 var readOnlyRef = Ref.CreateReadOnly(() => request.FillForwardResolution.Value.ToTimeSpan());
                 reader = new FillForwardEnumerator(reader, security.Exchange, readOnlyRef, security.IsExtendedMarketHours, end, config.Increment);
             }
