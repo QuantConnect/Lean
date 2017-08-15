@@ -395,6 +395,13 @@ namespace QuantConnect.Orders.Fills
                 {
                     return new Prices(price, 0, 0, 0, 0);
                 }
+
+                // If the ask/bid spreads are not available for ticks, try the price
+                price = tick.Price;
+                if (price != 0m)
+                {
+                    return new Prices(price, 0, 0, 0, 0);
+                }
             }
 
             var quoteBar = asset.Cache.GetData<QuoteBar>();
