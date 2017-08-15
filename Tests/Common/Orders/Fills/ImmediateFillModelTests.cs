@@ -16,10 +16,14 @@
 using System;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Indicators;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Forex;
+using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Common.Orders.Fills
 {
@@ -57,6 +61,28 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(expected, fill.FillPrice);
         }
 
+        [Test]
+        public void ImmediateFillModelUsesPriceForTicksWhenBidAskSpreadsAreNotAvailable()
+        {
+            var noon = new DateTime(2014, 6, 24, 12, 0, 0);
+            var timeKeeper = new TimeKeeper(noon.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
+            var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+            var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Tick, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, noon, 101.123m));
 
+            // Add both a tradebar and a tick to the security cache
+            // This is the case when a tick is seeded with minute data in an algorithm
+            security.Cache.AddData(new TradeBar(DateTime.MinValue, symbol, 1.0m, 1.0m, 1.0m, 1.0m, 1.0m));
+            security.Cache.AddData(new Tick(config, "42525000,1000000,100,A,@,0", DateTime.MinValue));
+
+            var fillModel = new ImmediateFillModel();
+            var order = new MarketOrder(symbol, 1000, DateTime.Now);
+            var fill = fillModel.MarketFill(security, order);
+
+            // The fill model should use the tick.Price
+            Assert.AreEqual(fill.FillPrice, 100m);
+        }
     }
 }

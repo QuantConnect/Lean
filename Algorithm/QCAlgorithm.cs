@@ -1513,6 +1513,9 @@ namespace QuantConnect.Algorithm
                 // cancel open orders
                 Transactions.CancelOpenOrders(security.Symbol);
 
+                // Clear cache
+                security.Cache.Reset();
+
                 // liquidate if invested
                 if (security.Invested) Liquidate(security.Symbol);
                 
