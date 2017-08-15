@@ -3,7 +3,7 @@
     "Equity-usa-[*]": {
       "dataTimeZone": "America/New_York",
       "exchangeTimeZone": "America/New_York",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "04:00:00",
@@ -89,7 +89,7 @@
           "state": "postmarket"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "1/1/1998",
         "1/1/1999",
@@ -403,8 +403,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
 
     "Future-usa-ZW": {
@@ -497,8 +497,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-ZC": {
       "dataTimeZone": "America/Chicago",
@@ -590,8 +590,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-ZS": {
       "dataTimeZone": "America/Chicago",
@@ -683,8 +683,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-ZM": {
       "dataTimeZone": "America/Chicago",
@@ -776,8 +776,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-ZL": {
       "dataTimeZone": "America/Chicago",
@@ -869,8 +869,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-ZO": {
       "dataTimeZone": "America/Chicago",
@@ -962,8 +962,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-DX": {
       "dataTimeZone": "America/New_York",
@@ -1030,8 +1030,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-6B": {
       "dataTimeZone": "America/Chicago",
@@ -1098,8 +1098,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-6C": {
       "dataTimeZone": "America/Chicago",
@@ -1166,8 +1166,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-6J": {
       "dataTimeZone": "America/Chicago",
@@ -1234,8 +1234,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-6S": {
       "dataTimeZone": "America/Chicago",
@@ -1302,8 +1302,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-6E": {
       "dataTimeZone": "America/Chicago",
@@ -1370,8 +1370,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-6A": {
       "dataTimeZone": "America/Chicago",
@@ -1438,8 +1438,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-6N": {
       "dataTimeZone": "America/Chicago",
@@ -1506,8 +1506,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-CL": {
       "dataTimeZone": "America/New_York",
@@ -1574,8 +1574,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-HO": {
       "dataTimeZone": "America/New_York",
@@ -1642,8 +1642,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-RB": {
       "dataTimeZone": "America/New_York",
@@ -1710,8 +1710,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-NG": {
       "dataTimeZone": "America/New_York",
@@ -1778,8 +1778,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-ZB": {
       "dataTimeZone": "America/Chicago",
@@ -1846,8 +1846,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-ZN": {
       "dataTimeZone": "America/Chicago",
@@ -1914,8 +1914,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-ZF": {
       "dataTimeZone": "America/Chicago",
@@ -1982,8 +1982,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-ZT": {
       "dataTimeZone": "America/Chicago",
@@ -2050,8 +2050,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-GE": {
       "dataTimeZone": "America/Chicago",
@@ -2118,8 +2118,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-ES": {
       "dataTimeZone": "America/Chicago",
@@ -2211,8 +2211,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-NQ": {
       "dataTimeZone": "America/Chicago",
@@ -2304,8 +2304,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-YM": {
       "dataTimeZone": "America/Chicago",
@@ -2397,8 +2397,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-VX": {
       "dataTimeZone": "America/Chicago",
@@ -2465,13 +2465,13 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-LE": {
       "dataTimeZone": "America/Chicago",
       "exchangeTimeZone": "America/Chicago",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "08:30:00",
@@ -2507,13 +2507,13 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-GF": {
       "dataTimeZone": "America/Chicago",
       "exchangeTimeZone": "America/Chicago",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "08:30:00",
@@ -2549,13 +2549,13 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-HE": {
       "dataTimeZone": "America/Chicago",
       "exchangeTimeZone": "America/Chicago",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "08:30:00",
@@ -2591,8 +2591,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-GC": {
       "dataTimeZone": "America/New_York",
@@ -2659,8 +2659,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-SI": {
       "dataTimeZone": "America/New_York",
@@ -2727,8 +2727,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-PL": {
       "dataTimeZone": "America/New_York",
@@ -2795,8 +2795,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-PA": {
       "dataTimeZone": "America/New_York",
@@ -2863,8 +2863,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-CT": {
       "dataTimeZone": "America/New_York",
@@ -2931,13 +2931,13 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-OJ": {
       "dataTimeZone": "America/New_York",
       "exchangeTimeZone": "America/New_York",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "08:00:00",
@@ -2973,13 +2973,13 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-KC": {
       "dataTimeZone": "America/New_York",
       "exchangeTimeZone": "America/New_York",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "04:15:00",
@@ -3015,13 +3015,13 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-SB": {
       "dataTimeZone": "America/New_York",
       "exchangeTimeZone": "America/New_York",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "03:30:00",
@@ -3057,13 +3057,13 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Future-usa-CC": {
       "dataTimeZone": "America/New_York",
       "exchangeTimeZone": "America/New_York",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "04:45:00",
@@ -3099,13 +3099,13 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Option-usa-[*]": {
       "dataTimeZone": "America/New_York",
       "exchangeTimeZone": "America/New_York",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "09:30:00",
@@ -3141,7 +3141,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "1/1/1998",
         "1/1/1999",
@@ -3430,7 +3430,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "1/1/2007",
         "1/1/2008",
@@ -3528,8 +3528,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Cfd-fxcm-[*]": {
       "dataTimeZone": "UTC-05",
@@ -3576,8 +3576,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Cfd-fxcm-AU200AUD": {
       "dataTimeZone": "UTC",
@@ -3669,7 +3669,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "1/2/2017",
         "1/26/2017",
@@ -3724,7 +3724,7 @@
     "Cfd-fxcm-BCOUSD": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "UTC",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "01:00:00",
@@ -3760,7 +3760,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017",
         "12/25/2017",
@@ -3781,7 +3781,7 @@
     "Cfd-fxcm-CH20CHF": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "UTC",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "07:00:00",
@@ -3817,7 +3817,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "1/2/2017",
         "4/14/2017",
@@ -3870,7 +3870,7 @@
     "Cfd-fxcm-DE10YBEUR": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "UTC",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "07:00:00",
@@ -3906,7 +3906,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017",
         "4/17/2017",
@@ -3959,7 +3959,7 @@
     "Cfd-fxcm-DE30EUR": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "UTC",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "07:00:00",
@@ -3995,7 +3995,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017",
         "4/17/2017",
@@ -4090,13 +4090,13 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Cfd-fxcm-ES35EUR": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "UTC",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "08:00:00",
@@ -4132,7 +4132,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017",
         "4/17/2017"
@@ -4141,7 +4141,7 @@
     "Cfd-fxcm-EU50EUR": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "UTC",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "07:00:00",
@@ -4177,7 +4177,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017",
         "4/17/2017",
@@ -4215,7 +4215,7 @@
     "Cfd-fxcm-FR40EUR": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "UTC",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "07:00:00",
@@ -4251,7 +4251,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017",
         "4/17/2017",
@@ -4286,7 +4286,7 @@
     "Cfd-fxcm-HK33HKD": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "UTC",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "01:15:00",
@@ -4347,7 +4347,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "1/2/2017",
         "1/30/2017",
@@ -4439,7 +4439,7 @@
     "Cfd-fxcm-IT40EUR": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "UTC",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "08:00:00",
@@ -4475,7 +4475,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017",
         "4/17/2017",
@@ -4522,7 +4522,7 @@
     "Cfd-fxcm-JP225JPY": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "UTC",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "00:00:00",
@@ -4558,7 +4558,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017",
         "12/25/2017",
@@ -4645,7 +4645,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017",
         "12/25/2017",
@@ -4732,7 +4732,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "1/2/2017",
         "1/16/2017",
@@ -4852,7 +4852,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017",
         "12/25/2017",
@@ -4877,7 +4877,7 @@
     "Cfd-fxcm-UK100GBP": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "UTC",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "07:00:00",
@@ -4913,7 +4913,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017",
         "4/17/2017",
@@ -5010,7 +5010,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "1/2/2017",
         "1/16/2017",
@@ -5133,7 +5133,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "1/2/2017",
         "1/16/2017",
@@ -5253,7 +5253,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017"
       ]
@@ -5323,7 +5323,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017"
       ]
@@ -5393,7 +5393,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017"
       ]
@@ -5463,7 +5463,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017"
       ]
@@ -5533,7 +5533,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017"
       ]
@@ -5583,8 +5583,8 @@
           "state": "market"
         }
       ],
-      "saturday": [],
-      "holidays": []
+      "saturday": [ ],
+      "holidays": [ ]
     },
     "Cfd-oanda-AU200AUD": {
       "dataTimeZone": "UTC",
@@ -5676,7 +5676,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "1/2/2017",
         "1/26/2017",
@@ -5793,7 +5793,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017",
         "12/25/2017",
@@ -5814,7 +5814,7 @@
     "Cfd-oanda-CH20CHF": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "Europe/Zurich",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "08:00:00",
@@ -5850,7 +5850,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "1/2/2017",
         "4/14/2017",
@@ -5990,7 +5990,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "1/2/2017",
         "1/16/2017",
@@ -6051,7 +6051,7 @@
     "Cfd-oanda-DE10YBEUR": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "Europe/Berlin",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "08:00:00",
@@ -6087,7 +6087,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017",
         "4/17/2017",
@@ -6140,7 +6140,7 @@
     "Cfd-oanda-DE30EUR": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "Europe/Berlin",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "08:00:00",
@@ -6176,7 +6176,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017",
         "4/17/2017",
@@ -6229,7 +6229,7 @@
     "Cfd-oanda-EU50EUR": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "Europe/Berlin",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "08:00:00",
@@ -6265,7 +6265,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017",
         "4/17/2017",
@@ -6302,7 +6302,7 @@
     "Cfd-oanda-FR40EUR": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "Europe/Paris",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "08:00:00",
@@ -6338,7 +6338,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017",
         "4/17/2017",
@@ -6373,7 +6373,7 @@
     "Cfd-oanda-HK33HKD": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "Asia/Hong_Kong",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "09:15:00",
@@ -6459,7 +6459,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "1/2/2017",
         "1/30/2017",
@@ -6637,7 +6637,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017",
         "12/25/2017",
@@ -6749,7 +6749,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017",
         "12/25/2017",
@@ -6836,7 +6836,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "1/2/2017",
         "1/16/2017",
@@ -6894,7 +6894,7 @@
     "Cfd-oanda-NL25EUR": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "Europe/Amsterdam",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "08:00:00",
@@ -6930,7 +6930,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017",
         "4/17/2017",
@@ -6965,7 +6965,7 @@
     "Cfd-oanda-SG30SGD": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "Asia/Hong_Kong",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "09:00:00",
@@ -7001,7 +7001,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "2/15/2010",
         "2/13/2011",
@@ -7145,7 +7145,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "1/2/2017",
         "1/16/2017",
@@ -7293,7 +7293,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017",
         "12/25/2017",
@@ -7318,7 +7318,7 @@
     "Cfd-oanda-SUGARUSD": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "03:30:00",
@@ -7354,7 +7354,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "1/2/2017",
         "1/16/2017",
@@ -7414,7 +7414,7 @@
     "Cfd-oanda-UK100GBP": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "Europe/London",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "01:00:00",
@@ -7450,7 +7450,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017",
         "4/17/2017",
@@ -7485,7 +7485,7 @@
     "Cfd-oanda-UK10YBGBP": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "Europe/London",
-      "sunday": [],
+      "sunday": [ ],
       "monday": [
         {
           "start": "08:00:00",
@@ -7521,7 +7521,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017",
         "4/17/2017",
@@ -7618,7 +7618,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "1/2/2017",
         "4/14/2017",
@@ -7729,7 +7729,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "1/2/2017",
         "1/16/2017",
@@ -7852,7 +7852,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "1/2/2017",
         "1/16/2017",
@@ -7975,7 +7975,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "1/2/2017",
         "1/16/2017",
@@ -8098,7 +8098,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "1/2/2017",
         "1/16/2017",
@@ -8221,7 +8221,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "1/2/2017",
         "1/16/2017",
@@ -8369,7 +8369,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "1/2/2017",
         "1/16/2017",
@@ -8492,7 +8492,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "1/2/2017",
         "1/16/2017",
@@ -8612,7 +8612,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017"
       ]
@@ -8682,7 +8682,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
 
       ]
@@ -8752,7 +8752,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017"
       ]
@@ -8822,7 +8822,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017"
       ]
@@ -8892,7 +8892,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017"
       ]
@@ -8962,7 +8962,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017"
       ]
@@ -9032,7 +9032,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017"
       ]
@@ -9102,7 +9102,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017"
       ]
@@ -9172,7 +9172,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017"
       ]
@@ -9242,7 +9242,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017"
       ]
@@ -9312,7 +9312,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017"
       ]
@@ -9382,7 +9382,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017"
       ]
@@ -9452,7 +9452,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017"
       ]
@@ -9522,7 +9522,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017"
       ]
@@ -9592,7 +9592,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017"
       ]
@@ -9662,7 +9662,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017"
       ]
@@ -9732,7 +9732,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017"
       ]
@@ -9802,7 +9802,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017"
       ]
@@ -9872,7 +9872,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017"
       ]
@@ -9942,7 +9942,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017"
       ]
@@ -10012,7 +10012,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017"
       ]
@@ -10082,7 +10082,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017"
       ]
@@ -10152,7 +10152,7 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017"
       ]
@@ -10222,84 +10222,158 @@
           "state": "market"
         }
       ],
-      "saturday": [],
+      "saturday": [ ],
       "holidays": [
         "4/14/2017"
-      ]    
+      ]
     },
-        "Forex-bitfinex-[*]": {
-            "dataTimeZone": "UTC",
-            "exchangeTimeZone": "UTC",
-            "sunday": [
-                {
-                    "start": "00:00:00",
-                    "end": "1.00:00:00",
-                    "state": "market"
-                }
-            ],
-            "monday": [
-                {
-                    "start": "00:00:00",
-                    "end": "1.00:00:00",
-                    "state": "market"
-                },
-                {
-                    "start": "00:00:00",
-                    "end": "1.00:00:00",
-                    "state": "market"
-                }
-            ],
-            "tuesday": [
-                {
-                    "start": "00:00:00",
-                    "end": "1.00:00:00",
-                    "state": "market"
-                },
-                {
-                    "start": "00:00:00",
-                    "end": "1.00:00:00",
-                    "state": "market"
-                }
-            ],
-            "wednesday": [
-                {
-                    "start": "00:00:00",
-                    "end": "1.00:00:00",
-                    "state": "market"
-                },
-                {
-                    "start": "00:00:00",
-                    "end": "1.00:00:00",
-                    "state": "market"
-                }
-            ],
-            "thursday": [
-                {
-                    "start": "00:00:00",
-                    "end": "1.00:00:00",
-                    "state": "market"
-                },
-                {
-                    "start": "00:00:00",
-                    "end": "1.00:00:00",
-                    "state": "market"
-                }
-            ],
-            "friday": [
-                {
-                    "start": "00:00:00",
-                    "end": "1.00:00:00",
-                    "state": "market"
-                }
-            ],
-            "saturday": [
-                {
-                    "start": "00:00:00",
-                    "end": "1.00:00:00",
-                    "state": "market"
-                }
-            ],
-            "holidays": [ ]
+    "Forex-bitfinex-[*]": {
+      "dataTimeZone": "UTC",
+      "exchangeTimeZone": "UTC",
+      "sunday": [
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
         }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        },
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        },
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        },
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        },
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "holidays": [ ]
+    },
+    "Forex-gdax-[*]": {
+      "dataTimeZone": "UTC",
+      "exchangeTimeZone": "UTC",
+      "sunday": [
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        },
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        },
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        },
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        },
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [
+        {
+          "start": "00:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "holidays": [ ]
+    }
   }
 }
