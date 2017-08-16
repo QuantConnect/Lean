@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.IO;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.ToolBox.AlgoSeekOptionsConverter;
 using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox
@@ -43,9 +42,10 @@ namespace QuantConnect.ToolBox
 
             var dataType = GetDataType(pathComponents.SecurityType, pathComponents.Resolution, tickType);
             var factory = (BaseData) Activator.CreateInstance(dataType);
-            
+            var subscriptionDataType = new SubscriptionDataType(dataType, tickType);
+
             // ignore time zones here, i.e, we're going to emit data in the data time zone
-            var config = new SubscriptionDataConfig(dataType, pathComponents.Symbol, pathComponents.Resolution, TimeZones.Utc, TimeZones.Utc, false, true, false);
+            var config = new SubscriptionDataConfig(subscriptionDataType, pathComponents.Symbol, pathComponents.Resolution, TimeZones.Utc, TimeZones.Utc, false, true, false);
             using (var reader = new StreamReader(stream))
             {
                 string line;

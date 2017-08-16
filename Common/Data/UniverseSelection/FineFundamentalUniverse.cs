@@ -82,7 +82,8 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>A fine fundamental subscription configuration with the specified symbol</returns>
         public static SubscriptionDataConfig CreateConfiguration(Symbol symbol)
         {
-            return new SubscriptionDataConfig(typeof (FineFundamental),
+            return new SubscriptionDataConfig(
+                new SubscriptionDataType(typeof(FineFundamental), TickType.Trade),
                 symbol: symbol,
                 resolution: Resolution.Daily,
                 dataTimeZone: TimeZones.NewYork,
@@ -91,7 +92,6 @@ namespace QuantConnect.Data.UniverseSelection
                 extendedHours: false,
                 isInternalFeed: true,
                 isCustom: false,
-                tickType: null,
                 isFilteredSubscription: false
                 );
         }

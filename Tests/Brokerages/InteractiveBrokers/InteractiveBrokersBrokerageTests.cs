@@ -51,9 +51,10 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 );
 
             // grabs account info from configuration
+            var subscriptionDataType = new SubscriptionDataType(typeof(TradeBar), TickType.Trade);
             var securityProvider = new SecurityProvider();
             securityProvider[Symbols.USDJPY] = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbols.USDJPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, false),
+                new SubscriptionDataConfig(subscriptionDataType, Symbols.USDJPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, false),
                 new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
 
             _interactiveBrokersBrokerage = new InteractiveBrokersBrokerage(new QCAlgorithm(), new OrderProvider(_orders), securityProvider);

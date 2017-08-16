@@ -97,9 +97,10 @@ namespace QuantConnect.Algorithm
             //Add this to the data-feed subscriptions
             var symbolObject = new Symbol(SecurityIdentifier.GenerateBase(symbol, Market.USA), symbol);
             var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(Market.USA, symbol, SecurityType.Base, CashBook.AccountCurrency);
+            var types = new List<SubscriptionDataType> { new SubscriptionDataType(T, TickType.Trade) };
 
             //Add this new generic data as a tradeable security: 
-            var security = SecurityManager.CreateSecurity(new List<Type>() { T }, Portfolio, SubscriptionManager, marketHoursDbEntry.ExchangeHours, marketHoursDbEntry.DataTimeZone,
+            var security = SecurityManager.CreateSecurity(types, Portfolio, SubscriptionManager, marketHoursDbEntry.ExchangeHours, marketHoursDbEntry.DataTimeZone,
                 symbolProperties, SecurityInitializer, symbolObject, resolution, fillDataForward, leverage, true, false, true, LiveMode);
 
             AddToUserDefinedUniverse(security);

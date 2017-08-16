@@ -64,7 +64,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Gets the data type used to process the subscription request, this type must derive from BaseData
         /// </summary>
-        public Type DataType { get; set; }
+        public SubscriptionDataType SubscriptionDataType { get; set; }
 
         /// <summary>
         /// Gets the time zone of the time stamps on the raw input data
@@ -92,7 +92,7 @@ namespace QuantConnect.Data
             Resolution = Resolution.Minute;
             FillForwardResolution = Resolution.Minute;
             IncludeExtendedMarketHours = false;
-            DataType = typeof (TradeBar);
+            SubscriptionDataType = new SubscriptionDataType(typeof (TradeBar), TickType.Trade);
             TimeZone = TimeZones.NewYork;
             IsCustomData = false;
             DataNormalizationMode = DataNormalizationMode.Adjusted;
@@ -103,7 +103,7 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="startTimeUtc">The start time for this request,</param>
         /// <param name="endTimeUtc">The start time for this request</param>
-        /// <param name="dataType">The data type of the output data</param>
+        /// <param name="subscriptionDataType">The data type + tick type of the output data</param>
         /// <param name="symbol">The symbol to request data for</param>
         /// <param name="resolution">The requested data resolution</param>
         /// <param name="exchangeHours">The exchange hours used in fill forward processing</param>
@@ -113,7 +113,7 @@ namespace QuantConnect.Data
         /// <param name="dataNormalizationMode">Specifies normalization mode used for this subscription</param>
         public HistoryRequest(DateTime startTimeUtc, 
             DateTime endTimeUtc,
-            Type dataType,
+            SubscriptionDataType subscriptionDataType,
             Symbol symbol,
             Resolution resolution,
             SecurityExchangeHours exchangeHours,
@@ -130,7 +130,7 @@ namespace QuantConnect.Data
             Resolution = resolution;
             FillForwardResolution = fillForwardResolution;
             IncludeExtendedMarketHours = includeExtendedMarketHours;
-            DataType = dataType;
+            SubscriptionDataType = subscriptionDataType;
             IsCustomData = isCustomData;
             DataNormalizationMode = dataNormalizationMode;
             TimeZone = exchangeHours.TimeZone;
@@ -152,7 +152,7 @@ namespace QuantConnect.Data
             Resolution = config.Resolution;
             FillForwardResolution = config.FillDataForward ? config.Resolution : (Resolution?) null;
             IncludeExtendedMarketHours = config.ExtendedMarketHours;
-            DataType = config.Type;
+            SubscriptionDataType = config.SubscriptionDataType;
             IsCustomData = config.IsCustomData;
             DataNormalizationMode = config.DataNormalizationMode;
             TimeZone = config.DataTimeZone;

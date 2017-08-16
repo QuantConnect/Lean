@@ -50,7 +50,8 @@ namespace QuantConnect.Algorithm
         {
             universeSettings = universeSettings ?? _algorithm.UniverseSettings;
             var symbol = Symbol.Create("us-equity-dollar-volume-top-" + count, SecurityType.Equity, Market.USA);
-            var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, true);
+            var subscriptionDataType = new SubscriptionDataType(typeof(CoarseFundamental), TickType.Trade);
+            var config = new SubscriptionDataConfig(subscriptionDataType, symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, true);
             return new FuncUniverse(config, universeSettings, _algorithm.SecurityInitializer, selectionData => (
                 from c in selectionData.OfType<CoarseFundamental>()
                 orderby c.DollarVolume descending 
@@ -70,7 +71,8 @@ namespace QuantConnect.Algorithm
         {
             universeSettings = universeSettings ?? _algorithm.UniverseSettings;
             var symbol = Symbol.Create("us-equity-dollar-volume-bottom-" + count, SecurityType.Equity, Market.USA);
-            var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, true);
+            var subscriptionDataType = new SubscriptionDataType(typeof(CoarseFundamental), TickType.Trade);
+            var config = new SubscriptionDataConfig(subscriptionDataType, symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, true);
             return new FuncUniverse(config, universeSettings, _algorithm.SecurityInitializer, selectionData => (
                 from c in selectionData.OfType<CoarseFundamental>()
                 orderby c.DollarVolume descending 
@@ -90,7 +92,8 @@ namespace QuantConnect.Algorithm
         {
             universeSettings = universeSettings ?? _algorithm.UniverseSettings;
             var symbol = Symbol.Create("us-equity-dollar-volume-percentile-" + percentile, SecurityType.Equity, Market.USA);
-            var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, true);
+            var subscriptionDataType = new SubscriptionDataType(typeof(CoarseFundamental), TickType.Trade);
+            var config = new SubscriptionDataConfig(subscriptionDataType, symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, true);
             return new FuncUniverse(config, universeSettings, _algorithm.SecurityInitializer, selectionData =>
             {
                 var list = selectionData as IReadOnlyList<CoarseFundamental> ?? selectionData.OfType<CoarseFundamental>().ToList();
@@ -119,7 +122,8 @@ namespace QuantConnect.Algorithm
         {
             universeSettings = universeSettings ?? _algorithm.UniverseSettings;
             var symbol = Symbol.Create("us-equity-dollar-volume-percentile-" + lowerPercentile + "-" + upperPercentile, SecurityType.Equity, Market.USA);
-            var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, true);
+            var subscriptionDataType = new SubscriptionDataType(typeof(CoarseFundamental), TickType.Trade);
+            var config = new SubscriptionDataConfig(subscriptionDataType, symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, true);
             return new FuncUniverse(config, universeSettings, _algorithm.SecurityInitializer, selectionData =>
             {
                 var list = selectionData as IReadOnlyList<CoarseFundamental> ?? selectionData.OfType<CoarseFundamental>().ToList();

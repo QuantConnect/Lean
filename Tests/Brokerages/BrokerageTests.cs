@@ -175,8 +175,9 @@ namespace QuantConnect.Tests.Brokerages
 
         internal static Security CreateSecurity(Symbol symbol)
         {
+            var subscriptionDataType = new SubscriptionDataType(typeof(TradeBar), TickType.Trade);
             return new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                new SubscriptionDataConfig(typeof (TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, false),
+                new SubscriptionDataConfig(subscriptionDataType, symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, false),
                 new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
         }
 

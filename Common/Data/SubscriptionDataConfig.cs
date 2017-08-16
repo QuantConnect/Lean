@@ -29,13 +29,17 @@ namespace QuantConnect.Data
     /// </summary>
     public class SubscriptionDataConfig : IEquatable<SubscriptionDataConfig>
     {
-        private Symbol _symbol;
         private readonly SecurityIdentifier _sid;
+
+        /// <summary>
+        /// Type and TickType of data
+        /// </summary>
+        public SubscriptionDataType SubscriptionDataType { get; }
 
         /// <summary>
         /// Type of data
         /// </summary>
-        public readonly Type Type;
+        public Type Type => SubscriptionDataType.DataType;
 
         /// <summary>
         /// Security type of this data subscription
@@ -45,15 +49,12 @@ namespace QuantConnect.Data
         /// <summary>
         /// Symbol of the asset we're requesting: this is really a perm tick!!
         /// </summary>
-        public Symbol Symbol
-        {
-            get { return _symbol; }
-        }
+        public Symbol Symbol { get; private set; }
 
         /// <summary>
-        /// Trade or quote data
+        /// Trade, quote or open interest data
         /// </summary>
-        public readonly TickType TickType;
+        public TickType TickType => SubscriptionDataType.TickType;
 
         /// <summary>
         /// Resolution of the asset we're requesting, second minute or tick
@@ -107,13 +108,13 @@ namespace QuantConnect.Data
         {
             get
             {
-                return _symbol.ID.SecurityType == SecurityType.Option ? 
-                    (_symbol.HasUnderlying ? _symbol.Underlying.Value : _symbol.Value) :
-                    _symbol.Value;
+                return Symbol.ID.SecurityType == SecurityType.Option ? 
+                    (Symbol.HasUnderlying ? Symbol.Underlying.Value : Symbol.Value) :
+                    Symbol.Value;
             }
             set
             {
-                _symbol = _symbol.UpdateMappedSymbol(value);
+                Symbol = Symbol.UpdateMappedSymbol(value);
             }
         }
 
@@ -145,7 +146,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Constructor for Data Subscriptions
         /// </summary>
-        /// <param name="objectType">Type of the data objects.</param>
+        /// <param name="subscriptionDataType">Data type and tick type for the subscription.</param>
         /// <param name="symbol">Symbol of the asset we're requesting</param>
         /// <param name="resolution">Resolution of the asset we're requesting</param>
         /// <param name="dataTimeZone">The time zone the raw data is time stamped in</param>
@@ -156,10 +157,9 @@ namespace QuantConnect.Data
         /// <param name="isInternalFeed">Set to true if this subscription is added for the sole purpose of providing currency conversion rates,
         /// setting this flag to true will prevent the data from being sent into the algorithm's OnData methods</param>
         /// <param name="isCustom">True if this is user supplied custom data, false for normal QC data</param>
-        /// <param name="tickType">Specifies if trade or quote data is subscribed</param>
         /// <param name="isFilteredSubscription">True if this subscription should have filters applied to it (market hours/user filters from security), false otherwise</param>
         /// <param name="dataNormalizationMode">Specifies normalization mode used for this subscription</param>
-        public SubscriptionDataConfig(Type objectType,
+        public SubscriptionDataConfig(SubscriptionDataType subscriptionDataType,
             Symbol symbol,
             Resolution resolution,
             DateTimeZone dataTimeZone,
@@ -168,20 +168,19 @@ namespace QuantConnect.Data
             bool extendedHours,
             bool isInternalFeed,
             bool isCustom = false,
-            TickType? tickType = null,
             bool isFilteredSubscription = true,
             DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted)
         {
-            if (objectType == null) throw new ArgumentNullException("objectType");
+            if (subscriptionDataType.DataType == null) throw new ArgumentNullException("subscriptionDataType");
             if (symbol == null) throw new ArgumentNullException("symbol");
             if (dataTimeZone == null) throw new ArgumentNullException("dataTimeZone");
             if (exchangeTimeZone == null) throw new ArgumentNullException("exchangeTimeZone");
 
-            Type = objectType;
+            SubscriptionDataType = subscriptionDataType;
             SecurityType = symbol.ID.SecurityType;
             Resolution = resolution;
             _sid = symbol.ID;
-            _symbol = symbol;
+            Symbol = symbol;
             FillDataForward = fillForward;
             ExtendedMarketHours = extendedHours;
             PriceScaleFactor = 1;
@@ -193,15 +192,6 @@ namespace QuantConnect.Data
             IsFilteredSubscription = isFilteredSubscription;
             Consolidators = new HashSet<IDataConsolidator>();
             DataNormalizationMode = dataNormalizationMode;
-
-            if (!tickType.HasValue)
-            {
-                TickType = LeanData.GetCommonTickTypeForCommonDataTypes(objectType, SecurityType);
-            }
-            else
-            {
-                TickType = tickType.Value;
-            }
 
             switch (resolution)
             {
@@ -231,7 +221,7 @@ namespace QuantConnect.Data
         /// Copy constructor with overrides
         /// </summary>
         /// <param name="config">The config to copy, then overrides are applied and all option</param>
-        /// <param name="objectType">Type of the data objects.</param>
+        /// <param name="subscriptionDataType">Data type and tick type for the subscription.</param>
         /// <param name="symbol">Symbol of the asset we're requesting</param>
         /// <param name="resolution">Resolution of the asset we're requesting</param>
         /// <param name="dataTimeZone">The time zone the raw data is time stamped in</param>
@@ -242,11 +232,10 @@ namespace QuantConnect.Data
         /// <param name="isInternalFeed">Set to true if this subscription is added for the sole purpose of providing currency conversion rates,
         /// setting this flag to true will prevent the data from being sent into the algorithm's OnData methods</param>
         /// <param name="isCustom">True if this is user supplied custom data, false for normal QC data</param>
-        /// <param name="tickType">Specifies if trade or quote data is subscribed</param>
         /// <param name="isFilteredSubscription">True if this subscription should have filters applied to it (market hours/user filters from security), false otherwise</param>
         /// <param name="dataNormalizationMode">Specifies normalization mode used for this subscription</param>
         public SubscriptionDataConfig(SubscriptionDataConfig config,
-            Type objectType = null,
+            SubscriptionDataType subscriptionDataType = null,
             Symbol symbol = null,
             Resolution? resolution = null,
             DateTimeZone dataTimeZone = null,
@@ -255,11 +244,10 @@ namespace QuantConnect.Data
             bool? extendedHours = null,
             bool? isInternalFeed = null,
             bool? isCustom = null,
-            TickType? tickType = null,
             bool? isFilteredSubscription = null,
             DataNormalizationMode? dataNormalizationMode = null)
             : this(
-            objectType ?? config.Type,
+            subscriptionDataType ?? config.SubscriptionDataType,
             symbol ?? config.Symbol,
             resolution ?? config.Resolution,
             dataTimeZone ?? config.DataTimeZone, 
@@ -268,10 +256,39 @@ namespace QuantConnect.Data
             extendedHours ?? config.ExtendedMarketHours,
             isInternalFeed ?? config.IsInternalFeed,
             isCustom ?? config.IsCustomData,
-            tickType ?? config.TickType,
             isFilteredSubscription ?? config.IsFilteredSubscription,
             dataNormalizationMode ?? config.DataNormalizationMode
             )
+        {
+        }
+
+        /// <summary>
+        /// Constructor for Data Subscriptions, only used by tests, left here for compatibility
+        /// </summary>
+        public SubscriptionDataConfig(Type dataType,
+            Symbol symbol,
+            Resolution resolution,
+            DateTimeZone dataTimeZone,
+            DateTimeZone exchangeTimeZone,
+            bool fillForward,
+            bool extendedHours,
+            bool isInternalFeed,
+            bool isCustom = false,
+            TickType? tickType = null,
+            bool isFilteredSubscription = true,
+            DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted)
+            : this(
+                new SubscriptionDataType(dataType, tickType ?? LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType)),
+                symbol,
+                resolution,
+                dataTimeZone,
+                exchangeTimeZone,
+                fillForward,
+                extendedHours,
+                isInternalFeed,
+                isCustom,
+                isFilteredSubscription,
+                dataNormalizationMode)
         {
         }
 
@@ -333,7 +350,7 @@ namespace QuantConnect.Data
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
+            if (obj.GetType() != GetType()) return false;
             return Equals((SubscriptionDataConfig) obj);
         }
 
@@ -387,7 +404,7 @@ namespace QuantConnect.Data
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Symbol.Value + "," + MappedSymbol + "," + Resolution + "," + Type.Name;
+            return Symbol.Value + "," + MappedSymbol + "," + Resolution + "," + Type.Name + "," + TickType;
         }
     }
 }

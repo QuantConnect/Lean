@@ -94,7 +94,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             start = start.ConvertFromUtc(request.ExchangeHours.TimeZone);
             end = end.ConvertFromUtc(request.ExchangeHours.TimeZone);
 
-            var config = new SubscriptionDataConfig(request.DataType, 
+            var config = new SubscriptionDataConfig(request.SubscriptionDataType, 
                 request.Symbol, 
                 request.Resolution, 
                 request.TimeZone, 
@@ -103,7 +103,6 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 request.IncludeExtendedMarketHours, 
                 false, 
                 request.IsCustomData,
-                null,
                 true,
                 request.DataNormalizationMode
                 );
@@ -127,7 +126,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             if (request.FillForwardResolution.HasValue)
             {
                 // copy forward Bid/Ask bars for QuoteBars
-                if (request.DataType == typeof(QuoteBar))
+                if (request.SubscriptionDataType.DataType == typeof(QuoteBar))
                 {
                     reader = new QuoteBarFillForwardEnumerator(reader);
                 }

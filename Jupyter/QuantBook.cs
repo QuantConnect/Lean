@@ -212,7 +212,9 @@ namespace QuantConnect.Jupyter
                     FillForwardResolution = null,
                     DataNormalizationMode = dataNormalizationMode,
                     IncludeExtendedMarketHours = extendedMarket,
-                    DataType = symbol.ID.SecurityType == SecurityType.Equity ? typeof(TradeBar) : typeof(QuoteBar)
+                    SubscriptionDataType = symbol.ID.SecurityType == SecurityType.Equity ? 
+                        new SubscriptionDataType(typeof(TradeBar), TickType.Trade) :
+                        new SubscriptionDataType(typeof(QuoteBar), TickType.Quote)
                 };
             });
 
@@ -247,7 +249,9 @@ namespace QuantConnect.Jupyter
                 var dir = new DirectoryInfo(Path.Combine(Globals.DataFolder, "equity", symbol.ID.Market, "fundamental", "fine", symbol.Value.ToLower()));
                 if (!dir.Exists) continue;
 
-                var config = new SubscriptionDataConfig(typeof(FineFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+                var subscriptionDataType = new SubscriptionDataType(typeof(FineFundamental), TickType.Trade);
+
+                var config = new SubscriptionDataConfig(subscriptionDataType, symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
 
                 foreach (var fileName in dir.EnumerateFiles())
                 {
@@ -335,7 +339,7 @@ namespace QuantConnect.Jupyter
                     var list = history.Get(symbol, selector).Select(x => (double)x).ToList();
                     if (list.Count == 0) continue;
 
-                    var index = request.DataType.Equals(typeof(QuoteBar))
+                    var index = request.SubscriptionDataType.DataType == typeof(QuoteBar)
                         ? history.Get<QuoteBar>(symbol).Select(x => x.Time)
                         : history.Get<TradeBar>(symbol).Select(x => x.Time);
 
@@ -365,7 +369,7 @@ namespace QuantConnect.Jupyter
                     var symbol = request.Symbol;
                     var dict = new Dictionary<string, List<double>>();
 
-                    if (request.DataType.Equals(typeof(QuoteBar)))
+                    if (request.SubscriptionDataType.DataType == typeof(QuoteBar))
                     {
                         var bars = history.Get<QuoteBar>(symbol).ToList();
                         if (bars.Count == 0) continue;
