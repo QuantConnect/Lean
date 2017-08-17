@@ -34,7 +34,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void HandlesTicks_ExpectInOrderWithNoDuplicates()
         {
             var subscriptionDataConfig = new SubscriptionDataConfig(
-                typeof(Tick), 
+                new SubscriptionDataType(typeof(Tick), TickType.Quote), 
                 Symbols.EURUSD, 
                 Resolution.Tick, 
                 TimeZones.Utc, 

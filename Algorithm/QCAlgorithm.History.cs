@@ -451,14 +451,16 @@ namespace QuantConnect.Algorithm
             if (subscriptionDataConfig != null && subscriptionDataConfig.Resolution == Resolution.Tick)
             {
                 var dataType = LeanData.GetDataType(resolution, subscriptionDataConfig.TickType);
-                subscriptionDataConfig = new SubscriptionDataConfig(subscriptionDataConfig, dataType, resolution: resolution);
+                subscriptionDataConfig = new SubscriptionDataConfig(subscriptionDataConfig, 
+                    new SubscriptionDataType(dataType, subscriptionDataConfig.TickType),
+                    resolution: resolution);
             }
 
             var request = new HistoryRequest
             {
                 StartTimeUtc = startTime.ConvertToUtc(_localTimeKeeper.TimeZone),
                 EndTimeUtc = endTime.ConvertToUtc(_localTimeKeeper.TimeZone),
-                DataType = subscriptionDataConfig != null ? subscriptionDataConfig.Type : typeof(TradeBar),
+                SubscriptionDataType = subscriptionDataConfig != null ? subscriptionDataConfig.SubscriptionDataType : new SubscriptionDataType(typeof(TradeBar), TickType.Trade),
                 Resolution = resolution,
                 FillForwardResolution = resolution,
                 Symbol = security.Symbol,
@@ -555,11 +557,13 @@ namespace QuantConnect.Algorithm
             resolution = resolution ?? security.Resolution;
 
             // find the correct data type for the history request
-            var dataType = subscription.IsCustomData ? subscription.Type : LeanData.GetDataType(resolution.Value, subscription.TickType);
+            var dataType = subscription.IsCustomData ? 
+                subscription.SubscriptionDataType : 
+                new SubscriptionDataType(LeanData.GetDataType(resolution.Value, subscription.TickType), subscription.TickType);
 
             var request = new HistoryRequest(subscription, security.Exchange.Hours, startAlgoTz.ConvertToUtc(TimeZone), endAlgoTz.ConvertToUtc(TimeZone))
             {
-                DataType = dataType,
+                SubscriptionDataType = dataType,
                 Resolution = resolution.Value,
                 FillForwardResolution = subscription.FillDataForward ? resolution : null
             };

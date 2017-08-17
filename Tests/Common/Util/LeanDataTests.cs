@@ -416,7 +416,8 @@ namespace QuantConnect.Tests.Common.Util
                 {
                     BaseDataType = typeof(QuoteBar);
                 }
-                Config = new SubscriptionDataConfig(BaseDataType, symbol, resolution, TimeZones.NewYork, TimeZones.NewYork, true, false, false, false, tickType);
+                var subscriptionDataType = new SubscriptionDataType(BaseDataType, tickType);
+                Config = new SubscriptionDataConfig(subscriptionDataType, symbol, resolution, TimeZones.NewYork, TimeZones.NewYork, true, false, false, false);
             }
         }
 
@@ -460,7 +461,8 @@ namespace QuantConnect.Tests.Common.Util
                     TickType = TickType.Quote;
                 }
 
-                Config = new SubscriptionDataConfig(Data.GetType(), Data.Symbol, Resolution, TimeZones.Utc, TimeZones.Utc, false, true, false, false, TickType);
+                var subscriptionDataType = new SubscriptionDataType(Data.GetType(), TickType);
+                Config = new SubscriptionDataConfig(subscriptionDataType, Data.Symbol, Resolution, TimeZones.Utc, TimeZones.Utc, false, true, false, false);
 
                 Name = SecurityType + "_" + data.GetType().Name;
 

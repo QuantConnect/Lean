@@ -121,7 +121,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             var configurations = new List<SubscriptionDataConfig>
             {
                 // add underlying trade data
-                new SubscriptionDataConfig(config, resolution: resolution, fillForward: true, symbol: underlying, objectType: typeof (TradeBar), tickType: TickType.Trade),
+                new SubscriptionDataConfig(config, 
+                    resolution: resolution, 
+                    fillForward: true, 
+                    symbol: underlying, 
+                    subscriptionDataType: new SubscriptionDataType(typeof (TradeBar), TickType.Trade))
             };
 
             if (!_isLiveMode)

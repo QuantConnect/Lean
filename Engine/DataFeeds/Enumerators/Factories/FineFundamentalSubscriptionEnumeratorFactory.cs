@@ -64,7 +64,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             var tradableDays = _tradableDaysProvider(request);
 
             var fineFundamental = new FineFundamental();
-            var fineFundamentalConfiguration = new SubscriptionDataConfig(request.Configuration, typeof(FineFundamental), request.Security.Symbol);
+            var subscriptionDataType = new SubscriptionDataType(typeof(FineFundamental), TickType.Trade);
+            var fineFundamentalConfiguration = new SubscriptionDataConfig(request.Configuration, subscriptionDataType, request.Security.Symbol);
 
             return (
                 from date in tradableDays
