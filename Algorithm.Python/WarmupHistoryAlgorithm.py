@@ -47,11 +47,11 @@ retrieve data to warm up indicators before data is received'''
         history = self.History(["EURUSD", "NZDUSD"], slow_period + 1)
         
         # prints out the tail of the dataframe
-        self.Log(str(history["EURUSD"].tail()))
-        self.Log(str(history["NZDUSD"].tail()))
+        self.Log(str(history.loc["EURUSD"].tail()))
+        self.Log(str(history.loc["NZDUSD"].tail()))
 
-        for index, row in history["EURUSD"].iterrows():
-            datapoint = IndicatorDataPoint(index, row["close"])
+        for index, row in history.loc["EURUSD"].iterrows():
+            datapoint = IndicatorDataPoint(index, row["Close"])
             self.fast.Update(datapoint)
             self.slow.Update(datapoint)
 

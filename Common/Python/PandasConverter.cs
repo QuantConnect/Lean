@@ -1,0 +1,173 @@
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using Python.Runtime;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace QuantConnect.Python
+{
+    /// <summary>
+    /// Collection of methods that converts lists of objects in pandas.DataFrame
+    /// </summary>
+    public class PandasConverter
+    {
+        dynamic _pandas;
+
+        /// <summary>
+        /// Creates an instance of <see cref="PandasConverter"/>.
+        /// </summary>
+        /// <param name="pandas"></param>
+        public PandasConverter(PyObject pandas = null)
+        {
+            try
+            {
+                if (pandas == null)
+                {
+                    using (Py.GIL())
+                    {
+                        pandas = Py.Import("pandas");
+                    }
+                }
+
+                _pandas = pandas;
+            }
+            catch (PythonException pythonException)
+            {
+                Logging.Log.Error($"PandasConverter: Failed to import pandas module: {pythonException}");
+            }
+        }
+
+        /// <summary>
+        /// Converts an enumerable of <see cref="Slice"/> in a pandas.DataFrame
+        /// </summary>
+        /// <param name="data">Enumerable of <see cref="Slice"/></param>
+        /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
+        public PyObject GetDataFrame(IEnumerable<Slice> data)
+        {
+            var symbols = data.SelectMany(x => x.Keys).Distinct().OrderBy(x => x.Value);
+
+            // If data contains derivatives and its underlying, 
+            // we get the underlying to exclude it from the dataframe 
+            Symbol underlying = null;
+            var derivatives = symbols.Where(x => x.HasUnderlying);
+            if (derivatives.Count() > 0)
+            {
+                underlying = derivatives.First().Underlying;
+            }
+            
+            using (Py.GIL())
+            {
+                var dataFrame = _pandas.DataFrame();
+
+                foreach (var symbol in symbols)
+                {
+                    if (symbol == underlying)
+                    {
+                        continue;
+                    }
+
+                    var items = new PyObject[]
+                    {
+                        dataFrame,
+                        GetDataFrame(data.Get<QuoteBar>(symbol)),
+                        GetDataFrame(data.Get<TradeBar>(symbol))
+                    };
+
+                    dataFrame = _pandas.concat(new PyList(items));
+                }
+
+                return dataFrame;
+            }
+        }
+
+        /// <summary>
+        /// Converts an enumerable of <see cref="IBaseDataBar"/> in a pandas.DataFrame
+        /// </summary>
+        /// <param name="data">Enumerable of <see cref="Slice"/></param>
+        /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
+        public PyObject GetDataFrame<T>(IEnumerable<T> data)
+            where T : IBaseDataBar
+        {
+            if (data.Count() == 0)
+            {
+                return _pandas.DataFrame();
+            }
+
+            using (Py.GIL())
+            {
+                var index = CreateIndex(data.First().Symbol, data.Select(x => x.Time));
+
+                var pyDict = new PyDict();
+                var columns = "Open,High,Low,Close";
+
+                pyDict.SetItem("Low", _pandas.Series(data.Select(x => (double)x.Low).ToList(), index));
+                pyDict.SetItem("Open", _pandas.Series(data.Select(x => (double)x.Open).ToList(), index));
+                pyDict.SetItem("High", _pandas.Series(data.Select(x => (double)x.High).ToList(), index));
+                pyDict.SetItem("Close", _pandas.Series(data.Select(x => (double)x.Close).ToList(), index));
+
+                if (typeof(T) == typeof(TradeBar))
+                {
+                    Func<IBaseDataBar, double> getVolume = x => { var bar = x as TradeBar; return (double)bar.Volume; };
+                    pyDict.SetItem("Volume", _pandas.Series(data.Select(x => getVolume(x)).ToList(), index));
+                    columns += ",Volume";
+                }
+
+                return _pandas.DataFrame(pyDict, columns: columns.Split(','));
+            }
+        }
+
+        /// <summary>
+        /// Creates the index of pandas.Series
+        /// </summary>
+        /// <param name="symbol"><see cref="Symbol"/> of the security</param>
+        /// <param name="time">Time series axis</param>
+        /// <returns><see cref="PyObject"/> containing a pandas.MultiIndex</returns>
+        private PyObject CreateIndex(Symbol symbol, IEnumerable<DateTime> time)
+        {
+            var value = (symbol.HasUnderlying ? symbol.Value : symbol.ToString()).ToPython();
+            var tuples = time.Select(x => new PyTuple(new PyObject[] { value, x.ToPython() }));
+            var names = "Symbol,Time";
+
+            if (symbol.SecurityType == SecurityType.Future)
+            {
+                tuples = time.Select(x => new PyTuple(new PyObject[] { symbol.ID.Date.ToPython(), value, x.ToPython() }));
+                names = "Expiry," + names;
+            }
+
+            if (symbol.SecurityType == SecurityType.Option)
+            {
+                tuples = time.Select(x => new PyTuple(new PyObject[] { symbol.ID.Date.ToPython(), symbol.ID.StrikePrice.ToPython(), symbol.ID.OptionRight.ToString().ToPython(), value, x.ToPython() }));
+                names = "Expiry,Strike,Type," + names;
+            }
+
+            return _pandas.MultiIndex.from_tuples(tuples.ToArray(), names: names.Split(','));
+        }
+
+        /// <summary>
+        /// Returns a string that represent the current object
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return _pandas == null
+                ? "pandas module was not imported."
+                : _pandas.Repr();
+        }
+    }
+}
