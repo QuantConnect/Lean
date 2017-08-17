@@ -114,18 +114,18 @@ namespace QuantConnect.Python
                 var index = CreateIndex(data.First().Symbol, data.Select(x => x.Time));
 
                 var pyDict = new PyDict();
-                var columns = "Open,High,Low,Close";
+                var columns = "open,high,low,close";
 
-                pyDict.SetItem("Low", _pandas.Series(data.Select(x => (double)x.Low).ToList(), index));
-                pyDict.SetItem("Open", _pandas.Series(data.Select(x => (double)x.Open).ToList(), index));
-                pyDict.SetItem("High", _pandas.Series(data.Select(x => (double)x.High).ToList(), index));
-                pyDict.SetItem("Close", _pandas.Series(data.Select(x => (double)x.Close).ToList(), index));
+                pyDict.SetItem("low", _pandas.Series(data.Select(x => (double)x.Low).ToList(), index));
+                pyDict.SetItem("open", _pandas.Series(data.Select(x => (double)x.Open).ToList(), index));
+                pyDict.SetItem("high", _pandas.Series(data.Select(x => (double)x.High).ToList(), index));
+                pyDict.SetItem("close", _pandas.Series(data.Select(x => (double)x.Close).ToList(), index));
 
                 if (typeof(T) == typeof(TradeBar))
                 {
                     Func<IBaseDataBar, double> getVolume = x => { var bar = x as TradeBar; return (double)bar.Volume; };
-                    pyDict.SetItem("Volume", _pandas.Series(data.Select(x => getVolume(x)).ToList(), index));
-                    columns += ",Volume";
+                    pyDict.SetItem("volume", _pandas.Series(data.Select(x => getVolume(x)).ToList(), index));
+                    columns += ",volume";
                 }
 
                 return _pandas.DataFrame(pyDict, columns: columns.Split(','));
@@ -142,18 +142,18 @@ namespace QuantConnect.Python
         {
             var value = (symbol.HasUnderlying ? symbol.Value : symbol.ToString()).ToPython();
             var tuples = time.Select(x => new PyTuple(new PyObject[] { value, x.ToPython() }));
-            var names = "Symbol,Time";
+            var names = "symbol,time";
 
             if (symbol.SecurityType == SecurityType.Future)
             {
                 tuples = time.Select(x => new PyTuple(new PyObject[] { symbol.ID.Date.ToPython(), value, x.ToPython() }));
-                names = "Expiry," + names;
+                names = "expiry," + names;
             }
 
             if (symbol.SecurityType == SecurityType.Option)
             {
                 tuples = time.Select(x => new PyTuple(new PyObject[] { symbol.ID.Date.ToPython(), symbol.ID.StrikePrice.ToPython(), symbol.ID.OptionRight.ToString().ToPython(), value, x.ToPython() }));
-                names = "Expiry,Strike,Type," + names;
+                names = "expiry,strike,type," + names;
             }
 
             return _pandas.MultiIndex.from_tuples(tuples.ToArray(), names: names.Split(','));
