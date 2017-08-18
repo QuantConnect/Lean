@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 
@@ -388,7 +389,7 @@ namespace QuantConnect.Orders.Fills
             }
 
             var tick = asset.Cache.GetData<Tick>();
-            if (tick != null)
+            if (tick != null && asset.Subscriptions.FirstOrDefault(x => x.Resolution == Resolution.Tick) != null)
             {
                 var price = direction == OrderDirection.Sell ? tick.BidPrice : tick.AskPrice;
                 if (price != 0m)
