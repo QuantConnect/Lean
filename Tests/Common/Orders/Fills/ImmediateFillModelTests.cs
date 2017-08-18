@@ -38,13 +38,14 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var exchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
             var quoteCash = new Cash("USD", 1000, 1);
             var symbolProperties = SymbolProperties.GetDefault("USD");
-            var security = new Forex(symbol, exchangeHours, quoteCash, symbolProperties);
+            var config = new SubscriptionDataConfig(typeof(Tick), symbol, Resolution.Tick, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            var security = new Forex(exchangeHours, quoteCash, config, symbolProperties);
 
             var reference = DateTime.Now;
             var referenceUtc = reference.ConvertToUtc(TimeZones.NewYork);
             var timeKeeper = new TimeKeeper(referenceUtc);
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
-
+            
             var brokerageModel = new FxcmBrokerageModel();
             var fillModel = brokerageModel.GetFillModel(security);
 
@@ -67,7 +68,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var noon = new DateTime(2014, 6, 24, 12, 0, 0);
             var timeKeeper = new TimeKeeper(noon.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
             var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Tick, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            var config = new SubscriptionDataConfig(typeof(Tick), Symbols.SPY, Resolution.Tick, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
             var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, noon, 101.123m));
