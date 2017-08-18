@@ -80,6 +80,10 @@
       <Project>{12156F46-D07E-4E3D-AD2B-7409E82AB62F}</Project>
       <Name>QuantConnect.Lean.Engine</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Indicators\QuantConnect.Indicators.csproj">
+      <Project>{73FB2522-C3ED-4E47-8E3D-AFAD48A6B888}</Project>
+      <Name>QuantConnect.Indicators</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj">
       <Project>{01911409-86BE-4E7D-9947-DF714138610D}</Project>
       <Name>QuantConnect.Logging</Name>

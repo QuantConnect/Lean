@@ -16,6 +16,7 @@
 using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Indicators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -157,6 +158,28 @@ namespace QuantConnect.Python
             }
 
             return _pandas.MultiIndex.from_tuples(tuples.ToArray(), names: names.Split(','));
+        }
+
+        /// <summary>
+        /// Converts a dictionary with a list of <see cref="IndicatorDataPoint"/> in a pandas.DataFrame
+        /// </summary>
+        /// <param name="data">Dictionary with a list of <see cref="IndicatorDataPoint"/></param>
+        /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
+        public PyObject GetIndicatorDataFrame(IDictionary<string, List<IndicatorDataPoint>> data)
+        {
+            using (Py.GIL())
+            {
+                var pyDict = new PyDict();
+
+                foreach (var kvp in data)
+                {
+                    var index = kvp.Value.Select(x => x.EndTime).ToList();
+                    var values = kvp.Value.Select(x => (double)x.Value).ToList();
+                    pyDict.SetItem(kvp.Key.ToLower(), _pandas.Series(values, index));
+                }
+
+                return _pandas.DataFrame(pyDict, columns: data.Keys.Select(x => x.ToLower()).OrderBy(x => x));
+            }
         }
 
         /// <summary>
