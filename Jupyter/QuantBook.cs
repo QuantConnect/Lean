@@ -262,43 +262,46 @@ namespace QuantConnect.Jupyter
         /// <param name="start">The start date of selected data</param>
         /// <param name="end">The end date of selected data</param>
         /// <returns></returns>
-        public PyObject GetFundamental(PyObject pyObject, string selector, DateTime? start = null, DateTime? end = null)
+        public PyObject GetFundamental(PyObject tickers, string selector, DateTime? start = null, DateTime? end = null)
         {
             if (string.IsNullOrWhiteSpace(selector))
             {
                 return "Invalid selector. Cannot be None, empty or consist only of white-space characters".ToPython();
             }
 
-            var symbols = _algorithm.GetSymbolsFromPyObject(pyObject, true);
-            if (symbols == null)
-            {
-                return "Invalid ticker(s). Please use GetSymbol to add symbols.".ToPython();
-            }
-
-            var list = new List<Tuple<Symbol, DateTime, object>>();
-
-            foreach (var symbol in symbols)
-            {
-                var dir = new DirectoryInfo(Path.Combine(Globals.DataFolder, "equity", symbol.ID.Market, "fundamental", "fine", symbol.Value.ToLower()));
-                if (!dir.Exists) continue;
-
-                var config = new SubscriptionDataConfig(typeof(FineFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
-
-                foreach (var fileName in dir.EnumerateFiles())
-                {
-                    var date = DateTime.ParseExact(fileName.Name.Substring(0, 8), DateFormat.EightCharacter, CultureInfo.InvariantCulture);
-                    if (date < start || date > end) continue;
-
-                    var factory = new TextSubscriptionDataSourceReader(_dataCacheProvider, config, date, false);
-                    var source = new SubscriptionDataSource(fileName.FullName, SubscriptionTransportMedium.LocalFile);
-                    var value = factory.Read(source).Select(x => GetPropertyValue(x, selector)).First();
-
-                    list.Add(Tuple.Create(symbol, date, value));
-                }
-            }
-
             using (Py.GIL())
             {
+                // If tickers are not a PyList, we create one
+                if (!PyList.IsListType(tickers))
+                {
+                    var tmp = new PyList();
+                    tmp.Append(tickers);
+                    tickers = tmp;
+                }
+
+                var list = new List<Tuple<Symbol, DateTime, object>>();
+
+                foreach (var ticker in tickers)
+                {
+                    var symbol = Symbol.Create(ticker.ToString(), SecurityType.Equity, Market.USA);
+                    var dir = new DirectoryInfo(Path.Combine(Globals.DataFolder, "equity", symbol.ID.Market, "fundamental", "fine", symbol.Value.ToLower()));
+                    if (!dir.Exists) continue;
+
+                    var config = new SubscriptionDataConfig(typeof(FineFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+
+                    foreach (var fileName in dir.EnumerateFiles())
+                    {
+                        var date = DateTime.ParseExact(fileName.Name.Substring(0, 8), DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+                        if (date < start || date > end) continue;
+
+                        var factory = new TextSubscriptionDataSourceReader(_dataCacheProvider, config, date, false);
+                        var source = new SubscriptionDataSource(fileName.FullName, SubscriptionTransportMedium.LocalFile);
+                        var value = factory.Read(source).Select(x => GetPropertyValue(x, selector)).First();
+
+                        list.Add(Tuple.Create(symbol, date, value));
+                    }
+                }
+
                 var data = new PyDict();
                 foreach (var item in list.GroupBy(x => x.Item1))
                 {

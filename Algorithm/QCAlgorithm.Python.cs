@@ -365,7 +365,7 @@ namespace QuantConnect.Algorithm
         /// <param name="pyObject">PyObject containing symbols</param>
         /// <param name="isEquity"></param>
         /// <returns>List of symbols</returns>
-        public List<Symbol> GetSymbolsFromPyObject(PyObject pyObject, bool isEquity = false)
+        public List<Symbol> GetSymbolsFromPyObject(PyObject pyObject)
         {
             using (Py.GIL())
             {
@@ -382,15 +382,14 @@ namespace QuantConnect.Algorithm
                 {
                     var symbol = (Symbol)item.AsManagedObject(typeof(Symbol));
 
-                    if (isEquity && string.IsNullOrWhiteSpace(symbol.Value))
+                    if (string.IsNullOrWhiteSpace(symbol.Value))
                     {
-                        var ticker = (string)item.AsManagedObject(typeof(string));
-                        symbol = new Symbol(SecurityIdentifier.GenerateEquity(ticker, Market.USA), ticker);
+                        continue;
                     }
 
                     symbols.Add(symbol);
                 }
-                return symbols.Count == 0 || string.IsNullOrEmpty(symbols.First().Value) ? null : symbols;
+                return symbols.Count == 0 ? null : symbols;
             }
         }
 
