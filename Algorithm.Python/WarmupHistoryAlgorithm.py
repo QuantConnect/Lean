@@ -51,7 +51,7 @@ retrieve data to warm up indicators before data is received'''
         self.Log(str(history.loc["NZDUSD"].tail()))
 
         for index, row in history.loc["EURUSD"].iterrows():
-            datapoint = IndicatorDataPoint(index, row["Close"])
+            datapoint = IndicatorDataPoint(index, row["close"])
             self.fast.Update(datapoint)
             self.slow.Update(datapoint)
 
