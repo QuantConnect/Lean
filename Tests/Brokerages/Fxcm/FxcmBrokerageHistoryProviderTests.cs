@@ -81,7 +81,8 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
                                        Resolution.Minute, 
                                        false, 
                                        false, 
-                                       DataNormalizationMode.Adjusted)
+                                       DataNormalizationMode.Adjusted,
+                                       TickType.Quote)
                 };
 
                 var history = historyProvider.GetHistory(requests, TimeZones.Utc);
@@ -145,7 +146,8 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
                     Resolution.Minute,
                     false,
                     false,
-                    DataNormalizationMode.Adjusted)
+                    DataNormalizationMode.Adjusted,
+                    TickType.Quote)
             };
 
             var history = historyProvider.GetHistory(requests, TimeZones.Utc);

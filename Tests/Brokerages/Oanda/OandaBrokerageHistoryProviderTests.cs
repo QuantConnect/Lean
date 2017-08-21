@@ -88,7 +88,8 @@ namespace QuantConnect.Tests.Brokerages.Oanda
                         Resolution.Minute,
                         false,
                         false,
-                        DataNormalizationMode.Adjusted)
+                        DataNormalizationMode.Adjusted,
+                        TickType.Quote)
                 };
 
                 var history = historyProvider.GetHistory(requests, TimeZones.Utc);

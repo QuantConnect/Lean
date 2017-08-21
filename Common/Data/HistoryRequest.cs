@@ -18,6 +18,7 @@ using System;
 using NodaTime;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data
 {
@@ -72,6 +73,11 @@ namespace QuantConnect.Data
         public DateTimeZone DataTimeZone { get; set; }
 
         /// <summary>
+        /// Gets the time zone of the time stamps on the raw input data
+        /// </summary>
+        public TickType TickType { get; set; }
+
+        /// <summary>
         /// Gets true if this is a custom data request, false for normal QC data
         /// </summary>
         public bool IsCustomData { get; set; }
@@ -96,6 +102,7 @@ namespace QuantConnect.Data
         /// <param name="includeExtendedMarketHours">True to include data from pre/post market hours</param>
         /// <param name="isCustomData">True for custom user data, false for normal QC data</param>
         /// <param name="dataNormalizationMode">Specifies normalization mode used for this subscription</param>
+        /// <param name="tickType">The tick type used to created the <see cref="SubscriptionDataConfig"/> for the retrieval of history data</param>
         public HistoryRequest(DateTime startTimeUtc, 
             DateTime endTimeUtc,
             Type dataType,
@@ -106,8 +113,8 @@ namespace QuantConnect.Data
             Resolution? fillForwardResolution,
             bool includeExtendedMarketHours,
             bool isCustomData,
-            DataNormalizationMode dataNormalizationMode
-            )
+            DataNormalizationMode dataNormalizationMode,
+            TickType tickType)
         {
             StartTimeUtc = startTimeUtc;
             EndTimeUtc = endTimeUtc;
@@ -120,6 +127,7 @@ namespace QuantConnect.Data
             DataType = dataType;
             IsCustomData = isCustomData;
             DataNormalizationMode = dataNormalizationMode;
+            TickType = tickType;
         }
 
         /// <summary>
@@ -142,6 +150,7 @@ namespace QuantConnect.Data
             IsCustomData = config.IsCustomData;
             DataNormalizationMode = config.DataNormalizationMode;
             DataTimeZone = config.DataTimeZone;
+            TickType = config.TickType;
         }
     }
 }

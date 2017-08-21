@@ -126,7 +126,8 @@ namespace QuantConnect.Securities
                                    security.Resolution,
                                    security.IsExtendedMarketHours,
                                    security.IsCustomData(),
-                                   security.DataNormalizationMode)
+                                   security.DataNormalizationMode,
+                                   TickType.Trade)
             };
         }
     }

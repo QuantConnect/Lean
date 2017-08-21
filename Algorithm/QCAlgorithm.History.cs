@@ -457,7 +457,7 @@ namespace QuantConnect.Algorithm
             var request = new HistoryRequest(
                 startTime.ConvertToUtc(_localTimeKeeper.TimeZone),
                 endTime.ConvertToUtc(_localTimeKeeper.TimeZone),
-                subscriptionDataConfig != null ? subscriptionDataConfig.Type : typeof(TradeBar),
+                subscriptionDataConfig == null ? typeof(TradeBar) : subscriptionDataConfig.Type,
                 security.Symbol,
                 resolution,
                 security.Exchange.Hours,
@@ -465,7 +465,8 @@ namespace QuantConnect.Algorithm
                 resolution,
                 security.IsExtendedMarketHours,
                 security.IsCustomData(),
-                security.DataNormalizationMode
+                security.DataNormalizationMode,
+                subscriptionDataConfig == null ? TickType.Trade: subscriptionDataConfig.TickType
             );
 
             var history = History(new List<HistoryRequest> { request });

@@ -74,7 +74,8 @@ namespace QuantConnect.Tests.Brokerages.Tradier
                         Resolution.Minute,
                         false,
                         false,
-                        DataNormalizationMode.Adjusted)
+                        DataNormalizationMode.Adjusted,
+                        TickType.Quote)
                 };
 
                 var history = brokerage.GetHistory(requests, TimeZones.Utc);

@@ -99,7 +99,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 request.IncludeExtendedMarketHours,
                 false,
                 request.IsCustomData,
-                null,
+                request.TickType,
                 true,
                 request.DataNormalizationMode
                 );
