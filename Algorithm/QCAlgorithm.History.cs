@@ -463,9 +463,9 @@ namespace QuantConnect.Algorithm
                 security.Exchange.Hours,
                 MarketHoursDatabase.FromDataFolder().GetDataTimeZone(security.Symbol.ID.Market, security.Symbol, security.Symbol.SecurityType),
                 resolution,
-                false,
-                false,
-                DataNormalizationMode.Adjusted
+                security.IsExtendedMarketHours,
+                security.IsCustomData(),
+                security.DataNormalizationMode
             );
 
             var history = History(new List<HistoryRequest> { request });

@@ -338,12 +338,12 @@ namespace QuantConnect.Jupyter
                                         typeof(QuoteBar), 
                                         x, 
                                         resolution ?? option.Resolution, 
-                                        underlying.Exchange.Hours, 
-                                        _algorithm.TimeZone,  // QuantBook should follow the algorithms assumptions
+                                        underlying.Exchange.Hours,
+                                        MarketHoursDatabase.FromDataFolder().GetDataTimeZone(underlying.Symbol.ID.Market, underlying.Symbol, underlying.Type),
                                         Resolution.Minute, 
-                                        false, 
-                                        false, 
-                                        DataNormalizationMode.Adjusted)
+                                        underlying.IsExtendedMarketHours, 
+                                        underlying.IsCustomData(), 
+                                        DataNormalizationMode.Raw)
                     );
 
             requests = requests.Union(new[] { new HistoryRequest(underlying.Subscriptions.FirstOrDefault(), underlying.Exchange.Hours, date.AddDays(-1), date) });
