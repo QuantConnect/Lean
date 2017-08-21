@@ -38,13 +38,14 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var exchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
             var quoteCash = new Cash("USD", 1000, 1);
             var symbolProperties = SymbolProperties.GetDefault("USD");
-            var security = new Forex(symbol, exchangeHours, quoteCash, symbolProperties);
+            var config = new SubscriptionDataConfig(typeof(Tick), symbol, Resolution.Tick, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            var security = new Forex(exchangeHours, quoteCash, config, symbolProperties);
 
             var reference = DateTime.Now;
             var referenceUtc = reference.ConvertToUtc(TimeZones.NewYork);
             var timeKeeper = new TimeKeeper(referenceUtc);
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
-
+            
             var brokerageModel = new FxcmBrokerageModel();
             var fillModel = brokerageModel.GetFillModel(security);
 
@@ -67,7 +68,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var noon = new DateTime(2014, 6, 24, 12, 0, 0);
             var timeKeeper = new TimeKeeper(noon.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
             var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Tick, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            var config = new SubscriptionDataConfig(typeof(Tick), Symbols.SPY, Resolution.Tick, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
             var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, noon, 101.123m));
@@ -83,6 +84,31 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             // The fill model should use the tick.Price
             Assert.AreEqual(fill.FillPrice, 100m);
+        }
+
+        [Test]
+        public void ImmediateFillModelDoesNotUseTicksWhenThereIsNoTickSubscription()
+        {
+            var noon = new DateTime(2014, 6, 24, 12, 0, 0);
+            var timeKeeper = new TimeKeeper(noon.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
+            var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+            // Minute subscription
+            var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, noon, 101.123m));
+
+
+            // This is the case when a tick is seeded with minute data in an algorithm
+            security.Cache.AddData(new TradeBar(DateTime.MinValue, symbol, 1.0m, 1.0m, 1.0m, 1.0m, 1.0m));
+            security.Cache.AddData(new Tick(config, "42525000,1000000,100,A,@,0", DateTime.MinValue));
+
+            var fillModel = new ImmediateFillModel();
+            var order = new MarketOrder(symbol, 1000, DateTime.Now);
+            var fill = fillModel.MarketFill(security, order);
+
+            // The fill model should use the tick.Price
+            Assert.AreEqual(fill.FillPrice, 1.0m);
         }
     }
 }
