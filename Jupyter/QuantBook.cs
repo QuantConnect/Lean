@@ -14,14 +14,22 @@
 */
 
 using Python.Runtime;
+using QuantConnect.Algorithm;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
+using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Python;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Cfd;
+using QuantConnect.Securities.Equity;
+using QuantConnect.Securities.Forex;
+using QuantConnect.Securities.Future;
+using QuantConnect.Securities.Option;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
@@ -34,17 +42,18 @@ namespace QuantConnect.Jupyter
     /// <summary>
     /// Provides access to data for quantitative analysis
     /// </summary>
-    public class QuantBook
+    public class QuantBook 
     {
         private dynamic _pandas;
+        private QCAlgorithm _algorithm;
         private IDataCacheProvider _dataCacheProvider;
-        private IHistoryProvider _historyProvider;
-
+        private PandasConverter _converter;
+        
         /// <summary>
         /// <see cref = "QuantBook" /> constructor.
         /// Provides access to data for quantitative analysis
         /// </summary>
-        public QuantBook()
+        public QuantBook() : base()
         {
             try
             {
@@ -52,14 +61,23 @@ namespace QuantConnect.Jupyter
                 {
                     _pandas = Py.Import("pandas");
                 }
+
+                _converter = new PandasConverter(_pandas);
+
+                // Create new instance of QCAlgorithm we are going to wrap
+                _algorithm = new QCAlgorithm();
                 
+                // By default, set start date to end data which is yesterday
+                SetStartDate(_algorithm.EndDate);
+                
+                // Initialize History Provider
                 var composer = new Composer();
                 var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(composer);
-                _dataCacheProvider = new SingleEntryDataCacheProvider(algorithmHandlers.DataProvider);
+                _dataCacheProvider = new ZipDataCacheProvider(algorithmHandlers.DataProvider);
 
                 var mapFileProvider = algorithmHandlers.MapFileProvider;
-                _historyProvider = composer.GetExportedValueByTypeName<IHistoryProvider>(Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider"));
-                _historyProvider.Initialize(null, algorithmHandlers.DataProvider, _dataCacheProvider, mapFileProvider, algorithmHandlers.FactorFileProvider, null);
+                _algorithm.HistoryProvider = composer.GetExportedValueByTypeName<IHistoryProvider>(Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider"));
+                _algorithm.HistoryProvider.Initialize(null, algorithmHandlers.DataProvider, _dataCacheProvider, mapFileProvider, algorithmHandlers.FactorFileProvider, null);
             }
             catch (Exception exception)
             {
@@ -68,157 +86,174 @@ namespace QuantConnect.Jupyter
         }
 
         /// <summary>
-        /// Get the Lean <see cref = "Symbol"/> object given its ticker, security type and market.
+        /// Set the start date for the backtest 
         /// </summary>
-        /// <param name="ticker">The asset symbol name</param>
-        /// <param name="type">The asset security type</param>
-        /// <param name="market">The asset market</param>
-        /// <returns><see cref = "Symbol"/> object wrapped in a <see cref = "PyObject"/></returns>
-        public PyObject GetSymbol(string ticker, string type = "Equity", string market = null)
+        /// <param name="start">Datetime Start date for backtest</param>
+        /// <remarks>Must be less than end date and within data available</remarks>
+        /// <seealso cref="SetStartDate(DateTime)"/>
+        public void SetStartDate(DateTime start)
         {
-            var securityType = (SecurityType)Enum.Parse(typeof(SecurityType), type, true);
-
-            SecurityIdentifier sid;
-
-            if (securityType == SecurityType.Cfd)
-            {
-                sid = SecurityIdentifier.GenerateCfd(ticker, market ?? Market.Oanda);
-            }
-            else if (securityType == SecurityType.Equity)
-            {
-                sid = SecurityIdentifier.GenerateEquity(ticker, market ?? Market.USA);
-            }
-            else if (securityType == SecurityType.Forex)
-            {
-                sid = SecurityIdentifier.GenerateForex(ticker, market ?? Market.FXCM);
-            }
-            else
-            {
-                return "Invalid security type. Use Equity, Forex or Cfd.".ToPython();
-            }
-
-            // Add symbol to cache
-            SymbolCache.Set(ticker, new Symbol(sid, ticker));
-
-            return SymbolCache.GetSymbol(ticker).ToPython();
+            _algorithm.SetStartDate(start);
         }
 
         /// <summary>
-        /// Gets symbol information from a list of tickers
+        /// Set the start date for backtest.
         /// </summary>
-        /// <param name="pyObject">The tickers to retrieve information for</param>
-        /// <returns>A pandas.DataFrame containing the symbol information</returns>
-        public PyObject PrintSymbols(PyObject pyObject)
+        /// <param name="day">Int starting date 1-30</param>
+        /// <param name="month">Int month starting date</param>
+        /// <param name="year">Int year starting date</param>
+        /// <remarks> 
+        ///     Wrapper for SetStartDate(DateTime). 
+        ///     Must be less than end date. 
+        ///     Ignored in live trading mode.
+        /// </remarks>
+        public void SetStartDate(int year, int month, int day)
         {
-            var symbols = GetSymbolsFromPyObject(pyObject);
-            if (symbols == null)
-            {
-                return "Invalid ticker(s). Please use get_symbol to add symbols.".ToPython();
-            }
+            _algorithm.SetStartDate(year, month, day);
+        }
 
-            using (Py.GIL())
-            {
-                var data = new PyDict();
-                var index = symbols.Select(x => x.ID);
-                data.SetItem("Value", _pandas.Series(symbols.Select(x => x.Value).ToList(), index));
-                data.SetItem("Asset Type", _pandas.Series(symbols.Select(x => x.SecurityType.ToString()).ToList(), index));
-                data.SetItem("Market", _pandas.Series(symbols.Select(x => x.ID.Market.ToString()).ToList(), index));
-                data.SetItem("Start Date", _pandas.Series(symbols.Select(x => x.SecurityType == SecurityType.Equity ? x.ID.Date.ToShortDateString() : null).ToList(), index));
-                return _pandas.DataFrame(data, columns: "Value,Asset Type,Market,Start Date".Split(',').ToList());
-            }
+        /// <summary>
+        /// Creates and adds a new <see cref="Equity"/> security to the algorithm
+        /// </summary>
+        /// <param name="ticker">The equity ticker symbol</param>
+        /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
+        /// <param name="market">The equity's market, <seealso cref="Market"/>. Default value is null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
+        /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
+        /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
+        /// <param name="extendedMarketHours">True to send data during pre and post market sessions. Default is <value>false</value></param>
+        /// <returns>The new <see cref="Equity"/> security</returns>
+        public Equity AddEquity(string ticker, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m, bool extendedMarketHours = false)
+        {
+            return _algorithm.AddEquity(ticker, resolution, market, fillDataForward, leverage, extendedMarketHours);
+        }
+
+        /// <summary>
+        /// Creates and adds a new <see cref="Forex"/> security to the algorithm
+        /// </summary>
+        /// <param name="ticker">The currency pair</param>
+        /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
+        /// <param name="market">The foreign exchange trading market, <seealso cref="Market"/>. Default value is null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
+        /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
+        /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
+        /// <returns>The new <see cref="Forex"/> security</returns>
+        public Forex AddForex(string ticker, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m)
+        {
+            return _algorithm.AddForex(ticker, resolution, market, fillDataForward, leverage);
+        }
+
+        /// <summary>
+        /// Creates and adds a new <see cref="Cfd"/> security to the algorithm
+        /// </summary>
+        /// <param name="ticker">The currency pair</param>
+        /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
+        /// <param name="market">The cfd trading market, <seealso cref="Market"/>. Default value is null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
+        /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
+        /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
+        /// <returns>The new <see cref="Cfd"/> security</returns>
+        public Cfd AddCfd(string ticker, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m)
+        {
+            return _algorithm.AddCfd(ticker, resolution, market, fillDataForward, leverage);
+        }
+
+        /// <summary>
+        /// Creates and adds a new <see cref="Future"/> security to the algorithm
+        /// </summary>
+        /// <param name="symbol">The futures contract symbol</param>
+        /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
+        /// <param name="market">The futures market, <seealso cref="Market"/>. Default is value null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
+        /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
+        /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
+        /// <returns>The new <see cref="Future"/> security</returns>
+        public Future AddFuture(string symbol, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m)
+        {
+            return _algorithm.AddFuture(symbol, resolution, market, fillDataForward, leverage);
+        }
+
+        /// <summary>
+            /// Creates and adds a new equity <see cref="Option"/> security to the algorithm
+            /// </summary>
+            /// <param name="underlying">The underlying equity symbol</param>
+            /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
+            /// <param name="market">The equity's market, <seealso cref="Market"/>. Default is value null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
+            /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
+            /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
+            /// <returns>The new <see cref="Option"/> security</returns>
+        public Option AddOption(string underlying, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m)
+        {
+            return _algorithm.AddOption(underlying, resolution, market, fillDataForward, leverage);
         }
 
         /// <summary>
         /// Gets the historical data for the specified symbols between the specified dates. The symbols must exist in the Securities collection.
         /// </summary>
-        /// <param name="symbols">The symbols to retrieve historical data for</param>
-        /// <param name="periods">The number of bars to request</param>
-        /// <param name="resolution">The resolution to request</param>
-        /// <param name="selector">Selects a value from the BaseData to filter the request output, if null retuns all OHLCV</param>
-        /// <param name="dataNormalizationMode">The data normalization mode. Default is Adjusted</param>
-        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
-        /// <returns>A pandas.DataFrame containing the requested historical data</returns>
-        public PyObject History(PyObject symbols, int periods, Resolution resolution = Resolution.Daily, Func<IBaseData, decimal> selector = null, DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted, bool extendedMarket = false)
-        {
-            var span = TimeSpan.FromDays(periods);
-
-            switch (resolution)
-            {
-                case Resolution.Second:
-                    span = TimeSpan.FromSeconds(periods);
-                    break;
-                case Resolution.Minute:
-                    span = TimeSpan.FromMinutes(periods);
-                    break;
-                case Resolution.Hour:
-                    span = TimeSpan.FromHours(periods);
-                    break;
-                default:
-                    break;
-            }
-
-            return History(symbols, span, resolution, selector, dataNormalizationMode, extendedMarket);
-        }
-
-        /// <summary>
-        /// Gets the historical data for the specified symbols between the specified dates. The symbols must exist in the Securities collection.
-        /// </summary>
-        /// <param name="symbols">The symbols to retrieve historical data for</param>
         /// <param name="span">The span over which to retrieve recent historical data</param>
         /// <param name="resolution">The resolution to request</param>
-        /// <param name="selector">Selects a value from the BaseData to filter the request output, if null retuns all OHLCV</param>
-        /// <param name="dataNormalizationMode">The data normalization mode. Default is Adjusted</param>
-        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
         /// <returns>A pandas.DataFrame containing the requested historical data</returns>
-        public PyObject History(PyObject symbols, TimeSpan span, Resolution resolution = Resolution.Daily, Func<IBaseData, decimal> selector = null, DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted, bool extendedMarket = false)
+        public PyObject History(TimeSpan span, Resolution? resolution = null)
         {
-            var endTimeUtc = DateTime.Now;
-            var startTimeUtc = endTimeUtc - span;
-            return History(symbols, startTimeUtc, endTimeUtc, resolution, selector, dataNormalizationMode, extendedMarket);
+            return _converter.GetDataFrame(_algorithm.History(_algorithm.Securities.Keys, _algorithm.Time - span, _algorithm.Time, resolution).Memoize());
         }
 
         /// <summary>
-        /// Gets the historical data for the specified symbols between the specified dates. The symbols must exist in the Securities collection.
+        /// Get the history for all configured securities over the requested span.
+        /// This will use the resolution and other subscription settings for each security.
+        /// The symbols must exist in the Securities collection.
         /// </summary>
-        /// <param name="pyObject">The symbols to retrieve historical data for</param>
+        /// <param name="periods">The number of bars to request</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>A pandas.DataFrame containing the requested historical data</returns>
+        public PyObject History(int periods, Resolution? resolution = null)
+        {
+            return _converter.GetDataFrame(_algorithm.History(_algorithm.Securities.Keys, periods, resolution).Memoize());
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbol over the request span. The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <typeparam name="T">The data type of the symbol</typeparam>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="span">The span over which to retrieve recent historical data</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        public PyObject History<T>(Symbol symbol, TimeSpan span, Resolution? resolution = null)
+            where T : IBaseDataBar
+        {
+            return _converter.GetDataFrame<T>(_algorithm.History<T>(symbol, _algorithm.Time - span, _algorithm.Time, resolution).Memoize());
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbol. The exact number of bars will be returned. 
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="periods">The number of bars to request</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        public PyObject History(Symbol symbol, int periods, Resolution? resolution = null)
+        {
+            return _converter.GetDataFrame(_algorithm.History(symbol, periods, resolution));
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbol between the specified dates. The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
         /// <param name="start">The start time in the algorithm's time zone</param>
         /// <param name="end">The end time in the algorithm's time zone</param>
         /// <param name="resolution">The resolution to request</param>
-        /// <param name="selector">Selects a value from the BaseData to filter the request output, if null retuns all OHLCV</param>
-        /// <param name="dataNormalizationMode">The data normalization mode. Default is Adjusted</param>
-        /// <param name="extendedMarket">True to include extended market hours data, false otherwise</param>
-        /// <returns>A pandas.DataFrame containing the requested historical data</returns>
-        public PyObject History(PyObject pyObject, DateTime? start = null, DateTime? end = null, Resolution resolution = Resolution.Daily, Func<IBaseData, decimal> selector = null, DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted, bool extendedMarket = false)
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        public PyObject History(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null)
         {
-            var symbols = GetSymbolsFromPyObject(pyObject);
-            if (symbols == null)
+            if (symbol.SecurityType == SecurityType.Equity)
             {
-                return "Invalid ticker(s). Please use get_symbol to add symbols.".ToPython();
+                return _converter.GetDataFrame(_algorithm.History<TradeBar>(symbol, start, end, resolution));
             }
-
-            var requests = symbols.Select(symbol =>
+            else
             {
-                if (symbol.SecurityType == SecurityType.Forex || symbol.SecurityType == SecurityType.Cfd)
-                {
-                    start = start ?? new DateTime(2005, 1, 1);
-                }
-
-                return new HistoryRequest()
-                {
-                    Symbol = symbol,
-                    StartTimeUtc = start ?? symbol.ID.Date,
-                    EndTimeUtc = end ?? DateTime.Now,
-                    Resolution = resolution,
-                    FillForwardResolution = null,
-                    DataNormalizationMode = dataNormalizationMode,
-                    IncludeExtendedMarketHours = extendedMarket,
-                    DataType = symbol.ID.SecurityType == SecurityType.Equity ? typeof(TradeBar) : typeof(QuoteBar)
-                };
-            });
-
-            return CreateDataFrame(requests, _historyProvider.GetHistory(requests, TimeZones.NewYork), selector);
+                return _converter.GetDataFrame(_algorithm.History<QuoteBar>(symbol, start, end, resolution));
+            }
         }
-
+        
         /// <summary>
         /// Get fundamental data from given symbols
         /// </summary>
@@ -227,43 +262,46 @@ namespace QuantConnect.Jupyter
         /// <param name="start">The start date of selected data</param>
         /// <param name="end">The end date of selected data</param>
         /// <returns></returns>
-        public PyObject GetFundamental(PyObject pyObject, string selector, DateTime? start = null, DateTime? end = null)
+        public PyObject GetFundamental(PyObject tickers, string selector, DateTime? start = null, DateTime? end = null)
         {
             if (string.IsNullOrWhiteSpace(selector))
             {
                 return "Invalid selector. Cannot be None, empty or consist only of white-space characters".ToPython();
             }
 
-            var symbols = GetSymbolsFromPyObject(pyObject, true);
-            if (symbols == null)
-            {
-                return "Invalid ticker(s). Please use get_symbol to add symbols.".ToPython();
-            }
-
-            var list = new List<Tuple<Symbol, DateTime, object>>();
-
-            foreach (var symbol in symbols)
-            {
-                var dir = new DirectoryInfo(Path.Combine(Globals.DataFolder, "equity", symbol.ID.Market, "fundamental", "fine", symbol.Value.ToLower()));
-                if (!dir.Exists) continue;
-
-                var config = new SubscriptionDataConfig(typeof(FineFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
-
-                foreach (var fileName in dir.EnumerateFiles())
-                {
-                    var date = DateTime.ParseExact(fileName.Name.Substring(0, 8), DateFormat.EightCharacter, CultureInfo.InvariantCulture);
-                    if (date < start || date > end) continue;
-
-                    var factory = new TextSubscriptionDataSourceReader(_dataCacheProvider, config, date, false);
-                    var source = new SubscriptionDataSource(fileName.FullName, SubscriptionTransportMedium.LocalFile);
-                    var value = factory.Read(source).Select(x => GetPropertyValue(x, selector)).First();
-
-                    list.Add(Tuple.Create(symbol, date, value));
-                }
-            }
-
             using (Py.GIL())
             {
+                // If tickers are not a PyList, we create one
+                if (!PyList.IsListType(tickers))
+                {
+                    var tmp = new PyList();
+                    tmp.Append(tickers);
+                    tickers = tmp;
+                }
+
+                var list = new List<Tuple<Symbol, DateTime, object>>();
+
+                foreach (var ticker in tickers)
+                {
+                    var symbol = Symbol.Create(ticker.ToString(), SecurityType.Equity, Market.USA);
+                    var dir = new DirectoryInfo(Path.Combine(Globals.DataFolder, "equity", symbol.ID.Market, "fundamental", "fine", symbol.Value.ToLower()));
+                    if (!dir.Exists) continue;
+
+                    var config = new SubscriptionDataConfig(typeof(FineFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+
+                    foreach (var fileName in dir.EnumerateFiles())
+                    {
+                        var date = DateTime.ParseExact(fileName.Name.Substring(0, 8), DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+                        if (date < start || date > end) continue;
+
+                        var factory = new TextSubscriptionDataSourceReader(_dataCacheProvider, config, date, false);
+                        var source = new SubscriptionDataSource(fileName.FullName, SubscriptionTransportMedium.LocalFile);
+                        var value = factory.Read(source).Select(x => GetPropertyValue(x, selector)).First();
+
+                        list.Add(Tuple.Create(symbol, date, value));
+                    }
+                }
+
                 var data = new PyDict();
                 foreach (var item in list.GroupBy(x => x.Item1))
                 {
@@ -276,161 +314,232 @@ namespace QuantConnect.Jupyter
         }
 
         /// <summary>
-        /// Get list of symbols from a PyObject
+        /// Gets <see cref="OptionHistory"/> object for a given symbol, date and resolution
         /// </summary>
-        /// <param name="pyObject">PyObject containing a list of tickers</param>
-        /// <returns>List of Symbol</returns>
-        private List<Symbol> GetSymbolsFromPyObject(PyObject pyObject, bool isEquity = false)
+        /// <param name="symbol">The symbol to retrieve historical option data for</param>
+        /// <param name="date">Date of the data</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <returns>A <see cref="OptionHistory"/> object that contains historical option data.</returns>
+        public OptionHistory GetOptionHistory(Symbol symbol, DateTime date, Resolution? resolution = null)
         {
-            using (Py.GIL())
-            {
-                // If not a PyList, convert it into one
-                if (!PyList.IsListType(pyObject))
-                {
-                    var tmp = new PyList();
-                    tmp.Append(pyObject);
-                    pyObject = tmp;
-                }
+            SetStartDate(date.AddDays(1));
+            var option = _algorithm.Securities[symbol] as Option;
+            var underlying = AddEquity(symbol.Underlying.Value, option.Resolution);
 
-                var symbols = new List<Symbol>();
-                foreach (PyObject item in pyObject)
-                {
-                    var symbol = (Symbol)item.AsManagedObject(typeof(Symbol));
+            var provider = new BacktestingOptionChainProvider();
+            var allSymbols = provider.GetOptionContractList(symbol.Underlying, date);
+            
+            var requests = _algorithm.History(symbol.Underlying, TimeSpan.FromDays(1), resolution)
+                .SelectMany(x => option.ContractFilter.Filter(new OptionFilterUniverse(allSymbols, x)))
+                .Distinct()
+                .Select(x =>
+                     new HistoryRequest()
+                        {
+                            Symbol = x,
+                            StartTimeUtc = date.AddDays(-1),
+                            EndTimeUtc = date,
+                            Resolution = resolution ?? option.Resolution,
+                            DataType = typeof(QuoteBar)
+                        }
+                    );
 
-                    if (isEquity && string.IsNullOrWhiteSpace(symbol.Value))
-                    {
-                        var ticker = (string)item.AsManagedObject(typeof(string));
-                        symbol = new Symbol(SecurityIdentifier.GenerateEquity(ticker, Market.USA), ticker);
-                    }
+            requests = requests.Union(new[] { new HistoryRequest(underlying.Subscriptions.FirstOrDefault(), underlying.Exchange.Hours, date.AddDays(-1), date) });
 
-                    symbols.Add(symbol);
-                }
-                return symbols.Count == 0 || string.IsNullOrEmpty(symbols.First().Value) ? null : symbols;
-            }
+            return new OptionHistory(_algorithm.HistoryProvider.GetHistory(requests.OrderByDescending(x => x.Symbol.SecurityType), _algorithm.TimeZone).Memoize());
         }
 
         /// <summary>
-        /// Creates a pandas.DataFrame from an enumerable of slice
+        /// Gets the historical data of an indicator for the specified symbol. The exact number of bars will be returned. 
+        /// The symbol must exist in the Securities collection.
         /// </summary>
-        /// <param name="requests">The history requests to execute</param>
-        /// <param name="slices">An enumerable of slice containing the requested historical data</param>
-        /// <param name="selector">Selects a value from the BaseData to filter the request output, if null retuns all OHLCV</param>
-        /// <returns>A pandas.DataFrame containing the requested historical data</returns>
-        private PyObject CreateDataFrame(IEnumerable<HistoryRequest> requests, IEnumerable<Slice> slices, Func<IBaseData, decimal> selector)
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="periods">The number of bars to request</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame of historical data of an indicator</returns>
+        public PyObject Indicator(IndicatorBase<IndicatorDataPoint> indicator, Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            if (selector == null)
-            {
-                return CreateMultiIndex(requests, slices);
-            }
-
-            using (Py.GIL())
-            {
-                var history = slices.ToList();
-                var data = new PyDict();
-
-                foreach (var request in requests)
-                {
-                    var symbol = request.Symbol;
-
-                    var list = history.Get(symbol, selector).Select(x => (double)x).ToList();
-                    if (list.Count == 0) continue;
-
-                    var index = request.DataType.Equals(typeof(QuoteBar))
-                        ? history.Get<QuoteBar>(symbol).Select(x => x.Time)
-                        : history.Get<TradeBar>(symbol).Select(x => x.Time);
-
-                    data.SetItem(symbol, _pandas.Series(list, index));
-                }
-
-                return _pandas.DataFrame(data);
-            }
+            var history = _algorithm.History<IBaseDataBar>(symbol, period, resolution);
+            return Indicator(indicator, history, selector);
         }
 
         /// <summary>
-        /// Creates a pandas.DataFrame from an enumerable of slice
+        /// Gets the historical data of a bar indicator for the specified symbol. The exact number of bars will be returned. 
+        /// The symbol must exist in the Securities collection.
         /// </summary>
-        /// <param name="requests">The history requests to execute</param>
-        /// <param name="slices">An enumerable of slice containing the requested historical data</param>
-        /// <returns>A pandas.DataFrame containing the requested historical data</returns>
-        private PyObject CreateMultiIndex(IEnumerable<HistoryRequest> requests, IEnumerable<Slice> slices)
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="periods">The number of bars to request</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame of historical data of a bar indicator</returns>
+        public PyObject Indicator(IndicatorBase<IBaseDataBar> indicator, Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
         {
-            using (Py.GIL())
-            {
-                var history = slices.ToList();
-                var data = new PyDict();
-                var symbols = new Dictionary<PyObject, string>();
-
-                foreach (var request in requests)
-                {
-                    var symbol = request.Symbol;
-                    var dict = new Dictionary<string, List<double>>();
-
-                    if (request.DataType.Equals(typeof(QuoteBar)))
-                    {
-                        var bars = history.Get<QuoteBar>(symbol).ToList();
-                        if (bars.Count == 0) continue;
-
-                        var index = bars.Select(x => x.Time);
-                        dict.Add("Open", bars.Select(x => (double)x.Open).ToList());
-                        dict.Add("High", bars.Select(x => (double)x.High).ToList());
-                        dict.Add("Low", bars.Select(x => (double)x.Low).ToList());
-                        dict.Add("Close", bars.Select(x => (double)x.Close).ToList());
-
-                        foreach (var kvp in dict)
-                        {
-                            var idx = new PyTuple(new[] { symbol.ToPython(), kvp.Key.ToPython() });
-                            data.SetItem(idx, _pandas.Series(kvp.Value, index));
-                        }
-                    }
-                    else
-                    {
-                        var bars = history.Get<TradeBar>(symbol).ToList();
-                        if (bars.Count == 0) continue;
-
-                        var index = bars.Select(x => x.Time);
-                        dict.Add("Open", bars.Select(x => (double)x.Open).ToList());
-                        dict.Add("High", bars.Select(x => (double)x.High).ToList());
-                        dict.Add("Low", bars.Select(x => (double)x.Low).ToList());
-                        dict.Add("Close", bars.Select(x => (double)x.Close).ToList());
-                        dict.Add("Volume", bars.Select(x => (double)x.Volume).ToList());
-
-                        foreach (var kvp in dict)
-                        {
-                            var idx = new PyTuple(new[] { symbol.ToPython(), kvp.Key.ToPython() });
-                            data.SetItem(idx, _pandas.Series(kvp.Value, index));
-                        }
-                    }
-
-                    symbols.Add(symbol.ToPython(), string.Join(",", dict.Keys));
-                }
-
-                // Return null if no data was found
-                if (symbols.Count == 0)
-                {
-                    return "No data found for requested symbols".ToPython();
-                }
-
-                var values = symbols.Values.OrderBy(x => x.Length).Last().Split(',').Select(x => x.ToPython()).ToArray();
-                var keys = symbols.Keys.SelectMany(x => Enumerable.Repeat(x, values.Length)).ToArray();
-
-                var columns = new PyList(new[]
-                {
-                    new PyList(keys),
-                    new PyList(values).Repeat(keys.Length / values.Length)
-                });
-                
-                var df = _pandas.DataFrame(data, columns: columns);
-
-                // If there is one one symbol, drop top level
-                if (symbols.Count == 1)
-                {
-                    df.columns = df.columns.droplevel(0);
-                }
-
-                return df;
-            }
+            var history = _algorithm.History<IBaseDataBar>(symbol, period, resolution);
+            return Indicator(indicator, history, selector);
         }
 
+        /// <summary>
+        /// Gets the historical data of an indicator for the specified symbol. The exact number of bars will be returned. 
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="indicator">Indicator</param>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="span">The span over which to retrieve recent historical data</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame of historical data of an indicator</returns>
+        public PyObject Indicator(IndicatorBase<IndicatorDataPoint> indicator, Symbol symbol, TimeSpan span, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var history = _algorithm.History<IBaseDataBar>(symbol, span, resolution);
+            return Indicator(indicator, history, selector);
+        }
+
+        /// <summary>
+        /// Gets the historical data of a bar indicator for the specified symbol. The exact number of bars will be returned. 
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="indicator">Indicator</param>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="span">The span over which to retrieve recent historical data</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame of historical data of a bar indicator</returns>
+        public PyObject Indicator(IndicatorBase<IBaseDataBar> indicator, Symbol symbol, TimeSpan span, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var history = _algorithm.History<IBaseDataBar>(symbol, span, resolution);
+            return Indicator(indicator, history, selector);
+        }
+
+        /// <summary>
+        /// Gets the historical data of an indicator for the specified symbol. The exact number of bars will be returned. 
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="indicator">Indicator</param>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="start">The start time in the algorithm's time zone</param>
+        /// <param name="end">The end time in the algorithm's time zone</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame of historical data of an indicator</returns>
+        public PyObject Indicator(IndicatorBase<IndicatorDataPoint> indicator, Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var history = _algorithm.History<IBaseDataBar>(symbol, start, end, resolution);
+            return Indicator(indicator, history, selector);
+        }
+
+        /// <summary>
+        /// Gets the historical data of a bar indicator for the specified symbol. The exact number of bars will be returned. 
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="indicator">Indicator</param>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="start">The start time in the algorithm's time zone</param>
+        /// <param name="end">The end time in the algorithm's time zone</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame of historical data of a bar indicator</returns>
+        public PyObject Indicator(IndicatorBase<IBaseDataBar> indicator, Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var history = _algorithm.History<IBaseDataBar>(symbol, start, end, resolution);
+            return Indicator(indicator, history, selector);
+        }
+
+        /// <summary>
+        /// Gets the historical data of an indicator and convert it into pandas.DataFrame
+        /// </summary>
+        /// <param name="indicator">Indicator</param>
+        /// <param name="history">Historical data used to calculate the indicator</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame containing the historical data of <param name="indicator"></returns>
+        private PyObject Indicator(IndicatorBase<IndicatorDataPoint> indicator, IEnumerable<IBaseDataBar> history, Func<IBaseData, decimal> selector = null)
+        {
+            // Reset the indicator
+            indicator.Reset();
+            
+            // Create a dictionary of the properties
+            var name = indicator.GetType().Name;
+
+            var properties = indicator.GetType().GetProperties()
+                .Where(x => x.PropertyType.IsGenericType)
+                .ToDictionary(x => x.Name, y => new List<IndicatorDataPoint>());
+            properties.Add(name, new List<IndicatorDataPoint>());
+
+            indicator.Updated += (s, e) =>
+            {
+                if (!indicator.IsReady)
+                {
+                    return;
+                }
+
+                foreach (var kvp in properties)
+                {
+                    var dataPoint = kvp.Key == name ? e : GetPropertyValue(s, kvp.Key + ".Current");
+                    kvp.Value.Add((IndicatorDataPoint)dataPoint);
+                }
+            };
+
+            selector = selector ?? (x => x.Value);
+
+            foreach (var bar in history)
+            {
+                var value = selector(bar);
+                indicator.Update(bar.EndTime, value);
+            }
+
+            return _converter.GetIndicatorDataFrame(properties);
+        }
+
+        /// <summary>
+        /// Gets the historical data of an bar indicator and convert it into pandas.DataFrame
+        /// </summary>
+        /// <param name="indicator">Bar indicator</param>
+        /// <param name="history">Historical data used to calculate the indicator</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>pandas.DataFrame containing the historical data of <param name="indicator"></returns>
+        private PyObject Indicator(IndicatorBase<IBaseDataBar> indicator, IEnumerable<IBaseDataBar> history, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            // Reset the indicator
+            indicator.Reset();
+
+            // Create a dictionary of the properties
+            var name = indicator.GetType().Name;
+
+            var properties = indicator.GetType().GetProperties()
+                .Where(x => x.PropertyType.IsGenericType)
+                .ToDictionary(x => x.Name, y => new List<IndicatorDataPoint>());
+            properties.Add(name, new List<IndicatorDataPoint>());
+
+            indicator.Updated += (s, e) =>
+            {
+                if (!indicator.IsReady)
+                {
+                    return;
+                }
+
+                foreach (var kvp in properties)
+                {
+                    var dataPoint = kvp.Key == name ? e : GetPropertyValue(s, kvp.Key + ".Current");
+                    kvp.Value.Add((IndicatorDataPoint)dataPoint);
+                }
+            };
+            
+            if (history.Count() > 0 && history.First().Symbol.SecurityType == SecurityType.Equity)
+            {
+                selector = selector ?? (x => (TradeBar)x);
+            }
+            else
+            {
+                selector = selector ?? (x => (QuoteBar)x);
+            }
+
+            foreach (var bar in history)
+            {
+                indicator.Update(selector(bar));
+            }
+
+            return _converter.GetIndicatorDataFrame(properties);
+        }
+        
         /// <summary>
         /// Gets a value of a property
         /// </summary>

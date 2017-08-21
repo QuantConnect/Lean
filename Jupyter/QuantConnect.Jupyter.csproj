@@ -55,10 +55,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlgorithmAnalysis.cs" />
+    <Compile Include="OptionHistory.cs" />
     <Compile Include="QuantBook.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">
+      <Project>{3240ACA4-BDD4-4D24-AC36-BBB651C39212}</Project>
+      <Name>QuantConnect.Algorithm</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Api\QuantConnect.Api.csproj">
       <Project>{c5d44209-49a0-4505-a870-043c5ef5fddf}</Project>
       <Name>QuantConnect.Api</Name>
@@ -75,6 +80,10 @@
       <Project>{12156F46-D07E-4E3D-AD2B-7409E82AB62F}</Project>
       <Name>QuantConnect.Lean.Engine</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Indicators\QuantConnect.Indicators.csproj">
+      <Project>{73FB2522-C3ED-4E47-8E3D-AFAD48A6B888}</Project>
+      <Name>QuantConnect.Indicators</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj">
       <Project>{01911409-86BE-4E7D-9947-DF714138610D}</Project>
       <Name>QuantConnect.Logging</Name>
@@ -85,7 +94,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="BasicAlgorithmAnalisysTemplate.ipynb">
+    <None Include="BasicAlgorithmAnalysisTemplate.ipynb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="BasicQuantBookTemplate.ipynb">
