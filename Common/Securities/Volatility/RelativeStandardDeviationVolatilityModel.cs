@@ -116,17 +116,17 @@ namespace QuantConnect.Securities
 
             return new[] 
             {
-                new HistoryRequest()
-                {
-                    StartTimeUtc = utcStartTime,
-                    EndTimeUtc = utcTime,
-                    Resolution = security.Resolution,
-                    FillForwardResolution = security.Resolution,
-                    IncludeExtendedMarketHours = true,
-                    Symbol = security.Symbol,
-                    DataType = typeof(TradeBar),
-                    TimeZone = security.Exchange.TimeZone
-                }
+                new HistoryRequest(utcStartTime, 
+                                   utcTime,
+                                   typeof(TradeBar),
+                                   security.Symbol,
+                                   security.Resolution,
+                                   security.Exchange.Hours,
+                                   MarketHoursDatabase.FromDataFolder().GetDataTimeZone(security.Symbol.ID.Market, security.Symbol, security.Type),
+                                   Resolution.Minute,
+                                   true,
+                                   false,
+                                   DataNormalizationMode.Adjusted)
             };
         }
     }

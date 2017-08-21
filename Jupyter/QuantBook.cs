@@ -333,14 +333,16 @@ namespace QuantConnect.Jupyter
                 .SelectMany(x => option.ContractFilter.Filter(new OptionFilterUniverse(allSymbols, x)))
                 .Distinct()
                 .Select(x =>
-                     new HistoryRequest()
-                        {
-                            Symbol = x,
-                            StartTimeUtc = date.AddDays(-1),
-                            EndTimeUtc = date,
-                            Resolution = resolution ?? option.Resolution,
-                            DataType = typeof(QuoteBar)
-                        }
+                     new HistoryRequest(date.AddDays(-1), 
+                                        date, typeof(QuoteBar), 
+                                        x, 
+                                        resolution ?? option.Resolution, 
+                                        underlying.Exchange.Hours, 
+                                        _algorithm.TimeZone,  // QuantBook should follow the algorithms assumptions
+                                        Resolution.Minute, 
+                                        false, 
+                                        false, 
+                                        DataNormalizationMode.Adjusted)
                     );
 
             requests = requests.Union(new[] { new HistoryRequest(underlying.Subscriptions.FirstOrDefault(), underlying.Exchange.Hours, date.AddDays(-1), date) });

@@ -81,22 +81,6 @@ namespace QuantConnect.Data
         /// </summary>
         public DataNormalizationMode DataNormalizationMode { get; set; }
 
-        /// <summary>
-        /// Initializes a new default instance of the <see cref="HistoryRequest"/> class
-        /// </summary>
-        public HistoryRequest()
-        {
-            StartTimeUtc = EndTimeUtc = DateTime.UtcNow;
-            Symbol = Symbol.Empty;
-            ExchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
-            Resolution = Resolution.Minute;
-            FillForwardResolution = Resolution.Minute;
-            IncludeExtendedMarketHours = false;
-            DataType = typeof (TradeBar);
-            TimeZone = TimeZones.NewYork;
-            IsCustomData = false;
-            DataNormalizationMode = DataNormalizationMode.Adjusted;
-        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HistoryRequest"/> class from the specified parameters
@@ -107,6 +91,7 @@ namespace QuantConnect.Data
         /// <param name="symbol">The symbol to request data for</param>
         /// <param name="resolution">The requested data resolution</param>
         /// <param name="exchangeHours">The exchange hours used in fill forward processing</param>
+        /// <param name="dataTimeZone">The time zone of the data</param>
         /// <param name="fillForwardResolution">The requested fill forward resolution for this request</param>
         /// <param name="includeExtendedMarketHours">True to include data from pre/post market hours</param>
         /// <param name="isCustomData">True for custom user data, false for normal QC data</param>
@@ -117,6 +102,7 @@ namespace QuantConnect.Data
             Symbol symbol,
             Resolution resolution,
             SecurityExchangeHours exchangeHours,
+            DateTimeZone dataTimeZone,
             Resolution? fillForwardResolution,
             bool includeExtendedMarketHours,
             bool isCustomData,
@@ -127,13 +113,13 @@ namespace QuantConnect.Data
             EndTimeUtc = endTimeUtc;
             Symbol = symbol;
             ExchangeHours = exchangeHours;
+            TimeZone = dataTimeZone;
             Resolution = resolution;
             FillForwardResolution = fillForwardResolution;
             IncludeExtendedMarketHours = includeExtendedMarketHours;
             DataType = dataType;
             IsCustomData = isCustomData;
             DataNormalizationMode = dataNormalizationMode;
-            TimeZone = exchangeHours.TimeZone;
         }
 
         /// <summary>
