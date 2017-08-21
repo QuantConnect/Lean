@@ -334,7 +334,8 @@ namespace QuantConnect.Jupyter
                 .Distinct()
                 .Select(x =>
                      new HistoryRequest(date.AddDays(-1), 
-                                        date, typeof(QuoteBar), 
+                                        date, 
+                                        typeof(QuoteBar), 
                                         x, 
                                         resolution ?? option.Resolution, 
                                         underlying.Exchange.Hours, 

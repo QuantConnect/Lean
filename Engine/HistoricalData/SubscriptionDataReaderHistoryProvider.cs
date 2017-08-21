@@ -97,7 +97,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             var config = new SubscriptionDataConfig(request.DataType, 
                 request.Symbol, 
                 request.Resolution, 
-                request.TimeZone, 
+                request.DataTimeZone, 
                 request.ExchangeHours.TimeZone, 
                 request.FillForwardResolution.HasValue, 
                 request.IncludeExtendedMarketHours, 

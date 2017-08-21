@@ -69,7 +69,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Gets the time zone of the time stamps on the raw input data
         /// </summary>
-        public DateTimeZone TimeZone { get; set; }
+        public DateTimeZone DataTimeZone { get; set; }
 
         /// <summary>
         /// Gets true if this is a custom data request, false for normal QC data
@@ -113,7 +113,7 @@ namespace QuantConnect.Data
             EndTimeUtc = endTimeUtc;
             Symbol = symbol;
             ExchangeHours = exchangeHours;
-            TimeZone = dataTimeZone;
+            DataTimeZone = dataTimeZone;
             Resolution = resolution;
             FillForwardResolution = fillForwardResolution;
             IncludeExtendedMarketHours = includeExtendedMarketHours;
@@ -141,7 +141,7 @@ namespace QuantConnect.Data
             DataType = config.Type;
             IsCustomData = config.IsCustomData;
             DataNormalizationMode = config.DataNormalizationMode;
-            TimeZone = config.DataTimeZone;
+            DataTimeZone = config.DataTimeZone;
         }
     }
 }
