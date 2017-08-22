@@ -333,14 +333,18 @@ namespace QuantConnect.Jupyter
                 .SelectMany(x => option.ContractFilter.Filter(new OptionFilterUniverse(allSymbols, x)))
                 .Distinct()
                 .Select(x =>
-                     new HistoryRequest()
-                        {
-                            Symbol = x,
-                            StartTimeUtc = date.AddDays(-1),
-                            EndTimeUtc = date,
-                            Resolution = resolution ?? option.Resolution,
-                            DataType = typeof(QuoteBar)
-                        }
+                     new HistoryRequest(date.AddDays(-1), 
+                                        date, 
+                                        typeof(QuoteBar), 
+                                        x, 
+                                        resolution ?? option.Resolution, 
+                                        underlying.Exchange.Hours,
+                                        MarketHoursDatabase.FromDataFolder().GetDataTimeZone(underlying.Symbol.ID.Market, underlying.Symbol, underlying.Type),
+                                        Resolution.Minute, 
+                                        underlying.IsExtendedMarketHours, 
+                                        underlying.IsCustomData(), 
+                                        DataNormalizationMode.Raw,
+                                        LeanData.GetCommonTickTypeForCommonDataTypes(typeof(QuoteBar), underlying.Type))
                     );
 
             requests = requests.Union(new[] { new HistoryRequest(underlying.Subscriptions.FirstOrDefault(), underlying.Exchange.Hours, date.AddDays(-1), date) });

@@ -14,11 +14,14 @@
 */
 
 using System;
+using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Brokerages.Tradier;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Logging;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Brokerages.Tradier
 {
@@ -61,13 +64,18 @@ namespace QuantConnect.Tests.Brokerages.Tradier
 
                 var requests = new[]
                 {
-                    new HistoryRequest
-                    {
-                        Symbol = symbol,
-                        Resolution = resolution,
-                        StartTimeUtc = now.Add(-period),
-                        EndTimeUtc = now
-                    }
+                    new HistoryRequest(now.Add(-period),
+                        now,
+                        typeof(QuoteBar),
+                        symbol,
+                        resolution,
+                        SecurityExchangeHours.AlwaysOpen(TimeZones.EasternStandard),
+                        TimeZones.EasternStandard,
+                        Resolution.Minute,
+                        false,
+                        false,
+                        DataNormalizationMode.Adjusted,
+                        TickType.Quote)
                 };
 
                 var history = brokerage.GetHistory(requests, TimeZones.Utc);

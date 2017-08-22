@@ -454,16 +454,20 @@ namespace QuantConnect.Algorithm
                 subscriptionDataConfig = new SubscriptionDataConfig(subscriptionDataConfig, dataType, resolution: resolution);
             }
 
-            var request = new HistoryRequest
-            {
-                StartTimeUtc = startTime.ConvertToUtc(_localTimeKeeper.TimeZone),
-                EndTimeUtc = endTime.ConvertToUtc(_localTimeKeeper.TimeZone),
-                DataType = subscriptionDataConfig != null ? subscriptionDataConfig.Type : typeof(TradeBar),
-                Resolution = resolution,
-                FillForwardResolution = resolution,
-                Symbol = security.Symbol,
-                ExchangeHours = security.Exchange.Hours
-            };
+            var request = new HistoryRequest(
+                startTime.ConvertToUtc(_localTimeKeeper.TimeZone),
+                endTime.ConvertToUtc(_localTimeKeeper.TimeZone),
+                subscriptionDataConfig == null ? typeof(TradeBar) : subscriptionDataConfig.Type,
+                security.Symbol,
+                resolution,
+                security.Exchange.Hours,
+                MarketHoursDatabase.FromDataFolder().GetDataTimeZone(security.Symbol.ID.Market, security.Symbol, security.Symbol.SecurityType),
+                resolution,
+                security.IsExtendedMarketHours,
+                security.IsCustomData(),
+                security.DataNormalizationMode,
+                subscriptionDataConfig == null ? LeanData.GetCommonTickTypeForCommonDataTypes(typeof(TradeBar), security.Type) : subscriptionDataConfig.TickType
+            );
 
             var history = History(new List<HistoryRequest> { request });
 

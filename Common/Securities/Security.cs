@@ -632,7 +632,20 @@ namespace QuantConnect.Securities
             if (data is OpenInterest || data.Price == 0m) return;
             Holdings.UpdateMarketPrice(Price);
         }
- 
+
+        /// <summary>
+        /// Returns true if the security contains at least one subscription that represents custom data
+        /// </summary>
+        public bool IsCustomData()
+        {
+            if (Subscriptions == null || !Subscriptions.Any())
+            {
+                return false;
+            }
+
+            return Subscriptions.Any(x => x.IsCustomData);
+        }
+
         /// <summary>
         /// Set the leverage parameter for this security
         /// </summary>
