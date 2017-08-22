@@ -14,12 +14,15 @@
 */
 
 using System;
+using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Brokerages.Oanda;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Logging;
+using QuantConnect.Securities;
 using Environment = QuantConnect.Brokerages.Oanda.Environment;
 
 namespace QuantConnect.Tests.Brokerages.Oanda
@@ -75,13 +78,18 @@ namespace QuantConnect.Tests.Brokerages.Oanda
 
                 var requests = new[]
                 {
-                    new HistoryRequest
-                    {
-                        Symbol = symbol,
-                        Resolution = resolution,
-                        StartTimeUtc = now.Add(-period),
-                        EndTimeUtc = now
-                    }
+                    new HistoryRequest(now.Add(-period),
+                        now,
+                        typeof(QuoteBar),
+                        symbol,
+                        resolution,
+                        SecurityExchangeHours.AlwaysOpen(TimeZones.EasternStandard),
+                        DateTimeZone.Utc,
+                        Resolution.Minute,
+                        false,
+                        false,
+                        DataNormalizationMode.Adjusted,
+                        TickType.Quote)
                 };
 
                 var history = historyProvider.GetHistory(requests, TimeZones.Utc);
