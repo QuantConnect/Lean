@@ -17,13 +17,11 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -129,9 +127,8 @@ namespace QuantConnect.Tests.Common.Securities
             var forexDefaultQuoteCurrency = forexSymbol.Value.Substring(3);
 
             var forexSymbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(forexSymbol.ID.Market, forexSymbol, forexSymbol.ID.SecurityType, forexDefaultQuoteCurrency);
-            var subscriptionTypes = new List<Type>() { typeof(QuoteBar) };
 
-            var forex = SecurityManager.CreateSecurity(subscriptionTypes,
+            var forex = SecurityManager.CreateSecurity(typeof(QuoteBar),
                 _securityPortfolioManager,
                 _subscriptionManager,
                 forexMarketHoursDbEntry.ExchangeHours,
@@ -158,9 +155,8 @@ namespace QuantConnect.Tests.Common.Securities
             var optionMarketHoursDbEntry = _marketHoursDatabase.GetEntry(optionSymbol.ID.Market, optionSymbol, SecurityType.Option);
             var optionDefaultQuoteCurrency = CashBook.AccountCurrency;
             var optionSymbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(optionSymbol.ID.Market, optionSymbol, optionSymbol.ID.SecurityType, optionDefaultQuoteCurrency);
-            var subscriptionTypes = new List<Type>() { typeof(ZipEntryName) };
 
-            var option = SecurityManager.CreateSecurity(subscriptionTypes,
+            var option = SecurityManager.CreateSecurity(typeof(ZipEntryName),
                 _securityPortfolioManager,
                 _subscriptionManager,
                 optionMarketHoursDbEntry.ExchangeHours,
@@ -189,9 +185,8 @@ namespace QuantConnect.Tests.Common.Securities
             var equityMarketHoursDbEntry = _marketHoursDatabase.GetEntry(equitySymbol.ID.Market, equitySymbol, SecurityType.Equity);
             var equityDefaultQuoteCurrency = CashBook.AccountCurrency;
             var equitySymbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(equitySymbol.ID.Market, equitySymbol, equitySymbol.ID.SecurityType, equityDefaultQuoteCurrency);
-            var subscriptionTypes = new List<Type>() { typeof(TradeBar) };
 
-            var equity = SecurityManager.CreateSecurity(subscriptionTypes,
+            var equity = SecurityManager.CreateSecurity(typeof(TradeBar),
                 _securityPortfolioManager,
                 _subscriptionManager,
                 equityMarketHoursDbEntry.ExchangeHours,
@@ -219,9 +214,8 @@ namespace QuantConnect.Tests.Common.Securities
             var marketHoursDbEntry = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, SecurityType.Equity);
             var defaultQuoteCurrency = CashBook.AccountCurrency;
             var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, defaultQuoteCurrency);
-            var subscriptionTypes = new List<Type>() { typeof(TradeBar) };
 
-            var subscriptions = SecurityManager.CreateSecurity(subscriptionTypes,
+            var subscriptions = SecurityManager.CreateSecurity(typeof(QuoteBar),
                 _securityPortfolioManager,
                 _subscriptionManager,
                 marketHoursDbEntry.ExchangeHours,
@@ -238,8 +232,8 @@ namespace QuantConnect.Tests.Common.Securities
                 false);
 
             Assert.AreEqual(subscriptions.Subscriptions.Count(), 1);
-            Assert.AreEqual(subscriptions.Subscriptions.First().Type, typeof(TradeBar));
-            Assert.AreEqual(subscriptions.Subscriptions.First().TickType, TickType.Trade);
+            Assert.AreEqual(subscriptions.Subscriptions.First().Type, typeof(QuoteBar));
+            Assert.AreEqual(subscriptions.Subscriptions.First().TickType, TickType.Quote);
         }
 
         [Test]
@@ -248,9 +242,8 @@ namespace QuantConnect.Tests.Common.Securities
             var equitySymbol = new Symbol(SecurityIdentifier.GenerateBase("BTC", Market.USA), "BTC");
             var equityMarketHoursDbEntry = _marketHoursDatabase.GetEntry(Market.USA, "BTC", SecurityType.Base, TimeZones.NewYork);
             var equitySymbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(equitySymbol.ID.Market, equitySymbol, equitySymbol.ID.SecurityType, CashBook.AccountCurrency);
-            var subscriptionTypes = new List<Type>() { typeof(Bitcoin) };
 
-            var equity = SecurityManager.CreateSecurity(subscriptionTypes,
+            var equity = SecurityManager.CreateSecurity(typeof(Bitcoin),
                 _securityPortfolioManager,
                 _subscriptionManager,
                 equityMarketHoursDbEntry.ExchangeHours,
@@ -280,7 +273,12 @@ namespace QuantConnect.Tests.Common.Securities
             var optionMarketHoursDbEntry = _marketHoursDatabase.GetEntry(Market.USA, "SPY", SecurityType.Equity, TimeZones.NewYork);
             var optionSymbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(optionSymbol.ID.Market, "SPY", optionSymbol.ID.SecurityType, CashBook.AccountCurrency);
 
-            var subscriptionTypes = new List<Type>() { typeof(TradeBar), typeof(QuoteBar), typeof(OpenInterest) };
+            var subscriptionTypes = new List<Tuple<Type, TickType>>
+            {
+                new Tuple<Type, TickType>(typeof(TradeBar), TickType.Trade),
+                new Tuple<Type, TickType>(typeof(QuoteBar), TickType.Quote),
+                new Tuple<Type, TickType>(typeof(OpenInterest), TickType.OpenInterest)
+            };
 
             var optionSubscriptions = SecurityManager.CreateSecurity(subscriptionTypes,
                 _securityPortfolioManager,
@@ -314,7 +312,12 @@ namespace QuantConnect.Tests.Common.Securities
             var marketHoursDbEntry = _marketHoursDatabase.GetEntry(Market.USA, "ED", SecurityType.Equity, TimeZones.NewYork);
             var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, "ED", symbol.ID.SecurityType, CashBook.AccountCurrency);
 
-            var subscriptionTypes = new List<Type>() { typeof(TradeBar), typeof(QuoteBar), typeof(OpenInterest) };
+            var subscriptionTypes = new List<Tuple<Type, TickType>>
+            {
+                new Tuple<Type, TickType>(typeof(TradeBar), TickType.Trade),
+                new Tuple<Type, TickType>(typeof(QuoteBar), TickType.Quote),
+                new Tuple<Type, TickType>(typeof(OpenInterest), TickType.OpenInterest)
+            };
 
             var subscriptions = SecurityManager.CreateSecurity(subscriptionTypes,
                 _securityPortfolioManager,
