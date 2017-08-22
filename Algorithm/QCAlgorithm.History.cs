@@ -466,7 +466,7 @@ namespace QuantConnect.Algorithm
                 security.IsExtendedMarketHours,
                 security.IsCustomData(),
                 security.DataNormalizationMode,
-                subscriptionDataConfig == null ? TickType.Trade: subscriptionDataConfig.TickType
+                subscriptionDataConfig == null ? LeanData.GetCommonTickTypeForCommonDataTypes(typeof(TradeBar), security.Type) : subscriptionDataConfig.TickType
             );
 
             var history = History(new List<HistoryRequest> { request });

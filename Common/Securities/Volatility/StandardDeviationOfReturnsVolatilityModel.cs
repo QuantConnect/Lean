@@ -19,6 +19,7 @@ using QuantConnect.Data;
 using QuantConnect.Indicators;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using QuantConnect.Util;
 
 namespace QuantConnect.Securities
 {
@@ -120,7 +121,7 @@ namespace QuantConnect.Securities
                                    security.IsExtendedMarketHours, 
                                    security.IsCustomData(), 
                                    security.DataNormalizationMode,
-                                   TickType.Trade)
+                                   LeanData.GetCommonTickTypeForCommonDataTypes(typeof(TradeBar), security.Type))
             };
         }
     }

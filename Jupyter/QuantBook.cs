@@ -344,7 +344,7 @@ namespace QuantConnect.Jupyter
                                         underlying.IsExtendedMarketHours, 
                                         underlying.IsCustomData(), 
                                         DataNormalizationMode.Raw,
-                                        TickType.Quote)
+                                        LeanData.GetCommonTickTypeForCommonDataTypes(typeof(QuoteBar), underlying.Type))
                     );
 
             requests = requests.Union(new[] { new HistoryRequest(underlying.Subscriptions.FirstOrDefault(), underlying.Exchange.Hours, date.AddDays(-1), date) });
