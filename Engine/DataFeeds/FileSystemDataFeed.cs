@@ -21,6 +21,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
@@ -533,6 +534,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // optionally apply fill forward logic, but never for tick data
             if (request.Configuration.FillDataForward && request.Configuration.Resolution != Resolution.Tick)
             {
+                // copy forward Bid/Ask bars for QuoteBars
+                if (request.Configuration.Type == typeof(QuoteBar))
+                {
+                    enumerator = new QuoteBarFillForwardEnumerator(enumerator);
+                }
+
                 var subscriptionConfigs = _subscriptions.Select(x => x.Configuration).Concat(new[] { request.Configuration });
 
                 UpdateFillForwardResolution(subscriptionConfigs);

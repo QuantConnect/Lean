@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -13,19 +13,27 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Commands
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using QuantConnect.Interfaces;
+
+namespace QuantConnect.Securities.Option
 {
     /// <summary>
-    /// Represents a command that will terminate the algorithm
+    /// An implementation of <see cref="IOptionChainProvider"/> that always returns an empty list of contracts
     /// </summary>
-    public sealed class QuitCommand : AlgorithmStatusCommand
+    public class EmptyOptionChainProvider : IOptionChainProvider
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="QuitCommand"/>
+        /// Gets the list of option contracts for a given underlying symbol
         /// </summary>
-        public QuitCommand()
-            : base(AlgorithmStatus.Stopped)
+        /// <param name="symbol">The underlying symbol</param>
+        /// <param name="date">The date for which to request the option chain (only used in backtesting)</param>
+        /// <returns>The list of option contracts</returns>
+        public IEnumerable<Symbol> GetOptionContractList(Symbol symbol, DateTime date)
         {
+            return Enumerable.Empty<Symbol>();
         }
     }
 }

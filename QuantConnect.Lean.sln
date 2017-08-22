@@ -55,6 +55,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.ToolBox", "Too
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.VisualStudioPlugin", "VisualStudioPlugin\QuantConnect.VisualStudioPlugin.csproj", "{5326A9FB-0270-4647-8C43-20C5607DB529}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Jupyter", "Jupyter\QuantConnect.Jupyter.csproj", "{9561D14A-467E-40AD-928E-EE9F758D7D98}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -191,6 +193,14 @@ Global
 		{5326A9FB-0270-4647-8C43-20C5607DB529}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5326A9FB-0270-4647-8C43-20C5607DB529}.Release|x64.ActiveCfg = Release|Any CPU
 		{5326A9FB-0270-4647-8C43-20C5607DB529}.Release|x64.Build.0 = Release|Any CPU
+		{9561D14A-467E-40AD-928E-EE9F758D7D98}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9561D14A-467E-40AD-928E-EE9F758D7D98}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9561D14A-467E-40AD-928E-EE9F758D7D98}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{9561D14A-467E-40AD-928E-EE9F758D7D98}.Debug|x64.Build.0 = Debug|Any CPU
+		{9561D14A-467E-40AD-928E-EE9F758D7D98}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9561D14A-467E-40AD-928E-EE9F758D7D98}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9561D14A-467E-40AD-928E-EE9F758D7D98}.Release|x64.ActiveCfg = Release|Any CPU
+		{9561D14A-467E-40AD-928E-EE9F758D7D98}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

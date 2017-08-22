@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Engine
     /// the Run method to be called at all, a task is launched via ctor to process
     /// the packets
     /// </summary>
-    public class TestResultHandler : IResultHandler
+    public class TestResultHandler : BaseResultsHandler, IResultHandler
     {
         private AlgorithmNodePacket _job = new BacktestNodePacket();
 

@@ -251,7 +251,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Customizable dynamic statistics displayed during live trading:
         /// </summary>
-        Dictionary<string, string> RuntimeStatistics
+        ConcurrentDictionary<string, string> RuntimeStatistics
         {
             get;
         }
@@ -285,6 +285,14 @@ namespace QuantConnect.Interfaces
         /// Gets the user settings for the algorithm
         /// </summary>
         AlgorithmSettings Settings
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Gets the option chain provider, used to get the list of option contracts for an underlying symbol
+        /// </summary>
+        IOptionChainProvider OptionChainProvider
         {
             get;
         }
@@ -570,5 +578,11 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="availableDataTypes">>The different <see cref="TickType"/> each <see cref="Security"/> supports</param>
         void SetAvailableDataTypes(Dictionary<SecurityType, List<TickType>> availableDataTypes);
+
+        /// <summary>
+        /// Sets the option chain provider, used to get the list of option contracts for an underlying symbol
+        /// </summary>
+        /// <param name="optionChainProvider">The option chain provider</param>
+        void SetOptionChainProvider(IOptionChainProvider optionChainProvider);
     }
 }

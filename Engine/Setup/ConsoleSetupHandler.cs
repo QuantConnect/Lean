@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using QuantConnect.AlgorithmFactory;
-using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
@@ -28,9 +27,7 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
-using QuantConnect.Securities;
-using QuantConnect.Util;
-using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Lean.Engine.Setup
 {
@@ -102,6 +99,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// </summary>
         /// <param name="algorithmNodePacket">Job packet</param>
         /// <param name="uninitializedAlgorithm">The algorithm instance before Initialize has been called</param>
+        /// <param name="factory">The brokerage factory</param>
         /// <returns>The brokerage instance, or throws if error creating instance</returns>
         public IBrokerage CreateBrokerage(AlgorithmNodePacket algorithmNodePacket, IAlgorithm uninitializedAlgorithm, out IBrokerageFactory factory)
         {
@@ -133,14 +131,21 @@ namespace QuantConnect.Lean.Engine.Setup
                 {
                     var backtestJob = baseJob as BacktestNodePacket;
                     algorithm.SetMaximumOrders(int.MaxValue);
+
                     // set our parameters
                     algorithm.SetParameters(baseJob.Parameters);
                     algorithm.SetLiveMode(false);
                     algorithm.SetAvailableDataTypes(GetConfiguredDataFeeds());
+
                     //Set the source impl for the event scheduling
                     algorithm.Schedule.SetEventSchedule(realTimeHandler);
+
+                    // set the option chain provider
+                    algorithm.SetOptionChainProvider(new CachingOptionChainProvider(new BacktestingOptionChainProvider()));
+
                     //Setup Base Algorithm:
                     algorithm.Initialize();
+
                     //Set the time frontier of the algorithm
                     algorithm.SetDateTime(algorithm.StartDate.ConvertToUtc(algorithm.TimeZone));
 

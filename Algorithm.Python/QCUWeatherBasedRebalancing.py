@@ -83,8 +83,10 @@ class Weather(PythonData):
         weather = Weather()
         weather.Symbol = config.Symbol
         weather.Time = datetime.strptime(data[0], '%Y-%m-%d') + timedelta(hours=20) # Make sure we only get this data AFTER trading day - don't want forward bias.
+        # If the second column is an invalid value (empty string), return None. The algorithm will discard it.
+        if not data[2]: return None
         weather.Value = decimal.Decimal(data[2])
-        weather["MaxC"] = float(data[1])
-        weather["MinC"] = float(data[3])
+        weather["Max.C"] = float(data[1])   # Using a dot in the propety name, it will capitalize the first letter of each word:
+        weather["Min.C"] = float(data[3])   # Max.C -> MaxC and Min.C -> MinC
 
         return weather

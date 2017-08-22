@@ -9,9 +9,10 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>QuantConnect.Messaging</RootNamespace>
     <AssemblyName>QuantConnect.Messaging</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <LangVersion>5</LangVersion>
+    <LangVersion>6</LangVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -22,6 +23,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Debug\QuantConnect.Messaging.xml</DocumentationFile>
+    <LangVersion>6</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -30,18 +32,17 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>6</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AsyncIO, Version=0.1.20.0, Culture=neutral, PublicKeyToken=44a94435bd6f33f8, processorArchitecture=MSIL">
-      <HintPath>..\packages\AsyncIO.0.1.20.0\lib\net40\AsyncIO.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="AsyncIO, Version=0.1.25.0, Culture=neutral, PublicKeyToken=44a94435bd6f33f8, processorArchitecture=MSIL">
+      <HintPath>..\packages\AsyncIO.0.1.26.0\lib\net40\AsyncIO.dll</HintPath>
     </Reference>
-    <Reference Include="NetMQ, Version=3.3.3.4, Culture=neutral, PublicKeyToken=a6decef4ddc58b3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\NetMQ.3.3.3.4\lib\net40\NetMQ.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="NetMQ, Version=4.0.0.1, Culture=neutral, PublicKeyToken=a6decef4ddc58b3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\NetMQ.4.0.0.1\lib\net40\NetMQ.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="RestSharp, Version=105.2.3.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\RestSharp.105.2.3\lib\net45\RestSharp.dll</HintPath>
@@ -49,6 +50,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -80,7 +82,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <None Include="app.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

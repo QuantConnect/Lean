@@ -34,7 +34,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
     /// </summary>
     public class AlgoSeekOptionsConverter
     {
-        private const int execTimeout = 300;// sec
+        private const int execTimeout = 600;// sec
 
         private string _source;
         private string _remote;
@@ -85,93 +85,90 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             //Extract each file massively in parallel.
             Parallel.ForEach(files, parallelOptionsProcessing, file =>
             {
-                try
+                Log.Trace("Remote File :" + file);
+
+                var csvFile = Path.Combine(_source, Path.GetFileName(file).Replace(".bz2", ""));
+
+                Log.Trace("Source File :" + csvFile);
+
+                if (!File.Exists(csvFile))
                 {
-                    Log.Trace("Remote File :" + file);
+                    Log.Trace("AlgoSeekOptionsConverter.Convert(): Extracting " + file);
 
-                    var csvFile = Path.Combine(_source, Path.GetFileName(file).Replace(".bz2", ""));
+                    var cmdArgs = " e " + file + " -o" + _source;
+                    RunZipper(zipper, cmdArgs);
+                }
 
-                    Log.Trace("Source File :" + csvFile);
+                // setting up local processors and the flush event
+                var processors = new Processors();
+                var waitForFlush = new ManualResetEvent(true);
 
-                    if (!File.Exists(csvFile))
+                // symbol filters 
+                // var symbolFilterNames = new string[] { "AAPL", "TWX", "NWSA", "FOXA", "AIG", "EGLE", "EGEC" };
+                // var symbolFilter = symbolFilterNames.SelectMany(name => new[] { name, name + "1", name + ".1" }).ToHashSet();
+                // var reader = new AlgoSeekOptionsReader(csvFile, _referenceDate, symbolFilter);
+
+                var reader = new ToolBox.AlgoSeekOptionsConverter.AlgoSeekOptionsReader(csvFile, _referenceDate);
+                if (start == DateTime.MinValue)
+                {
+                    start = DateTime.Now;
+                }
+
+                var flushStep = TimeSpan.FromMinutes(15 + random.NextDouble() * 5);
+
+                if (reader.Current != null) // reader contains the data
+                {
+                    var previousFlush = reader.Current.Time.RoundDown(flushStep);
+
+                    do
                     {
-                        Log.Trace("AlgoSeekOptionsConverter.Convert(): Extracting " + file);
+                        var tick = reader.Current as Tick;
 
-                        var cmdArgs = " e " + file + " -o" + _source;
-                        RunZipper(zipper, cmdArgs);
-                    }
-
-                    // setting up local processors and the flush event
-                    var processors = new Processors();
-                    var waitForFlush = new ManualResetEvent(true);
-
-                    // symbol filters 
-                    // var symbolFilterNames = new string[] { "AAPL", "TWX", "NWSA", "FOXA", "AIG", "EGLE", "EGEC" };
-                    // var symbolFilter = symbolFilterNames.SelectMany(name => new[] { name, name + "1", name + ".1" }).ToHashSet();
-                    // var reader = new AlgoSeekOptionsReader(csvFile, _referenceDate, symbolFilter);
-
-                    var reader = new ToolBox.AlgoSeekOptionsConverter.AlgoSeekOptionsReader(csvFile, _referenceDate);
-                    if (start == DateTime.MinValue)
-                    {
-                        start = DateTime.Now;
-                    }
-
-                    var flushStep = TimeSpan.FromMinutes(15 + random.NextDouble() * 5);
-
-                    if (reader.Current != null) // reader contains the data
-                    {
-                        var previousFlush = reader.Current.Time.RoundDown(flushStep);
-
-                        do
+                        //If the next minute has clocked over; flush the consolidators; serialize and store data to disk.
+                        if (tick.Time.RoundDown(flushStep) > previousFlush)
                         {
-                            var tick = reader.Current as Tick;
+                            previousFlush = WriteToDisk(processors, waitForFlush, tick.Time, flushStep);
+                            processors = new Processors();
+                        }
 
-                            //If the next minute has clocked over; flush the consolidators; serialize and store data to disk.
-                            if (tick.Time.RoundDown(flushStep) > previousFlush)
-                            {
-                                previousFlush = WriteToDisk(processors, waitForFlush, tick.Time, flushStep);
-                                processors = new Processors();
-                            }
-
-                            //Add or create the consolidator-flush mechanism for symbol:
-                            List<AlgoSeekOptionsProcessor> symbolProcessors;
-                            if (!processors.TryGetValue(tick.Symbol, out symbolProcessors))
-                            {
-                                symbolProcessors = new List<AlgoSeekOptionsProcessor>(3)
+                        //Add or create the consolidator-flush mechanism for symbol:
+                        List<AlgoSeekOptionsProcessor> symbolProcessors;
+                        if (!processors.TryGetValue(tick.Symbol, out symbolProcessors))
+                        {
+                            symbolProcessors = new List<AlgoSeekOptionsProcessor>(3)
                                             {
                                                 new AlgoSeekOptionsProcessor(tick.Symbol, _referenceDate, TickType.Trade, _resolution, _destination),
                                                 new AlgoSeekOptionsProcessor(tick.Symbol, _referenceDate, TickType.Quote, _resolution, _destination),
                                                 new AlgoSeekOptionsProcessor(tick.Symbol, _referenceDate, TickType.OpenInterest, _resolution, _destination)
                                             };
 
-                                processors[tick.Symbol] = symbolProcessors;
-                            }
-
-                            // Pass current tick into processor: enum 0 = trade; 1 = quote, , 2 = oi
-                            symbolProcessors[(int)tick.TickType].Process(tick);
-
-                            if (Interlocked.Increment(ref totalLinesProcessed) % 1000000m == 0)
-                            {
-                                Log.Trace("AlgoSeekOptionsConverter.Convert(): Processed {0,3}M ticks( {1}k / sec); Memory in use: {2} MB; Total progress: {3}%", Math.Round(totalLinesProcessed / 1000000m, 2), Math.Round(totalLinesProcessed / 1000L / (DateTime.Now - start).TotalSeconds), Process.GetCurrentProcess().WorkingSet64 / (1024 * 1024), 100 * totalFilesProcessed / totalFiles);
-                            }
-
+                            processors[tick.Symbol] = symbolProcessors;
                         }
-                        while (reader.MoveNext());
 
-                        Log.Trace("AlgoSeekOptionsConverter.Convert(): Performing final flush to disk... ");
-                        Flush(processors, DateTime.MaxValue, true);
-                        WriteToDisk(processors, waitForFlush, DateTime.MaxValue, flushStep, true);
+                        // Pass current tick into processor: enum 0 = trade; 1 = quote, , 2 = oi
+                        symbolProcessors[(int)tick.TickType].Process(tick);
+
+                        if (Interlocked.Increment(ref totalLinesProcessed) % 1000000m == 0)
+                        {
+                            Log.Trace("AlgoSeekOptionsConverter.Convert(): Processed {0,3}M ticks( {1}k / sec); Memory in use: {2} MB; Total progress: {3}%", Math.Round(totalLinesProcessed / 1000000m, 2), Math.Round(totalLinesProcessed / 1000L / (DateTime.Now - start).TotalSeconds), Process.GetCurrentProcess().WorkingSet64 / (1024 * 1024), 100 * totalFilesProcessed / totalFiles);
+                        }
+
                     }
+                    while (reader.MoveNext());
 
-                    processors = null;
+                    Log.Trace("AlgoSeekOptionsConverter.Convert(): Performing final flush to disk... ");
+                    Flush(processors, DateTime.MaxValue, true);
+                    WriteToDisk(processors, waitForFlush, DateTime.MaxValue, flushStep, true);
 
-                    Log.Trace("AlgoSeekOptionsConverter.Convert(): Finished processing file: " + file);
-                    Interlocked.Increment(ref totalFilesProcessed);
+                    Log.Trace("AlgoSeekOptionsConverter.Convert(): Cleaning up extracted options file {0}", csvFile);
+                    File.Delete(csvFile);
                 }
-                catch (Exception err)
-                {
-                    Log.Error("Exception caught! File: {0} Err: {1} Source {2} Stack {3}", file, err.Message, err.Source, err.StackTrace);
-                }
+
+                processors = null;
+
+                Log.Trace("AlgoSeekOptionsConverter.Convert(): Finished processing file: " + file);
+                Interlocked.Increment(ref totalFilesProcessed);
+
             });
         }
 
@@ -275,25 +272,23 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                 .GroupBy(x => Directory.GetParent(x).FullName);
 
             //Zip each file massively in parallel.
-            Parallel.ForEach(files, parallelOptionsZipping, file =>
+            Parallel.ForEach(files, file =>
             {
                 try
                 {
                     var outputFileName = file.Key + ".zip";
                     // Create and open a new ZIP file
                     var filesToCompress = Directory.GetFiles(file.Key, "*.csv", SearchOption.AllDirectories);
-                    var zip = ZipFile.Open(outputFileName, ZipArchiveMode.Create);
-
-                    Log.Trace("AlgoSeekOptionsConverter.Package(): Zipping " + outputFileName);
-
-                    foreach (var fileToCompress in filesToCompress)
+                    using (var zip = ZipFile.Open(outputFileName, ZipArchiveMode.Create))
                     {
-                        // Add the entry for each file
-                        zip.CreateEntryFromFile(fileToCompress, Path.GetFileName(fileToCompress), CompressionLevel.Optimal);
-                    }
+                        Log.Trace("AlgoSeekOptionsConverter.Package(): Zipping " + outputFileName);
 
-                    // Dispose of the object when we are done
-                    zip.Dispose();
+                        foreach (var fileToCompress in filesToCompress)
+                        {
+                            // Add the entry for each file
+                            zip.CreateEntryFromFile(fileToCompress, Path.GetFileName(fileToCompress), CompressionLevel.Optimal);
+                        }
+                    }
 
                     try
                     {
@@ -347,62 +342,54 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         private static void RunZipper(string zipper, string cmdArgs)
         {
             bool timedOut = false;
-            try
+
+            Func<object, string> readStream = streamReader => ((StreamReader)streamReader).ReadToEnd();
+
+            using (var process = new Process())
             {
-                Func<object, string> readStream = streamReader => ((StreamReader)streamReader).ReadToEnd();
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.CreateNoWindow = true;
+                process.StartInfo.RedirectStandardError = true;
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.FileName = zipper;
+                process.StartInfo.Arguments = cmdArgs;
 
-                using (var process = new Process())
+                process.Start();
+
+                using (var processWaiter = Task.Factory.StartNew(() => process.WaitForExit(execTimeout * 1000)))
+                using (var outputReader = Task.Factory.StartNew(readStream, process.StandardOutput))
+                using (var errorReader = Task.Factory.StartNew(readStream, process.StandardError))
                 {
-                    process.StartInfo.UseShellExecute = false;
-                    process.StartInfo.CreateNoWindow = true;
-                    process.StartInfo.RedirectStandardError = true;
-                    process.StartInfo.RedirectStandardOutput = true;
-                    process.StartInfo.FileName = zipper;
-                    process.StartInfo.Arguments = cmdArgs;
+                    bool waitResult = processWaiter.Result;
 
-                    process.Start();
-
-                    using (var processWaiter = Task.Factory.StartNew(() => process.WaitForExit(execTimeout * 1000)))
-                    using (var outputReader = Task.Factory.StartNew(readStream, process.StandardOutput))
-                    using (var errorReader = Task.Factory.StartNew(readStream, process.StandardError))
+                    if (!waitResult)
                     {
-                        bool waitResult = processWaiter.Result;
+                        process.Kill();
+                        Log.Trace("7Zip Process Killed: " + cmdArgs);
+                    }
 
-                        if (!waitResult)
+                    Task.WaitAll(new Task[] { outputReader, errorReader }, execTimeout * 1000);
+
+                    if (!waitResult)
+                    {
+                        Log.Error("7Zip timed out: " + cmdArgs);
+                        throw new Exception("7z timed out");
+                    }
+                    else
+                    {
+                        if (process.ExitCode > 0)
                         {
-                            process.Kill();
-                            Log.Trace("7Zip Process Killed: " + cmdArgs);
-                        }
-
-                        Task.WaitAll(new Task[] { outputReader, errorReader }, execTimeout * 1000);
-
-                        if (!waitResult)
-                        {
-                            Log.Error("7Zip timed out: " + cmdArgs);
-                            timedOut = true;
+                            Log.Error("7Zip Exited Unsuccessfully: " + cmdArgs);
+                            Log.Error("7zip message {0}", process.StandardError.ReadToEnd());
+                            throw new Exception("7z exited unsuccessfully");
                         }
                         else
                         {
-                            if (process.ExitCode > 0)
-                            {
-                                Log.Error("7Zip Exited Unsuccessfully: " + cmdArgs);
-                            }
-                            else
-                            {
-                                Log.Trace("7Zip Exited Successfully: " + cmdArgs);
-                            }
+                            Log.Trace("7Zip Exited Successfully: " + cmdArgs);
                         }
                     }
                 }
             }
-            catch(Exception e)
-            {
-                if (!timedOut)
-                {
-                    Log.Error("RunZipper() failed: " + e.Message);
-                }
-            }
         }
-
     }
 }

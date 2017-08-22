@@ -92,6 +92,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 processStartInfo.RedirectStandardOutput = false;
                 var process = Process.Start(processStartInfo);
                 _scriptProcessId = process != null ? process.Id : 0;
+
+                // wait a few seconds for IB to start up
+                Thread.Sleep(TimeSpan.FromSeconds(30));
             }
             catch (Exception err)
             {
@@ -212,9 +215,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         public static void Restart()
         {
             Start(_ibControllerDirectory, _twsDirectory, _userId, _password, _tradingMode, _useTws);
-
-            // wait a few seconds for IB to start up
-            Thread.Sleep(TimeSpan.FromSeconds(30));
         }
 
         /// <summary>

@@ -103,7 +103,13 @@ namespace QuantConnect.Data.UniverseSelection
             Universe = universe;
             Security = security;
             Configuration = configuration;
-            StartTimeUtc = startTimeUtc;
+
+            // open interest data comes in once a day before market open,
+            // make the subscription start from midnight
+            StartTimeUtc = configuration.TickType == TickType.OpenInterest ?
+                startTimeUtc.ConvertFromUtc(Configuration.ExchangeTimeZone).Date.ConvertToUtc(Configuration.ExchangeTimeZone) :
+                startTimeUtc;
+
             EndTimeUtc = endTimeUtc;
 
             _localStartTime = new Lazy<DateTime>(() => StartTimeUtc.ConvertFromUtc(Configuration.ExchangeTimeZone));

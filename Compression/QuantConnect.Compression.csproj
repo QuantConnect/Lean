@@ -9,9 +9,10 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>QuantConnect.Compression</RootNamespace>
     <AssemblyName>QuantConnect.Compression</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <LangVersion>5</LangVersion>
+    <LangVersion>6</LangVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -22,6 +23,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>6</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -31,16 +33,17 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>6</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="DotNetZip, Version=1.10.1.0, Culture=neutral, PublicKeyToken=6583c7c814667745, processorArchitecture=MSIL">
+      <HintPath>..\packages\DotNetZip.1.10.1\lib\net20\DotNetZip.dll</HintPath>
+    </Reference>
     <Reference Include="ICSharpCode.SharpZipLib">
       <HintPath>..\packages\ICSharpCode.SharpZipLib.dll.0.85.4.369\lib\net20\ICSharpCode.SharpZipLib.dll</HintPath>
-    </Reference>
-    <Reference Include="Ionic.Zip">
-      <HintPath>..\packages\DotNetZip.1.9.3\lib\net20\Ionic.Zip.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

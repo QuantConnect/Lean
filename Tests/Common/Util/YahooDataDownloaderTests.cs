@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.IsTrue(yahooData.Any());
         }
 
-        [Test]
+        [Test, Ignore("Yahoo Api as of 7/11/2017 has the adjusted close and close swapped.")]
         public void GetMethod_WithNormalDates_ShouldReturnCorrectHistoricalData()
         {
             //Arrange

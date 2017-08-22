@@ -72,17 +72,17 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the most recent bid size submitted to this cache
         /// </summary>
-        public long BidSize { get; private set; }
+        public decimal BidSize { get; private set; }
 
         /// <summary>
         /// Gets the most recent ask size submitted to this cache
         /// </summary>
-        public long AskSize { get; private set; }
+        public decimal AskSize { get; private set; }
 
         /// <summary>
         /// Gets the most recent volume submitted to this cache
         /// </summary>
-        public long Volume { get; private set; }
+        public decimal Volume { get; private set; }
 
         /// <summary>
         /// Gets the most recent open interest submitted to this cache

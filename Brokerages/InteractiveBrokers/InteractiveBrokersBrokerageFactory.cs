@@ -101,7 +101,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // launch the IB gateway
             InteractiveBrokersGatewayRunner.Start(ibControllerDirectory, twsDirectory, userId, password, tradingMode, useTws);
 
-            var ib = new InteractiveBrokersBrokerage(algorithm.Transactions, algorithm.Portfolio, account, host, port, agentDescription);
+            var ib = new InteractiveBrokersBrokerage(algorithm, algorithm.Transactions, algorithm.Portfolio, account, host, port, agentDescription);
             Composer.Instance.AddPart<IDataQueueHandler>(ib);
 
             return ib;

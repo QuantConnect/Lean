@@ -16,8 +16,8 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using NUnit.Framework;
+using QuantConnect.Algorithm;
 using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
@@ -75,7 +75,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.USDJPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, false),
                 new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
 
-            var brokerage = new InteractiveBrokersBrokerage(new OrderProvider(_orders), securityProvider);
+            var brokerage = new InteractiveBrokersBrokerage(new QCAlgorithm(), new OrderProvider(_orders), securityProvider);
             brokerage.Connect();
 
             return brokerage;

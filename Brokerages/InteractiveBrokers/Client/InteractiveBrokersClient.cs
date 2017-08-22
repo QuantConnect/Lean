@@ -381,22 +381,34 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         public event EventHandler<RerouteMktDepthReqEventArgs> RerouteMktDepthReq;
 
+        /// <summary>
+        /// MarketRule event handler
+        /// </summary>
+        public event EventHandler<MarketRuleEventArgs> MarketRule;
+
+        /// <summary>
+        /// Pnl event handler
+        /// </summary>
+        public event EventHandler<PnlEventArgs> Pnl;
+
+        /// <summary>
+        /// PnlSingle event handler
+        /// </summary>
+        public event EventHandler<PnlSingleEventArgs> PnlSingle;
+
         #endregion
 
         /// <summary>
         /// Returns true if we're currently connected to the broker
         /// </summary>
-        public bool Connected
-        {
-            get { return ClientSocket.IsConnected(); }
-        }
+        public bool Connected => ClientSocket.IsConnected();
 
         /// <summary>
         /// Gets the instance of <see cref="EClientSocket"/> to access IB API methods
         /// </summary>
         public EClientSocket ClientSocket
         {
-            get; private set;
+            get;
         }
 
         /// <summary>
@@ -1237,6 +1249,40 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
             OnRerouteMktDepthReq(new RerouteMktDepthReqEventArgs(reqId, conId, exchange));
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="marketRuleId"></param>
+        /// <param name="priceIncrements"></param>
+        public void marketRule(int marketRuleId, PriceIncrement[] priceIncrements)
+        {
+            OnMarketRule(new MarketRuleEventArgs(marketRuleId, priceIncrements));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="reqId"></param>
+        /// <param name="dailyPnL"></param>
+        /// <param name="unrealizedPnL"></param>
+        public void pnl(int reqId, double dailyPnL, double unrealizedPnL)
+        {
+            OnPnl(new PnlEventArgs(reqId, dailyPnL, unrealizedPnL));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="reqId"></param>
+        /// <param name="pos"></param>
+        /// <param name="dailyPnL"></param>
+        /// <param name="unrealizedPnL"></param>
+        /// <param name="value"></param>
+        public void pnlSingle(int reqId, int pos, double dailyPnL, double unrealizedPnL, double value)
+        {
+            OnPnlSingle(new PnlSingleEventArgs(reqId, pos, dailyPnL, unrealizedPnL, value));
+        }
+
         #endregion
 
         #region Event Invocators
@@ -1246,8 +1292,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnError(ErrorEventArgs e)
         {
-            var handler = Error;
-            if (handler != null) handler(this, e);
+            Error?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1255,8 +1300,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnCurrentTimeUtc(CurrentTimeUtcEventArgs e)
         {
-            var handler = CurrentTimeUtc;
-            if (handler != null) handler(this, e);
+            CurrentTimeUtc?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1264,8 +1308,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnTickPrice(TickPriceEventArgs e)
         {
-            var handler = TickPrice;
-            if (handler != null) handler(this, e);
+            TickPrice?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1273,8 +1316,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnTickSize(TickSizeEventArgs e)
         {
-            var handler = TickSize;
-            if (handler != null) handler(this, e);
+            TickSize?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1282,8 +1324,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnTickString(TickStringEventArgs e)
         {
-            var handler = TickString;
-            if (handler != null) handler(this, e);
+            TickString?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1291,8 +1332,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnTickGeneric(TickGenericEventArgs e)
         {
-            var handler = TickGeneric;
-            if (handler != null) handler(this, e);
+            TickGeneric?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1300,8 +1340,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnTickEfp(TickEfpEventArgs e)
         {
-            var handler = TickEfp;
-            if (handler != null) handler(this, e);
+            TickEfp?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1309,8 +1348,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnDeltaNeutralValidation(DeltaNeutralValidationEventArgs e)
         {
-            var handler = DeltaNeutralValidation;
-            if (handler != null) handler(this, e);
+            DeltaNeutralValidation?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1318,8 +1356,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnTickOptionComputation(TickOptionComputationEventArgs e)
         {
-            var handler = TickOptionComputation;
-            if (handler != null) handler(this, e);
+            TickOptionComputation?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1327,8 +1364,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnTickSnapshotEnd(TickSnapshotEndEventArgs e)
         {
-            var handler = TickSnapshotEnd;
-            if (handler != null) handler(this, e);
+            TickSnapshotEnd?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1336,8 +1372,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnNextValidId(NextValidIdEventArgs e)
         {
-            var handler = NextValidId;
-            if (handler != null) handler(this, e);
+            NextValidId?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1345,8 +1380,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnManagedAccounts(ManagedAccountsEventArgs e)
         {
-            var handler = ManagedAccounts;
-            if (handler != null) handler(this, e);
+            ManagedAccounts?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1354,8 +1388,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnConnectionClosed()
         {
-            var handler = ConnectionClosed;
-            if (handler != null) handler(this, EventArgs.Empty);
+            ConnectionClosed?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -1363,8 +1396,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnAccountSummary(AccountSummaryEventArgs e)
         {
-            var handler = AccountSummary;
-            if (handler != null) handler(this, e);
+            AccountSummary?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1372,8 +1404,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnAccountSummaryEnd(RequestEndEventArgs e)
         {
-            var handler = AccountSummaryEnd;
-            if (handler != null) handler(this, e);
+            AccountSummaryEnd?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1381,8 +1412,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnBondContractDetails(ContractDetailsEventArgs e)
         {
-            var handler = BondContractDetails;
-            if (handler != null) handler(this, e);
+            BondContractDetails?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1390,8 +1420,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnUpdateAccountValue(UpdateAccountValueEventArgs e)
         {
-            var handler = UpdateAccountValue;
-            if (handler != null) handler(this, e);
+            UpdateAccountValue?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1399,8 +1428,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnUpdatePortfolio(UpdatePortfolioEventArgs e)
         {
-            var handler = UpdatePortfolio;
-            if (handler != null) handler(this, e);
+            UpdatePortfolio?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1408,8 +1436,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnUpdateAccountTime(UpdateAccountTimeEventArgs e)
         {
-            var handler = UpdateAccountTime;
-            if (handler != null) handler(this, e);
+            UpdateAccountTime?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1417,8 +1444,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnAccountDownloadEnd(AccountDownloadEndEventArgs e)
         {
-            var handler = AccountDownloadEnd;
-            if (handler != null) handler(this, e);
+            AccountDownloadEnd?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1426,8 +1452,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnOrderStatus(OrderStatusEventArgs e)
         {
-            var handler = OrderStatus;
-            if (handler != null) handler(this, e);
+            OrderStatus?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1435,8 +1460,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnOpenOrder(OpenOrderEventArgs e)
         {
-            var handler = OpenOrder;
-            if (handler != null) handler(this, e);
+            OpenOrder?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1444,8 +1468,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnOpenOrderEnd()
         {
-            var handler = OpenOrderEnd;
-            if (handler != null) handler(this, EventArgs.Empty);
+            OpenOrderEnd?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -1453,8 +1476,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnContractDetails(ContractDetailsEventArgs e)
         {
-            var handler = ContractDetails;
-            if (handler != null) handler(this, e);
+            ContractDetails?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1462,8 +1484,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnContractDetailsEnd(RequestEndEventArgs e)
         {
-            var handler = ContractDetailsEnd;
-            if (handler != null) handler(this, e);
+            ContractDetailsEnd?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1471,8 +1492,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnExecutionDetails(ExecutionDetailsEventArgs e)
         {
-            var handler = ExecutionDetails;
-            if (handler != null) handler(this, e);
+            ExecutionDetails?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1480,8 +1500,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnExecutionDetailsEnd(RequestEndEventArgs e)
         {
-            var handler = ExecutionDetailsEnd;
-            if (handler != null) handler(this, e);
+            ExecutionDetailsEnd?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1489,8 +1508,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnCommissionReport(CommissionReportEventArgs e)
         {
-            var handler = CommissionReport;
-            if (handler != null) handler(this, e);
+            CommissionReport?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1498,8 +1516,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnFundamentalData(FundamentalDataEventArgs e)
         {
-            var handler = FundamentalData;
-            if (handler != null) handler(this, e);
+            FundamentalData?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1507,8 +1524,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnHistoricalData(HistoricalDataEventArgs e)
         {
-            var handler = HistoricalData;
-            if (handler != null) handler(this, e);
+            HistoricalData?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1516,8 +1532,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnHistoricalDataUpdate(HistoricalDataUpdateEventArgs e)
         {
-            var handler = HistoricalDataUpdate;
-            if (handler != null) handler(this, e);
+            HistoricalDataUpdate?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1525,8 +1540,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnHistoricalDataEnd(HistoricalDataEndEventArgs e)
         {
-            var handler = HistoricalDataEnd;
-            if (handler != null) handler(this, e);
+            HistoricalDataEnd?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1534,8 +1548,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnMarketDataType(MarketDataTypeEventArgs e)
         {
-            var handler = MarketDataType;
-            if (handler != null) handler(this, e);
+            MarketDataType?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1543,8 +1556,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnUpdateMarketDepth(UpdateMarketDepthEventArgs e)
         {
-            var handler = UpdateMarketDepth;
-            if (handler != null) handler(this, e);
+            UpdateMarketDepth?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1552,8 +1564,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnUpdateMarketDepthLevel2(UpdateMarketDepthLevel2EventArgs e)
         {
-            var handler = UpdateMarketDepthLevel2;
-            if (handler != null) handler(this, e);
+            UpdateMarketDepthLevel2?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1561,8 +1572,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnUpdateNewsBulletin(UpdateNewsBulletinEventArgs e)
         {
-            var handler = UpdateNewsBulletin;
-            if (handler != null) handler(this, e);
+            UpdateNewsBulletin?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1570,8 +1580,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnPosition(PositionEventArgs e)
         {
-            var handler = Position;
-            if (handler != null) handler(this, e);
+            Position?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1579,8 +1588,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnPositionEnd()
         {
-            var handler = PositionEnd;
-            if (handler != null) handler(this, EventArgs.Empty);
+            PositionEnd?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -1588,8 +1596,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnRealtimeBar(RealtimeBarEventArgs e)
         {
-            var handler = RealtimeBar;
-            if (handler != null) handler(this, e);
+            RealtimeBar?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1597,8 +1604,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnScannerParameters(ScannerParametersEventArgs e)
         {
-            var handler = ScannerParameters;
-            if (handler != null) handler(this, e);
+            ScannerParameters?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1606,8 +1612,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnScannerData(ScannerDataEventArgs e)
         {
-            var handler = ScannerData;
-            if (handler != null) handler(this, e);
+            ScannerData?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1615,8 +1620,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnScannerDataEnd(RequestEndEventArgs e)
         {
-            var handler = ScannerDataEnd;
-            if (handler != null) handler(this, e);
+            ScannerDataEnd?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1624,8 +1628,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnReceiveFa(ReceiveFaEventArgs e)
         {
-            var handler = ReceiveFa;
-            if (handler != null) handler(this, e);
+            ReceiveFa?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1633,8 +1636,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnVerifyMessageApi(VerifyMessageApiEventArgs e)
         {
-            var handler = VerifyMessageApi;
-            if (handler != null) handler(this, e);
+            VerifyMessageApi?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1642,8 +1644,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnVerifyCompleted(VerifyCompletedEventArgs e)
         {
-            var handler = VerifyCompleted;
-            if (handler != null) handler(this, e);
+            VerifyCompleted?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1651,8 +1652,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnVerifyAndAuthMessageApi(VerifyAndAuthMessageApiEventArgs e)
         {
-            var handler = VerifyAndAuthMessageApi;
-            if (handler != null) handler(this, e);
+            VerifyAndAuthMessageApi?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1660,8 +1660,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnVerifyAndAuthCompleted(VerifyAndAuthCompletedEventArgs e)
         {
-            var handler = VerifyAndAuthCompleted;
-            if (handler != null) handler(this, e);
+            VerifyAndAuthCompleted?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1669,8 +1668,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnDisplayGroupList(DisplayGroupListEventArgs e)
         {
-            var handler = DisplayGroupList;
-            if (handler != null) handler(this, e);
+            DisplayGroupList?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1678,8 +1676,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnDisplayGroupUpdated(DisplayGroupUpdatedEventArgs e)
         {
-            var handler = DisplayGroupUpdated;
-            if (handler != null) handler(this, e);
+            DisplayGroupUpdated?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1687,8 +1684,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnConnectAck()
         {
-            var handler = ConnectAck;
-            if (handler != null) handler(this, EventArgs.Empty);
+            ConnectAck?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -1696,8 +1692,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnPositionMulti(PositionMultiEventArgs e)
         {
-            var handler = PositionMulti;
-            if (handler != null) handler(this, e);
+            PositionMulti?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1705,8 +1700,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnPositionMultiEnd(RequestEndEventArgs e)
         {
-            var handler = PositionMultiEnd;
-            if (handler != null) handler(this, e);
+            PositionMultiEnd?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1714,8 +1708,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnAccountUpdateMulti(AccountUpdateMultiEventArgs e)
         {
-            var handler = AccountUpdateMulti;
-            if (handler != null) handler(this, e);
+            AccountUpdateMulti?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1723,8 +1716,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnAccountUpdateMultiEnd(RequestEndEventArgs e)
         {
-            var handler = AccountUpdateMultiEnd;
-            if (handler != null) handler(this, e);
+            AccountUpdateMultiEnd?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1732,8 +1724,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnSecurityDefinitionOptionParameter(SecurityDefinitionOptionParameterEventArgs e)
         {
-            var handler = SecurityDefinitionOptionParameter;
-            if (handler != null) handler(this, e);
+            SecurityDefinitionOptionParameter?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1741,8 +1732,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnSecurityDefinitionOptionParameterEnd(RequestEndEventArgs e)
         {
-            var handler = SecurityDefinitionOptionParameterEnd;
-            if (handler != null) handler(this, e);
+            SecurityDefinitionOptionParameterEnd?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1750,8 +1740,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnSoftDollarTiers(SoftDollarTiersEventArgs e)
         {
-            var handler = SoftDollarTiers;
-            if (handler != null) handler(this, e);
+            SoftDollarTiers?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1759,8 +1748,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnFamilyCodes(FamilyCodesEventArgs e)
         {
-            var handler = FamilyCodes;
-            if (handler != null) handler(this, e);
+            FamilyCodes?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1768,8 +1756,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnSymbolSamples(SymbolSamplesEventArgs e)
         {
-            var handler = SymbolSamples;
-            if (handler != null) handler(this, e);
+            SymbolSamples?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1777,8 +1764,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnMktDepthExchanges(MktDepthExchangesEventArgs e)
         {
-            var handler = MktDepthExchanges;
-            if (handler != null) handler(this, e);
+            MktDepthExchanges?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1786,8 +1772,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnTickNews(TickNewsEventArgs e)
         {
-            var handler = TickNews;
-            if (handler != null) handler(this, e);
+            TickNews?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1795,8 +1780,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnSmartComponents(SmartComponentsEventArgs e)
         {
-            var handler = SmartComponents;
-            if (handler != null) handler(this, e);
+            SmartComponents?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1804,8 +1788,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnTickReqParams(TickReqParamsEventArgs e)
         {
-            var handler = TickReqParams;
-            if (handler != null) handler(this, e);
+            TickReqParams?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1813,8 +1796,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnNewsProviders(NewsProvidersEventArgs e)
         {
-            var handler = NewsProviders;
-            if (handler != null) handler(this, e);
+            NewsProviders?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1822,8 +1804,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnNewsArticle(NewsArticleEventArgs e)
         {
-            var handler = NewsArticle;
-            if (handler != null) handler(this, e);
+            NewsArticle?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1831,8 +1812,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnHistoricalNews(HistoricalNewsEventArgs e)
         {
-            var handler = HistoricalNews;
-            if (handler != null) handler(this, e);
+            HistoricalNews?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1840,8 +1820,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnHistoricalNewsEnd(HistoricalNewsEndEventArgs e)
         {
-            var handler = HistoricalNewsEnd;
-            if (handler != null) handler(this, e);
+            HistoricalNewsEnd?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1849,8 +1828,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnHeadTimestamp(HeadTimestampEventArgs e)
         {
-            var handler = HeadTimestamp;
-            if (handler != null) handler(this, e);
+            HeadTimestamp?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1858,8 +1836,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnHistogramData(HistogramDataEventArgs e)
         {
-            var handler = HistogramData;
-            if (handler != null) handler(this, e);
+            HistogramData?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1867,8 +1844,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnRerouteMktDataReq(RerouteMktDataReqEventArgs e)
         {
-            var handler = RerouteMktDataReq;
-            if (handler != null) handler(this, e);
+            RerouteMktDataReq?.Invoke(this, e);
         }
 
         /// <summary>
@@ -1876,8 +1852,31 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </summary>
         protected virtual void OnRerouteMktDepthReq(RerouteMktDepthReqEventArgs e)
         {
-            var handler = RerouteMktDepthReq;
-            if (handler != null) handler(this, e);
+            RerouteMktDepthReq?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// MarketRule event invocator
+        /// </summary>
+        protected virtual void OnMarketRule(MarketRuleEventArgs e)
+        {
+            MarketRule?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// Pnl event invocator
+        /// </summary>
+        protected virtual void OnPnl(PnlEventArgs e)
+        {
+            Pnl?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// PnlSingle event invocator
+        /// </summary>
+        protected virtual void OnPnlSingle(PnlSingleEventArgs e)
+        {
+            PnlSingle?.Invoke(this, e);
         }
 
         #endregion

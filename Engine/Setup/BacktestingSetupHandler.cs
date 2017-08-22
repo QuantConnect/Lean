@@ -17,10 +17,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Timers;
 using QuantConnect.Algorithm;
 using QuantConnect.AlgorithmFactory;
-using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.RealTime;
@@ -28,9 +26,8 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
-using QuantConnect.Securities;
-using QuantConnect.Util;
 using QuantConnect.Data;
+using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Lean.Engine.Setup
 {
@@ -134,6 +131,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// </summary>
         /// <param name="algorithmNodePacket">Job packet</param>
         /// <param name="uninitializedAlgorithm">The algorithm instance before Initialize has been called</param>
+        /// <param name="factory">The brokerage factory</param>
         /// <returns>The brokerage instance, or throws if error creating instance</returns>
         public IBrokerage CreateBrokerage(AlgorithmNodePacket algorithmNodePacket, IAlgorithm uninitializedAlgorithm, out IBrokerageFactory factory)
         {
@@ -183,12 +181,16 @@ namespace QuantConnect.Lean.Engine.Setup
                 {
                     //Set our parameters
                     algorithm.SetParameters(job.Parameters);
+
                     //Algorithm is backtesting, not live:
                     algorithm.SetLiveMode(false);
-                    //Set the algorithm time before we even initialize:
-                    algorithm.SetDateTime(job.PeriodStart.ConvertToUtc(algorithm.TimeZone));
+
                     //Set the source impl for the event scheduling
                     algorithm.Schedule.SetEventSchedule(realTimeHandler);
+
+                    // set the option chain provider
+                    algorithm.SetOptionChainProvider(new CachingOptionChainProvider(new BacktestingOptionChainProvider()));
+
                     //Initialise the algorithm, get the required data:
                     algorithm.Initialize();
                 }
@@ -201,6 +203,10 @@ namespace QuantConnect.Lean.Engine.Setup
 
             //Before continuing, detect if this is ready:
             if (!initializeComplete) return false;
+
+            // TODO: Refactor the BacktestResultHandler to use algorithm not job to set times
+            job.PeriodStart = algorithm.StartDate;
+            job.PeriodFinish = algorithm.EndDate;
 
             algorithm.PostInitialize();
 

@@ -1,5 +1,5 @@
 #
-#	LEAN Foundation Docker Container 20170623
+#	LEAN Foundation Docker Container 20170822
 #	Cross platform deployment for multiple brokerages	
 #	Intended to be used in conjunction with DockerfileLeanAlgorithm. This is just the foundation common OS+Dependencies required.
 #
@@ -56,8 +56,8 @@ RUN echo "deb http://download.mono-project.com/repo/debian wheezy/snapshots/4.6.
   && apt-get install -y fsharp && rm -rf /var/lib/apt/lists/* /tmp/*
 
 # Install Python.NET
-RUN nuget install QuantConnect.pythonnet -Version 1.0.4.4 \
-    && cp QuantConnect.pythonnet.1.0.4.4/lib/Python.Runtime.dll /usr/lib
+RUN nuget install QuantConnect.pythonnet -Version 1.0.4.5 \
+    && cp QuantConnect.pythonnet.1.0.4.5/lib/Python.Runtime.dll /usr/lib
 	
 RUN ln -s /usr/lib/x86_64-linux-gnu/libpython2.7.so /usr/lib/libpython27.so
 
@@ -69,3 +69,9 @@ RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz \
     && make \
     && make install \ 
     && pip install TA-lib
+
+# Install R
+RUN apt-get update \
+    && apt-get install -y r-base \
+    && apt-get install -y pandoc \
+    && apt-get install -y libcurl4-openssl-dev

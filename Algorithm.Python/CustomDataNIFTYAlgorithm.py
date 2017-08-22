@@ -66,7 +66,7 @@ class CustomDataNIFTYAlgorithm(QCAlgorithm):
         if self.Time.weekday() != 2: return
 
         cur_qnty = self.Portfolio["NIFTY"].Quantity
-        quantity = math.floor(self.Portfolio.MarginRemaining * decimal.Decimal(0.9) / data["NIFTY"].Close)
+        quantity = decimal.Decimal(math.floor(self.Portfolio.MarginRemaining * decimal.Decimal(0.9) / data["NIFTY"].Close))
         hi_nifty = max(price.NiftyPrice for price in self.prices)
         lo_nifty = min(price.NiftyPrice for price in self.prices)
 

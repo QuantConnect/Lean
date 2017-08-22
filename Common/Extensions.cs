@@ -242,7 +242,6 @@ namespace QuantConnect
         /// </summary>
         /// <param name="str">String to be converted to positive decimal value</param>
         /// <remarks>
-        /// Method makes some assuptions - always numbers, no "signs" +,- etc.
         /// Leading and trailing whitespace chars are ignored
         /// </remarks>
         /// <returns>Decimal value of the string</returns>
@@ -255,6 +254,12 @@ namespace QuantConnect
             var length = str.Length;
 
             while (index < length && char.IsWhiteSpace(str[index]))
+            {
+                index++;
+            }
+
+            var isNegative = index < length && str[index] == '-';
+            if (isNegative)
             {
                 index++;
             }
@@ -280,7 +285,7 @@ namespace QuantConnect
 
             var lo = (int)value;
             var mid = (int)(value >> 32);
-            return new decimal(lo, mid, 0, false, (byte)(hasDecimals ? decimalPlaces : 0));
+            return new decimal(lo, mid, 0, isNegative, (byte)(hasDecimals ? decimalPlaces : 0));
         }
 
         /// <summary>
