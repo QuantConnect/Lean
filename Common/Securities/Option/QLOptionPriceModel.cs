@@ -15,14 +15,9 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QLNet;
-using QuantConnect.Util;
 
 namespace QuantConnect.Securities.Option
 {
@@ -41,13 +36,19 @@ namespace QuantConnect.Securities.Option
         private readonly PricingEngineFuncEx _pricingEngineFunc;
 
         /// <summary>
+        /// When enabled, approximates Greeks if corresponding pricing model didn't calculate exact numbers.
+        /// The default value is true.
+        /// </summary>
+        public bool EnableGreekApproximation { get; set; } = true;
+
+        /// <summary>
         /// Method constructs QuantLib option price model with necessary estimators of underlying volatility, risk free rate, and underlying dividend yield
         /// </summary>
         /// <param name="pricingEngineFunc">Function modeled stochastic process, and returns new pricing engine to run calculations for that option</param>
         /// <param name="underlyingVolEstimator">The underlying volatility estimator</param>
         /// <param name="riskFreeRateEstimator">The risk free rate estimator</param>
         /// <param name="dividendYieldEstimator">The underlying dividend yield estimator</param>
-        public QLOptionPriceModel(PricingEngineFunc pricingEngineFunc, IQLUnderlyingVolatilityEstimator underlyingVolEstimator, IQLRiskFreeRateEstimator riskFreeRateEstimator, IQLDividendYieldEstimator dividendYieldEstimator)
+      public QLOptionPriceModel(PricingEngineFunc pricingEngineFunc, IQLUnderlyingVolatilityEstimator underlyingVolEstimator, IQLRiskFreeRateEstimator riskFreeRateEstimator, IQLDividendYieldEstimator dividendYieldEstimator)
         {
             _pricingEngineFunc = (option, process) => pricingEngineFunc(process);
             _underlyingVolEstimator = underlyingVolEstimator ?? new ConstantQLUnderlyingVolatilityEstimator();
@@ -126,7 +127,7 @@ namespace QuantConnect.Securities.Option
                     }
                     catch (Exception)
                     {
-                        return optionSecurity.EnableGreekApproximation ? (decimal)reevalFunc() : 0.0m;
+                        return EnableGreekApproximation ? (decimal)reevalFunc() : 0.0m;
                     }
                 };
 
@@ -155,7 +156,7 @@ namespace QuantConnect.Securities.Option
                     }
                     catch (Exception)
                     {
-                        if (optionSecurity.EnableGreekApproximation)
+                        if (EnableGreekApproximation)
                         {
                             var step = 0.01;
                             var initial = underlyingQuoteValue.value();
