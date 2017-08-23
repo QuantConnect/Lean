@@ -191,7 +191,7 @@ namespace QuantConnect.Tests.Common
             equity.VolatilityModel = new DummyVolatilityModel(underlyingVol);
 
             var contract = new OptionContract(Symbols.SPY_P_192_Feb19_2016, Symbols.SPY) { Time = evaluationDate };
-            var optionPut = new Option(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY_C_192_Feb19_2016, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)));
+            var optionPut = new Option(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY_P_192_Feb19_2016, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)));
             optionPut.SetMarketPrice(new Tick { Value = price });
             optionPut.Underlying = equity;
             optionPut.EnableGreekApproximation = false;
