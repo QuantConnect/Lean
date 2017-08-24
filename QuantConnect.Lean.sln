@@ -40,7 +40,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Api", "Api\Qua
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Views", "UserInterface\QuantConnect.Views.csproj", "{C68BEEED-B0C0-4002-94D4-1E871133D02A}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "QuantConnect.Algorithm.FSharp", "Algorithm.FSharp\QuantConnect.Algorithm.FSharp.fsproj", "{7702711A-0C09-40D4-B151-E308D1520738}"
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "QuantConnect.Algorithm.FSharp", "Algorithm.FSharp\QuantConnect.Algorithm.FSharp.fsproj", "{7702711A-0C09-40D4-B151-E308D1520738}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Algorithm.CSharp", "Algorithm.CSharp\QuantConnect.Algorithm.CSharp.csproj", "{39A81C16-A1E8-425E-A8F2-1433ADB80228}"
 EndProject
@@ -53,9 +53,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{93A63A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.ToolBox", "ToolBox\QuantConnect.ToolBox.csproj", "{AC9A142C-B485-44D7-91FF-015C22C43D05}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.VisualStudioPlugin", "VisualStudioPlugin\QuantConnect.VisualStudioPlugin.csproj", "{5326A9FB-0270-4647-8C43-20C5607DB529}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Jupyter", "Jupyter\QuantConnect.Jupyter.csproj", "{9561D14A-467E-40AD-928E-EE9F758D7D98}"
+EndProject
+Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "QuantConnect.VisualStudioPlugin", "VisualStudioPlugin\QuantConnect.VisualStudioPlugin.csproj", "{7415F460-C87E-4F0C-A792-3F68DF7951A2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Views.Mac", "UserInterface.Mac\QuantConnect.Views.Mac.csproj", "{5961BF65-D662-402F-96E6-0069C27C6DCA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -187,12 +189,6 @@ Global
 		{AC9A142C-B485-44D7-91FF-015C22C43D05}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AC9A142C-B485-44D7-91FF-015C22C43D05}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AC9A142C-B485-44D7-91FF-015C22C43D05}.Release|x64.ActiveCfg = Release|Any CPU
-		{5326A9FB-0270-4647-8C43-20C5607DB529}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5326A9FB-0270-4647-8C43-20C5607DB529}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{5326A9FB-0270-4647-8C43-20C5607DB529}.Debug|x64.Build.0 = Debug|Any CPU
-		{5326A9FB-0270-4647-8C43-20C5607DB529}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5326A9FB-0270-4647-8C43-20C5607DB529}.Release|x64.ActiveCfg = Release|Any CPU
-		{5326A9FB-0270-4647-8C43-20C5607DB529}.Release|x64.Build.0 = Release|Any CPU
 		{9561D14A-467E-40AD-928E-EE9F758D7D98}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9561D14A-467E-40AD-928E-EE9F758D7D98}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9561D14A-467E-40AD-928E-EE9F758D7D98}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -201,6 +197,20 @@ Global
 		{9561D14A-467E-40AD-928E-EE9F758D7D98}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9561D14A-467E-40AD-928E-EE9F758D7D98}.Release|x64.ActiveCfg = Release|Any CPU
 		{9561D14A-467E-40AD-928E-EE9F758D7D98}.Release|x64.Build.0 = Release|Any CPU
+		{7415F460-C87E-4F0C-A792-3F68DF7951A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7415F460-C87E-4F0C-A792-3F68DF7951A2}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7415F460-C87E-4F0C-A792-3F68DF7951A2}.Debug|x64.Build.0 = Debug|Any CPU
+		{7415F460-C87E-4F0C-A792-3F68DF7951A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7415F460-C87E-4F0C-A792-3F68DF7951A2}.Release|x64.ActiveCfg = Release|Any CPU
+		{7415F460-C87E-4F0C-A792-3F68DF7951A2}.Release|x64.Build.0 = Release|Any CPU
+		{5961BF65-D662-402F-96E6-0069C27C6DCA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5961BF65-D662-402F-96E6-0069C27C6DCA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5961BF65-D662-402F-96E6-0069C27C6DCA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5961BF65-D662-402F-96E6-0069C27C6DCA}.Debug|x64.Build.0 = Debug|Any CPU
+		{5961BF65-D662-402F-96E6-0069C27C6DCA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5961BF65-D662-402F-96E6-0069C27C6DCA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5961BF65-D662-402F-96E6-0069C27C6DCA}.Release|x64.ActiveCfg = Release|Any CPU
+		{5961BF65-D662-402F-96E6-0069C27C6DCA}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -820,6 +820,19 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Return the first in the series of names, or find the one that matches the configured algirithmTypeName
+        /// </summary>
+        /// <param name="names">The list of class names</param>
+        /// <param name="algorithmTypeName">The configured algorithm type name from the config</param>
+        /// <returns>The name of the class being run</returns>
+        public static string SingleOrAlgorithmTypeName(this List<string> names, string algorithmTypeName)
+        {
+            // if there's only one use that guy
+            // if there's more than one then find which one we should use using the algorithmTypeName specified
+            return names.Count == 1 ? names.Single() : names.SingleOrDefault(x => x.Contains("." + algorithmTypeName));
+        }
+
+        /// <summary>
         /// Converts the specified <paramref name="enum"/> value to its corresponding lower-case string representation
         /// </summary>
         /// <param name="enum">The enumeration value</param>
