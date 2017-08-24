@@ -251,7 +251,6 @@
     <Compile Include="Engine\FactorFileTests.cs" />
     <Compile Include="Engine\RealTimePriceUpdateTests.cs" />
     <Compile Include="Engine\RealTime\ScheduledEventTests.cs" />
-    <Compile Include="Engine\SetupHandlerTests.cs" />
     <Compile Include="Engine\TestResultHandler.cs" />
     <Compile Include="Indicators\AbsolutePriceOscillatorTests.cs" />
     <Compile Include="Indicators\AccumulationDistributionOscillatorTests.cs" />
