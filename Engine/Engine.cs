@@ -384,6 +384,7 @@ namespace QuantConnect.Lean.Engine
                 {
                     Log.Trace("Engine.Run(): Disconnecting from brokerage...");
                     brokerage.Disconnect();
+                    brokerage.Dispose();
                 }
                 if (_algorithmHandlers.Setup != null)
                 {
