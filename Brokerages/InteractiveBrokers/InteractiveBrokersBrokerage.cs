@@ -667,7 +667,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
-        public void Dispose()
+        public override void Dispose()
         {
             if (_client != null)
             {
