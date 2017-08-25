@@ -25,6 +25,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using Newtonsoft.Json;
 using NodaTime;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
 using Timer = System.Timers.Timer;
 
@@ -840,6 +841,26 @@ namespace QuantConnect
         public static string ToLower(this Enum @enum)
         {
             return @enum.ToString().ToLower();
+        }
+
+        /// <summary>
+        /// Turn order into an order ticket
+        /// </summary>
+        /// <param name="order">The <see cref="Order"/> being converted</param>
+        /// <param name="transactionManager">The transaction manager, <see cref="SecurityTransactionManager"/></param>
+        /// <returns></returns>
+        public static OrderTicket ToOrderTicket(this Order order, SecurityTransactionManager transactionManager)
+        {
+            var submitOrderRequest = new SubmitOrderRequest(order.Type,
+                order.SecurityType,
+                order.Symbol,
+                order.Quantity,
+                order.Price,
+                order.Price,
+                order.Time,
+                order.Tag);
+
+            return new OrderTicket(transactionManager, submitOrderRequest);
         }
     }
 }
