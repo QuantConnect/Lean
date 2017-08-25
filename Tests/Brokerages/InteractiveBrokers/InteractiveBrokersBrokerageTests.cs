@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using NUnit.Framework;
+using QuantConnect.Algorithm;
 using QuantConnect.Brokerages.InteractiveBrokers;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
@@ -55,7 +56,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.USDJPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, false),
                 new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
 
-            _interactiveBrokersBrokerage = new InteractiveBrokersBrokerage(new OrderProvider(_orders), securityProvider);
+            _interactiveBrokersBrokerage = new InteractiveBrokersBrokerage(new QCAlgorithm(), new OrderProvider(_orders), securityProvider);
             _interactiveBrokersBrokerage.Connect();
         }
 
@@ -128,6 +129,63 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         {
             var ib = _interactiveBrokersBrokerage;
             Assert.IsTrue(ib.IsConnected);
+        }
+
+        [Test]
+        public void IsConnectedUpdatesCorrectly()
+        {
+            var ib = _interactiveBrokersBrokerage;
+            Assert.IsTrue(ib.IsConnected);
+
+            ib.Disconnect();
+            Assert.IsFalse(ib.IsConnected);
+
+            ib.Connect();
+            Assert.IsTrue(ib.IsConnected);
+        }
+
+        [Test]
+        public void IsConnectedAfterReset()
+        {
+            var ib = _interactiveBrokersBrokerage;
+            Assert.IsTrue(ib.IsConnected);
+
+            ib.ResetGatewayConnection();
+            Assert.IsTrue(InteractiveBrokersGatewayRunner.IsRunning());
+            Assert.IsTrue(ib.IsConnected);
+
+            ib.CheckIbGateway();
+            Assert.IsTrue(ib.IsConnected);
+        }
+
+        [Test]
+        public void ConnectDisconnectLoop()
+        {
+            var ib = _interactiveBrokersBrokerage;
+            Assert.IsTrue(ib.IsConnected);
+
+            const int iterations = 2;
+            for (var i = 0; i < iterations; i++)
+            {
+                ib.Disconnect();
+                Assert.IsFalse(ib.IsConnected);
+                ib.Connect();
+                Assert.IsTrue(ib.IsConnected);
+            }
+        }
+
+        [Test]
+        public void ResetConnectionLoop()
+        {
+            var ib = _interactiveBrokersBrokerage;
+            Assert.IsTrue(ib.IsConnected);
+
+            const int iterations = 2;
+            for (var i = 0; i < iterations; i++)
+            {
+                ib.ResetGatewayConnection();
+                Assert.IsTrue(ib.IsConnected);
+            }
         }
 
         [Test]

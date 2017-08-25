@@ -11,36 +11,35 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
 */
 
-using QuantConnect.Commands;
+using System;
+using IBApi;
 
-namespace QuantConnect.Packets
+namespace QuantConnect.Brokerages.InteractiveBrokers.Client
 {
     /// <summary>
-    /// Contains data held as the result of executing a command
+    /// Event arguments class for the <see cref="InteractiveBrokersClient.MarketRule"/> event
     /// </summary>
-    public class CommandResultPacket : Packet
+    public class MarketRuleEventArgs : EventArgs
     {
         /// <summary>
-        /// Gets or sets the command that produced this packet
+        /// The market rule id.
         /// </summary>
-        public string CommandName { get; set; }
+        public int MarketRuleId { get; set; }
 
         /// <summary>
-        /// Gets or sets whether or not the
+        /// The price increments.
         /// </summary>
-        public bool Success { get; set; }
+        public PriceIncrement[] PriceIncrements { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CommandResultPacket"/> class
+        /// Initializes a new instance of the <see cref="MarketRuleEventArgs"/> class
         /// </summary>
-        public CommandResultPacket(ICommand command, bool success)
-            : base(PacketType.CommandResult)
+        public MarketRuleEventArgs(int marketRuleId, PriceIncrement[] priceIncrements)
         {
-            Success = success;
-            CommandName = command.GetType().Name;
+            MarketRuleId = marketRuleId;
+            PriceIncrements = priceIncrements;
         }
     }
 }

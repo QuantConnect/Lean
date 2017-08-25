@@ -16,12 +16,15 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
+using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Fxcm;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Logging;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Brokerages.Fxcm
 {
@@ -68,13 +71,18 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
 
                 var requests = new[]
                 {
-                    new HistoryRequest
-                    {
-                        Symbol = symbol,
-                        Resolution = resolution,
-                        StartTimeUtc = now.Add(-period),
-                        EndTimeUtc = now
-                    }
+                    new HistoryRequest(now.Add(-period), 
+                                       now, 
+                                       typeof(QuoteBar), 
+                                       symbol, 
+                                       resolution, 
+                                       SecurityExchangeHours.AlwaysOpen(TimeZones.Utc), 
+                                       DateTimeZone.Utc, 
+                                       Resolution.Minute, 
+                                       false, 
+                                       false, 
+                                       DataNormalizationMode.Adjusted,
+                                       TickType.Quote)
                 };
 
                 var history = historyProvider.GetHistory(requests, TimeZones.Utc);
@@ -128,13 +136,18 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
 
             var requests = new[]
             {
-                new HistoryRequest
-                {
-                    Symbol = symbol,
-                    Resolution = resolution,
-                    StartTimeUtc = startDate,
-                    EndTimeUtc = endDate
-                }
+                new HistoryRequest(startDate,
+                    endDate,
+                    typeof(QuoteBar),
+                    symbol,
+                    resolution,
+                    SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                    DateTimeZone.Utc,
+                    Resolution.Minute,
+                    false,
+                    false,
+                    DataNormalizationMode.Adjusted,
+                    TickType.Quote)
             };
 
             var history = historyProvider.GetHistory(requests, TimeZones.Utc);

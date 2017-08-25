@@ -15,30 +15,20 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using QuantConnect.Commands;
-using QuantConnect.Packets;
 
 namespace QuantConnect.Interfaces
 {
     /// <summary>
-    /// Represents a command queue for the algorithm. This is an entry point
-    /// for external messages to act upon the running algorithm instance.
+    /// Provides the full option chain for a given underlying.
     /// </summary>
-    [InheritedExport(typeof(ICommandQueueHandler))]
-    public interface ICommandQueueHandler : IDisposable
+    public interface IOptionChainProvider
     {
         /// <summary>
-        /// Initializes this command queue for the specified job
+        /// Gets the list of option contracts for a given underlying symbol
         /// </summary>
-        /// <param name="job">The job that defines what queue to bind to</param>
-        /// <param name="algorithm">The algorithm instance</param>
-        void Initialize(AlgorithmNodePacket job, IAlgorithm algorithm);
-
-        /// <summary>
-        /// Gets the commands in the queue
-        /// </summary>
-        /// <returns>The next command in the queue, if present, null if no commands present</returns>
-        IEnumerable<ICommand> GetCommands();
+        /// <param name="symbol">The underlying symbol</param>
+        /// <param name="date">The date for which to request the option chain (only used in backtesting)</param>
+        /// <returns>The list of option contracts</returns>
+        IEnumerable<Symbol> GetOptionContractList(Symbol symbol, DateTime date);
     }
 }

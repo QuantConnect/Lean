@@ -93,11 +93,13 @@ namespace QuantConnect.Orders
 
             // populate common order properties
             order.Id = jObject["Id"].Value<int>();
-            order.Quantity = jObject["Quantity"].Value<int>();
             order.Status = (OrderStatus) jObject["Status"].Value<int>();
             order.Time = jObject["Time"].Value<DateTime>();
             order.Tag = jObject["Tag"].Value<string>();
-            order.Quantity = jObject["Quantity"].Value<int>();
+
+            try { order.Quantity = jObject["Quantity"].Value<int>(); }
+            catch { order.Quantity = jObject["Quantity"].Value<decimal>(); }
+
             order.Price = jObject["Price"].Value<decimal>();
             var securityType = (SecurityType) jObject["SecurityType"].Value<int>();
             order.BrokerId = jObject["BrokerId"].Select(x => x.Value<string>()).ToList();

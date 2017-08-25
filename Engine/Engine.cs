@@ -79,16 +79,12 @@ namespace QuantConnect.Lean.Engine
         /// Runs a single backtest/live job from the job queue
         /// </summary>
         /// <param name="job">The algorithm job to be processed</param>
+        /// <param name="manager"></param>
         /// <param name="assemblyPath">The path to the algorithm's assembly</param>
-        public void Run(AlgorithmNodePacket job, string assemblyPath)
+        public void Run(AlgorithmNodePacket job, AlgorithmManager manager, string assemblyPath)
         {
             var algorithm = default(IAlgorithm);
-            var algorithmManager = new AlgorithmManager(_liveMode);
-
-            //Start monitoring the backtest active status:
-            var statusPing = new StateCheck.Ping(algorithmManager, _systemHandlers.Api, _algorithmHandlers.Results, _systemHandlers.Notify, job);
-            var statusPingThread = new Thread(statusPing.Run) { IsBackground = true };
-            statusPingThread.Start();
+            var algorithmManager = manager;
 
             try
             {
@@ -114,15 +110,15 @@ namespace QuantConnect.Lean.Engine
                     // Save algorithm to cache, load algorithm instance:
                     algorithm = _algorithmHandlers.Setup.CreateAlgorithmInstance(job, assemblyPath);
 
+                    // Set algorithm in ILeanManager
+                    _systemHandlers.LeanManager.SetAlgorithm(algorithm);
+
                     // Initialize the brokerage
                     IBrokerageFactory factory;
                     brokerage = _algorithmHandlers.Setup.CreateBrokerage(job, algorithm, out factory);
 
                     // Initialize the data feed before we initialize so he can intercept added securities/universes via events
                     _algorithmHandlers.DataFeed.Initialize(algorithm, job, _algorithmHandlers.Results, _algorithmHandlers.MapFileProvider, _algorithmHandlers.FactorFileProvider, _algorithmHandlers.DataProvider);
-
-                    // initialize command queue system
-                    _algorithmHandlers.CommandQueue.Initialize(job, algorithm);
 
                     // set the order processor on the transaction manager (needs to be done before initializing BrokerageHistoryProvider)
                     algorithm.Transactions.SetOrderProcessor(_algorithmHandlers.Transactions);
@@ -184,7 +180,6 @@ namespace QuantConnect.Lean.Engine
                 Log.Trace("         RealTime:     " + _algorithmHandlers.RealTime.GetType().FullName);
                 Log.Trace("         Results:      " + _algorithmHandlers.Results.GetType().FullName);
                 Log.Trace("         Transactions: " + _algorithmHandlers.Transactions.GetType().FullName);
-                Log.Trace("         Commands:     " + _algorithmHandlers.CommandQueue.GetType().FullName);
                 if (algorithm != null && algorithm.HistoryProvider != null)
                 {
                     Log.Trace("         History Provider:     " + algorithm.HistoryProvider.GetType().FullName);
@@ -253,7 +248,7 @@ namespace QuantConnect.Lean.Engine
                                 // -> Using this Data Feed, 
                                 // -> Send Orders to this TransactionHandler, 
                                 // -> Send Results to ResultHandler.
-                                algorithmManager.Run(job, algorithm, _algorithmHandlers.DataFeed, _algorithmHandlers.Transactions, _algorithmHandlers.Results, _algorithmHandlers.RealTime, _algorithmHandlers.CommandQueue, isolator.CancellationToken);
+                                algorithmManager.Run(job, algorithm, _algorithmHandlers.DataFeed, _algorithmHandlers.Transactions, _algorithmHandlers.Results, _algorithmHandlers.RealTime, _systemHandlers.LeanManager, isolator.CancellationToken);
                             }
                             catch (Exception err)
                             {
@@ -312,7 +307,10 @@ namespace QuantConnect.Lean.Engine
                             // make sure we've taken samples for these series before just blindly requesting them
                             if (charts.ContainsKey(strategyEquityKey) &&
                                 charts[strategyEquityKey].Series.ContainsKey(equityKey) &&
-                                charts[strategyEquityKey].Series.ContainsKey(dailyPerformanceKey))
+                                charts[strategyEquityKey].Series.ContainsKey(dailyPerformanceKey) &&
+                                charts.ContainsKey(benchmarkKey) &&
+                                charts[benchmarkKey].Series.ContainsKey(benchmarkKey)
+                            )
                             {
                                 var equity = charts[strategyEquityKey].Series[equityKey].Values;
                                 var performance = charts[strategyEquityKey].Series[dailyPerformanceKey].Values;
@@ -364,7 +362,6 @@ namespace QuantConnect.Lean.Engine
 
                 //Close result handler:
                 _algorithmHandlers.Results.Exit();
-                statusPing.Exit();
 
                 //Wait for the threads to complete:
                 var ts = Stopwatch.StartNew();
@@ -382,12 +379,12 @@ namespace QuantConnect.Lean.Engine
                 if (threadFeed != null && threadFeed.IsAlive) threadFeed.Abort();
                 if (threadTransactions != null && threadTransactions.IsAlive) threadTransactions.Abort();
                 if (threadResults != null && threadResults.IsAlive) threadResults.Abort();
-                if (statusPingThread != null && statusPingThread.IsAlive) statusPingThread.Abort();
 
                 if (brokerage != null)
                 {
                     Log.Trace("Engine.Run(): Disconnecting from brokerage...");
                     brokerage.Disconnect();
+                    brokerage.Dispose();
                 }
                 if (_algorithmHandlers.Setup != null)
                 {

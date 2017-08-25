@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -23,16 +22,11 @@ using System.Text;
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
-using Ionic.Zip;
-using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using ZipEntry = ICSharpCode.SharpZipLib.Zip.ZipEntry;
 using ZipFile = Ionic.Zip.ZipFile;
 using ZipInputStream = ICSharpCode.SharpZipLib.Zip.ZipInputStream;
 using ZipOutputStream = ICSharpCode.SharpZipLib.Zip.ZipOutputStream;
-using System.Collections.Concurrent;
-using System.Threading.Tasks;
-using System.Runtime.CompilerServices;
 
 namespace QuantConnect
 {
@@ -843,6 +837,22 @@ namespace QuantConnect
             using (var zip = new ICSharpCode.SharpZipLib.Zip.ZipFile(path))
             {
                 return zip.TestArchive(true);
+            }
+        }
+
+        /// <summary>
+        /// Returns the entry file names contained in a zip file
+        /// </summary>
+        /// <param name="zipFileName">The zip file name</param>
+        /// <returns>An IEnumerable of entry file names</returns>
+        public static IEnumerable<string> GetZipEntryFileNames(string zipFileName)
+        {
+            using (var zip = ZipFile.Read(zipFileName))
+            {
+                foreach (var entry in zip)
+                {
+                    yield return entry.FileName;
+                }
             }
         }
     }

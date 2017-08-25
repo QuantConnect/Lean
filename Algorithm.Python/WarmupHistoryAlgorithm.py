@@ -35,6 +35,7 @@ retrieve data to warm up indicators before data is received'''
         self.SetCash(100000)          #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
         forex = self.AddForex("EURUSD", Resolution.Second)
+        forex = self.AddForex("NZDUSD", Resolution.Second)
         
         fast_period = 60
         slow_period = 3600
@@ -42,11 +43,17 @@ retrieve data to warm up indicators before data is received'''
         self.slow = self.EMA("EURUSD", slow_period)
         
         # "slow_period + 1" because rolling window waits for one to fall off the back to be considered ready
-        history = map(lambda x: x["EURUSD"], self.History(slow_period + 1))
-        for bar in history:
-        	datapoint = IndicatorDataPoint(bar.EndTime, bar.Close)
-        	self.fast.Update(datapoint)
-        	self.slow.Update(datapoint)
+        # History method returns a dict with a pandas.DataFrame
+        history = self.History(["EURUSD", "NZDUSD"], slow_period + 1)
+        
+        # prints out the tail of the dataframe
+        self.Log(str(history.loc["EURUSD"].tail()))
+        self.Log(str(history.loc["NZDUSD"].tail()))
+
+        for index, row in history.loc["EURUSD"].iterrows():
+            datapoint = IndicatorDataPoint(index, row["close"])
+            self.fast.Update(datapoint)
+            self.slow.Update(datapoint)
 
         self.Log("FAST {0} READY. Samples: {1}".format("IS" if self.fast.IsReady else "IS NOT", self.fast.Samples))
         self.Log("SLOW {0} READY. Samples: {1}".format("IS" if self.slow.IsReady else "IS NOT", self.slow.Samples))

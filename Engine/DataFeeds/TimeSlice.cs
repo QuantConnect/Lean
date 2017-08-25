@@ -484,12 +484,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (tick.AskPrice != 0m)
                 {
                     contract.AskPrice = tick.AskPrice;
-                    contract.AskSize = tick.AskSize;
+                    contract.AskSize = (long)tick.AskSize;
                 }
                 if (tick.BidPrice != 0m)
                 {
                     contract.BidPrice = tick.BidPrice;
-                    contract.BidSize = tick.BidSize;
+                    contract.BidSize = (long)tick.BidSize;
                 }
             }
             else if (tick.TickType == TickType.OpenInterest)
@@ -526,12 +526,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (tick.AskPrice != 0m)
                 {
                     contract.AskPrice = tick.AskPrice;
-                    contract.AskSize = tick.AskSize;
+                    contract.AskSize = (long)tick.AskSize;
                 }
                 if (tick.BidPrice != 0m)
                 {
                     contract.BidPrice = tick.BidPrice;
-                    contract.BidSize = tick.BidSize;
+                    contract.BidSize = (long)tick.BidSize;
                 }
             }
             else if (tick.TickType == TickType.OpenInterest)

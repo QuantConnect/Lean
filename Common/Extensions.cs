@@ -242,7 +242,6 @@ namespace QuantConnect
         /// </summary>
         /// <param name="str">String to be converted to positive decimal value</param>
         /// <remarks>
-        /// Method makes some assuptions - always numbers, no "signs" +,- etc.
         /// Leading and trailing whitespace chars are ignored
         /// </remarks>
         /// <returns>Decimal value of the string</returns>
@@ -255,6 +254,12 @@ namespace QuantConnect
             var length = str.Length;
 
             while (index < length && char.IsWhiteSpace(str[index]))
+            {
+                index++;
+            }
+
+            var isNegative = index < length && str[index] == '-';
+            if (isNegative)
             {
                 index++;
             }
@@ -280,7 +285,7 @@ namespace QuantConnect
 
             var lo = (int)value;
             var mid = (int)(value >> 32);
-            return new decimal(lo, mid, 0, false, (byte)(hasDecimals ? decimalPlaces : 0));
+            return new decimal(lo, mid, 0, isNegative, (byte)(hasDecimals ? decimalPlaces : 0));
         }
 
         /// <summary>
@@ -812,6 +817,19 @@ namespace QuantConnect
                 source = source.Replace(match.Value, "<a href='" + match.Value + "' target='blank'>" + match.Value + "</a>");
             }
             return source;
+        }
+
+        /// <summary>
+        /// Return the first in the series of names, or find the one that matches the configured algirithmTypeName
+        /// </summary>
+        /// <param name="names">The list of class names</param>
+        /// <param name="algorithmTypeName">The configured algorithm type name from the config</param>
+        /// <returns>The name of the class being run</returns>
+        public static string SingleOrAlgorithmTypeName(this List<string> names, string algorithmTypeName)
+        {
+            // if there's only one use that guy
+            // if there's more than one then find which one we should use using the algorithmTypeName specified
+            return names.Count == 1 ? names.Single() : names.SingleOrDefault(x => x.Contains("." + algorithmTypeName));
         }
 
         /// <summary>

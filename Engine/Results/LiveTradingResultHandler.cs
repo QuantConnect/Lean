@@ -41,7 +41,7 @@ namespace QuantConnect.Lean.Engine.Results
     /// Live trading result handler implementation passes the messages to the QC live trading interface.
     /// </summary>
     /// <remarks>Live trading result handler is quite busy. It sends constant price updates, equity updates and order/holdings updates.</remarks>
-    public class LiveTradingResultHandler : IResultHandler
+    public class LiveTradingResultHandler : BaseResultsHandler, IResultHandler
     {
         private readonly DateTime _launchTimeUtc = DateTime.UtcNow;
 
@@ -180,7 +180,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="dataFeed"></param>
         /// <param name="setupHandler"></param>
         /// <param name="transactionHandler"></param>
-        public void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, IDataFeed dataFeed, ISetupHandler setupHandler, ITransactionHandler transactionHandler)
+        public virtual void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, IDataFeed dataFeed, ISetupHandler setupHandler, ITransactionHandler transactionHandler)
         {
             _api = api;
             _dataFeed = dataFeed;
@@ -322,7 +322,7 @@ namespace QuantConnect.Lean.Engine.Results
                     //Add other fixed parameters.
                     runtimeStatistics.Add("Unrealized:", "$" + _algorithm.Portfolio.TotalUnrealizedProfit.ToString("N2"));
                     runtimeStatistics.Add("Fees:", "-$" + _algorithm.Portfolio.TotalFees.ToString("N2"));
-                    runtimeStatistics.Add("Net Profit:", "$" + _algorithm.Portfolio.TotalProfit.ToString("N2"));
+                    runtimeStatistics.Add("Net Profit:", "$" + (_algorithm.Portfolio.TotalProfit - _algorithm.Portfolio.TotalFees).ToString("N2"));
                     runtimeStatistics.Add("Return:", netReturn.ToString("P"));
                     runtimeStatistics.Add("Equity:", "$" + _algorithm.Portfolio.TotalPortfolioValue.ToString("N2"));
                     runtimeStatistics.Add("Holdings:", "$" + _algorithm.Portfolio.TotalHoldingsValue.ToString("N2"));
@@ -811,10 +811,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             try
             {
-                //Concatenate and upload the log file:
-                var joined = string.Join("\r\n", logs.Select(x=>x.Message));
-                var key = "live/" + _job.UserId + "/" + _job.ProjectId + "/" + _job.DeployId + "-" + DateTime.UtcNow.ToString("yyyy-MM-dd-HH") + "-log.txt";
-                _api.Store(joined, key, StoragePermissions.Authenticated);
+                SaveLogs(_job.DeployId, logs.Select(x => x.Message));
             }
             catch (Exception err)
             {
@@ -833,13 +830,6 @@ namespace QuantConnect.Lean.Engine.Results
         /// </remarks>
         public void StoreResult(Packet packet, bool async = true)
         {
-            // this will hold all the serialized data and the keys to be stored
-            var data_keys = Enumerable.Range(0, 0).Select(x => new
-            {
-                Key = (string)null,
-                Serialized = (string)null
-            }).ToList();
-
             try
             {
                 Log.Debug("LiveTradingResultHandler.StoreResult(): Begin store result sampling");
@@ -868,22 +858,14 @@ namespace QuantConnect.Lean.Engine.Results
 
                         // swap out our charts with the sampeld data
                         live.Results.Charts = minuteCharts;
-                        data_keys.Add(new
-                        {
-                            Key = CreateKey("minute"),
-                            Serialized = JsonConvert.SerializeObject(live.Results)
-                        });
+                        SaveResults(CreateKey("minute"), live.Results);
 
                         // 10 minute resolution data, save today
                         var tenminuteSampler = new SeriesSampler(TimeSpan.FromMinutes(10));
                         var tenminuteCharts = tenminuteSampler.SampleCharts(live.Results.Charts, start, stop);
 
                         live.Results.Charts = tenminuteCharts;
-                        data_keys.Add(new
-                        {
-                            Key = CreateKey("10minute"),
-                            Serialized = JsonConvert.SerializeObject(live.Results)
-                        });
+                        SaveResults(CreateKey("10minute"), live.Results);
 
                         // high resolution data, we only want to save an hour
                         live.Results.Charts = highResolutionCharts;
@@ -894,17 +876,13 @@ namespace QuantConnect.Lean.Engine.Results
 
                         foreach (var name in live.Results.Charts.Keys)
                         {
-                            var newPacket = new LiveResult();
-                            newPacket.Orders = new Dictionary<int, Order>(live.Results.Orders);
-                            newPacket.Holdings = new Dictionary<string, Holding>(live.Results.Holdings);
-                            newPacket.Charts = new Dictionary<string, Chart>();
-                            newPacket.Charts.Add(name, live.Results.Charts[name]);
+                            var result = new LiveResult();
+                            result.Orders = new Dictionary<int, Order>(live.Results.Orders);
+                            result.Holdings = new Dictionary<string, Holding>(live.Results.Holdings);
+                            result.Charts = new Dictionary<string, Chart>();
+                            result.Charts.Add(name, live.Results.Charts[name]);
 
-                            data_keys.Add(new
-                            {
-                                Key = CreateKey("second_" + Uri.EscapeUriString(name), "yyyy-MM-dd-HH"),
-                                Serialized = JsonConvert.SerializeObject(newPacket)
-                            });
+                            SaveResults(CreateKey("second_" + Uri.EscapeUriString(name), "yyyy-MM-dd-HH"), result);
                         }
                     }
                     else
@@ -913,12 +891,6 @@ namespace QuantConnect.Lean.Engine.Results
                     }
                 }
                 Log.Debug("LiveTradingResultHandler.StoreResult(): End store result sampling");
-
-                // Upload Results Portion
-                foreach (var dataKey in data_keys)
-                {
-                    _api.Store(dataKey.Serialized, dataKey.Key, StoragePermissions.Authenticated, async);
-                }
             }
             catch (Exception err)
             {
@@ -1010,7 +982,7 @@ namespace QuantConnect.Lean.Engine.Results
 
         private string CreateKey(string suffix, string dateFormat = "yyyy-MM-dd")
         {
-            return string.Format("live/{0}/{1}/{2}-{3}_{4}.json", _job.UserId, _job.ProjectId, _job.DeployId, DateTime.UtcNow.ToString(dateFormat), suffix);
+            return string.Format("{0}-{1}_{2}.json", _job.DeployId, DateTime.UtcNow.ToString(dateFormat), suffix);
         }
 
 

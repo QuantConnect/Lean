@@ -672,30 +672,6 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
-        /// Retrieves the location of the logs
-        /// </summary>
-        /// <param name="logs">The list of individual logs to be stored</param>
-        /// <param name="job">The <see cref="AlgorithmNodePacket"/> used to generate the url to the logs</param>
-        /// <param name="permissions">The <see cref="StoragePermissions"/> for the file</param>
-        /// <param name="async">Bool indicating whether the method to <see cref="Store"/> should be async</param>
-        /// <returns>The location where the logs can be accessed</returns>
-        /// <remarks>Since the logs are stored on disc during local backtest, this method simply returns the location of those logs
-        /// TODO: Get the filename of the logs instead of hard coding it.
-        ///  </remarks>
-        public virtual string StoreLogs(List<string> logs, AlgorithmNodePacket job, StoragePermissions permissions, bool async = false)
-        {
-            return Path.Combine(Directory.GetCurrentDirectory(), "log.txt");
-        }
-
-        /// <summary>
-        /// Store data with these authentication type
-        /// </summary>
-        public virtual void Store(string data, string location, StoragePermissions permissions, bool async = false)
-        {
-            //
-        }
-
-        /// <summary>
         /// Send an email to the user associated with the specified algorithm id
         /// </summary>
         /// <param name="algorithmId">The algorithm id</param>

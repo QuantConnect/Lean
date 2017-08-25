@@ -156,7 +156,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private string GetCountLimitReason(Resolution resolution)
         {
             var limit = GetResolutionLimit(resolution);
-            return string.Format("We currently only support {0} {1} at a time due to physical memory limitations", limit, resolution.ToString().ToLower());
+            return string.Format("We currently only support {0} symbols subscribed with {1} resolution at a time due to physical memory limitations", limit, resolution.ToString().ToLower());
         }
 
         /// <summary>

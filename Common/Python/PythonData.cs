@@ -16,7 +16,6 @@
 using Python.Runtime;
 using QuantConnect.Data;
 using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Python
 {
@@ -27,12 +26,7 @@ namespace QuantConnect.Python
     public class PythonData : DynamicData
     {
         private readonly dynamic _pythonData;
-
-        /// <summary>
-        /// List of Dynamic Members
-        /// </summary>
-        public List<string> DynamicMembers = new List<string>();
-
+        
         /// <summary>
         /// Constructor for initialising the PythonData class
         /// </summary>
@@ -80,8 +74,7 @@ namespace QuantConnect.Python
                 return _pythonData.Reader(config, line, date, isLiveMode);
             }
         }
-
-
+        
         /// <summary>
         /// Indexes into this PythonData, where index is key to the dynamic property
         /// </summary>
@@ -96,12 +89,7 @@ namespace QuantConnect.Python
 
             set
             {
-                var val = value is double ? Convert.ToDecimal(value) : value;
-                SetProperty(index, val);
-
-                // Saves the names for future reference
-                if (DynamicMembers.Contains(index)) return;
-                DynamicMembers.Add(index);
+                SetProperty(index, value is double ? Convert.ToDecimal(value) : value);
             }
         }   
     }
