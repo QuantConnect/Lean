@@ -14,12 +14,7 @@
  *
 */
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Orders.OptionExercise
@@ -51,15 +46,13 @@ namespace QuantConnect.Orders.OptionExercise
 
             var orderFee = option.FeeModel.GetOrderFee(option, order);
 
-            var cashQuote = option.QuoteCurrency;
-
             var addUnderlyingEvent = new OrderEvent(order.Id,
                             underlying.Symbol,
                             utcTime,
                             OrderStatus.Filled,
                             exerciseDirection,
                             exercisePrice,
-                            exerciseQuantity,
+                            exerciseQuantity * option.ContractUnitOfTrade,
                             0.0m,
                             "Option Exercise/Assignment");
 
