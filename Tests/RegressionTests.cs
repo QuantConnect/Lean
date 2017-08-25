@@ -499,19 +499,20 @@ namespace QuantConnect.Tests
                 {"Treynor Ratio", "0.391"},
                 {"Total Fees", "$23.05"},
             };
-        var optionExerciseAssignRegressionAlgorithmStatistics = new Dictionary<string, string>
+
+            var optionExerciseAssignRegressionAlgorithmStatistics = new Dictionary<string, string>
             {
                 {"Total Trades", "4"},
                 {"Average Win", "0.30%"},
-                {"Average Loss", "-0.20%"},
-                {"Compounding Annual Return", "-42.722%"},
+                {"Average Loss", "-0.32%"},
+                {"Compounding Annual Return", "-85.023%"},
                 {"Drawdown", "0.400%"},
-                {"Expectancy", "-0.168"},
-                {"Net Profit", "-0.103%"},
+                {"Expectancy", "-0.359"},
+                {"Net Profit", "-0.350%"},
                 {"Sharpe Ratio", "0"},
                 {"Loss Rate", "67%"},
                 {"Win Rate", "33%"},
-                {"Profit-Loss Ratio", "1.50"},
+                {"Profit-Loss Ratio", "0.92"},
                 {"Alpha", "0"},
                 {"Beta", "0"},
                 {"Annual Standard Deviation", "0"},
