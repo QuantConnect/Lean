@@ -22,7 +22,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         #region Properties
         protected override Symbol Symbol
         {
-            get { return Symbol.Create("BTCUSD", SecurityType, Market.GDAX); }
+            get { return Symbol.Create("ETHBTC", SecurityType, Market.GDAX); }
         }
 
         /// <summary>
@@ -38,7 +38,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         /// </summary>
         protected override decimal HighPrice
         {
-            get { return 4000m; }
+            get { return 1m; }
         }
 
         /// <summary>
@@ -46,12 +46,12 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         /// </summary>
         protected override decimal LowPrice
         {
-            get { return 1000m; }
+            get { return 0.0001m; }
         }
 
         protected override decimal GetDefaultQuantity()
         {
-            return 0.01m;
+            return 0.00001m;
         }
         #endregion
 

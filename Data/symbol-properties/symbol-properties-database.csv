@@ -2,6 +2,7 @@ market,symbol,type,description,quote_currency,contract_multiplier,minimum_price_
 
 #
 # Use # signs for comments
+bitfinex,BTCUSD,forex,BTCUSD,USD,1,0.01,0.01
 #
 
 fxcm,AU200AUD,cfd,S&P/ASX index of Australian listed shares,USD,0.1,0.1,1
@@ -236,4 +237,14 @@ oanda,USDTRY,forex,USD/TRY,TRY,1,0.00001,1
 oanda,USDZAR,forex,USD/ZAR,ZAR,1,0.00001,1
 oanda,ZARJPY,forex,ZAR/JPY,JPY,1,0.001,1
 
-bitfinex,BTCUSD,forex,BTCUSD,USD,1,0.01,0.01
+gdax,BTCUSD,forex,BTCUSD,USD,1,0.01,0.01
+gdax,LTCUSD,forex,LTCUSD,USD,1,0.01,0.01
+gdax,ETHUSD,forex,ETHUSD,USD,1,0.01,0.01
+gdax,LTCBTC,forex,LTCBTC,BTC,1,0.00001,0.00001
+gdax,ETHBTC,forex,ETHBTC,BTC,1,0.00001,0.00001
+gdax,BTCGBP,forex,BTCGBP,GBP,1,0.01,0.01
+gdax,LTCGBP,forex,LTCGBP,GBP,1,0.01,0.01
+gdax,ETHGBP,forex,ETHGBP,GBP,1,0.01,0.01
+gdax,BTCEUR,forex,BTCEUR,EUR,1,0.01,0.01
+gdax,LTCEUR,forex,LTCEUR,EUR,1,0.01,0.01
+gdax,ETHEUR,forex,ETHEUR,EUR,1,0.01,0.01

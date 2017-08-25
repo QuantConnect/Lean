@@ -35,13 +35,15 @@ namespace QuantConnect.Orders.Fees
         /// <returns>The cost of the order in units of the account currency</returns>
         public decimal GetOrderFee(Securities.Security security, Order order)
         {
-            //todo: fee scaling with trade size
-            decimal divisor = 0.002m;
-
+			//0% maker fee after reimbursement.
             if (order.Type == OrderType.Limit)
             {
-                divisor = 0.001m;
+                return 0m;
             }
+
+            //todo: fee scaling with trade size
+            decimal divisor = 0.025m;
+
             decimal fee = security.Price * (order.Quantity < 0 ? (order.Quantity * -1) : order.Quantity) * divisor;
             return fee;
         }

@@ -13,7 +13,7 @@ namespace QuantConnect.Brokerages.GDAX.Messages
     public class BaseMessage
     {
         public string Type { get; set; }
-        public int Sequence { get; set; }
+        public long Sequence { get; set; }
         public DateTime Time { get; set; }
         [JsonProperty("product_id")]
         public string ProductId { get; set; }

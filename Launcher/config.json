@@ -96,6 +96,11 @@
   "iqfeed-productName": "",
   "iqfeed-version": "1.0",
 
+  // gdax configuration
+  "gdax-api-secret": "",
+  "gdax-api-key": "",
+  "gdax-passphrase": "",
+
   // Required to access data from Quandl
   // To get your access token go to https://www.quandl.com/account/api
   "quandl-auth-token": "",
@@ -247,6 +252,21 @@
       "log-handler": "QuantConnect.Logging.QueueLogHandler",
       "desktop-http-port": "1234",
       "desktop-exe": "../../../UserInterface/bin/Release/QuantConnect.Views.exe"
-    }
+    },
+
+      "live-gdax": {
+      "live-mode": true,
+
+      // real brokerage implementations require the BrokerageTransactionHandler
+      "live-mode-brokerage": "GDAXBrokerage",
+      "data-queue-handler": "GDAXBrokerage",
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+      "history-provider": "BrokerageHistoryProvider"
+    },
+
   }
 }

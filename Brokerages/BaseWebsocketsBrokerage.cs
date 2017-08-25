@@ -59,7 +59,7 @@ namespace QuantConnect.Brokerages
         /// Timestamp of most recent heeartbeat message
         /// </summary>
         protected DateTime LastHeartbeatUtcTime = DateTime.UtcNow;
-        const int _heartbeatTimeout = 300;
+        const int _heartbeatTimeout = 90;
         Thread _connectionMonitorThread;
         CancellationTokenSource _cancellationTokenSource;
         private readonly object _lockerConnectionMonitor = new object();
@@ -204,6 +204,7 @@ namespace QuantConnect.Brokerages
                 if (IsConnected)
                 {
                     WebSocket.Close();
+                    Thread.Sleep(3000);
                 }
                 if (!IsConnected)
                 {

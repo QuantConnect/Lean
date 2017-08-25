@@ -37,6 +37,7 @@ namespace QuantConnect.Brokerages.GDAX
     public partial class GDAXBrokerage : BaseWebsocketsBrokerage, IDataQueueHandler
     {
 
+        #region Declarations
         /// <summary>
         /// Collection of ask prices for subscribed symbols
         /// </summary>
@@ -45,15 +46,16 @@ namespace QuantConnect.Brokerages.GDAX
         /// Collection of bid prices for subscribed symbols
         /// </summary>
         public Dictionary<Symbol, ConcurrentDictionary<string, decimal>> BidPrices { get; private set; }
-        private object tickLocker = new object();
-        private ConcurrentDictionary<Symbol, Tick> previousTick = new ConcurrentDictionary<Symbol, Tick>();
-        CancellationTokenSource canceller = new CancellationTokenSource();
+        private object _tickLocker = new object();
+        private ConcurrentDictionary<Symbol, Tick> _previousTick = new ConcurrentDictionary<Symbol, Tick>();
+        private CancellationTokenSource _canceller = new CancellationTokenSource();
         /// <summary>
         /// Collection of partial split messages
         /// </summary>
         public ConcurrentDictionary<long, GDAXFill> FillSplit { get; set; }
         private string _passPhrase;
         private string _wssUrl;
+        #endregion
 
         /// <summary>
         /// Constructor for brokerage
@@ -110,6 +112,11 @@ namespace QuantConnect.Brokerages.GDAX
                     OrderOpenOrChange(e.Data);
                     return;
                 }
+                else if (raw.Type == "received")
+                {
+                    return;
+                }
+
 
                 Log.Trace("GDAXWebsocketsBrokerage.OnMessage(): " + e.Data);
             }
@@ -238,9 +245,9 @@ namespace QuantConnect.Brokerages.GDAX
         {
             var min = AskPrices[symbol].Any() ? AskPrices[symbol].Min(a => a.Value) : 0;
             var max = BidPrices[symbol].Any() ? BidPrices[symbol].Max(a => a.Value) : 0;
-            if (previousTick[symbol].AskPrice != min || previousTick[symbol].BidPrice != max && min > 0 && max > 0)
+            if (_previousTick[symbol].AskPrice != min || _previousTick[symbol].BidPrice != max && min > 0 && max > 0)
             {
-                lock (tickLocker)
+                lock (_tickLocker)
                 {
                     Tick updating = new Tick
                     {
@@ -251,7 +258,7 @@ namespace QuantConnect.Brokerages.GDAX
                         Symbol = symbol
                     };
 
-                    previousTick[updating.Symbol] = updating;
+                    _previousTick[updating.Symbol] = updating;
                     this.Ticks.Add(updating);
                 }
             }
@@ -266,19 +273,18 @@ namespace QuantConnect.Brokerages.GDAX
         {
 
             int delay = 60000;
-            var token = canceller.Token;
+            var token = _canceller.Token;
             var listener = Task.Factory.StartNew(() =>
             {
+                Log.Trace("PollLatestTick: " + "Started polling for ticks: " + symbol.Value.ToString());
                 while (true)
                 {
-                    previousTick.AddOrUpdate(symbol, GetTick(symbol));
+                    _previousTick.AddOrUpdate(symbol, GetTick(symbol));
                     Thread.Sleep(delay);
                     if (token.IsCancellationRequested) break;
                 }
-
+                Log.Trace("PollLatestTick: " + "Stopped polling for ticks: " + symbol.Value.ToString());
             }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
-
-            Log.Trace("PollLatestTick: " + "Stopped polling for ticks.");
         }
 
         #region IDataQueueHandler
@@ -293,9 +299,17 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 this.Connect();
             }
+			//todo: heartbeat disabled for now
+            //WebSocket.Send("{ \"type\": \"heartbeat\", \"on\": true }");
 
             foreach (var item in symbols)
             {
+			//todo: cleaner way to filter out bad symbols
+                if (item.Value.Length != 6)
+                {
+                    continue;
+                }
+
                 //add symbols to ticker data
                 foreach (var list in new[] { AskPrices, BidPrices })
                 {
@@ -308,9 +322,9 @@ namespace QuantConnect.Brokerages.GDAX
                 this.ChannelList[item.Value] = new Channel { Name = item.Value, Symbol = item.Value };
 
                 //add empty ticks to most recent. These avoid emitting duplicate ticks
-                if (!previousTick.Keys.Contains(item))
+                if (!_previousTick.Keys.Contains(item))
                 {
-                    previousTick.TryAdd(item, new Tick());
+                    _previousTick.TryAdd(item, new Tick());
                 }
 
                 //Set off a task to poll for latest tick
@@ -319,21 +333,28 @@ namespace QuantConnect.Brokerages.GDAX
 
             var payload = new
             {
-                Type = "subscribe",
-                ProductIds = symbols.Select(s => s.Value.ToString().Substring(0, 3) + "-" + s.Value.ToString().Substring(3)).ToArray(),
+                product_ids = symbols.Where(s => s.Value.Length == 6).Select(s => s.Value.ToString().Substring(0, 3) + "-" + s.Value.ToString().Substring(3)).ToArray(),
             };
 
-            var token = GetAuthenticationToken(JsonConvert.SerializeObject(payload), "", _wssUrl);
+            if (payload.product_ids.Length == 0)
+            {
+                return;
+            }
 
-            WebSocket.Send(JsonConvert.SerializeObject(new
+            var token = GetAuthenticationToken(JsonConvert.SerializeObject(payload), "GET", "/users/self");
+
+            var json = JsonConvert.SerializeObject(new
             {
                 type = "subscribe",
-                product_ids = payload.ProductIds,
-                key = ApiKey,
-                passphrase = _passPhrase,
-                signature = token.Signature,
-                timestamp = token.Timestamp
-            }));
+                product_ids = payload.product_ids,
+				//todo: wss auth disabled for now
+                //key = ApiKey,
+                //signature = token.Signature,
+                //timestamp = token.Timestamp,
+                //passphrase = _passPhrase
+            });
+
+            WebSocket.Send(json);
 
             Log.Trace("Subscribe: Sent subcribe.");
 
@@ -346,7 +367,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="symbols"></param>
         public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
-            canceller.Cancel();
+            _canceller.Cancel();
         }
         #endregion
 
