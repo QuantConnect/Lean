@@ -6,9 +6,7 @@
   // two predefined environments, 'backtesting' and 'live', feel free
   // to add more!
 
-  // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed",
-  // "backtesting-desktop","backtesting-desktop-mac"
-  "environment": "backtesting",
+  "environment": "backtesting",// "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
 
   // algorithm class selector
   "algorithm-type-name": "BasicTemplateAlgorithm",
@@ -36,7 +34,7 @@
   "data-provider": "QuantConnect.Lean.Engine.DataFeeds.DefaultDataProvider",
 
   // limits on number of symbols to allow
-  "symbol-minute-limit": 10000,
+  "symbol-minute-limit": 10000, 
   "symbol-second-limit": 10000,
   "symbol-tick-limit": 10000,
 
@@ -64,7 +62,7 @@
   "ib-agent-description": "Individual",
   "ib-use-tws": false,
   "ib-tws-dir": "C:\\Jts",
-  "ib-trading-mode": "paper",
+  "ib-trading-mode": "paper", 
   "ib-controller-dir": "C:\\IBController",
 
   // tradier configuration
@@ -152,7 +150,7 @@
 
     // defines the 'live-interactive' environment
     "live-interactive": {
-      "live-mode": true,
+        "live-mode": true,
 
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "InteractiveBrokersBrokerage",
