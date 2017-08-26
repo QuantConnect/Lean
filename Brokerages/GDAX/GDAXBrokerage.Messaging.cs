@@ -228,8 +228,7 @@ namespace QuantConnect.Brokerages.GDAX
             var req = new RestRequest(string.Format("/products/{0}/ticker", ConvertSymbol(symbol)), Method.GET);
             var response = RestClient.Execute(req);
             var tick = JsonConvert.DeserializeObject<Messages.Tick>(response.Content);
-            //todo: change tick after int change
-            return new Tick(tick.Time, symbol, tick.Bid, tick.Ask) { Quantity = (int)tick.Volume };
+            return new Tick(tick.Time, symbol, tick.Bid, tick.Ask) { Quantity = tick.Volume };
         }
 
         private void EmitTick(string productId)
@@ -266,7 +265,7 @@ namespace QuantConnect.Brokerages.GDAX
         }
 
         /// <summary>
-        /// Poll for new tick to refresh the state of real-time order book
+        /// Poll for new tick to refresh the baseline state of real-time order book
         /// </summary>
         /// <param name="symbol"></param>
         private void PollTick(Symbol symbol)
@@ -279,6 +278,7 @@ namespace QuantConnect.Brokerages.GDAX
                 Log.Trace("PollLatestTick: " + "Started polling for ticks: " + symbol.Value.ToString());
                 while (true)
                 {
+                    //todo: adding a new baseline tick should result in pruning of price AskPrices and BidPrices
                     _previousTick.AddOrUpdate(symbol, GetTick(symbol));
                     Thread.Sleep(delay);
                     if (token.IsCancellationRequested) break;

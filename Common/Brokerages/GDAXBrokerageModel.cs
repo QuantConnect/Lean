@@ -37,8 +37,6 @@ namespace QuantConnect.Brokerages
     public class GDAXBrokerageModel : DefaultBrokerageModel
     {
 
-        string _wallet;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="GDAXBrokerageModel"/> class
         /// </summary>

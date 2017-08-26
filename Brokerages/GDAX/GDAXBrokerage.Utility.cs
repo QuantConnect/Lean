@@ -41,8 +41,8 @@ namespace QuantConnect.Brokerages.GDAX
         /// <summary>
         /// Creates an auth token and adds to the request
         /// </summary>
-        /// <param name="request"></param>
-        /// <returns></returns>
+        /// <param name="request">the rest request</param>
+        /// <returns>a token representing the request params</returns>
         public AuthenticationToken GetAuthenticationToken(IRestRequest request)
         {
             var body = request.Parameters.SingleOrDefault(b => b.Type == ParameterType.RequestBody);
@@ -59,7 +59,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// <summary>
         /// Creates an auth token to sign a request
         /// </summary>
-        /// <param name="body">the request cody as json</param>
+        /// <param name="body">the request body as json</param>
         /// <param name="method">the http method</param>
         /// <param name="url">the request url</param>
         /// <returns></returns>
@@ -102,8 +102,8 @@ namespace QuantConnect.Brokerages.GDAX
         /// <summary>
         /// Converts a product id to a symbol
         /// </summary>
-        /// <param name="productId"></param>
-        /// <returns></returns>
+        /// <param name="productId">gdax format product id</param>
+        /// <returns>Symbol</returns>
         public static Symbol ConvertProductId(string productId)
         {
             return Symbol.Create(productId.Replace("-", ""), SecurityType.Forex, Market.GDAX);
@@ -112,8 +112,8 @@ namespace QuantConnect.Brokerages.GDAX
         /// <summary>
         /// Converts a symbol to a product id
         /// </summary>
-        /// <param name="symbol"></param>
-        /// <returns></returns>
+        /// <param name="symbol">Th symbol</param>
+        /// <returns>gdax product id</returns>
         protected static string ConvertSymbol(Symbol symbol)
         {
             return symbol.Value.Substring(0, 3).ToLower() + "-" + symbol.Value.Substring(3, 3).ToLower();

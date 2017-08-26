@@ -59,9 +59,9 @@ namespace QuantConnect.Brokerages
         /// Timestamp of most recent heeartbeat message
         /// </summary>
         protected DateTime LastHeartbeatUtcTime = DateTime.UtcNow;
-        const int _heartbeatTimeout = 90;
-        Thread _connectionMonitorThread;
-        CancellationTokenSource _cancellationTokenSource;
+        private const int _heartbeatTimeout = 90;
+        private Thread _connectionMonitorThread;
+        private CancellationTokenSource _cancellationTokenSource;
         private readonly object _lockerConnectionMonitor = new object();
         private volatile bool _connectionLost;
         #endregion
@@ -69,13 +69,13 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Creates an instance of a websockets brokerage
         /// </summary>
-        /// <param name="wssUrl">the webco</param>
-        /// <param name="websocket"></param>
-        /// <param name="restClient"></param>
-        /// <param name="apiKey"></param>
-        /// <param name="apiSecret"></param>
-        /// <param name="market"></param>
-        /// <param name="name"></param>
+        /// <param name="wssUrl">Websockets base url</param>
+        /// <param name="websocket">Websocket client instance</param>
+        /// <param name="restClient">Rest client instance</param>
+        /// <param name="apiKey">Brokerage api auth key</param>
+        /// <param name="apiSecret">Brokerage api auth secret</param>
+        /// <param name="market">Name of market</param>
+        /// <param name="name">Name of brokerage</param>
         public BaseWebsocketsBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string market, string name) : base(name)
         {
             WebSocket = websocket;
@@ -204,6 +204,7 @@ namespace QuantConnect.Brokerages
                 if (IsConnected)
                 {
                     WebSocket.Close();
+                    //todo: await connnection closure
                     Thread.Sleep(3000);
                 }
                 if (!IsConnected)
