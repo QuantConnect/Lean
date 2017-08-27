@@ -279,7 +279,13 @@ namespace QuantConnect.Brokerages.GDAX
                 while (true)
                 {
                     //todo: adding a new baseline tick should result in pruning of price AskPrices and BidPrices
-                    _previousTick.AddOrUpdate(symbol, GetTick(symbol));
+                    var latest = GetTick(symbol);
+                    lock (_tickLocker)
+                    {
+                        Ticks.Add(latest);
+                    }
+                    _previousTick.AddOrUpdate(symbol, latest);
+
                     Thread.Sleep(delay);
                     if (token.IsCancellationRequested) break;
                 }
@@ -299,12 +305,12 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 this.Connect();
             }
-			//todo: heartbeat disabled for now
+            //todo: heartbeat disabled for now
             //WebSocket.Send("{ \"type\": \"heartbeat\", \"on\": true }");
 
             foreach (var item in symbols)
             {
-			//todo: cleaner way to filter out bad symbols
+                //todo: cleaner way to filter out bad symbols
                 if (item.Value.Length != 6)
                 {
                     continue;
@@ -347,7 +353,7 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 type = "subscribe",
                 product_ids = payload.product_ids,
-				//todo: wss auth disabled for now
+                //todo: wss auth disabled for now
                 //key = ApiKey,
                 //signature = token.Signature,
                 //timestamp = token.Timestamp,

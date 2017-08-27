@@ -51,12 +51,12 @@ namespace QuantConnect.Brokerages.GDAX
             var req = new RestRequest("/orders", Method.POST);
             req.AddJsonBody(new
             {
-                size = order.Quantity,
+                size = Math.Abs(order.Quantity),
                 side = order.Direction.ToString().ToLower(),
                 type = ConvertOrderType(order.Type),
                 price = order is LimitOrder ? ((LimitOrder)order).LimitPrice : 0,
                 product_id = ConvertSymbol(order.Symbol),
-                overdraft_enabled = true
+                //overdraft_enabled = false
             });
 
             GetAuthenticationToken(req);
