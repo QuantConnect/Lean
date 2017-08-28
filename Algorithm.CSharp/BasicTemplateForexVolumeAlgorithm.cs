@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
             // Find more symbols here: http://quantconnect.com/data
             EURUSD = AddForex("EURUSD", Resolution.Minute, Market.FXCM).Symbol;
 
-            AddData<ForexVolume>("EURUSD", Resolution.Minute, DateTimeZone.Utc);
+            AddData<FxcmForexVolume>("EURUSD", Resolution.Minute, DateTimeZone.Utc);
             var _price = Identity(EURUSD);
             fastVWMA = _price.WeightedBy(volume, period: 15);
             slowVWMA = _price.WeightedBy(volume, period: 300);
@@ -73,7 +73,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public void OnData(ForexVolume fxVolume)
+        public void OnData(FxcmForexVolume fxVolume)
         {
             volume.Update(new IndicatorDataPoint
             {

@@ -27,7 +27,7 @@ namespace QuantConnect.ToolBox
     ///     FXCM Real FOREX Volume/Transactions Downloader Toolbox Project For LEAN Algorithmic Trading Engine.
     /// </summary>
     /// <seealso cref="QuantConnect.ToolBox.IDataDownloader" />
-    public class ForexVolumeDownloader : IDataDownloader
+    public class FxcmForexVolumeDownloader : IDataDownloader
     {
         private enum FxcmSymbolId
         {
@@ -81,10 +81,10 @@ namespace QuantConnect.ToolBox
         #region Public Methods
 
         /// <summary>
-        ///     Initializes a new instance of the <see cref="ForexVolumeDownloader" /> class.
+        ///     Initializes a new instance of the <see cref="FxcmForexVolumeDownloader" /> class.
         /// </summary>
         /// <param name="dataDirectory">The Lean data directory.</param>
-        public ForexVolumeDownloader(string dataDirectory)
+        public FxcmForexVolumeDownloader(string dataDirectory)
         {
             _dataDirectory = dataDirectory;
         }
@@ -179,7 +179,7 @@ namespace QuantConnect.ToolBox
                 var volume = _volumeIdx.Select(x => long.Parse(obs[x])).Sum();
 
                 var transactions = _transactionsIdx.Select(x => int.Parse(obs[x])).Sum();
-                requestedData.Add(new ForexVolume
+                requestedData.Add(new FxcmForexVolume
                 {
                     Symbol = symbol,
                     Time = obsTime,

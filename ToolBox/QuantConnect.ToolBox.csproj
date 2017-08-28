@@ -173,8 +173,8 @@
     <Compile Include="FactorFileGenerator.cs" />
     <Compile Include="FileStreamProvider.cs" />
     <Compile Include="FilteredDataProcessor.cs" />
-    <Compile Include="ForexVolumeDownloader\ForexVolumeDownloader.cs" />
     <Compile Include="ForexVolumeDownloader\ForexVolumeWriter.cs" />
+    <Compile Include="ForexVolumeDownloader\FxcmForexVolumeDownloader.cs" />
     <Compile Include="ForexVolumeDownloader\Program.cs" />
     <Compile Include="FxcmDownloader\FxcmDataDownloader.cs" />
     <Compile Include="FxcmDownloader\Program.cs" />

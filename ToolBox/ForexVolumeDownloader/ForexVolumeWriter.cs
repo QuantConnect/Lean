@@ -44,7 +44,7 @@ namespace QuantConnect.ToolBox
         private void WriteMinuteData(IEnumerable<BaseData> data)
         {
             var sb = new StringBuilder();
-            var volData = data.Cast<ForexVolume>();
+            var volData = data.Cast<FxcmForexVolume>();
             var dataByDay = volData.GroupBy(o => o.Time.Date);
             foreach (var dayOfData in dataByDay)
             {
@@ -66,7 +66,7 @@ namespace QuantConnect.ToolBox
         {
             var sb = new StringBuilder();
 
-            var volData = data.Cast<ForexVolume>();
+            var volData = data.Cast<FxcmForexVolume>();
             foreach (var obs in volData)
             {
                 sb.AppendLine(string.Format("{0:yyyyMMdd HH:mm},{1},{2}", obs.Time, obs.Value,

@@ -25,7 +25,7 @@ namespace QuantConnect.Tests.ToolBox
         private string _dataDirectory;
         private List<string> _testingTempFolders = new List<string>();
 
-        private ForexVolumeDownloader _downloader;
+        private FxcmForexVolumeDownloader _downloader;
         private readonly Symbol _eurusd = Symbol.Create("EURUSD", SecurityType.Base, Market.FXCM);
 
         [SetUp]
@@ -34,7 +34,7 @@ namespace QuantConnect.Tests.ToolBox
             var randomFolder = Guid.NewGuid().ToString("N").Substring(startIndex: 0, length: 8);
             var assemblyFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             _dataDirectory = Path.Combine(assemblyFolder, randomFolder);
-            _downloader = new ForexVolumeDownloader(_dataDirectory);
+            _downloader = new FxcmForexVolumeDownloader(_dataDirectory);
             _testingTempFolders.Add(_dataDirectory);
         }
 
@@ -65,7 +65,7 @@ namespace QuantConnect.Tests.ToolBox
             var endUtc = DateTime.ParseExact(endDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             //Act
             var actualData = _downloader.Get(symbol, resolution, startUtc,
-                endUtc).Cast<ForexVolume>().ToArray();
+                endUtc).Cast<FxcmForexVolume>().ToArray();
             //Assert
             Assert.AreEqual(expectedData.Length, actualData.Length);
             for (var i = 0; i < expectedData.Length - 1; i++)
@@ -90,7 +90,7 @@ namespace QuantConnect.Tests.ToolBox
             var writer = new ForexVolumeWriter(resolution, symbol, _dataDirectory);
             writer.Write(data);
             // Assert
-            var expectedData = data.Cast<ForexVolume>().ToArray();
+            var expectedData = data.Cast<FxcmForexVolume>().ToArray();
             var expectedFolder = Path.Combine(_dataDirectory, string.Format("forex/fxcm/{0}", resolution.ToLower()));
             if (resolution == Resolution.Minute)
             {
