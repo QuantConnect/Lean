@@ -23,7 +23,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     ///     Basic template algorithm simply initializes the date range and cash
     /// </summary>
-    public class BasicTemplateForexVolumeAlgorithm : QCAlgorithm
+    public class BasicTemplateFxcmVolumeAlgorithm : QCAlgorithm
     {
         private readonly Identity volume = new Identity("volIdentity");
         private Symbol EURUSD;
@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
             // Find more symbols here: http://quantconnect.com/data
             EURUSD = AddForex("EURUSD", Resolution.Minute, Market.FXCM).Symbol;
 
-            AddData<FxcmForexVolume>("EURUSD", Resolution.Minute, DateTimeZone.Utc);
+            AddData<FxcmVolume>("EURUSD", Resolution.Minute, DateTimeZone.Utc);
             var _price = Identity(EURUSD);
             fastVWMA = _price.WeightedBy(volume, period: 15);
             slowVWMA = _price.WeightedBy(volume, period: 300);
@@ -73,7 +73,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public void OnData(FxcmForexVolume fxVolume)
+        public void OnData(FxcmVolume fxVolume)
         {
             volume.Update(new IndicatorDataPoint
             {

@@ -7,7 +7,7 @@ using System.Text;
 
 namespace QuantConnect.ToolBox
 {
-    public class ForexVolumeWriter
+    public class FxcmVolumeWriter
     {
         private readonly Symbol _symbol;
         private readonly string _market;
@@ -15,7 +15,7 @@ namespace QuantConnect.ToolBox
         private readonly Resolution _resolution;
         private readonly string _folderPath;
 
-        public ForexVolumeWriter(Resolution resolution, Symbol symbol, string dataDirectory)
+        public FxcmVolumeWriter(Resolution resolution, Symbol symbol, string dataDirectory)
         {
             _symbol = symbol;
             _resolution = resolution;
@@ -44,7 +44,7 @@ namespace QuantConnect.ToolBox
         private void WriteMinuteData(IEnumerable<BaseData> data)
         {
             var sb = new StringBuilder();
-            var volData = data.Cast<FxcmForexVolume>();
+            var volData = data.Cast<FxcmVolume>();
             var dataByDay = volData.GroupBy(o => o.Time.Date);
             foreach (var dayOfData in dataByDay)
             {
@@ -66,7 +66,7 @@ namespace QuantConnect.ToolBox
         {
             var sb = new StringBuilder();
 
-            var volData = data.Cast<FxcmForexVolume>();
+            var volData = data.Cast<FxcmVolume>();
             foreach (var obs in volData)
             {
                 sb.AppendLine(string.Format("{0:yyyyMMdd HH:mm},{1},{2}", obs.Time, obs.Value,

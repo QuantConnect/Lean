@@ -3,7 +3,7 @@ using QuantConnect.Logging;
 using System;
 using System.Globalization;
 
-namespace QuantConnect.ToolBox.FxcmVolumeDownloader
+namespace QuantConnect.ToolBox.FxcmVolumeDownload
 {
     class Program
     {
@@ -11,7 +11,7 @@ namespace QuantConnect.ToolBox.FxcmVolumeDownloader
         {
             if (args.Length != 4)
             {
-                Console.WriteLine("Usage: FxcmForexVolumeDownloader SYMBOLS RESOLUTION FROMDATE TODATE");
+                Console.WriteLine("Usage: FxcmVolumeDownloader SYMBOLS RESOLUTION FROMDATE TODATE");
                 Console.WriteLine("SYMBOLS = eg EURUSD,USDJPY\n" +
                                   "\tAvailable pairs:\n" +
                                   "\tEURUSD, USDJPY, GBPUSD, USDCHF, EURCHF, AUDUSD, USDCAD,\n" +
@@ -46,7 +46,7 @@ namespace QuantConnect.ToolBox.FxcmVolumeDownloader
                 // Load settings from config.json
 
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
-                var downloader = new FxcmForexVolumeDownloader(dataDirectory);
+                var downloader = new FxcmVolumeDownloader(dataDirectory);
                 foreach (var ticker in tickers)
                 {
                     var symbol = Symbol.Create(ticker, SecurityType.Base, Market.FXCM);

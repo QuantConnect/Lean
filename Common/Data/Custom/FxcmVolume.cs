@@ -15,7 +15,7 @@ namespace QuantConnect.Data.Custom
     ///
     /// </summary>
     /// <seealso cref="QuantConnect.Data.BaseData" />
-    public class FxcmForexVolume : BaseData
+    public class FxcmVolume : BaseData
     {
         private string[] _availableSymbols =
         {
@@ -99,7 +99,7 @@ namespace QuantConnect.Data.Custom
             {
                 time = DateTime.ParseExact(obs[0], "yyyyMMdd HH:mm", CultureInfo.InvariantCulture);
             }
-            return new FxcmForexVolume
+            return new FxcmVolume
             {
                 DataType = MarketDataType.Base,
                 Symbol = config.Symbol,
