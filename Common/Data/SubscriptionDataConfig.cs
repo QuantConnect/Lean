@@ -29,7 +29,6 @@ namespace QuantConnect.Data
     /// </summary>
     public class SubscriptionDataConfig : IEquatable<SubscriptionDataConfig>
     {
-        private Symbol _symbol;
         private readonly SecurityIdentifier _sid;
 
         /// <summary>
@@ -45,13 +44,10 @@ namespace QuantConnect.Data
         /// <summary>
         /// Symbol of the asset we're requesting: this is really a perm tick!!
         /// </summary>
-        public Symbol Symbol
-        {
-            get { return _symbol; }
-        }
+        public Symbol Symbol { get; private set; }
 
         /// <summary>
-        /// Trade or quote data
+        /// Trade, quote or open interest data
         /// </summary>
         public readonly TickType TickType;
 
@@ -107,13 +103,13 @@ namespace QuantConnect.Data
         {
             get
             {
-                return _symbol.ID.SecurityType == SecurityType.Option ? 
-                    (_symbol.HasUnderlying ? _symbol.Underlying.Value : _symbol.Value) :
-                    _symbol.Value;
+                return Symbol.ID.SecurityType == SecurityType.Option ? 
+                    (Symbol.HasUnderlying ? Symbol.Underlying.Value : Symbol.Value) :
+                    Symbol.Value;
             }
             set
             {
-                _symbol = _symbol.UpdateMappedSymbol(value);
+                Symbol = Symbol.UpdateMappedSymbol(value);
             }
         }
 
@@ -181,7 +177,7 @@ namespace QuantConnect.Data
             SecurityType = symbol.ID.SecurityType;
             Resolution = resolution;
             _sid = symbol.ID;
-            _symbol = symbol;
+            Symbol = symbol;
             FillDataForward = fillForward;
             ExtendedMarketHours = extendedHours;
             PriceScaleFactor = 1;
@@ -194,14 +190,7 @@ namespace QuantConnect.Data
             Consolidators = new HashSet<IDataConsolidator>();
             DataNormalizationMode = dataNormalizationMode;
 
-            if (!tickType.HasValue)
-            {
-                TickType = LeanData.GetCommonTickTypeForCommonDataTypes(objectType, SecurityType);
-            }
-            else
-            {
-                TickType = tickType.Value;
-            }
+            TickType = tickType ?? LeanData.GetCommonTickTypeForCommonDataTypes(objectType, SecurityType);
 
             switch (resolution)
             {
@@ -333,7 +322,7 @@ namespace QuantConnect.Data
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
+            if (obj.GetType() != GetType()) return false;
             return Equals((SubscriptionDataConfig) obj);
         }
 
@@ -387,7 +376,7 @@ namespace QuantConnect.Data
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Symbol.Value + "," + MappedSymbol + "," + Resolution + "," + Type.Name;
+            return Symbol.Value + "," + MappedSymbol + "," + Resolution + "," + Type.Name + "," + TickType;
         }
     }
 }
