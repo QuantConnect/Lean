@@ -56,6 +56,7 @@ namespace QuantConnect.Brokerages.GDAX
                 type = ConvertOrderType(order.Type),
                 price = order is LimitOrder ? ((LimitOrder)order).LimitPrice : 0,
                 product_id = ConvertSymbol(order.Symbol),
+				//todo: can be enabled if margin
                 //overdraft_enabled = true
             });
 
@@ -66,15 +67,16 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 dynamic raw = JsonConvert.DeserializeObject<dynamic>(response.Content);
 
-                if (raw != null && raw.order_id != 0)
+                if (raw != null && raw.id != 0)
                 {
+                    string brokerId = raw.id;
                     if (CachedOrderIDs.ContainsKey(order.Id))
                     {
-                        CachedOrderIDs[order.Id].BrokerId.Add((string)raw.order_id);
+                        CachedOrderIDs[order.Id].BrokerId.Add(brokerId);
                     }
                     else
                     {
-                        order.BrokerId.Add((string)raw.order_id);
+                        order.BrokerId.Add(brokerId);
                         CachedOrderIDs.TryAdd(order.Id, order);
                     }
                 }
@@ -84,7 +86,8 @@ namespace QuantConnect.Brokerages.GDAX
             }
 
             OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Bitfinex Order Event") { Status = OrderStatus.Invalid });
-            Log.Trace("BitfinexBrokerage.PlaceOrder(): Order failed Order Id: " + order.Id + " timestamp:" + order.Time + " quantity: " + order.Quantity.ToString());
+            Log.Trace("BitfinexBrokerage.PlaceOrder(): Order failed Order Id: " + order.Id + " timestamp:" + order.Time + " quantity: " + order.Quantity.ToString()
+                + " content:" + response.Content);
             return false;
 
         }
