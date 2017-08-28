@@ -56,7 +56,7 @@ namespace QuantConnect.Brokerages.GDAX
                 type = ConvertOrderType(order.Type),
                 price = order is LimitOrder ? ((LimitOrder)order).LimitPrice : 0,
                 product_id = ConvertSymbol(order.Symbol),
-                //overdraft_enabled = false
+                //overdraft_enabled = true
             });
 
             GetAuthenticationToken(req);

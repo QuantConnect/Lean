@@ -121,7 +121,7 @@ namespace QuantConnect.Brokerages.GDAX
 
         private static Orders.OrderStatus ConvertOrderStatus(Messages.Order order)
         {
-            if (order.Size != 0 && order.FilledSize != order.Size)
+            if (order.FilledSize != 0 && order.FilledSize != order.Size)
             {
                 return Orders.OrderStatus.PartiallyFilled;
             }       
