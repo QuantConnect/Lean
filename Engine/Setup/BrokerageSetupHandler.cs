@@ -278,6 +278,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     {
                         // be sure to assign order IDs such that we increment from the SecurityTransactionManager to avoid ID collisions
                         Log.Trace("BrokerageSetupHandler.Setup(): Has open order: " + order.Symbol.Value + " - " + order.Quantity);
+                        resultHandler.DebugMessage($"BrokerageSetupHandler.Setup(): Open order detected.  Creating order tickets for open order {order.Symbol.Value} with quantity {order.Quantity}. Beware that this order ticket may not accurately reflect the quantity of the order if the open order is partially filled.");
                         order.Id = algorithm.Transactions.GetIncrementOrderId();
                         transactionHandler.Orders.AddOrUpdate(order.Id, order, (i, o) => order);
                         transactionHandler.OrderTickets.AddOrUpdate(order.Id, order.ToOrderTicket(algorithm.Transactions));
