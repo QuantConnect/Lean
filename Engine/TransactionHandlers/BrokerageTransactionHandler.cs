@@ -80,6 +80,14 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
+        /// Gets the permanent storage for all order tickets
+        /// </summary>
+        public ConcurrentDictionary<int, OrderTicket> OrderTickets
+        {
+            get { return _orderTickets; }
+        }
+
+        /// <summary>
         /// Gets the current number of orders that have been processed
         /// </summary>
         public int OrdersCount

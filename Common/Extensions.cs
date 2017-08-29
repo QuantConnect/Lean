@@ -25,6 +25,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using Newtonsoft.Json;
 using NodaTime;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
 using Timer = System.Timers.Timer;
 
@@ -840,6 +841,57 @@ namespace QuantConnect
         public static string ToLower(this Enum @enum)
         {
             return @enum.ToString().ToLower();
+        }
+
+        /// <summary>
+        /// Turn order into an order ticket
+        /// </summary>
+        /// <param name="order">The <see cref="Order"/> being converted</param>
+        /// <param name="transactionManager">The transaction manager, <see cref="SecurityTransactionManager"/></param>
+        /// <returns></returns>
+        public static OrderTicket ToOrderTicket(this Order order, SecurityTransactionManager transactionManager)
+        {
+            var limitPrice = 0m;
+            var stopPrice = 0m;
+
+            switch (order.Type)
+            {
+                case OrderType.Limit:
+                    var limitOrder = order as LimitOrder;
+                    limitPrice = limitOrder.LimitPrice;
+                    break;
+                case OrderType.StopMarket:
+                    var stopMarketOrder = order as StopMarketOrder;
+                    stopPrice = stopMarketOrder.StopPrice;
+                    break;
+                case OrderType.StopLimit:
+                    var stopLimitOrder = order as StopLimitOrder;
+                    stopPrice = stopLimitOrder.StopPrice;
+                    limitPrice = stopLimitOrder.LimitPrice;
+                    break;
+                case OrderType.OptionExercise:
+                case OrderType.Market:
+                case OrderType.MarketOnOpen:
+                case OrderType.MarketOnClose:
+                    limitPrice = order.Price;
+                    stopPrice = order.Price;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            var submitOrderRequest = new SubmitOrderRequest(order.Type,
+                order.SecurityType,
+                order.Symbol,
+                order.Quantity,
+                stopPrice,
+                limitPrice,
+                order.Time,
+                order.Tag);
+
+            submitOrderRequest.SetOrderId(order.Id);
+
+            return new OrderTicket(transactionManager, submitOrderRequest);
         }
     }
 }

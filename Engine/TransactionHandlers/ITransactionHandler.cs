@@ -48,6 +48,14 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
+        /// Gets the permanent storage for all order tickets
+        /// </summary>
+        ConcurrentDictionary<int, OrderTicket> OrderTickets
+        {
+            get;
+        }
+
+        /// <summary>
         /// Initializes the transaction handler for the specified algorithm using the specified brokerage implementation
         /// </summary>
         void Initialize(IAlgorithm algorithm, IBrokerage brokerage, IResultHandler resultHandler);

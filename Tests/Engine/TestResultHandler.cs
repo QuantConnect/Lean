@@ -89,7 +89,7 @@ namespace QuantConnect.Tests.Engine
         {
         }
 
-        public void DebugMessage(string message)
+        public virtual void DebugMessage(string message)
         {
             Messages.Enqueue(new DebugPacket(_job.ProjectId, _job.AlgorithmId, _job.CompileId, message));
         }
