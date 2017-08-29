@@ -89,19 +89,7 @@ namespace QuantConnect.Lean.Engine.Setup
             IAlgorithm algorithm;
 
             // limit load times to 10 seconds and force the assembly to have exactly one derived type
-            var loader = new Loader(algorithmNodePacket.Language, TimeSpan.FromSeconds(15), names =>
-            {
-                // if there's only one use that guy
-                if (names.Count == 1)
-                {
-                    return names.Single();
-                }
-
-                // if there's more than one then check configuration for which one we should use
-                var algorithmName = Config.Get("algorithm-type-name");
-                return names.Single(x => x.Contains("." + algorithmName));
-            });
-
+            var loader = new Loader(algorithmNodePacket.Language, TimeSpan.FromSeconds(15), names => names.SingleOrAlgorithmTypeName(Config.Get("algorithm-type-name")));
             var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, algorithmNodePacket.RamAllocation, out algorithm, out error);
             if (!complete) throw new Exception(error + " Try re-building algorithm and remove duplicate QCAlgorithm base classes.");
 

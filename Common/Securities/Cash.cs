@@ -205,7 +205,7 @@ namespace QuantConnect.Securities
                     var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType);
                     var exchangeHours = marketHoursDbEntry.ExchangeHours;
                     // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
-                    var config = subscriptions.Add(objectType, symbol, minimumResolution, marketHoursDbEntry.DataTimeZone, exchangeHours.TimeZone, false, true, false, true);
+                    var config = subscriptions.Add(objectType, TickType.Quote, symbol, minimumResolution, marketHoursDbEntry.DataTimeZone, exchangeHours.TimeZone, false, true, false, true);
                     SecuritySymbol = config.Symbol;
 
                     Security security;

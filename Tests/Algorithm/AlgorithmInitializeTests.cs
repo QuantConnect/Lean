@@ -50,6 +50,20 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
+        public void Validates_SetBrokerageModel_IB_AddForex()
+        {
+            var algorithm = new QCAlgorithm();
+
+            algorithm.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage);
+            var security = algorithm.AddForex(Ticker, Resolution, Market);
+
+            // Leverage and FeeModel from BrokerageModel
+            Assert.AreEqual(50, Math.Round(security.Leverage, RoundingPrecision));
+            Assert.IsInstanceOf(typeof(InteractiveBrokersFeeModel), security.FeeModel);
+            Assert.AreEqual(2, security.FeeModel.GetOrderFee(security, _order));
+        }
+
+        [Test]
         public void Validates_AddForex_SetBrokerageModel()
         {
             var algorithm = new QCAlgorithm();

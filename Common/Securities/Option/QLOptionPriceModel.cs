@@ -15,14 +15,9 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QLNet;
-using QuantConnect.Util;
 
 namespace QuantConnect.Securities.Option
 {
@@ -39,6 +34,12 @@ namespace QuantConnect.Securities.Option
         private readonly IQLRiskFreeRateEstimator _riskFreeRateEstimator;
         private readonly IQLDividendYieldEstimator _dividendYieldEstimator;
         private readonly PricingEngineFuncEx _pricingEngineFunc;
+
+        /// <summary>
+        /// When enabled, approximates Greeks if corresponding pricing model didn't calculate exact numbers.
+        /// The default value is true.
+        /// </summary>
+        public bool EnableGreekApproximation { get; set; } = true;
 
         /// <summary>
         /// Method constructs QuantLib option price model with necessary estimators of underlying volatility, risk free rate, and underlying dividend yield
@@ -126,7 +127,7 @@ namespace QuantConnect.Securities.Option
                     }
                     catch (Exception)
                     {
-                        return optionSecurity.EnableGreekApproximation ? (decimal)reevalFunc() : 0.0m;
+                        return EnableGreekApproximation ? (decimal)reevalFunc() : 0.0m;
                     }
                 };
 
@@ -155,7 +156,7 @@ namespace QuantConnect.Securities.Option
                     }
                     catch (Exception)
                     {
-                        if (optionSecurity.EnableGreekApproximation)
+                        if (EnableGreekApproximation)
                         {
                             var step = 0.01;
                             var initial = underlyingQuoteValue.value();

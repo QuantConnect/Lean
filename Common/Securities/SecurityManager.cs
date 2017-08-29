@@ -21,7 +21,6 @@ using System.Collections.Specialized;
 using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Util;
 
 namespace QuantConnect.Securities
@@ -307,7 +306,7 @@ namespace QuantConnect.Securities
         /// leverage is less than or equal to zero.
         /// This method also add the new symbol mapping to the <see cref="SymbolCache"/>
         /// </summary>
-        public static Security CreateSecurity(List<Type> factoryTypes,
+        public static Security CreateSecurity(List<Tuple<Type, TickType>> subscriptionDataTypes,
             SecurityPortfolioManager securityPortfolioManager,
             SubscriptionManager subscriptionManager,
             SecurityExchangeHours exchangeHours,
@@ -325,22 +324,25 @@ namespace QuantConnect.Securities
             bool addToSymbolCache = true,
             bool isFilteredSubscription = true)
         {
-            if (!factoryTypes.Any())
+            if (!subscriptionDataTypes.Any())
             {
-                throw new ArgumentNullException("factoryTypes", "At least one type needed to create security");
+                throw new ArgumentNullException(nameof(subscriptionDataTypes), "At least one type needed to create security");
             }
 
             // add the symbol to our cache
             if (addToSymbolCache) SymbolCache.Set(symbol.Value, symbol);
 
             // Add the symbol to Data Manager -- generate unified data streams for algorithm events
-            SubscriptionDataConfigList configList = new SubscriptionDataConfigList(symbol);
-
-            foreach (var dataFeedType in factoryTypes)
-            {
-                configList.Add(subscriptionManager.Add(dataFeedType, symbol, resolution, dataTimeZone, exchangeHours.TimeZone, isCustomData, fillDataForward,
-                                                        extendedMarketHours, isInternalFeed, isFilteredSubscription));
-            }
+            var configList = new SubscriptionDataConfigList(symbol);
+            configList.AddRange(from subscriptionDataType 
+                                in subscriptionDataTypes
+                                let dataType = subscriptionDataType.Item1
+                                let tickType = subscriptionDataType.Item2
+                                select subscriptionManager.Add(dataType, tickType, 
+                                                               symbol, resolution, dataTimeZone, 
+                                                               exchangeHours.TimeZone, isCustomData, 
+                                                               fillDataForward, extendedMarketHours, 
+                                                               isInternalFeed, isFilteredSubscription));
 
             // verify the cash book is in a ready state
             var quoteCurrency = symbolProperties.QuoteCurrency;
@@ -438,6 +440,52 @@ namespace QuantConnect.Securities
         /// leverage is less than or equal to zero.
         /// This method also add the new symbol mapping to the <see cref="SymbolCache"/>
         /// </summary>
+        public static Security CreateSecurity(Type dataType,
+            SecurityPortfolioManager securityPortfolioManager,
+            SubscriptionManager subscriptionManager,
+            SecurityExchangeHours exchangeHours,
+            DateTimeZone dataTimeZone,
+            SymbolProperties symbolProperties,
+            ISecurityInitializer securityInitializer,
+            Symbol symbol,
+            Resolution resolution,
+            bool fillDataForward,
+            decimal leverage,
+            bool extendedMarketHours,
+            bool isInternalFeed,
+            bool isCustomData,
+            bool isLiveMode,
+            bool addToSymbolCache = true,
+            bool isFilteredSubscription = true)
+        {
+            return CreateSecurity(
+                new List<Tuple<Type, TickType>>
+                {
+                    new Tuple<Type, TickType>(dataType, LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType))
+                },
+                securityPortfolioManager,
+                subscriptionManager,
+                exchangeHours,
+                dataTimeZone,
+                symbolProperties,
+                securityInitializer,
+                symbol,
+                resolution,
+                fillDataForward,
+                leverage,
+                extendedMarketHours,
+                isInternalFeed,
+                isCustomData,
+                isLiveMode,
+                addToSymbolCache,
+                isFilteredSubscription);
+        }
+
+        /// <summary>
+        /// Creates a security and matching configuration. This applies the default leverage if
+        /// leverage is less than or equal to zero.
+        /// This method also add the new symbol mapping to the <see cref="SymbolCache"/>
+        /// </summary>
         public static Security CreateSecurity(SecurityPortfolioManager securityPortfolioManager,
             SubscriptionManager subscriptionManager,
             MarketHoursDatabase marketHoursDatabase,
@@ -462,7 +510,7 @@ namespace QuantConnect.Securities
             var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, defaultQuoteCurrency);
 
             var types = subscriptionManager.LookupSubscriptionConfigDataTypes(symbol.SecurityType, resolution, symbol.IsCanonical());
-            
+
             return CreateSecurity(types, securityPortfolioManager, subscriptionManager, exchangeHours, marketHoursDbEntry.DataTimeZone, symbolProperties, securityInitializer, symbol, resolution,
                 fillDataForward, leverage, extendedMarketHours, isInternalFeed, isCustomData, isLiveMode, addToSymbolCache);
         }

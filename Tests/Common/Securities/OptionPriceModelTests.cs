@@ -18,12 +18,8 @@ using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Indicators;
-using QuantConnect.Orders;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Cfd;
 using QuantConnect.Securities.Equity;
-using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Option;
 using System.Collections.Generic;
 
@@ -191,12 +187,13 @@ namespace QuantConnect.Tests.Common
             equity.VolatilityModel = new DummyVolatilityModel(underlyingVol);
 
             var contract = new OptionContract(Symbols.SPY_P_192_Feb19_2016, Symbols.SPY) { Time = evaluationDate };
-            var optionPut = new Option(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY_C_192_Feb19_2016, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)));
+            var optionPut = new Option(SecurityExchangeHours.AlwaysOpen(tz), new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY_P_192_Feb19_2016, Resolution.Minute, tz, tz, true, false, false), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency)));
             optionPut.SetMarketPrice(new Tick { Value = price });
             optionPut.Underlying = equity;
-            optionPut.EnableGreekApproximation = false;
 
-            var priceModel = OptionPriceModels.CrankNicolsonFD();
+            var priceModel = (QLOptionPriceModel)OptionPriceModels.CrankNicolsonFD();
+            priceModel.EnableGreekApproximation = false;
+
             var results = priceModel.Evaluate(optionPut, null, contract);
             var greeks = results.Greeks;
 
@@ -204,9 +201,9 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(greeks.Rho, 0);
             Assert.AreEqual(greeks.Vega, 0);
 
-            optionPut.EnableGreekApproximation = true;
+            priceModel = (QLOptionPriceModel)OptionPriceModels.CrankNicolsonFD();
+            priceModel.EnableGreekApproximation = true;
 
-            priceModel = OptionPriceModels.CrankNicolsonFD();
             results = priceModel.Evaluate(optionPut, null, contract);
             greeks = results.Greeks;
 
