@@ -386,7 +386,6 @@ namespace QuantConnect.Util
                         );
                     }
 
-                case SecurityType.Crypto:
                     if (isHourOrDaily)
                     {
                         return string.Format("{0}.csv", 
