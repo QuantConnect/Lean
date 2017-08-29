@@ -56,7 +56,7 @@ namespace QuantConnect.Securities.Crypto
 
             // decompose the symbol into each currency pair
             string baseCurrencySymbol, quoteCurrencySymbol;
-            DecomposeCurrencyPair(config.Symbol.Value, out baseCurrencySymbol, out quoteCurrencySymbol);
+            Forex.Forex.DecomposeCurrencyPair(config.Symbol.Value, out baseCurrencySymbol, out quoteCurrencySymbol);
             BaseCurrencySymbol = baseCurrencySymbol;
         }
 
@@ -88,11 +88,10 @@ namespace QuantConnect.Securities.Crypto
 
             // decompose the symbol into each currency pair
             string baseCurrencySymbol, quoteCurrencySymbol;
-            DecomposeCurrencyPair(symbol.Value, out baseCurrencySymbol, out quoteCurrencySymbol);
+            Forex.Forex.DecomposeCurrencyPair(symbol.Value, out baseCurrencySymbol, out quoteCurrencySymbol);
             BaseCurrencySymbol = baseCurrencySymbol;
         }
 
-        //todo: DRY
         /// <summary>
         /// Gets the currency acquired by going long this currency pair
         /// </summary>
@@ -101,23 +100,6 @@ namespace QuantConnect.Securities.Crypto
         /// of going long the EUR/USD a trader is acquiring euros in exchange for US dollars
         /// </remarks>
         public string BaseCurrencySymbol { get; protected set; }
-
-        //todo: DRY
-        /// <summary>
-        /// Decomposes the specified currency pair into a base and quote currency provided as out parameters
-        /// </summary>
-        /// <param name="currencyPair">The input currency pair to be decomposed, for example, "EURUSD"</param>
-        /// <param name="baseCurrency">The output base currency</param>
-        /// <param name="quoteCurrency">The output quote currency</param>
-        public static void DecomposeCurrencyPair(string currencyPair, out string baseCurrency, out string quoteCurrency)
-        {
-            if (currencyPair == null || currencyPair.Length != 6)
-            {
-                throw new ArgumentException("Currency pairs must be exactly 6 characters: " + currencyPair);
-            }
-            baseCurrency = currencyPair.Substring(0, 3);
-            quoteCurrency = currencyPair.Substring(3);
-        }
 
     }
 }
