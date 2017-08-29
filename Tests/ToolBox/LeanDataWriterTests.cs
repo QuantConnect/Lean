@@ -21,6 +21,7 @@ namespace QuantConnect.Tests.ToolBox
         private Symbol _forex;
         private Symbol _cfd;
         private Symbol _equity;
+        private Symbol _crypto;
         private List<Tick> _ticks;
         private DateTime _date;
 
@@ -31,6 +32,7 @@ namespace QuantConnect.Tests.ToolBox
             _cfd = Symbol.Create("BCOUSD", SecurityType.Cfd, Market.Oanda);
             _equity = Symbol.Create("spy", SecurityType.Equity, Market.USA);
             _date = DateTime.Parse("3/16/2017 12:00:00 PM", CultureInfo.InvariantCulture);
+            _crypto = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX);
         }
 
         private List<Tick> GetTicks(Symbol sym)
@@ -92,6 +94,22 @@ namespace QuantConnect.Tests.ToolBox
 
             var leanDataWriter = new LeanDataWriter(Resolution.Tick, _equity, _dataDirectory);
             leanDataWriter.Write(GetTicks(_equity));
+
+            Assert.IsTrue(File.Exists(filePath));
+            Assert.IsFalse(File.Exists(filePath + ".tmp"));
+
+            var data = QuantConnect.Compression.Unzip(filePath);
+
+            Assert.AreEqual(data.First().Value.Count(), 3);
+        }
+
+        [Test]
+        public void LeanDataWriter_CanWriteCrypto()
+        {
+            var filePath = LeanData.GenerateZipFilePath(_dataDirectory, _crypto, _date, Resolution.Second, TickType.Quote);
+
+            var leanDataWriter = new LeanDataWriter(Resolution.Second, _crypto, _dataDirectory, TickType.Quote);
+            leanDataWriter.Write(GetQuoteBars(_crypto));
 
             Assert.IsTrue(File.Exists(filePath));
             Assert.IsFalse(File.Exists(filePath + ".tmp"));

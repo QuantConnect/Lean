@@ -694,7 +694,7 @@ namespace QuantConnect.Algorithm
             if (security.Type == SecurityType.Forex || security.Type == SecurityType.Crypto)
             {
                 Cash baseCash;
-                var baseCurrency = ((Forex)security).BaseCurrencySymbol;
+                var baseCurrency = ((IBaseCurrencySymbol)security).BaseCurrencySymbol;
                 if (!Portfolio.CashBook.TryGetValue(baseCurrency, out baseCash))
                 {
                     return OrderResponse.Error(request, OrderResponseErrorCode.ForexBaseAndQuoteCurrenciesRequired, request.Symbol.Value + ": requires " + baseCurrency + " and " + quoteCurrency + " in the cashbook to trade.");

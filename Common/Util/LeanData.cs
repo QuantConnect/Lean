@@ -455,7 +455,7 @@ namespace QuantConnect.Util
         {
             if (securityType != SecurityType.Base && securityType != SecurityType.Equity && securityType != SecurityType.Forex && securityType != SecurityType.Cfd && securityType != SecurityType.Crypto)
             {
-                throw new NotImplementedException("This method only implements base, equity, forex and cfd security type.");
+                throw new NotImplementedException("This method only implements base, equity, forex, crypto and cfd security type.");
             }
 
             symbol = symbol.ToLower();

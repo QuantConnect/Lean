@@ -53,7 +53,7 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
                 var downloader = new CryptoiqDownloader(args[2], scaleFactor);
 
                 // Download the data
-                var symbolObject = Symbol.Create(args[3], SecurityType.Forex, market);
+                var symbolObject = Symbol.Create(args[3], SecurityType.Crypto, market);
                 var data = downloader.Get(symbolObject, Resolution.Tick, startDate, endDate);
 
                 // Save the data

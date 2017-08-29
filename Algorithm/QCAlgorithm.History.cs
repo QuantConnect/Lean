@@ -253,7 +253,7 @@ namespace QuantConnect.Algorithm
             var securityType = symbol.ID.SecurityType;
             if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd || securityType == SecurityType.Crypto)
             {
-                Error("Calling this method on a Forex or CFD security will return an empty result. Please use the generic version with QuoteBar type parameter.");
+                Error("Calling this method on a Forex or CFD or Crypto security will return an empty result. Please use the generic version with QuoteBar type parameter.");
             }
 
             return History(new[] {symbol}, start, Time.RoundDown((resolution ?? security.Resolution).ToTimeSpan()), resolution).Get(symbol).Memoize();
@@ -323,7 +323,7 @@ namespace QuantConnect.Algorithm
             var securityType = symbol.ID.SecurityType;
             if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd || securityType == SecurityType.Crypto)
             {
-                Error("Calling this method on a Forex or CFD security will return an empty result. Please use the generic version with QuoteBar type parameter.");
+                Error("Calling this method on a Forex or CFD or crypto security will return an empty result. Please use the generic version with QuoteBar type parameter.");
             }
 
             return History(new[] {symbol}, span, resolution).Get(symbol).Memoize();
@@ -342,7 +342,7 @@ namespace QuantConnect.Algorithm
             var securityType = symbol.ID.SecurityType;
             if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd || securityType == SecurityType.Crypto)
             {
-                Error("Calling this method on a Forex or CFD security will return an empty result. Please use the generic version with QuoteBar type parameter.");
+                Error("Calling this method on a Forex or CFD or cyrpto security will return an empty result. Please use the generic version with QuoteBar type parameter.");
             }
 
             return History(new[] {symbol}, start, end, resolution).Get(symbol).Memoize();

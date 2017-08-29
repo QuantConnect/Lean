@@ -16,6 +16,7 @@
 using System;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Securities
 {
@@ -76,7 +77,7 @@ namespace QuantConnect.Securities
                 if (security.Type == SecurityType.Forex || security.Type == SecurityType.Crypto)
                 {
                     // model forex fills as currency swaps
-                    var forex = (Forex.Forex) security;
+                    var forex = (IBaseCurrencySymbol) security;
                     security.SettlementModel.ApplyFunds(portfolio, security, fill.UtcTime, forex.BaseCurrencySymbol, fill.FillQuantity);
                 }
                 

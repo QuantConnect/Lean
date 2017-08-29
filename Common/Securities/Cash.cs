@@ -213,6 +213,10 @@ namespace QuantConnect.Securities
                     {
                         security = new Cfd.Cfd(exchangeHours, quoteCash, config, symbolProperties);
                     }
+                    else if (securityType == SecurityType.Crypto)
+                    {
+                        security = new Crypto.Crypto(exchangeHours, quoteCash, config, symbolProperties);
+                    }
                     else
                     {
                         security = new Forex.Forex(exchangeHours, quoteCash, config, symbolProperties);

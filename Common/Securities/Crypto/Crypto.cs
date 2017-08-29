@@ -26,7 +26,7 @@ namespace QuantConnect.Securities.Crypto
     /// Crypto Security Object Implementation for Crypto Assets
     /// </summary>
     /// <seealso cref="Security"/>
-    public class Crypto : Security
+    public class Crypto : Security, IBaseCurrencySymbol
     {
         /// <summary>
         /// Constructor for the Crypto security
