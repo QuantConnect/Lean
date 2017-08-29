@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AbsolutePriceOscillator.cs" />
+    <Compile Include="AccelerationBands.cs" />
     <Compile Include="AccumulationDistribution.cs" />
     <Compile Include="AccumulationDistributionOscillator.cs" />
     <Compile Include="ArnaudLegouxMovingAverage.cs" />

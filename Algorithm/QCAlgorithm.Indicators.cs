@@ -25,6 +25,25 @@ namespace QuantConnect.Algorithm
     public partial class QCAlgorithm
     {
         /// <summary>
+        /// Creates a new Acceleration Bands indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose Acceleration Bands we want.</param>
+        /// <param name="period">The period of the three moving average (middle, upper and lower band).</param>
+        /// <param name="width">A coefficient specifying the distance between the middle band and upper or lower bands.</param>
+        /// <param name="movingAverageType">Type of the moving average.</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar.</param>
+        /// <returns></returns>
+        public AccelerationBands ABANDS(Symbol symbol, int period, decimal width = 4, MovingAverageType movingAverageType = MovingAverageType.Simple,
+            Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, string.Format("ABANDS_{0}_{1}", period, width), resolution);
+            var abands = new AccelerationBands(name, period, width, movingAverageType);
+            RegisterIndicator(symbol, abands, resolution, selector);
+            return abands;
+        }
+
+        /// <summary>
         /// Creates a new AccumulationDistribution indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose AD we want</param>
@@ -78,7 +97,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol whose ADXR we want</param>
         /// <param name="period">The period over which to compute the ADXR</param>
-        /// <param name="resolution">The resolution</param>
+        /// <param name="resolution">The resolution.</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>The AverageDirectionalMovementIndexRating indicator for the requested symbol over the specified period</returns>
         public AverageDirectionalMovementIndexRating ADXR(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
