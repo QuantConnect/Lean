@@ -149,6 +149,10 @@ namespace QuantConnect.Brokerages
             switch (security.Type)
             {
                 case SecurityType.Equity:
+                    if (AccountType == AccountType.Cash)
+                    {
+                        return 1m;
+                    }
                     return 2m;
 
                 case SecurityType.Forex:
