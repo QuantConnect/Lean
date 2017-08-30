@@ -1,11 +1,11 @@
 #
-#	LEAN Foundation Docker Container 20170623
+#	LEAN Foundation Docker Container 20170830
 #	Cross platform deployment for multiple brokerages	
 #	Intended to be used in conjunction with DockerfileLeanAlgorithm. This is just the foundation common OS+Dependencies required.
 #
 
 # Use base system for cleaning up wayward processes
-FROM phusion/baseimage:0.9.19
+FROM phusion/baseimage:0.9.22
 
 MAINTAINER QuantConnect <contact@quantconnect.com>
 
@@ -30,7 +30,7 @@ RUN \
   apt-get install -y oracle-java8-installer && \
   rm -rf /var/lib/apt/lists/* && \
   rm -rf /var/cache/oracle-jdk8-installer
-  
+ 
 # Install IB Gateway: Installs to ~/Jts
 RUN \
 	wget http://data.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64-v960.2a.sh && \
@@ -56,7 +56,8 @@ RUN echo "deb http://download.mono-project.com/repo/debian wheezy/snapshots/4.6.
   && apt-get install -y fsharp && rm -rf /var/lib/apt/lists/* /tmp/*
 
 # Install Python.NET
-RUN nuget install QuantConnect.pythonnet -Version 1.0.4.4 \
+# Have to add env TZ=UTC. See https://github.com/dotnet/coreclr/issues/602
+RUN env TZ=UTC nuget install QuantConnect.pythonnet -Version 1.0.4.4 \
     && cp QuantConnect.pythonnet.1.0.4.4/lib/Python.Runtime.dll /usr/lib
 	
 RUN ln -s /usr/lib/x86_64-linux-gnu/libpython2.7.so /usr/lib/libpython27.so
