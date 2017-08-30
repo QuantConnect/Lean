@@ -34,6 +34,8 @@ namespace QuantConnect.Tests.Common.Data
         [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.Quote)]
         [TestCase(SecurityType.Cfd, Resolution.Minute, typeof(QuoteBar), TickType.Quote)]
         [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.Quote)]
+        [TestCase(SecurityType.Crypto, Resolution.Minute, typeof(QuoteBar), TickType.Quote)]
+        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Quote)]
         public void GetsSubscriptionDataTypesSingle(SecurityType securityType, Resolution resolution, Type expectedDataType, TickType expectedTickType)
         {
             var types = GetSubscriptionDataTypes(securityType, resolution);

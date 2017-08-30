@@ -30,6 +30,7 @@ namespace QuantConnect.Tests
 
         public static readonly Symbol USDJPY = CreateForexSymbol("USDJPY");
         public static readonly Symbol EURUSD = CreateForexSymbol("EURUSD");
+        public static readonly Symbol BTCUSD = CreateCryptoSymbol("BTCUSD");
         public static readonly Symbol EURGBP = CreateForexSymbol("EURGBP");
         public static readonly Symbol GBPUSD = CreateForexSymbol("GBPUSD");
         
@@ -64,5 +65,11 @@ namespace QuantConnect.Tests
         {
             return Symbol.CreateOption(symbol, Market.USA, OptionStyle.American, right, strike, expiry);
         }
+
+        private static Symbol CreateCryptoSymbol(string symbol)
+        {
+            return Symbol.Create(symbol, SecurityType.Crypto, Market.Bitfinex);
+        }
+
     }
 }

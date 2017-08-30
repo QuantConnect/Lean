@@ -119,23 +119,25 @@ namespace QuantConnect.Tests.Common.Securities
             manager.Remove(security.Symbol);
         }
 
-        [Test]
-        public void SecurityManagerCanCreate_Forex_WithCorrectSubscriptions()
+        [TestCase("EURUSD", SecurityType.Forex, Market.FXCM)]
+        [TestCase("EURUSD", SecurityType.Forex, Market.Oanda)]
+        [TestCase("BTCUSD", SecurityType.Crypto, Market.Bitfinex)]
+        public void SecurityManagerCanCreate_ForexOrCrypto_WithCorrectSubscriptions(string ticker, SecurityType type, string market)
         {
-            var forexSymbol = Symbol.Create("EURUSD", SecurityType.Forex, Market.FXCM);
-            var forexMarketHoursDbEntry = _marketHoursDatabase.GetEntry(forexSymbol.ID.Market, forexSymbol, SecurityType.Forex);
-            var forexDefaultQuoteCurrency = forexSymbol.Value.Substring(3);
+            var symbol = Symbol.Create(ticker, type, market);
+            var marketHoursDbEntry = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, type);
+            var defaultQuoteCurrency = symbol.Value.Substring(3);
 
-            var forexSymbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(forexSymbol.ID.Market, forexSymbol, forexSymbol.ID.SecurityType, forexDefaultQuoteCurrency);
+            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, defaultQuoteCurrency);
 
-            var forex = SecurityManager.CreateSecurity(typeof(QuoteBar),
+            var actual = SecurityManager.CreateSecurity(typeof(QuoteBar),
                 _securityPortfolioManager,
                 _subscriptionManager,
-                forexMarketHoursDbEntry.ExchangeHours,
-                forexMarketHoursDbEntry.DataTimeZone,
-                forexSymbolProperties,
+                marketHoursDbEntry.ExchangeHours,
+                marketHoursDbEntry.DataTimeZone,
+                symbolProperties,
                 _securityInitializer,
-                forexSymbol,
+                symbol,
                 Resolution.Second,
                 false,
                 1.0m,
@@ -143,9 +145,9 @@ namespace QuantConnect.Tests.Common.Securities
                 false,
                 false,
                 false);
-            Assert.AreEqual(forex.Subscriptions.Count(), 1);
-            Assert.AreEqual(forex.Subscriptions.First().Type, typeof(QuoteBar));
-            Assert.AreEqual(forex.Subscriptions.First().TickType, TickType.Quote);
+            Assert.AreEqual(actual.Subscriptions.Count(), 1);
+            Assert.AreEqual(actual.Subscriptions.First().Type, typeof(QuoteBar));
+            Assert.AreEqual(actual.Subscriptions.First().TickType, TickType.Quote);
         }
 
         [Test]

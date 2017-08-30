@@ -548,6 +548,30 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void CryptoFillUpdatesCashCorrectly()
+        {
+            var securities = new SecurityManager(TimeKeeper);
+            var transactions = new SecurityTransactionManager(securities);
+            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            portfolio.SetCash(10000);
+            portfolio.CashBook.Add("BTC", 0, 4000.01m);
+
+            securities.Add(Symbols.BTCUSD, new QuantConnect.Securities.Crypto.Crypto(SecurityExchangeHours, portfolio.CashBook["USD"], CreateTradeBarDataConfig(SecurityType.Crypto, 
+                Symbols.BTCUSD), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
+            var security = securities[Symbols.BTCUSD];
+            Assert.AreEqual(0, security.Holdings.Quantity);
+            Assert.AreEqual(10000, portfolio.Cash);
+
+            var orderFee = security.FeeModel.GetOrderFee(security, new MarketOrder(Symbols.BTCUSD, 2, DateTime.MinValue));
+            var fill = new OrderEvent(1, Symbols.BTCUSD, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Buy, 4000.01m, 2, orderFee);
+            portfolio.ProcessFill(fill);
+            Assert.AreEqual(2, security.Holdings.Quantity);
+            Assert.AreEqual(10000, portfolio.Cash);
+            Assert.AreEqual(2, portfolio.CashBook["BTC"].Amount);
+            Assert.AreEqual(1999.98, portfolio.CashBook["USD"].Amount);
+        }
+
+        [Test]
         public void EquitySellAppliesSettlementCorrectly()
         {
             var securityExchangeHours = SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours();
@@ -1496,6 +1520,8 @@ namespace QuantConnect.Tests.Common.Securities
             if (type == SecurityType.Forex)
                 return new SubscriptionDataConfig(typeof (TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true);
             if (type == SecurityType.Future)
+                return new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true);
+            if (type == SecurityType.Crypto)
                 return new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true);
             throw new NotImplementedException(type.ToString());
         }
