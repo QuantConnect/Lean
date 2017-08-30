@@ -236,4 +236,4 @@ oanda,USDTRY,forex,USD/TRY,TRY,1,0.00001,1
 oanda,USDZAR,forex,USD/ZAR,ZAR,1,0.00001,1
 oanda,ZARJPY,forex,ZAR/JPY,JPY,1,0.001,1
 
-bitfinex,BTCUSD,forex,BTCUSD,USD,1,0.01,0.01
+bitfinex,BTCUSD,crypto,BTCUSD,USD,1,0.01,0.01

@@ -945,7 +945,7 @@ namespace QuantConnect.Algorithm
         public void SetBenchmark(SecurityType securityType, string symbol)
         {
             var market = securityType == SecurityType.Forex ? Market.FXCM : Market.USA;
-            market = securityType == SecurityType.Crypto ? Market.GDAX : market;
+            market = securityType == SecurityType.Crypto ? Market.Bitfinex : market;
             _benchmarkSymbol = QuantConnect.Symbol.Create(symbol, securityType, market);
         }
 

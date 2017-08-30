@@ -110,7 +110,7 @@ namespace QuantConnect.Orders
             //todo: can't safely derive market from security type
             if (securityType == SecurityType.Forex) market = Market.FXCM;
 
-            if (securityType == SecurityType.Crypto) market = Market.GDAX;
+            if (securityType == SecurityType.Crypto) market = Market.Bitfinex;
 
             if (jObject.SelectTokens("Symbol.ID").Any())
             {

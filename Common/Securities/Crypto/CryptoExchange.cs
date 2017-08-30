@@ -21,20 +21,13 @@ namespace QuantConnect.Securities.Crypto
     /// <seealso cref="SecurityExchange"/>
     public class CryptoExchange : SecurityExchange
     {
-        /// <summary>
-        /// Number of trading days per year for this security, used for performance statistics.
-        /// </summary>
-        public override int TradingDaysPerYear
-        {
-            get { return 365; }
-        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CryptoExchange"/> class using market hours
-        /// derived from the market-hours-database for the FXCM Crypto market
+        /// derived from the market-hours-database for the Crypto market
         /// </summary>
-        public CryptoExchange()
-            : base(MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.GDAX, null, SecurityType.Crypto, TimeZones.Utc))
+        public CryptoExchange(string market)
+            : base(MarketHoursDatabase.FromDataFolder().GetExchangeHours(market, null, SecurityType.Crypto, TimeZones.Utc))
         {
         }
 

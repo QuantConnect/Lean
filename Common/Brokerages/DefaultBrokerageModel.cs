@@ -44,7 +44,7 @@ namespace QuantConnect.Brokerages
             {SecurityType.Future, Market.USA},
             {SecurityType.Forex, Market.FXCM},
             {SecurityType.Cfd, Market.FXCM},
-            {SecurityType.Crypto, Market.GDAX}
+            {SecurityType.Crypto, Market.Bitfinex}
         }.ToReadOnlyDictionary();
 
         /// <summary>

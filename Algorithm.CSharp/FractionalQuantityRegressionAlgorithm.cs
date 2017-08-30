@@ -36,7 +36,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
 
             SetTimeZone(NodaTime.DateTimeZone.Utc);
-            var security = AddSecurity(SecurityType.Forex, "BTCUSD", Resolution.Daily, Market.Bitfinex, false, 3.3m, true);
+            var security = AddSecurity(SecurityType.Crypto, "BTCUSD", Resolution.Daily, Market.Bitfinex, false, 3.3m, true);
             var con = new QuoteBarConsolidator(1);
             SubscriptionManager.AddConsolidator("BTCUSD", con);
             con.DataConsolidated += con_DataConsolidated;
