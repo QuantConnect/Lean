@@ -98,16 +98,18 @@ namespace QuantConnect.Indicators
                 Value = input.Close
             });
 
+            var coeff = _width * (input.High - input.Low) / (input.High + input.Low);
+
             LowerBand.Update(new IndicatorDataPoint
             {
                 Time = input.Time,
-                Value = input.Low * (1 - _width * (input.High - input.Low) / (input.High + input.Low))
+                Value = input.Low * (1 - coeff)
             });
 
             UpperBand.Update(new IndicatorDataPoint
             {
                 Time = input.Time,
-                Value = input.High * (1 + _width * (input.High - input.Low) / (input.High + input.Low))
+                Value = input.High * (1 + coeff)
             });
 
             return MiddleBand;
