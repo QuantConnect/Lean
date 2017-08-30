@@ -53,7 +53,7 @@ namespace QuantConnect.Algorithm
         /// <remarks>Generic type T must implement base data</remarks>
         public void AddData(PyObject type, string symbol, Resolution resolution = Resolution.Minute)
         {
-            AddData(type, symbol, Resolution.Minute, TimeZones.NewYork, false, 1m);
+            AddData(type, symbol, resolution, TimeZones.NewYork, false, 1m);
         }
 
 
