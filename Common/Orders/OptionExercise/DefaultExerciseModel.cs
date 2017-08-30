@@ -52,7 +52,7 @@ namespace QuantConnect.Orders.OptionExercise
                             OrderStatus.Filled,
                             exerciseDirection,
                             exercisePrice,
-                            exerciseQuantity * option.ContractUnitOfTrade,
+                            exerciseQuantity,
                             0.0m,
                             "Option Exercise/Assignment");
 
