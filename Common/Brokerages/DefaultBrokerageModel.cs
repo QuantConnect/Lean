@@ -146,13 +146,14 @@ namespace QuantConnect.Brokerages
         /// <returns>The leverage for the specified security</returns>
         public decimal GetLeverage(Security security)
         {
+            if (AccountType == AccountType.Cash)
+            {
+                return 1m;
+            }
+                    
             switch (security.Type)
             {
                 case SecurityType.Equity:
-                    if (AccountType == AccountType.Cash)
-                    {
-                        return 1m;
-                    }
                     return 2m;
 
                 case SecurityType.Forex:
