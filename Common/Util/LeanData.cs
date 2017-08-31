@@ -79,19 +79,22 @@ namespace QuantConnect.Util
                     switch (resolution)
                     {
                         case Resolution.Tick:
-                            var tick = (Tick) data;
+                            var tick = data as Tick;
+                            if (tick == null) throw new NullReferenceException("tick");
                             return ToCsv(milliseconds, tick.BidPrice, tick.AskPrice);
 
                         case Resolution.Second:
                         case Resolution.Minute:
-                            var bar = (QuoteBar) data;
+                            var bar = data as QuoteBar;
+                            if (bar == null) throw new NullReferenceException("bar");
                             return ToCsv(milliseconds,
                                 ToNonScaledCsv(bar.Bid), bar.LastBidSize,
                                 ToNonScaledCsv(bar.Ask), bar.LastAskSize);
 
                         case Resolution.Hour:
                         case Resolution.Daily:
-                            var bigBar = (QuoteBar) data;
+                            var bigBar = data as QuoteBar;
+                            if (bigBar == null) throw new NullReferenceException("big bar");
                             return ToCsv(longTime,
                                 ToNonScaledCsv(bigBar.Bid), bigBar.LastBidSize,
                                 ToNonScaledCsv(bigBar.Ask), bigBar.LastAskSize);
@@ -238,6 +241,9 @@ namespace QuantConnect.Util
                             throw new ArgumentOutOfRangeException("resolution", resolution, null);
                     }
                     break;
+
+                default:
+                    throw new ArgumentOutOfRangeException("securityType", securityType, null);
             }
 
             throw new NotImplementedException("LeanData.GenerateLine has not yet been implemented for security type: " + securityType + " at resolution: " + resolution);
