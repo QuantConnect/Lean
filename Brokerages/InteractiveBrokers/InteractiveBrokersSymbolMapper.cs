@@ -28,7 +28,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
     {
         // we have a special treatment of futures, because IB renamed several exchange tickers (like GBP instead of 6B). We fix this: 
         // We map those tickers back to their original names using the map below
-        private Dictionary<string, string> _ibNameMap = new Dictionary<string, string>();
+        private readonly Dictionary<string, string> _ibNameMap = new Dictionary<string, string>();
 
         /// <summary>
         /// Constructs InteractiveBrokersSymbolMapper. Default parameters are used.
@@ -77,13 +77,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             if (symbol.ID.SecurityType == SecurityType.Forex && symbol.Value.Length != 6)
                 throw new ArgumentException("Forex symbol length must be equal to 6: " + symbol.Value);
 
-            if (symbol.ID.SecurityType == SecurityType.Option)
+            switch (symbol.ID.SecurityType)
             {
-                return symbol.Underlying.Value;
-            }
-            if (symbol.ID.SecurityType == SecurityType.Future)
-            {
-                return GetBrokerageRootSymbol(symbol.ID.Symbol);
+                case SecurityType.Option:
+                    return symbol.Underlying.Value;
+
+                case SecurityType.Future:
+                    return GetBrokerageRootSymbol(symbol.ID.Symbol);
+
+                case SecurityType.Equity:
+                    return symbol.Value.Replace(".", " ");
             }
 
             return symbol.Value;
@@ -112,20 +115,24 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             try
             {
-                if (securityType == SecurityType.Future)
+                switch (securityType)
                 {
-                    return Symbol.CreateFuture(GetLeanRootSymbol(brokerageSymbol), market, expirationDate);
+                    case SecurityType.Future:
+                        return Symbol.CreateFuture(GetLeanRootSymbol(brokerageSymbol), market, expirationDate);
+
+                    case SecurityType.Option:
+                        return Symbol.CreateOption(brokerageSymbol, market, OptionStyle.American, optionRight, strike, expirationDate);
+
+                    case SecurityType.Equity:
+                        brokerageSymbol = brokerageSymbol.Replace(" ", ".");
+                        break;
                 }
-                else if (securityType == SecurityType.Option)
-                {
-                    return Symbol.CreateOption(brokerageSymbol, market, OptionStyle.American, optionRight, strike, expirationDate);
-                }
-                
+
                 return Symbol.Create(brokerageSymbol, securityType, market);
             }
             catch (Exception)
             {
-                throw new ArgumentException(string.Format("Invalid symbol: {0}, security type: {1}, market: {2}.", brokerageSymbol, securityType, market));
+                throw new ArgumentException($"Invalid symbol: {brokerageSymbol}, security type: {securityType}, market: {market}.");
             }
         }
 
