@@ -131,7 +131,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             _unit.BidPrices[_symbol].TryAdd(orderId, 122m);
 
             _unit.OnMessage(_unit, GDAXTestsHelpers.GetArgs(json));
-            var actual = _unit.Ticks.First();
+            var actual = _unit.Ticks.Last();
 
             Assert.AreEqual(123.45m, side == "buy" ? actual.BidPrice : actual.AskPrice);
             var mid = (_unit.AskPrices[_symbol].Min(a => a.Value) + _unit.BidPrices[_symbol].Max(b => b.Value)) / 2m;
@@ -195,7 +195,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         {
             var response = new
             {
-                order_id = _brokerId,
+                id = _brokerId,
                 fill_fees = "0.11"
             };
             SetupResponse(JsonConvert.SerializeObject(response), httpStatus);
