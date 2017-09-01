@@ -942,10 +942,13 @@ namespace QuantConnect.Algorithm
         /// <remarks>
         /// Must use symbol that is available to the trade engine in your data store(not strictly enforced)
         /// </remarks>
+        [Obsolete("Symbol implicit operator to string is provided for algorithm use only.")]
         public void SetBenchmark(SecurityType securityType, string symbol)
         {
-            var market = securityType == SecurityType.Forex ? Market.FXCM : Market.USA;
-            market = securityType == SecurityType.Crypto ? Market.Bitfinex : market;
+            string market = Market.USA;
+
+            this.BrokerageModel.DefaultMarkets.TryGetValue(securityType, out market);
+
             _benchmarkSymbol = QuantConnect.Symbol.Create(symbol, securityType, market);
         }
 
