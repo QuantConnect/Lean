@@ -266,7 +266,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             algo.SetCash(100000);
 
             // Sets the Security
-            var security = algo.AddSecurity(SecurityType.Forex, "BTCUSD", Resolution.Hour, Market.Bitfinex, false, 3.3m, true);
+            var security = algo.AddSecurity(SecurityType.Forex, "BTCUSD", Resolution.Hour, Market.GDAX, false, 3.3m, true);
 
             //Initializes the transaction handler
             var transactionHandler = new BrokerageTransactionHandler();
@@ -288,7 +288,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             algo.SetCash(100000);
 
             // Sets the Security
-            var security = algo.AddSecurity(SecurityType.Forex, "BTCUSD", Resolution.Hour, Market.Bitfinex, false, 3.3m, true);
+            var security = algo.AddSecurity(SecurityType.Forex, "BTCUSD", Resolution.Hour, Market.GDAX, false, 3.3m, true);
 
             //Initializes the transaction handler
             var transactionHandler = new BrokerageTransactionHandler();
@@ -310,7 +310,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             algo.SetCash(100000);
 
             // Sets the Security
-            var security = algo.AddSecurity(SecurityType.Forex, "BTCUSD", Resolution.Hour, Market.Bitfinex, false, 3.3m, true);
+            var security = algo.AddSecurity(SecurityType.Forex, "BTCUSD", Resolution.Hour, Market.GDAX, false, 3.3m, true);
 
             //Initializes the transaction handler
             var transactionHandler = new BrokerageTransactionHandler();

@@ -44,7 +44,7 @@ namespace QuantConnect.Brokerages.GDAX
         private List<Matched> _messages = new List<Matched>();
 
         /// <summary>
-        /// Creates instance of BitfinexFill
+        /// Creates instance of GDAXFill
         /// </summary>
         /// <param name="order"></param>
         public GDAXFill(Orders.Order order)

@@ -59,7 +59,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Transaction and submit/execution rules will use gdax models
         /// </summary>
-        GDAX
+        GDAX = 12
 
     }
 }

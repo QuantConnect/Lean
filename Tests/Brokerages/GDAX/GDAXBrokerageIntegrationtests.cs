@@ -13,10 +13,10 @@ using System.Reflection;
 using Moq;
 using QuantConnect.Brokerages;
 
-namespace QuantConnect.Tests.Brokerages.Bitfinex
+namespace QuantConnect.Tests.Brokerages.GDAX
 {
     [TestFixture, Ignore("This test requires a configured and active account")]
-    public class BitfinexBrokerageTests : BrokerageTests
+    public class GDAXBrokerageIntegrationTests : BrokerageTests
     {
 
         #region Properties

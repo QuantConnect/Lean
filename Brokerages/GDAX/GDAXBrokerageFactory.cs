@@ -23,15 +23,15 @@ namespace QuantConnect.Brokerages.GDAX
 {
 
     /// <summary>
-    /// Factory method to create Bitfinex Websockets brokerage
+    /// Factory method to create GDAX Websockets brokerage
     /// </summary>
-    public class BitfinexBrokerageFactory : BrokerageFactory
+    public class GDAXBrokerageFactory : BrokerageFactory
     {
 
         /// <summary>
         /// Factory constructor
         /// </summary>
-        public BitfinexBrokerageFactory() : base(typeof(GDAXBrokerage))
+        public GDAXBrokerageFactory() : base(typeof(GDAXBrokerage))
         {
         }
 

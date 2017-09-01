@@ -80,13 +80,13 @@ namespace QuantConnect.Brokerages.GDAX
                         CachedOrderIDs.TryAdd(order.Id, order);
                     }
                 }
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Bitfinex Order Event") { Status = OrderStatus.Submitted, OrderFee = raw.fill_fees });
-                Log.Trace("BitfinexBrokerage.PlaceOrder(): Order completed successfully orderid:" + order.Id.ToString());
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Submitted, OrderFee = raw.fill_fees });
+                Log.Trace("GDAXBrokerage.PlaceOrder(): Order completed successfully orderid:" + order.Id.ToString());
                 return true;
             }
 
-            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Bitfinex Order Event") { Status = OrderStatus.Invalid });
-            Log.Trace("BitfinexBrokerage.PlaceOrder(): Order failed Order Id: " + order.Id + " timestamp:" + order.Time + " quantity: " + order.Quantity.ToString()
+            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Invalid });
+            Log.Trace("GDAXBrokerage.PlaceOrder(): Order failed Order Id: " + order.Id + " timestamp:" + order.Time + " quantity: " + order.Quantity.ToString()
                 + " content:" + response.Content);
             return false;
 
@@ -165,7 +165,7 @@ namespace QuantConnect.Brokerages.GDAX
                         }
                         else
                         {
-                            Log.Error("GDAXBrokerage.GetOpenBitfinexOrders(): Unsupported order type returned from brokerage" + item.Type);
+                            Log.Error("GDAXBrokerage.GetOpenOrders(): Unsupported order type returned from brokerage" + item.Type);
                             continue;
                         }
 

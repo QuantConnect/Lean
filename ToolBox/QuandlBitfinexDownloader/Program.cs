@@ -41,7 +41,7 @@ namespace QuantConnect.ToolBox.QuandlBitfinexDownloader
 
                 // Create an instance of the downloader
                 const string market = Market.Bitfinex;
-                var downloader = new QuandlBitfinexDownloader(args[1], scaleFactor);
+                var downloader = new QuandlBitfinexDownloader(args[1]);
 
                 // Download the data
                 var symbol = Symbol.Create("BTCUSD", SecurityType.Forex, market);
