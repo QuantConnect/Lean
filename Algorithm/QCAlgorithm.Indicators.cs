@@ -644,6 +644,25 @@ namespace QuantConnect.Algorithm
             return mfi;
         }
 
+
+        /// <summary>
+        /// Creates a new Mass Index indicator. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose Mass Index we want.</param>
+        /// <param name="emaPeriod">The period used by both EMA.</param>
+        /// <param name="sumPeriod">The sum period.</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The Mass Index indicator for the requested symbol over the specified period</returns>
+        public MassIndex MI(Symbol symbol, int emaPeriod = 9, int sumPeriod = 25, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, "MII" + emaPeriod + sumPeriod, resolution);
+            var mi = new MassIndex(name, emaPeriod, sumPeriod);
+            RegisterIndicator(symbol, mi, resolution, selector);
+            return mi;
+        }
+
         /// <summary>
         /// Creates a new MidPoint indicator.
         /// </summary>
