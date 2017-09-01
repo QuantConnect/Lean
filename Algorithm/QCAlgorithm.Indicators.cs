@@ -655,7 +655,7 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The resolution.</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>The Mass Index indicator for the requested symbol over the specified period</returns>
-        public MassIndex MI(Symbol symbol, int emaPeriod = 9, int sumPeriod = 25, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        public MassIndex MASS(Symbol symbol, int emaPeriod = 9, int sumPeriod = 25, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
         {
             var name = CreateIndicatorName(symbol, "MII" + emaPeriod + sumPeriod, resolution);
             var mi = new MassIndex(name, emaPeriod, sumPeriod);
