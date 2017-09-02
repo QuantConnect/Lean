@@ -12,12 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+using SuperSocket.ClientEngine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
-using WebSocketSharp;
+using WebSocket4Net;
 
 namespace QuantConnect.Brokerages
 {
@@ -29,6 +31,7 @@ namespace QuantConnect.Brokerages
     {
 
         WebSocket wrapped;
+        private string _url;
 
         /// <summary>
         /// Wraps constructor
@@ -36,8 +39,12 @@ namespace QuantConnect.Brokerages
         /// <param name="url"></param>
         public void Initialize(string url)
         {
+            _url = url;
             wrapped = new WebSocket(url);
-            wrapped.EmitOnPing = true;
+#if DEBUG
+            wrapped.AllowUnstrustedCertificate = true;
+#endif
+            wrapped.EnableAutoSendPing = true;
         }
 
         /// <summary>
@@ -54,7 +61,10 @@ namespace QuantConnect.Brokerages
         /// </summary>
         public void Connect()
         {
-            wrapped.Connect();
+            if (!this.IsOpen)
+            {
+                wrapped.Open();
+            }
         }
 
         /// <summary>
@@ -68,9 +78,17 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Wraps IsAlive
         /// </summary>
-        public bool IsAlive
+        public bool IsOpen
         {
-            get { return wrapped.IsAlive; }
+            get { return wrapped.State == WebSocketState.Open; }
+        }
+
+        /// <summary>
+        /// Wraps IsAlive
+        /// </summary>
+        public bool IsConnecting
+        {
+            get { return wrapped.State == WebSocketState.Connecting; }
         }
 
         /// <summary>
@@ -78,29 +96,21 @@ namespace QuantConnect.Brokerages
         /// </summary>
         public WebSocket Instance { get { return wrapped; } }
 
-		/// <summary>
+        /// <summary>
         /// Wraps Url
         /// </summary>
         public Uri Url
         {
-            get { return wrapped.Url; }
-        }
-
-        /// <summary>
-        /// Wraps read state property
-        /// </summary>
-        public WebSocketState ReadyState
-        {
-            get { return wrapped.ReadyState; }
+            get { return new Uri(_url); }
         }
 
         /// <summary>
         /// Wraps message event
         /// </summary>
-        public event EventHandler<MessageEventArgs> OnMessage
+        public event EventHandler<MessageReceivedEventArgs> OnMessage
         {
-            add { wrapped.OnMessage += value; }
-            remove { wrapped.OnMessage -= value; }
+            add { wrapped.MessageReceived += value; }
+            remove { wrapped.MessageReceived -= value; }
         }
 
         /// <summary>
@@ -108,8 +118,8 @@ namespace QuantConnect.Brokerages
         /// </summary>
         public event EventHandler<ErrorEventArgs> OnError
         {
-            add { wrapped.OnError += value; }
-            remove { wrapped.OnError -= value; }
+            add { wrapped.Error += value; }
+            remove { wrapped.Error -= value; }
         }
 
         /// <summary>
@@ -117,8 +127,8 @@ namespace QuantConnect.Brokerages
         /// </summary>
         public event EventHandler OnOpen
         {
-            add { wrapped.OnOpen += value; }
-            remove { wrapped.OnOpen -= value; }
+            add { wrapped.Opened += value; }
+            remove { wrapped.Opened -= value; }
         }
 
     }

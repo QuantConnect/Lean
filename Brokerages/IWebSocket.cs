@@ -12,12 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+using SuperSocket.ClientEngine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using WebSocketSharp;
+using WebSocket4Net;
 
 namespace QuantConnect.Brokerages
 {
@@ -51,9 +52,14 @@ namespace QuantConnect.Brokerages
         void Close();
 
         /// <summary>
-        /// Wraps IsAlive
+        /// Wraps IsOpen
         /// </summary>
-        bool IsAlive { get; }
+        bool IsOpen { get; }
+
+        /// <summary>
+        /// Wraps connection state
+        /// </summary>
+        bool IsConnecting { get; }
 
         /// <summary>
         /// Returns wrapped instance
@@ -66,14 +72,9 @@ namespace QuantConnect.Brokerages
         Uri Url { get; }
 
         /// <summary>
-        /// Ready state property
-        /// </summary>
-        WebSocketState ReadyState { get; }
-
-        /// <summary>
         /// on message event
         /// </summary>
-        event EventHandler<MessageEventArgs> OnMessage;
+        event EventHandler<MessageReceivedEventArgs> OnMessage;
 
         /// <summary>
         /// On error event

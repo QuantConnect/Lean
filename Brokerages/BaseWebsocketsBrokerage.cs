@@ -3,6 +3,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using RestSharp;
+using SuperSocket.ClientEngine;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -10,7 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using WebSocketSharp;
+using WebSocket4Net;
 
 namespace QuantConnect.Brokerages
 {
@@ -64,6 +65,7 @@ namespace QuantConnect.Brokerages
         private CancellationTokenSource _cancellationTokenSource;
         private readonly object _lockerConnectionMonitor = new object();
         private volatile bool _connectionLost;
+        private const int _connectionTimeout = 30000;
         #endregion
 
         /// <summary>
@@ -91,7 +93,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public abstract void OnMessage(object sender, MessageEventArgs e);
+        public abstract void OnMessage(object sender, MessageReceivedEventArgs e);
 
         /// <summary>
         /// Creates wss connection, monitors for disconnection and re-connects when necessary
@@ -102,6 +104,8 @@ namespace QuantConnect.Brokerages
             WebSocket.OnError += OnError;
 
             WebSocket.Connect();
+            Wait(_connectionTimeout, () => WebSocket.IsOpen);
+
             _cancellationTokenSource = new CancellationTokenSource();
             _connectionMonitorThread = new Thread(() =>
             {
@@ -187,7 +191,7 @@ namespace QuantConnect.Brokerages
         /// <param name="e"></param>
         public void OnError(object sender, ErrorEventArgs e)
         {
-            Log.Debug(e.Message);
+            Log.Debug(e.Exception.ToString());
         }
 
         /// <summary>
@@ -204,12 +208,12 @@ namespace QuantConnect.Brokerages
                 if (IsConnected)
                 {
                     WebSocket.Close();
-                    //todo: await connnection closure
-                    Thread.Sleep(3000);
+                    Wait(_connectionTimeout, () => !WebSocket.IsOpen);
                 }
                 if (!IsConnected)
                 {
                     WebSocket.Connect();
+                    Wait(_connectionTimeout, () => WebSocket.IsOpen);
                 }
             }
             finally
@@ -217,6 +221,20 @@ namespace QuantConnect.Brokerages
                 WebSocket.OnError += this.OnError;
                 this.Subscribe(null, subscribed);
             }
+        }
+
+        private void Wait(int timeout, Func<bool> state)
+        {
+            var StartTime = Environment.TickCount;
+            do
+            {
+                if (Environment.TickCount > StartTime + timeout)
+                {
+                    throw new Exception("Websockets connection timeout.");
+                }
+                Thread.Sleep(1);
+            }
+            while (!state());
         }
 
         /// <summary>

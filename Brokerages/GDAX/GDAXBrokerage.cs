@@ -25,7 +25,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using WebSocketSharp;
+using WebSocket4Net;
 
 namespace QuantConnect.Brokerages.GDAX
 {
@@ -38,7 +38,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         public override bool IsConnected
         {
-            get { return WebSocket.ReadyState == WebSocketState.Connecting || WebSocket.ReadyState == WebSocketState.Open; }
+            get { return WebSocket.IsOpen; }
         }
 
         /// <summary>
@@ -79,6 +79,7 @@ namespace QuantConnect.Brokerages.GDAX
                         order.BrokerId.Add(brokerId);
                         CachedOrderIDs.TryAdd(order.Id, order);
                     }
+                    FillSplit.TryAdd(order.Id, new GDAXFill(order));
                 }
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Submitted, OrderFee = raw.fill_fees });
                 Log.Trace("GDAXBrokerage.PlaceOrder(): Order completed successfully orderid:" + order.Id.ToString());

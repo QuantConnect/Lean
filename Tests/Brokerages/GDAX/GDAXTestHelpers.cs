@@ -2,14 +2,9 @@ using QuantConnect.Brokerages.GDAX;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using WebSocketSharp;
+using WebSocket4Net;
 
 namespace QuantConnect.Tests.Brokerages.GDAX
 {
@@ -35,16 +30,11 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             unit.FillSplit.TryAdd(id, new GDAXFill(order));
         }
 
-        [DebuggerStepThrough]
-        public static MessageEventArgs GetArgs(string json)
+        public static MessageReceivedEventArgs GetArgs(string json)
         {
             BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
             System.Globalization.CultureInfo culture = null;
-            MessageEventArgs args = (MessageEventArgs)Activator.CreateInstance(typeof(MessageEventArgs), flags, null, new object[]
-            {
-                Opcode.Text,
-                System.Text.Encoding.UTF8.GetBytes(json)
-            }, culture);
+            MessageReceivedEventArgs args = new MessageReceivedEventArgs(json);
 
             return args;
         }

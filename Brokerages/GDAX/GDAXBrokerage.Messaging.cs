@@ -25,12 +25,12 @@ using System.Configuration;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using WebSocketSharp;
 using QuantConnect.Securities;
 using QuantConnect.Data;
 using QuantConnect.Packets;
 using System.Threading;
 using RestSharp;
+using WebSocket4Net;
 
 namespace QuantConnect.Brokerages.GDAX
 {
@@ -55,6 +55,7 @@ namespace QuantConnect.Brokerages.GDAX
         public ConcurrentDictionary<long, GDAXFill> FillSplit { get; set; }
         private string _passPhrase;
         private string _wssUrl;
+        private bool _enableTickPolling;
         #endregion
 
         /// <summary>
@@ -81,35 +82,36 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public override void OnMessage(object sender, MessageEventArgs e)
+        public override void OnMessage(object sender, MessageReceivedEventArgs e)
         {
             try
             {
-                var raw = JsonConvert.DeserializeObject<Messages.BaseMessage>(e.Data, JsonSettings);
+                var raw = JsonConvert.DeserializeObject<Messages.BaseMessage>(e.Message, JsonSettings);
+
+                LastHeartbeatUtcTime = DateTime.UtcNow;
 
                 if (raw.Type == "heartbeat")
                 {
-                    LastHeartbeatUtcTime = DateTime.UtcNow;
                     return;
                 }
                 else if (raw.Type == "error")
                 {
-                    var error = JsonConvert.DeserializeObject<Messages.Error>(e.Data, JsonSettings);
+                    var error = JsonConvert.DeserializeObject<Messages.Error>(e.Message, JsonSettings);
                     Log.Error("GDAXBrokerage.OnMessage(): " + error.Message);
                 }
                 else if (raw.Type == "done")
                 {
-                    OrderDone(e.Data);
+                    OrderDone(e.Message);
                     return;
                 }
                 else if (raw.Type == "match")
                 {
-                    OrderMatch(e.Data);
+                    OrderMatch(e.Message);
                     return;
                 }
                 else if (raw.Type == "open" || raw.Type == "change")
                 {
-                    OrderOpenOrChange(e.Data);
+                    OrderOpenOrChange(e.Message);
                     return;
                 }
                 else if (raw.Type == "received")
@@ -118,11 +120,11 @@ namespace QuantConnect.Brokerages.GDAX
                 }
 
 
-                Log.Trace("GDAXWebsocketsBrokerage.OnMessage(): " + e.Data);
+                Log.Trace("GDAXWebsocketsBrokerage.OnMessage(): " + e.Message);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, string.Format("Parsing wss message failed. Data: {0}", e.Data));
+                Log.Error(ex, string.Format("Parsing wss message failed. Data: {0}", e.Message));
                 throw;
             }
         }
@@ -131,6 +133,7 @@ namespace QuantConnect.Brokerages.GDAX
         {
             var message = JsonConvert.DeserializeObject<Messages.Matched>(data, JsonSettings);
             var cached = CachedOrderIDs.Where(o => o.Value.BrokerId.Contains(message.MakerOrderId) || o.Value.BrokerId.Contains(message.TakerOrderId));
+            //todo: update volume quotes
 
             if (!cached.Any())
             {
@@ -142,7 +145,8 @@ namespace QuantConnect.Brokerages.GDAX
 
             var orderEvent = new OrderEvent
             (
-                cached.First().Key, ConvertProductId(message.ProductId), message.Time, OrderStatus.PartiallyFilled,
+                cached.First().Key, ConvertProductId(message.ProductId), message.Time,
+                split.OrderQuantity == split.TotalQuantity() ? OrderStatus.Filled : OrderStatus.PartiallyFilled,
                 message.Side == "sell" ? OrderDirection.Sell : OrderDirection.Buy,
                 message.Price, message.Size,
                 GetFee(cached.First().Value), "GDAX Match Event"
@@ -189,7 +193,7 @@ namespace QuantConnect.Brokerages.GDAX
             (
                 cached.First().Key, ConvertProductId(message.ProductId), message.Time, OrderStatus.Filled,
                 message.Side == "sell" ? OrderDirection.Sell : OrderDirection.Buy,
-                message.Price, split.OrderQuantity - split.TotalQuantity(),
+                message.Price, split.TotalQuantity(),
                 GetFee(cached.First().Value), "GDAX Fill Event"
             );
 
@@ -254,7 +258,9 @@ namespace QuantConnect.Brokerages.GDAX
                         BidPrice = max,
                         Value = (min + max) / 2m,
                         Time = DateTime.UtcNow,
-                        Symbol = symbol
+                        Symbol = symbol,
+                        TickType = TickType.Quote
+                        //todo: tick volume                          
                     };
 
                     _previousTick[updating.Symbol] = updating;
@@ -286,6 +292,8 @@ namespace QuantConnect.Brokerages.GDAX
                     }
                     _previousTick.AddOrUpdate(symbol, latest);
 
+                    if (!_enableTickPolling) break;
+
                     Thread.Sleep(delay);
                     if (token.IsCancellationRequested) break;
                 }
@@ -301,10 +309,6 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="symbols"></param>
         public override void Subscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
-            if (!this.IsConnected)
-            {
-                this.Connect();
-            }
             //todo: heartbeat disabled for now
             //WebSocket.Send("{ \"type\": \"heartbeat\", \"on\": true }");
 
@@ -333,7 +337,7 @@ namespace QuantConnect.Brokerages.GDAX
                     _previousTick.TryAdd(item, new Tick());
                 }
 
-                //Set off a task to poll for latest tick
+                //Set off a task to poll for latest tick. best nid and ask is needed now 
                 PollTick(item);
             }
 

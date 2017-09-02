@@ -12,24 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-using System;
-using System.Linq;
-using NUnit.Framework;
-using WebSocketSharp;
 using Moq;
-using System.Threading;
-using System.IO;
-using QuantConnect.Tests.Brokerages.GDAX;
-using RestSharp;
-using System.Security.Cryptography;
-using System.Text;
-using QuantConnect.Api;
-using System.Net;
 using Newtonsoft.Json;
-using System.Collections.Generic;
-using QuantConnect.Orders;
-using QuantConnect.Brokerages.GDAX;
+using NUnit.Framework;
 using QuantConnect.Brokerages;
+using QuantConnect.Brokerages.GDAX;
+using QuantConnect.Orders;
+using RestSharp;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Threading;
 
 namespace QuantConnect.Tests.Brokerages.GDAX
 {
@@ -92,9 +87,9 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         [Test()]
         public void IsConnectedTest()
         {
-            _wss.Setup(w => w.ReadyState).Returns(WebSocketState.Open);
+            _wss.Setup(w => w.IsOpen).Returns(true);
             Assert.IsTrue(_unit.IsConnected);
-            _wss.Setup(w => w.ReadyState).Returns(WebSocketState.Closed);
+            _wss.Setup(w => w.IsOpen).Returns(false);
             Assert.IsFalse(_unit.IsConnected);
         }
 
@@ -102,6 +97,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         public void ConnectTest()
         {
             _wss.Setup(m => m.Connect()).Verifiable();
+            _wss.Setup(m => m.IsOpen).Returns(true);
 
             _unit.Connect();
             _wss.Verify();
@@ -111,6 +107,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         public void DisconnectTest()
         {
             _wss.Setup(m => m.Close()).Verifiable();
+            _wss.Setup(m => m.IsOpen).Returns(true);
             _unit.Connect();
             _unit.Disconnect();
             _wss.Verify();
