@@ -469,7 +469,7 @@ namespace QuantConnect.Algorithm
                 subscriptionDataConfig == null ? LeanData.GetCommonTickTypeForCommonDataTypes(typeof(TradeBar), security.Type) : subscriptionDataConfig.TickType
             );
 
-            var history = History(new List<HistoryRequest> { request });
+            var history = History(new List<HistoryRequest> { request }).ToList();
 
             if (history.Any() && history.First().Values.Any())
             {
