@@ -15,4 +15,7 @@
   <Assets>
     <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
   </Assets>
+  <Prerequisites>
+    <Prerequisite Id="Microsoft.VisualStudio.Component.VSSDK" Version="[15.0.26621.2,16.0)" DisplayName="Visual Studio SDK" />
+  </Prerequisites>
 </PackageManifest>
