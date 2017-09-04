@@ -305,8 +305,8 @@ namespace QuantConnect.Brokerages.GDAX
             foreach (var item in order.BrokerId)
             {
                 var req = new RestRequest("/orders/" + item, Method.GET);
-                var response = RestClient.Execute(req);
                 GetAuthenticationToken(req);
+                var response = RestClient.Execute(req);
                 var fill = JsonConvert.DeserializeObject<dynamic>(response.Content);
 
                 totalFee += (decimal)fill.fill_fees;
