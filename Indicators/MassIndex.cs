@@ -12,7 +12,6 @@ namespace QuantConnect.Indicators
     public class MassIndex : IndicatorBase<TradeBar>
     {
         private readonly int _sumPeriod;
-        private readonly Identity _highLow;
         private readonly ExponentialMovingAverage _ema;
         private readonly ExponentialMovingAverage _ema2;
         private readonly Sum _sum;
@@ -27,7 +26,6 @@ namespace QuantConnect.Indicators
             : base(name)
         {
             _sumPeriod = sumPeriod;
-            _highLow = new Identity("HighLow");
             _ema = new ExponentialMovingAverage(emaPeriod);
             _ema2 = new ExponentialMovingAverage(emaPeriod);
             _sum = new Sum(sumPeriod);
@@ -40,7 +38,7 @@ namespace QuantConnect.Indicators
         /// <param name="sumPeriod">The sum period.</param>
         public MassIndex(int emaPeriod = 9, int sumPeriod = 25)
             : this(string.Format("MII_{0}_{1}", emaPeriod, sumPeriod), emaPeriod, sumPeriod)
-        {}
+        { }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -53,7 +51,6 @@ namespace QuantConnect.Indicators
         public override void Reset()
         {
             base.Reset();
-            _highLow.Reset();
             _ema.Reset();
             _ema2.Reset();
             _sum.Reset();
@@ -68,13 +65,11 @@ namespace QuantConnect.Indicators
         /// </returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
-            _highLow.Update(new IndicatorDataPoint
+            _ema.Update(new IndicatorDataPoint
             {
                 Time = input.Time,
                 Value = input.High - input.Low
             });
-
-            _ema.Update(_highLow.Current);
 
             _ema2.Update(_ema.Current);
 
@@ -92,7 +87,6 @@ namespace QuantConnect.Indicators
             {
                 return _sum;
             }
-
         }
     }
 }
