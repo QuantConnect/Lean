@@ -11,7 +11,6 @@ namespace QuantConnect.Indicators
     /// <seealso cref="QuantConnect.Indicators.IndicatorBase{QuantConnect.Data.Market.TradeBar}"/>
     public class MassIndex : IndicatorBase<TradeBar>
     {
-        private readonly int _sumPeriod;
         private readonly ExponentialMovingAverage _ema;
         private readonly ExponentialMovingAverage _ema2;
         private readonly Sum _sum;
@@ -25,7 +24,6 @@ namespace QuantConnect.Indicators
         public MassIndex(string name, int emaPeriod, int sumPeriod)
             : base(name)
         {
-            _sumPeriod = sumPeriod;
             _ema = new ExponentialMovingAverage(emaPeriod);
             _ema2 = new ExponentialMovingAverage(emaPeriod);
             _sum = new Sum(sumPeriod);
@@ -81,7 +79,7 @@ namespace QuantConnect.Indicators
 
             if (!_sum.IsReady)
             {
-                return _sumPeriod;
+                return _sum.Period;
             }
             else
             {
