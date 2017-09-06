@@ -50,12 +50,12 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         public void Setup()
         {
             _unit = new GDAXBrokerage("wss://localhost", _wss.Object, _rest.Object, "abc", "MTIz", "pass");
-            _orderData = File.ReadAllText("TestData\\gdax_order.txt");
-            _matchData = File.ReadAllText("TestData\\gdax_match.txt");
-            _openOrderData = File.ReadAllText("TestData\\gdax_openOrders.txt");
-            _accountsData = File.ReadAllText("TestData\\gdax_accounts.txt");
-            _holdingData = File.ReadAllText("TestData\\gdax_holding.txt");
-            _orderByIdData = File.ReadAllText("TestData\\gdax_orderById.txt");
+            _orderData = File.ReadAllText("TestData//gdax_order.txt");
+            _matchData = File.ReadAllText("TestData//gdax_match.txt");
+            _openOrderData = File.ReadAllText("TestData//gdax_openOrders.txt");
+            _accountsData = File.ReadAllText("TestData//gdax_accounts.txt");
+            _holdingData = File.ReadAllText("TestData//gdax_holding.txt");
+            _orderByIdData = File.ReadAllText("TestData//gdax_orderById.txt");
 
             _symbol = Symbol.Create("BTCUSD", SecurityType.Forex, Market.GDAX);
 
@@ -63,7 +63,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
             _rest.Setup(m => m.Execute(It.Is<IRestRequest>(r => r.Resource.StartsWith("/products/")))).Returns(new RestSharp.RestResponse
             {
-                Content = File.ReadAllText("TestData\\gdax_tick.txt"),
+                Content = File.ReadAllText("TestData//gdax_tick.txt"),
                 StatusCode = HttpStatusCode.OK
             });
 
