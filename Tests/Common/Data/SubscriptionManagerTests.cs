@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,8 +34,6 @@ namespace QuantConnect.Tests.Common.Data
         [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.Quote)]
         [TestCase(SecurityType.Cfd, Resolution.Minute, typeof(QuoteBar), TickType.Quote)]
         [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.Quote)]
-        [TestCase(SecurityType.Crypto, Resolution.Minute, typeof(QuoteBar), TickType.Quote)]
-        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Quote)]
         public void GetsSubscriptionDataTypesSingle(SecurityType securityType, Resolution resolution, Type expectedDataType, TickType expectedTickType)
         {
             var types = GetSubscriptionDataTypes(securityType, resolution);
@@ -89,6 +87,30 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(TickType.Trade, types[1].Item2);
             Assert.AreEqual(typeof(Tick), types[2].Item1);
             Assert.AreEqual(TickType.OpenInterest, types[2].Item2);
+        }
+
+        [Test]
+        [TestCase(Resolution.Minute)]
+        [TestCase(Resolution.Tick)]
+        public void GetsSubscriptionDataTypesCrypto(Resolution resolution)
+        {
+            var types = GetSubscriptionDataTypes(SecurityType.Crypto, resolution);
+
+            Assert.AreEqual(2, types.Count);
+
+            if (resolution == Resolution.Tick)
+            {
+                Assert.AreEqual(typeof(Tick), types[0].Item1);
+                Assert.AreEqual(typeof(Tick), types[1].Item1);
+            }
+            else
+            {
+                Assert.AreEqual(typeof(QuoteBar), types[0].Item1);
+                Assert.AreEqual(typeof(TradeBar), types[1].Item1);
+            }
+
+            Assert.AreEqual(TickType.Quote, types[0].Item2);
+            Assert.AreEqual(TickType.Trade, types[1].Item2);
         }
 
         private static List<Tuple<Type, TickType>> GetSubscriptionDataTypes(SecurityType securityType, Resolution resolution, bool isCanonical = false)
