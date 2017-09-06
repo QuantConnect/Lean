@@ -110,16 +110,23 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 securityType != SecurityType.Future)
                 throw new ArgumentException("Invalid security type: " + securityType);
 
-            if (securityType == SecurityType.Future)
+            try
             {
-                return Symbol.CreateFuture(GetLeanRootSymbol(brokerageSymbol), market, expirationDate);
+                if (securityType == SecurityType.Future)
+                {
+                    return Symbol.CreateFuture(GetLeanRootSymbol(brokerageSymbol), market, expirationDate);
+                }
+                else if (securityType == SecurityType.Option)
+                {
+                    return Symbol.CreateOption(brokerageSymbol, market, OptionStyle.American, optionRight, strike, expirationDate);
+                }
+                
+                return Symbol.Create(brokerageSymbol, securityType, market);
             }
-            else if (securityType == SecurityType.Option)
+            catch (Exception)
             {
-                return Symbol.CreateOption(brokerageSymbol, market, OptionStyle.American, optionRight, strike, expirationDate);
+                throw new ArgumentException(string.Format("Invalid symbol: {0}, security type: {1}, market: {2}.", brokerageSymbol, securityType, market));
             }
-
-            return Symbol.Create(brokerageSymbol, securityType, market);
         }
 
 

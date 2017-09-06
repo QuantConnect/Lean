@@ -74,6 +74,11 @@ namespace QuantConnect.Tests.Algorithm
             var future = algo.AddSecurity(SecurityType.Future, "ES");
             Assert.IsTrue(future.Subscriptions.Count() == 1);
             Assert.IsTrue(future.Subscriptions.FirstOrDefault(x => typeof(ZipEntryName).IsAssignableFrom(x.Type)) != null);
+
+            // Crypto
+            var crypto = algo.AddSecurity(SecurityType.Crypto, "btcusd", Resolution.Daily);
+            Assert.IsTrue(crypto.Subscriptions.Count() == 1);
+            Assert.IsTrue(GetMatchingSubscription(crypto, typeof(QuoteBar)) != null);
         }
 
 

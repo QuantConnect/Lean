@@ -78,6 +78,7 @@ namespace QuantConnect.ToolBox
 
                 case SecurityType.Cfd:
                 case SecurityType.Forex:
+                case SecurityType.Crypto:
                     return typeof (QuoteBar);
 
                 case SecurityType.Option:

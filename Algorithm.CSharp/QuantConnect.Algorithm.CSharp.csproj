@@ -86,6 +86,7 @@
   <ItemGroup>
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.cs" />
     <Compile Include="BasicTemplateDailyAlgorithm.cs" />
+    <Compile Include="BasicTemplateFxcmVolumeAlgorithm.cs" />
     <Compile Include="BasicTemplateFuturesAlgorithmDaily.cs" />
     <Compile Include="CallingRFromCSharp.cs" />
     <Compile Include="FuturesMomentumAlgorithm.cs" />

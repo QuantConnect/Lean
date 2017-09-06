@@ -269,7 +269,8 @@ namespace QuantConnect.Api
             // ignore unsupported security types
             if (symbol.ID.SecurityType != SecurityType.Equity &&
                 symbol.ID.SecurityType != SecurityType.Cfd &&
-                symbol.ID.SecurityType != SecurityType.Forex)
+                symbol.ID.SecurityType != SecurityType.Forex &&
+                symbol.ID.SecurityType != SecurityType.Crypto)
             {
                 Log.Trace("WebSocketConnection.CanSubscribe(): Unsupported security type, {0}.", symbol.ID.SecurityType);
                 return false;

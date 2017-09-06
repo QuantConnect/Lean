@@ -20,6 +20,7 @@ using Newtonsoft.Json.Linq;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Util;
+using QuantConnect.Brokerages;
 
 namespace QuantConnect.Orders
 {
@@ -105,8 +106,19 @@ namespace QuantConnect.Orders
             order.BrokerId = jObject["BrokerId"].Select(x => x.Value<string>()).ToList();
             order.ContingentId = jObject["ContingentId"].Value<int>();
 
-            var market = Market.USA;
-            if (securityType == SecurityType.Forex) market = Market.FXCM;
+            string market = Market.USA;
+
+            //does data have market?
+            var suppliedMarket = jObject.SelectTokens("Symbol.ID.Market");
+            if (suppliedMarket.Any())
+            {
+                market = suppliedMarket.Single().Value<string>();
+            }
+            else
+            {
+                //no data, use default                
+                new DefaultBrokerageModel().DefaultMarkets.TryGetValue(securityType, out market);
+            }
 
             if (jObject.SelectTokens("Symbol.ID").Any())
             {
@@ -127,7 +139,7 @@ namespace QuantConnect.Orders
             }
             return order;
         }
-        
+
         /// <summary>
         /// Creates an order of the correct type
         /// </summary>
