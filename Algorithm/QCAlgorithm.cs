@@ -1465,6 +1465,15 @@ namespace QuantConnect.Algorithm
             var option = (Option)SecurityManager.CreateSecurity(Portfolio, SubscriptionManager, _marketHoursDatabase, _symbolPropertiesDatabase, SecurityInitializer,
                 symbol, resolution, fillDataForward, leverage, false, false, false, LiveMode);
 
+            // add underlying if not present
+            var underlying = option.Symbol.Underlying;
+            Security equity;
+            if (!Securities.TryGetValue(underlying, out equity))
+            {
+                equity = AddEquity(underlying.Value, option.Resolution, underlying.ID.Market, false);
+            }
+            option.Underlying = equity;
+
             AddToUserDefinedUniverse(option);
 
             return option;
