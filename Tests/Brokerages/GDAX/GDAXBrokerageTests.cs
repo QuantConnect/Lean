@@ -70,7 +70,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             _rest.Setup(m => m.Execute(It.Is<IRestRequest>(r => r.Resource.StartsWith("/orders/" + _brokerId) || r.Resource.StartsWith("/orders/" + _matchBrokerId))))
             .Returns(new RestSharp.RestResponse
             {
-                Content = File.ReadAllText("TestData\\gdax_orderById.txt"),
+                Content = File.ReadAllText("TestData//gdax_orderById.txt"),
                 StatusCode = HttpStatusCode.OK
             });
         }
