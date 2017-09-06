@@ -126,6 +126,7 @@
     <Compile Include="FractalAdaptiveMovingAverage.cs" />
     <Compile Include="FilteredIdentity.cs" />
     <Compile Include="HullMovingAverage.cs" />
+    <Compile Include="MassIndex.cs" />
     <Compile Include="RegressionChannel.cs" />
     <Compile Include="SwissArmyKnife.cs" />
     <Compile Include="TradeBarIndicator.cs" />
