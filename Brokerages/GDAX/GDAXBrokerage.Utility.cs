@@ -36,6 +36,11 @@ namespace QuantConnect.Brokerages.GDAX
         private const string KeyHeader = "CB-ACCESS-KEY";
         private const string TimeHeader = "CB-ACCESS-TIMESTAMP";
         private const string PassHeader = "CB-ACCESS-PASSPHRASE";
+        private const string Open = "open";
+        private const string Pending = "pending";
+        private const string Active = "active";
+        private const string Done = "done";
+        private const string Settled = "settled";
 
         /// <summary>
         /// Creates an auth token and adds to the request
@@ -124,11 +129,11 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 return Orders.OrderStatus.PartiallyFilled;
             }       
-            else if (order.Status == "open" || order.Status == "pending" || order.Status == "active")
+            else if (order.Status == Open || order.Status == Pending || order.Status == Active)
             {
                 return Orders.OrderStatus.Submitted;
             }
-            else if (order.Status == "done" || order.Status == "settled")
+            else if (order.Status == Done || order.Status == Settled)
             {
                 return Orders.OrderStatus.Filled;
             }
