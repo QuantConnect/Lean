@@ -9,8 +9,31 @@ namespace QuantConnect.ToolBox.FxcmVolumeDownload
     {
         static void Main(string[] args)
         {
+
+            if (args.Length == 1)
+            {
+
+                if (args[0] == "all")
+                {
+                    args = new[]
+                    {
+                        "EURUSD,USDJPY,GBPUSD,USDCHF,EURCHF,AUDUSD,USDCAD,NZDUSD,EURGBP,EURJPY,GBPJPY,EURAUD,EURCAD,AUDJPY",
+                        "All",
+                        "20100101",
+                        DateTime.Today.ToString("yyyyMMdd")
+                    };
+                }
+                else if (args[0] == "update")
+                {
+                    
+                }
+
+            }
             if (args.Length != 4)
             {
+                Console.WriteLine("Usage:\n\t" +
+                                  "FxcmVolumeDownloader all\t will download data for all available pair for the three resolutions.\n\t" +
+                                  "FxcmVolumeDownloader update\t will download just last day data for all available pair for the three resolutions.");
                 Console.WriteLine("Usage: FxcmVolumeDownloader SYMBOLS RESOLUTION FROMDATE TODATE");
                 Console.WriteLine("SYMBOLS = eg EURUSD,USDJPY\n" +
                                   "\tAvailable pairs:\n" +

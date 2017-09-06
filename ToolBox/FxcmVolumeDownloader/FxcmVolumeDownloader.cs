@@ -97,13 +97,19 @@ namespace QuantConnect.ToolBox
         /// <param name="resolution">The resolution.</param>
         /// <param name="startUtc">The start UTC.</param>
         /// <param name="endUtc">The end UTC.</param>
-        public void Run(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
+        /// <param name="update">Flag to </param>
+        public void Run(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc, bool update=false)
         {
             var data = new List<BaseData>();
             var requestDayInterval = 0;
             var writer = new FxcmVolumeWriter(resolution, symbol, _dataDirectory);
             var intermediateStartDate = startUtc;
             var intermediateEndDate = endUtc;
+
+            if (update)
+            {
+                // TODO: implement 
+            }
 
             // As the responses has a Limit of 10000 lines, hourly data the minute data request should be sliced.
             if (resolution == Resolution.Minute && (endUtc - startUtc).TotalMinutes > 10000)
