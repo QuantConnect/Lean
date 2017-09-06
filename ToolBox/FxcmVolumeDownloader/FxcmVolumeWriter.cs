@@ -13,7 +13,6 @@ namespace QuantConnect.ToolBox
         private readonly string _market;
         private readonly string _dataDirectory;
         private readonly Resolution _resolution;
-        private readonly string _folderPath;
 
         public FxcmVolumeWriter(Resolution resolution, Symbol symbol, string dataDirectory)
         {
@@ -21,16 +20,25 @@ namespace QuantConnect.ToolBox
             _resolution = resolution;
             _dataDirectory = dataDirectory;
             _market = _symbol.ID.Market;
-            _folderPath = Path.Combine(new[] { _dataDirectory, "forex", _market.ToLower(), _resolution.ToString().ToLower() });
-            if (resolution == Resolution.Minute)
+        }
+
+        public string FolderPath
+        {
+            get
             {
-                _folderPath = Path.Combine(_folderPath, symbol.Value.ToLower());
+                var folderPath = Path.Combine(new[] { _dataDirectory, "forex", _market.ToLower(), _resolution.ToString().ToLower() });
+                if (_resolution == Resolution.Minute)
+                {
+                    folderPath = Path.Combine(FolderPath, _symbol.Value.ToLower());
+                }
+                return folderPath;
             }
+            
         }
 
         public void Write(IEnumerable<BaseData> data)
         {
-            if (!Directory.Exists(_folderPath)) Directory.CreateDirectory(_folderPath);
+            if (!Directory.Exists(FolderPath)) Directory.CreateDirectory(FolderPath);
             if (_resolution == Resolution.Minute)
             {
                 WriteMinuteData(data);
@@ -54,7 +62,7 @@ namespace QuantConnect.ToolBox
                         obs.Transactions));
                 }
                 var filename = string.Format("{0:yyyyMMdd}_volume.csv", dayOfData.Key);
-                var filePath = Path.Combine(_folderPath, filename);
+                var filePath = Path.Combine(FolderPath, filename);
                 File.WriteAllText(filePath, sb.ToString());
                 // Write out this data string to a zip file
                 Compression.Zip(filePath, filename);
@@ -74,7 +82,7 @@ namespace QuantConnect.ToolBox
             }
 
             var filename = _symbol.Value.ToLower() + "_volume.csv";
-            var filePath = Path.Combine(_folderPath, filename);
+            var filePath = Path.Combine(FolderPath, filename);
             File.WriteAllText(filePath, sb.ToString());
             // Write out this data string to a zip file
             Compression.Zip(filePath, filename);

@@ -98,7 +98,7 @@ namespace QuantConnect.ToolBox
         /// <param name="startUtc">The start UTC.</param>
         /// <param name="endUtc">The end UTC.</param>
         /// <param name="update">Flag to </param>
-        public void Run(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc, bool update=false)
+        public void Run(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc, bool update = false)
         {
             var data = new List<BaseData>();
             var requestDayInterval = 0;
@@ -108,7 +108,17 @@ namespace QuantConnect.ToolBox
 
             if (update)
             {
-                // TODO: implement 
+                var updatedDates = CheckDataAlreadyDownloaded(writer.FolderPath);
+                if (updatedDates.Item1 == null || updatedDates.Item2 == null)
+                {
+                    return;
+                }
+                else
+                {
+                    intermediateStartDate = (DateTime)updatedDates.Item1;
+                    intermediateEndDate = (DateTime)updatedDates.Item2;
+                }
+
             }
 
             // As the responses has a Limit of 10000 lines, hourly data the minute data request should be sliced.
@@ -143,7 +153,7 @@ namespace QuantConnect.ToolBox
                     data.Clear();
                 }
             } while (intermediateEndDate != endUtc);
-            // Seems the data has som duplicate values! this makes the writer throw an error.
+            // Seems the data has some duplicate values! This makes the writer throws an error.
             var duplicates = data.GroupBy(x => x.Time)
                 .Where(g => g.Count() > 1)
                 .Select(g => g.Key)
@@ -199,6 +209,11 @@ namespace QuantConnect.ToolBox
         #endregion Public Methods
 
         #region Private Methods
+
+        private Tuple<DateTime?, DateTime?> CheckDataAlreadyDownloaded(string folderPath)
+        {
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         ///     Generates the API Requests.
