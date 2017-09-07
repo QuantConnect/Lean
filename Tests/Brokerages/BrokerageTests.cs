@@ -123,6 +123,12 @@ namespace QuantConnect.Tests.Brokerages
                 Assert.Fail("Failed to connect to brokerage");
             }
 
+            //gdax does not have a user data stream. Instead, we need to symbol subscribe and monitor for our orders.
+            if (brokerage.Name == "GDAX")
+            {
+                ((QuantConnect.Brokerages.GDAX.GDAXBrokerage)brokerage).Subscribe(null, new[] { Symbol });
+            }
+
             Log.Trace("");
             Log.Trace("GET OPEN ORDERS");
             Log.Trace("");
@@ -180,7 +186,7 @@ namespace QuantConnect.Tests.Brokerages
                 new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
         }
 
-        public OrderProvider OrderProvider 
+        public OrderProvider OrderProvider
         {
             get { return _orderProvider ?? (_orderProvider = new OrderProvider()); }
         }
@@ -270,7 +276,7 @@ namespace QuantConnect.Tests.Brokerages
         /// </summary>
         protected virtual decimal GetDefaultQuantity()
         {
-            return 1; 
+            return 1;
         }
 
         [Test]
@@ -515,7 +521,7 @@ namespace QuantConnect.Tests.Brokerages
             };
 
             Brokerage.OrderStatusChanged += brokerageOnOrderStatusChanged;
-            
+
             OrderProvider.Add(order);
             if (!Brokerage.PlaceOrder(order) && !allowFailedSubmission)
             {

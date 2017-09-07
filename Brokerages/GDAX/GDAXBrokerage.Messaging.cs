@@ -135,6 +135,22 @@ namespace QuantConnect.Brokerages.GDAX
             var cached = CachedOrderIDs.Where(o => o.Value.BrokerId.Contains(message.MakerOrderId) || o.Value.BrokerId.Contains(message.TakerOrderId));
             //todo: update volume quotes
 
+            var symbol = ConvertProductId(message.ProductId);
+
+            lock (_tickLocker)
+            {
+                Tick updating = new Tick
+                {
+                    Value = message.Price,
+                    Time = DateTime.UtcNow,
+                    Symbol = symbol,
+                    TickType = TickType.Trade,
+                    Quantity = message.Side == "sell" ? -message.Size : message.Size
+                };
+
+                this.Ticks.Add(updating);
+            }
+
             if (!cached.Any())
             {
                 return;
@@ -145,7 +161,7 @@ namespace QuantConnect.Brokerages.GDAX
 
             var orderEvent = new OrderEvent
             (
-                cached.First().Key, ConvertProductId(message.ProductId), message.Time,
+                cached.First().Key, symbol, message.Time,
                 split.OrderQuantity == split.TotalQuantity() ? OrderStatus.Filled : OrderStatus.PartiallyFilled,
                 message.Side == "sell" ? OrderDirection.Sell : OrderDirection.Buy,
                 message.Price, message.Size,
@@ -284,7 +300,7 @@ namespace QuantConnect.Brokerages.GDAX
                 Log.Trace("PollLatestTick: " + "Started polling for ticks: " + symbol.Value.ToString());
                 while (true)
                 {
-                    //todo: adding a new baseline tick should result in pruning of price AskPrices and BidPrices
+                    //todo: adding a new baseline tick should result in pruning of AskPrices and BidPrices
                     var latest = GetTick(symbol);
                     lock (_tickLocker)
                     {
@@ -337,7 +353,7 @@ namespace QuantConnect.Brokerages.GDAX
                     _previousTick.TryAdd(item, new Tick());
                 }
 
-                //Set off a task to poll for latest tick. best nid and ask is needed now 
+                //Set off a task to poll for latest tick. best bid and ask is needed now 
                 PollTick(item);
             }
 

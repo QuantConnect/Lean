@@ -172,6 +172,8 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
             //if not our order should get no event
             Assert.AreEqual(raised.WaitOne(1000), expectedQuantity != 99);
+
+            Assert.AreEqual(400.23, _unit.Ticks.First().Price);
         }
 
         [Test]
