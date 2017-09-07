@@ -70,7 +70,7 @@ namespace QuantConnect.ToolBox
             }
         }
 
-        private void WriteHourAndDailyData(IEnumerable<BaseData> data, bool update=false)
+        private void WriteHourAndDailyData(IEnumerable<BaseData> data)
         {
             var sb = new StringBuilder();
 
@@ -81,11 +81,10 @@ namespace QuantConnect.ToolBox
                     obs.Transactions));
             }
 
-            var filename = _symbol.Value.ToLower() + "_volume.csv";
-            var filePath = Path.Combine(FolderPath, filename);
-            File.WriteAllText(filePath, sb.ToString());
-            // Write out this data string to a zip file
-            Compression.Zip(filePath, filename);
+            var filename = _symbol.Value.ToLower() + "_volume";
+            var zipFilePath = Path.Combine(FolderPath, filename + ".zip");
+
+            Compression.ZipCreateAppendData(zipFilePath, filename + ".csv", sb.ToString());
         }
     }
 }

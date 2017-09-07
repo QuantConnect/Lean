@@ -116,7 +116,7 @@ namespace QuantConnect.ToolBox
                 }
                 else
                 {
-                    intermediateStartDate = (DateTime) updatedStartDate;
+                    intermediateStartDate = ((DateTime) updatedStartDate).AddDays(1);
                     intermediateEndDate = DateTime.Today;
                 }
 
@@ -181,12 +181,12 @@ namespace QuantConnect.ToolBox
                         string.Format("{0}_volume.zip", symbol.Value.ToLower()));
                     if (File.Exists(expectedFilePath))
                     {
-                        var lastStrDate = Compression.ReadLines(expectedFilePath).Last().Split(',').First().Substring(0, 7);
+                        var lastStrDate = Compression.ReadLines(expectedFilePath).Last().Split(',').First().Substring(0, 8);
                         lastAvailableDate = DateTime.ParseExact(lastStrDate, "yyyyMMdd", CultureInfo.InvariantCulture);
                     }
                     break;
                 case Resolution.Minute:
-                    var lastFileDate = Directory.GetFiles(folderPath, "*_volume.zip").OrderBy(f => f).Last().Substring(0, 7);
+                    var lastFileDate = Directory.GetFiles(folderPath, "*_volume.zip").OrderBy(f => f).Last().Substring(0, 8);
                     lastAvailableDate = DateTime.ParseExact(lastFileDate, "yyyyMMdd", CultureInfo.InvariantCulture);
                     break;
             }

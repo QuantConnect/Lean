@@ -19,6 +19,11 @@ namespace QuantConnect.ToolBox.FxcmVolumeDownload
             {
                 if (args[0] == "all" || args[0] == "update")
                 {
+                    if (args[0] == "update")
+                    {
+                        isUpdate = true;
+                    }
+
                     args = new[]
                     {
                         "EURUSD,USDJPY,GBPUSD,USDCHF,EURCHF,AUDUSD,USDCAD,NZDUSD,EURGBP,EURJPY,GBPJPY,EURAUD,EURCAD,AUDJPY",
@@ -26,11 +31,6 @@ namespace QuantConnect.ToolBox.FxcmVolumeDownload
                         "20100101",
                         DateTime.Today.ToString("yyyyMMdd")
                     };
-
-                    if (args[0] == "update")
-                    {
-                        isUpdate = true;
-                    }
                 }
             }
 

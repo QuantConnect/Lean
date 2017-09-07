@@ -33,7 +33,9 @@ namespace QuantConnect.Tests.ToolBox
         {
             var randomFolder = Guid.NewGuid().ToString("N").Substring(startIndex: 0, length: 8);
             var assemblyFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            _dataDirectory = Path.Combine(assemblyFolder, randomFolder);
+            // TODO: use temp folders again
+            //_dataDirectory = Path.Combine(assemblyFolder, randomFolder);
+            _dataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), randomFolder);
             _downloader = new FxcmVolumeDownloader(_dataDirectory);
             _testingTempFolders.Add(_dataDirectory);
         }
@@ -137,7 +139,7 @@ namespace QuantConnect.Tests.ToolBox
             Assert.AreEqual(expected: 27, actual: files.Length);
         }
 
-        [Ignore("Long test")]
+        //[Ignore("Long test")]
         [Test]
         public void RequestWithMoreThan10KHourlyObservationIsCorrectlySaved()
         {
