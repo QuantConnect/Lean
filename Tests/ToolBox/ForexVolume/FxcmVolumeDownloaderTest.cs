@@ -121,7 +121,7 @@ namespace QuantConnect.Tests.ToolBox
             }
         }
 
-        //[Ignore("Long test")]
+        [Ignore("Long test")]
         [Test]
         public void RequestWithMoreThan10KMinuteObservationIsCorrectlySaved()
         {
@@ -137,7 +137,7 @@ namespace QuantConnect.Tests.ToolBox
             Assert.AreEqual(expected: 27, actual: files.Length);
         }
 
-        //[Ignore("Long test")]
+        [Ignore("Long test")]
         [Test]
         public void RequestWithMoreThan10KHourlyObservationIsCorrectlySaved()
         {

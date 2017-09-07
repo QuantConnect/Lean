@@ -117,7 +117,7 @@ namespace QuantConnect.ToolBox
                 else
                 {
                     intermediateStartDate = ((DateTime) updatedStartDate).AddDays(1);
-                    intermediateEndDate = DateTime.Today;
+                    intermediateEndDate = DateTime.Today.AddDays(-1);
                 }
 
             }
@@ -167,30 +167,6 @@ namespace QuantConnect.ToolBox
                 }
             }
             writer.Write(data);
-        }
-
-        private DateTime? GetLastAvailableDateOfData(Symbol symbol, Resolution resolution, string folderPath)
-        {
-            DateTime? lastAvailableDate = null;
-            if (!Directory.Exists(folderPath)) return lastAvailableDate;
-            switch (resolution)
-            {
-                case Resolution.Daily:
-                case Resolution.Hour:
-                    var expectedFilePath = Path.Combine(folderPath,
-                        string.Format("{0}_volume.zip", symbol.Value.ToLower()));
-                    if (File.Exists(expectedFilePath))
-                    {
-                        var lastStrDate = Compression.ReadLines(expectedFilePath).Last().Split(',').First().Substring(0, 8);
-                        lastAvailableDate = DateTime.ParseExact(lastStrDate, "yyyyMMdd", CultureInfo.InvariantCulture);
-                    }
-                    break;
-                case Resolution.Minute:
-                    var lastFileDate = Directory.GetFiles(folderPath, "*_volume.zip").OrderBy(f => f).Last().Substring(0, 8);
-                    lastAvailableDate = DateTime.ParseExact(lastFileDate, "yyyyMMdd", CultureInfo.InvariantCulture);
-                    break;
-            }
-            return lastAvailableDate;
         }
 
         /// <summary>
@@ -325,6 +301,30 @@ namespace QuantConnect.ToolBox
                         "tick or second resolution are not supported for Forex Volume.");
             }
             return interval;
+        }
+
+        private DateTime? GetLastAvailableDateOfData(Symbol symbol, Resolution resolution, string folderPath)
+        {
+            DateTime? lastAvailableDate = null;
+            if (!Directory.Exists(folderPath)) return lastAvailableDate;
+            switch (resolution)
+            {
+                case Resolution.Daily:
+                case Resolution.Hour:
+                    var expectedFilePath = Path.Combine(folderPath,
+                        string.Format("{0}_volume.zip", symbol.Value.ToLower()));
+                    if (File.Exists(expectedFilePath))
+                    {
+                        var lastStrDate = Compression.ReadLines(expectedFilePath).Last().Split(',').First().Substring(0, 8);
+                        lastAvailableDate = DateTime.ParseExact(lastStrDate, "yyyyMMdd", CultureInfo.InvariantCulture);
+                    }
+                    break;
+                case Resolution.Minute:
+                    var lastFileDate = Directory.GetFiles(folderPath, "*_volume.zip").OrderBy(f => f).Last().Substring(0, 8);
+                    lastAvailableDate = DateTime.ParseExact(lastFileDate, "yyyyMMdd", CultureInfo.InvariantCulture);
+                    break;
+            }
+            return lastAvailableDate;
         }
 
         #endregion Private Methods

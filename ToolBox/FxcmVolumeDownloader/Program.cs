@@ -10,7 +10,7 @@ namespace QuantConnect.ToolBox.FxcmVolumeDownload
         private static void Main(string[] args)
         {
             var isUpdate = false;
-
+            // TODO:clean after debugging
 #if DEBUG
             args = new[] {"update"};
 #endif
@@ -29,7 +29,7 @@ namespace QuantConnect.ToolBox.FxcmVolumeDownload
                         "EURUSD,USDJPY,GBPUSD,USDCHF,EURCHF,AUDUSD,USDCAD,NZDUSD,EURGBP,EURJPY,GBPJPY,EURAUD,EURCAD,AUDJPY",
                         "All",
                         "20100101",
-                        DateTime.Today.ToString("yyyyMMdd")
+                        DateTime.Today.AddDays(-1).ToString("yyyyMMdd")
                     };
                 }
             }
