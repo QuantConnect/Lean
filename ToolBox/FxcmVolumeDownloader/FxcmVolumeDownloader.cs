@@ -18,6 +18,7 @@ using QuantConnect.Data.Custom;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net;
 
@@ -108,15 +109,15 @@ namespace QuantConnect.ToolBox
 
             if (update)
             {
-                var updatedDates = CheckDataAlreadyDownloaded(writer.FolderPath);
-                if (updatedDates.Item1 == null || updatedDates.Item2 == null)
+                var updatedStartDate = GetLastAvailableDateOfData(symbol, resolution, writer.FolderPath);
+                if (updatedStartDate == null)
                 {
                     return;
                 }
                 else
                 {
-                    intermediateStartDate = (DateTime)updatedDates.Item1;
-                    intermediateEndDate = (DateTime)updatedDates.Item2;
+                    intermediateStartDate = (DateTime) updatedStartDate;
+                    intermediateEndDate = DateTime.Today;
                 }
 
             }
@@ -168,6 +169,30 @@ namespace QuantConnect.ToolBox
             writer.Write(data);
         }
 
+        private DateTime? GetLastAvailableDateOfData(Symbol symbol, Resolution resolution, string folderPath)
+        {
+            DateTime? lastAvailableDate = null;
+            if (!Directory.Exists(folderPath)) return lastAvailableDate;
+            switch (resolution)
+            {
+                case Resolution.Daily:
+                case Resolution.Hour:
+                    var expectedFilePath = Path.Combine(folderPath,
+                        string.Format("{0}_volume.zip", symbol.Value.ToLower()));
+                    if (File.Exists(expectedFilePath))
+                    {
+                        var lastStrDate = Compression.ReadLines(expectedFilePath).Last().Split(',').First().Substring(0, 7);
+                        lastAvailableDate = DateTime.ParseExact(lastStrDate, "yyyyMMdd", CultureInfo.InvariantCulture);
+                    }
+                    break;
+                case Resolution.Minute:
+                    var lastFileDate = Directory.GetFiles(folderPath, "*_volume.zip").OrderBy(f => f).Last().Substring(0, 7);
+                    lastAvailableDate = DateTime.ParseExact(lastFileDate, "yyyyMMdd", CultureInfo.InvariantCulture);
+                    break;
+            }
+            return lastAvailableDate;
+        }
+
         /// <summary>
         ///     Get historical data enumerable for a single symbol, type and resolution given this start and end time (in UTC).
         /// </summary>
@@ -209,11 +234,6 @@ namespace QuantConnect.ToolBox
         #endregion Public Methods
 
         #region Private Methods
-
-        private Tuple<DateTime?, DateTime?> CheckDataAlreadyDownloaded(string folderPath)
-        {
-            throw new NotImplementedException();
-        }
 
         /// <summary>
         ///     Generates the API Requests.

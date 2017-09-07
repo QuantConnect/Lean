@@ -11,6 +11,10 @@ namespace QuantConnect.ToolBox.FxcmVolumeDownload
         {
             var isUpdate = false;
 
+#if DEBUG
+            args = new[] {"update"};
+#endif
+
             if (args.Length == 1)
             {
                 if (args[0] == "all" || args[0] == "update")

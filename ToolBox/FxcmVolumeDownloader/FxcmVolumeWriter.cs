@@ -70,7 +70,7 @@ namespace QuantConnect.ToolBox
             }
         }
 
-        private void WriteHourAndDailyData(IEnumerable<BaseData> data)
+        private void WriteHourAndDailyData(IEnumerable<BaseData> data, bool update=false)
         {
             var sb = new StringBuilder();
 
