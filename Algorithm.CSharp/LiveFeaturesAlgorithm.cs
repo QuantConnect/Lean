@@ -44,7 +44,7 @@ namespace QuantConnect
             AddSecurity(SecurityType.Forex, "EURUSD", Resolution.Minute);
 
             //Custom/Bitcoin Live Data: 24/7
-            AddData<Bitcoin>("BTC", Resolution.Second);
+            AddData<Bitcoin>("BTC", Resolution.Second, TimeZones.Utc);
         }
 
         /// <summary>
@@ -161,7 +161,7 @@ namespace QuantConnect
                 try
                 {
                     coin = JsonConvert.DeserializeObject<Bitcoin>(line);
-                    coin.EndTime = DateTime.UtcNow.ConvertFromUtc(config.DataTimeZone);
+                    coin.EndTime = DateTime.UtcNow;
                     coin.Time = coin.EndTime - config.Increment;
                     coin.Value = coin.Close;
                 }
