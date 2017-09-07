@@ -20,21 +20,14 @@ namespace QuantConnect.ToolBox
             _resolution = resolution;
             _dataDirectory = dataDirectory;
             _market = _symbol.ID.Market;
+            FolderPath = Path.Combine(new[] { _dataDirectory, "forex", _market.ToLower(), _resolution.ToString().ToLower() });
+            if (_resolution == Resolution.Minute)
+            {
+                FolderPath = Path.Combine(FolderPath, _symbol.Value.ToLower());
+            }
         }
 
-        public string FolderPath
-        {
-            get
-            {
-                var folderPath = Path.Combine(new[] { _dataDirectory, "forex", _market.ToLower(), _resolution.ToString().ToLower() });
-                if (_resolution == Resolution.Minute)
-                {
-                    folderPath = Path.Combine(FolderPath, _symbol.Value.ToLower());
-                }
-                return folderPath;
-            }
-            
-        }
+        public string FolderPath { get; }
 
         public void Write(IEnumerable<BaseData> data)
         {
