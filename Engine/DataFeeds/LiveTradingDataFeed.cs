@@ -621,6 +621,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 };
 
                 var symbolUniverse = _dataQueueHandler as IDataQueueUniverseProvider;
+                if (symbolUniverse == null)
+                {
+                    throw new NotSupportedException("The DataQueueHandler does not support Options.");
+                }
 
                 var enumeratorFactory = new OptionChainUniverseSubscriptionEnumeratorFactory(configure, symbolUniverse, _timeProvider);
                 enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
@@ -632,6 +636,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating futures chain universe: " + config.Symbol.ToString());
 
                 var symbolUniverse = _dataQueueHandler as IDataQueueUniverseProvider;
+                if (symbolUniverse == null)
+                {
+                    throw new NotSupportedException("The DataQueueHandler does not support Futures.");
+                }
 
                 var enumeratorFactory = new FuturesChainUniverseSubscriptionEnumeratorFactory(symbolUniverse, _timeProvider);
                 enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
