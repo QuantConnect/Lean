@@ -40,9 +40,11 @@ namespace QuantConnect.Tests.Common.Data
         {
             var types = GetSubscriptionDataTypes(securityType, resolution);
 
-            Assert.AreEqual(1, types.Count);
+            Assert.AreEqual(securityType == SecurityType.Crypto ? 2 : 1, types.Count);
             Assert.AreEqual(expectedDataType, types[0].Item1);
+
             Assert.AreEqual(expectedTickType, types[0].Item2);
+
         }
 
         [Test]

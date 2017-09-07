@@ -77,8 +77,9 @@ namespace QuantConnect.Tests.Algorithm
 
             // Crypto
             var crypto = algo.AddSecurity(SecurityType.Crypto, "btcusd", Resolution.Daily);
-            Assert.IsTrue(crypto.Subscriptions.Count() == 1);
+            Assert.IsTrue(crypto.Subscriptions.Count() == 2);
             Assert.IsTrue(GetMatchingSubscription(crypto, typeof(QuoteBar)) != null);
+            Assert.IsTrue(GetMatchingSubscription(crypto, typeof(TradeBar)) != null);
         }
 
 
