@@ -147,6 +147,8 @@ namespace QuantConnect.Brokerages.GDAX.Messages
         public decimal BestBid { get; set; }
         [JsonProperty("best_ask")]
         public decimal BestAsk { get; set; }
+        public decimal Price { get; set; }
+        public string Side { get; set; }
     }
 
 #pragma warning restore 1591

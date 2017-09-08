@@ -150,8 +150,6 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
             //if not our order should get no event
             Assert.AreEqual(raised.WaitOne(1000), expectedQuantity != 99);
-
-            Assert.AreEqual(400.23, _unit.Ticks.First().Price);
         }
 
         [Test]
@@ -312,9 +310,15 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             var actual = _unit.Ticks.First();
 
             Assert.AreEqual("BTCUSD", actual.Symbol.Value);
-            Assert.AreEqual(4388.005m, _unit.Ticks.First().Price);
+            Assert.AreEqual(4388.005m, actual.Price);
             Assert.AreEqual(4388m, actual.BidPrice);
             Assert.AreEqual(4388.01m, actual.AskPrice);
+
+            actual = _unit.Ticks.Last();
+
+            Assert.AreEqual("BTCUSD", actual.Symbol.Value);
+            Assert.AreEqual(4388.01m, actual.Price);
+            Assert.AreEqual(0.03m, actual.Quantity);
         }
 
     }

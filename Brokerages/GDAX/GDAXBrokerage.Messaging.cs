@@ -129,20 +129,6 @@ namespace QuantConnect.Brokerages.GDAX
 
             var symbol = ConvertProductId(message.ProductId);
 
-            lock (_tickLocker)
-            {
-                Tick updating = new Tick
-                {
-                    Value = message.Price,
-                    Time = DateTime.UtcNow,
-                    Symbol = symbol,
-                    TickType = TickType.Trade,
-                    Quantity = message.Side == "sell" ? -message.Size : message.Size
-                };
-
-                this.Ticks.Add(updating);
-            }
-
             if (!cached.Any())
             {
                 return;
@@ -247,6 +233,20 @@ namespace QuantConnect.Brokerages.GDAX
                 };
 
                 this.Ticks.Add(updating);
+
+                lock (_tickLocker)
+                {
+                    Tick last = new Tick
+                    {
+                        Value = message.Price,
+                        Time = DateTime.UtcNow,
+                        Symbol = symbol,
+                        TickType = TickType.Trade,
+                        Quantity = message.Side == "sell" ? -message.LastSize : message.LastSize
+                    };
+
+                    this.Ticks.Add(last);
+                }
             }
 
         }
