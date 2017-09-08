@@ -60,6 +60,7 @@ namespace QuantConnect.Brokerages.GDAX.Messages
     public class Error : BaseMessage
     {
         public string Message { get; set; }
+        public string Reason { get; set; }
     }
 
     public class Subscribe
@@ -134,6 +135,18 @@ namespace QuantConnect.Brokerages.GDAX.Messages
         public decimal Ask { get; set; }
         public decimal Volume { get; set; }
         public DateTime Time { get; set; }
+    }
+
+    public class Ticker : BaseMessage
+    {
+        [JsonProperty("trade_id")]
+        public string TradeId { get; set; }
+        [JsonProperty("last_size")]
+        public decimal LastSize { get; set; }
+        [JsonProperty("best_bid")]
+        public decimal BestBid { get; set; }
+        [JsonProperty("best_ask")]
+        public decimal BestAsk { get; set; }
     }
 
 #pragma warning restore 1591

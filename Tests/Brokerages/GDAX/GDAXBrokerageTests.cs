@@ -18,6 +18,7 @@ using NUnit.Framework;
 using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.GDAX;
 using QuantConnect.Orders;
+using QuantConnect.Packets;
 using RestSharp;
 using System;
 using System.Collections.Generic;
@@ -42,6 +43,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         string _matchData;
         string _accountsData;
         string _holdingData;
+        string _tickerData;
         Symbol _symbol;
         const string _brokerId = "d0c5340b-6d6c-49d9-b567-48c4bfca13d2";
         const string _matchBrokerId = "132fb6ae-456b-4654-b4e0-d681ac05cea1";
@@ -56,10 +58,9 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             _accountsData = File.ReadAllText("TestData//gdax_accounts.txt");
             _holdingData = File.ReadAllText("TestData//gdax_holding.txt");
             _orderByIdData = File.ReadAllText("TestData//gdax_orderById.txt");
+            _tickerData = File.ReadAllText("TestData//gdax_ticker.txt");
 
             _symbol = Symbol.Create("BTCUSD", SecurityType.Forex, Market.GDAX);
-
-
 
             _rest.Setup(m => m.Execute(It.Is<IRestRequest>(r => r.Resource.StartsWith("/products/")))).Returns(new RestSharp.RestResponse
             {
@@ -111,29 +112,6 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             _unit.Connect();
             _unit.Disconnect();
             _wss.Verify();
-        }
-
-        [TestCase("open", "buy")]
-        [TestCase("open", "sell")]
-        [TestCase("change", "buy")]
-        [TestCase("change", "sell")]
-        public void OnMessageOrderOpenOrChangeTest(string type, string side)
-        {
-            string json = _orderData.Replace("type_value", type).Replace("side_value", side);
-            string orderId = "d50ec984-77a8-460a-b958-66f114b0de9b";
-
-            _unit.Subscribe(null, new[] { _symbol });
-
-            _unit.AskPrices[_symbol].TryAdd(orderId, 124m);
-            _unit.BidPrices[_symbol].TryAdd(orderId, 122m);
-
-            _unit.OnMessage(_unit, GDAXTestsHelpers.GetArgs(json));
-            var actual = _unit.Ticks.Last();
-
-            Assert.AreEqual(123.45m, side == "buy" ? actual.BidPrice : actual.AskPrice);
-            var mid = (_unit.AskPrices[_symbol].Min(a => a.Value) + _unit.BidPrices[_symbol].Max(b => b.Value)) / 2m;
-            Assert.AreEqual(mid, actual.Price);
-            Assert.AreEqual("BTCUSD", actual.Symbol.Value.ToString());
         }
 
         [TestCase(5.23512)]
@@ -309,6 +287,34 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         public void UpdateOrderTest()
         {
             Assert.Throws<NotSupportedException>(() => _unit.UpdateOrder(new LimitOrder()));
+        }
+
+        [Test]
+        public void SubscribeTest()
+        {
+            string actual = null;
+            string expected = "[\"BTC-USD\",\"BTC-ETH\"]";
+            _wss.Setup(w => w.Send(It.IsAny<string>())).Callback<string>(c => actual = c);
+
+            _unit.Subscribe(Mock.Of<LiveNodePacket>(), new[] { Symbol.Create("BTCUSD", SecurityType.Forex, Market.GDAX), Symbol.Create("GBPUSD", SecurityType.Forex, Market.GDAX),
+                Symbol.Create("BTCETH", SecurityType.Forex, Market.GDAX)});
+
+           StringAssert.Contains(expected, actual);
+        }
+
+        [Test]
+        public void OnMessageTickerTest()
+        {
+            string json = _tickerData;
+
+            _unit.OnMessage(_unit, GDAXTestsHelpers.GetArgs(json));
+
+            var actual = _unit.Ticks.First();
+
+            Assert.AreEqual("BTCUSD", actual.Symbol.Value);
+            Assert.AreEqual(4388.005m, _unit.Ticks.First().Price);
+            Assert.AreEqual(4388m, actual.BidPrice);
+            Assert.AreEqual(4388.01m, actual.AskPrice);
         }
 
     }

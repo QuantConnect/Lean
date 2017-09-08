@@ -32,8 +32,6 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
         public static MessageReceivedEventArgs GetArgs(string json)
         {
-            BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
-            System.Globalization.CultureInfo culture = null;
             MessageReceivedEventArgs args = new MessageReceivedEventArgs(json);
 
             return args;
