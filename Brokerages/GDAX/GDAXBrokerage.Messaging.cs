@@ -163,7 +163,8 @@ namespace QuantConnect.Brokerages.GDAX
             //first process impact on order book
             var symbol = ConvertProductId(message.ProductId);
 
-            if (message.Reason == "canceled")
+            //if we don't exit now, will result in fill message
+            if (message.Reason == "canceled" || message.RemainingSize > 0)
             {
                 return;
             }
