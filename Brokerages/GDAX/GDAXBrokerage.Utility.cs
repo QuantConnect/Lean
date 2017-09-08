@@ -32,10 +32,10 @@ namespace QuantConnect.Brokerages.GDAX
     public partial class GDAXBrokerage : BaseWebsocketsBrokerage, IDataQueueHandler
     {
 
-        private const string SignHeader = "CB-ACCESS-SIGN";
-        private const string KeyHeader = "CB-ACCESS-KEY";
-        private const string TimeHeader = "CB-ACCESS-TIMESTAMP";
-        private const string PassHeader = "CB-ACCESS-PASSPHRASE";
+        public const string SignHeader = "CB-ACCESS-SIGN";
+        public const string KeyHeader = "CB-ACCESS-KEY";
+        public const string TimeHeader = "CB-ACCESS-TIMESTAMP";
+        public const string PassHeader = "CB-ACCESS-PASSPHRASE";
         private const string Open = "open";
         private const string Pending = "pending";
         private const string Active = "active";
@@ -73,6 +73,7 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 Key = ApiKey,
                 Passphrase = _passPhrase,
+                //todo: query time server to correct for time skew
                 Timestamp = Time.DateTimeToUnixTimeStamp(DateTime.UtcNow).ToString(System.Globalization.CultureInfo.InvariantCulture)
             };
 

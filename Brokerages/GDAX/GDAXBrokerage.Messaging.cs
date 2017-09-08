@@ -308,10 +308,10 @@ namespace QuantConnect.Brokerages.GDAX
                 type = payload.type,
                 channels = payload.channels,
                 product_ids = payload.product_ids,
-                key = ApiKey,
-                signature = token.Signature,
-                timestamp = token.Timestamp,
-                passphrase = _passPhrase
+                SignHeader = token.Signature,
+                KeyHeader = ApiKey,
+                PassHeader = _passPhrase,
+                TimeHeader = token.Timestamp
             });
 
             WebSocket.Send(json);
@@ -327,12 +327,13 @@ namespace QuantConnect.Brokerages.GDAX
         }
 
         /// <summary>
-        /// Not supported by broker. Subscribers are expected to disconnect
+        /// Ends current subscriptions
         /// </summary>
         /// <param name="job"></param>
         /// <param name="symbols"></param>
         public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
+            WebSocket.Send(JsonConvert.SerializeObject(new { type = "unsubscribe", channels = new[] { "heartbeat", "users", "ticker" } }));
         }
         #endregion
 
