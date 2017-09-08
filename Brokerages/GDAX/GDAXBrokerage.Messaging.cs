@@ -266,6 +266,25 @@ namespace QuantConnect.Brokerages.GDAX
                 if (IsValidForSubscribe(item))
                 {
                     this.ChannelList[item.Value] = new Channel { Name = item.Value, Symbol = item.Value };
+
+                    //emit baseline tick
+                    var message = GetTick(item);
+
+                    lock (_tickLocker)
+                    {
+                        Tick updating = new Tick
+                        {
+                            AskPrice = message.AskPrice,
+                            BidPrice = message.BidPrice,
+                            Value = (message.AskPrice + message.BidPrice) / 2m,
+                            Time = DateTime.UtcNow,
+                            Symbol = item,
+                            TickType = TickType.Quote
+                            //todo: tick volume                          
+                        };
+
+                        this.Ticks.Add(updating);
+                    }
                 }
             }
 
@@ -295,6 +314,7 @@ namespace QuantConnect.Brokerages.GDAX
             });
 
             WebSocket.Send(json);
+
 
             Log.Trace("Subscribe: Sent subcribe.");
 

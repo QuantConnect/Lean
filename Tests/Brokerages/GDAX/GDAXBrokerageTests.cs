@@ -294,10 +294,17 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             string expected = "[\"BTC-USD\",\"BTC-ETH\"]";
             _wss.Setup(w => w.Send(It.IsAny<string>())).Callback<string>(c => actual = c);
 
+            _unit.Ticks.Clear();
+
             _unit.Subscribe(Mock.Of<LiveNodePacket>(), new[] { Symbol.Create("BTCUSD", SecurityType.Forex, Market.GDAX), Symbol.Create("GBPUSD", SecurityType.Forex, Market.GDAX),
                 Symbol.Create("BTCETH", SecurityType.Forex, Market.GDAX)});
 
-           StringAssert.Contains(expected, actual);
+            StringAssert.Contains(expected, actual);
+
+            Assert.AreEqual(2, _unit.Ticks.Count());
+            Assert.AreEqual(333.98, _unit.Ticks.First().BidPrice);
+            Assert.AreEqual(333.99, _unit.Ticks.First().AskPrice);
+            Assert.AreEqual(333.985, _unit.Ticks.First().Price);
         }
 
         [Test]
