@@ -1,4 +1,5 @@
-﻿using QuantConnect.Data;
+﻿using System;
+using QuantConnect.Data;
 using QuantConnect.Data.Custom;
 using System.Collections.Generic;
 using System.IO;
@@ -63,7 +64,7 @@ namespace QuantConnect.ToolBox
             }
         }
 
-        private void WriteHourAndDailyData(IEnumerable<BaseData> data)
+        private void WriteHourAndDailyData(IEnumerable<BaseData> data, bool update = false)
         {
             var sb = new StringBuilder();
 
@@ -74,10 +75,29 @@ namespace QuantConnect.ToolBox
                     obs.Transactions));
             }
 
+            var data_to_save = string.Empty;
             var filename = _symbol.Value.ToLower() + "_volume";
-            var zipFilePath = Path.Combine(FolderPath, filename + ".zip");
+            var csvFilePath = Path.Combine(FolderPath, filename + ".csv");
 
-            Compression.ZipCreateAppendData(zipFilePath, filename + ".csv", sb.ToString());
+            if (update)
+            {
+                var zipFilePath = Path.Combine(FolderPath, filename + ".zip");
+                using (var sr = Compression.UnzipStreamToStreamReader(File.OpenRead(zipFilePath)))
+                {
+                    data_to_save = sr.ReadToEnd() + sb;
+                }
+            }
+            else
+            {
+                {
+                    data_to_save = sb.ToString();
+                }
+            }
+
+            File.WriteAllText(csvFilePath, data_to_save);
+            // Write out this data string to a zip file
+            Compression.Zip(csvFilePath, filename);
+
         }
     }
 }
