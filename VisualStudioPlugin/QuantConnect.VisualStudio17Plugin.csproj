@@ -92,7 +92,7 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="Key.snk" />
-    <None Include="packages.QuantConnect.VisualStudioPluginVS17.config" />
+    <None Include="packages.QuantConnect.VisualStudio17Plugin.config" />
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>

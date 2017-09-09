@@ -2,7 +2,7 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
-MinimumVisualStudioVersion = 10.0.40219.1
+MinimumVisualStudioVersion = 14.0.0.0
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Lean.Launcher", "Launcher\QuantConnect.Lean.Launcher.csproj", "{09E7B916-E58B-4021-BD8B-C10B4446E226}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Lean.Engine", "Engine\QuantConnect.Lean.Engine.csproj", "{12156F46-D07E-4E3D-AD2B-7409E82AB62F}"
@@ -53,11 +53,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{93A63A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.ToolBox", "ToolBox\QuantConnect.ToolBox.csproj", "{AC9A142C-B485-44D7-91FF-015C22C43D05}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.VisualStudioPluginVS15", "VisualStudioPlugin\QuantConnect.VisualStudioPluginVS15.csproj", "{5326A9FB-0270-4647-8C43-20C5607DB529}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Jupyter", "Jupyter\QuantConnect.Jupyter.csproj", "{9561D14A-467E-40AD-928E-EE9F758D7D98}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.VisualStudioPluginVS17", "VisualStudioPlugin\QuantConnect.VisualStudioPluginVS17.csproj", "{5326A9FB-0270-4647-8C43-20C5607DB530}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.VisualStudio15Plugin", "VisualStudioPlugin\QuantConnect.VisualStudio15Plugin.csproj", "{5326A9FB-0270-4647-8C43-20C5607DB529}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -189,12 +187,6 @@ Global
 		{AC9A142C-B485-44D7-91FF-015C22C43D05}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AC9A142C-B485-44D7-91FF-015C22C43D05}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AC9A142C-B485-44D7-91FF-015C22C43D05}.Release|x64.ActiveCfg = Release|Any CPU
-		{5326A9FB-0270-4647-8C43-20C5607DB529}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5326A9FB-0270-4647-8C43-20C5607DB529}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{5326A9FB-0270-4647-8C43-20C5607DB529}.Debug|x64.Build.0 = Debug|Any CPU
-		{5326A9FB-0270-4647-8C43-20C5607DB529}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5326A9FB-0270-4647-8C43-20C5607DB529}.Release|x64.ActiveCfg = Release|Any CPU
-		{5326A9FB-0270-4647-8C43-20C5607DB529}.Release|x64.Build.0 = Release|Any CPU
 		{9561D14A-467E-40AD-928E-EE9F758D7D98}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9561D14A-467E-40AD-928E-EE9F758D7D98}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9561D14A-467E-40AD-928E-EE9F758D7D98}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -203,14 +195,14 @@ Global
 		{9561D14A-467E-40AD-928E-EE9F758D7D98}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9561D14A-467E-40AD-928E-EE9F758D7D98}.Release|x64.ActiveCfg = Release|Any CPU
 		{9561D14A-467E-40AD-928E-EE9F758D7D98}.Release|x64.Build.0 = Release|Any CPU
-		{5326A9FB-0270-4647-8C43-20C5607DB530}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5326A9FB-0270-4647-8C43-20C5607DB530}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5326A9FB-0270-4647-8C43-20C5607DB530}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{5326A9FB-0270-4647-8C43-20C5607DB530}.Debug|x64.Build.0 = Debug|Any CPU
-		{5326A9FB-0270-4647-8C43-20C5607DB530}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5326A9FB-0270-4647-8C43-20C5607DB530}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5326A9FB-0270-4647-8C43-20C5607DB530}.Release|x64.ActiveCfg = Release|Any CPU
-		{5326A9FB-0270-4647-8C43-20C5607DB530}.Release|x64.Build.0 = Release|Any CPU
+		{5326A9FB-0270-4647-8C43-20C5607DB529}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5326A9FB-0270-4647-8C43-20C5607DB529}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5326A9FB-0270-4647-8C43-20C5607DB529}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5326A9FB-0270-4647-8C43-20C5607DB529}.Debug|x64.Build.0 = Debug|Any CPU
+		{5326A9FB-0270-4647-8C43-20C5607DB529}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5326A9FB-0270-4647-8C43-20C5607DB529}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5326A9FB-0270-4647-8C43-20C5607DB529}.Release|x64.ActiveCfg = Release|Any CPU
+		{5326A9FB-0270-4647-8C43-20C5607DB529}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
