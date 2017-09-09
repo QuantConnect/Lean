@@ -40,7 +40,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectTypeGuids>{82b43b9b-a64c-4715-b499-d71e9ca2bd60};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <ProjectGuid>{5326A9FB-0270-4647-8C43-20C5607DB530}</ProjectGuid>
+    <ProjectGuid>{5326A9FB-0270-4647-8C43-20C5607DB529}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>QuantConnect.VisualStudioPlugin</RootNamespace>
