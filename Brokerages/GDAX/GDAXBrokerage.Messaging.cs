@@ -103,12 +103,9 @@ namespace QuantConnect.Brokerages.GDAX
                     OrderMatch(e.Message);
                     return;
                 }
-                else if (raw.Type == "open" || raw.Type == "change")
+                else if (raw.Type == "open" || raw.Type == "change" | raw.Type == "received" | raw.Type == "subscriptions") 
                 {
-                    return;
-                }
-                else if (raw.Type == "received")
-                {
+                    //known messages we don't need to handle or log 
                     return;
                 }
 
@@ -289,11 +286,13 @@ namespace QuantConnect.Brokerages.GDAX
                 }
             }
 
+            var products = ChannelList.Select(s => s.Value.Symbol.Substring(0, 3) + "-" + s.Value.Symbol.Substring(3)).ToArray();
+
             var payload = new
             {
                 type = "subscribe",
-                product_ids = ChannelList.Select(s => s.Value.Symbol.Substring(0, 3) + "-" + s.Value.Symbol.Substring(3)).ToArray(),
-                channels = new[] { "heartbeat", "ticker", "user" }
+                product_ids = products,
+                channels = new [] { "heartbeat", "ticker", "user", "matches" }
             };
 
             if (payload.product_ids.Length == 0)
