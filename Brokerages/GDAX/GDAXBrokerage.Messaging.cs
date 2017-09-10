@@ -136,16 +136,18 @@ namespace QuantConnect.Brokerages.GDAX
             var split = this.FillSplit[cached.First().Key];
             split.Add(message);
 
+            //is this the total order at once? Is this the last split fill?
+            var status = message.Size == cached.Single().Value.Quantity || split.OrderQuantity == split.TotalQuantity() ? OrderStatus.Filled : OrderStatus.PartiallyFilled;
+
             var orderEvent = new OrderEvent
             (
-                cached.First().Key, symbol, message.Time,
-                split.OrderQuantity == split.TotalQuantity() ? OrderStatus.Filled : OrderStatus.PartiallyFilled,
+                cached.First().Key, symbol, message.Time, status,
                 message.Side == "sell" ? OrderDirection.Sell : OrderDirection.Buy,
                 message.Price, message.Size,
                 GetFee(cached.First().Value), "GDAX Match Event"
             );
 
-            //if we think we're filled we won't wait for done event
+            //if we're filled we won't wait for done event
             if (orderEvent.Status == OrderStatus.Filled)
             {
                 Orders.Order outOrder = null;

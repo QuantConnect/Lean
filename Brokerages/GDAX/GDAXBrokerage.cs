@@ -91,6 +91,11 @@ namespace QuantConnect.Brokerages.GDAX
                     CachedOrderIDs.TryAdd(order.Id, order);
                 }
 
+                if (order.Type != OrderType.Market)
+                {
+                    FillSplit.TryAdd(order.Id, new GDAXFill(order));
+                }
+
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Submitted });
 
                 if (order.Type == OrderType.Market)
@@ -98,10 +103,6 @@ namespace QuantConnect.Brokerages.GDAX
                     OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, (decimal)raw.fill_fees, "GDAX Order Event") { Status = OrderStatus.Filled });
                     Orders.Order outOrder = null;
                     CachedOrderIDs.TryRemove(order.Id, out outOrder);
-                }
-                else
-                {
-                    FillSplit.TryAdd(order.Id, new GDAXFill(order));
                 }
 
                 Log.Trace("GDAXBrokerage.PlaceOrder: Order completed successfully orderid:" + order.Id.ToString());
