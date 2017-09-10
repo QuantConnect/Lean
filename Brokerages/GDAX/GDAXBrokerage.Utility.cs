@@ -32,9 +32,21 @@ namespace QuantConnect.Brokerages.GDAX
     public partial class GDAXBrokerage : BaseWebsocketsBrokerage, IDataQueueHandler
     {
 
+        /// <summary>
+        /// Sign Header
+        /// </summary>
         public const string SignHeader = "CB-ACCESS-SIGN";
+        /// <summary>
+        /// Key Header
+        /// </summary>
         public const string KeyHeader = "CB-ACCESS-KEY";
+        /// <summary>
+        /// Timestamp Header
+        /// </summary>
         public const string TimeHeader = "CB-ACCESS-TIMESTAMP";
+        /// <summary>
+        /// Passphrase header
+        /// </summary>
         public const string PassHeader = "CB-ACCESS-PASSPHRASE";
         private const string Open = "open";
         private const string Pending = "pending";

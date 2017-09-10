@@ -73,29 +73,40 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 dynamic raw = JsonConvert.DeserializeObject<dynamic>(response.Content);
 
-                if (raw != null && raw.id != 0)
+                if (raw == null || raw.id == null)
                 {
-                    string brokerId = raw.id;
-                    if (CachedOrderIDs.ContainsKey(order.Id))
-                    {
-                        CachedOrderIDs[order.Id].BrokerId.Add(brokerId);
-                    }
-                    else
-                    {
-                        order.BrokerId.Add(brokerId);
-                        CachedOrderIDs.TryAdd(order.Id, order);
-                    }
-                    FillSplit.TryAdd(order.Id, new GDAXFill(order));
+                    Log.Error("GDAXBrokerage.PlaceOrder: Error parsing response from place order");
+
+                    return false;
                 }
+
+                string brokerId = raw.id;
+                if (CachedOrderIDs.ContainsKey(order.Id))
+                {
+                    CachedOrderIDs[order.Id].BrokerId.Add(brokerId);
+                }
+                else
+                {
+                    order.BrokerId.Add(brokerId);
+                    CachedOrderIDs.TryAdd(order.Id, order);
+                }
+
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Submitted });
 
                 if (order.Type == OrderType.Market)
                 {
                     OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, (decimal)raw.fill_fees, "GDAX Order Event") { Status = OrderStatus.Filled });
+                    Orders.Order outOrder = null;
+                    CachedOrderIDs.TryRemove(order.Id, out outOrder);
+                }
+                else
+                {
+                    FillSplit.TryAdd(order.Id, new GDAXFill(order));
                 }
 
-                Log.Trace("GDAXBrokerage.PlaceOrder(): Order completed successfully orderid:" + order.Id.ToString());
+                Log.Trace("GDAXBrokerage.PlaceOrder: Order completed successfully orderid:" + order.Id.ToString());
                 return true;
+
             }
 
             OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Invalid });
@@ -228,10 +239,6 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 foreach (var item in JsonConvert.DeserializeObject<Messages.Order[]>(response.Content))
                 {
-                    if (item.Type == "stop")
-                    {
-                        continue;
-                    }
 
                     decimal conversionRate;
                     if (!item.ProductId.EndsWith("USD", StringComparison.InvariantCultureIgnoreCase))

@@ -168,10 +168,16 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             Assert.AreEqual("abc", actual.Key);
         }
 
-        [TestCase("1", HttpStatusCode.OK, Orders.OrderStatus.Submitted, 1.23, 1234.56)]
-        [TestCase("1", HttpStatusCode.OK, Orders.OrderStatus.Submitted, -1.23, 1234.56)]
-        [TestCase(null, HttpStatusCode.BadRequest, Orders.OrderStatus.Invalid, 1.23, 1234.56)]
-        public void PlaceOrderTest(string orderId, HttpStatusCode httpStatus, Orders.OrderStatus status, decimal quantity, decimal price)
+        [TestCase("1", HttpStatusCode.OK, Orders.OrderStatus.Submitted, 1.23, 0, OrderType.Market)]
+        [TestCase("1", HttpStatusCode.OK, Orders.OrderStatus.Submitted, -1.23, 0, OrderType.Market)]
+        [TestCase("1", HttpStatusCode.OK, Orders.OrderStatus.Submitted, 1.23, 1234.56, OrderType.Limit)]
+        [TestCase("1", HttpStatusCode.OK, Orders.OrderStatus.Submitted, -1.23, 1234.56, OrderType.Limit)]
+        [TestCase("1", HttpStatusCode.OK, Orders.OrderStatus.Submitted, 1.23, 1234.56, OrderType.StopMarket)]
+        [TestCase("1", HttpStatusCode.OK, Orders.OrderStatus.Submitted, -1.23, 1234.56, OrderType.StopMarket)]
+        [TestCase(null, HttpStatusCode.BadRequest, Orders.OrderStatus.Invalid, 1.23, 1234.56, OrderType.Market)]
+        [TestCase(null, HttpStatusCode.BadRequest, Orders.OrderStatus.Invalid, 1.23, 1234.56, OrderType.Limit)]
+        [TestCase(null, HttpStatusCode.BadRequest, Orders.OrderStatus.Invalid, 1.23, 1234.56, OrderType.StopMarket)]
+        public void PlaceOrderTest(string orderId, HttpStatusCode httpStatus, Orders.OrderStatus status, decimal quantity, decimal price, OrderType orderType)
         {
             var response = new
             {
@@ -180,22 +186,52 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             };
             SetupResponse(JsonConvert.SerializeObject(response), httpStatus);
 
+            bool? hasFilled = null;
+
+            if (orderType == OrderType.Market && httpStatus == HttpStatusCode.OK)
+            {
+                hasFilled = false;
+            }
+
             ManualResetEvent raised = new ManualResetEvent(false);
             _unit.OrderStatusChanged += (s, e) =>
             {
-                Assert.AreEqual(status, e.Status);
-                if (orderId != null)
+                if (orderType == OrderType.Market && e.Status == OrderStatus.Filled)
                 {
-                    Assert.AreEqual("BTCUSD", e.Symbol.Value);
+                    hasFilled = true;
                     Assert.AreEqual(0.11, e.OrderFee);
-                    Assert.That((quantity > 0 && e.Direction == Orders.OrderDirection.Buy) || (quantity < 0 && e.Direction == Orders.OrderDirection.Sell));
-                    Assert.IsTrue(orderId == null || _unit.CachedOrderIDs.SelectMany(c => c.Value.BrokerId.Where(b => b == _brokerId)).Any());
                 }
-                raised.Set();
+                else
+                {
+                    Assert.AreEqual(status, e.Status);
+                    if (orderId != null)
+                    {
+                        Assert.AreEqual("BTCUSD", e.Symbol.Value);
+                        Assert.That((quantity > 0 && e.Direction == Orders.OrderDirection.Buy) || (quantity < 0 && e.Direction == Orders.OrderDirection.Sell));
+                        Assert.IsTrue(orderId == null || _unit.CachedOrderIDs.SelectMany(c => c.Value.BrokerId.Where(b => b == _brokerId)).Any());
+                    }
+                    raised.Set();
+                }
             };
-            bool actual = _unit.PlaceOrder(new Orders.LimitOrder(_symbol, quantity, price, DateTime.UtcNow));
+
+            Order order = null;
+            if (orderType == OrderType.Limit)
+            {
+                order = new Orders.LimitOrder(_symbol, quantity, price, DateTime.UtcNow);
+            }
+            else if (orderType == OrderType.Market)
+            {
+                order = new Orders.MarketOrder(_symbol, quantity, DateTime.UtcNow);
+            }
+            else
+            {
+                order = new Orders.StopMarketOrder(_symbol, quantity, price, DateTime.UtcNow);
+            }
+
+            bool actual = _unit.PlaceOrder(order);
 
             Assert.IsTrue(actual || (orderId == null && !actual));
+            Assert.IsTrue(hasFilled ?? true);
             Assert.IsTrue(raised.WaitOne(1000));
         }
 
