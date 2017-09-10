@@ -12,10 +12,11 @@ using QuantConnect.Orders;
 using System.Reflection;
 using Moq;
 using QuantConnect.Brokerages;
+using RestSharp;
 
 namespace QuantConnect.Tests.Brokerages.GDAX
 {
-    [TestFixture, Ignore("This test requires a configured and active account")]
+    [TestFixture/*, Ignore("This test requires a configured and active account")*/]
     public class GDAXBrokerageIntegrationTests : BrokerageTests
     {
 
@@ -51,23 +52,31 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
         protected override decimal GetDefaultQuantity()
         {
-            return 0.00001m;
+            return 0.01m;
         }
         #endregion
 
         protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
         {
-            var restClient = new RestSharp.RestClient();
+            var restClient = new RestClient("https://api.gdax.com");
             var webSocketClient = new WebSocketWrapper();
 
+            var algorithm = new Mock<IAlgorithm>();
+            algorithm.Setup(a => a.BrokerageModel).Returns(new GDAXBrokerageModel(AccountType.Cash));
+
             return new GDAXBrokerage(Config.Get("gdax-url", "wss://ws-feed.gdax.com"), webSocketClient, restClient, Config.Get("gdax-api-key"), Config.Get("gdax-api-secret"), 
-                Config.Get("gdax-passphrase"));
+                Config.Get("gdax-passphrase"), algorithm.Object);
         }
 
         protected override decimal GetAskPrice(Symbol symbol)
         {
             var tick = ((GDAXBrokerage)this.Brokerage).GetTick(symbol);
             return tick.AskPrice;
+        }
+
+        protected override void ModifyOrderUntilFilled(Order order, OrderTestParameters parameters, double secondsTimeout = 90)
+        {
+            Assert.Pass("Order update not supported");
         }
 
         //no stop limit support
