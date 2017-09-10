@@ -17,6 +17,7 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.GDAX;
+using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using RestSharp;
@@ -37,6 +38,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         GDAXBrokerage _unit;
         Mock<IWebSocket> _wss = new Mock<IWebSocket>();
         Mock<IRestClient> _rest = new Mock<IRestClient>();
+        Mock<IAlgorithm> _algo = new Mock<IAlgorithm>();
         string _orderData;
         string _orderByIdData;
         string _openOrderData;
@@ -47,11 +49,12 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         Symbol _symbol;
         const string _brokerId = "d0c5340b-6d6c-49d9-b567-48c4bfca13d2";
         const string _matchBrokerId = "132fb6ae-456b-4654-b4e0-d681ac05cea1";
+        AccountType _accountType = AccountType.Margin;
 
         [SetUp()]
         public void Setup()
         {
-            _unit = new GDAXBrokerage("wss://localhost", _wss.Object, _rest.Object, "abc", "MTIz", "pass");
+            _unit = new GDAXBrokerage("wss://localhost", _wss.Object, _rest.Object, "abc", "MTIz", "pass", _algo.Object);
             _orderData = File.ReadAllText("TestData//gdax_order.txt");
             _matchData = File.ReadAllText("TestData//gdax_match.txt");
             _openOrderData = File.ReadAllText("TestData//gdax_openOrders.txt");
@@ -74,6 +77,8 @@ namespace QuantConnect.Tests.Brokerages.GDAX
                 Content = File.ReadAllText("TestData//gdax_orderById.txt"),
                 StatusCode = HttpStatusCode.OK
             });
+
+            _algo.Setup(a => a.BrokerageModel.AccountType).Returns(_accountType);
         }
 
         private void SetupResponse(string body, HttpStatusCode httpStatus = HttpStatusCode.OK)

@@ -21,6 +21,7 @@ using QuantConnect.Securities;
 using RestSharp;
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -49,16 +50,21 @@ namespace QuantConnect.Brokerages.GDAX
         public override bool PlaceOrder(Orders.Order order)
         {
             var req = new RestRequest("/orders", Method.POST);
-            req.AddJsonBody(new
+
+            dynamic payload = new ExpandoObject();
+
+            payload.size = Math.Abs(order.Quantity);
+            payload.side = order.Direction.ToString().ToLower();
+            payload.type = ConvertOrderType(order.Type);
+            payload.price = order is LimitOrder ? ((LimitOrder)order).LimitPrice : order is StopMarketOrder ? ((StopMarketOrder)order).StopPrice : 0;
+            payload.product_id = ConvertSymbol(order.Symbol);
+
+            if (_algorithm.BrokerageModel.AccountType == AccountType.Margin)
             {
-                size = Math.Abs(order.Quantity),
-                side = order.Direction.ToString().ToLower(),
-                type = ConvertOrderType(order.Type),
-                price = order is LimitOrder ? ((LimitOrder)order).LimitPrice : 0,
-                product_id = ConvertSymbol(order.Symbol),
-				//todo: can be enabled if margin
-                //overdraft_enabled = true
-            });
+                payload.overdraft_enabled = true;
+            }
+
+            req.AddJsonBody(payload);
 
             GetAuthenticationToken(req);
             var response = RestClient.Execute(req);
@@ -81,7 +87,13 @@ namespace QuantConnect.Brokerages.GDAX
                     }
                     FillSplit.TryAdd(order.Id, new GDAXFill(order));
                 }
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Submitted, OrderFee = raw.fill_fees });
+                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Submitted });
+
+                if (order.Type == OrderType.Market)
+                {
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, (decimal)raw.fill_fees, "GDAX Order Event") { Status = OrderStatus.Filled });
+                }
+
                 Log.Trace("GDAXBrokerage.PlaceOrder(): Order completed successfully orderid:" + order.Id.ToString());
                 return true;
             }
@@ -216,6 +228,11 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 foreach (var item in JsonConvert.DeserializeObject<Messages.Order[]>(response.Content))
                 {
+                    if (item.Type == "stop")
+                    {
+                        continue;
+                    }
+
                     decimal conversionRate;
                     if (!item.ProductId.EndsWith("USD", StringComparison.InvariantCultureIgnoreCase))
                     {
@@ -239,7 +256,7 @@ namespace QuantConnect.Brokerages.GDAX
                         ConversionRate = conversionRate,
                         MarketPrice = item.Price,
                         //todo: check this
-                        AveragePrice = item.ExecutedValue / item.FilledSize
+                        AveragePrice = item.FilledSize > 0 ? item.ExecutedValue / item.FilledSize : 0
                     });
                 }
 

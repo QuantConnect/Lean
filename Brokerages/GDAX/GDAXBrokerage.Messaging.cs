@@ -47,6 +47,7 @@ namespace QuantConnect.Brokerages.GDAX
         private string _passPhrase;
         private string _wssUrl;
         private const string _symbolMatching = "ETH|LTC|BTC";
+        private IAlgorithm _algorithm;
         #endregion
 
         /// <summary>
@@ -58,12 +59,13 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="apiKey">api key</param>
         /// <param name="apiSecret">api secret</param>
         /// <param name="passPhrase">pass phrase</param>
-        public GDAXBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase)
+        public GDAXBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm)
             : base(wssUrl, websocket, restClient, apiKey, apiSecret, Market.GDAX, "GDAX")
         {
             FillSplit = new ConcurrentDictionary<long, GDAXFill>();
             _passPhrase = passPhrase;
             _wssUrl = wssUrl;
+            _algorithm = algorithm;
         }
 
         /// <summary>

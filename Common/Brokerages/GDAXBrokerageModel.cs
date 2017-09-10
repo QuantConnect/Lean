@@ -68,5 +68,19 @@ namespace QuantConnect.Brokerages
             return new GDAXFeeModel();
         }
 
+        /// <summary>
+        /// Gdax does no support update meaning this will always return false
+        /// </summary>
+        /// <param name="security"></param>
+        /// <param name="order"></param>
+        /// <param name="request"></param>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
+        {
+            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, "Brokerage does not support update. You must cancel and re-create instead.");
+            return false;
+        }
+
     }
 }
