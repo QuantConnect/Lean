@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -74,10 +74,10 @@ namespace QuantConnect.Tests.Common.Securities
         public void HoldingsTests()
         {
             var security = GetSecurity();
-            
+
             // Long 100 stocks test
             security.Holdings.SetHoldings(100m, 100);
-            
+
             Assert.AreEqual(100m, security.Holdings.AveragePrice);
             Assert.AreEqual(100, security.Holdings.Quantity);
             Assert.IsTrue(security.HoldStock);
@@ -180,6 +180,28 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.DoesNotThrow(() => { equity.SetDataNormalizationMode(DataNormalizationMode.SplitAdjusted); });
             Assert.DoesNotThrow(() => { equity.SetDataNormalizationMode(DataNormalizationMode.Adjusted); });
             Assert.DoesNotThrow(() => { equity.SetDataNormalizationMode(DataNormalizationMode.TotalReturn); });
+        }
+
+        [Test]
+        public void TickQuantityUpdatedInSecurityCache()
+        {
+            var tick1 = new Tick();
+            tick1.Update(1, 1, 1, 10, 1, 1);
+
+            var tick2 = new Tick();
+            tick2.Update(1, 1, 1, 20, 1, 1);
+
+            var securityCache = new SecurityCache();
+
+            Assert.AreEqual(0, securityCache.Volume);
+
+            securityCache.AddData(tick1);
+
+            Assert.AreEqual(10, securityCache.Volume);
+
+            securityCache.AddData(tick2);
+
+            Assert.AreEqual(20, securityCache.Volume);
         }
 
         private Security GetSecurity()
