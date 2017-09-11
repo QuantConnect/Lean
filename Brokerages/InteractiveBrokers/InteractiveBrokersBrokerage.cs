@@ -250,7 +250,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             get { return _client; }
         }
 
-
         /// <summary>
         /// Places a new order and assigns a new broker ID to the order
         /// </summary>
@@ -1054,7 +1053,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             // https://www.interactivebrokers.com/en/software/api/apiguide/tables/api_message_codes.htm
 
-            var tickerId = e.Id;
+            var requestId = e.Id;
             var errorCode = e.Code;
             var errorMsg = e.Message;
 
@@ -1063,12 +1062,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             // if there is additional information for the originating request, append it to the error message
             string requestMessage;
-            if (_requestInformation.TryGetValue(tickerId, out requestMessage))
+            if (_requestInformation.TryGetValue(requestId, out requestMessage))
             {
                 errorMsg += ". Origin: " + requestMessage;
             }
 
-            Log.Trace(string.Format("InteractiveBrokersBrokerage.HandleError(): Order: {0} ErrorCode: {1} - {2}", tickerId, errorCode, errorMsg));
+            Log.Trace($"InteractiveBrokersBrokerage.HandleError(): RequestId: {requestId} ErrorCode: {errorCode} - {errorMsg}");
 
             // figure out the message type based on our code collections below
             var brokerageMessageType = BrokerageMessageType.Information;
@@ -1110,11 +1109,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             if (InvalidatingCodes.Contains(errorCode))
             {
-                var message = string.Format("{0} - {1}", errorCode, errorMsg);
-                Log.Trace(string.Format("InteractiveBrokersBrokerage.HandleError.InvalidateOrder(): Order: {0} ErrorCode: {1}", tickerId, message));
+                var message = $"{errorCode} - {errorMsg}";
+                Log.Trace($"InteractiveBrokersBrokerage.HandleError.InvalidateOrder(): IBOrderId: {requestId} ErrorCode: {message}");
 
                 // invalidate the order
-                var order = _orderProvider.GetOrderByBrokerageId(tickerId);
+                var order = _orderProvider.GetOrderByBrokerageId(requestId);
                 const int orderFee = 0;
                 var orderEvent = new OrderEvent(order, DateTime.UtcNow, orderFee)
                 {
@@ -2602,7 +2601,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly ConcurrentDictionary<Symbol, int> _lastAskSizes = new ConcurrentDictionary<Symbol, int>();
         private readonly ConcurrentDictionary<Symbol, int> _openInterests = new ConcurrentDictionary<Symbol, int>();
         private readonly List<Tick> _ticks = new List<Tick>();
-
 
         private static class AccountValueKeys
         {
