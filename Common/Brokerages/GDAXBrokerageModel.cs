@@ -37,6 +37,8 @@ namespace QuantConnect.Brokerages
     public class GDAXBrokerageModel : DefaultBrokerageModel
     {
 
+        private static BrokerageMessageEvent _message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, "Brokerage does not support update. You must cancel and re-create instead.");
+
         /// <summary>
         /// Initializes a new instance of the <see cref="GDAXBrokerageModel"/> class
         /// </summary>
@@ -78,8 +80,26 @@ namespace QuantConnect.Brokerages
         /// <returns></returns>
         public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
-            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, "Brokerage does not support update. You must cancel and re-create instead.");
+            message = _message;
             return false;
+        }
+
+        /// <summary>
+        /// Evaluates whether exchange will accept order. Will reject order update
+        /// </summary>
+        /// <param name="security"></param>
+        /// <param name="order"></param>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
+        {           
+            if (order.BrokerId != null && order.BrokerId.Any())
+            {
+                message = _message;
+                return false;
+            }
+
+            return base.CanSubmitOrder(security, order, out message);
         }
 
     }

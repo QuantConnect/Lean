@@ -60,6 +60,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="apiKey">api key</param>
         /// <param name="apiSecret">api secret</param>
         /// <param name="passPhrase">pass phrase</param>
+        /// <param name="algorithm">the algorithm instance is required to retreive account type</param>
         public GDAXBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm)
             : base(wssUrl, websocket, restClient, apiKey, apiSecret, Market.GDAX, "GDAX")
         {

@@ -262,9 +262,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             var actual = _unit.GetTick(_symbol);
             Assert.AreEqual(333.98m, actual.BidPrice);
             Assert.AreEqual(333.99m, actual.AskPrice);
-            //todo: int conversion
             Assert.AreEqual(5957.11914015, actual.Quantity);
-            //Assert.AreEqual(5957.11914015, actual.Quantity);
         }
 
         [Test()]
