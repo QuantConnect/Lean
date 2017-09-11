@@ -16,7 +16,7 @@ using RestSharp;
 
 namespace QuantConnect.Tests.Brokerages.GDAX
 {
-    [TestFixture/*, Ignore("This test requires a configured and active account")*/]
+    [TestFixture, Ignore("This test requires a configured and active account")]
     public class GDAXBrokerageIntegrationTests : BrokerageTests
     {
 
