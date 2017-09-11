@@ -116,6 +116,8 @@ namespace QuantConnect.Securities
                 if (tick.AskSize != 0) AskSize = tick.AskSize;
 
                 if (tick.Quantity != 0) Volume = tick.Quantity;
+
+                return;
             }
             var bar = data as IBar;
             if (bar != null)
