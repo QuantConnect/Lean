@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -182,7 +182,7 @@ namespace QuantConnect.Algorithm
         /// <param name="periods">The number of bars to request</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
-        public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null) 
+        public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null)
             where T : IBaseData
         {
             var requests = symbols.Select(x =>
@@ -208,7 +208,7 @@ namespace QuantConnect.Algorithm
         /// <param name="end">The end time in the algorithm's time zone</param>
         /// <param name="resolution">The resolution to request</param>
         /// <returns>An enumerable of slice containing the requested historical data</returns>
-        public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null) 
+        public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null)
             where T : IBaseData
         {
             var requests = symbols.Select(x =>
@@ -238,7 +238,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Gets the historical data for the specified symbol. The exact number of bars will be returned. 
+        /// Gets the historical data for the specified symbol. The exact number of bars will be returned.
         /// The symbol must exist in the Securities collection.
         /// </summary>
         /// <param name="symbol">The symbol to retrieve historical data for</param>
@@ -260,7 +260,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Gets the historical data for the specified symbol. The exact number of bars will be returned. 
+        /// Gets the historical data for the specified symbol. The exact number of bars will be returned.
         /// The symbol must exist in the Securities collection.
         /// </summary>
         /// <typeparam name="T">The data type of the symbol</typeparam>
@@ -444,13 +444,20 @@ namespace QuantConnect.Algorithm
             var startTime = GetStartTimeAlgoTzForSecurity(security, 1, resolution);
             var endTime   = Time.RoundDown(resolution.ToTimeSpan());
 
+            // request QuoteBar for Options and Futures
+            var dataType = typeof(BaseData);
+            if (security.Type == SecurityType.Option || security.Type == SecurityType.Future)
+            {
+                dataType = LeanData.GetDataType(resolution, TickType.Quote);
+            }
+
             // Get the config with the largest resolution
-            var subscriptionDataConfig = GetMatchingSubscription(security, typeof(BaseData));
+            var subscriptionDataConfig = GetMatchingSubscription(security, dataType);
 
             // if subscription resolution is Tick, we also need to update the data type from Tick to TradeBar/QuoteBar
             if (subscriptionDataConfig != null && subscriptionDataConfig.Resolution == Resolution.Tick)
             {
-                var dataType = LeanData.GetDataType(resolution, subscriptionDataConfig.TickType);
+                dataType = LeanData.GetDataType(resolution, subscriptionDataConfig.TickType);
                 subscriptionDataConfig = new SubscriptionDataConfig(subscriptionDataConfig, dataType, resolution: resolution);
             }
 
