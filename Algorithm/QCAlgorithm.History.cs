@@ -446,7 +446,7 @@ namespace QuantConnect.Algorithm
 
             // request QuoteBar for Options and Futures
             var dataType = typeof(BaseData);
-            if (security.Type == SecurityType.Option || security.Type == SecurityType.Option)
+            if (security.Type == SecurityType.Option || security.Type == SecurityType.Future)
             {
                 dataType = LeanData.GetDataType(resolution, TickType.Quote);
             }
