@@ -350,6 +350,18 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         }
 
         [Test]
+        public void UnsubscribeTest()
+        {
+            string actual = null;
+            _wss.Setup(w => w.Send(It.IsAny<string>())).Callback<string>(c => actual = c);
+            _unit.Unsubscribe(null, new List<Symbol> { Symbol.Create("BTCUSD", SecurityType.Forex, Market.GDAX) });
+            StringAssert.Contains("user", actual);
+            StringAssert.Contains("heartbeat", actual);
+            StringAssert.Contains("ticker", actual);
+            StringAssert.Contains("matches", actual);
+        }
+
+        [Test]
         public void OnMessageTickerTest()
         {
             string json = _tickerData;

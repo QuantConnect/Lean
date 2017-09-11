@@ -48,6 +48,7 @@ namespace QuantConnect.Brokerages.GDAX
         private string _wssUrl;
         private const string _symbolMatching = "ETH|LTC|BTC";
         private IAlgorithm _algorithm;
+        private static string[] _channels = new string[] { "heartbeat", "ticker", "user", "matches" };
         #endregion
 
         /// <summary>
@@ -297,7 +298,7 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 type = "subscribe",
                 product_ids = products,
-                channels = new[] { "heartbeat", "ticker", "user", "matches" }
+                channels = _channels
             };
 
             if (payload.product_ids.Length == 0)
@@ -337,7 +338,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="symbols"></param>
         public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
-            WebSocket.Send(JsonConvert.SerializeObject(new { type = "unsubscribe", channels = new[] { "heartbeat", "users", "ticker" } }));
+            WebSocket.Send(JsonConvert.SerializeObject(new { type = "unsubscribe", channels = _channels }));
         }
         #endregion
 
