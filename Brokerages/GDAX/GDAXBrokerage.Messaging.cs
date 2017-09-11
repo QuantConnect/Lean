@@ -105,7 +105,7 @@ namespace QuantConnect.Brokerages.GDAX
                     OrderMatch(e.Message);
                     return;
                 }
-                else if (raw.Type == "open" || raw.Type == "change" | raw.Type == "received" | raw.Type == "subscriptions") 
+                else if (raw.Type == "open" || raw.Type == "change" | raw.Type == "received" | raw.Type == "subscriptions")
                 {
                     //known messages we don't need to handle or log 
                     return;
@@ -137,7 +137,8 @@ namespace QuantConnect.Brokerages.GDAX
             split.Add(message);
 
             //is this the total order at once? Is this the last split fill?
-            var status = message.Size == cached.Single().Value.Quantity || split.OrderQuantity == split.TotalQuantity() ? OrderStatus.Filled : OrderStatus.PartiallyFilled;
+            var status = Math.Abs(message.Size) == Math.Abs(cached.Single().Value.Quantity) || Math.Abs(split.OrderQuantity) == Math.Abs(split.TotalQuantity())
+                ? OrderStatus.Filled : OrderStatus.PartiallyFilled;
 
             var orderEvent = new OrderEvent
             (
@@ -296,7 +297,7 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 type = "subscribe",
                 product_ids = products,
-                channels = new [] { "heartbeat", "ticker", "user", "matches" }
+                channels = new[] { "heartbeat", "ticker", "user", "matches" }
             };
 
             if (payload.product_ids.Length == 0)
