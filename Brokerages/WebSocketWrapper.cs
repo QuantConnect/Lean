@@ -25,7 +25,7 @@ namespace QuantConnect.Brokerages
 {
 
     /// <summary>
-    /// Wrapper for WebSocketSharp to enhance testability
+    /// Wrapper for WebSocket4Net to enhance testability
     /// </summary>
     public class WebSocketWrapper : IWebSocket
     {

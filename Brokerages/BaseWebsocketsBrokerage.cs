@@ -57,7 +57,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         protected string ApiKey;
         /// <summary>
-        /// Timestamp of most recent heeartbeat message
+        /// Timestamp of most recent heartbeat message
         /// </summary>
         protected DateTime LastHeartbeatUtcTime = DateTime.UtcNow;
         private const int _heartbeatTimeout = 90;

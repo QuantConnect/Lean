@@ -48,7 +48,7 @@ namespace QuantConnect.Brokerages.GDAX
         private string _wssUrl;
         private const string _symbolMatching = "ETH|LTC|BTC";
         private IAlgorithm _algorithm;
-        private static string[] _channels = new string[] { "heartbeat", "ticker", "user", "matches" };
+        private static string[] _channelNames = new string[] { "heartbeat", "ticker", "user", "matches" };
         #endregion
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace QuantConnect.Brokerages.GDAX
                 else if (raw.Type == "error")
                 {
                     var error = JsonConvert.DeserializeObject<Messages.Error>(e.Message, JsonSettings);
-                    Log.Error("GDAXBrokerage.OnMessage(): " + error.Message + " " + error.Reason);
+                    Log.Error("GDAXBrokerage.OnMessage: " + error.Message + " " + error.Reason);
                 }
                 else if (raw.Type == "done")
                 {
@@ -126,7 +126,6 @@ namespace QuantConnect.Brokerages.GDAX
         {
             var message = JsonConvert.DeserializeObject<Messages.Matched>(data, JsonSettings);
             var cached = CachedOrderIDs.Where(o => o.Value.BrokerId.Contains(message.MakerOrderId) || o.Value.BrokerId.Contains(message.TakerOrderId));
-            //todo: update volume quotes
 
             var symbol = ConvertProductId(message.ProductId);
 
@@ -164,9 +163,6 @@ namespace QuantConnect.Brokerages.GDAX
         {
             var message = JsonConvert.DeserializeObject<Messages.Done>(data, JsonSettings);
 
-            //first process impact on order book
-            var symbol = ConvertProductId(message.ProductId);
-
             //if we don't exit now, will result in fill message
             if (message.Reason == "canceled" || message.RemainingSize > 0)
             {
@@ -176,7 +172,7 @@ namespace QuantConnect.Brokerages.GDAX
             //is this our order?
             var cached = CachedOrderIDs.Where(o => o.Value.BrokerId.Contains(message.OrderId));
 
-            if (!cached.Any())
+            if (!cached.Any() || cached.Single().Value.Status == OrderStatus.Filled)
             {
                 return;
             }
@@ -299,7 +295,7 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 type = "subscribe",
                 product_ids = products,
-                channels = _channels
+                channels = _channelNames
             };
 
             if (payload.product_ids.Length == 0)
@@ -339,7 +335,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="symbols"></param>
         public void Unsubscribe(LiveNodePacket job, IEnumerable<Symbol> symbols)
         {
-            WebSocket.Send(JsonConvert.SerializeObject(new { type = "unsubscribe", channels = _channels }));
+            WebSocket.Send(JsonConvert.SerializeObject(new { type = "unsubscribe", channels = _channelNames }));
         }
         #endregion
 

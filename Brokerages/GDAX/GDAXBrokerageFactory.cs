@@ -81,7 +81,7 @@ namespace QuantConnect.Brokerages.GDAX
             foreach (var item in required)
             {
                 if (string.IsNullOrEmpty(job.BrokerageData[item]))
-                    throw new Exception(string.Format("Missing {0} in config.json", item));
+                    throw new Exception(string.Format("GDAXBrokerageFactory.CreateBrokerage: Missing {0} in config.json", item));
             }
 
             var restClient = new RestClient("https://api.gdax.com");

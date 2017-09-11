@@ -111,7 +111,7 @@ namespace QuantConnect.Brokerages.GDAX
             }
 
             OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Invalid });
-            Log.Trace("GDAXBrokerage.PlaceOrder(): Order failed Order Id: " + order.Id + " timestamp:" + order.Time + " quantity: " + order.Quantity.ToString()
+            Log.Trace("GDAXBrokerage.PlaceOrder: Order failed Order Id: " + order.Id + " timestamp:" + order.Time + " quantity: " + order.Quantity.ToString()
                 + " content:" + response.Content);
             return false;
 
@@ -124,7 +124,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// <returns></returns>
         public override bool UpdateOrder(Orders.Order order)
         {
-            throw new NotSupportedException("Order update not supported. Please cancel and re-create.");
+            throw new NotSupportedException("GDAXBrokerage.UpdateOrder: Order update not supported. Please cancel and re-create.");
         }
 
         /// <summary>
@@ -190,7 +190,7 @@ namespace QuantConnect.Brokerages.GDAX
                         }
                         else
                         {
-                            Log.Error("GDAXBrokerage.GetOpenOrders(): Unsupported order type returned from brokerage" + item.Type);
+                            Log.Error("GDAXBrokerage.GetOpenOrders: Unsupported order type returned from brokerage" + item.Type);
                             continue;
                         }
 
