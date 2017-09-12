@@ -703,6 +703,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 throw new InvalidOperationException("InteractiveBrokersBrokerage.IBPlaceOrder(): Unable to place order while not connected.");
             }
 
+            // MOO/MOC require directed option orders
+            if (exchange == null &&
+                order.Symbol.SecurityType == SecurityType.Option &&
+                (order.Type == OrderType.MarketOnOpen || order.Type == OrderType.MarketOnClose))
+            {
+                exchange = Market.CBOE.ToUpper();
+            }
+
             var contract = CreateContract(order.Symbol, exchange);
 
             int ibOrderId;
