@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -87,7 +87,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         private readonly InteractiveBrokersSymbolMapper _symbolMapper = new InteractiveBrokersSymbolMapper();
 
-        // Prioritized list of exchanges used to find right futures contract 
+        // Prioritized list of exchanges used to find right futures contract
         private readonly Dictionary<string, string> _futuresExchanges = new Dictionary< string, string>
         {
             { Market.Globex, "GLOBEX" },
@@ -184,7 +184,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _clientId = IncrementClientId();
             _agentDescription = agentDescription;
             _client = new IB.InteractiveBrokersClient(_signal);
-            
+
             // set up event handlers
             _client.UpdatePortfolio += HandlePortfolioUpdates;
             _client.OrderStatus += HandleOrderStatusUpdates;
@@ -249,7 +249,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             get { return _client; }
         }
-
 
         /// <summary>
         /// Places a new order and assigns a new broker ID to the order
@@ -348,7 +347,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             _client.OpenOrder += clientOnOpenOrder;
             _client.OpenOrderEnd += clientOnOpenOrderEnd;
-            
+
             _client.ClientSocket.reqAllOpenOrders();
 
             // wait for our end signal
@@ -611,7 +610,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             };
             _client.AccountDownloadEnd += clientOnAccountDownloadEnd;
 
-            // we'll wait to get our first account update, we need to be absolutely sure we 
+            // we'll wait to get our first account update, we need to be absolutely sure we
             // have downloaded the entire account before leaving this function
             var firstAccountUpdateReceived = new ManualResetEvent(false);
             EventHandler<IB.UpdateAccountValueEventArgs> clientOnUpdateAccountValue = (sender, args) =>
@@ -702,6 +701,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             if (!IsConnected)
             {
                 throw new InvalidOperationException("InteractiveBrokersBrokerage.IBPlaceOrder(): Unable to place order while not connected.");
+            }
+
+            // MOO/MOC require directed option orders
+            if (exchange == null &&
+                order.Symbol.SecurityType == SecurityType.Option &&
+                (order.Type == OrderType.MarketOnOpen || order.Type == OrderType.MarketOnClose))
+            {
+                exchange = Market.CBOE.ToUpper();
             }
 
             var contract = CreateContract(order.Symbol, exchange);
@@ -861,10 +868,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var contractDetails = new List<ContractDetails>();
 
             // define our event handlers
-            EventHandler<IB.ContractDetailsEventArgs> clientOnContractDetails = 
+            EventHandler<IB.ContractDetailsEventArgs> clientOnContractDetails =
                 (sender, args) => contractDetails.Add(args.ContractDetails);
-            
-            EventHandler<IB.RequestEndEventArgs> clientOnContractDetailsEnd = 
+
+            EventHandler<IB.RequestEndEventArgs> clientOnContractDetailsEnd =
                 (sender, args) => manualResetEvent.Set();
 
             _client.ContractDetails += clientOnContractDetails;
@@ -924,10 +931,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             // if this stays zero then we haven't received the conversion rate
-            var rate = 0m; 
+            var rate = 0m;
             var manualResetEvent = new ManualResetEvent(false);
 
-            // we're going to request ticks first and if not present, 
+            // we're going to request ticks first and if not present,
             // we'll make a history request and use the latest value returned.
 
             const int requestTimeout = 60;
@@ -1008,7 +1015,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                     // request some historical data, IB's api takes into account weekends/market opening hours
                     const string requestSpan = "100 S";
-                    _client.ClientSocket.reqHistoricalData(historicalTicker, contract, DateTime.UtcNow.ToString("yyyyMMdd HH:mm:ss UTC"), 
+                    _client.ClientSocket.reqHistoricalData(historicalTicker, contract, DateTime.UtcNow.ToString("yyyyMMdd HH:mm:ss UTC"),
                         requestSpan, IB.BarSize.OneSecond, HistoricalDataType.Ask, 0, 2, false, new List<TagValue>());
 
                     if (!manualResetEvent.WaitOne(requestTimeout * 1000))
@@ -1054,7 +1061,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             // https://www.interactivebrokers.com/en/software/api/apiguide/tables/api_message_codes.htm
 
-            var tickerId = e.Id;
+            var requestId = e.Id;
             var errorCode = e.Code;
             var errorMsg = e.Message;
 
@@ -1063,12 +1070,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             // if there is additional information for the originating request, append it to the error message
             string requestMessage;
-            if (_requestInformation.TryGetValue(tickerId, out requestMessage))
+            if (_requestInformation.TryGetValue(requestId, out requestMessage))
             {
                 errorMsg += ". Origin: " + requestMessage;
             }
 
-            Log.Trace(string.Format("InteractiveBrokersBrokerage.HandleError(): Order: {0} ErrorCode: {1} - {2}", tickerId, errorCode, errorMsg));
+            Log.Trace($"InteractiveBrokersBrokerage.HandleError(): RequestId: {requestId} ErrorCode: {errorCode} - {errorMsg}");
 
             // figure out the message type based on our code collections below
             var brokerageMessageType = BrokerageMessageType.Information;
@@ -1095,7 +1102,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 OnMessage(new BrokerageMessageEvent(brokerageMessageType, errorCode, errorMsg));
 
                 // With IB Gateway v960.2a in the cloud, we are not receiving order fill events after the nightly reset,
-                // so we execute the following sequence: 
+                // so we execute the following sequence:
                 // disconnect, kill IB Gateway, restart IB Gateway, reconnect, restore data subscriptions
                 Log.Trace("InteractiveBrokersBrokerage.HandleError(): Reconnect message received. Restarting...");
 
@@ -1110,11 +1117,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             if (InvalidatingCodes.Contains(errorCode))
             {
-                var message = string.Format("{0} - {1}", errorCode, errorMsg);
-                Log.Trace(string.Format("InteractiveBrokersBrokerage.HandleError.InvalidateOrder(): Order: {0} ErrorCode: {1}", tickerId, message));
+                var message = $"{errorCode} - {errorMsg}";
+                Log.Trace($"InteractiveBrokersBrokerage.HandleError.InvalidateOrder(): IBOrderId: {requestId} ErrorCode: {message}");
 
                 // invalidate the order
-                var order = _orderProvider.GetOrderByBrokerageId(tickerId);
+                var order = _orderProvider.GetOrderByBrokerageId(requestId);
                 const int orderFee = 0;
                 var orderEvent = new OrderEvent(order, DateTime.UtcNow, orderFee)
                 {
@@ -1492,7 +1499,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             // not yet supported
-            //ibOrder.ParentId = 
+            //ibOrder.ParentId =
             //ibOrder.OcaGroup =
 
             return ibOrder;
@@ -1711,33 +1718,33 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 case IB.OrderStatus.ApiPending:
                 case IB.OrderStatus.PendingSubmit:
-                case IB.OrderStatus.PreSubmitted: 
+                case IB.OrderStatus.PreSubmitted:
                     return OrderStatus.New;
 
                 case IB.OrderStatus.ApiCancelled:
                 case IB.OrderStatus.PendingCancel:
-                case IB.OrderStatus.Cancelled: 
+                case IB.OrderStatus.Cancelled:
                     return OrderStatus.Canceled;
 
-                case IB.OrderStatus.Submitted: 
+                case IB.OrderStatus.Submitted:
                     return OrderStatus.Submitted;
 
-                case IB.OrderStatus.Filled: 
+                case IB.OrderStatus.Filled:
                     return OrderStatus.Filled;
 
-                case IB.OrderStatus.PartiallyFilled: 
+                case IB.OrderStatus.PartiallyFilled:
                     return OrderStatus.PartiallyFilled;
 
-                case IB.OrderStatus.Error: 
+                case IB.OrderStatus.Error:
                     return OrderStatus.Invalid;
 
                 case IB.OrderStatus.Inactive:
                     Log.Error("InteractiveBrokersBrokerage.ConvertOrderStatus(): Inactive order");
                     return OrderStatus.None;
 
-                case IB.OrderStatus.None: 
+                case IB.OrderStatus.None:
                     return OrderStatus.None;
-                    
+
                 // not sure how to map these guys
                 default:
                     throw new ArgumentException(status, "status");
@@ -1773,7 +1780,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     throw new InvalidEnumArgumentException("type", (int)type, typeof(SecurityType));
             }
         }
-        
+
         /// <summary>
         /// Maps SecurityType enum
         /// </summary>
@@ -1812,7 +1819,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
-        /// Maps Resolution to IB representation 
+        /// Maps Resolution to IB representation
         /// </summary>
         /// <param name="resolution"></param>
         /// <returns></returns>
@@ -1834,7 +1841,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
-        /// Maps Resolution to IB span 
+        /// Maps Resolution to IB span
         /// </summary>
         /// <param name="resolution"></param>
         /// <returns></returns>
@@ -1962,7 +1969,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             bool result;
             var time = DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork);
-            
+
             // don't kill algos on Saturdays if we don't have a connection
             if (time.DayOfWeek == DayOfWeek.Saturday)
             {
@@ -1990,9 +1997,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
 
         /// <summary>
-        /// IDataQueueHandler interface implementation 
+        /// IDataQueueHandler interface implementation
         /// </summary>
-        /// 
+        ///
         public IEnumerable<BaseData> GetNextTicks()
         {
             Tick[] ticks;
@@ -2035,7 +2042,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                             if (!_subscribedSymbols.ContainsKey(symbol))
                             {
-                                // processing canonical option and futures symbols 
+                                // processing canonical option and futures symbols
                                 var subscribeSymbol = symbol;
 
                                 // we subscribe to the underlying
@@ -2242,7 +2249,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             if (tick.Quantity == 0) return;
 
             switch (e.Field)
-            { 
+            {
                 case IBApi.TickType.BID_SIZE:
 
                     tick.TickType = TickType.Quote;
@@ -2264,8 +2271,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     tick.Value = tick.AskPrice;
                     tick.AskSize = tick.Quantity;
                     break;
-                
-                
+
+
                 case IBApi.TickType.LAST_SIZE:
                     tick.TickType = TickType.Trade;
 
@@ -2274,7 +2281,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     _lastVolumes[symbol] = (int)tick.Quantity;
 
                     tick.Value = lastPrice;
-                        
+
                     break;
 
                 case IBApi.TickType.OPEN_INTEREST:
@@ -2300,7 +2307,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
-        /// Method returns a collection of Symbols that are available at the broker. 
+        /// Method returns a collection of Symbols that are available at the broker.
         /// </summary>
         /// <param name="lookupName">String representing the name to lookup</param>
         /// <param name="securityType">Expected security type of the returned symbols (if any)</param>
@@ -2366,7 +2373,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <remarks>For IB history limitations see https://www.interactivebrokers.com/en/software/api/apiguide/tables/historical_data_limitations.htm </remarks>
         public override IEnumerable<BaseData> GetHistory(HistoryRequest request)
         {
-            // skipping universe and canonical symbols 
+            // skipping universe and canonical symbols
             if (!CanSubscribe(request.Symbol) ||
                 (request.Symbol.ID.SecurityType == SecurityType.Option && request.Symbol.IsCanonical()) ||
                 (request.Symbol.ID.SecurityType == SecurityType.Future && request.Symbol.IsCanonical()))
@@ -2381,7 +2388,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var startTime = request.Resolution == Resolution.Daily ? request.StartTimeUtc.Date : request.StartTimeUtc;
             var endTime = request.Resolution == Resolution.Daily ? request.EndTimeUtc.Date : request.EndTimeUtc;
 
-            Log.Trace("InteractiveBrokersBrokerage::GetHistory(): Submitting request: {0}({1}): {2} {3} UTC -> {4} UTC", 
+            Log.Trace("InteractiveBrokersBrokerage::GetHistory(): Submitting request: {0}({1}): {2} {3} UTC -> {4} UTC",
                 request.Symbol.Value, contract, request.Resolution, startTime, endTime);
 
             DateTimeZone exchangeTimeZone;
@@ -2395,21 +2402,21 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             IEnumerable<BaseData> history;
             if (request.Symbol.SecurityType == SecurityType.Forex || request.Symbol.SecurityType == SecurityType.Cfd)
             {
-                // Forex and CFD need two separate IB requests for Bid and Ask, 
+                // Forex and CFD need two separate IB requests for Bid and Ask,
                 // each pair of TradeBars will be joined into a single QuoteBar
                 var historyBid = GetHistory(request, contract, startTime, endTime, exchangeTimeZone, duration, resolution, HistoricalDataType.Bid);
                 var historyAsk = GetHistory(request, contract, startTime, endTime, exchangeTimeZone, duration, resolution, HistoricalDataType.Ask);
 
-                history = historyBid.Join(historyAsk, 
-                    bid => bid.Time, 
-                    ask => ask.Time, 
+                history = historyBid.Join(historyAsk,
+                    bid => bid.Time,
+                    ask => ask.Time,
                     (bid, ask) => new QuoteBar(
-                        bid.Time, 
-                        bid.Symbol, 
-                        new Bar(bid.Open, bid.High, bid.Low, bid.Close), 
-                        0, 
-                        new Bar(ask.Open, ask.High, ask.Low, ask.Close), 
-                        0, 
+                        bid.Time,
+                        bid.Symbol,
+                        new Bar(bid.Open, bid.High, bid.Low, bid.Close),
+                        0,
+                        new Bar(ask.Open, ask.High, ask.Low, ask.Close),
+                        0,
                         bid.Period));
             }
             else
@@ -2431,13 +2438,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         private IEnumerable<TradeBar> GetHistory(
-            HistoryRequest request, 
-            Contract contract, 
-            DateTime startTime, 
-            DateTime endTime, 
-            DateTimeZone exchangeTimeZone, 
-            string duration, 
-            string resolution, 
+            HistoryRequest request,
+            Contract contract,
+            DateTime startTime,
+            DateTime endTime,
+            DateTimeZone exchangeTimeZone,
+            string duration,
+            string resolution,
             string dataType)
         {
             const int timeOut = 60; // seconds timeout
@@ -2533,7 +2540,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 history.AddRange(filteredPiece);
 
-                // moving endTime to the new position to proceed with next request (if needed) 
+                // moving endTime to the new position to proceed with next request (if needed)
                 endTime = filteredPiece.First().Time;
             }
 
@@ -2603,7 +2610,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly ConcurrentDictionary<Symbol, int> _openInterests = new ConcurrentDictionary<Symbol, int>();
         private readonly List<Tick> _ticks = new List<Tick>();
 
-
         private static class AccountValueKeys
         {
             public const string CashBalance = "CashBalance";
@@ -2620,7 +2626,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         // these are warning messages from IB
         private static readonly HashSet<int> WarningCodes = new HashSet<int>
         {
-            102, 104, 105, 106, 107, 109, 110, 111, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 129, 131, 132, 133, 134, 135, 136, 137, 140, 141, 146, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 201, 202, 303,313,314,315,319,325,328,329,334,335,336,337,338,339,340,341,342,343,345,347,348,349,350,352,353,355,356,358,359,360,361,362,363,364,367,368,369,370,371,372,373,374,375,376,377,378,379,380,382,383,385,386,387,388,389,390,391,392,393,394,395,396,397,398,399,400,402,403,404,405,406,407,408,409,410,411,412,413,417,418,419,420,421,422,423,424,425,426,427,428,429,430,433,434,435,436,437,439,440,441,442,443,444,445,446,447,448,449,450,1100,10002,10003,10006,10007,10008,10009,10010,10011,10012,10014,10018,10019,10020,1101,1102,2100,2101,2102,2103,2104,2105,2106,2107,2108,2109,2110,2148
+            102, 104, 105, 106, 107, 109, 110, 111, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 129, 131, 132, 133, 134, 135, 136, 137, 140, 141, 146, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 201, 202, 303,313,314,315,319,325,328,329,334,335,336,337,338,339,340,341,342,343,345,347,348,349,350,352,353,355,356,358,359,360,361,362,363,364,367,368,369,370,371,372,373,374,375,376,377,378,379,380,382,383,385,386,387,388,389,390,391,392,393,394,395,396,397,398,399,400,402,403,404,405,406,407,408,409,410,411,412,413,417,418,419,420,421,422,423,424,425,426,427,428,429,430,433,434,435,436,437,439,440,441,442,443,444,445,446,447,448,449,450,1100,10002,10003,10006,10007,10008,10009,10010,10011,10012,10014,10018,10019,10020,10052,1101,1102,2100,2101,2102,2103,2104,2105,2106,2107,2108,2109,2110,2148
         };
 
         // these require us to issue invalidated order events
