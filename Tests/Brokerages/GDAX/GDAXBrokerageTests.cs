@@ -380,5 +380,10 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             Assert.AreEqual(0.03m, actual.Quantity);
         }
 
-    }
+        [Test]
+        public void PollTickTest()
+        {
+        }
+
+        }
 }

@@ -49,6 +49,7 @@ namespace QuantConnect.Brokerages.GDAX
         private const string _symbolMatching = "ETH|LTC|BTC";
         private IAlgorithm _algorithm;
         private static string[] _channelNames = new string[] { "heartbeat", "ticker", "user", "matches" };
+        private CancellationTokenSource _canceller = new CancellationTokenSource();
         #endregion
 
         /// <summary>
@@ -287,6 +288,12 @@ namespace QuantConnect.Brokerages.GDAX
                         this.Ticks.Add(updating);
                     }
                 }
+                //todo: added for production testing
+                //http://openexchangerates.org/latest.json
+                else
+                {
+                    PollTick(item, new RestClient("http://api.fixer.io/latest?base=usd"));
+                }
             }
 
             var products = ChannelList.Select(s => s.Value.Symbol.Substring(0, 3) + "-" + s.Value.Symbol.Substring(3)).ToArray();
@@ -321,6 +328,51 @@ namespace QuantConnect.Brokerages.GDAX
 
             Log.Trace("Subscribe: Sent subcribe.");
 
+        }
+
+        /// <summary>
+        /// Poll for new tick to refresh conversion rate of non-USD denomination
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <param name="client"></param>
+        public void PollTick(Symbol symbol, IRestClient client)
+        {
+
+            int delay = 36000000;
+            var token = _canceller.Token;
+            var listener = Task.Factory.StartNew(() =>
+            {
+
+                Log.Trace("PollLatestTick: " + "Started polling for ticks: " + symbol.Value.ToString());
+                while (true)
+                {
+                    var response = client.Get(new RestSharp.RestRequest());
+                    if (response.StatusCode != System.Net.HttpStatusCode.OK)
+                    {
+                        Log.Error("PollTick: error returned from conversion rate service.");
+                        return;
+                    }
+
+                    var raw = JsonConvert.DeserializeObject<JObject>(response.Content);
+                    var currency = symbol.Value.Replace("USD", "");
+                    var parsing = raw.SelectToken("rates." + currency);
+
+                    lock (_tickLocker)
+                    {
+                        var latest = new Tick
+                        {
+                            Value = parsing.Value<decimal>(),
+                            Time = DateTime.UtcNow,
+                            Symbol = symbol
+                        };
+                        Ticks.Add(latest);
+                    }
+
+                    Thread.Sleep(delay);
+                    if (token.IsCancellationRequested) break;
+                }
+                Log.Trace("PollLatestTick: " + "Stopped polling for ticks: " + symbol.Value.ToString());
+            }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 
         private bool IsValidForSubscribe(Symbol symbol)
