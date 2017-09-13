@@ -129,15 +129,15 @@ namespace QuantConnect.Python
 
                 if (typeof(T) == typeof(QuoteBar))
                 {
-                    Func<IBaseDataBar, QuoteBar> toQuoteBar = x => x as QuoteBar;
-                    pyDict.SetItem("askopen", _pandas.Series(data.Select(x => (double)toQuoteBar(x).Ask.Open).ToList(), index));
-                    pyDict.SetItem("bidopen", _pandas.Series(data.Select(x => (double)toQuoteBar(x).Bid.Open).ToList(), index));
-                    pyDict.SetItem("askhigh", _pandas.Series(data.Select(x => (double)toQuoteBar(x).Ask.High).ToList(), index));
-                    pyDict.SetItem("bidhigh", _pandas.Series(data.Select(x => (double)toQuoteBar(x).Bid.High).ToList(), index));
-                    pyDict.SetItem("asklow", _pandas.Series(data.Select(x => (double)toQuoteBar(x).Ask.Low).ToList(), index));
-                    pyDict.SetItem("bidlow", _pandas.Series(data.Select(x => (double)toQuoteBar(x).Bid.Low).ToList(), index));
-                    pyDict.SetItem("askclose", _pandas.Series(data.Select(x => (double)toQuoteBar(x).Ask.Close).ToList(), index));
-                    pyDict.SetItem("bidclose", _pandas.Series(data.Select(x => (double)toQuoteBar(x).Bid.Close).ToList(), index));
+                    Func<IBaseDataBar, QuoteBar> toQuoteBar = x => x as QuoteBar;                   
+                    pyDict.SetItem("askopen", _pandas.Series(data.Select(x => { return toQuoteBar(x).Ask == null ? double.NaN : (double)toQuoteBar(x).Ask.Open; }).ToList(), index));
+                    pyDict.SetItem("bidopen", _pandas.Series(data.Select(x => { return toQuoteBar(x).Bid == null ? double.NaN : (double)toQuoteBar(x).Bid.Open; }).ToList(), index));
+                    pyDict.SetItem("askhigh", _pandas.Series(data.Select(x => { return toQuoteBar(x).Ask == null ? double.NaN : (double)toQuoteBar(x).Ask.High; }).ToList(), index));
+                    pyDict.SetItem("bidhigh", _pandas.Series(data.Select(x => { return toQuoteBar(x).Bid == null ? double.NaN : (double)toQuoteBar(x).Bid.High; }).ToList(), index));
+                    pyDict.SetItem("asklow", _pandas.Series(data.Select(x => { return toQuoteBar(x).Ask == null ? double.NaN : (double)toQuoteBar(x).Ask.Low; }).ToList(), index));
+                    pyDict.SetItem("bidlow", _pandas.Series(data.Select(x => { return toQuoteBar(x).Bid == null ? double.NaN : (double)toQuoteBar(x).Bid.Low; }).ToList(), index));
+                    pyDict.SetItem("askclose", _pandas.Series(data.Select(x => { return toQuoteBar(x).Ask == null ? double.NaN : (double)toQuoteBar(x).Ask.Close; }).ToList(), index));
+                    pyDict.SetItem("bidclose", _pandas.Series(data.Select(x => { return toQuoteBar(x).Bid == null ? double.NaN : (double)toQuoteBar(x).Bid.Close; }).ToList(), index));
                     pyDict.SetItem("asksize", _pandas.Series(data.Select(x => (double)toQuoteBar(x).LastAskSize).ToList(), index));
                     pyDict.SetItem("bidsize", _pandas.Series(data.Select(x => (double)toQuoteBar(x).LastBidSize).ToList(), index));
                 }
