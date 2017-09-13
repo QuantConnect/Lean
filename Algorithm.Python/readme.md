@@ -22,6 +22,8 @@ QuantConnect Python Algorithm Project:
 
 2.4.3 On the "Path" section click New and enter the python27.dll path, in our example this was *C:\Windows\System32*
 
+2.4.4 *C:\Windows\System32* is normally in the path, thus this procedure is not necessary.
+
 2.5 Install [pandas](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
 
 **3. Setup LEAN:**
@@ -60,7 +62,7 @@ QuantConnect Python Algorithm Project:
 
 2.1 By default, macOS has python installed.
 
-2.2 Confirm the libpython2.7.dylib is in place in */usr/lib*
+2.2 Confirm the libpython2.7.dylib is in place in */usr/lib*.
 
 2.3 If libpython2.7.dylib is not in */usr/lib*, find and link it into */usr/lib*:
 ```
@@ -68,6 +70,9 @@ $ find / -name libpython2.7.dylib
 /System/Library/Frameworks/Python.framework/Versions/2.7/lib/libpython2.7.dylib
 $ ln -s /System/Library/Frameworks/Python.framework/Versions/2.7/lib/libpython2.7.dylib /usr/lib/libpython2.7.dylib
 ```
+
+2.3.1 Common Mistake: Often you may get a permissions error when trying to setup this sym link - you should check if the file already exists in the */usr/lib* directory. If its there you don't need to add the sym link.
+
 2.4 If libpython2.7.dylib cannot be found, reinstall python.
 
 2.5 Install [pandas](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies)
