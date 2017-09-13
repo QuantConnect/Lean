@@ -668,6 +668,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         public override void Dispose()
         {
+            Log.Trace("InteractiveBrokersBrokerage.Dispose(): Disposing of IB resources.");
+
             if (_client != null)
             {
                 Disconnect();
@@ -2094,26 +2096,28 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 foreach (var symbol in symbols)
                 {
-                    lock (_sync)
+                    if (CanSubscribe(symbol))
                     {
-                        Log.Trace("InteractiveBrokersBrokerage.Unsubscribe(): " + symbol.Value);
-
-                        if (symbol.ID.SecurityType == SecurityType.Option && symbol.ID.StrikePrice == 0.0m)
+                        lock (_sync)
                         {
-                            var subscribeSymbol = symbol.Underlying;
-                            _underlyings.Remove(subscribeSymbol);
-                        }
+                            Log.Trace("InteractiveBrokersBrokerage.Unsubscribe(): Unsubscribe Request: " + symbol.Value);
 
-                        var res = default(int);
+                            if (symbol.ID.SecurityType == SecurityType.Option && symbol.ID.StrikePrice == 0.0m)
+                            {
+                                _underlyings.Remove(symbol.Underlying);
+                            }
 
-                        if (_subscribedSymbols.TryRemove(symbol, out res))
-                        {
-                            _messagingRateLimiter.WaitToProceed();
+                            var res = default(int);
 
-                            Client.ClientSocket.cancelMktData(res);
+                            if (_subscribedSymbols.TryRemove(symbol, out res))
+                            {
+                                _messagingRateLimiter.WaitToProceed();
 
-                            var secRes = default(Symbol);
-                            _subscribedTickets.TryRemove(res, out secRes);
+                                Client.ClientSocket.cancelMktData(res);
+
+                                var secRes = default(Symbol);
+                                _subscribedTickets.TryRemove(res, out secRes);
+                            }
                         }
                     }
                 }
