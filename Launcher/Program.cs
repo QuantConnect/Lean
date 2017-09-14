@@ -92,7 +92,7 @@ namespace QuantConnect.Lean.Launcher
                 throw;
             }
 
-            if (environment.EndsWith("-desktop"))
+            if (environment.EndsWith("-desktop") || environment.EndsWith("-desktop-mac"))
             {
                 var info = new ProcessStartInfo
                 {
