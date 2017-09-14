@@ -180,7 +180,7 @@ namespace QuantConnect.Securities
             var currencyPairs = Currencies.CurrencyPairs.Select(x =>
             {
                 // allow XAU or XAG to be used as quote currencies, but pairs including them are CFDs
-                var securityType = Symbol.StartsWith("X") ? SecurityType.Cfd : SecurityType.Forex;
+                var securityType = Symbol.StartsWith("XAU") || Symbol.StartsWith("XAG") ? SecurityType.Cfd : SecurityType.Forex;
                 var market = string.Empty;
                 if (!markets.TryGetValue(securityType, out market))
                 {
