@@ -25,34 +25,33 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This example demonstrates how to get access to futures history for a given root symbol.
-    /// It also shows how you can prefilter contracts easily based on expirations.
-    /// It also shows how you can inspect the futures chain to pick a specific contract to trade.
+    /// This example demonstrates how to get access to futures contract features (symbol, bid/ask price etc.)
+    /// It also shows how to get access to futures history for a given underlying
+    /// and get those features in history request .
     /// </summary>
-    public class BasicTemplateFuturesHistoryAlgorithm : QCAlgorithm
+    public class BasicTemplateFuturesFeaturesAlgorithm : QCAlgorithm
     {
         // S&P 500 EMini futures
-        private const string RootSP500 = Futures.Indices.SP500EMini;
-        public Symbol SP500 = QuantConnect.Symbol.Create(RootSP500, SecurityType.Future, Market.USA);
-
-        // Gold futures
-        private const string RootGold = Futures.Metals.Gold;
-        public Symbol Gold = QuantConnect.Symbol.Create(RootGold, SecurityType.Future, Market.USA);
+        private string [] roots = new []
+        {
+            Futures.Indices.SP500EMini,
+            Futures.Metals.Gold,
+        };
 
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 08);
-            SetEndDate(2013, 10, 11);
+            SetStartDate(2016, 08, 17);
+            SetEndDate(2016, 08, 20);
             SetCash(1000000);
 
-            var futureSP500 = AddFuture(RootSP500, Resolution.Minute);
-            var futureGold = AddFuture(RootGold, Resolution.Minute);
+            foreach (var root in roots)
+            {
+                // set our expiry filter for this futures chain
+                AddFuture(root, Resolution.Minute).SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
+            }
 
-            // set our expiry filter for this futures chain
-            futureSP500.SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
-            futureGold.SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
-
-            SetBenchmark(d => 1m);
+            var benchmark = AddEquity("SPY");
+            SetBenchmark(benchmark.Symbol);
         }
 
         /// <summary>
@@ -65,23 +64,28 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 foreach(var chain in slice.FutureChains)
                 {
-                    // find the front contract expiring no earlier than in 90 days
-                    var contract = (
-                        from futuresContract in chain.Value.OrderBy(x => x.Expiry)
-                        where futuresContract.Expiry > Time.Date.AddDays(90)
-                        select futuresContract
-                        ).FirstOrDefault();
-
-                    // if found, trade it
-                    if (contract != null)
+                    foreach(var contract in chain.Value)
                     {
-                        MarketOrder(contract.Symbol, 1);
+                        Log(String.Format("{0},Bid={1} Ask={2} Last={3} OI={4}",
+                             contract.Symbol.Value,
+                             contract.BidPrice,
+                             contract.AskPrice,
+                             contract.LastPrice,
+                             contract.OpenInterest));
                     }
                 }
             }
-            else
+        }
+        public override void OnSecuritiesChanged(SecurityChanges changes)
+        {
+            foreach (var change in changes.AddedSecurities)
             {
-                Liquidate();
+                var history = History(change.Symbol, 10, Resolution.Minute);
+
+                foreach (var data in history.OrderByDescending(x => x.Time).Take(3))
+                {
+                    Log("History: " + data.Symbol.Value + ": " + data.Time + " > " + data.Close);
+                }
             }
         }
 
@@ -94,19 +98,5 @@ namespace QuantConnect.Algorithm.CSharp
         {
             Log(orderEvent.ToString());
         }
-
-        public override void OnSecuritiesChanged(SecurityChanges changes)
-        {
-            foreach (var change in changes.AddedSecurities)
-            {
-                var history = History<TradeBar>(change.Symbol, 1, Resolution.Minute);
-
-                foreach (var data in history.OrderByDescending(x => x.Time).Take(1))
-                {
-                    Log("History: " + data.Symbol.Value + ": " + data.Time + " > " + data.Close);
-                }
-            }
-        }
-
     }
 }
