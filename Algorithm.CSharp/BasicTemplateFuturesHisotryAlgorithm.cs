@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,26 +32,27 @@ namespace QuantConnect.Algorithm.CSharp
     public class BasicTemplateFuturesHistoryAlgorithm : QCAlgorithm
     {
         // S&P 500 EMini futures
-        private string [] roots = new []
-        {
-            Futures.Indices.SP500EMini,
-            Futures.Metals.Gold,
-        };
+        private const string RootSP500 = Futures.Indices.SP500EMini;
+        public Symbol SP500 = QuantConnect.Symbol.Create(RootSP500, SecurityType.Future, Market.USA);
+
+        // Gold futures
+        private const string RootGold = Futures.Metals.Gold;
+        public Symbol Gold = QuantConnect.Symbol.Create(RootGold, SecurityType.Future, Market.USA);
 
         public override void Initialize()
         {
-            SetStartDate(2016, 08, 17);
-            SetEndDate(2016, 08, 20);
+            SetStartDate(2013, 10, 08);
+            SetEndDate(2013, 10, 11);
             SetCash(1000000);
 
-            foreach (var root in roots)
-            {
-                // set our expiry filter for this futures chain
-                AddFuture(root, Resolution.Minute).SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
-            }
+            var futureSP500 = AddFuture(RootSP500, Resolution.Minute);
+            var futureGold = AddFuture(RootGold, Resolution.Minute);
 
-            var benchmark = AddEquity("SPY");
-            SetBenchmark(benchmark.Symbol);
+            // set our expiry filter for this futures chain
+            futureSP500.SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
+            futureGold.SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
+
+            SetBenchmark(d => 1m);
         }
 
         /// <summary>
@@ -64,28 +65,23 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 foreach(var chain in slice.FutureChains)
                 {
-                    foreach(var contract in chain.Value)
+                    // find the front contract expiring no earlier than in 90 days
+                    var contract = (
+                        from futuresContract in chain.Value.OrderBy(x => x.Expiry)
+                        where futuresContract.Expiry > Time.Date.AddDays(90)
+                        select futuresContract
+                        ).FirstOrDefault();
+
+                    // if found, trade it
+                    if (contract != null)
                     {
-                        Log(String.Format("{0},Bid={1} Ask={2} Last={3} OI={4}",
-                             contract.Symbol.Value,
-                             contract.BidPrice,
-                             contract.AskPrice,
-                             contract.LastPrice,
-                             contract.OpenInterest));
+                        MarketOrder(contract.Symbol, 1);
                     }
                 }
             }
-        }
-        public override void OnSecuritiesChanged(SecurityChanges changes)
-        {
-            foreach (var change in changes.AddedSecurities)
+            else
             {
-                var history = History(change.Symbol, 10, Resolution.Daily);
-
-                foreach (var data in history.OrderByDescending(x => x.Time).Take(3))
-                {
-                    Log("History: " + data.Symbol.Value + ": " + data.Time + " > " + data.Close);
-                }
+                Liquidate();
             }
         }
 
@@ -98,5 +94,19 @@ namespace QuantConnect.Algorithm.CSharp
         {
             Log(orderEvent.ToString());
         }
+
+        public override void OnSecuritiesChanged(SecurityChanges changes)
+        {
+            foreach (var change in changes.AddedSecurities)
+            {
+                var history = History<TradeBar>(change.Symbol, 1, Resolution.Minute);
+
+                foreach (var data in history.OrderByDescending(x => x.Time).Take(1))
+                {
+                    Log("History: " + data.Symbol.Value + ": " + data.Time + " > " + data.Close);
+                }
+            }
+        }
+
     }
 }
