@@ -1,7 +1,7 @@
 from datetime import timedelta
 import numpy as np
 
-class BasicTemplateAlgorithm(QCAlgorithm):
+class BasicTemplateForexAlgorithm(QCAlgorithm):
 
 	def Initialize(self):
 		# Set the cash we'd like to use for our backtest
