@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(forexTrade.Subscriptions.Count() == 1);
             Assert.IsTrue(GetMatchingSubscription(forexTrade, typeof(QuoteBar)) != null);
 
-            // Change 
+            // Change
             var dataFeedsConfigString = Config.Get("security-data-feeds");
             Dictionary<SecurityType, List<TickType>> dataFeeds = new Dictionary<SecurityType, List<TickType>>();
             if (dataFeedsConfigString != string.Empty)
@@ -65,12 +65,12 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(option.Subscriptions.Count() == 1);
             Assert.IsTrue(GetMatchingSubscription(option, typeof(ZipEntryName)) != null);
 
-            // cfd 
+            // cfd
             var cfd = algo.AddSecurity(SecurityType.Cfd, "abc");
             Assert.IsTrue(cfd.Subscriptions.Count() == 1);
             Assert.IsTrue(GetMatchingSubscription(cfd, typeof(QuoteBar)) != null);
 
-            // future 
+            // future
             var future = algo.AddSecurity(SecurityType.Future, "ES");
             Assert.IsTrue(future.Subscriptions.Count() == 1);
             Assert.IsTrue(future.Subscriptions.FirstOrDefault(x => typeof(ZipEntryName).IsAssignableFrom(x.Type)) != null);
