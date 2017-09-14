@@ -157,7 +157,7 @@ namespace QuantConnect.Brokerages
                     return 50m;
 
                 case SecurityType.Crypto:
-                    return 3m;
+                    return 1m;
 
                 case SecurityType.Base:
                 case SecurityType.Commodity:
