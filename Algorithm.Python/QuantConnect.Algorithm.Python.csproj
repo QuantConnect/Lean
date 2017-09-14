@@ -69,6 +69,12 @@
     </None>
     <None Include="packages.config" />
     <None Include="readme.md" />
+    <None Include="BasicTemplateOptionStrategyAlgorithm.py" />
+    <None Include="BasicTemplateFuturesHistoryAlgorithm.py" />
+    <None Include="BasicTemplateFuturesConsolidationAlgorithm.py" />
+    <None Include="EmaCrossUniverseSelectionAlgorithm.py" />
+    <None Include="BasicTemplateDailyAlgorithm.py" />
+    <None Include="BasicTemplateForexAlgorithm.py" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="AddRemoveSecurityRegressionAlgorithm.py">
