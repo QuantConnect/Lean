@@ -38,6 +38,7 @@ using QuantConnect.Statistics;
 using QuantConnect.Util;
 using System.Collections.Concurrent;
 using QuantConnect.Securities.Future;
+using QuantConnect.Securities.Crypto;
 
 namespace QuantConnect.Algorithm
 {
@@ -941,9 +942,13 @@ namespace QuantConnect.Algorithm
         /// <remarks>
         /// Must use symbol that is available to the trade engine in your data store(not strictly enforced)
         /// </remarks>
+        [Obsolete("Symbol implicit operator to string is provided for algorithm use only.")]
         public void SetBenchmark(SecurityType securityType, string symbol)
         {
-            var market = securityType == SecurityType.Forex ? Market.FXCM : Market.USA;
+            string market = Market.USA;
+
+            this.BrokerageModel.DefaultMarkets.TryGetValue(securityType, out market);
+
             _benchmarkSymbol = QuantConnect.Symbol.Create(symbol, securityType, market);
         }
 
@@ -1505,6 +1510,11 @@ namespace QuantConnect.Algorithm
         public Cfd AddCfd(string ticker, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m)
         {
             return AddSecurity<Cfd>(SecurityType.Cfd, ticker, resolution, market, fillDataForward, leverage, false);
+        }
+
+        public Crypto AddCrypto(string ticker, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m)
+        {
+            return AddSecurity<Crypto>(SecurityType.Crypto, ticker, resolution, market, fillDataForward, leverage, false);
         }
 
         /// <summary>

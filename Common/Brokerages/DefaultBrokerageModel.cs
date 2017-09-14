@@ -43,7 +43,8 @@ namespace QuantConnect.Brokerages
             {SecurityType.Option, Market.USA},
             {SecurityType.Future, Market.USA},
             {SecurityType.Forex, Market.FXCM},
-            {SecurityType.Cfd, Market.FXCM}
+            {SecurityType.Cfd, Market.FXCM},
+            {SecurityType.Crypto, Market.Bitfinex}
         }.ToReadOnlyDictionary();
 
         /// <summary>
@@ -160,6 +161,9 @@ namespace QuantConnect.Brokerages
                 case SecurityType.Cfd:
                     return 50m;
 
+                case SecurityType.Crypto:
+                    return 1m;
+
                 case SecurityType.Base:
                 case SecurityType.Commodity:
                 case SecurityType.Option:
@@ -191,6 +195,7 @@ namespace QuantConnect.Brokerages
                 case SecurityType.Base:
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
+                case SecurityType.Crypto:
                     return new ConstantFeeModel(0m);
 
                 case SecurityType.Equity:
@@ -219,6 +224,7 @@ namespace QuantConnect.Brokerages
 
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
+                case SecurityType.Crypto:
                     return new ConstantSlippageModel(0);
 
                 case SecurityType.Commodity:

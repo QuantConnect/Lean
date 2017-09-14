@@ -351,7 +351,7 @@ namespace QuantConnect.Securities
                 // since we have none it's safe to say the conversion is zero
                 securityPortfolioManager.CashBook.Add(quoteCurrency, 0, 0);
             }
-            if (symbol.ID.SecurityType == SecurityType.Forex)
+            if (symbol.ID.SecurityType == SecurityType.Forex || symbol.ID.SecurityType == SecurityType.Crypto)
             {
                 // decompose the symbol into each currency pair
                 string baseCurrency;
@@ -395,6 +395,10 @@ namespace QuantConnect.Securities
 
                 case SecurityType.Cfd:
                     security = new Cfd.Cfd(symbol, exchangeHours, quoteCash, symbolProperties);
+                    break;
+
+                case SecurityType.Crypto:
+                    security = new Crypto.Crypto(symbol, exchangeHours, quoteCash, symbolProperties);
                     break;
 
                 default:
@@ -502,7 +506,7 @@ namespace QuantConnect.Securities
             var exchangeHours = marketHoursDbEntry.ExchangeHours;
 
             var defaultQuoteCurrency = CashBook.AccountCurrency;
-            if (symbol.ID.SecurityType == SecurityType.Forex) defaultQuoteCurrency = symbol.Value.Substring(3);
+            if (symbol.ID.SecurityType == SecurityType.Forex || symbol.ID.SecurityType == SecurityType.Crypto) defaultQuoteCurrency = symbol.Value.Substring(3);
             var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, defaultQuoteCurrency);
 
             var types = subscriptionManager.LookupSubscriptionConfigDataTypes(symbol.SecurityType, resolution, symbol.IsCanonical());

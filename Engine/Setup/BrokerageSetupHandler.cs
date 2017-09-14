@@ -286,7 +286,10 @@ namespace QuantConnect.Lean.Engine.Setup
                 {
                     // populate the algorithm with the account's current holdings
                     var holdings = brokerage.GetAccountHoldings();
-                    var supportedSecurityTypes = new HashSet<SecurityType> { SecurityType.Equity, SecurityType.Forex, SecurityType.Cfd, SecurityType.Option, SecurityType.Future };
+                    var supportedSecurityTypes = new HashSet<SecurityType>
+                    {
+                        SecurityType.Equity, SecurityType.Forex, SecurityType.Cfd, SecurityType.Option, SecurityType.Future, SecurityType.Crypto
+                    };
                     var minResolution = new Lazy<Resolution>(() => algorithm.Securities.Select(x => x.Value.Resolution).DefaultIfEmpty(Resolution.Second).Min());
                     foreach (var holding in holdings)
                     {

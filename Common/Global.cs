@@ -108,6 +108,12 @@ namespace QuantConnect
             {
                 rounding = 5;
             }
+            //do not round crypto
+            else if (holding.Type == SecurityType.Crypto)
+            {
+                rounding = int.MaxValue;
+            }
+
 
             AveragePrice = Math.Round(holding.AveragePrice, rounding);
             MarketPrice = Math.Round(holding.Price, rounding);
@@ -298,7 +304,12 @@ namespace QuantConnect
         /// <summary>
         /// Contract For a Difference Security Type.
         /// </summary>
-        Cfd
+        Cfd,
+
+        /// <summary>
+        /// Cryptocurrency Security Type.
+        /// </summary>
+        Crypto
     }
 
     /// <summary>
