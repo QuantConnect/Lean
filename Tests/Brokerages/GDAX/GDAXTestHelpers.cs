@@ -19,7 +19,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
         private static SubscriptionDataConfig CreateConfig()
         {
-            return new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create("BTCUSD", SecurityType.Forex, Market.GDAX), Resolution.Minute, TimeZones.Utc, TimeZones.Utc, 
+            return new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX), Resolution.Minute, TimeZones.Utc, TimeZones.Utc, 
                 false, true, false);
         }
 

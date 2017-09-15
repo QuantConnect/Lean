@@ -246,7 +246,7 @@ namespace QuantConnect.Brokerages.GDAX
                     {
 
                         var baseSymbol = (item.ProductId.Substring(0, 3) + "USD").ToLower();
-                        var tick = this.GetTick(Symbol.Create(baseSymbol, SecurityType.Forex, Market.GDAX));
+                        var tick = this.GetTick(Symbol.Create(baseSymbol, SecurityType.Crypto, Market.GDAX));
                         conversionRate = tick.Price;
                     }
                     else
@@ -259,7 +259,7 @@ namespace QuantConnect.Brokerages.GDAX
                     {
                         Symbol = ConvertProductId(item.ProductId),
                         Quantity = item.Side == "sell" ? -item.FilledSize : item.FilledSize,
-                        Type = SecurityType.Forex,
+                        Type = SecurityType.Crypto,
                         CurrencySymbol = item.ProductId.Substring(0, 3).ToUpper(),
                         ConversionRate = conversionRate,
                         MarketPrice = item.Price,
@@ -294,7 +294,7 @@ namespace QuantConnect.Brokerages.GDAX
                     }
                     else
                     {
-                        var tick = GetTick(Symbol.Create(item.Currency + "USD", SecurityType.Forex, Market.GDAX));
+                        var tick = GetTick(Symbol.Create(item.Currency + "USD", SecurityType.Crypto, Market.GDAX));
 
                         list.Add(new Securities.Cash(item.Currency.ToUpper(), item.Balance, tick.Price));
                     }

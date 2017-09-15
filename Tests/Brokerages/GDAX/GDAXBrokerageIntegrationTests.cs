@@ -31,7 +31,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         /// </summary>
         protected override SecurityType SecurityType
         {
-            get { return SecurityType.Forex; }
+            get { return SecurityType.Crypto; }
         }
 
         /// <summary>

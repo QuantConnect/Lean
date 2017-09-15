@@ -63,7 +63,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             _orderByIdData = File.ReadAllText("TestData//gdax_orderById.txt");
             _tickerData = File.ReadAllText("TestData//gdax_ticker.txt");
 
-            _symbol = Symbol.Create("BTCUSD", SecurityType.Forex, Market.GDAX);
+            _symbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX);
 
             _rest.Setup(m => m.Execute(It.Is<IRestRequest>(r => r.Resource.StartsWith("/products/")))).Returns(new RestSharp.RestResponse
             {
@@ -336,8 +336,8 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
             _unit.Ticks.Clear();
 
-            _unit.Subscribe(Mock.Of<LiveNodePacket>(), new[] { Symbol.Create("BTCUSD", SecurityType.Forex, Market.GDAX), Symbol.Create("GBPUSD", SecurityType.Forex, Market.GDAX),
-                Symbol.Create("BTCETH", SecurityType.Forex, Market.GDAX)});
+            _unit.Subscribe(Mock.Of<LiveNodePacket>(), new[] { Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX), Symbol.Create("GBPUSD", SecurityType.Crypto, Market.GDAX),
+                Symbol.Create("BTCETH", SecurityType.Crypto, Market.GDAX)});
 
             StringAssert.Contains(expected, actual);
 
@@ -352,7 +352,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         {
             string actual = null;
             _wss.Setup(w => w.Send(It.IsAny<string>())).Callback<string>(c => actual = c);
-            _unit.Unsubscribe(null, new List<Symbol> { Symbol.Create("BTCUSD", SecurityType.Forex, Market.GDAX) });
+            _unit.Unsubscribe(null, new List<Symbol> { Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX) });
             StringAssert.Contains("user", actual);
             StringAssert.Contains("heartbeat", actual);
             StringAssert.Contains("ticker", actual);
