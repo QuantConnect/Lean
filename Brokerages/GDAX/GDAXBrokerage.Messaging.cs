@@ -290,7 +290,7 @@ namespace QuantConnect.Brokerages.GDAX
                 }
                 //todo: added for production testing
                 //http://openexchangerates.org/latest.json
-                else
+                else if (!item.Value.Contains("UNIVERSE"))
                 {
                     PollTick(item, new RestClient("http://api.fixer.io/latest?base=usd"));
                 }
