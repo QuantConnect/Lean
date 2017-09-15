@@ -54,4 +54,4 @@ class BasicTemplateForexAlgorithm(QCAlgorithm):
     def OnData(self, data):
         # Print to console to verify that data is coming in
         for key in data.Keys:
-            self.Log(str(key.Value) + ": " + str(data.Time) + " > " + str(i[key].Value))
+            self.Log(str(key.Value) + ": " + str(data.Time) + " > " + str(data[key].Value))
