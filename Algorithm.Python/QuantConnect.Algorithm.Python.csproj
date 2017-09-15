@@ -75,6 +75,11 @@
     <None Include="EmaCrossUniverseSelectionAlgorithm.py" />
     <None Include="BasicTemplateDailyAlgorithm.py" />
     <None Include="BasicTemplateForexAlgorithm.py" />
+    <None Include="CustomDataRegressionAlgorithm.py" />
+    <None Include="BasicTemplateOptionsFilterUniverseAlgorithm.py" />
+    <None Include="BasicTemplateOptionsHistoryAlgorithm.py" />
+    <None Include="BasicTemplateOptionTradesAlgorithm.py" />
+    <None Include="WeeklyUniverseSelectionRegressionAlgorithm.py" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="AddRemoveSecurityRegressionAlgorithm.py">
