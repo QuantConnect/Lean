@@ -20,7 +20,7 @@ using QuantConnect.Brokerages.InteractiveBrokers;
 namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 {
     [TestFixture]
-    class InteractiveBrokersSymbolMapperTests
+    public class InteractiveBrokersSymbolMapperTests
     {
         [Test]
         public void ReturnsCorrectLeanSymbol()
@@ -34,6 +34,11 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 
             symbol = mapper.GetLeanSymbol("AAPL", SecurityType.Equity, Market.USA);
             Assert.AreEqual("AAPL", symbol.Value);
+            Assert.AreEqual(SecurityType.Equity, symbol.ID.SecurityType);
+            Assert.AreEqual(Market.USA, symbol.ID.Market);
+
+            symbol = mapper.GetLeanSymbol("BRK B", SecurityType.Equity, Market.USA);
+            Assert.AreEqual("BRK.B", symbol.Value);
             Assert.AreEqual(SecurityType.Equity, symbol.ID.SecurityType);
             Assert.AreEqual(Market.USA, symbol.ID.Market);
         }
@@ -50,6 +55,10 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             symbol = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
             brokerageSymbol = mapper.GetBrokerageSymbol(symbol);
             Assert.AreEqual("AAPL", brokerageSymbol);
+
+            symbol = Symbol.Create("BRK.B", SecurityType.Equity, Market.USA);
+            brokerageSymbol = mapper.GetBrokerageSymbol(symbol);
+            Assert.AreEqual("BRK B", brokerageSymbol);
         }
 
         [Test]

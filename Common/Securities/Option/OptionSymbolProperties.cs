@@ -13,12 +13,6 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace QuantConnect.Securities.Option
 {
     /// <summary>
@@ -43,6 +37,7 @@ namespace QuantConnect.Securities.Option
         {
             ContractUnitOfTrade = (int)contractMultiplier;
         }
+
         /// <summary>
         /// Creates an instance of the <see cref="OptionSymbolProperties"/> class from <see cref="SymbolProperties"/> class
         /// </summary>
@@ -60,6 +55,7 @@ namespace QuantConnect.Securities.Option
         {
             ContractUnitOfTrade = unitOfTrade;
         }
+
         internal void SetContractMultiplier(decimal multiplier)
         {
             ContractMultiplier = multiplier;

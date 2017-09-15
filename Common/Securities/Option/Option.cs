@@ -187,7 +187,7 @@ namespace QuantConnect.Securities.Option
         /// <returns></returns>
         public decimal GetExerciseQuantity(decimal quantity)
         {
-            return quantity * ContractUnitOfTrade / ContractMultiplier;
+            return quantity * ContractUnitOfTrade;
         }
 
         /// <summary>
