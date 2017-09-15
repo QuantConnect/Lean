@@ -37,7 +37,6 @@ namespace QuantConnect.ToolBox.QuandlBitfinexDownloader
             {
                 // Load settings from config.json
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
-                var scaleFactor = Config.GetInt("bitfinex-scale-factor", 100);
 
                 // Create an instance of the downloader
                 const string market = Market.Bitfinex;

@@ -53,7 +53,7 @@ namespace QuantConnect.Algorithm
         /// <remarks>Generic type T must implement base data</remarks>
         public void AddData(PyObject type, string symbol, Resolution resolution = Resolution.Minute)
         {
-            AddData(type, symbol, Resolution.Minute, TimeZones.NewYork, false, 1m);
+            AddData(type, symbol, resolution, TimeZones.NewYork, false, 1m);
         }
 
 
@@ -74,13 +74,13 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// AddData a new user defined data source, requiring only the minimum config options.
         /// </summary>
-        /// <param name="T">Data source type</param>
+        /// <param name="dataType">Data source type</param>
         /// <param name="symbol">Key/Symbol for data</param>
         /// <param name="resolution">Resolution of the Data Required</param>
         /// <param name="timeZone">Specifies the time zone of the raw data</param>
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
-        public void AddData(Type T, string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
+        public void AddData(Type dataType, string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
             var marketHoursDbEntry = _marketHoursDatabase.GetEntry(Market.USA, symbol, SecurityType.Base, timeZone);
 
@@ -89,7 +89,7 @@ namespace QuantConnect.Algorithm
             var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(Market.USA, symbol, SecurityType.Base, CashBook.AccountCurrency);
 
             //Add this new generic data as a tradeable security: 
-            var security = SecurityManager.CreateSecurity(new List<Type>() { T }, Portfolio, SubscriptionManager, marketHoursDbEntry.ExchangeHours, marketHoursDbEntry.DataTimeZone,
+            var security = SecurityManager.CreateSecurity(dataType, Portfolio, SubscriptionManager, marketHoursDbEntry.ExchangeHours, marketHoursDbEntry.DataTimeZone,
                 symbolProperties, SecurityInitializer, symbolObject, resolution, fillDataForward, leverage, true, false, true, LiveMode);
 
             AddToUserDefinedUniverse(security);

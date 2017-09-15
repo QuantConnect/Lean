@@ -97,13 +97,15 @@ namespace QuantConnect.Data
             {
                 dataType = typeof(Tick);
             }
-            return Add(dataType, symbol, resolution, timeZone, exchangeTimeZone, isCustomData, fillDataForward, extendedMarketHours);
+            var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType);
+            return Add(dataType, tickType, symbol, resolution, timeZone, exchangeTimeZone, isCustomData, fillDataForward, extendedMarketHours);
         }
 
         /// <summary>
         /// Add Market Data Required - generic data typing support as long as Type implements BaseData.
         /// </summary>
         /// <param name="dataType">Set the type of the data we're subscribing to.</param>
+        /// <param name="tickType">Tick type for the subscription.</param>
         /// <param name="symbol">Symbol of the asset we're like</param>
         /// <param name="resolution">Resolution of Asset Required</param>
         /// <param name="dataTimeZone">The time zone the subscription's data is time stamped in</param>
@@ -115,7 +117,7 @@ namespace QuantConnect.Data
         /// <param name="isInternalFeed">Set to true to prevent data from this subscription from being sent into the algorithm's OnData events</param>
         /// <param name="isFilteredSubscription">True if this subscription should have filters applied to it (market hours/user filters from security), false otherwise</param>
         /// <returns>The newly created <see cref="SubscriptionDataConfig"/></returns>
-        public SubscriptionDataConfig Add(Type dataType, Symbol symbol, Resolution resolution, DateTimeZone dataTimeZone, DateTimeZone exchangeTimeZone, bool isCustomData, bool fillDataForward = true, bool extendedMarketHours = false, bool isInternalFeed = false, bool isFilteredSubscription = true)
+        public SubscriptionDataConfig Add(Type dataType, TickType tickType, Symbol symbol, Resolution resolution, DateTimeZone dataTimeZone, DateTimeZone exchangeTimeZone, bool isCustomData, bool fillDataForward = true, bool extendedMarketHours = false, bool isInternalFeed = false, bool isFilteredSubscription = true)
         {
             if (dataTimeZone == null)
             {
@@ -127,7 +129,7 @@ namespace QuantConnect.Data
             }
 
             //Create:
-            var newConfig = new SubscriptionDataConfig(dataType, symbol, resolution, dataTimeZone, exchangeTimeZone, fillDataForward, extendedMarketHours, isInternalFeed, isCustomData, isFilteredSubscription: isFilteredSubscription);
+            var newConfig = new SubscriptionDataConfig(dataType, symbol, resolution, dataTimeZone, exchangeTimeZone, fillDataForward, extendedMarketHours, isInternalFeed, isCustomData, isFilteredSubscription: isFilteredSubscription, tickType: tickType);
 
             //Add to subscription list: make sure we don't have this symbol:
             if (Subscriptions.Contains(newConfig))
@@ -201,13 +203,13 @@ namespace QuantConnect.Data
             return new Dictionary<SecurityType, List<TickType>>()
             {
                 {SecurityType.Base, new List<TickType>() { TickType.Trade } },
-                //todo: revert trade ticks for forex
-                {SecurityType.Forex, new List<TickType>() { TickType.Quote, TickType.Trade } },
+                {SecurityType.Forex, new List<TickType>() { TickType.Quote } },
                 {SecurityType.Equity, new List<TickType>() { TickType.Trade } },
                 {SecurityType.Option, new List<TickType>() { TickType.Quote, TickType.Trade, TickType.OpenInterest } },
                 {SecurityType.Cfd, new List<TickType>() { TickType.Quote } },
                 {SecurityType.Future, new List<TickType>() { TickType.Quote, TickType.Trade, TickType.OpenInterest } },
-                {SecurityType.Commodity, new List<TickType>() { TickType.Trade } }
+                {SecurityType.Commodity, new List<TickType>() { TickType.Trade } },
+                {SecurityType.Crypto, new List<TickType>() { TickType.Quote, TickType.Trade } },
             };
         }
 
@@ -226,19 +228,14 @@ namespace QuantConnect.Data
         /// <param name="resolution">The resolution of the data requested</param>
         /// <param name="isCanonical">Indicates whether the security is Canonical (future and options)</param>
         /// <returns>Types that should be added to the <see cref="SubscriptionDataConfig"/></returns>
-        public List<Type> LookupSubscriptionConfigDataTypes(SecurityType symbolSecurityType, Resolution resolution, bool isCanonical)
+        public List<Tuple<Type, TickType>> LookupSubscriptionConfigDataTypes(SecurityType symbolSecurityType, Resolution resolution, bool isCanonical)
         {
             if (isCanonical)
             {
-                return new List<Type>() { typeof(ZipEntryName) };
+                return new List<Tuple<Type, TickType>> { new Tuple<Type, TickType>(typeof(ZipEntryName), TickType.Quote) };
             }
 
-            if (resolution == Resolution.Tick)
-            {
-                return new List<Type>() { typeof(Tick) };
-            }
-
-            return AvailableDataTypes[symbolSecurityType].Select(tickType => LeanData.GetDataType(resolution, tickType)).ToList();
+            return AvailableDataTypes[symbolSecurityType].Select(tickType => new Tuple<Type, TickType>(LeanData.GetDataType(resolution, tickType), tickType)).ToList();
         }
 
     } // End Algorithm MetaData Manager Class

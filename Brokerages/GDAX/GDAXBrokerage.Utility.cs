@@ -123,7 +123,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// <returns>Symbol</returns>
         public static Symbol ConvertProductId(string productId)
         {
-            return Symbol.Create(productId.Replace("-", ""), SecurityType.Forex, Market.GDAX);
+            return Symbol.Create(productId.Replace("-", ""), SecurityType.Crypto, Market.GDAX);
         }
 
         /// <summary>

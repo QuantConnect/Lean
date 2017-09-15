@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -51,7 +51,7 @@ namespace QuantConnect.Lean.Engine.Results
         private string _deployId;
         private LiveNodePacket _job;
         private ConcurrentDictionary<string, Chart> _charts;
-        private ConcurrentQueue<OrderEvent> _orderEvents; 
+        private ConcurrentQueue<OrderEvent> _orderEvents;
         private ConcurrentQueue<Packet> _messages;
         private IAlgorithm _algorithm;
         private volatile bool _exitTriggered;
@@ -188,11 +188,11 @@ namespace QuantConnect.Lean.Engine.Results
             _setupHandler = setupHandler;
             _transactionHandler = transactionHandler;
             _job = (LiveNodePacket)job;
-            if (_job == null) throw new Exception("LiveResultHandler.Constructor(): Submitted Job type invalid."); 
+            if (_job == null) throw new Exception("LiveResultHandler.Constructor(): Submitted Job type invalid.");
             _deployId = _job.DeployId;
             _compileId = _job.CompileId;
         }
-        
+
         /// <summary>
         /// Live trading result handler thread.
         /// </summary>
@@ -383,14 +383,14 @@ namespace QuantConnect.Lean.Engine.Results
                         try
                         {
                             _api.SendStatistics(
-                                _job.AlgorithmId, 
+                                _job.AlgorithmId,
                                 _algorithm.Portfolio.TotalUnrealizedProfit,
-                                _algorithm.Portfolio.TotalFees, 
+                                _algorithm.Portfolio.TotalFees,
                                 _algorithm.Portfolio.TotalProfit,
-                                _algorithm.Portfolio.TotalHoldingsValue, 
+                                _algorithm.Portfolio.TotalHoldingsValue,
                                 _algorithm.Portfolio.TotalPortfolioValue,
                                 netReturn,
-                                _algorithm.Portfolio.TotalSaleVolume, 
+                                _algorithm.Portfolio.TotalSaleVolume,
                                 _lastOrderId, 0);
                         }
                         catch (Exception err)
@@ -419,7 +419,7 @@ namespace QuantConnect.Lean.Engine.Results
                     Log.Debug("LiveTradingResultHandler.Update(): Finished trimming charts");
 
 
-                    //Set the new update time after we've finished processing. 
+                    //Set the new update time after we've finished processing.
                     // The processing can takes time depending on how large the packets are.
                     _nextUpdate = DateTime.Now.AddSeconds(2);
 
@@ -451,9 +451,9 @@ namespace QuantConnect.Lean.Engine.Results
 
             // First add send charts
 
-            // Loop through all the charts, add them to packets to be sent. 
+            // Loop through all the charts, add them to packets to be sent.
             // Group three charts to a packets, and add in the data to the chart depending on the subscription.
-            
+
             foreach (var deltaChart in deltaCharts.Values)
             {
                 var chart = new Chart(deltaChart.Name);
@@ -804,7 +804,7 @@ namespace QuantConnect.Lean.Engine.Results
 
 
         /// <summary>
-        /// Process the log entries and save it to permanent storage 
+        /// Process the log entries and save it to permanent storage
         /// </summary>
         /// <param name="logs">Log list</param>
         public void StoreLog(IEnumerable<LogEntry> logs)
@@ -882,7 +882,7 @@ namespace QuantConnect.Lean.Engine.Results
                             result.Charts = new Dictionary<string, Chart>();
                             result.Charts.Add(name, live.Results.Charts[name]);
 
-                            SaveResults(CreateKey("second_" + Uri.EscapeUriString(name), "yyyy-MM-dd-HH"), result);
+                            SaveResults(CreateKey("second_" + CreateSafeChartName(name), "yyyy-MM-dd-HH"), result);
                         }
                     }
                     else
@@ -985,6 +985,16 @@ namespace QuantConnect.Lean.Engine.Results
             return string.Format("{0}-{1}_{2}.json", _job.DeployId, DateTime.UtcNow.ToString(dateFormat), suffix);
         }
 
+        /// <summary>
+        /// Escape the chartname so that it can be saved to a file system
+        /// </summary>
+        /// <param name="chartName">The name of a chart</param>
+        /// <returns>The name of the chart will all escape all characters except RFC 2396 unreserved characters</returns>
+        protected virtual string CreateSafeChartName(string chartName)
+        {
+            return Uri.EscapeDataString(chartName);
+        }
+
 
         /// <summary>
         /// Set the chart name that we want data from.
@@ -995,7 +1005,7 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Process the synchronous result events, sampling and message reading. 
+        /// Process the synchronous result events, sampling and message reading.
         /// This method is triggered from the algorithm manager thread.
         /// </summary>
         /// <remarks>Prime candidate for putting into a base class. Is identical across all result handlers.</remarks>

@@ -55,13 +55,13 @@ namespace QuantConnect.ToolBox
             _market = symbol.ID.Market.ToLower();
             _dataType = dataType;
             // All fx data is quote data.
-            if (_securityType == SecurityType.Forex || _securityType == SecurityType.Cfd)
+            if (_securityType == SecurityType.Forex || _securityType == SecurityType.Cfd || _securityType == SecurityType.Crypto)
             {
                 _dataType = TickType.Quote;
             }
 
             // Can only process Fx and equity for now
-            if (_securityType != SecurityType.Equity && _securityType != SecurityType.Forex && _securityType != SecurityType.Cfd)
+            if (_securityType != SecurityType.Equity && _securityType != SecurityType.Forex && _securityType != SecurityType.Cfd && _securityType != SecurityType.Crypto)
             {
                 throw new Exception("Sorry this security type is not yet supported by the LEAN data writer: " + _securityType);
             }

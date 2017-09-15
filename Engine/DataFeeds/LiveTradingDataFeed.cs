@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -65,7 +65,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private BusyBlockingCollection<TimeSlice> _bridge;
         private UniverseSelection _universeSelection;
         private DateTime _frontierUtc;
-        
+
 
         /// <summary>
         /// Gets all of the current subscriptions this data feed is processing
@@ -179,7 +179,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var subscription = request.IsUniverseSubscription
                 ? CreateUniverseSubscription(request)
                 : CreateSubscription(request);
-            
+
             // for some reason we couldn't create the subscription
             if (subscription == null)
             {
@@ -370,7 +370,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             Log.Trace("LiveTradingDataFeed.Exit(): Setting cancellation token...");
             _cancellationTokenSource.Cancel();
-            
+
             if (_bridge != null) _bridge.Dispose();
         }
 
@@ -421,7 +421,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var refresher = new RefreshEnumerator<BaseData>(() =>
                     {
                         var dateInDataTimeZone = DateTime.UtcNow.ConvertFromUtc(request.Configuration.DataTimeZone).Date;
-                        var enumeratorFactory = new BaseDataSubscriptionEnumeratorFactory(r => new[] { dateInDataTimeZone });
+                        var enumeratorFactory = new BaseDataSubscriptionEnumeratorFactory(true, r => new[] { dateInDataTimeZone });
                         var factoryReadEnumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
                         var maximumDataAge = TimeSpan.FromTicks(Math.Max(request.Configuration.Increment.Ticks, TimeSpan.FromSeconds(5).Ticks));
                         var fastForward = new FastForwardEnumerator(factoryReadEnumerator, _timeProvider, request.Security.Exchange.TimeZone, maximumDataAge);
@@ -548,7 +548,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var tzOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
 
             IEnumerator<BaseData> enumerator;
-            
+
             var userDefined = request.Universe as UserDefinedUniverse;
             if (userDefined != null)
             {
@@ -621,6 +621,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 };
 
                 var symbolUniverse = _dataQueueHandler as IDataQueueUniverseProvider;
+                if (symbolUniverse == null)
+                {
+                    throw new NotSupportedException("The DataQueueHandler does not support Options.");
+                }
 
                 var enumeratorFactory = new OptionChainUniverseSubscriptionEnumeratorFactory(configure, symbolUniverse, _timeProvider);
                 enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
@@ -632,6 +636,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating futures chain universe: " + config.Symbol.ToString());
 
                 var symbolUniverse = _dataQueueHandler as IDataQueueUniverseProvider;
+                if (symbolUniverse == null)
+                {
+                    throw new NotSupportedException("The DataQueueHandler does not support Futures.");
+                }
 
                 var enumeratorFactory = new FuturesChainUniverseSubscriptionEnumeratorFactory(symbolUniverse, _timeProvider);
                 enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
@@ -654,7 +662,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var frontierAware = new FrontierAwareEnumerator(fastForward, _frontierTimeProvider, tzOffsetProvider);
                     return new BaseDataCollectionAggregatorEnumerator(frontierAware, config.Symbol);
                 });
-                
+
                 // rate limit the refreshing of the stack to the requested interval
                 var minimumTimeBetweenCalls = Math.Min(config.Increment.Ticks, TimeSpan.FromMinutes(30).Ticks);
                 var rateLimit = new RateLimitEnumerator(refresher, _timeProvider, TimeSpan.FromTicks(minimumTimeBetweenCalls));

@@ -18,8 +18,6 @@ using System.Collections.Generic;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Equity;
-using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Interfaces;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Fees;

@@ -12,9 +12,10 @@
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
-    <RestorePackages>true</RestorePackages>
     <LangVersion>6</LangVersion>
     <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -67,9 +68,8 @@
     <Reference Include="nunit.framework, Version=2.6.4.14350, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
       <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
     </Reference>
-    <Reference Include="Python.Runtime, Version=2.4.0.0, Culture=neutral, processorArchitecture=AMD64">
-      <HintPath>..\packages\QuantConnect.pythonnet.1.0.4.4\lib\Python.Runtime.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Python.Runtime, Version=2.4.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\QuantConnect.pythonnet.1.0.4.8\lib\Python.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="QuantConnect.Fxcm, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -145,6 +145,7 @@
     <Compile Include="Common\BrokerageNameTests.cs" />
     <Compile Include="Common\CurrenciesTests.cs" />
     <Compile Include="Common\Data\Market\QuoteBarTests.cs" />
+    <Compile Include="Common\Data\SubscriptionManagerTests.cs" />
     <Compile Include="Common\Orders\Slippage\SlippageModelsTests.cs" />
     <Compile Include="Common\Securities\BrokerageModelSecurityInitializerTests.cs" />
     <Compile Include="Common\Securities\FutureFilterTests.cs" />
@@ -259,8 +260,10 @@
     <Compile Include="Engine\FactorFileTests.cs" />
     <Compile Include="Engine\RealTimePriceUpdateTests.cs" />
     <Compile Include="Engine\RealTime\ScheduledEventTests.cs" />
+    <Compile Include="Engine\Setup\BrokerageSetupHandlerTests.cs" />
     <Compile Include="Engine\TestResultHandler.cs" />
     <Compile Include="Indicators\AbsolutePriceOscillatorTests.cs" />
+    <Compile Include="Indicators\AccelerationBandsTests.cs" />
     <Compile Include="Indicators\AccumulationDistributionOscillatorTests.cs" />
     <Compile Include="Indicators\AccumulationDistributionTests.cs" />
     <Compile Include="Indicators\AverageDirectionalIndexTests.cs" />
@@ -278,6 +281,7 @@
     <Compile Include="Indicators\HeikinAshiTests.cs" />
     <Compile Include="Indicators\IchimokuKinkoHyoTests.cs" />
     <Compile Include="Indicators\KeltnerChannelsTests.cs" />
+    <Compile Include="Indicators\MassIndexTests.cs" />
     <Compile Include="Indicators\RegressionChannelTest.cs" />
     <Compile Include="Indicators\LeastSquaresMovingAverageTest.cs" />
     <Compile Include="Indicators\LogReturnTests.cs" />
@@ -309,6 +313,7 @@
     <Compile Include="Symbols.cs" />
     <Compile Include="TestExtensions.cs" />
     <Compile Include="Indicators\LinearWeightedMovingAverageTests.cs" />
+    <Compile Include="ToolBox\ForexVolume\FxcmVolumeDownloaderTest.cs" />
     <Compile Include="ToolBox\LeanDataReaderTests.cs" />
     <Compile Include="ToolBox\LeanDataWriterTests.cs" />
     <None Include="app.config">
@@ -413,9 +418,21 @@
     <Content Include="TestData\frama.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="TestData\fxVolumeDaily.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="TestData\fxVolumeHourly.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="TestData\fxVolumeMinute.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="TestData\multizip.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="TestData\spy_acceleration_bands_20_4.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="TestData\gdax_order.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -423,6 +440,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\spy_hma.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\spy_mass_index_25.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="TestData\spy_with_ichimoku.csv">
@@ -656,12 +676,12 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
-  <Import Project="..\packages\QuantConnect.pythonnet.1.0.4.4\build\QuantConnect.pythonnet.targets" Condition="Exists('..\packages\QuantConnect.pythonnet.1.0.4.4\build\QuantConnect.pythonnet.targets')" />
+  <Import Project="..\packages\QuantConnect.pythonnet.1.0.4.8\build\QuantConnect.pythonnet.targets" Condition="Exists('..\packages\QuantConnect.pythonnet.1.0.4.8\build\QuantConnect.pythonnet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\QuantConnect.pythonnet.1.0.4.4\build\QuantConnect.pythonnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.pythonnet.1.0.4.4\build\QuantConnect.pythonnet.targets'))" />
+    <Error Condition="!Exists('..\packages\QuantConnect.pythonnet.1.0.4.8\build\QuantConnect.pythonnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.pythonnet.1.0.4.8\build\QuantConnect.pythonnet.targets'))" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
