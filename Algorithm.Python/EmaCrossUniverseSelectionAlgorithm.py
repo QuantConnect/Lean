@@ -66,7 +66,7 @@ class EmaCrossUniverseSelectionAlgorithm(QCAlgorithm):
         # we need to return only the symbol objects
         list = List[Symbol]()
         for x in values[:self.coarse_count]:
-            print x.symbol, x.scale
+            self.Log('symbol: ' + str(x.symbol.Value) + '  scale: ' + str(x.scale))
             list.Add(x.symbol)
 
         return list
