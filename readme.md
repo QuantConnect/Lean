@@ -70,7 +70,7 @@ sudo apt-get install -y binutils mono-complete ca-certificates-mono referenceass
 ```
 - Install Nuget and Python
 ```
-sudo apt-get update && apt-get install -y nuget python-pip
+sudo apt-get update && sudo apt-get install -y nuget python-pip
 ```
 - Restore NuGet packages then compile:
 ```
