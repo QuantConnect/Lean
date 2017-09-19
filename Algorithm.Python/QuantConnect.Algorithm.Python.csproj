@@ -80,6 +80,8 @@
     <None Include="BasicTemplateOptionsHistoryAlgorithm.py" />
     <None Include="BasicTemplateOptionTradesAlgorithm.py" />
     <None Include="WeeklyUniverseSelectionRegressionAlgorithm.py" />
+    <None Include="DailyFxAlgorithm.py" />
+    <None Include="FuturesMomentumAlgorithm.py" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="AddRemoveSecurityRegressionAlgorithm.py">
