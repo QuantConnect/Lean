@@ -66,9 +66,3 @@ class RegressionChannelAlgorithm(QCAlgorithm):
         self.Plot("Trade Plot", "UpperChannel", self._rc.UpperChannel.Current.Value)
         self.Plot("Trade Plot", "LowerChannel", self._rc.LowerChannel.Current.Value)
         self.Plot("Trade Plot", "Regression", self._rc.LinearRegression.Current.Value)
-    
-    
-    
-    
-    
-    
