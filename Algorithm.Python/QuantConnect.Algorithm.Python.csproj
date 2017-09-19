@@ -82,6 +82,7 @@
     <None Include="WeeklyUniverseSelectionRegressionAlgorithm.py" />
     <None Include="DailyFxAlgorithm.py" />
     <None Include="FuturesMomentumAlgorithm.py" />
+    <None Include="RegressionChannelAlgorithm.py" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="AddRemoveSecurityRegressionAlgorithm.py">
