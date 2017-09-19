@@ -165,6 +165,8 @@ namespace QuantConnect.Data.Custom
 
             foreach (var dailyfx in dailyfxList)
             {
+                dailyfx.Symbol = config.Symbol;
+
                 // Custom data format without settings in market hours are assumed UTC.
                 dailyfx.Time = dailyfx.DisplayDate.Date.AddHours(dailyfx.DisplayTime.TimeOfDay.TotalHours);
 
