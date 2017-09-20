@@ -131,7 +131,6 @@
     <Compile Include="HistoryAndWarmupRegressionAlgorithm.cs" />
     <Compile Include="LimitFillRegressionAlgorithm.cs" />
     <Compile Include="BasicTemplateFillForwardAlgorithm.cs" />
-    <Compile Include="BenchmarkAlgorithm.cs" />
     <Compile Include="BrokerageModelAlgorithm.cs" />
     <Compile Include="BubbleAlgorithm.cs" />
     <Compile Include="CustomChartingAlgorithm.cs" />

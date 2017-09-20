@@ -37,17 +37,18 @@ namespace QuantConnect.Algorithm.CSharp
     {
         // S&P 500 EMini futures
         private const string TickerSP500 = Futures.Indices.SP500EMini;
-        public Symbol SymbolSP500;
+        public Symbol SymbolSP500 = QuantConnect.Symbol.Create(TickerSP500, SecurityType.Future, Market.USA);
 
         // Dow Jones ETF Options
         // Generally direct assignments like below are frowned upon as they skip the map files and may identify the wrong symbol.
         // e.g. OptionSymbol = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
         private const string UnderlyingTicker = "DIA";
-        public Symbol Underlying, OptionSymbol;
+        public readonly Symbol Underlying = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Equity, Market.USA);
+        public readonly Symbol OptionSymbol = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
 
         // Microsoft Equtiy
         private const string TickerMSFT = "MSFT";
-        private Symbol SymbolMSFT;
+        private readonly Symbol SymbolMSFT = QuantConnect.Symbol.Create(TickerMSFT, SecurityType.Equity, Market.USA);
 
         // EUR/USD FX spot pair
         private const string TickerEURUSD = "EURUSD";
@@ -69,8 +70,7 @@ namespace QuantConnect.Algorithm.CSharp
             // setting up options
             var equity = AddEquity(UnderlyingTicker);
             var option = AddOption(UnderlyingTicker);
-            Underlying = equity.Symbol;
-            OptionSymbol = option.Symbol;
+
             equity.SetDataNormalizationMode(DataNormalizationMode.Raw);
             option.PriceModel = OptionPriceModels.BinomialCoxRossRubinstein();
             // option.EnableGreekApproximation = true;
@@ -78,7 +78,7 @@ namespace QuantConnect.Algorithm.CSharp
             option.SetFilter(-2, +2, TimeSpan.Zero, TimeSpan.FromDays(180));
 
             // setting up stock
-            SymbolMSFT = AddEquity(TickerMSFT).Symbol;
+            AddEquity(TickerMSFT);
 
             // setting up FX
             AddForex(TickerEURUSD);

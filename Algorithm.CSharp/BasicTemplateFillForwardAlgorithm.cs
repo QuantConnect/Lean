@@ -15,16 +15,17 @@
 
 using QuantConnect.Data.Market;
 
-namespace QuantConnect.Algorithm.Examples
+namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Skeleton algorithm demonstrating filling forward data through gaps and inconsistent data. By default LEAN fills the previous bar forward
     /// so you get regular bars.
     /// </summary>
     /// <meta name="tag" content="using data" />
-    /// <meta name="tag" content="regression test" />
     public class BasicTemplateFillForwardAlgorithm : QCAlgorithm
     {
+        private Symbol _asur = QuantConnect.Symbol.Create("ASUR", SecurityType.Equity, Market.USA);
+
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -45,7 +46,7 @@ namespace QuantConnect.Algorithm.Examples
         {
             if (!Portfolio.Invested)
             {
-                SetHoldings("ASUR", 1);
+                SetHoldings(_asur, 1);
                 Debug("Purchased Stock");
             }
         }

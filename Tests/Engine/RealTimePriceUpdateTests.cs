@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Algorithm.Examples;
 using QuantConnect.Brokerages;
 using QuantConnect.Data.Auxiliary;
@@ -42,7 +43,7 @@ namespace QuantConnect.Tests.Engine
                 DataQueueHandler = "LiveDataQueue"
             };
 
-            var algo = new BenchmarkAlgorithm();
+            var algo = new BasicTemplateAlgorithm();
 
             _liveTradingDataFeed.Initialize(algo, jobPacket, new LiveTradingResultHandler(), new LocalDiskMapFileProvider(), null, new DefaultDataProvider());
 
@@ -88,7 +89,7 @@ namespace QuantConnect.Tests.Engine
 
         class TimeZoneOffsetProviderNeverOpen : TimeZoneOffsetProvider
         {
-            public TimeZoneOffsetProviderNeverOpen() 
+            public TimeZoneOffsetProviderNeverOpen()
                 : base(TimeZones.NewYork, DateTime.Parse("1/1/2016"), DateTime.Parse("1/1/2018"))
             {
             }

@@ -27,6 +27,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// It also shows how you can prefilter contracts easily based on strikes and expirations, and how you
     /// can inspect the option chain to pick a specific option contract to trade.
     /// </summary>
+    /// <meta name="tag" content="using data" />
+    /// <meta name="tag" content="options" />
+    /// <meta name="tag" content="filter selection" />
     public class BasicTemplateOptionsAlgorithm : QCAlgorithm
     {
         private const string UnderlyingTicker = "GOOG";

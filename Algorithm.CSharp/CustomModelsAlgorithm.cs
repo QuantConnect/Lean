@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,12 +25,18 @@ using QuantConnect.Securities;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This algorithm shows how you can define your own custom models.
+    /// Demonstration of using custom fee, slippage and fill models for modelling transactions in backtesting.
+    /// QuantConnect allows you to model all orders as deeply and accurately as you need.
     /// </summary>
+    /// <meta name="tag" content="trading and orders" />
+    /// <meta name="tag" content="transaction fees and slippage" />
+    /// <meta name="tag" content="custom transaction models" />
+    /// <meta name="tag" content="custom slippage models" />
+    /// <meta name="tag" content="custom fee models" />
     public class CustomModelsAlgorithm : QCAlgorithm
     {
         private Security _security;
-        private Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+        private readonly Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
 
         public override void Initialize()
         {

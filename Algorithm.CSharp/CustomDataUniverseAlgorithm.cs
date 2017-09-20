@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,15 +24,19 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// This algorithm shows how to grab symbols from an external api each day
     /// and load data using the universe selection feature. In this example we
-    /// define a custom data type for the NYSE top gainers and then short the 
+    /// define a custom data type for the NYSE top gainers and then short the
     /// top 2 gainers each day
     /// </summary>
+    /// <meta name="tag" content="using data" />
+    /// <meta name="tag" content="universes" />
+    /// <meta name="tag" content="custom universes" />
     public class CustomDataUniverseAlgorithm : QCAlgorithm
     {
         private SecurityChanges _changes;
 
         public override void Initialize()
         {
+            // Data ADDED via universe selection is added with Daily resolution.
             UniverseSettings.Resolution = Resolution.Daily;
 
             SetStartDate(2015, 01, 05);
@@ -100,8 +104,8 @@ namespace QuantConnect.Algorithm.CSharp
                 set { Time = value - QuantConnect.Time.OneDay; }
             }
 
-            private int count;
-            private DateTime lastDate;
+            private int _count;
+            private DateTime _lastDate;
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
                 if (isLiveMode)
@@ -128,11 +132,11 @@ namespace QuantConnect.Algorithm.CSharp
                     };
                 }
 
-                if (lastDate != date)
+                if (_lastDate != date)
                 {
                     // reset our counter for the new day
-                    lastDate = date;
-                    count = 0;
+                    _lastDate = date;
+                    _count = 0;
                 }
 
                 // parse the html into a symbol
@@ -156,7 +160,7 @@ namespace QuantConnect.Algorithm.CSharp
                     Symbol = Symbol.Create(symbolString, SecurityType.Equity, Market.USA),
                     Time = date,
                     // the html has these in order, so we'll keep incrementing until a new day
-                    TopGainersRank = ++count
+                    TopGainersRank = ++_count
                 };
             }
         }
