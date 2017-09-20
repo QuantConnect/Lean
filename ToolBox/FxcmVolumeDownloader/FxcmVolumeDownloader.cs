@@ -13,14 +13,14 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data;
-using QuantConnect.Data.Custom;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using QuantConnect.Data;
+using QuantConnect.Data.Custom;
 
 namespace QuantConnect.ToolBox
 {
@@ -48,12 +48,12 @@ namespace QuantConnect.ToolBox
             AUDJPY = 17
         }
 
-        #region Fields
-
         /// <summary>
-        ///     Integer representing client version.
+        ///     The request base URL.
         /// </summary>
-        private readonly int _ver = 1;
+        private readonly string _baseUrl = " http://marketsummary2.fxcorporate.com/ssisa/servlet?RT=SSI";
+
+        private readonly string _dataDirectory;
 
         /// <summary>
         ///     FXCM session id.
@@ -63,23 +63,17 @@ namespace QuantConnect.ToolBox
         /// <summary>
         ///     The columns index which should be added to obtain the transactions.
         /// </summary>
-        private readonly long[] _transactionsIdx = { 27, 29, 31, 33 };
+        private readonly long[] _transactionsIdx = {27, 29, 31, 33};
+
+        /// <summary>
+        ///     Integer representing client version.
+        /// </summary>
+        private readonly int _ver = 1;
 
         /// <summary>
         ///     The columns index which should be added to obtain the volume.
         /// </summary>
-        private readonly int[] _volumeIdx = { 26, 28, 30, 32 };
-
-        /// <summary>
-        ///     The request base URL.
-        /// </summary>
-        private readonly string _baseUrl = " http://marketsummary2.fxcorporate.com/ssisa/servlet?RT=SSI";
-
-        private readonly string _dataDirectory;
-
-        #endregion Fields
-
-        #region Public Methods
+        private readonly int[] _volumeIdx = {26, 28, 30, 32};
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="FxcmVolumeDownloader" /> class.
@@ -88,6 +82,44 @@ namespace QuantConnect.ToolBox
         public FxcmVolumeDownloader(string dataDirectory)
         {
             _dataDirectory = dataDirectory;
+        }
+
+        /// <summary>
+        ///     Get historical data enumerable for a single symbol, type and resolution given this start and end time (in UTC).
+        /// </summary>
+        /// <param name="symbol">Symbol for the data we're looking for.</param>
+        /// <param name="resolution">Resolution of the data request</param>
+        /// <param name="startUtc">Start time of the data in UTC</param>
+        /// <param name="endUtc">End time of the data in UTC</param>
+        /// <returns>
+        ///     Enumerable of base data for this symbol
+        /// </returns>
+        public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
+        {
+            var idx = 0;
+            var obsTime = startUtc;
+            var requestedData = new List<BaseData>();
+            var lines = RequestData(symbol, resolution, startUtc, endUtc);
+
+            do
+            {
+                var line = lines[idx++];
+                var obs = line.Split(';');
+                var stringDate = obs[0].Substring(startIndex: 3);
+                obsTime = DateTime.ParseExact(stringDate, "yyyyMMddHHmm",
+                                              DateTimeFormatInfo.InvariantInfo);
+                var volume = _volumeIdx.Select(x => long.Parse(obs[x])).Sum();
+
+                var transactions = _transactionsIdx.Select(x => int.Parse(obs[x])).Sum();
+                requestedData.Add(new FxcmVolume
+                {
+                    Symbol = symbol,
+                    Time = obsTime,
+                    Value = volume,
+                    Transactions = transactions
+                });
+            } while (obsTime.Date <= endUtc.Date && idx < lines.Length - 1);
+            return requestedData.Where(o => o.Time.Date >= startUtc.Date && o.Time.Date <= endUtc.Date);
         }
 
         /// <summary>
@@ -112,7 +144,7 @@ namespace QuantConnect.ToolBox
                 var updatedStartDate = GetLastAvailableDateOfData(symbol, resolution, writer.FolderPath);
                 if (updatedStartDate == null) return;
 
-                intermediateStartDate = ((DateTime) updatedStartDate).AddDays(-1);
+                intermediateStartDate = ((DateTime) updatedStartDate).AddDays(value: -1);
                 intermediateEndDate = DateTime.Today;
             }
 
@@ -148,89 +180,8 @@ namespace QuantConnect.ToolBox
                     data.Clear();
                 }
             } while (intermediateEndDate != endUtc);
-            
+
             writer.Write(data, update);
-        }
-
-        /// <summary>
-        ///     Get historical data enumerable for a single symbol, type and resolution given this start and end time (in UTC).
-        /// </summary>
-        /// <param name="symbol">Symbol for the data we're looking for.</param>
-        /// <param name="resolution">Resolution of the data request</param>
-        /// <param name="startUtc">Start time of the data in UTC</param>
-        /// <param name="endUtc">End time of the data in UTC</param>
-        /// <returns>
-        ///     Enumerable of base data for this symbol
-        /// </returns>
-        public IEnumerable<BaseData> Get(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
-        {
-            var idx = 0;
-            var obsTime = startUtc;
-            var requestedData = new List<BaseData>();
-            var lines = RequestData(symbol, resolution, startUtc, endUtc);
-
-            do
-            {
-                var line = lines[idx++];
-                var obs = line.Split(';');
-                var stringDate = obs[0].Substring(startIndex: 3);
-                obsTime = DateTime.ParseExact(stringDate, "yyyyMMddHHmm",
-                    DateTimeFormatInfo.InvariantInfo);
-                var volume = _volumeIdx.Select(x => long.Parse(obs[x])).Sum();
-
-                var transactions = _transactionsIdx.Select(x => int.Parse(obs[x])).Sum();
-                requestedData.Add(new FxcmVolume
-                {
-                    Symbol = symbol,
-                    Time = obsTime,
-                    Value = volume,
-                    Transactions = transactions
-                });
-            } while (obsTime.Date <= endUtc.Date && idx < lines.Length - 1);
-            return requestedData.Where(o => o.Time.Date >= startUtc.Date && o.Time.Date <= endUtc.Date);
-        }
-
-        #endregion Public Methods
-
-        #region Private Methods
-
-        /// <summary>
-        ///     Generates the API Requests.
-        /// </summary>
-        /// <param name="symbol">The symbol.</param>
-        /// <param name="resolution">The resolution.</param>
-        /// <param name="startUtc">The start date in UTC.</param>
-        /// <param name="endUtc">The end date in UTC.</param>
-        /// <returns></returns>
-        private string[] RequestData(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
-        {
-            var startDate = string.Empty;
-            var endDate = endUtc.AddDays(2).ToString("yyyyMMdd") + "2100";
-            var symbolId = GetFxcmIDFromSymbol(symbol);
-            var interval = GetIntervalFromResolution(resolution);
-            switch (resolution)
-            {
-                case Resolution.Minute:
-                case Resolution.Hour:
-                    startDate = startUtc.ToString("yyyyMMdd") + "0000";
-                    break;
-
-                case Resolution.Daily:
-                    startDate = startUtc.AddDays(1).ToString("yyyyMMdd") + "2100";
-                    break;
-            }
-
-            var request = string.Format("{0}&ver={1}&sid={2}&interval={3}&offerID={4}&timeFrom={5}&timeTo={6}",
-                _baseUrl, _ver, _sid, interval, symbolId, startDate, endDate);
-
-            string[] lines;
-            using (var client = new WebClient())
-            {
-                var data = client.DownloadString(request);
-                lines = data.Split('\n');
-            }
-            // Removes the HTML head and tail.
-            return lines.Skip(2).Take(lines.Length - 4).ToArray();
         }
 
         /// <summary>
@@ -244,7 +195,7 @@ namespace QuantConnect.ToolBox
             int symbolId;
             try
             {
-                symbolId = (int)Enum.Parse(typeof(FxcmSymbolId), symbol.Value);
+                symbolId = (int) Enum.Parse(typeof(FxcmSymbolId), symbol.Value);
             }
             catch (ArgumentException)
             {
@@ -281,7 +232,7 @@ namespace QuantConnect.ToolBox
 
                 default:
                     throw new ArgumentOutOfRangeException("resolution", resolution,
-                        "tick or second resolution are not supported for Forex Volume.");
+                                                          "tick or second resolution are not supported for Forex Volume.");
             }
             return interval;
         }
@@ -295,21 +246,61 @@ namespace QuantConnect.ToolBox
                 case Resolution.Daily:
                 case Resolution.Hour:
                     var expectedFilePath = Path.Combine(folderPath,
-                        string.Format("{0}_volume.zip", symbol.Value.ToLower()));
+                                                        string.Format("{0}_volume.zip", symbol.Value.ToLower()));
                     if (File.Exists(expectedFilePath))
                     {
-                        var lastStrDate = Compression.ReadLines(expectedFilePath).Last().Split(',').First().Substring(0, 8);
+                        var lastStrDate = Compression
+                            .ReadLines(expectedFilePath).Last().Split(',').First().Substring(startIndex: 0, length: 8);
                         lastAvailableDate = DateTime.ParseExact(lastStrDate, "yyyyMMdd", CultureInfo.InvariantCulture);
                     }
                     break;
                 case Resolution.Minute:
-                    var lastFileDate = Directory.GetFiles(folderPath, "*_volume.zip").OrderBy(f => f).Last().Substring(0, 8);
+                    var lastFileDate = Directory
+                        .GetFiles(folderPath, "*_volume.zip").OrderBy(f => f).Last()
+                        .Substring(startIndex: 0, length: 8);
                     lastAvailableDate = DateTime.ParseExact(lastFileDate, "yyyyMMdd", CultureInfo.InvariantCulture);
                     break;
             }
             return lastAvailableDate;
         }
 
-        #endregion Private Methods
+        /// <summary>
+        ///     Generates the API Requests.
+        /// </summary>
+        /// <param name="symbol">The symbol.</param>
+        /// <param name="resolution">The resolution.</param>
+        /// <param name="startUtc">The start date in UTC.</param>
+        /// <param name="endUtc">The end date in UTC.</param>
+        /// <returns></returns>
+        private string[] RequestData(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
+        {
+            var startDate = string.Empty;
+            var endDate = endUtc.AddDays(value: 2).ToString("yyyyMMdd") + "2100";
+            var symbolId = GetFxcmIDFromSymbol(symbol);
+            var interval = GetIntervalFromResolution(resolution);
+            switch (resolution)
+            {
+                case Resolution.Minute:
+                case Resolution.Hour:
+                    startDate = startUtc.ToString("yyyyMMdd") + "0000";
+                    break;
+
+                case Resolution.Daily:
+                    startDate = startUtc.AddDays(value: 1).ToString("yyyyMMdd") + "2100";
+                    break;
+            }
+
+            var request = string.Format("{0}&ver={1}&sid={2}&interval={3}&offerID={4}&timeFrom={5}&timeTo={6}",
+                                        _baseUrl, _ver, _sid, interval, symbolId, startDate, endDate);
+
+            string[] lines;
+            using (var client = new WebClient())
+            {
+                var data = client.DownloadString(request);
+                lines = data.Split('\n');
+            }
+            // Removes the HTML head and tail.
+            return lines.Skip(count: 2).Take(lines.Length - 4).ToArray();
+        }
     }
 }
