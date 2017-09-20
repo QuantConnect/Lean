@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,12 +24,16 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// EMA cross with S&P 500 E-mini futures
-    /// In this example, we demostrate how to trade futures contracts using 
+    /// EMA cross with SP500 E-mini futures
+    /// In this example, we demostrate how to trade futures contracts using
     /// a equity to generate the trading signals
     /// It also shows how you can prefilter contracts easily based on expirations.
     /// It also shows how you can inspect the futures chain to pick a specific contract to trade.
     /// </summary>
+    /// <meta name="tag" content="using data" />
+    /// <meta name="tag" content="futures" />
+    /// <meta name="tag" content="indicators" />
+    /// <meta name="tag" content="strategy example" />
     public class FuturesMomentumAlgorithm : QCAlgorithm
     {
         private const decimal _tolerance = 0.001m;

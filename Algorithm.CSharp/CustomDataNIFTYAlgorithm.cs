@@ -59,8 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">One(1) Nifty Object, streamed into our algorithm synchronised in time with our other data streams</param>
         public void OnData(DollarRupee data)
         {
-            _today = new CorrelationPair(data.Time);
-            _today.CurrencyPrice = Convert.ToDouble(data.Close);
+            _today = new CorrelationPair(data.Time) {CurrencyPrice = Convert.ToDouble(data.Close)};
         }
 
         /// <summary>

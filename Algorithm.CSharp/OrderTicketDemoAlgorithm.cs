@@ -2,11 +2,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,11 +24,16 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// In this algorithm we submit/update/cancel each order type
     /// </summary>
+    /// <meta name="tag" content="trading and orders" />
+    /// <meta name="tag" content="placing orders" />
+    /// <meta name="tag" content="managing orders" />
+    /// <meta name="tag" content="order tickets" />
+    /// <meta name="tag" content="updating orders" />
     public class OrderTicketDemoAlgorithm : QCAlgorithm
     {
         private const string symbol = "SPY";
-        private readonly List<OrderTicket> _openMarketOnOpenOrders = new List<OrderTicket>(); 
-        private readonly List<OrderTicket> _openMarketOnCloseOrders = new List<OrderTicket>(); 
+        private readonly List<OrderTicket> _openMarketOnOpenOrders = new List<OrderTicket>();
+        private readonly List<OrderTicket> _openMarketOnCloseOrders = new List<OrderTicket>();
         private readonly List<OrderTicket> _openLimitOrders = new List<OrderTicket>();
         private readonly List<OrderTicket> _openStopMarketOrders = new List<OrderTicket>();
         private readonly List<OrderTicket> _openStopLimitOrders = new List<OrderTicket>();
@@ -77,8 +82,8 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        /// MarketOrders are the only orders that are processed synchronously by default, so 
-        /// they'll fill by the next line of code. This behavior equally applies to live mode. 
+        /// MarketOrders are the only orders that are processed synchronously by default, so
+        /// they'll fill by the next line of code. This behavior equally applies to live mode.
         /// You can opt out of this behavior by specifying the 'asynchronous' parameter as true.
         /// </summary>
         private void MarketOrders()
@@ -120,8 +125,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// a limit price below the current market price. Likewise the opposite is true
         /// when selling, you can place a LimitOrder to sell with a limit price above the
         /// current market price to get a better sale price.
-        /// You can submit requests to update or cancel the LimitOrder at any time. 
-        /// The 'LimitPrice' for an order can be retrieved from the ticket using the 
+        /// You can submit requests to update or cancel the LimitOrder at any time.
+        /// The 'LimitPrice' for an order can be retrieved from the ticket using the
         /// OrderTicket.Get(OrderField) method, for example:
         /// <code>
         /// var currentLimitPrice = orderTicket.Get(OrderField.LimitPrice);
@@ -167,7 +172,7 @@ namespace QuantConnect.Algorithm.CSharp
                 longOrder.Update(new UpdateOrderFields
                 {
                     // we could change the quantity, but need to specify it
-                    //Quantity = 
+                    //Quantity =
                     LimitPrice = newLongLimit,
                     Tag = "Update #" + (longOrder.UpdateRequests.Count + 1)
                 });
@@ -185,8 +190,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// market price. In this way it's a 'stop loss' for a short trade.
         /// When placing a short trade, the stop price must be below current
         /// market price. In this way it's a 'stop loss' for a long trade.
-        /// You can submit requests to update or cancel the StopMarketOrder at any time. 
-        /// The 'StopPrice' for an order can be retrieved from the ticket using the 
+        /// You can submit requests to update or cancel the StopMarketOrder at any time.
+        /// The 'StopPrice' for an order can be retrieved from the ticket using the
         /// OrderTicket.Get(OrderField) method, for example:
         /// <code>
         /// var currentStopPrice = orderTicket.Get(OrderField.StopPrice);
@@ -236,7 +241,7 @@ namespace QuantConnect.Algorithm.CSharp
                 longOrder.Update(new UpdateOrderFields
                 {
                     // we could change the quantity, but need to specify it
-                    //Quantity = 
+                    //Quantity =
                     StopPrice = newLongStop,
                     Tag = "Update #" + (longOrder.UpdateRequests.Count + 1)
                 });
@@ -319,7 +324,7 @@ namespace QuantConnect.Algorithm.CSharp
                 longOrder.Update(new UpdateOrderFields
                 {
                     // we could change the quantity, but need to specify it
-                    //Quantity = 
+                    //Quantity =
                     StopPrice = newLongStop,
                     LimitPrice = newLongLimit,
                     Tag = "Update #" + (longOrder.UpdateRequests.Count + 1)
@@ -407,7 +412,7 @@ namespace QuantConnect.Algorithm.CSharp
                     _openMarketOnOpenOrders.Clear();
                     return;
                 }
-                
+
                 var quantity = ticket.Quantity + 1;
                 Log("Updating quantity  - New Quantity: " + quantity);
 
@@ -418,7 +423,7 @@ namespace QuantConnect.Algorithm.CSharp
                     Tag = "Update #" + (ticket.UpdateRequests.Count + 1)
                 });
             }
-            
+
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)

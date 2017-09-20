@@ -19,6 +19,7 @@ using System.IO;
 using System.Linq;
 using NodaTime;
 using NUnit.Framework;
+using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
