@@ -110,16 +110,10 @@ namespace QuantConnect.ToolBox
             if (update)
             {
                 var updatedStartDate = GetLastAvailableDateOfData(symbol, resolution, writer.FolderPath);
-                if (updatedStartDate == null)
-                {
-                    return;
-                }
-                else
-                {
-                    intermediateStartDate = ((DateTime) updatedStartDate).AddDays(1);
-                    intermediateEndDate = DateTime.Today.AddDays(-1);
-                }
+                if (updatedStartDate == null) return;
 
+                intermediateStartDate = ((DateTime) updatedStartDate).AddDays(-1);
+                intermediateEndDate = DateTime.Today;
             }
 
             // As the responses has a Limit of 10000 lines, hourly data the minute data request should be sliced.
@@ -154,19 +148,8 @@ namespace QuantConnect.ToolBox
                     data.Clear();
                 }
             } while (intermediateEndDate != endUtc);
-            // Seems the data has some duplicate values! This makes the writer throws an error.
-            var duplicates = data.GroupBy(x => x.Time)
-                .Where(g => g.Count() > 1)
-                .Select(g => g.Key)
-                .ToList();
-            if (duplicates.Count != 0)
-            {
-                foreach (var duplicate in duplicates)
-                {
-                    data.RemoveAll(o => o.Time == duplicate);
-                }
-            }
-            writer.Write(data);
+            
+            writer.Write(data, update);
         }
 
         /// <summary>

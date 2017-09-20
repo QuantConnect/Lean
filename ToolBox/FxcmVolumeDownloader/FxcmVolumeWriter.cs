@@ -30,16 +30,18 @@ namespace QuantConnect.ToolBox
 
         public string FolderPath { get; }
 
-        public void Write(IEnumerable<BaseData> data)
+        public void Write(IEnumerable<BaseData> data, bool update=false)
         {
             if (!Directory.Exists(FolderPath)) Directory.CreateDirectory(FolderPath);
+            // TODO: read the file here merge and check for duplicates
+            data = CheckForDuplicatesObservations(data);
             if (_resolution == Resolution.Minute)
             {
                 WriteMinuteData(data);
             }
             else
             {
-                WriteHourAndDailyData(data);
+                WriteHourAndDailyData(data, update);
             }
         }
 
@@ -98,6 +100,25 @@ namespace QuantConnect.ToolBox
             // Write out this data string to a zip file
             Compression.Zip(csvFilePath, filename);
 
+        }
+
+        private IEnumerable<BaseData> CheckForDuplicatesObservations(IEnumerable<BaseData> data)
+        {
+            // Seems the data has some duplicate values! This makes the writer throws an error.
+            var duplicates = data.GroupBy(x => x.Time)
+                                 .Where(g => g.Count() > 1)
+                                 .Select(g => g.Key)
+                                 .ToList();
+            if (duplicates.Count != 0)
+            {
+                var cleanData = data.ToList();
+                foreach (var duplicate in duplicates)
+                {
+                    cleanData.RemoveAll(o => o.Time == duplicate);
+                }
+                return cleanData;
+            }
+            return data;
         }
     }
 }

@@ -29,7 +29,7 @@ namespace QuantConnect.ToolBox.FxcmVolumeDownload
                         "EURUSD,USDJPY,GBPUSD,USDCHF,EURCHF,AUDUSD,USDCAD,NZDUSD,EURGBP,EURJPY,GBPJPY,EURAUD,EURCAD,AUDJPY",
                         "All",
                         "20100101",
-                        DateTime.Today.AddDays(-1).ToString("yyyyMMdd")
+                        DateTime.Today.ToString("yyyyMMdd")
                     };
                 }
             }
@@ -73,7 +73,10 @@ namespace QuantConnect.ToolBox.FxcmVolumeDownload
 
                 // Load settings from config.json
 
-                var dataDirectory = Config.Get("data-directory", "../../../Data");
+                // TODO: toClean 
+                //var dataDirectory = Config.Get("data-directory", "../../../Data");
+                var dataDirectory = "C:\\Users\\jjd\\Desktop\\TestingFXCMVolScript";
+
                 var downloader = new FxcmVolumeDownloader(dataDirectory);
                 foreach (var ticker in tickers)
                 {
