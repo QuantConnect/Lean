@@ -193,7 +193,7 @@ namespace QuantConnect.Data.UniverseSelection
                     isUniverseSubscription: false,
                     universe: this,
                     security: security,
-                    configuration: config,
+                    configuration: new SubscriptionDataConfig(config),
                     startTimeUtc: currentTimeUtc,
                     endTimeUtc: maximumEndTimeUtc
                     )
