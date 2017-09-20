@@ -69,6 +69,20 @@
     </None>
     <None Include="packages.config" />
     <None Include="readme.md" />
+    <None Include="BasicTemplateOptionStrategyAlgorithm.py" />
+    <None Include="BasicTemplateFuturesHistoryAlgorithm.py" />
+    <None Include="BasicTemplateFuturesConsolidationAlgorithm.py" />
+    <None Include="EmaCrossUniverseSelectionAlgorithm.py" />
+    <None Include="BasicTemplateDailyAlgorithm.py" />
+    <None Include="BasicTemplateForexAlgorithm.py" />
+    <None Include="CustomDataRegressionAlgorithm.py" />
+    <None Include="BasicTemplateOptionsFilterUniverseAlgorithm.py" />
+    <None Include="BasicTemplateOptionsHistoryAlgorithm.py" />
+    <None Include="BasicTemplateOptionTradesAlgorithm.py" />
+    <None Include="WeeklyUniverseSelectionRegressionAlgorithm.py" />
+    <None Include="DailyFxAlgorithm.py" />
+    <None Include="FuturesMomentumAlgorithm.py" />
+    <None Include="RegressionChannelAlgorithm.py" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="AddRemoveSecurityRegressionAlgorithm.py">
