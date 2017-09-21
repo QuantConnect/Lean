@@ -31,7 +31,7 @@ class EmaCrossUniverseSelectionAlgorithm(QCAlgorithm):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
         
         self.SetStartDate(2010,01,01)  #Set Start Date
-        self.SetEndDate(2015,01,03)    #Set End Date
+        self.SetEndDate(2015,01,01)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         
         self.UniverseSettings.Resolution = Resolution.Daily        
@@ -80,15 +80,15 @@ class EmaCrossUniverseSelectionAlgorithm(QCAlgorithm):
          
         # we want 20% allocation in each security in our universe
         for security in changes.AddedSecurities:
-            self.SetHoldings(security.Symbol, 0.2)
+            self.SetHoldings(security.Symbol, 0.1)
 
 
 class SymbolData(object):
     def __init__(self, symbol):
         self.symbol = symbol
         self.tolerance = d.Decimal(1.01)
-        self.fast = ExponentialMovingAverage(10)
-        self.slow = ExponentialMovingAverage(30)
+        self.fast = ExponentialMovingAverage(100)
+        self.slow = ExponentialMovingAverage(300)
         self.is_uptrend = False
         self.scale = 0
 
@@ -101,4 +101,4 @@ class SymbolData(object):
             self.is_uptrend = fast > slow * self.tolerance
 
         if self.is_uptrend:
-            self.scale = (fast - slow) / ((fast + slow) / 2)
+            self.scale = (fast - slow) / ((fast + slow) / d.Decimal(2.0))

@@ -83,6 +83,7 @@
     <None Include="DailyFxAlgorithm.py" />
     <None Include="FuturesMomentumAlgorithm.py" />
     <None Include="RegressionChannelAlgorithm.py" />
+    <None Include="OptionChainProviderAlgorithm.py" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="AddRemoveSecurityRegressionAlgorithm.py">
