@@ -27,6 +27,13 @@ import decimal as d
 from datetime import datetime, timedelta
 from decimal import Decimal
 
+### <summary>
+### Strategy example using a portfolio of ETF Global Rotation
+### </summary>
+### <meta name="tag" content="strategy example" />
+### <meta name="tag" content="momentum" />
+### <meta name="tag" content="using data" />
+
 
 class ETFGlobalRotationAlgorithm(QCAlgorithm):
 
@@ -37,12 +44,18 @@ class ETFGlobalRotationAlgorithm(QCAlgorithm):
         self.LastRotationTime = datetime.min
         self.RotationInterval = timedelta(days=30)
         self.first = True
+
+        # these are the growth symbols we'll rotate through
+
         GrowthSymbols =["MDY", # US S&P mid cap 400
                         "IEV", # iShares S&P europe 350
                         "EEM", # iShared MSCI emerging markets
                         "ILF", # iShares S&P latin america
                         "EPP" ] # iShared MSCI Pacific ex-Japan
+
+        # these are the safety symbols we go to when things are looking bad for growth
         SafetySymbols = ["EDV", "SHY"] # "EDV" Vangaurd TSY 25yr, "SHY" Barclays Low Duration TSY
+        # we'll hold some computed data in these guys
         self.SymbolData = []
         for symbol in list(set(GrowthSymbols) | set(SafetySymbols)):
             self.AddSecurity(SecurityType.Equity, symbol, Resolution.Minute)
@@ -52,6 +65,9 @@ class ETFGlobalRotationAlgorithm(QCAlgorithm):
     
         
     def OnData(self, data):
+
+        # the first time we come through here we'll need to do some things such as allocation
+        # and initializing our symbol data
 
         if self.first:
             self.first = False
@@ -64,6 +80,7 @@ class ETFGlobalRotationAlgorithm(QCAlgorithm):
             orderedObjScores = sorted(self.SymbolData, key=lambda x: Score(x[1].Current.Value,x[2].Current.Value).ObjectiveScore(), reverse=True)
             for x in orderedObjScores:
                 self.Log(">>SCORE>>" + x[0] + ">>" + str(Score(x[1].Current.Value,x[2].Current.Value).ObjectiveScore()))
+            # pick which one is best from growth and safety symbols
             bestGrowth = orderedObjScores[0]
             if Score(bestGrowth[1].Current.Value,bestGrowth[2].Current.Value).ObjectiveScore() > 0:
                 if (self.Portfolio[bestGrowth[0]].Quantity == 0):
@@ -73,6 +90,7 @@ class ETFGlobalRotationAlgorithm(QCAlgorithm):
                 qty = self.Portfolio.MarginRemaining / self.Securities[bestGrowth[0]].Close
                 self.MarketOrder(bestGrowth[0], int(qty)) 
             else:
+            # if no one has a good objective score then let's hold cash this month to be safe
                 self.Log(">>LIQUIDATE>>CASH")
                 self.Liquidate()
         
@@ -85,4 +103,4 @@ class Score(object):
     def ObjectiveScore(self):
         weight1 = 100
         weight2 = 75
-        return (weight1 * self.oneMonthPerformance + weight2 * self.threeMonthPerformance) / (weight1 + weight2)erformance.Current.Value) / (weight1 + weight2)
+        return (weight1 * self.oneMonthPerformance + weight2 * self.threeMonthPerformance) / (weight1 + weight2)
