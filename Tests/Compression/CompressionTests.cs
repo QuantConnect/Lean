@@ -13,8 +13,10 @@
  * limitations under the License.
 */
 
+using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using Ionic.Zip;
 using NUnit.Framework;
@@ -24,6 +26,36 @@ namespace QuantConnect.Tests.Compression
     [TestFixture]
     public class CompressionTests
     {
+        private string _dataDirectory;
+
+        [TestFixtureTearDown]
+        public void Cleanning()
+        {
+            if(Directory.Exists(_dataDirectory)) Directory.Delete(_dataDirectory);
+        }
+
+        [TestCase(false, Description = "This test had been PASSING before the ReadZipEntry fix.")]
+        [TestCase(true, Description = "This test had been FAILING before the ReadZipEntry fix.")]
+        public void ReadLinesIssue(bool countLines)
+        {
+            // Arrange 
+            var randomFolder = Guid.NewGuid().ToString("N").Substring(startIndex: 0, length: 8);
+            var assemblyFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            _dataDirectory = Path.Combine(assemblyFolder, randomFolder);
+            Directory.CreateDirectory(_dataDirectory);
+
+            var _originalZipFile = Path.Combine("TestData", "20151224_quote_american.zip");
+
+            var copiedZipFile = Path.Combine(_dataDirectory, "testingFile.zip");
+            File.Copy(_originalZipFile, copiedZipFile);
+            // Act
+            var lines = QuantConnect.Compression.ReadLines(copiedZipFile);
+            if (countLines) Assert.AreEqual(56, lines.Count());
+            // Assert
+            Assert.DoesNotThrow(() => File.Delete(copiedZipFile));
+        }
+
+
         [Test]
         public void ReadLinesCountMatchesLineCount()
         {

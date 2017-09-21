@@ -611,13 +611,15 @@ namespace QuantConnect
 
         private static IEnumerable<string> ReadZipEntry(Ionic.Zip.ZipEntry entry)
         {
+            var output = new List<string>();
             using (var entryReader = new StreamReader(entry.OpenReader()))
             {
                 while (!entryReader.EndOfStream)
                 {
-                    yield return entryReader.ReadLine();
+                    output.Add(entryReader.ReadLine());
                 }
             }
+            return output;
         }
 
         /// <summary>
