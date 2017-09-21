@@ -16,7 +16,7 @@
 using System;
 using QuantConnect.Data.Market;
 
-namespace QuantConnect.Algorithm.Examples
+namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Algorithm demonstrating custom charting support in QuantConnect.

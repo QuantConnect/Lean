@@ -1,10 +1,10 @@
 ﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
-# 
-# Licensed under the Apache License, Version 2.0 (the "License"); 
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,13 +24,17 @@ from QuantConnect.Indicators import *
 from QuantConnect.Data.Market import *
 from datetime import datetime, timedelta
 
-
+### <summary>
+### Strategy example using a portfolio of ETF Global Rotation
+### </summary>
+### <meta name="tag" content="strategy example" />
+### <meta name="tag" content="momentum" />
+### <meta name="tag" content="using data" />
 class ETFGlobalRotationAlgorithm(QCAlgorithm):
-    '''ETF Global Rotation Strategy'''
 
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
-        
+
         self.SetStartDate(2007,01,01)  #Set Start Date
         self.SetCash(25000)            #Set Strategy Cash
 
@@ -46,7 +50,7 @@ class ETFGlobalRotationAlgorithm(QCAlgorithm):
     	    "EEM",    # iShared MSCI emerging markets
     	    "ILF",    # iShares S&P latin america
     	    "EPP" ]   # iShared MSCI Pacific ex-Japan
-            
+
         # these are the safety symbols we go to when things are looking bad for growth
         self.SafetySymbols = [
     	    "EDV",    # Vangaurd TSY 25yr+
@@ -54,7 +58,7 @@ class ETFGlobalRotationAlgorithm(QCAlgorithm):
 
         # we'll hold some computed data in these guys
         self.SymbolData = [ ]
-            
+
         for ticker in self.GrowthSymbols + self.SafetySymbols:
             # ideally we would use daily data
             equity = self.AddEquity(ticker)
@@ -62,11 +66,11 @@ class ETFGlobalRotationAlgorithm(QCAlgorithm):
             threeMonthPerformance = self.MOM(equity.Symbol, 90, Resolution.Daily)
 
             self.SymbolData.append(SymbolData(equity.Symbol, oneMonthPerformance, threeMonthPerformance))
-        
+
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
         try:
-            # the first time we come through here we'll need to do some 
+            # the first time we come through here we'll need to do some
             # things such as allocation and initializing our symbol data
             if self.__first:
                 self.__first = False
@@ -77,13 +81,13 @@ class ETFGlobalRotationAlgorithm(QCAlgorithm):
             if delta > self.__rotationInternal:
                 self.__lastRotationTime = self.Time
                 for x in self.SymbolData: x.Update()
-            
+
                 # pick which one is best from growth and safety symbols
                 orderedObjScores = sorted(self.SymbolData, key=lambda x: x.ObjectiveScore, reverse = True)
-                
+
                 for orderedObjScore in orderedObjScores:
                 	self.Log(">>SCORE>>{0}>>{1}".format(orderedObjScore.Symbol, orderedObjScore.ObjectiveScore))
-                
+
                 bestGrowth = orderedObjScores[0]
                 if bestGrowth.ObjectiveScore > 0:
                     if self.Portfolio[bestGrowth.Symbol].Quantity == 0:

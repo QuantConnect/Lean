@@ -1,10 +1,10 @@
 ﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
-# 
-# Licensed under the Apache License, Version 2.0 (the "License"); 
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,17 +25,25 @@ from QuantConnect.Indicators import *
 from System.Collections.Generic import List
 import decimal as d
 
+### <summary>
+### In this algorithm we demonstrate how to perform some technical analysis as
+### part of your coarse fundamental universe selection
+### </summary>
+### <meta name="tag" content="using data" />
+### <meta name="tag" content="indicators" />
+### <meta name="tag" content="universes" />
+### <meta name="tag" content="coarse universes" />
 class EmaCrossUniverseSelectionAlgorithm(QCAlgorithm):
-    '''In this algorithm we demonstrate how to define a universe as a combination of use the coarse fundamental data and fine fundamental data'''
+
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
-        
+
         self.SetStartDate(2010,01,01)  #Set Start Date
         self.SetEndDate(2015,01,01)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
-        
-        self.UniverseSettings.Resolution = Resolution.Daily        
-        self.UniverseSettings.Leverage = 2        
+
+        self.UniverseSettings.Resolution = Resolution.Daily
+        self.UniverseSettings.Leverage = 2
 
         self.coarse_count = 10
         self.averages = { };
@@ -43,23 +51,23 @@ class EmaCrossUniverseSelectionAlgorithm(QCAlgorithm):
         # this add universe method accepts two parameters:
         # - coarse selection function: accepts an IEnumerable<CoarseFundamental> and returns an IEnumerable<Symbol>
         self.AddUniverse(self.CoarseSelectionFunction)
-        
+
 
     # sort the data by daily dollar volume and take the top 'NumberOfSymbols'
     def CoarseSelectionFunction(self, coarse):
-        
-        # We are going to use a dictionary to refer the object that will keep the moving averages 
+
+        # We are going to use a dictionary to refer the object that will keep the moving averages
         for cf in coarse:
-            if cf.Symbol not in self.averages: 
+            if cf.Symbol not in self.averages:
                 self.averages[cf.Symbol] = SymbolData(cf.Symbol)
 
             # Updates the SymbolData object with current EOD price
             avg = self.averages[cf.Symbol]
             avg.update(cf.EndTime, cf.Price)
 
-        # Filter the values of the dict: we only want up-trending securities 
+        # Filter the values of the dict: we only want up-trending securities
         values = filter(lambda x: x.is_uptrend, self.averages.values())
-        
+
         # Sorts the values of the dict: we want those with greater difference between the moving averages
         values.sort(key=lambda x: x.scale, reverse=True)
 
@@ -77,7 +85,7 @@ class EmaCrossUniverseSelectionAlgorithm(QCAlgorithm):
         for security in changes.RemovedSecurities:
             if security.Invested:
                 self.Liquidate(security.Symbol)
-         
+
         # we want 20% allocation in each security in our universe
         for security in changes.AddedSecurities:
             self.SetHoldings(security.Symbol, 0.1)
@@ -94,7 +102,7 @@ class SymbolData(object):
 
     def update(self, time, value):
         datapoint = IndicatorDataPoint(time, value)
-        
+
         if self.fast.Update(datapoint) and self.slow.Update(datapoint):
             fast = self.fast.Current.Value
             slow = self.slow.Current.Value

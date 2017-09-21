@@ -33,6 +33,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// When a new 'consolidated' piece of data is produced by the IDataConsolidator, an event is fired
     /// with the argument of the new data.
     /// </summary>
+    /// <meta name="tag" content="using data" />
+    /// <meta name="tag" content="consolidating data" />
     public class DataConsolidationAlgorithm : QCAlgorithm
     {
         private TradeBar _last;
