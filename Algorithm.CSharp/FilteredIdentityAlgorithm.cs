@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 using QuantConnect.Data.Market;
@@ -21,8 +20,11 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Example algorithm of the Identity indicator with the filtering enhancement 
+    /// Example algorithm of the Identity indicator with the filtering enhancement. Filtering is used to check
+    /// the output of the indicator before returning it.
     /// </summary>
+    /// <meta name="tag" content="indicators" />
+    /// <meta name="tag" content="indicator classes" />
     public class FilteredIdentityAlgorithm : QCAlgorithm
     {
         private Symbol _symbol;
@@ -36,7 +38,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2014, 5, 2);  //Set Start Date
             SetEndDate(StartDate);     //Set End Date
             SetCash(100000);           //Set Strategy Cash
-            
+
             // Find more symbols here: http://quantconnect.com/data
             var security = AddForex("EURUSD", Resolution.Tick);
 

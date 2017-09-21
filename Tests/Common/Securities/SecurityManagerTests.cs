@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using NUnit.Framework;
+using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;

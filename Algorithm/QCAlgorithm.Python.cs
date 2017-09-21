@@ -102,7 +102,7 @@ namespace QuantConnect.Algorithm
         /// <param name="pycoarse">Defines an initial coarse selection</param>
         public void AddUniverse(PyObject pycoarse)
         {
-            var coarse = ToFunc<CoarseFundamental>(pycoarse);
+            var coarse = ToFunc<IEnumerable<CoarseFundamental>, Symbol>(pycoarse);
             AddUniverse(coarse);
         }
 
@@ -114,9 +114,49 @@ namespace QuantConnect.Algorithm
         /// <param name="pyfine">Defines a more detailed selection with access to more data</param>
         public void AddUniverse(PyObject pycoarse, PyObject pyfine)
         {
-            var coarse = ToFunc<CoarseFundamental>(pycoarse);
-            var fine = ToFunc<FineFundamental>(pyfine);
+            var coarse = ToFunc<IEnumerable<CoarseFundamental>, Symbol>(pycoarse);
+            var fine = ToFunc< IEnumerable<FineFundamental>, Symbol>(pyfine);
             AddUniverse(coarse, fine);
+        }
+
+        /// <summary>
+        /// Creates a new universe and adds it to the algorithm. This can be used to return a list of string
+        /// symbols retrieved from anywhere and will loads those symbols under the US Equity market.
+        /// </summary>
+        /// <param name="name">A unique name for this universe</param>
+        /// <param name="resolution">The resolution this universe should be triggered on</param>
+        /// <param name="pySelector">Function delegate that accepts a DateTime and returns a collection of string symbols</param>
+        public void AddUniverse(string name, Resolution resolution, PyObject pySelector)
+        {
+            var selector = ToFunc<DateTime, string>(pySelector);
+            AddUniverse(name, resolution, selector);
+        }
+
+        /// <summary>
+        /// Creates a new universe and adds it to the algorithm. This can be used to return a list of string
+        /// symbols retrieved from anywhere and will loads those symbols under the US Equity market.
+        /// </summary>
+        /// <param name="name">A unique name for this universe</param>
+        /// <param name="pySelector">Function delegate that accepts a DateTime and returns a collection of string symbols</param>
+        public void AddUniverse(string name, PyObject pySelector)
+        {
+            var selector = ToFunc<DateTime, string>(pySelector);
+            AddUniverse(name, selector);
+        }
+
+        /// <summary>
+        /// Creates a new user defined universe that will fire on the requested resolution during market hours.
+        /// </summary>
+        /// <param name="securityType">The security type of the universe</param>
+        /// <param name="name">A unique name for this universe</param>
+        /// <param name="resolution">The resolution this universe should be triggered on</param>
+        /// <param name="market">The market of the universe</param>
+        /// <param name="universeSettings">The subscription settings used for securities added from this universe</param>
+        /// <param name="pySelector">Function delegate that accepts a DateTime and returns a collection of string symbols</param>
+        public void AddUniverse(SecurityType securityType, string name, Resolution resolution, string market, UniverseSettings universeSettings, PyObject pySelector)
+        {
+            var selector = ToFunc<DateTime, string>(pySelector);
+            AddUniverse(securityType, name, resolution, market, universeSettings, selector);
         }
 
         /// <summary>
@@ -422,9 +462,10 @@ namespace QuantConnect.Algorithm
         /// Encapsulates a python method with a <see cref="System.Func{T, TResult}"/>
         /// </summary>
         /// <typeparam name="T">The data type</typeparam>
+        /// <typeparam name="TSecond">The output type</typeparam>
         /// <param name="pyObject">The python method</param>
         /// <returns>A <see cref="System.Func{T, TResult}"/> that encapsulates the python method</returns>
-        private Func<IEnumerable<T>, IEnumerable<Symbol>> ToFunc<T>(PyObject pyObject)
+        private Func<T, IEnumerable<TSecond>> ToFunc<T, TSecond>(PyObject pyObject)
         {
             var testMod =
                "from clr import AddReference\n" +
@@ -436,14 +477,14 @@ namespace QuantConnect.Algorithm
                "from QuantConnect import Symbol\n" +
                "from QuantConnect.Data.Fundamental import FineFundamental\n" +
                "from QuantConnect.Data.UniverseSelection import CoarseFundamental\n" +
-               "def to_func(pyobject, type):\n" +
-               "    return Func[IEnumerable[type], IEnumerable[Symbol]](pyobject)";
+               "def to_func(pyobject, in_type, out_type):\n" +
+               "    return Func[in_type, IEnumerable[out_type]](pyobject)";
 
             using (Py.GIL())
             {
                 dynamic toFunc = PythonEngine.ModuleFromString("x", testMod).GetAttr("to_func");
-                return toFunc(pyObject, typeof(T))
-                    .AsManagedObject(typeof(Func<IEnumerable<T>, IEnumerable<Symbol>>));
+                return toFunc(pyObject, typeof(T), typeof(TSecond))
+                    .AsManagedObject(typeof(Func<T, IEnumerable<TSecond>>));
             }
         }
     }

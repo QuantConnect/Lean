@@ -797,6 +797,8 @@ namespace QuantConnect.Lean.Engine.Results
         /// <remarks>Prime candidate for putting into a base class. Is identical across all result handlers.</remarks>
         public void ProcessSynchronousEvents(bool forceProcess = false)
         {
+            if (_algorithm == null) return;
+
             var time = _algorithm.UtcTime;
 
             if (time > _nextSample || forceProcess)

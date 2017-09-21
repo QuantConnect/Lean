@@ -84,6 +84,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.cs" />
+    <Compile Include="RollingWindowAlgorithm.cs" />
     <Compile Include="BasicTemplateDailyAlgorithm.cs" />
     <Compile Include="BasicTemplateFxcmVolumeAlgorithm.cs" />
     <Compile Include="BasicTemplateFuturesAlgorithmDaily.cs" />
@@ -126,12 +127,10 @@
     </Compile>
     <Compile Include="DelistingEventsAlgorithm.cs" />
     <Compile Include="DropboxBaseDataUniverseSelectionAlgorithm.cs" />
-    <Compile Include="EquitiesLabAlgorithm.cs" />
     <Compile Include="HistoryAlgorithm.cs" />
     <Compile Include="HistoryAndWarmupRegressionAlgorithm.cs" />
     <Compile Include="LimitFillRegressionAlgorithm.cs" />
     <Compile Include="BasicTemplateFillForwardAlgorithm.cs" />
-    <Compile Include="BenchmarkAlgorithm.cs" />
     <Compile Include="BrokerageModelAlgorithm.cs" />
     <Compile Include="BubbleAlgorithm.cs" />
     <Compile Include="CustomChartingAlgorithm.cs" />

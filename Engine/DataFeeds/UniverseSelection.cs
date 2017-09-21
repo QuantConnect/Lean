@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
@@ -85,7 +86,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     var security = new Equity(symbol, exchangeHours, quoteCash, symbolProperties);
 
-                    var request = new SubscriptionRequest(true, universe, security, config, dateTimeUtc, dateTimeUtc);
+                    var request = new SubscriptionRequest(true, universe, security, new SubscriptionDataConfig(config), dateTimeUtc, dateTimeUtc);
                     using (var enumerator = factory.CreateEnumerator(request, dataProvider))
                     {
                         if (enumerator.MoveNext())
@@ -207,7 +208,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 foreach (var security in addedSecurities)
                 {
                     // assume currency feeds are always one subscription per, these are typically quote subscriptions
-                    _dataFeed.AddSubscription(new SubscriptionRequest(false, universe, security, security.Subscriptions.First(), dateTimeUtc, algorithmEndDateUtc));
+                    _dataFeed.AddSubscription(new SubscriptionRequest(false, universe, security, new SubscriptionDataConfig(security.Subscriptions.First()), dateTimeUtc, algorithmEndDateUtc));
                 }
             }
 

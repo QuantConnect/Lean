@@ -1,10 +1,10 @@
 ﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
-# 
-# Licensed under the Apache License, Version 2.0 (the "License"); 
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,11 +34,15 @@ from decimal import Decimal
 ### <meta name="tag" content="momentum" />
 ### <meta name="tag" content="using data" />
 
-
+### <summary>
+### Strategy example using a portfolio of ETF Global Rotation
+### </summary>
+### <meta name="tag" content="strategy example" />
+### <meta name="tag" content="momentum" />
+### <meta name="tag" content="using data" />
 class ETFGlobalRotationAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-
         self.SetCash(25000)
         self.SetStartDate(2007,1,1)
         self.LastRotationTime = datetime.min
@@ -46,7 +50,6 @@ class ETFGlobalRotationAlgorithm(QCAlgorithm):
         self.first = True
 
         # these are the growth symbols we'll rotate through
-
         GrowthSymbols =["MDY", # US S&P mid cap 400
                         "IEV", # iShares S&P europe 350
                         "EEM", # iShared MSCI emerging markets

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,33 +21,38 @@ using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
-using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// This example demonstrates how to create a multi asset class trading strategy.
-    /// This code is designed for test purposes and can be used with paper brokerage. 
-    /// All asset classes are not necessarily supported by some brokers. See our website for details.
+    /// It is designed for test purposes and can be used with paper brokerage. All asset classes are not
+    /// necessarily supported by some brokers. See our website for details.
     /// </summary>
+    /// <meta name="tag" content="using data" />
+    /// <meta name="tag" content="futures" />
+    /// <meta name="tag" content="equity" />
+    /// <meta name="tag" content="options" />
     public class BasicTemplateMultiAssetAlgorithm : QCAlgorithm
     {
         // S&P 500 EMini futures
         private const string TickerSP500 = Futures.Indices.SP500EMini;
         public Symbol SymbolSP500 = QuantConnect.Symbol.Create(TickerSP500, SecurityType.Future, Market.USA);
 
-        // Google options
+        // Dow Jones ETF Options
+        // Generally direct assignments like below are frowned upon as they skip the map files and may identify the wrong symbol.
+        // e.g. OptionSymbol = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
         private const string UnderlyingTicker = "DIA";
         public readonly Symbol Underlying = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Equity, Market.USA);
         public readonly Symbol OptionSymbol = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
 
-        // Microsoft stock 
+        // Microsoft Equtiy
         private const string TickerMSFT = "MSFT";
         private readonly Symbol SymbolMSFT = QuantConnect.Symbol.Create(TickerMSFT, SecurityType.Equity, Market.USA);
 
         // EUR/USD FX spot pair
         private const string TickerEURUSD = "EURUSD";
-        private readonly Symbol SymbolEURUSD = QuantConnect.Symbol.Create(TickerEURUSD, SecurityType.Forex, Market.FXCM);
+        private Symbol SymbolEURUSD = QuantConnect.Symbol.Create(TickerEURUSD, SecurityType.Forex, Market.FXCM);
 
         private int barCount = 0;
 
@@ -65,6 +70,7 @@ namespace QuantConnect.Algorithm.CSharp
             // setting up options
             var equity = AddEquity(UnderlyingTicker);
             var option = AddOption(UnderlyingTicker);
+
             equity.SetDataNormalizationMode(DataNormalizationMode.Raw);
             option.PriceModel = OptionPriceModels.BinomialCoxRossRubinstein();
             // option.EnableGreekApproximation = true;
@@ -112,7 +118,7 @@ namespace QuantConnect.Algorithm.CSharp
                     OptionChain optionChain;
                     if (slice.OptionChains.TryGetValue(OptionSymbol, out optionChain))
                     {
-                        // find a farthest ATM contract 
+                        // find a farthest ATM contract
                         var contract = optionChain
                             .OrderBy(x => Math.Abs(optionChain.Underlying.Price - x.Strike))
                             .ThenByDescending(x => x.Expiry)

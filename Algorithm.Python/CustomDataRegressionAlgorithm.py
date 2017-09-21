@@ -1,10 +1,10 @@
 ﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
-# 
-# Licensed under the Apache License, Version 2.0 (the "License"); 
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,17 +24,24 @@ from QuantConnect.Algorithm import QCAlgorithm
 from QuantConnect.Data.UniverseSelection import *
 from datetime import datetime
 
-
+### <summary>
+### Regression test to demonstrate importing and trading on custom data.
+### </summary>
+### <meta name="tag" content="using data" />
+### <meta name="tag" content="importing data" />
+### <meta name="tag" content="custom data" />
+### <meta name="tag" content="crypto" />
+### <meta name="tag" content="regression test" />
 class CustomDataRegressionAlgorithm(QCAlgorithm):
-    
+
     ''' Regression algorithm for custom data '''
 
     def Initialize(self):
-        
+
         self.SetStartDate(2014,04,01)  #Set Start Date
         self.SetEndDate(2015,04,30)    #Set End Date
         self.SetCash(50000)            #Set Strategy Cash
-        
+
         self.AddData[Bitcoin]("BTC", Resolution.Daily)
 
     def OnData(self, data):

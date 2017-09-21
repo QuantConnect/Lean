@@ -1,10 +1,10 @@
 ﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
-# 
-# Licensed under the Apache License, Version 2.0 (the "License"); 
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,13 +24,17 @@ from QuantConnect.Orders import *
 from QuantConnect.Data.UniverseSelection import *
 from datetime import datetime
 
-
+### <summary>
+### Universe Selection regression algorithm simulates an edge case. In one week, Google listed two new symbols, delisted one of them and changed
+### tickers.
+### </summary>
+### <meta name="tag" content="regression test" />
 class UniverseSelectionRegressionAlgorithm(QCAlgorithm):
     '''Basic template algorithm simply initializes the date range and cash'''
 
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
-        
+
         self.SetStartDate(2014,03,22)  #Set Start Date
         self.SetEndDate(2014,04,07)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
@@ -40,7 +44,7 @@ class UniverseSelectionRegressionAlgorithm(QCAlgorithm):
         # security that doesn't exist until half way in backtest (comes in as GOOCV)
         self.AddEquity("GOOG", Resolution.Daily)
 
-        self.UniverseSettings.Resolution = Resolution.Daily                
+        self.UniverseSettings.Resolution = Resolution.Daily
         self.AddUniverse(self.CoarseSelectionFunction)
 
         self.__delistedSymbols = []
@@ -52,9 +56,9 @@ class UniverseSelectionRegressionAlgorithm(QCAlgorithm):
         for c in coarse:
             if c.Symbol.Value == "GOOG" or c.Symbol.Value == "GOOCV" or c.Symbol.Value == "GOOAV" or c.Symbol.Value == "GOOGL":
                 list.Add(c.Symbol)
-        return list 
+        return list
 
-        
+
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
         if self.Transactions.OrdersCount == 0:
@@ -67,9 +71,9 @@ class UniverseSelectionRegressionAlgorithm(QCAlgorithm):
             self.Liquidade()
             return
 
-        if self.__changes is None: 
+        if self.__changes is None:
             return
-        
+
         for security in self.__changes.AddedSecurities:
             if security.Symbol in data:
                 self.Log("{0}: Added Security: {1}".format(self.Time, security.Symbol))

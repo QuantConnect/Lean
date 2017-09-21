@@ -23,6 +23,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm to test universe additions and removals with open positions
     /// </summary>
+    /// <meta name="tag" content="regression test" />
     public class WeeklyUniverseSelectionRegressionAlgorithm : QCAlgorithm
     {
         private readonly Symbol _ibm = QuantConnect.Symbol.Create("IBM", SecurityType.Equity, Market.USA);

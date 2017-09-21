@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,13 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
-
+    /// <summary>
+    /// Regression test for history and warm up using the data available in open source.
+    /// </summary>
+    /// <meta name="tag" content="history and warm up" />
+    /// <meta name="tag" content="history" />
+    /// <meta name="tag" content="regression test" />
+    /// <meta name="tag" content="warm up" />
     public class HistoryAndWarmupRegressionAlgorithm : QCAlgorithm
     {
         private const string SPY    = "SPY";
@@ -114,7 +120,7 @@ namespace QuantConnect.Algorithm.CSharp
                 EMA = algorithm.EMA(symbol, 14);
                 MACD = algorithm.MACD(symbol, 12, 26, 9);
 
-                // if we're receiving daily 
+                // if we're receiving daily
 
                 _algorithm = algorithm;
             }
@@ -156,8 +162,8 @@ namespace QuantConnect.Algorithm.CSharp
                 // if we just finished entering, place a stop loss as well
                 if (Security.Invested)
                 {
-                    var stop = Security.Holdings.IsLong 
-                        ? fill.FillPrice*(1 - PercentGlobalStopLoss) 
+                    var stop = Security.Holdings.IsLong
+                        ? fill.FillPrice*(1 - PercentGlobalStopLoss)
                         : fill.FillPrice*(1 + PercentGlobalStopLoss);
 
                     _currentStopLoss = _algorithm.StopMarketOrder(Symbol, -Quantity, stop, "StopLoss at: " + stop);

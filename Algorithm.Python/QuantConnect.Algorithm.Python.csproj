@@ -158,6 +158,7 @@
     <Content Include="RegressionAlgorithm.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="UserDefinedUniverseAlgorithm.py" />
     <Content Include="WarmupAlgorithm.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

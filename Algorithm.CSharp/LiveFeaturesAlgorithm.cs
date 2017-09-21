@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,16 +16,20 @@
 using System;
 using System.Globalization;
 using Newtonsoft.Json;
-using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
-namespace QuantConnect
+namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// QuantConnect University: Live Trading Functionality Demonstration:
-    /// This algorithm demonstrates the underlying functionality specifically for live trading.
+    /// Live Trading Functionality Demonstration algorithm including SMS, Email and Web hook notifications.
     /// </summary>
+    /// <meta name="tag" content="live trading" />
+    /// <meta name="tag" content="alerts" />
+    /// <meta name="tag" content="sms alerts" />
+    /// <meta name="tag" content="web hooks" />
+    /// <meta name="tag" content="email alerts" />
+    /// <meta name="tag" content="runtime statistics" />
     public class LiveTradingFeaturesAlgorithm : QCAlgorithm
     {
         /// <summary>
@@ -110,7 +114,7 @@ namespace QuantConnect
         [JsonProperty("volume")]
         public decimal VolumeBTC = 0;
         public decimal VolumeUSD = 0;
-        
+
         /// <summary>
         /// 1. DEFAULT CONSTRUCTOR: Custom data types need a default constructor.
         /// We search for a default constructor so please provide one here. It won't be used for data, just to generate the "Factory".
@@ -168,7 +172,7 @@ namespace QuantConnect
                 catch { /* Do nothing, possible error in json decoding */ }
                 return coin;
             }
-            
+
             //Example Line Format:
             //Date      Open   High    Low     Close   Volume (BTC)    Volume (Currency)   Weighted Price
             //2011-09-13 5.8    6.0     5.65    5.97    58.37138238,    346.0973893944      5.929230648356

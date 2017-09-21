@@ -4,6 +4,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
+using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
