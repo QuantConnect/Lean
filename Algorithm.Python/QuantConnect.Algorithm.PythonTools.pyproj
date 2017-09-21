@@ -57,6 +57,7 @@
     <Compile Include="ScheduledEventsAlgorithm.py" />
     <Compile Include="UniverseSelectionRegressionAlgorithm.py" />
     <Compile Include="UpdateOrderRegressionAlgorithm.py" />
+    <Compile Include="UserDefinedUniverseAlgorithm.py" />
     <Compile Include="WarmupAlgorithm.py" />
     <Compile Include="WarmupHistoryAlgorithm.py" />
   </ItemGroup>
