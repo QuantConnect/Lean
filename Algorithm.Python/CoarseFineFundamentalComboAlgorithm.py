@@ -54,7 +54,7 @@ class CoarseFineFundamentalComboAlgorithm(QCAlgorithm):
         top5 = sortedByDollarVolume[:self.__numberOfSymbols]
 
         # we need to return only the symbol objects
-        list = List[Symbol]()
+        list = List[Symbol](len(top5))
         for x in top5:
             list.Add(x.Symbol)
 
@@ -68,7 +68,7 @@ class CoarseFineFundamentalComboAlgorithm(QCAlgorithm):
         # take the top entries from our sorted collection
         topFine = sortedByPeRatio[:self.__numberOfSymbolsFine]
 
-        list = List[Symbol]()
+        list = List[Symbol](len(topFine))
         for x in topFine:
             list.Add(x.Symbol)
 
