@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Algorithm.Examples;
 using QuantConnect.Brokerages;
@@ -43,12 +44,21 @@ namespace QuantConnect.Tests.Engine
                 DataQueueHandler = "LiveDataQueue"
             };
 
-            var algo = new BasicTemplateAlgorithm();
+            var algo = new TestAlgorithm();
 
             _liveTradingDataFeed.Initialize(algo, jobPacket, new LiveTradingResultHandler(), new LocalDiskMapFileProvider(), null, new DefaultDataProvider());
 
             algo.Initialize();
         }
+
+        /// <summary>
+        /// Test algorithm which doesn't consume any feeds for simple testing.
+        /// </summary>
+        private class TestAlgorithm : QCAlgorithm
+        {
+            public override void Initialize() { SetBenchmark(time => 0); }
+        }
+
 
         [TestFixtureTearDown]
         public void TearDown()

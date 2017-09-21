@@ -29,7 +29,6 @@ from QuantConnect.Algorithm import QCAlgorithm
 ### <meta name="tag" content="assets" />
 ### <meta name="tag" content="regression test" />
 class AddRemoveSecurityRegressionAlgorithm(QCAlgorithm):
-    '''Basic template algorithm simply initializes the date range and cash'''
 
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
