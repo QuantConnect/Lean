@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
-using QuantConnect.Algorithm.CSharp;
-using QuantConnect.Algorithm.Examples;
 using QuantConnect.Brokerages;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Lean.Engine.DataFeeds;
