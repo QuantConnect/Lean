@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -98,7 +98,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         }
 
         /// <summary>
-        /// Execute the live realtime event thread montioring. 
+        /// Execute the live realtime event thread montioring.
         /// It scans every second monitoring for an event trigger.
         /// </summary>
         public void Run()
@@ -122,6 +122,12 @@ namespace QuantConnect.Lean.Engine.RealTime
                     {
                         scheduledEvent.Value.Scan(time);
                     }
+                }
+                catch (ScheduledEventException scheduledEventException)
+                {
+                    var errorMessage = $"LiveTradingRealTimeHandler: There was an error thrown in the scheduled event: {scheduledEventException.ScheduledEventExceptionMessage}";
+                    Log.Error(errorMessage);
+                    _resultHandler.ErrorMessage(errorMessage);
                 }
                 catch (Exception err)
                 {
