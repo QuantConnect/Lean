@@ -33,7 +33,6 @@ import json
 ### </summary>
 ### <meta name="tag" content="strategy example" />
 ### <meta name="tag" content="using data" />
-### <meta name="tag" content="importing data" />
 ### <meta name="tag" content="custom data" />
 class CustomDataNIFTYAlgorithm(QCAlgorithm):
 

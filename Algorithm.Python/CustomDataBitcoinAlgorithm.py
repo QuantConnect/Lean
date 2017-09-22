@@ -33,7 +33,6 @@ import json
 ### </summary>
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="custom data" />
-### <meta name="tag" content="importing data" />
 ### <meta name="tag" content="crypto" />
 class CustomDataBitcoinAlgorithm(QCAlgorithm):
 

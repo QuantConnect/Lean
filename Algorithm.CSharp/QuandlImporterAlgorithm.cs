@@ -25,7 +25,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// The Quandl object has properties which match the spreadsheet headers.
     /// If you have multiple quandl streams look at data.Symbol to distinguish them.
     /// </summary>
-    /// <meta name="tag" content="importing data" />
+    /// <meta name="tag" content="custom data" />
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="quandl" />
     public class QuandlImporterAlgorithm : QCAlgorithm

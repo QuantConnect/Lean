@@ -30,7 +30,7 @@ from datetime import datetime, timedelta
 ### The Quandl object has properties which match the spreadsheet headers.
 ### If you have multiple quandl streams look at data.Symbol to distinguish them.
 ### </summary>
-### <meta name="tag" content="importing data" />
+### <meta name="tag" content="custom data" />
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="quandl" />
 class QuandlImporterAlgorithm(QCAlgorithm):

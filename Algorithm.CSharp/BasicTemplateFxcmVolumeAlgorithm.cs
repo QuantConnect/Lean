@@ -24,7 +24,6 @@ namespace QuantConnect.Algorithm.CSharp
     ///  Example demonstrating importing custom forex volume data to use with your algorithm from FXCM.
     /// </summary>
     /// <meta name="tag" content="using data" />
-    /// <meta name="tag" content="importing data" />
     /// <meta name="tag" content="custom data" />
     /// <meta name="tag" content="history" />
     /// <meta name="tag" content="forex" />

@@ -28,7 +28,6 @@ import decimal
 ### Using weather in NYC to rebalance portfolio. Assumption is people are happier when its warm.
 ### </summary>
 ### <meta name="tag" content="using data" />
-### <meta name="tag" content="importing data" />
 ### <meta name="tag" content="custom data" />
 ### <meta name="tag" content="strategy example" />
 class QCUWeatherBasedRebalancing(QCAlgorithm):

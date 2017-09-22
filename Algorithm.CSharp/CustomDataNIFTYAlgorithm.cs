@@ -27,7 +27,6 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     /// <meta name="tag" content="strategy example" />
     /// <meta name="tag" content="using data" />
-    /// <meta name="tag" content="importing data" />
     /// <meta name="tag" content="custom data" />
     public class CustomDataNiftyAlgorithm : QCAlgorithm
     {

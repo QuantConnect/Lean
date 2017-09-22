@@ -32,7 +32,6 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     /// <meta name="tag" content="strategy example" />
     /// <meta name="tag" content="custom data" />
-    /// <meta name="tag" content="importing data" />
     public class BubbleAlgorithm : QCAlgorithm
     {
         private decimal _currCape;

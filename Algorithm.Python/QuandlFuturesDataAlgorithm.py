@@ -30,7 +30,6 @@ from datetime import datetime, timedelta
 ### </summary>
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="quandl" />
-### <meta name="tag" content="importing data" />
 ### <meta name="tag" content="custom data" />
 ### <meta name="tag" content="futures" />
 class QCUQuandlFutures(QCAlgorithm):
