@@ -31,7 +31,7 @@ import json
 ### This demonstration imports indian NSE index "NIFTY" as a tradable security in addition to the USDINR currency pair. We move into the
 ### NSE market when the economy is performing well.
 ### </summary>
-### <meta name="tag" content="strategy examples" />
+### <meta name="tag" content="strategy example" />
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="importing data" />
 ### <meta name="tag" content="custom data" />

@@ -30,7 +30,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// Capitalize in overvalued markets by generating returns with momentum and selling before the crash
     /// Capitalize in undervalued markets by purchasing stocks at bottom of trough
     /// </summary>
-    /// <meta name="tag" content="strategy examples" />
+    /// <meta name="tag" content="strategy example" />
     /// <meta name="tag" content="custom data" />
     /// <meta name="tag" content="importing data" />
     public class BubbleAlgorithm : QCAlgorithm
