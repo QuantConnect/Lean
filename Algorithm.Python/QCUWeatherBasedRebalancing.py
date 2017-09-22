@@ -30,7 +30,7 @@ import decimal
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="importing data" />
 ### <meta name="tag" content="custom data" />
-### <meta name="tag" content="strategy examples" />
+### <meta name="tag" content="strategy example" />
 class QCUWeatherBasedRebalancing(QCAlgorithm):
 
     def Initialize(self):

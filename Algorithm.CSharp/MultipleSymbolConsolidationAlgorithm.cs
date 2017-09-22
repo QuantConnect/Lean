@@ -28,7 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="consolidating data" />
     /// <meta name="tag" content="indicators" />
     /// <meta name="tag" content="using data" />
-    /// <meta name="tag" content="strategy examples" />
+    /// <meta name="tag" content="strategy example" />
     public class MultipleSymbolConsolidationAlgorithm : QCAlgorithm
     {
         /// <summary>

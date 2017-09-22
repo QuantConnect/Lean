@@ -28,7 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="indicators" />
     /// <meta name="tag" content="indicator classes" />
     /// <meta name="tag" content="moving average cross" />
-    /// <meta name="tag" content="strategy examples" />
+    /// <meta name="tag" content="strategy example" />
     public class MovingAverageCrossAlgorithm : QCAlgorithm
     {
         private string _symbol = "SPY";

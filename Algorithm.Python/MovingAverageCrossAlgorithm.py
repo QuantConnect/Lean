@@ -31,7 +31,7 @@ import decimal as d
 ### <meta name="tag" content="indicators" />
 ### <meta name="tag" content="indicator classes" />
 ### <meta name="tag" content="moving average cross" />
-### <meta name="tag" content="strategy examples" />
+### <meta name="tag" content="strategy example" />
 class MovingAverageCrossAlgorithm(QCAlgorithm):
 
     def Initialize(self):
