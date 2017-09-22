@@ -24,7 +24,6 @@ namespace QuantConnect.Algorithm.CSharp
     /// Use event/fundamental calendar information (DailyFx) to design event based forex algorithms.
     /// </summary>
     /// <meta name="tag" content="using data" />
-    /// <meta name="tag" content="importing data" />
     /// <meta name="tag" content="custom data" />
     /// <meta name="tag" content="forex" />
     /// <meta name="tag" content="dailyfx" />

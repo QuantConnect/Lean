@@ -21,7 +21,6 @@ namespace QuantConnect.Algorithm.CSharp
     /// Regression test to demonstrate importing and trading on custom data.
     /// </summary>
     /// <meta name="tag" content="using data" />
-    /// <meta name="tag" content="importing data" />
     /// <meta name="tag" content="custom data" />
     /// <meta name="tag" content="crypto" />
     /// <meta name="tag" content="regression test" />
