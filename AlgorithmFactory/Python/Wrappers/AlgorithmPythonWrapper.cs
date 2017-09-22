@@ -708,7 +708,30 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
             {
                 using (Py.GIL())
                 {
-                    _algorithm.OnMarginCall(requests);
+                    var pyRequests = _algorithm.OnMarginCall(requests) as PyObject;
+                    
+                    // If the method does not return or returns a non-iterable PyObject, throw an exception
+                    if (pyRequests == null || !pyRequests.IsIterable())
+                    {
+                        throw new Exception("OnMarginCall must return a non-empty list of SubmitOrderRequest");
+                    }
+
+                    requests.Clear();
+
+                    foreach (PyObject pyRequest in pyRequests)
+                    {
+                        SubmitOrderRequest request;
+                        if (TryConvert(pyRequest, out request))
+                        {
+                            requests.Add(request);
+                        }
+                    }
+
+                    // If the PyObject is an empty list or its items are not SubmitOrderRequest objects, throw an exception
+                    if (requests.Count == 0)
+                    {
+                        throw new Exception("OnMarginCall must return a non-empty list of SubmitOrderRequest");
+                    }
                 }
             }
             catch (PythonException pythonException)
@@ -949,6 +972,26 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
             {
                 return PythonEngine.ModuleFromString("AlgorithmPythonUtil", code);
             }
+        }
+
+        /// <summary>
+        /// Tries to convert a PyObject into a C# object
+        /// </summary>
+        /// <typeparam name="T">Type of the C# object</typeparam>
+        /// <param name="pyObject">PyObject to be converted</param>
+        /// <param name="result">C# object that of type T</param>
+        /// <returns>True if successful conversion</returns>
+        private bool TryConvert<T>(PyObject pyObject, out T result)
+        {
+            result = default(T);
+            var type = (Type)pyObject.GetPythonType().AsManagedObject(typeof(Type));
+
+            if (type == typeof(T))
+            {
+                result = (T)pyObject.AsManagedObject(typeof(T));
+            }
+            
+            return type == typeof(T);
         }
 
         /// <summary>
