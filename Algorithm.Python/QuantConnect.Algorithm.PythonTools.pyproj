@@ -44,6 +44,7 @@
     <Compile Include="LimitFillRegressionAlgorithm.py" />
     <Compile Include="MACDTrendAlgorithm.py" />
     <Compile Include="main.py" />
+    <Compile Include="MarginCallEventsAlgorithm.py" />
     <Compile Include="MarketOnOpenOnCloseAlgorithm.py" />
     <Compile Include="MovingAverageCrossAlgorithm.py" />
     <Compile Include="OrderTicketDemoAlgorithm.py" />
