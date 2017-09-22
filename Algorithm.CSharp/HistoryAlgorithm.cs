@@ -29,7 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="history and warm up" />
-    /// <meta name="tag" content="histotry" />
+    /// <meta name="tag" content="history" />
     /// <meta name="tag" content="warm up" />
     public class HistoryAlgorithm : QCAlgorithm
     {
