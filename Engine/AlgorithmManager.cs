@@ -461,21 +461,13 @@ namespace QuantConnect.Lean.Engine
                 {
                     foreach (var update in timeSlice.ConsolidatorUpdateData)
                     {
-                        var resolutionTimeSpan = update.Target.Resolution.ToTimeSpan();
                         var consolidators = update.Target.Consolidators;
                         foreach (var consolidator in consolidators)
                         {
                             foreach (var dataPoint in update.Data)
                             {
-                                // Filter out data with resolution higher than the data subscription resolution.
-                                // This is needed to avoid feeding in higher resolution data, typically fill-forward bars.
-                                // It also prevents volume-based indicators or consolidators summing up volume to generate
-                                // invalid values.
-                                var algorithmTimeSpan = resolutionTimeSpan == TimeSpan.FromTicks(0)
-                                    ? TimeSpan.FromTicks(0)
-                                    : TimeSpan.FromSeconds(1);
-                                if (update.Target.Resolution == Resolution.Tick ||
-                                    algorithm.UtcTime.RoundDown(algorithmTimeSpan) == dataPoint.EndTime.RoundUp(resolutionTimeSpan).ConvertToUtc(update.Target.ExchangeTimeZone))
+                                // only push data into consolidators on the native, subscribed to resolution
+                                if (EndTimeIsInNativeResolution(update.Target, dataPoint.EndTime))
                                 {
                                     consolidator.Update(dataPoint);
                                 }
@@ -996,6 +988,20 @@ namespace QuantConnect.Lean.Engine
                 _algorithm.Status = AlgorithmStatus.RuntimeError;
                 Log.Error(err);
             }
+        }
+
+        /// <summary>
+        /// Determines if a data point is in it's native, configured resolution
+        /// </summary>
+        private static bool EndTimeIsInNativeResolution(SubscriptionDataConfig config, DateTime dataPointEndTime)
+        {
+            if (config.Increment == TimeSpan.Zero)
+            {
+                return true;
+            }
+
+            var roundedDataPointEndTime = dataPointEndTime.RoundDownInTimeZone(config.Increment, config.ExchangeTimeZone, config.DataTimeZone);
+            return dataPointEndTime == roundedDataPointEndTime;
         }
     }
 }
