@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void FillsForwardMidDay()
         {
             var dataResolution = Time.OneMinute;
-            
+
             var reference = new DateTime(2015, 6, 25, 9, 30, 0);
             var data = Enumerable.Range(0, 2).Select(x => new TradeBar
             {
@@ -67,7 +67,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(reference.AddMinutes(3), fillForwardEnumerator.Current.EndTime);
             Assert.AreEqual(1, fillForwardEnumerator.Current.Value);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
-            
+
             Assert.IsFalse(fillForwardEnumerator.MoveNext());
         }
 
@@ -375,7 +375,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Time = reference,
                     Value = 0,
                     Period = dataResolution
-                }, 
+                },
                 new TradeBar
                 {
                     Time = reference.AddHours(3),
@@ -506,7 +506,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(1, fillForwardEnumerator.Current.Value);
             Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
-            
+
             Assert.IsFalse(fillForwardEnumerator.MoveNext());
         }
 

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -94,14 +94,14 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             start = start.ConvertFromUtc(request.ExchangeHours.TimeZone);
             end = end.ConvertFromUtc(request.ExchangeHours.TimeZone);
 
-            var config = new SubscriptionDataConfig(request.DataType, 
-                request.Symbol, 
-                request.Resolution, 
-                request.DataTimeZone, 
-                request.ExchangeHours.TimeZone, 
-                request.FillForwardResolution.HasValue, 
-                request.IncludeExtendedMarketHours, 
-                false, 
+            var config = new SubscriptionDataConfig(request.DataType,
+                request.Symbol,
+                request.Resolution,
+                request.DataTimeZone,
+                request.ExchangeHours.TimeZone,
+                request.FillForwardResolution.HasValue,
+                request.IncludeExtendedMarketHours,
+                false,
                 request.IsCustomData,
                 request.TickType,
                 true,
@@ -110,14 +110,14 @@ namespace QuantConnect.Lean.Engine.HistoricalData
 
             var security = new Security(request.ExchangeHours, config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
 
-            IEnumerator<BaseData> reader = new SubscriptionDataReader(config, 
-                start, 
-                end, 
+            IEnumerator<BaseData> reader = new SubscriptionDataReader(config,
+                start,
+                end,
                 ResultHandlerStub.Instance,
-                config.SecurityType == SecurityType.Equity ? _mapFileProvider.Get(config.Market) : MapFileResolver.Empty, 
+                config.SecurityType == SecurityType.Equity ? _mapFileProvider.Get(config.Market) : MapFileResolver.Empty,
                 _factorFileProvider,
                 _dataProvider,
-                Time.EachTradeableDay(request.ExchangeHours, start, end), 
+                Time.EachTradeableDay(request.ExchangeHours, start, end),
                 false,
                 _dataCacheProvider,
                 false

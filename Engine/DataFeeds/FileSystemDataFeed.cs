@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -212,8 +212,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
-            var subscription = request.IsUniverseSubscription 
-                ? CreateUniverseSubscription(request) 
+            var subscription = request.IsUniverseSubscription
+                ? CreateUniverseSubscription(request)
                 : CreateSubscription(request);
 
             if (subscription == null)
@@ -272,7 +272,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             catch (Exception err)
             {
-                Log.Error("FileSystemDataFeed.Run(): Encountered an error: " + err.Message); 
+                Log.Error("FileSystemDataFeed.Run(): Encountered an error: " + err.Message);
                 if (!_cancellationTokenSource.IsCancellationRequested)
                 {
                     _cancellationTokenSource.Cancel();
@@ -385,7 +385,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 if (request.Universe is OptionChainUniverse)
                 {
-                    return new OptionChainUniverseSubscriptionEnumeratorFactory((req, e) => ConfigureEnumerator(req, true, e), 
+                    return new OptionChainUniverseSubscriptionEnumeratorFactory((req, e) => ConfigureEnumerator(req, true, e),
                         _mapFileProvider.Get(request.Security.Symbol.ID.Market), _factorFileProvider);
                 }
                 if (request.Universe is FuturesChainUniverse)
@@ -479,7 +479,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     break;
                 }
-                
+
                 // syncer returns MaxValue on failure/end of data
                 if (timeSlice.Time != DateTime.MaxValue)
                 {
@@ -488,7 +488,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // end of data signal
                     if (nextFrontier == DateTime.MaxValue) break;
 
-                    _frontierUtc = nextFrontier;    
+                    _frontierUtc = nextFrontier;
                 }
                 else if (timeSlice.SecurityChanges == SecurityChanges.None)
                 {

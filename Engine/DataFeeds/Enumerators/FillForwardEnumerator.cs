@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,7 +34,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private DateTime? _delistedTime;
         private BaseData _previous;
         private bool _isFillingForward;
-        
+
         private readonly TimeSpan _dataResolution;
         private readonly bool _isExtendedMarketHours;
         private readonly DateTime _subscriptionEndTime;
@@ -159,7 +159,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     {
                         return false;
                     }
-                    
+
                     Current = endOfSubscription;
                     return true;
                 }
@@ -183,7 +183,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 }
                 return true;
             }
-            
+
             if (RequiresFillForwardData(_fillForwardResolution.Value, _previous, underlyingCurrent, out fillForward))
             {
                 // we require fill forward data because the _enumerator.Current is too far in future
