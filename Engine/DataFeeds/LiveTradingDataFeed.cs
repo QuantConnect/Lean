@@ -512,7 +512,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     UpdateFillForwardResolution(subscriptionConfigs);
 
-                    enumerator = new LiveFillForwardEnumerator(_frontierTimeProvider, enumerator, request.Security.Exchange, _fillForwardResolution, request.Configuration.ExtendedMarketHours, localEndTime, request.Configuration.Increment);
+                    enumerator = new LiveFillForwardEnumerator(_frontierTimeProvider, enumerator, request.Security.Exchange, _fillForwardResolution, request.Configuration.ExtendedMarketHours, localEndTime, request.Configuration.Increment, request.Configuration.DataTimeZone);
                 }
 
                 // define market hours and user filters to incoming data
@@ -617,7 +617,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     UpdateFillForwardResolution(subscriptionConfigs);
 
-                    return new LiveFillForwardEnumerator(_frontierTimeProvider, input, request.Security.Exchange, _fillForwardResolution, request.Configuration.ExtendedMarketHours, localEndTime, request.Configuration.Increment);
+                    return new LiveFillForwardEnumerator(_frontierTimeProvider, input, request.Security.Exchange, _fillForwardResolution, request.Configuration.ExtendedMarketHours, localEndTime, request.Configuration.Increment, request.Configuration.DataTimeZone);
                 };
 
                 var symbolUniverse = _dataQueueHandler as IDataQueueUniverseProvider;

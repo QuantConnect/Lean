@@ -545,7 +545,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 UpdateFillForwardResolution(subscriptionConfigs);
 
                 enumerator = new FillForwardEnumerator(enumerator, request.Security.Exchange, _fillForwardResolution,
-                    request.Security.IsExtendedMarketHours, request.EndTimeLocal, request.Configuration.Resolution.ToTimeSpan());
+                    request.Security.IsExtendedMarketHours, request.EndTimeLocal, request.Configuration.Resolution.ToTimeSpan(), request.Configuration.DataTimeZone);
             }
 
             // optionally apply exchange/user filters

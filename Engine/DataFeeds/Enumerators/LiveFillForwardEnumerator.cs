@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Securities;
 using QuantConnect.Util;
@@ -43,8 +44,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="isExtendedMarketHours">True to use the exchange's extended market hours, false to use the regular market hours</param>
         /// <param name="subscriptionEndTime">The end time of the subscrition, once passing this date the enumerator will stop</param>
         /// <param name="dataResolution">The source enumerator's data resolution</param>
-        public LiveFillForwardEnumerator(ITimeProvider timeProvider, IEnumerator<BaseData> enumerator, SecurityExchange exchange, IReadOnlyRef<TimeSpan> fillForwardResolution, bool isExtendedMarketHours, DateTime subscriptionEndTime, TimeSpan dataResolution)
-            : base(enumerator, exchange, fillForwardResolution, isExtendedMarketHours, subscriptionEndTime, dataResolution)
+        /// <param name="dataTimeZone">Time zone of the underlying source data</param>
+        public LiveFillForwardEnumerator(ITimeProvider timeProvider, IEnumerator<BaseData> enumerator, SecurityExchange exchange, IReadOnlyRef<TimeSpan> fillForwardResolution, bool isExtendedMarketHours, DateTime subscriptionEndTime, TimeSpan dataResolution, DateTimeZone dataTimeZone)
+            : base(enumerator, exchange, fillForwardResolution, isExtendedMarketHours, subscriptionEndTime, dataResolution, dataTimeZone)
         {
             _timeProvider = timeProvider;
         }
