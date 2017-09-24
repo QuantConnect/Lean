@@ -275,6 +275,16 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(expectedOutput, output.ToString(CultureInfo.InvariantCulture));
         }
 
+        [Test]
+        public void RoundsDownInTimeZone()
+        {
+            var dataTimeZone = TimeZones.Utc;
+            var exchangeTimeZone = TimeZones.EasternStandard;
+            var time = new DateTime(2000, 01, 01).ConvertTo(dataTimeZone, exchangeTimeZone);
+            var roundedTime = time.RoundDownInTimeZone(Time.OneDay, exchangeTimeZone, dataTimeZone);
+            Assert.AreEqual(time, roundedTime);
+        }
+
         private class Super<T>
         {
         }
