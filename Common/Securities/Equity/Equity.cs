@@ -40,6 +40,29 @@ namespace QuantConnect.Securities.Equity
         /// <summary>
         /// Construct the Equity Object
         /// </summary>
+        public Equity(Symbol symbol, SecurityExchangeHours exchangeHours, Cash quoteCurrency, SymbolProperties symbolProperties)
+            : base(symbol,
+                quoteCurrency,
+                symbolProperties,
+                new EquityExchange(exchangeHours),
+                new EquityCache(),
+                new SecurityPortfolioModel(),
+                new ImmediateFillModel(),
+                new InteractiveBrokersFeeModel(),
+                new ConstantSlippageModel(0m),
+                new ImmediateSettlementModel(),
+                Securities.VolatilityModel.Null,
+                new SecurityMarginModel(2m),
+                new EquityDataFilter(),
+                new AdjustedPriceVariationModel()
+                )
+        {
+            Holdings = new EquityHolding(this);
+        }
+
+        /// <summary>
+        /// Construct the Equity Object
+        /// </summary>
         public Equity(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, Cash quoteCurrency, SymbolProperties symbolProperties)
             : base(
                 config,
@@ -52,11 +75,30 @@ namespace QuantConnect.Securities.Equity
                 new InteractiveBrokersFeeModel(),
                 new ConstantSlippageModel(0m),
                 new ImmediateSettlementModel(),
+                Securities.VolatilityModel.Null,
                 new SecurityMarginModel(2m),
-                new EquityDataFilter()
+                new EquityDataFilter(),
+                new AdjustedPriceVariationModel()
                 )
         {
             Holdings = new EquityHolding(this);
+        }
+
+        /// <summary>
+        /// Sets the data normalization mode to be used by this security
+        /// </summary>
+        public override void SetDataNormalizationMode(DataNormalizationMode mode)
+        {
+            base.SetDataNormalizationMode(mode);
+
+            if (mode == DataNormalizationMode.Adjusted)
+            {
+                PriceVariationModel = new AdjustedPriceVariationModel();
+            }
+            else
+            {
+                PriceVariationModel = new EquityPriceVariationModel();
+            }
         }
     }
 }

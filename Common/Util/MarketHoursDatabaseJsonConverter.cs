@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NodaTime;
@@ -56,7 +55,7 @@ namespace QuantConnect.Util
         public class MarketHoursDatabaseJson
         {
             /// <summary>
-            /// The entries in the market hours database, keyed by <see cref="MarketHoursDatabase.Key.ToString"/>
+            /// The entries in the market hours database, keyed by <see cref="SecurityDatabaseKey"/>
             /// </summary>
             [JsonProperty("entries")]
             public Dictionary<string, MarketHoursDatabaseEntryJson> Entries;
@@ -156,6 +155,11 @@ namespace QuantConnect.Util
             /// </summary>
             [JsonProperty("holidays")]
             public List<string> Holidays;
+            /// <summary>
+            /// Early closes by date
+            /// </summary>
+            [JsonProperty("earlyCloses")]
+            public Dictionary<string, TimeSpan> EarlyCloses = new Dictionary<string, TimeSpan>();
 
             /// <summary>
             /// Initializes a new instance of the <see cref="MarketHoursDatabaseEntryJson"/> class
@@ -174,7 +178,7 @@ namespace QuantConnect.Util
                 SetSegmentsForDay(hours, DayOfWeek.Thursday, out Thursday);
                 SetSegmentsForDay(hours, DayOfWeek.Friday, out Friday);
                 SetSegmentsForDay(hours, DayOfWeek.Saturday, out Saturday);
-                Holidays = hours.Holidays.Select(x => x.ToString("M/d/yyyy")).ToList();
+                Holidays = hours.Holidays.Select(x => x.ToString("M/d/yyyy", CultureInfo.InvariantCulture)).ToList();
             }
 
             /// <summary>
@@ -193,8 +197,9 @@ namespace QuantConnect.Util
                     { DayOfWeek.Friday, new LocalMarketHours(DayOfWeek.Friday, Friday) },
                     { DayOfWeek.Saturday, new LocalMarketHours(DayOfWeek.Saturday, Saturday) }
                 };
-                var holidayDates = Holidays.Select(x => DateTime.ParseExact(x, "M/d/yyyy", null)).ToHashSet();
-                var exchangeHours = new SecurityExchangeHours(DateTimeZoneProviders.Tzdb[ExchangeTimeZone], holidayDates, hours);
+                var holidayDates = Holidays.Select(x => DateTime.ParseExact(x, "M/d/yyyy", CultureInfo.InvariantCulture)).ToHashSet();
+                var earlyCloses = EarlyCloses.ToDictionary(x => DateTime.ParseExact(x.Key, "M/d/yyyy", CultureInfo.InvariantCulture), x => x.Value);
+                var exchangeHours = new SecurityExchangeHours(DateTimeZoneProviders.Tzdb[ExchangeTimeZone], holidayDates, hours, earlyCloses);
                 return new MarketHoursDatabase.Entry(DateTimeZoneProviders.Tzdb[DataTimeZone], exchangeHours);
             }
 

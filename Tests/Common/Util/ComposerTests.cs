@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.ComponentModel.Composition;
 using System.Linq;
 using NUnit.Framework;
@@ -27,11 +28,12 @@ namespace QuantConnect.Tests.Common.Util
         public void ComposesTypes()
         {
             var instances = Composer.Instance.GetExportedValues<IExport>().ToList();
-            Assert.AreEqual(4, instances.Count);
+            Assert.AreEqual(5, instances.Count);
             Assert.AreEqual(1, instances.Count(x => x.GetType() == typeof (Export1)));
             Assert.AreEqual(1, instances.Count(x => x.GetType() == typeof (Export2)));
             Assert.AreEqual(1, instances.Count(x => x.GetType() == typeof (Export3)));
             Assert.AreEqual(1, instances.Count(x => x.GetType() == typeof (Export4)));
+            Assert.AreEqual(1, instances.Count(x => x.GetType() == typeof(Export5)));
         }
 
         [Test]
@@ -53,10 +55,30 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreNotEqual(export1, export2);
         }
 
+        [Test]
+        public void GetsMultipleInterfacesInstance()
+        {
+            var instance1 = Composer.Instance.Single<IOneMoreExport>(x => x.Export == 5);
+            Assert.IsNotNull(instance1);
+            Assert.IsInstanceOf(typeof(Export5), instance1);
+
+            var instance2 = Composer.Instance.Single<IExport>(x => x.Id == 5);
+            Assert.IsNotNull(instance2);
+            Assert.IsInstanceOf(typeof(Export5), instance2);
+
+            Assert.AreEqual(instance1, instance2);
+        }
+
         [InheritedExport(typeof(IExport))]
         interface IExport
         {
             int Id { get; }
+        }
+
+        [InheritedExport(typeof(IOneMoreExport))]
+        interface IOneMoreExport
+        {
+            decimal Export { get; }
         }
 
         class Export1 : IExport
@@ -74,6 +96,13 @@ namespace QuantConnect.Tests.Common.Util
         class Export4 : IExport
         {
             public int Id { get { return 4; } }
+        }
+
+        class Export5 : IExport, IOneMoreExport
+        {
+            public decimal Export { get { return 5; } }
+
+            public int Id { get { return 5; } }
         }
     }
 }

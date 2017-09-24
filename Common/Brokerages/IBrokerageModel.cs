@@ -120,6 +120,7 @@ namespace QuantConnect.Brokerages
         /// <param name="accountType">The account type</param>
         /// <returns>The settlement model for this brokerage</returns>
         ISettlementModel GetSettlementModel(Security security, AccountType accountType);
+
     }
 
     /// <summary>
@@ -151,7 +152,10 @@ namespace QuantConnect.Brokerages
                     
                 case BrokerageName.FxcmBrokerage:
                     return new FxcmBrokerageModel(accountType);
-                    
+
+                case BrokerageName.Bitfinex:
+                    return new DefaultBrokerageModel(accountType);
+
                 default:
                     throw new ArgumentOutOfRangeException("brokerage", brokerage, null);
             }

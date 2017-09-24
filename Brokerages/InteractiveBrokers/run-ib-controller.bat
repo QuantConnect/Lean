@@ -1,24 +1,26 @@
-:: Launch IB Gateway
+:: LEAN IB Gateway Launcher
 
 :: IB Controller Sourced-Modified from https://github.com/ib-controller/ib-controller
+@echo off
+set TWS_MAJOR_VRSN=960
+set TRADING_MODE=%6
 
-set IBCDIR=%1
-set IBCINI=%~1\IBController.ini
-set TWSDIR=%2
-::set TWSUSERID=%3
-::set TWSPASSWORD=%4
+set IBC_PATH=%1
+set TWS_PATH=%2
+set TWSUSERID=%3
+set TWSPASSWORD=%4
+set APP=%5
 
-:: use tws or controller gateway
-set CONTROLLER=ibcontroller.IBGatewayController
-if /i "%5" EQU "-tws" set CONTROLLER=ibcontroller.IBController
+set IBC_INI=%IBC_PATH%\IBController.ini
+set LOG_PATH=%IBC_PATH%\Logs
 
-set TWSCP=jts.jar;total.2012.jar
-set JAVAOPTS=-Dsun.java2d.noddraw=false -Dswing.boldMetal=false -Dsun.locale.formatasdefault=true -Xmx768M
-
-:: start ib controller
-pushd %TWSDIR%
-start java.exe -cp  %TWSCP%;%IBCDIR%\IBController.jar %JAVAOPTS% %CONTROLLER% %IBCINI% %3 %4
-popd
+set TITLE=IBController (%APP% %TWS_MAJOR_VRSN%)
+set MIN=
+if not defined LOG_PATH set MIN=/Min
+set WAIT=
+if /I "%~1" == "/WAIT" set WAIT=/wait
+@echo on
+start "%TITLE%" %MIN% %WAIT% "%IBC_PATH%\Scripts\DisplayBannerAndLaunch.bat"
 
 :: clear out our history and the screen
 doskey /reinstall

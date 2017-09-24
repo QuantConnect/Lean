@@ -70,6 +70,11 @@ namespace QuantConnect.Messaging
                     Log.Trace("Debug: " + debug.Message);
                     break;
 
+                case PacketType.SystemDebug:
+                    var systemDebug = (SystemDebugPacket)packet;
+                    Log.Trace("Debug: " + systemDebug.Message);
+                    break;
+
                 case PacketType.Log:
                     var log = (LogPacket) packet;
                     Log.Trace("Log: " + log.Message);
@@ -100,7 +105,7 @@ namespace QuantConnect.Messaging
                             Log.Trace("STATISTICS:: " + pair.Key + " " + pair.Value);
                             //Console.WriteLine("\t\t\t\t{{\"{0}\",\"{1}\"}},", pair.Key, pair.Value);
                         }
-                        //Console.WriteLine("\t\t\t});");
+                        //Console.WriteLine("\t\t\t};");
 
                         //foreach (var pair in statisticsResults.RollingPerformances)
                         //{

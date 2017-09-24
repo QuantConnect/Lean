@@ -63,7 +63,7 @@ namespace QuantConnect.Tests.Common
             Assert.IsTrue(SymbolCache.TryGetTicker(Symbols.EURUSD, out ticker));
             Assert.AreEqual(Symbols.EURUSD.Value, ticker);
 
-            var symbol = new Symbol(SecurityIdentifier.GenerateForex("NOT A FOREX PAIR", Market.FXCM), "EURGBP");
+            var symbol = new Symbol(SecurityIdentifier.GenerateForex("NOT-A-FOREX-PAIR", Market.FXCM), "EURGBP");
             Assert.IsFalse(SymbolCache.TryGetTicker(symbol, out ticker));
             Assert.AreEqual(default(string), ticker);
         }
@@ -79,9 +79,31 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void TryGetTickerFromUncachedSymbol()
         {
-            var symbol = Symbol.Create("My Ticker", SecurityType.Equity, Market.USA);
+            var symbol = Symbol.Create("My-Ticker", SecurityType.Equity, Market.USA);
             var ticker = SymbolCache.GetTicker(symbol);
             Assert.AreEqual(symbol.ID.ToString(), ticker);
+        }
+
+        [Test]
+        public void TryRemoveSymbolRemovesSymbolMappings()
+        {
+            string ticker;
+            Symbol symbol;
+            SymbolCache.Set("SPY", Symbols.SPY);
+            Assert.IsTrue(SymbolCache.TryRemove(Symbols.SPY));
+            Assert.IsFalse(SymbolCache.TryGetSymbol("SPY", out symbol));
+            Assert.IsFalse(SymbolCache.TryGetTicker(Symbols.SPY, out ticker));
+        }
+
+        [Test]
+        public void TryRemoveTickerRemovesSymbolMappings()
+        {
+            string ticker;
+            Symbol symbol;
+            SymbolCache.Set("SPY", Symbols.SPY);
+            Assert.IsTrue(SymbolCache.TryRemove("SPY"));
+            Assert.IsFalse(SymbolCache.TryGetSymbol("SPY", out symbol));
+            Assert.IsFalse(SymbolCache.TryGetTicker(Symbols.SPY, out ticker));
         }
     }
 }

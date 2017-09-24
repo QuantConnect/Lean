@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Forex;
 
@@ -34,6 +35,16 @@ namespace QuantConnect.Brokerages
         public InteractiveBrokersBrokerageModel(AccountType accountType = AccountType.Margin)
             : base(accountType)
         {
+        }
+
+        /// <summary>
+        /// Gets a new fee model that represents this brokerage's fee structure
+        /// </summary>
+        /// <param name="security">The security to get a fee model for</param>
+        /// <returns>The new fee model for this brokerage</returns>
+        public override IFeeModel GetFeeModel(Security security)
+        {
+            return new InteractiveBrokersFeeModel();
         }
 
         /// <summary>
@@ -109,7 +120,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Returns true if the specified order is within IB's order size limits
         /// </summary>
-        private bool IsForexWithinOrderSizeLimits(string currencyPair, int quantity, out BrokerageMessageEvent message)
+        private bool IsForexWithinOrderSizeLimits(string currencyPair, decimal quantity, out BrokerageMessageEvent message)
         {
             /* https://www.interactivebrokers.com/en/?f=%2Fen%2Ftrading%2FforexOrderSize.php
             Currency    Currency Description	    Minimum Order Size	Maximum Order Size

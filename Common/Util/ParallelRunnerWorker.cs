@@ -63,7 +63,7 @@ namespace QuantConnect.Util
             lock (_sync)
             {
                 if (_thread != null) return;
-                _thread = new Thread(() => ThreadEntry(token));
+                _thread = new Thread(() => ThreadEntry(token)) { IsBackground = true };
                 _thread.Start();
             }
         }

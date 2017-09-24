@@ -58,11 +58,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public int GetResolutionCount(Resolution resolution)
         {
             return (from subscription in _subscriptionsProvider()
-                    let security = subscription.Security
-                    where security.Resolution == resolution
                     // don't count feeds we auto add
-                    where !security.SubscriptionDataConfig.IsInternalFeed
-                    select security.Resolution).Count();
+                    where !subscription.Configuration.IsInternalFeed
+                    group subscription by subscription.Security into g
+                    let security = g.Key
+                    where security.Resolution == resolution
+                    select security).Count();
         }
 
         /// <summary>
@@ -154,7 +155,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         private string GetCountLimitReason(Resolution resolution)
         {
-            return string.Format("We currently only support {0} {1} at a time due to physical memory limitations", _tickLimit, resolution.ToString().ToLower());
+            var limit = GetResolutionLimit(resolution);
+            return string.Format("We currently only support {0} symbols subscribed with {1} resolution at a time due to physical memory limitations", limit, resolution.ToString().ToLower());
         }
 
         /// <summary>

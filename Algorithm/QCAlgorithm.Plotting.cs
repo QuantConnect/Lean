@@ -14,7 +14,9 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
@@ -23,20 +25,13 @@ namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
-        private Dictionary<string, Chart> _charts = new Dictionary<string, Chart>();
-        private Dictionary<string, string> _runtimeStatistics = new Dictionary<string, string>();
+        private readonly Dictionary<string, Chart> _charts = new Dictionary<string, Chart>();
 
         /// <summary>
         /// Access to the runtime statistics property. User provided statistics.
         /// </summary>
         /// <remarks> RuntimeStatistics are displayed in the head banner in live trading</remarks>
-        public Dictionary<string, string> RuntimeStatistics
-        {
-            get
-            {
-                return _runtimeStatistics;
-            }
-        }
+        public ConcurrentDictionary<string, string> RuntimeStatistics { get; } = new ConcurrentDictionary<string, string>();
 
         /// <summary>
         /// Add a Chart object to algorithm collection
@@ -187,7 +182,7 @@ namespace QuantConnect.Algorithm
             var thisSeries = thisChart.Series[series];
             if (thisSeries.Values.Count < 4000 || _liveMode)
             {
-                thisSeries.AddPoint(Time, value, _liveMode);
+                thisSeries.AddPoint(UtcTime, value, _liveMode);
             }
             else 
             {
@@ -202,7 +197,7 @@ namespace QuantConnect.Algorithm
         /// <param name="indicators">The indicatorsto plot</param>
         /// <seealso cref="Plot(string,string,decimal)"/>
         public void Plot<T>(string chart, params IndicatorBase<T>[] indicators)
-            where T : BaseData
+            where T : IBaseData
         {
             foreach (var indicator in indicators)
             {
@@ -214,7 +209,7 @@ namespace QuantConnect.Algorithm
         /// Automatically plots each indicator when a new value is available
         /// </summary>
         public void PlotIndicator<T>(string chart, params IndicatorBase<T>[] indicators)
-            where T : BaseData
+            where T : IBaseData
         {
             foreach (var i in indicators)
             {
@@ -231,7 +226,7 @@ namespace QuantConnect.Algorithm
         /// Automatically plots each indicator when a new value is available, optionally waiting for indicator.IsReady to return true
         /// </summary>
         public void PlotIndicator<T>(string chart, bool waitForReady, params IndicatorBase<T>[] indicators)
-            where T : BaseData
+            where T : IBaseData
         {
             foreach (var i in indicators)
             {
@@ -255,14 +250,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="LiveMode"/>
         public void SetRuntimeStatistic(string name, string value)
         {
-            //If not set, add it to the dictionary:
-            if (!_runtimeStatistics.ContainsKey(name))
-            {
-                _runtimeStatistics.Add(name, value);
-            }
-
-            //Set 
-            _runtimeStatistics[name] = value;
+            RuntimeStatistics.AddOrUpdate(name, value);
         }
 
         /// <summary>
@@ -272,7 +260,7 @@ namespace QuantConnect.Algorithm
         /// <param name="value">Decimal value of your runtime statistic</param>
         public void SetRuntimeStatistic(string name, decimal value)
         {
-            SetRuntimeStatistic(name, value.ToString());
+            SetRuntimeStatistic(name, value.ToString(CultureInfo.InvariantCulture));
         }
 
         /// <summary>
@@ -292,7 +280,7 @@ namespace QuantConnect.Algorithm
         /// <param name="value">Double value of your runtime statistic</param>
         public void SetRuntimeStatistic(string name, double value)
         {
-            SetRuntimeStatistic(name, value.ToString());
+            SetRuntimeStatistic(name, value.ToString(CultureInfo.InvariantCulture));
         }
 
         /// <summary>

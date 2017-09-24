@@ -23,7 +23,7 @@ namespace QuantConnect.Indicators
     /// </summary>
     /// <typeparam name="T">The type of input this indicator takes</typeparam>
     public sealed class ConstantIndicator<T> : IndicatorBase<T>
-        where T : BaseData
+        where T : IBaseData
     {
         private readonly decimal _value;
 

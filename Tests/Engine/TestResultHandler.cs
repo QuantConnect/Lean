@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Engine
     /// the Run method to be called at all, a task is launched via ctor to process
     /// the packets
     /// </summary>
-    public class TestResultHandler : IResultHandler
+    public class TestResultHandler : BaseResultsHandler, IResultHandler
     {
         private AlgorithmNodePacket _job = new BacktestNodePacket();
 
@@ -89,10 +89,16 @@ namespace QuantConnect.Tests.Engine
         {
         }
 
-        public void DebugMessage(string message)
+        public virtual void DebugMessage(string message)
         {
             Messages.Enqueue(new DebugPacket(_job.ProjectId, _job.AlgorithmId, _job.CompileId, message));
         }
+
+        public void SystemDebugMessage(string message)
+        {
+            Messages.Enqueue(new SystemDebugPacket(_job.ProjectId, _job.AlgorithmId, _job.CompileId, message));
+        }
+
 
         public void SecurityType(List<SecurityType> types)
         {
@@ -110,7 +116,7 @@ namespace QuantConnect.Tests.Engine
 
         public void RuntimeError(string message, string stacktrace = "")
         {
-            Messages.Enqueue(new RuntimeErrorPacket(_job.AlgorithmId, message, stacktrace));
+            Messages.Enqueue(new RuntimeErrorPacket(_job.UserId, _job.AlgorithmId, message, stacktrace));
         }
 
         public void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, DateTime time, decimal value, string unit = "$")

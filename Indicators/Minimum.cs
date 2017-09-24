@@ -40,7 +40,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="period">The period over which to look back</param>
         public Minimum(int period)
-            : base("Min" + period, period)
+            : base("MIN" + period, period)
         {
         }
 

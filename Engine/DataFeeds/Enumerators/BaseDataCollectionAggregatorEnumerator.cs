@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using QuantConnect.Data;
@@ -25,7 +26,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// that aggregates an underlying <see cref="IEnumerator{BaseData}"/> into a single
     /// data packet
     /// </summary>
-    public class BaseDataCollectionAggregatorEnumerator : IEnumerator<BaseDataCollection>
+    public class BaseDataCollectionAggregatorEnumerator<T> : IEnumerator<T>
+        where T : BaseDataCollection, new()
     {
         private bool _endOfStream;
         private bool _needsMoveNext;
@@ -61,7 +63,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 return false;
             }
 
-            BaseDataCollection collection = null;
+            T collection = null;
             while (true)
             {
                 if (_needsMoveNext)
@@ -76,7 +78,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
                 if (_enumerator.Current == null)
                 {
-                    // the underlying returned false, stop here and start again on the next call
+                    // the underlying returned null, stop here and start again on the next call
                     _needsMoveNext = true;
                     break;
                 }
@@ -84,12 +86,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 if (collection == null)
                 {
                     // we have new data, set the collection's symbol/times
-                    collection = new BaseDataCollection
-                    {
-                        Symbol = _symbol,
-                        Time = _enumerator.Current.Time,
-                        EndTime = _enumerator.Current.EndTime
-                    };
+                    var current = _enumerator.Current;
+                    collection = CreateCollection(_symbol, current.Time, current.EndTime);
                 }
 
                 if (collection.EndTime != _enumerator.Current.EndTime)
@@ -100,12 +98,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 }
 
                 // this data belongs in this collection, keep going until null or bad time
-                collection.Data.Add(_enumerator.Current);
+                Add(collection, _enumerator.Current);
                 _needsMoveNext = true;
             }
 
             Current = collection;
-            return !_endOfStream;
+            return collection != null;
         }
 
         /// <summary>
@@ -123,7 +121,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <returns>
         /// The element in the collection at the current position of the enumerator.
         /// </returns>
-        public BaseDataCollection Current
+        public T Current
         {
             get; private set;
         }
@@ -147,6 +145,59 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         public void Dispose()
         {
             _enumerator.Dispose();
+        }
+
+        /// <summary>
+        /// Creates a new, empty <see cref="BaseDataCollection"/>.
+        /// </summary>
+        /// <param name="symbol">The base data collection symbol</param>
+        /// <param name="time">The start time of the collection</param>
+        /// <param name="endTime">The end time of the collection</param>
+        /// <returns>A new, empty <see cref="BaseDataCollection"/></returns>
+        protected virtual T CreateCollection(Symbol symbol, DateTime time, DateTime endTime)
+        {
+            return new T
+            {
+                Symbol = symbol,
+                Time = time,
+                EndTime = endTime
+            };
+        }
+
+        /// <summary>
+        /// Adds the specified instance of <see cref="BaseData"/> to the current collection
+        /// </summary>
+        /// <param name="collection">The collection to be added to</param>
+        /// <param name="current">The data to be added</param>
+        protected virtual void Add(T collection, BaseData current)
+        {
+            collection.Data.Add(current);
+        }
+
+        /// <summary>
+        /// Adds all specified instances of <see cref="BaseData"/> to the current collection
+        /// </summary>
+        /// <param name="collection">The collection to be added to</param>
+        /// <param name="current">The data collection to be added</param>
+        protected virtual void SetData(T collection, List<BaseData> current)
+        {
+            collection.Data = current;
+        }
+    }
+
+    /// <summary>
+    /// Provides a non-generic implementation of <see cref="BaseDataCollectionAggregatorEnumerator{T}"/>
+    /// </summary>
+    public class BaseDataCollectionAggregatorEnumerator : BaseDataCollectionAggregatorEnumerator<BaseDataCollection>
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BaseDataCollectionAggregatorEnumerator"/> class
+        /// </summary>
+        /// <param name="enumerator">The enumerator to aggregate</param>
+        /// <param name="symbol">The output data's symbol</param>
+        public BaseDataCollectionAggregatorEnumerator(IEnumerator<BaseData> enumerator, Symbol symbol)
+            : base(enumerator, symbol)
+        {
         }
     }
 }

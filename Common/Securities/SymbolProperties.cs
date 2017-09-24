@@ -44,27 +44,37 @@ namespace QuantConnect.Securities
         public decimal ContractMultiplier
         {
             get; 
-            private set;
+            protected set;
         }
 
         /// <summary>
-        /// The pip size (tick size) for the security
+        /// The minimum price variation (tick size) for the security
         /// </summary>
-        public decimal PipSize
+        public decimal MinimumPriceVariation
         {
             get; 
             private set;
         }
 
         /// <summary>
+        /// The lot size (lot size of the order) for the security
+        /// </summary>
+        public decimal LotSize
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
         /// Creates an instance of the <see cref="SymbolProperties"/> class
         /// </summary>
-        public SymbolProperties(string description, string quoteCurrency, decimal contractMultiplier, decimal pipSize)
+        public SymbolProperties(string description, string quoteCurrency, decimal contractMultiplier, decimal minimumPriceVariation, decimal lotSize)
         {
             Description = description;
             QuoteCurrency = quoteCurrency;
             ContractMultiplier = contractMultiplier;
-            PipSize = pipSize;
+            MinimumPriceVariation = minimumPriceVariation;
+            LotSize = lotSize;
         }
 
         /// <summary>
@@ -74,7 +84,7 @@ namespace QuantConnect.Securities
         /// <returns>A default instance of the<see cref="SymbolProperties"/> class</returns>
         public static SymbolProperties GetDefault(string quoteCurrency)
         {
-            return new SymbolProperties("", quoteCurrency.ToUpper(), 1, 0.01m);
+            return new SymbolProperties("", quoteCurrency.ToUpper(), 1, 0.01m, 1);
         }
     }
 }

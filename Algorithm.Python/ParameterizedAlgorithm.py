@@ -1,70 +1,68 @@
 ﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
-# 
-# Licensed under the Apache License, Version 2.0 (the "License"); 
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import clr
-clr.AddReference("System")
-clr.AddReference("QuantConnect.Algorithm")
-clr.AddReference("QuantConnect.Indicators")
-clr.AddReference("QuantConnect.Common")
+from clr import AddReference
+AddReference("System")
+AddReference("QuantConnect.Algorithm")
+AddReference("QuantConnect.Indicators")
+AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
 from QuantConnect.Parameters import *
+import decimal as d
 
-
+### <summary>
+### Demonstration of the parameter system of QuantConnect. Using parameters you can pass the values required into C# algorithms for optimization.
+### </summary>
+### <meta name="tag" content="optimization" />
+### <meta name="tag" content="using quantconnect" />
 class ParameterizedAlgorithm(QCAlgorithm):
-    def __init__(self):
-        # The values 100 and 200 are just default values
-        # that only used if the parameters do not exist
-        self.FastPeriod = 100
-        self.SlowPeriod = 200
-        self.Fast = None
-        self.Slow = None
-
 
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
-        
+
         self.SetStartDate(2013, 10, 07)  #Set Start Date
         self.SetEndDate(2013, 10, 11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.AddSecurity(SecurityType.Equity, "SPY")
+        self.AddEquity("SPY")
 
         # Receive parameters from the Job
-        fastPeriod = self.GetParameter("ema-fast")
-        slowPeriod = self.GetParameter("ema-slow")
-        if fastPeriod is not None: self.FastPeriod = int(fastPeriod)
-        if slowPeriod is not None: self.SlowPeriod = int(slowPeriod)
-        
-        self.Fast = self.EMA("SPY", self.FastPeriod);
-        self.Slow = self.EMA("SPY", self.SlowPeriod);
+        ema_fast = self.GetParameter("ema-fast")
+        ema_slow = self.GetParameter("ema-slow")
 
-        
+        # The values 100 and 200 are just default values that only used if the parameters do not exist
+        fast_period = 100 if ema_fast is None else int(ema_fast)
+        slow_period = 200 if ema_slow is None else int(ema_slow)
+
+        self.fast = self.EMA("SPY", fast_period)
+        self.slow = self.EMA("SPY", slow_period)
+
+
     def OnData(self, data):
-        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        
-        Arguments:
-            data: TradeBars IDictionary object with your stock data
-        '''
-        
+        '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''
+
         # wait for our indicators to ready
-        if not self.Fast.IsReady or not self.Slow.IsReady:
+        if not self.fast.IsReady or not self.slow.IsReady:
             return
 
-        if self.Fast.Current.Value > self.Slow.Current.Value * 1.001:
+        fast = self.fast.Current.Value
+        slow = self.slow.Current.Value
+
+        if fast > slow * d.Decimal(1.001):
             self.SetHoldings("SPY", 1)
-        elif self.Fast.Current.Value < self.Slow.Current.Value * 0.999:
+        elif fast < slow * d.Decimal(0.999):
             self.Liquidate("SPY")

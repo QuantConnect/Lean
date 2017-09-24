@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Reflection;
 
 namespace QuantConnect.Tests
 {
@@ -22,6 +23,7 @@ namespace QuantConnect.Tests
     /// </summary>
     public static class Symbols
     {
+
         public static readonly Symbol SPY = CreateEquitySymbol("SPY");
         public static readonly Symbol AAPL = CreateEquitySymbol("AAPL");
         public static readonly Symbol MSFT = CreateEquitySymbol("MSFT");
@@ -30,12 +32,50 @@ namespace QuantConnect.Tests
 
         public static readonly Symbol USDJPY = CreateForexSymbol("USDJPY");
         public static readonly Symbol EURUSD = CreateForexSymbol("EURUSD");
+        public static readonly Symbol BTCUSD = CreateCryptoSymbol("BTCUSD");
         public static readonly Symbol EURGBP = CreateForexSymbol("EURGBP");
         public static readonly Symbol GBPUSD = CreateForexSymbol("GBPUSD");
-        
+
         public static readonly Symbol DE10YBEUR = CreateCfdSymbol("DE10YBEUR", Market.FXCM);
 
+        public static readonly Symbol SPY_C_192_Feb19_2016 = CreateOptionSymbol("SPY", OptionRight.Call, 192m, new DateTime(2016, 02, 19));
         public static readonly Symbol SPY_P_192_Feb19_2016 = CreateOptionSymbol("SPY", OptionRight.Put, 192m, new DateTime(2016, 02, 19));
+
+        public static readonly Symbol Fut_SPY_Feb19_2016 = CreateFutureSymbol("SPY", new DateTime(2016, 02, 19));
+        public static readonly Symbol Fut_SPY_Mar19_2016 = CreateFutureSymbol("SPY", new DateTime(2016, 03, 19));
+
+        /// <summary>
+        /// Can be supplied in TestCase attribute
+        /// </summary>
+        public enum SymbolsKey
+        {
+            SPY,
+            AAPL,
+            MSFT,
+            ZNGA,
+            FXE,
+            USDJPY,
+            EURUSD,
+            BTCUSD,
+            EURGBP,
+            GBPUSD,
+            DE10YBEUR,
+            SPY_C_192_Feb19_2016,
+            SPY_P_192_Feb19_2016,
+            Fut_SPY_Feb19_2016,
+            Fut_SPY_Mar19_2016
+        }
+
+        /// <summary>
+        /// Convert key into symbol instance
+        /// </summary>
+        /// <param name="key">the symbol key</param>
+        /// <returns>The matching symbol instance</returns>
+        /// <remarks>Using reflection minimizes maintenance but is slower at runtime.</remarks>
+        public static Symbol Lookup(SymbolsKey key)
+        {
+            return (Symbol)typeof(Symbols).GetField(key.ToString(), BindingFlags.Public | BindingFlags.Static).GetValue(null);
+        }
 
         private static Symbol CreateForexSymbol(string symbol)
         {
@@ -45,6 +85,10 @@ namespace QuantConnect.Tests
         private static Symbol CreateEquitySymbol(string symbol)
         {
             return Symbol.Create(symbol, SecurityType.Equity, Market.USA);
+        }
+        private static Symbol CreateFutureSymbol(string symbol, DateTime expiry)
+        {
+            return Symbol.CreateFuture(symbol, Market.USA, expiry);
         }
 
         private static Symbol CreateCfdSymbol(string symbol, string market)
@@ -56,5 +100,11 @@ namespace QuantConnect.Tests
         {
             return Symbol.CreateOption(symbol, Market.USA, OptionStyle.American, right, strike, expiry);
         }
+
+        private static Symbol CreateCryptoSymbol(string symbol)
+        {
+            return Symbol.Create(symbol, SecurityType.Crypto, Market.Bitfinex);
+        }
+
     }
 }

@@ -15,6 +15,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -31,6 +33,11 @@ namespace QuantConnect.Brokerages
         /// Event that fires each time an order is filled
         /// </summary>
         public event EventHandler<OrderEvent> OrderStatusChanged;
+
+        /// <summary>
+        /// Event that fires each time a short option position is assigned
+        /// </summary>
+        public event EventHandler<OrderEvent> OptionPositionAssigned;
 
         /// <summary>
         /// Event that fires each time a user's brokerage account is changed
@@ -93,6 +100,14 @@ namespace QuantConnect.Brokerages
         public abstract void Disconnect();
 
         /// <summary>
+        /// Dispose of the brokerage instance
+        /// </summary>
+        public virtual void Dispose()
+        {
+            // NOP
+        }
+
+        /// <summary>
         /// Event invocator for the OrderFilled event
         /// </summary>
         /// <param name="e">The OrderEvent</param>
@@ -103,6 +118,25 @@ namespace QuantConnect.Brokerages
                 Log.Debug("Brokerage.OnOrderEvent(): " + e);
 
                 var handler = OrderStatusChanged;
+                if (handler != null) handler(this, e);
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+        }
+
+        /// <summary>
+        /// Event invocator for the OptionPositionAssigned event
+        /// </summary>
+        /// <param name="e">The OrderEvent</param>
+        protected virtual void OnOptionPositionAssigned(OrderEvent e)
+        {
+            try
+            {
+                Log.Debug("Brokerage.OptionPositionAssigned(): " + e);
+
+                var handler = OptionPositionAssigned;
                 if (handler != null) handler(this, e);
             }
             catch (Exception err)
@@ -174,5 +208,23 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <returns>The current cash balance for each currency available for trading</returns>
         public abstract List<Cash> GetCashBalance();
+
+        /// <summary>
+        /// Specifies whether the brokerage will instantly update account balances
+        /// </summary>
+        public virtual bool AccountInstantlyUpdated
+        {
+            get { return false; }
+        }
+
+        /// <summary>
+        /// Gets the history for the requested security
+        /// </summary>
+        /// <param name="request">The historical data request</param>
+        /// <returns>An enumerable of bars covering the span specified in the request</returns>
+        public virtual IEnumerable<BaseData> GetHistory(HistoryRequest request)
+        {
+            return Enumerable.Empty<BaseData>();
+        }
     }
 }

@@ -95,8 +95,7 @@ namespace QuantConnect.Securities
         /// <returns>The exchange hours for the specified security</returns>
         public SecurityExchangeHours GetExchangeHours(string market, Symbol symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
         {
-            var stringSymbol = symbol == null ? string.Empty : symbol.Value;
-            return GetEntry(market, stringSymbol, securityType, overrideTimeZone).ExchangeHours;
+            return GetEntry(market, symbol, securityType, overrideTimeZone).ExchangeHours;
         }
 
         /// <summary>
@@ -120,11 +119,22 @@ namespace QuantConnect.Securities
         /// <returns>A <see cref="MarketHoursDatabase"/> class that represents the data in the market-hours folder</returns>
         public static MarketHoursDatabase FromDataFolder()
         {
+            return FromDataFolder(Globals.DataFolder);
+        }
+
+        /// <summary>
+        /// Gets the instance of the <see cref="MarketHoursDatabase"/> class produced by reading in the market hours
+        /// data found in /Data/market-hours/
+        /// </summary>
+        /// <param name="dataFolder">Path to the data folder</param>
+        /// <returns>A <see cref="MarketHoursDatabase"/> class that represents the data in the market-hours folder</returns>
+        public static MarketHoursDatabase FromDataFolder(string dataFolder)
+        {
             lock (DataFolderMarketHoursDatabaseLock)
             {
                 if (_dataFolderMarketHoursDatabase == null)
                 {
-                    var path = Path.Combine(Globals.DataFolder, "market-hours", "market-hours-database.json");
+                    var path = Path.Combine(dataFolder, "market-hours", "market-hours-database.json");
                     _dataFolderMarketHoursDatabase = FromFile(path);
                 }
             }
@@ -181,11 +191,31 @@ namespace QuantConnect.Securities
                 // and holidays, but we'll express them in a different time zone
                 if (overrideTimeZone != null && !entry.ExchangeHours.TimeZone.Equals(overrideTimeZone))
                 {
-                    return new Entry(overrideTimeZone, new SecurityExchangeHours(overrideTimeZone, entry.ExchangeHours.Holidays, entry.ExchangeHours.MarketHours));
+                    return new Entry(overrideTimeZone, new SecurityExchangeHours(overrideTimeZone, entry.ExchangeHours.Holidays, entry.ExchangeHours.MarketHours, entry.ExchangeHours.EarlyCloses));
                 }
             }
 
             return entry;
+        }
+
+        /// <summary>
+        /// Gets the entry for the specified market/symbol/security-type
+        /// </summary>
+        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
+        /// <param name="symbol">The particular symbol being traded (Symbol class)</param>
+        /// <param name="securityType">The security type of the symbol</param>
+        /// <param name="overrideTimeZone">Specify this time zone to override the resolved time zone from the market hours database.
+        /// This value will also be used as the time zone for SecurityType.Base with no market hours database entry.
+        /// If null is specified, no override will be performed. If null is specified, and it's SecurityType.Base, then Utc will be used.</param>
+        /// <returns>The entry matching the specified market/symbol/security-type</returns>
+        public virtual Entry GetEntry(string market, Symbol symbol, SecurityType securityType, DateTimeZone overrideTimeZone = null)
+        {
+            var stringSymbol = symbol == null ? string.Empty : 
+                (symbol.ID.SecurityType == SecurityType.Option ? (symbol.HasUnderlying ? symbol.Underlying.Value : string.Empty) :
+                (symbol.ID.SecurityType == SecurityType.Future ? symbol.ID.Symbol : 
+                symbol.Value));
+
+            return GetEntry(market, stringSymbol, securityType, overrideTimeZone);
         }
 
         /// <summary>

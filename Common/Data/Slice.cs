@@ -29,6 +29,9 @@ namespace QuantConnect.Data
     {
         private readonly Ticks _ticks;
         private readonly TradeBars _bars;
+        private readonly QuoteBars _quoteBars;
+        private readonly OptionChains _optionChains;
+        private readonly FuturesChains _futuresChains;
 
         // aux data
         private readonly Splits _splits;
@@ -67,11 +70,43 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
+        /// Gets the <see cref="QuoteBars"/> for this slice of data
+        /// </summary>
+        public QuoteBars QuoteBars
+        {
+            get { return _quoteBars; }
+        }
+
+        /// <summary>
         /// Gets the <see cref="Ticks"/> for this slice of data
         /// </summary>
         public Ticks Ticks
         {
             get { return _ticks; }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="OptionChains"/> for this slice of data
+        /// </summary>
+        public OptionChains OptionChains
+        {
+            get { return _optionChains; }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="FuturesChains"/> for this slice of data
+        /// </summary>
+        public FuturesChains FuturesChains
+        {
+            get { return _futuresChains; }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="FuturesChains"/> for this slice of data
+        /// </summary>
+        public FuturesChains FutureChains
+        {
+            get { return _futuresChains; }
         }
 
         /// <summary>
@@ -138,7 +173,7 @@ namespace QuantConnect.Data
         /// <param name="time">The timestamp for this slice of data</param>
         /// <param name="data">The raw data in this slice</param>
         public Slice(DateTime time, IEnumerable<BaseData> data)
-            : this(time, data, null, null, null, null, null, null)
+            : this(time, data, null, null, null, null, null, null, null, null, null)
         {
         }
 
@@ -148,13 +183,16 @@ namespace QuantConnect.Data
         /// <param name="time">The timestamp for this slice of data</param>
         /// <param name="data">The raw data in this slice</param>
         /// <param name="tradeBars">The trade bars for this slice</param>
+        /// <param name="quoteBars">The quote bars for this slice</param>
         /// <param name="ticks">This ticks for this slice</param>
+        /// <param name="optionChains">The option chains for this slice</param>
+        /// <param name="futuresChains">The futures chains for this slice</param>
         /// <param name="splits">The splits for this slice</param>
         /// <param name="dividends">The dividends for this slice</param>
         /// <param name="delistings">The delistings for this slice</param>
         /// <param name="symbolChanges">The symbol changed events for this slice</param>
         /// <param name="hasData">true if this slice contains data</param>
-        public Slice(DateTime time, IEnumerable<BaseData> data, TradeBars tradeBars, Ticks ticks, Splits splits, Dividends dividends, Delistings delistings, SymbolChangedEvents symbolChanges, bool? hasData = null)
+        public Slice(DateTime time, IEnumerable<BaseData> data, TradeBars tradeBars, QuoteBars quoteBars, Ticks ticks, OptionChains optionChains, FuturesChains futuresChains, Splits splits, Dividends dividends, Delistings delistings, SymbolChangedEvents symbolChanges, bool? hasData = null)
         {
             Time = time;
 
@@ -167,6 +205,9 @@ namespace QuantConnect.Data
 
             _ticks = CreateTicksCollection(ticks);
             _bars = CreateCollection<TradeBars, TradeBar>(tradeBars);
+            _quoteBars = CreateCollection<QuoteBars, QuoteBar>(quoteBars);
+            _optionChains = CreateCollection<OptionChains, OptionChain>(optionChains);
+            _futuresChains = CreateCollection<FuturesChains, FuturesChain>(futuresChains);
 
             // auxiliary data
             _splits = CreateCollection<Splits, Split>(splits);
@@ -202,7 +243,7 @@ namespace QuantConnect.Data
         /// <typeparam name="T">The type of data we want, for example, <see cref="TradeBar"/> or <see cref="Quandl"/>, ect...</typeparam>
         /// <returns>The <see cref="DataDictionary{T}"/> containing the data of the specified type</returns>
         public DataDictionary<T> Get<T>()
-            where T : BaseData
+            where T : IBaseData
         {
             Lazy<object> dictionary;
             if (!_dataByType.TryGetValue(typeof(T), out dictionary))
@@ -288,6 +329,11 @@ namespace QuantConnect.Data
                         symbolData.TradeBar = (TradeBar)datum;
                         break;
 
+                    case MarketDataType.QuoteBar:
+                        symbolData.Type = SubscriptionType.QuoteBar;
+                        symbolData.QuoteBar = (QuoteBar)datum;
+                        break;
+
                     case MarketDataType.Tick:
                         symbolData.Type = SubscriptionType.Tick;
                         symbolData.Ticks.Add((Tick)datum);
@@ -371,7 +417,7 @@ namespace QuantConnect.Data
             return _data.Value.Select(kvp => new KeyValuePair<Symbol, BaseData>(kvp.Key, kvp.Value.GetData()));
         }
 
-        private enum SubscriptionType { TradeBar, Tick, Custom };
+        private enum SubscriptionType { TradeBar, QuoteBar, Tick, Custom };
         private class SymbolData
         {
             public SubscriptionType Type;
@@ -380,6 +426,7 @@ namespace QuantConnect.Data
             // data
             public BaseData Custom;
             public TradeBar TradeBar;
+            public QuoteBar QuoteBar;
             public readonly List<Tick> Ticks;
             public readonly List<BaseData> AuxilliaryData;
 
@@ -396,6 +443,8 @@ namespace QuantConnect.Data
                 {
                     case SubscriptionType.TradeBar:
                         return TradeBar;
+                    case SubscriptionType.QuoteBar:
+                        return QuoteBar;
                     case SubscriptionType.Tick:
                         return Ticks;
                     case SubscriptionType.Custom:

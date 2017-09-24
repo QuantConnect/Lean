@@ -16,8 +16,12 @@
 
 using System;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
+using System.IO;
 using System.Threading;
+using System.Windows.Forms;
 using QuantConnect.Configuration;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
@@ -31,20 +35,25 @@ namespace QuantConnect.Lean.Launcher
 
         static void Main(string[] args)
         {
-            Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
-
             //Initialize:
-            string mode = "RELEASE";
+            var mode = "RELEASE";
+            #if DEBUG
+                mode = "DEBUG";
+            #endif
+
+            if (OS.IsWindows)
+            { 
+                Console.OutputEncoding = System.Text.Encoding.Unicode;
+            }
+
+            var environment = Config.Get("environment");
             var liveMode = Config.GetBool("live-mode");
             Log.DebuggingEnabled = Config.GetBool("debug-mode");
-
-#if DEBUG
-            mode = "DEBUG";
-#endif
-
+            Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
+   
             //Name thread for the profiler:
             Thread.CurrentThread.Name = "Algorithm Analysis Thread";
-            Log.Trace("Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v" + Globals.Version + " Mode: " + mode);
+            Log.Trace("Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v" + Globals.Version + " Mode: " + mode + " (" + (Environment.Is64BitProcess ? "64" : "32") + "bit)");
             Log.Trace("Engine.Main(): Started " + DateTime.Now.ToShortTimeString());
             Log.Trace("Engine.Main(): Memory " + OS.ApplicationMemoryUsed + "Mb-App  " + +OS.TotalPhysicalMemoryUsed + "Mb-Used  " + OS.TotalPhysicalMemory + "Mb-Total");
 
@@ -71,7 +80,7 @@ namespace QuantConnect.Lean.Launcher
             {
                 throw new Exception("Engine.Main(): Job was null.");
             }
-
+            
             LeanEngineAlgorithmHandlers leanEngineAlgorithmHandlers;
             try
             {
@@ -83,16 +92,16 @@ namespace QuantConnect.Lean.Launcher
                 throw;
             }
 
-            // log the job endpoints
-            Log.Trace("JOB HANDLERS: ");
-            Log.Trace("         DataFeed:     " + leanEngineAlgorithmHandlers.DataFeed.GetType().FullName);
-            Log.Trace("         Setup:        " + leanEngineAlgorithmHandlers.Setup.GetType().FullName);
-            Log.Trace("         RealTime:     " + leanEngineAlgorithmHandlers.RealTime.GetType().FullName);
-            Log.Trace("         Results:      " + leanEngineAlgorithmHandlers.Results.GetType().FullName);
-            Log.Trace("         Transactions: " + leanEngineAlgorithmHandlers.Transactions.GetType().FullName);
-            Log.Trace("         History:      " + leanEngineAlgorithmHandlers.HistoryProvider.GetType().FullName);
-            Log.Trace("         Commands:     " + leanEngineAlgorithmHandlers.CommandQueue.GetType().FullName);
-            if (job is LiveNodePacket) Log.Trace("         Brokerage:    " + ((LiveNodePacket)job).Brokerage);
+            if (environment.EndsWith("-desktop"))
+            {
+                var info = new ProcessStartInfo
+                {
+                    UseShellExecute = false,
+                    FileName  = Config.Get("desktop-exe"),
+                    Arguments = Config.Get("desktop-http-port")
+                };
+                Process.Start(info);
+            }
 
             // if the job version doesn't match this instance version then we can't process it
             // we also don't want to reprocess redelivered jobs
@@ -103,15 +112,19 @@ namespace QuantConnect.Lean.Launcher
                 //In this event kill the old algorithm and leave a message so the user can later review.
                 leanEngineSystemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, _collapseMessage);
                 leanEngineSystemHandlers.Notify.SetAuthentication(job);
-                leanEngineSystemHandlers.Notify.Send(new RuntimeErrorPacket(job.AlgorithmId, _collapseMessage));
+                leanEngineSystemHandlers.Notify.Send(new RuntimeErrorPacket(job.UserId, job.AlgorithmId, _collapseMessage));
                 leanEngineSystemHandlers.JobQueue.AcknowledgeJob(job);
                 return;
             }
 
             try
             {
+                var algorithmManager = new AlgorithmManager(liveMode);
+
+                leanEngineSystemHandlers.LeanManager.Initialize(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, job, algorithmManager);
+
                 var engine = new Engine.Engine(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, liveMode);
-                engine.Run(job, assemblyPath);
+                engine.Run(job, algorithmManager, assemblyPath);
             }
             finally
             {
@@ -123,6 +136,10 @@ namespace QuantConnect.Lean.Launcher
                 leanEngineSystemHandlers.Dispose();
                 leanEngineAlgorithmHandlers.Dispose();
                 Log.LogHandler.Dispose();
+
+                Log.Trace("Program.Main(): Exiting Lean...");
+
+                Environment.Exit(0);
             }
         }
     }

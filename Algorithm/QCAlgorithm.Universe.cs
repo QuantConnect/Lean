@@ -17,8 +17,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm
 {
@@ -218,7 +220,7 @@ namespace QuantConnect.Algorithm
             var dataTimeZone = marketHoursDbEntry.DataTimeZone;
             var exchangeTimeZone = marketHoursDbEntry.ExchangeHours.TimeZone;
             var symbol = QuantConnect.Symbol.Create(name, securityType, market);
-            var config = new SubscriptionDataConfig(typeof(T), symbol, resolution, dataTimeZone, exchangeTimeZone, false, false, true, true);
+            var config = new SubscriptionDataConfig(typeof(T), symbol, resolution, dataTimeZone, exchangeTimeZone, false, false, true, true, isFilteredSubscription: false);
             AddUniverse(new FuncUniverse(config, universeSettings, SecurityInitializer, d => selector(d.OfType<T>())));
         }
 
@@ -238,20 +240,42 @@ namespace QuantConnect.Algorithm
             var dataTimeZone = marketHoursDbEntry.DataTimeZone;
             var exchangeTimeZone = marketHoursDbEntry.ExchangeHours.TimeZone;
             var symbol = QuantConnect.Symbol.Create(name, securityType, market);
-            var config = new SubscriptionDataConfig(typeof(T), symbol, resolution, dataTimeZone, exchangeTimeZone, false, false, true, true);
+            var config = new SubscriptionDataConfig(typeof(T), symbol, resolution, dataTimeZone, exchangeTimeZone, false, false, true, true, isFilteredSubscription: false);
             AddUniverse(new FuncUniverse(config, universeSettings, SecurityInitializer, d => selector(d.OfType<T>()).Select(x => QuantConnect.Symbol.Create(x, securityType, market))));
         }
 
         /// <summary>
-        /// Creates a new univese and adds it to the algorithm. This is for coarse fundamntal US Equity data and
+        /// Creates a new universe and adds it to the algorithm. This is for coarse fundamental US Equity data and
         /// will be executed on day changes in the NewYork time zone (<see cref="TimeZones.NewYork"/>
         /// </summary>
         /// <param name="selector">Defines an initial coarse selection</param>
         public void AddUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> selector)
         {
-            var symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA);
-            var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, true);
-            AddUniverse(new FuncUniverse(config, UniverseSettings, SecurityInitializer, selectionData => selector(selectionData.OfType<CoarseFundamental>())));
+            AddUniverse(new CoarseFundamentalUniverse(UniverseSettings, SecurityInitializer, selector));
+        }
+
+        /// <summary>
+        /// Creates a new universe and adds it to the algorithm. This is for coarse and fine fundamental US Equity data and
+        /// will be executed on day changes in the NewYork time zone (<see cref="TimeZones.NewYork"/>
+        /// </summary>
+        /// <param name="coarseSelector">Defines an initial coarse selection</param>
+        /// <param name="fineSelector">Defines a more detailed selection with access to more data</param>
+        public void AddUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarseSelector, Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> fineSelector)
+        {
+            var coarse = new CoarseFundamentalUniverse(UniverseSettings, SecurityInitializer, coarseSelector);
+
+            AddUniverse(new FineFundamentalFilteredUniverse(coarse, fineSelector));
+        }
+
+        /// <summary>
+        /// Creates a new universe and adds it to the algorithm. This is for fine fundamental US Equity data and
+        /// will be executed on day changes in the NewYork time zone (<see cref="TimeZones.NewYork"/>
+        /// </summary>
+        /// <param name="universe">The universe to be filtered with fine fundamental selection</param>
+        /// <param name="fineSelector">Defines a more detailed selection with access to more data</param>
+        public void AddUniverse(Universe universe, Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> fineSelector)
+        {
+            AddUniverse(new FineFundamentalFilteredUniverse(universe, fineSelector));
         }
 
         /// <summary>
@@ -292,7 +316,7 @@ namespace QuantConnect.Algorithm
             var dataTimeZone = marketHoursDbEntry.DataTimeZone;
             var exchangeTimeZone = marketHoursDbEntry.ExchangeHours.TimeZone;
             var symbol = QuantConnect.Symbol.Create(name, securityType, market);
-            var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, resolution, dataTimeZone, exchangeTimeZone, false, false, true);
+            var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, resolution, dataTimeZone, exchangeTimeZone, false, false, true, isFilteredSubscription: false);
             AddUniverse(new UserDefinedUniverse(config, universeSettings, SecurityInitializer, resolution.ToTimeSpan(), selector));
         }
 
@@ -301,17 +325,33 @@ namespace QuantConnect.Algorithm
         /// </summary>
         private void AddToUserDefinedUniverse(Security security)
         {
+            // if we are adding a non-internal security which is also the benchmark, we remove it first
+            Security existingSecurity;
+            if (Securities.TryGetValue(security.Symbol, out existingSecurity))
+            {
+                if (!security.IsInternalFeed() && existingSecurity.Symbol == _benchmarkSymbol)
+                {
+                    var securityUniverse = UniverseManager.Values.OfType<UserDefinedUniverse>().FirstOrDefault(x => x.Members.ContainsKey(security.Symbol));
+                    if (securityUniverse != null)
+                    {
+                        securityUniverse.Remove(security.Symbol);
+                    }
+
+                    Securities.Remove(security.Symbol);
+                }
+            }
+
             Securities.Add(security);
 
             // add this security to the user defined universe
             Universe universe;
-            var securityConfig = security.SubscriptionDataConfig;
-            var universeSymbol = UserDefinedUniverse.CreateSymbol(securityConfig.SecurityType, securityConfig.Market);
+            var subscription = security.Subscriptions.First();
+            var universeSymbol = UserDefinedUniverse.CreateSymbol(subscription.SecurityType, subscription.Market);
             if (!UniverseManager.TryGetValue(universeSymbol, out universe))
             {
                 // create a new universe, these subscription settings don't currently get used
                 // since universe selection proper is never invoked on this type of universe
-                var uconfig = new SubscriptionDataConfig(securityConfig, symbol: universeSymbol, isInternalFeed: true, fillForward: false);
+                var uconfig = new SubscriptionDataConfig(subscription, symbol: universeSymbol, isInternalFeed: true, fillForward: false);
                 universe = new UserDefinedUniverse(uconfig,
                     new UniverseSettings(security.Resolution, security.Leverage, security.IsFillDataForward, security.IsExtendedMarketHours, TimeSpan.Zero),
                     SecurityInitializer,

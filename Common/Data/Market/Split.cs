@@ -52,8 +52,7 @@ namespace QuantConnect.Data.Market
         /// </summary>
         public decimal SplitFactor
         {
-            get { return Value; }
-            set { Value = value; }
+            get; private set;
         }
 
         /// <summary>
@@ -61,7 +60,8 @@ namespace QuantConnect.Data.Market
         /// </summary>
         public decimal ReferencePrice
         {
-            get; private set;
+            get { return Value; }
+            set { Value = value; }
         }
 
         /// <summary>

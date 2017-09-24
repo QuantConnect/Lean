@@ -17,7 +17,7 @@ using System;
 using NUnit.Framework;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
-using QuantConnect.Securities;
+using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Common.Data
 {
@@ -183,6 +183,46 @@ namespace QuantConnect.Tests.Common.Data
             Assert.IsNotNull(consolidated);
             Assert.AreEqual(TimeSpan.FromDays(1), consolidated.Period);
             Assert.AreEqual(reference.AddDays(2), consolidated.Time);
+        }
+
+        [Test]
+        public void ConsolidatesWithRegisterIndicator()
+        {
+            var consolidator = new BaseDataConsolidator(TimeSpan.FromMinutes(5));
+            consolidator.DataConsolidated += OnFiveMinutes;
+
+            indicator = new SimpleMovingAverage(2);
+            RegisterIndicator(indicator, consolidator);
+
+            var time = DateTime.Today.AddHours(9);
+            for (var i = 1; i < 100; i++)
+            {
+                consolidator.Update(new Tick(time.AddMinutes(i - 1), Symbols.SPY, i, i, i));
+            }
+        }
+
+        private SimpleMovingAverage indicator;
+
+        private void OnFiveMinutes(object sender, TradeBar e)
+        {
+            if (!indicator.IsReady) return;
+
+            var previous = e.Value - e.Period.Minutes;
+            var actual = (e.Value +  previous) / indicator.Period;
+            Assert.AreEqual(indicator, actual);
+        }
+
+        /// <summary>
+        /// Simplified version of QCAlgorithm.RegisterIndicator
+        /// </summary>
+        /// <param name="indicator">The indicator to receive data from the consolidator</param>
+        /// <param name="consolidator">The consolidator to receive raw subscription data</param>
+        public void RegisterIndicator(IndicatorBase<IndicatorDataPoint> indicator, IDataConsolidator consolidator)
+        {
+            consolidator.DataConsolidated += (sender, consolidated) =>
+            {
+                indicator.Update(consolidated.EndTime, consolidated.Value);
+            };
         }
     }
 }

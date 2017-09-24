@@ -16,6 +16,8 @@
 using System;
 using System.Globalization;
 using QuantConnect.Data;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Indicators
 {
@@ -46,7 +48,7 @@ namespace QuantConnect.Indicators
         /// <param name="waitForFirstToReady">True to only send updates to the second if first.IsReady returns true, false to alway send updates to second</param>
         /// <returns>The reference to the second indicator to allow for method chaining</returns>
         public static TSecond Of<T, TSecond>(this TSecond second, IndicatorBase<T> first, bool waitForFirstToReady = true)
-            where T : BaseData
+            where T : IBaseData
             where TSecond : IndicatorBase<IndicatorDataPoint>
         {
             first.Updated += (sender, consolidated) =>
@@ -59,6 +61,44 @@ namespace QuantConnect.Indicators
             };
 
             return second;
+        }
+
+        /// <summary>
+        /// Creates a new CompositeIndicator such that the result will be average of a first indicator weighted by a second one
+        /// </summary>
+        /// <param name="value">Indicator that will be averaged</param>
+        /// <param name="weight">Indicator that provides the average weights</param>
+        /// <param name="period">Average period</param>
+        /// <returns>Indicator that results of the average of first by weights given by second</returns>
+        public static CompositeIndicator<IndicatorDataPoint> WeightedBy<T, TWeight>(this IndicatorBase<T> value, TWeight weight, int period)
+            where T : IBaseData
+            where TWeight : IndicatorBase<IndicatorDataPoint>
+        {
+            var x = new WindowIdentity(period);
+            var y = new WindowIdentity(period);
+            var numerator = new Sum("Sum_xy", period);
+            var denominator = new Sum("Sum_y", period);
+
+            value.Updated += (sender, consolidated) =>
+            {
+                x.Update(consolidated);
+                if (x.Samples == y.Samples)
+                {
+                    numerator.Update(consolidated.Time, consolidated.Value * y.Current.Value);
+                }  
+            };
+
+            weight.Updated += (sender, consolidated) =>
+            {
+                y.Update(consolidated);
+                if (x.Samples == y.Samples)
+                {
+                    numerator.Update(consolidated.Time, consolidated.Value * x.Current.Value);
+                }
+                denominator.Update(consolidated);
+            };
+            
+            return numerator.Over(denominator);
         }
 
         /// <summary>
@@ -175,7 +215,7 @@ namespace QuantConnect.Indicators
         /// <returns>The ratio of the left to the right indicator</returns>
         public static CompositeIndicator<IndicatorDataPoint> Over(this IndicatorBase<IndicatorDataPoint> left, IndicatorBase<IndicatorDataPoint> right)
         {
-            return new CompositeIndicator<IndicatorDataPoint>(left, right, (l, r) => l / r);
+            return new CompositeIndicator<IndicatorDataPoint>(left, right, (l, r) => r == 0m ? new IndicatorResult(0m, IndicatorStatus.MathError) : new IndicatorResult(l / r));
         }
 
         /// <summary>
@@ -190,7 +230,7 @@ namespace QuantConnect.Indicators
         /// <returns>The ratio of the left to the right indicator</returns>
         public static CompositeIndicator<IndicatorDataPoint> Over(this IndicatorBase<IndicatorDataPoint> left, IndicatorBase<IndicatorDataPoint> right, string name)
         {
-            return new CompositeIndicator<IndicatorDataPoint>(name, left, right, (l, r) => l / r);
+            return new CompositeIndicator<IndicatorDataPoint>(name, left, right, (l, r) => r == 0m ? new IndicatorResult(0m, IndicatorStatus.MathError) : new IndicatorResult(l / r));
         }
 
         /// <summary>
@@ -235,6 +275,60 @@ namespace QuantConnect.Indicators
         public static CompositeIndicator<IndicatorDataPoint> Times(this IndicatorBase<IndicatorDataPoint> left, IndicatorBase<IndicatorDataPoint> right, string name)
         {
             return new CompositeIndicator<IndicatorDataPoint>(name, left, right, (l, r) => l * r);
+        }
+
+        /// <summary>Creates a new ExponentialMovingAverage indicator with the specified period and smoothingFactor from the left indicator
+        /// </summary>
+        /// <param name="left">The ExponentialMovingAverage indicator will be created using the data from left</param>
+        /// <param name="period">The period of the ExponentialMovingAverage indicators</param>
+        /// <param name="smoothingFactor">The percentage of data from the previous value to be carried into the next value</param>
+        /// <param name="waitForFirstToReady">True to only send updates to the second if left.IsReady returns true, false to alway send updates</param>
+        /// <returns>A reference to the ExponentialMovingAverage indicator to allow for method chaining</returns>
+        public static ExponentialMovingAverage EMA<T>(this IndicatorBase<T> left, int period, decimal? smoothingFactor = null, bool waitForFirstToReady = true)
+            where T : IBaseData
+        {
+            decimal k = smoothingFactor.HasValue ? k = smoothingFactor.Value : ExponentialMovingAverage.SmoothingFactorDefault(period);
+            ExponentialMovingAverage emaOfLeft = new ExponentialMovingAverage(string.Format("EMA{0}_Of_{1}", period, left.Name), period, k).Of(left, waitForFirstToReady);
+            return emaOfLeft;
+        }
+
+        /// <summary>Creates a new Maximum indicator with the specified period from the left indicator
+        /// </summary>
+        /// <param name="left">The Maximum indicator will be created using the data from left</param>
+        /// <param name="period">The period of the Maximum indicator</param>
+        /// <param name="waitForFirstToReady">True to only send updates to the second if left.IsReady returns true, false to alway send updates</param>
+        /// <returns>A reference to the Maximum indicator to allow for method chaining</returns>
+        public static Maximum MAX<T>(this IndicatorBase<T> left, int period, bool waitForFirstToReady = true)
+            where T : IBaseData
+        {
+            Maximum maxOfLeft = new Maximum(string.Format("MAX{0}_Of_{1}", period, left.Name), period).Of(left, waitForFirstToReady);
+            return maxOfLeft;
+        }
+
+        /// <summary>Creates a new Minimum indicator with the specified period from the left indicator
+        /// </summary>
+        /// <param name="left">The Minimum indicator will be created using the data from left</param>
+        /// <param name="period">The period of the Minimum indicator</param>
+        /// <param name="waitForFirstToReady">True to only send updates to the second if left.IsReady returns true, false to alway send updates</param>
+        /// <returns>A reference to the Minimum indicator to allow for method chaining</returns>
+        public static Minimum MIN<T>(this IndicatorBase<T> left, int period, bool waitForFirstToReady = true)
+            where T : IBaseData
+        {
+            Minimum minOfLeft = new Minimum(string.Format("MIN{0}_Of_{1}", period, left.Name), period).Of(left, waitForFirstToReady);
+            return minOfLeft;
+        }
+
+        /// <summary>Initializes a new instance of the SimpleMovingAverage class with the specified name and period from the left indicator
+        /// </summary>
+        /// <param name="left">The SimpleMovingAverage indicator will be created using the data from left</param>
+        /// <param name="period">The period of the SMA</param>
+        /// <param name="waitForFirstToReady">True to only send updates to the second if first.IsReady returns true, false to alway send updates to second</param>
+        /// <returns>The reference to the SimpleMovingAverage indicator to allow for method chaining</returns>
+        public static SimpleMovingAverage SMA<T>(this IndicatorBase<T> left, int period, bool waitForFirstToReady = true)
+            where T : IBaseData
+        {
+            SimpleMovingAverage smaOfLeft = new SimpleMovingAverage(string.Format("SMA{0}_Of_{1}", period, left.Name), period).Of(left, waitForFirstToReady);
+            return smaOfLeft;
         }
     }
 }

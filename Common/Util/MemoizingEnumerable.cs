@@ -85,8 +85,8 @@ namespace QuantConnect.Util
                     }
                     else
                     {
-                        // we have a value if we're not finished
-                        hasValue = !_finished;
+                        // we have a value if it's in the buffer
+                        hasValue = _buffer.Count > i;
                     }
                 }
 

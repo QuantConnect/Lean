@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
@@ -188,6 +189,8 @@ namespace QuantConnect.Tests.Common.Securities
             var securityPrice = 100m;
             var quantity = 300;
 
+            var orderProcessor = new MarginCallModelTests.OrderProcessor();
+            var portfolio = GetPortfolio(orderProcessor, quantity);
             var model = new PatternDayTradingMarginModel();
 
             // Open Market
@@ -195,7 +198,7 @@ namespace QuantConnect.Tests.Common.Securities
             security.Holdings.SetHoldings(securityPrice, quantity);
 
             var expected = -(int)(Math.Round((totalMargin - netLiquidationValue) / securityPrice, MidpointRounding.AwayFromZero) * 4m);
-            var actual = model.GenerateMarginCallOrder(security, netLiquidationValue, totalMargin).Quantity;
+            var actual = portfolio.MarginCallModel.GenerateMarginCallOrder(security, netLiquidationValue, totalMargin, model.GetMaintenanceMarginRequirement(security)).Quantity;
 
             Assert.AreEqual(expected, actual);
 
@@ -204,7 +207,7 @@ namespace QuantConnect.Tests.Common.Securities
             security.Holdings.SetHoldings(securityPrice, quantity);
 
             expected = -(int)(Math.Round((totalMargin - netLiquidationValue) / securityPrice, MidpointRounding.AwayFromZero) * 2m);
-            actual = model.GenerateMarginCallOrder(security, netLiquidationValue, totalMargin).Quantity;
+            actual = portfolio.MarginCallModel.GenerateMarginCallOrder(security, netLiquidationValue, totalMargin, model.GetMaintenanceMarginRequirement(security)).Quantity;
 
             Assert.AreEqual(expected, actual);
         }
@@ -217,6 +220,8 @@ namespace QuantConnect.Tests.Common.Securities
             var securityPrice = 100m;
             var quantity = -300;
 
+            var orderProcessor = new MarginCallModelTests.OrderProcessor();
+            var portfolio = GetPortfolio(orderProcessor, quantity);
             var model = new PatternDayTradingMarginModel();
 
             // Open Market
@@ -224,7 +229,7 @@ namespace QuantConnect.Tests.Common.Securities
             security.Holdings.SetHoldings(securityPrice, quantity);
 
             var expected = (int)(Math.Round((totalMargin - netLiquidationValue) / securityPrice, MidpointRounding.AwayFromZero) * 4m);
-            var actual = model.GenerateMarginCallOrder(security, netLiquidationValue, totalMargin).Quantity;
+            var actual = portfolio.MarginCallModel.GenerateMarginCallOrder(security, netLiquidationValue, totalMargin, model.GetMaintenanceMarginRequirement(security)).Quantity;
 
             Assert.AreEqual(expected, actual);
 
@@ -233,9 +238,21 @@ namespace QuantConnect.Tests.Common.Securities
             security.Holdings.SetHoldings(securityPrice, quantity);
 
             expected = (int)(Math.Round((totalMargin - netLiquidationValue) / securityPrice, MidpointRounding.AwayFromZero) * 2m);
-            actual = model.GenerateMarginCallOrder(security, netLiquidationValue, totalMargin).Quantity;
+            actual = portfolio.MarginCallModel.GenerateMarginCallOrder(security, netLiquidationValue, totalMargin, model.GetMaintenanceMarginRequirement(security)).Quantity;
 
             Assert.AreEqual(expected, actual);
+        }
+
+        private SecurityPortfolioManager GetPortfolio(IOrderProcessor orderProcessor, int quantity)
+        {
+            var securities = new SecurityManager(new TimeKeeper(DateTime.Now, new[] { TimeZones.NewYork }));
+            var transactions = new SecurityTransactionManager(securities);
+            transactions.SetOrderProcessor(orderProcessor);
+
+            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            portfolio.SetCash(quantity);
+
+            return portfolio;
         }
 
         private static Security CreateSecurity(DateTime newLocalTime)
@@ -258,10 +275,11 @@ namespace QuantConnect.Tests.Common.Securities
             var friday = new LocalMarketHours(DayOfWeek.Friday, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0));
             var saturday = LocalMarketHours.ClosedAllDay(DayOfWeek.Saturday);
 
+            var earlyCloses = new Dictionary<DateTime, TimeSpan>();
             return new SecurityExchangeHours(TimeZones.NewYork, USHoliday.Dates.Select(x => x.Date), new[]
             {
                 sunday, monday, tuesday, wednesday, thursday, friday, saturday
-            }.ToDictionary(x => x.DayOfWeek));
+            }.ToDictionary(x => x.DayOfWeek), earlyCloses);
         }
 
         private static SubscriptionDataConfig CreateTradeBarConfig()

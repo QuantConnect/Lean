@@ -63,6 +63,24 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the symbol properties for the specified market/symbol/security-type
+        /// </summary>
+        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
+        /// <param name="symbol">The particular symbol being traded (Symbol class)</param>
+        /// <param name="securityType">The security type of the symbol</param>
+        /// <param name="defaultQuoteCurrency">Specifies the quote currency to be used when returning a default instance of an entry is not found in the database</param>
+        /// <returns>The symbol properties matching the specified market/symbol/security-type or null if not found</returns>
+        public SymbolProperties GetSymbolProperties(string market, Symbol symbol, SecurityType securityType, string defaultQuoteCurrency)
+        {
+            var stringSymbol = symbol == null ? string.Empty :
+                (symbol.ID.SecurityType == SecurityType.Option ? symbol.Underlying.Value :
+                (symbol.ID.SecurityType == SecurityType.Future ? symbol.ID.Symbol :
+                 symbol.Value));
+
+            return GetSymbolProperties(market, stringSymbol, securityType, defaultQuoteCurrency);
+        }
+
+        /// <summary>
         /// Gets the instance of the <see cref="SymbolPropertiesDatabase"/> class produced by reading in the symbol properties
         /// data found in /Data/symbol-properties/
         /// </summary>
@@ -128,8 +146,9 @@ namespace QuantConnect.Securities
             return new SymbolProperties(
                 description: csv[3], 
                 quoteCurrency: csv[4],
-                contractMultiplier: csv[5].ToDecimal(), 
-                pipSize: csv[6].ToDecimal());
+                contractMultiplier: csv[5].ToDecimal(),
+                minimumPriceVariation: csv[6].ToDecimal(),
+                lotSize: csv[7].ToDecimal());
         }
 
 

@@ -35,6 +35,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private readonly IEnumerator<BaseData> _enumerator;
         private readonly TimeZoneOffsetProvider _offsetProvider;
 
+        private BaseData _lastEmittedValue;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="FrontierAwareEnumerator"/> class
         /// </summary>
@@ -69,6 +71,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     // we can now emit the underlyingCurrent as part of this time slice
                     _current = underlyingCurrent;
                     _needsMoveNext = true;
+                    _lastEmittedValue = _current;
                 }
                 else
                 {
@@ -91,8 +94,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
             if (underlyingCurrent != null && underlyingCurrent.EndTime <= localFrontier)
             {
-                _needsMoveNext = true;
-                _current = underlyingCurrent;
+                // only emit if new data available (skip custom data if same time/value)
+                if (_lastEmittedValue != null && 
+                    _lastEmittedValue.DataType == MarketDataType.Base && 
+                    _lastEmittedValue.EndTime == underlyingCurrent.EndTime &&
+                    _lastEmittedValue.Value == underlyingCurrent.Value)
+                {
+                    _current = null;
+                }
+                else
+                {
+                    _needsMoveNext = true;
+                    _current = underlyingCurrent;
+                    _lastEmittedValue = _current;
+                }
             }
             else
             {

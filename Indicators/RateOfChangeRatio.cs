@@ -49,7 +49,7 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
-            var denominator = IsReady ? window.MostRecentlyRemoved : window[window.Count - 1];
+            var denominator = window.Samples > window.Size ? window.MostRecentlyRemoved : window[window.Count - 1];
 
             return denominator != 0 ? input / denominator : 0m;
         }

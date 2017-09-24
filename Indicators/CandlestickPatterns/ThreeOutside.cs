@@ -63,7 +63,7 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         /// <param name="window">The window of data held in this indicator</param>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IReadOnlyWindow<TradeBar> window, TradeBar input)
+        protected override decimal ComputeNextValue(IReadOnlyWindow<IBaseDataBar> window, IBaseDataBar input)
         {
             if (!IsReady)
             {

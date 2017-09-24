@@ -15,7 +15,6 @@
 
 using System;
 using System.Globalization;
-using System.IO;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 
@@ -35,7 +34,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Quantity exchanged in a trade.
         /// </summary>
-        public int Quantity = 0;
+        public decimal Quantity = 0;
 
         /// <summary>
         /// Exchange we are executing on. String short code expanded in the MarketCodes.US global dictionary
@@ -78,12 +77,12 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Size of bid quote.
         /// </summary>
-        public long BidSize = 0;
+        public decimal BidSize = 0;
 
         /// <summary>
         /// Size of ask quote.
         /// </summary>
-        public long AskSize = 0;
+        public decimal AskSize = 0;
 
         //In Base Class: Alias of Closing:
         //public decimal Price;
@@ -152,7 +151,6 @@ namespace QuantConnect.Data.Market
             AskPrice = ask;
         }
 
-
         /// <summary>
         /// Initializer for a last-trade equity tick with bid or ask prices. 
         /// </summary>
@@ -201,14 +199,13 @@ namespace QuantConnect.Data.Market
             DataType = MarketDataType.Tick;
             Symbol = symbol;
             Time = baseDate.Date.AddMilliseconds(csv[0].ToInt32());
-            Value = csv[1].ToDecimal()/10000m;
+            Value = csv[1].ToDecimal() / GetScaleFactor(symbol.SecurityType);
             TickType = TickType.Trade;
-            Quantity = csv[2].ToInt32();
+            Quantity = csv[2].ToDecimal();
             Exchange = csv[3].Trim();
             SaleCondition = csv[4];
             Suspicious = csv[5].ToInt32() == 1;
         }
-
 
         /// <summary>
         /// Parse a tick data line from quantconnect zip source files.
@@ -223,7 +220,8 @@ namespace QuantConnect.Data.Market
                 DataType = MarketDataType.Tick;
 
                 // Which security type is this data feed:
-                const decimal scaleFactor = 10000m;
+                var scaleFactor = GetScaleFactor(config.SecurityType);
+
                 switch (config.SecurityType)
                 {
                     case SecurityType.Equity:
@@ -233,7 +231,7 @@ namespace QuantConnect.Data.Market
                         Time = date.Date.AddMilliseconds(csv[0].ToInt64()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
                         Value = config.GetNormalizedPrice(csv[1].ToDecimal() / scaleFactor);
                         TickType = TickType.Trade;
-                        Quantity = csv[2].ToInt32();
+                        Quantity = csv[2].ToDecimal();
                         if (csv.Count > 3)
                         {
                             Exchange = csv[3];
@@ -245,6 +243,7 @@ namespace QuantConnect.Data.Market
 
                     case SecurityType.Forex:
                     case SecurityType.Cfd:
+                    case SecurityType.Crypto:
                     {
                         var csv = line.ToCsv(3);
                         Symbol = config.Symbol;
@@ -256,6 +255,7 @@ namespace QuantConnect.Data.Market
                         break;
                     }
 
+                    case SecurityType.Future:
                     case SecurityType.Option:
                     {
                         var csv = line.ToCsv(7);
@@ -266,22 +266,26 @@ namespace QuantConnect.Data.Market
                         if (TickType == TickType.Trade)
                         {
                             Value = config.GetNormalizedPrice(csv[1].ToDecimal()/scaleFactor);
-                            Quantity = csv[2].ToInt32();
+                            Quantity = csv[2].ToDecimal();
                             Exchange = csv[3];
                             SaleCondition = csv[4];
                             Suspicious = csv[5] == "1";
+                        }
+                        else if (TickType == TickType.OpenInterest)
+                        {
+                            Value = csv[1].ToDecimal();
                         }
                         else
                         {
                             if (csv[1].Length != 0)
                             {
                                 BidPrice = config.GetNormalizedPrice(csv[1].ToDecimal()/scaleFactor);
-                                BidSize = csv[2].ToInt32();
+                                BidSize = csv[2].ToDecimal();
                             }
                             if (csv[3].Length != 0)
                             {
                                 AskPrice = config.GetNormalizedPrice(csv[3].ToDecimal()/scaleFactor);
-                                AskSize = csv[4].ToInt32();
+                                AskSize = csv[4].ToDecimal();
                             }
                             Exchange = csv[5];
                             Suspicious = csv[6] == "1";
@@ -348,13 +352,13 @@ namespace QuantConnect.Data.Market
             }
 
             var source = LeanData.GenerateZipFilePath(Globals.DataFolder, config.Symbol, date, config.Resolution, config.TickType);
-            if (config.SecurityType == SecurityType.Option)
+            if (config.SecurityType == SecurityType.Option ||
+                config.SecurityType == SecurityType.Future)
             {
                 source += "#" + LeanData.GenerateZipEntryName(config.Symbol, date, config.Resolution, config.TickType);
             }
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
-
 
         /// <summary>
         /// Update the tick price information - not used.
@@ -370,9 +374,9 @@ namespace QuantConnect.Data.Market
             Value = lastTrade;
             BidPrice = bidPrice;
             AskPrice = askPrice;
-            BidSize = (long) bidSize;
-            AskSize = (long) askSize;
-            Quantity = Convert.ToInt32(volume);
+            BidSize = bidSize;
+            AskSize = askSize;
+            Quantity = Convert.ToDecimal(volume);
         }
 
         /// <summary>
@@ -382,7 +386,8 @@ namespace QuantConnect.Data.Market
         {
             return (TickType == TickType.Trade && LastPrice > 0.0m && Quantity > 0) ||
                    (TickType == TickType.Quote && AskPrice > 0.0m && AskSize > 0) ||
-                   (TickType == TickType.Quote && BidPrice > 0.0m && BidSize > 0);
+                   (TickType == TickType.Quote && BidPrice > 0.0m && BidSize > 0) ||
+                   (TickType == TickType.OpenInterest && Value > 0);
         }
 
         /// <summary>
@@ -392,6 +397,11 @@ namespace QuantConnect.Data.Market
         public override BaseData Clone()
         {
             return new Tick(this);
+        }
+
+        private static decimal GetScaleFactor(SecurityType securityType)
+        {
+            return securityType == SecurityType.Equity || securityType == SecurityType.Option ? 10000m : 1;
         }
 
     } // End Tick Class:

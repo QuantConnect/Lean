@@ -25,7 +25,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using Newtonsoft.Json;
 using NodaTime;
-using QuantConnect.Data;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
 using Timer = System.Timers.Timer;
 
@@ -81,12 +81,13 @@ namespace QuantConnect
         /// Extension method to convert a byte array into a string.
         /// </summary>
         /// <param name="bytes">Byte array to convert.</param>
+        /// <param name="encoding">The encoding to use for the conversion. Defaults to Encoding.ASCII</param>
         /// <returns>String from bytes.</returns>
-        public static string GetString(this byte[] bytes) 
+        public static string GetString(this byte[] bytes, Encoding encoding = null)
         {
-            var chars = new char[bytes.Length / sizeof(char)];
-            Buffer.BlockCopy(bytes, 0, chars, 0, bytes.Length);
-            return new string(chars);
+            if (encoding == null) encoding = Encoding.ASCII;
+
+            return encoding.GetString(bytes);
         }
 
         /// <summary>
@@ -106,6 +107,23 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Encrypt the token:time data to make our API hash.
+        /// </summary>
+        /// <param name="data">Data to be hashed by SHA256</param>
+        /// <returns>Hashed string.</returns>
+        public static string ToSHA256(this string data)
+        {
+            var crypt = new SHA256Managed();
+            var hash = new StringBuilder();
+            var crypto = crypt.ComputeHash(Encoding.UTF8.GetBytes(data), 0, Encoding.UTF8.GetByteCount(data));
+            foreach (var theByte in crypto)
+            {
+                hash.Append(theByte.ToString("x2"));
+            }
+            return hash.ToString();
+        }
+
+        /// <summary>
         /// Extension method to automatically set the update value to same as "add" value for TryAddUpdate. 
         /// This makes the API similar for traditional and concurrent dictionaries.
         /// </summary>
@@ -117,6 +135,43 @@ namespace QuantConnect
         public static void AddOrUpdate<K, V>(this ConcurrentDictionary<K, V> dictionary, K key, V value)
         {
             dictionary.AddOrUpdate(key, value, (oldkey, oldvalue) => value);
+        }
+
+        /// <summary>
+        /// Extension method to automatically add/update lazy values in concurrent dictionary. 
+        /// </summary>
+        /// <typeparam name="TKey">Key type for dictionary</typeparam>
+        /// <typeparam name="TValue">Value type for dictonary</typeparam>
+        /// <param name="dictionary">Dictionary object we're operating on</param>
+        /// <param name="key">Key we want to add or update.</param>
+        /// <param name="addValueFactory">The function used to generate a value for an absent key</param>
+        /// <param name="updateValueFactory">The function used to generate a new value for an existing key based on the key's existing value</param>
+        public static TValue AddOrUpdate<TKey, TValue>(this ConcurrentDictionary<TKey, Lazy<TValue>> dictionary, TKey key, Func<TKey, TValue> addValueFactory, Func<TKey, TValue, TValue> updateValueFactory)
+        {
+            var result = dictionary.AddOrUpdate(key, new Lazy<TValue>(() => addValueFactory(key)), (key2, old) => new Lazy<TValue>(() => updateValueFactory(key2, old.Value)));
+            return result.Value;
+        }
+
+        /// <summary>
+        /// Adds the specified element to the collection with the specified key. If an entry does not exist for th
+        /// specified key then one will be created.
+        /// </summary>
+        /// <typeparam name="TKey">The key type</typeparam>
+        /// <typeparam name="TElement">The collection element type</typeparam>
+        /// <typeparam name="TCollection">The collection type</typeparam>
+        /// <param name="dictionary">The source dictionary to be added to</param>
+        /// <param name="key">The key</param>
+        /// <param name="element">The element to be added</param>
+        public static void Add<TKey, TElement, TCollection>(this IDictionary<TKey, TCollection> dictionary, TKey key, TElement element)
+            where TCollection : ICollection<TElement>, new()
+        {
+            TCollection list;
+            if (!dictionary.TryGetValue(key, out list))
+            {
+                list = new TCollection();
+                dictionary.Add(key, list);
+            }
+            list.Add(element);
         }
 
         /// <summary>
@@ -164,7 +219,20 @@ namespace QuantConnect
             return (decimal)d.RoundToSignificantDigits(7);
         }
 
-        private static decimal Normalize(decimal input)
+        /// <summary>
+        /// Casts the specified input value to a decimal while acknowledging the overflow conditions
+        /// </summary>
+        /// <param name="input">The value to be cast</param>
+        /// <returns>The input value as a decimal, if the value is too large or to small to be represented
+        /// as a decimal, then the closest decimal value will be returned</returns>
+        public static decimal SafeDecimalCast(this double input)
+        {
+            if (input <= (double) decimal.MinValue) return decimal.MinValue;
+            if (input >= (double) decimal.MaxValue) return decimal.MaxValue;
+            return (decimal) input;
+        }
+
+        public static decimal Normalize(this decimal input)
         {
             // http://stackoverflow.com/a/7983330/1582922
             return input / 1.000000000000000000000000000000000m;
@@ -174,21 +242,40 @@ namespace QuantConnect
         /// Extension method for faster string to decimal conversion. 
         /// </summary>
         /// <param name="str">String to be converted to positive decimal value</param>
-        /// <remarks>Method makes some assuptions - always numbers, no "signs" +,- etc.</remarks>
+        /// <remarks>
+        /// Leading and trailing whitespace chars are ignored
+        /// </remarks>
         /// <returns>Decimal value of the string</returns>
         public static decimal ToDecimal(this string str)
         {
             long value = 0;
             var decimalPlaces = 0;
-            bool hasDecimals = false;
+            var hasDecimals = false;
+            var index = 0;
+            var length = str.Length;
 
-            for (var i = 0; i < str.Length; i++)
+            while (index < length && char.IsWhiteSpace(str[index]))
             {
-                var ch = str[i];
+                index++;
+            }
+
+            var isNegative = index < length && str[index] == '-';
+            if (isNegative)
+            {
+                index++;
+            }
+
+            while (index < length)
+            {
+                var ch = str[index++];
                 if (ch == '.')
                 {
                     hasDecimals = true;
                     decimalPlaces = 0;
+                }
+                else if (char.IsWhiteSpace(ch))
+                {
+                    break;
                 }
                 else
                 {
@@ -199,7 +286,7 @@ namespace QuantConnect
 
             var lo = (int)value;
             var mid = (int)(value >> 32);
-            return new decimal(lo, mid, 0, false, (byte)(hasDecimals ? decimalPlaces : 0));
+            return new decimal(lo, mid, 0, isNegative, (byte)(hasDecimals ? decimalPlaces : 0));
         }
 
         /// <summary>
@@ -255,6 +342,46 @@ namespace QuantConnect
             }
             if (last != 0) last = last + 1;
             csv.Add(str.Substring(last));
+            return csv;
+        }
+
+        /// <summary>
+        /// Breaks the specified string into csv components, works correctly with commas in data fields 
+        /// </summary>
+        /// <param name="str">The string to be broken into csv</param>
+        /// <param name="size">The expected size of the output list</param>
+        /// <returns>A list of the csv pieces</returns>
+        public static List<string> ToCsvData(this string str, int size = 4)
+        {
+            var csv = new List<string>(size);
+
+            int last = -1;
+            bool textDataField = false;
+
+            for (var i = 0; i < str.Length; i++)
+            {
+                switch (str[i])
+                {
+                    case '"':
+                        textDataField = !textDataField;
+                        break;
+                    case ',':
+                        if (!textDataField)
+                        {
+                            csv.Add(str.Substring(last + 1, (i - last)).Trim(' ', ','));
+                            last = i;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            if (last != str.Length - 1)
+            {
+                csv.Add(str.Substring(last + 1).Trim());
+            }
+
             return csv;
         }
 
@@ -456,6 +583,16 @@ namespace QuantConnect
             }
 
             return from.AtLeniently(LocalDateTime.FromDateTime(time)).ToDateTimeUtc();
+        }
+
+        /// <summary>
+        /// Business day here is defined as any day of the week that is not saturday or sunday
+        /// </summary>
+        /// <param name="date">The date to be examined</param>
+        /// <returns>A bool indicating wether the datetime is a weekday or not</returns>
+        public static bool IsCommonBusinessDay(this DateTime date)
+        {
+            return (date.DayOfWeek != DayOfWeek.Saturday && date.DayOfWeek != DayOfWeek.Sunday);
         }
 
         /// <summary>
@@ -684,6 +821,19 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Return the first in the series of names, or find the one that matches the configured algirithmTypeName
+        /// </summary>
+        /// <param name="names">The list of class names</param>
+        /// <param name="algorithmTypeName">The configured algorithm type name from the config</param>
+        /// <returns>The name of the class being run</returns>
+        public static string SingleOrAlgorithmTypeName(this List<string> names, string algorithmTypeName)
+        {
+            // if there's only one use that guy
+            // if there's more than one then find which one we should use using the algorithmTypeName specified
+            return names.Count == 1 ? names.Single() : names.SingleOrDefault(x => x.Contains("." + algorithmTypeName));
+        }
+
+        /// <summary>
         /// Converts the specified <paramref name="enum"/> value to its corresponding lower-case string representation
         /// </summary>
         /// <param name="enum">The enumeration value</param>
@@ -691,6 +841,57 @@ namespace QuantConnect
         public static string ToLower(this Enum @enum)
         {
             return @enum.ToString().ToLower();
+        }
+
+        /// <summary>
+        /// Turn order into an order ticket
+        /// </summary>
+        /// <param name="order">The <see cref="Order"/> being converted</param>
+        /// <param name="transactionManager">The transaction manager, <see cref="SecurityTransactionManager"/></param>
+        /// <returns></returns>
+        public static OrderTicket ToOrderTicket(this Order order, SecurityTransactionManager transactionManager)
+        {
+            var limitPrice = 0m;
+            var stopPrice = 0m;
+
+            switch (order.Type)
+            {
+                case OrderType.Limit:
+                    var limitOrder = order as LimitOrder;
+                    limitPrice = limitOrder.LimitPrice;
+                    break;
+                case OrderType.StopMarket:
+                    var stopMarketOrder = order as StopMarketOrder;
+                    stopPrice = stopMarketOrder.StopPrice;
+                    break;
+                case OrderType.StopLimit:
+                    var stopLimitOrder = order as StopLimitOrder;
+                    stopPrice = stopLimitOrder.StopPrice;
+                    limitPrice = stopLimitOrder.LimitPrice;
+                    break;
+                case OrderType.OptionExercise:
+                case OrderType.Market:
+                case OrderType.MarketOnOpen:
+                case OrderType.MarketOnClose:
+                    limitPrice = order.Price;
+                    stopPrice = order.Price;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            var submitOrderRequest = new SubmitOrderRequest(order.Type,
+                order.SecurityType,
+                order.Symbol,
+                order.Quantity,
+                stopPrice,
+                limitPrice,
+                order.Time,
+                order.Tag);
+
+            submitOrderRequest.SetOrderId(order.Id);
+
+            return new OrderTicket(transactionManager, submitOrderRequest);
         }
     }
 }

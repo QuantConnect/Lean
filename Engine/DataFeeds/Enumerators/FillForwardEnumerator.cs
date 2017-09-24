@@ -19,6 +19,7 @@ using System.Collections;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 
@@ -33,7 +34,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private DateTime? _delistedTime;
         private BaseData _previous;
         private bool _isFillingForward;
-        private bool _emittedAuxilliaryData;
         
         private readonly TimeSpan _dataResolution;
         private readonly bool _isExtendedMarketHours;
@@ -115,7 +115,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 }
             }
 
-            if (!_emittedAuxilliaryData && Current != null)
+            if (Current != null && Current.DataType != MarketDataType.Auxiliary)
             {
                 // only set the _previous if the last item we emitted was NOT auxilliary data,
                 // since _previous is used for fill forward behavior
@@ -145,12 +145,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     // we can fill forward the rest of this subscription if required
                     var endOfSubscription = (Current ?? _previous).Clone(true);
                     endOfSubscription.Time = _subscriptionEndTime.RoundDown(_dataResolution);
+                    endOfSubscription.EndTime = endOfSubscription.Time + _dataResolution;
                     if (RequiresFillForwardData(_fillForwardResolution.Value, _previous, endOfSubscription, out fillForward))
                     {
                         // don't mark as filling forward so we come back into this block, subscription is done
                         //_isFillingForward = true;
                         Current = fillForward;
-                        _emittedAuxilliaryData = false;
                         return true;
                     }
 
@@ -161,7 +161,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     }
                     
                     Current = endOfSubscription;
-                    _emittedAuxilliaryData = false;
                     return true;
                 }
             }
@@ -176,7 +175,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
             if (underlyingCurrent != null && underlyingCurrent.DataType == MarketDataType.Auxiliary)
             {
-                _emittedAuxilliaryData = true;
                 Current = underlyingCurrent;
                 var delisting = Current as Delisting;
                 if (delisting != null && delisting.Type == DelistingType.Delisted)
@@ -186,7 +184,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 return true;
             }
             
-            _emittedAuxilliaryData = false;
             if (RequiresFillForwardData(_fillForwardResolution.Value, _previous, underlyingCurrent, out fillForward))
             {
                 // we require fill forward data because the _enumerator.Current is too far in future
@@ -230,7 +227,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         {
             if (next.EndTime < previous.Time)
             {
-                throw new ArgumentException("FillForwardEnumerator received data out of order. Symbol: " + previous.Symbol.ID);
+                Log.Error("FillForwardEnumerator received data out of order. Symbol: " + previous.Symbol.ID);
+                fillForward = null;
+                return false;
             }
 
             // check to see if the gap between previous and next warrants fill forward behavior
@@ -247,6 +246,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 // this is the normal case where we had a hole in the middle of the day
                 fillForward = previous.Clone(true);
                 fillForward.Time = (previous.Time + fillForwardResolution).RoundDown(fillForwardResolution);
+                fillForward.EndTime = fillForward.Time + _dataResolution;
                 return true;
             }
 
@@ -269,6 +269,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 // if next is still in the future then we need to emit a fill forward for market open
                 fillForward = previous.Clone(true);
                 fillForward.Time = (nextFillForwardTime - _dataResolution).RoundDown(fillForwardResolution);
+                fillForward.EndTime = fillForward.Time + _dataResolution;
                 return true;
             }
 

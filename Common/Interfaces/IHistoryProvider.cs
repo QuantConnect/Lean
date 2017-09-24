@@ -40,8 +40,10 @@ namespace QuantConnect.Interfaces
         /// <param name="job">The job</param>
         /// <param name="mapFileProvider">Provider used to get a map file resolver to handle equity mapping</param>
         /// <param name="factorFileProvider">Provider used to get factor files to handle equity price scaling</param>
+        /// <param name="dataProvider">Provider used to get data when it is not present on disk</param>
         /// <param name="statusUpdate">Function used to send status updates</param>
-        void Initialize(AlgorithmNodePacket job, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, Action<int> statusUpdate);
+        /// <param name="dataCacheProvider">Provider used to cache history data files</param>
+        void Initialize(AlgorithmNodePacket job, IDataProvider dataProvider, IDataCacheProvider dataCacheProvider, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, Action<int> statusUpdate);
 
         /// <summary>
         /// Gets the history for the requested securities

@@ -155,7 +155,8 @@ namespace QuantConnect.Tests.Common.Util
                 holidays = Enumerable.Empty<DateTime>();
             }
 
-            var exchangeHours = new SecurityExchangeHours(exchangeTimeZone, holidays, marketHours.ToDictionary(x => x.DayOfWeek));
+            var earlyCloses = new Dictionary<DateTime, TimeSpan>();
+            var exchangeHours = new SecurityExchangeHours(exchangeTimeZone, holidays, marketHours.ToDictionary(x => x.DayOfWeek), earlyCloses);
             return new MarketHoursDatabase.Entry(dataTimeZone, exchangeHours);
         }
 

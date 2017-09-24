@@ -61,15 +61,22 @@ namespace QuantConnect.Indicators
             _rollingSum += input.Value;
             _rollingSumOfSquares += input.Value * input.Value;
 
-            if (Samples < Period)
+            if (Samples < 2)
                 return 0m;
 
-            var meanValue1 = _rollingSum / Period;
-            var meanValue2 = _rollingSumOfSquares / Period;
+            var n = Period;
+            if (Samples < n)
+                n = (int)Samples;
 
-            var removedValue = window[Period - 1];
-            _rollingSum -= removedValue;
-            _rollingSumOfSquares -= removedValue * removedValue;
+            var meanValue1 = _rollingSum / n;
+            var meanValue2 = _rollingSumOfSquares / n;
+
+            if (n == Period)
+            {
+                var removedValue = window[Period - 1];
+                _rollingSum -= removedValue;
+                _rollingSumOfSquares -= removedValue * removedValue;
+            }
 
             return meanValue2 - meanValue1 * meanValue1;
         }

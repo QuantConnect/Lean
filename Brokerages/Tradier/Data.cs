@@ -412,6 +412,10 @@ namespace QuantConnect.Brokerages.Tradier
         [JsonProperty(PropertyName = "type")]
         public string Type;
 
+        /// Unix date of the event
+        [JsonProperty(PropertyName = "date")]
+        public string UnixDate;
+
         /// Trading Stream: Symbol
         [JsonProperty(PropertyName = "symbol")]
         public string Symbol;

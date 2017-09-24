@@ -24,7 +24,7 @@ namespace QuantConnect.ToolBox
     /// </summary>
     public class FilteredDataProcessor : IDataProcessor
     {
-        private readonly Func<BaseData, bool> _predicate;
+        private readonly Func<IBaseData, bool> _predicate;
         private readonly IDataProcessor _processor;
 
         /// <summary>
@@ -32,7 +32,7 @@ namespace QuantConnect.ToolBox
         /// </summary>
         /// <param name="processor">The processor to filter data for</param>
         /// <param name="predicate">The filtering predicate to be applied</param>
-        public FilteredDataProcessor(IDataProcessor processor, Func<BaseData, bool> predicate)
+        public FilteredDataProcessor(IDataProcessor processor, Func<IBaseData, bool> predicate)
         {
             _predicate = predicate;
             _processor = processor;
@@ -42,7 +42,7 @@ namespace QuantConnect.ToolBox
         /// Invoked for each piece of data from the source file
         /// </summary>
         /// <param name="data">The data to be processed</param>
-        public void Process(BaseData data)
+        public void Process(IBaseData data)
         {
             if (_predicate(data))
             {

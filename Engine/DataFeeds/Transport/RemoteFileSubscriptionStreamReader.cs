@@ -17,6 +17,7 @@
 using System;
 using System.IO;
 using System.Net;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Transport
 {
@@ -29,11 +30,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         private readonly IStreamReader _streamReader;
 
         /// <summary>
-        /// Initializes a new insance of the <see cref="RemoteFileSubscriptionStreamReader"/> class.
+        /// Initializes a new instance of the <see cref="RemoteFileSubscriptionStreamReader"/> class.
         /// </summary>
+        /// <param name="dataCacheProvider">The <see cref="IDataCacheProvider"/> used to retrieve a stream of data</param>
         /// <param name="source">The remote url to be downloaded via web client</param>
         /// <param name="downloadDirectory">The local directory and destination of the download</param>
-        public RemoteFileSubscriptionStreamReader(string source, string downloadDirectory)
+        public RemoteFileSubscriptionStreamReader(IDataCacheProvider dataCacheProvider, string source, string downloadDirectory)
         {
             // create a hash for a new filename
             var filename = Guid.NewGuid() + source.GetExtension();
@@ -46,7 +48,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
             }
 
             // now we can just use the local file reader
-            _streamReader = new LocalFileSubscriptionStreamReader(destination);
+            _streamReader = new LocalFileSubscriptionStreamReader(dataCacheProvider, destination);
         }
 
         /// <summary>

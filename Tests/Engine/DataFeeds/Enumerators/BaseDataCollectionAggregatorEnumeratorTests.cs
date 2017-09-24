@@ -18,7 +18,6 @@ using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 {

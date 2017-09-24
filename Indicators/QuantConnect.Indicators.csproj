@@ -9,9 +9,10 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>QuantConnect.Indicators</RootNamespace>
     <AssemblyName>QuantConnect.Indicators</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <LangVersion>5</LangVersion>
+    <LangVersion>6</LangVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -21,7 +22,8 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Debug\QuantConnect.Indicators.XML</DocumentationFile>
+    <DocumentationFile>bin\Debug\QuantConnect.Indicators.xml</DocumentationFile>
+    <LangVersion>6</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -30,11 +32,11 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>6</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="MathNet.Numerics, Version=3.7.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\MathNet.Numerics.3.7.0\lib\net40\MathNet.Numerics.dll</HintPath>
+    <Reference Include="MathNet.Numerics, Version=3.19.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MathNet.Numerics.3.19.0\lib\net40\MathNet.Numerics.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -46,8 +48,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AbsolutePriceOscillator.cs" />
+    <Compile Include="AccelerationBands.cs" />
     <Compile Include="AccumulationDistribution.cs" />
     <Compile Include="AccumulationDistributionOscillator.cs" />
+    <Compile Include="ArnaudLegouxMovingAverage.cs" />
     <Compile Include="AverageDirectionalIndex.cs" />
     <Compile Include="AverageDirectionalMovementIndexRating.cs" />
     <Compile Include="BalanceOfPower.cs" />
@@ -118,6 +123,15 @@
     <Compile Include="ChandeMomentumOscillator.cs" />
     <Compile Include="DonchianChannel.cs" />
     <Compile Include="DoubleExponentialMovingAverage.cs" />
+    <Compile Include="FractalAdaptiveMovingAverage.cs" />
+    <Compile Include="FilteredIdentity.cs" />
+    <Compile Include="HullMovingAverage.cs" />
+    <Compile Include="MassIndex.cs" />
+    <Compile Include="RegressionChannel.cs" />
+    <Compile Include="SwissArmyKnife.cs" />
+    <Compile Include="TradeBarIndicator.cs" />
+    <Compile Include="VolumeWeightedAveragePriceIndicator.cs" />
+    <Compile Include="FisherTransform.cs" />
     <Compile Include="HeikinAshi.cs" />
     <Compile Include="IchimokuKinkoHyo.cs" />
     <Compile Include="IndicatorResult.cs" />
@@ -126,6 +140,8 @@
     <Compile Include="KeltnerChannels.cs" />
     <Compile Include="LeastSquaresMovingAverage.cs" />
     <Compile Include="LogReturn.cs" />
+    <Compile Include="MidPrice.cs" />
+    <Compile Include="MidPoint.cs" />
     <Compile Include="Momersion.cs" />
     <Compile Include="NormalizedAverageTrueRange.cs" />
     <Compile Include="OnBalanceVolume.cs" />
@@ -134,11 +150,15 @@
     </Compile>
     <Compile Include="LinearWeightedMovingAverage.cs" />
     <Compile Include="ParabolicStopAndReverse.cs" />
+    <Compile Include="PercentagePriceOscillator.cs" />
+    <Compile Include="WindowIdentity.cs" />
     <Compile Include="T3MovingAverage.cs" />
     <Compile Include="RateOfChangeRatio.cs" />
+    <Compile Include="Trix.cs" />
     <Compile Include="TrueRange.cs" />
     <Compile Include="TripleExponentialMovingAverage.cs" />
     <Compile Include="TriangularMovingAverage.cs" />
+    <Compile Include="UltimateOscillator.cs" />
     <Compile Include="Variance.cs" />
     <Compile Include="WilliamsPercentR.cs" />
     <Compile Include="AroonOscillator.cs" />
@@ -152,9 +172,7 @@
     <Compile Include="Identity.cs" />
     <Compile Include="Indicator.cs" />
     <Compile Include="IndicatorBase.cs" />
-    <Compile Include="IndicatorDataPoint.cs" />
     <Compile Include="IndicatorExtensions.cs" />
-    <Compile Include="IReadOnlyWindow.cs" />
     <Compile Include="MeanAbsoluteDeviation.cs" />
     <Compile Include="Minimum.cs" />
     <Compile Include="Momentum.cs" />
@@ -168,11 +186,10 @@
     <Compile Include="RelativeStrengthIndex.cs" />
     <Compile Include="Stochastics.cs" />
     <Compile Include="Sum.cs" />
-    <Compile Include="RollingWindow.cs" />
     <Compile Include="SimpleMovingAverage.cs" />
     <Compile Include="MovingAverageTypeExtensions.cs" />
     <Compile Include="Maximum.cs" />
-    <Compile Include="TradeBarIndicator.cs" />
+    <Compile Include="BarIndicator.cs" />
     <Compile Include="WindowIndicator.cs" />
     <Compile Include="StandardDeviation.cs" />
     <Compile Include="BollingerBands.cs" />
@@ -185,6 +202,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IndicatorBase.Operators.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

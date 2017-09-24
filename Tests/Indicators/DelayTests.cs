@@ -47,7 +47,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void DelayTakesPeriodPlus2UpdaesToEmitNonInitialPoint()
+        public void DelayTakesPeriodPlus2UpdatesToEmitNonInitialPoint()
         {
             int start = 1;
             int count = 10;

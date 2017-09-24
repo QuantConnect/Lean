@@ -19,6 +19,8 @@ using com.fxcm.fix;
 using com.fxcm.fix.posttrade;
 using com.fxcm.fix.trade;
 using com.sun.rowset;
+using java.util;
+using NodaTime;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Brokerages.Fxcm
@@ -170,26 +172,75 @@ namespace QuantConnect.Brokerages.Fxcm
         }
 
         /// <summary>
-        /// Converts a Java Date value to a DateTime value
+        /// Converts a Java Date value to a UTC DateTime value
         /// </summary>
         /// <param name="javaDate">The Java date</param>
         /// <returns></returns>
-        private static DateTime FromJavaDate(java.util.Date javaDate)
+        private static DateTime FromJavaDate(Date javaDate)
         {
-            var cal = java.util.Calendar.getInstance();
-            cal.setTime(javaDate);
+            // Convert javaDate to UTC Instant (Epoch)
+            var instant = Instant.FromMillisecondsSinceUnixEpoch(javaDate.getTime());
 
-            // note that the Month component of java.util.Date  
-            // from 0-11 (i.e. Jan == 0)
-            return new DateTime(cal.get(java.util.Calendar.YEAR),
-                                cal.get(java.util.Calendar.MONTH) + 1,
-                                cal.get(java.util.Calendar.DAY_OF_MONTH),
-                                cal.get(java.util.Calendar.HOUR_OF_DAY),
-                                cal.get(java.util.Calendar.MINUTE),
-                                cal.get(java.util.Calendar.SECOND),
-                                cal.get(java.util.Calendar.MILLISECOND));
+            // Convert to .Net UTC DateTime
+            return instant.ToDateTimeUtc();
         }
 
+        /// <summary>
+        /// Converts a LEAN Resolution to an IFXCMTimingInterval
+        /// </summary>
+        /// <param name="resolution">The resolution to convert</param>
+        /// <returns></returns>
+        public static IFXCMTimingInterval ToFxcmInterval(Resolution resolution)
+        {
+            IFXCMTimingInterval interval = null;
+
+            switch (resolution)
+            {
+                case Resolution.Tick:
+                    interval = FXCMTimingIntervalFactory.TICK;
+
+                    break;
+                case Resolution.Second:
+                    interval = FXCMTimingIntervalFactory.SEC10;
+
+                    break;
+                case Resolution.Minute:
+                    interval = FXCMTimingIntervalFactory.MIN1;
+
+                    break;
+                case Resolution.Hour:
+                    interval = FXCMTimingIntervalFactory.HOUR1;
+
+                    break;
+                case Resolution.Daily:
+                    interval = FXCMTimingIntervalFactory.DAY1;
+
+                    break;
+            }
+
+            return interval;
+        }
+
+        /// <summary>
+        /// Converts a Java Date value to a UTC DateTime value
+        /// </summary>
+        /// <param name="utcDateTime">The UTC DateTime value</param>
+        /// <returns>A UTC Java Date value</returns>
+        public static Date ToJavaDateUtc(DateTime utcDateTime)
+        {
+            var cal = Calendar.getInstance();
+            cal.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+
+            cal.set(Calendar.YEAR, utcDateTime.Year);
+            cal.set(Calendar.MONTH, utcDateTime.Month - 1);
+            cal.set(Calendar.DAY_OF_MONTH, utcDateTime.Day);
+            cal.set(Calendar.HOUR_OF_DAY, utcDateTime.Hour);
+            cal.set(Calendar.MINUTE, utcDateTime.Minute);
+            cal.set(Calendar.SECOND, utcDateTime.Second);
+            cal.set(Calendar.MILLISECOND, utcDateTime.Millisecond);
+
+            return cal.getTime();
+        }
 
         //
         // So it turns out that in order to properly load the QuantConnect.Brokerages

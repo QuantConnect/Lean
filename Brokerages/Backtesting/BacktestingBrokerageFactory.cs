@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
@@ -23,16 +22,8 @@ namespace QuantConnect.Brokerages.Backtesting
     /// <summary>
     /// Factory type for the <see cref="BacktestingBrokerage"/>
     /// </summary>
-    public class BacktestingBrokerageFactory : IBrokerageFactory
+    public class BacktestingBrokerageFactory : BrokerageFactory
     {
-        /// <summary>
-        /// Gets the type of brokerage produced by this factory
-        /// </summary>
-        public Type BrokerageType
-        {
-            get { return typeof(BacktestingBrokerage); }
-        }
-
         /// <summary>
         /// Gets the brokerage data required to run the IB brokerage from configuration
         /// </summary>
@@ -40,7 +31,7 @@ namespace QuantConnect.Brokerages.Backtesting
         /// The implementation of this property will create the brokerage data dictionary required for
         /// running live jobs. See <see cref="IJobQueueHandler.NextJob"/>
         /// </remarks>
-        public Dictionary<string, string> BrokerageData
+        public override Dictionary<string, string> BrokerageData
         {
             get { return new Dictionary<string, string>(); }
         }
@@ -48,7 +39,7 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <summary>
         /// Gets a new instance of the <see cref="InteractiveBrokersBrokerageModel"/>
         /// </summary>
-        public IBrokerageModel BrokerageModel
+        public override IBrokerageModel BrokerageModel
         {
             get { return new InteractiveBrokersBrokerageModel(); }
         }
@@ -59,7 +50,7 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <param name="job">The job packet to create the brokerage for</param>
         /// <param name="algorithm">The algorithm instance</param>
         /// <returns>A new brokerage instance</returns>
-        public IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm)
+        public override IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm)
         {
             return new BacktestingBrokerage(algorithm);
         }
@@ -68,9 +59,17 @@ namespace QuantConnect.Brokerages.Backtesting
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         /// <filterpriority>2</filterpriority>
-        public void Dispose()
+        public override void Dispose()
         {
             // NOP
+        }
+
+        /// <summary>
+        ///Initializes a new instance of the <see cref="BacktestingBrokerageFactory"/> class
+        /// </summary>
+        public BacktestingBrokerageFactory() 
+            : base(typeof(BacktestingBrokerage))
+        {
         }
     }
 }

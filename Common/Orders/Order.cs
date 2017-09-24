@@ -17,8 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Cfd;
-using QuantConnect.Securities.Forex;
 
 namespace QuantConnect.Orders
 {
@@ -46,11 +44,16 @@ namespace QuantConnect.Orders
         /// Symbol of the Asset
         /// </summary>
         public Symbol Symbol { get; internal set; }
-        
+
         /// <summary>
         /// Price of the Order.
         /// </summary>
         public decimal Price { get; internal set; }
+
+        /// <summary>
+        /// Currency for the order price
+        /// </summary>
+        public string PriceCurrency { get; internal set; }
 
         /// <summary>
         /// Time the order was created.
@@ -60,7 +63,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Number of shares to execute.
         /// </summary>
-        public int Quantity { get; internal set; }
+        public decimal Quantity { get; internal set; }
 
         /// <summary>
         /// Order Type
@@ -120,7 +123,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public decimal Value
         {
-            get { return Quantity*Price; }
+            get { return Quantity * Price; }
         }
 
         /// <summary>
@@ -130,6 +133,7 @@ namespace QuantConnect.Orders
         {
             Time = new DateTime();
             Price = 0;
+            PriceCurrency = string.Empty;
             Quantity = 0;
             Symbol = Symbol.Empty;
             Status = OrderStatus.None;
@@ -147,10 +151,11 @@ namespace QuantConnect.Orders
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
         /// <param name="time">Time the order was placed</param>
         /// <param name="tag">User defined data tag for this order</param>
-        protected Order(Symbol symbol, int quantity, DateTime time, string tag = "")
+        protected Order(Symbol symbol, decimal quantity, DateTime time, string tag = "")
         {
             Time = time;
             Price = 0;
+            PriceCurrency = string.Empty;
             Quantity = quantity;
             Symbol = symbol;
             Status = OrderStatus.None;
@@ -231,6 +236,7 @@ namespace QuantConnect.Orders
             order.ContingentId = ContingentId;
             order.Duration = Duration;
             order.Price = Price;
+            order.PriceCurrency = PriceCurrency;
             order.Quantity = Quantity;
             order.Status = Status;
             order.Symbol = Symbol;
@@ -264,6 +270,9 @@ namespace QuantConnect.Orders
                     break;
                 case OrderType.MarketOnClose:
                     order = new MarketOnCloseOrder(request.Symbol, request.Quantity, request.Time, request.Tag);
+                    break;
+                case OrderType.OptionExercise:
+                    order = new OptionExerciseOrder(request.Symbol, request.Quantity, request.Time, request.Tag);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

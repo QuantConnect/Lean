@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,7 @@ using Newtonsoft.Json;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using RestSharp;
 
 namespace QuantConnect.Messaging
 {
@@ -33,6 +34,12 @@ namespace QuantConnect.Messaging
         /// </summary>
         public static readonly bool IsEnabled = Config.GetBool("send-via-api");
 
+        // Client for sending asynchronous requests.
+        private static readonly RestClient Client = new RestClient("http://streaming.quantconnect.com")
+        {
+            Timeout = 300000
+        };
+
         /// <summary>
         /// Send a message to the QuantConnect Chart Streaming API.
         /// </summary>
@@ -43,28 +50,42 @@ namespace QuantConnect.Messaging
         {
             try
             {
-                using (var client = new WebClient())
+                var tx = JsonConvert.SerializeObject(packet);
+                if (tx.Length > 10000)
                 {
-                    var tx = JsonConvert.SerializeObject(packet);
-                    if (tx.Length > 10000)
-                    {
-                        Log.Trace("StreamingApi.Transmit(): Packet too long: " + packet.GetType());
-                    }
-
-                    var response = client.UploadValues("http://streaming.quantconnect.com", new NameValueCollection
-                    {
-                        {"uid", userId.ToString()},
-                        {"token", apiToken},
-                        {"tx", tx}
-                    });
-
-                    //Deserialize the response from the streaming API and throw in error case.
-                    var result = JsonConvert.DeserializeObject<Response>(System.Text.Encoding.UTF8.GetString(response));
-                    if (result.Type == "error")
-                    {
-                        throw new Exception(result.Message);
-                    }
+                    Log.Trace("StreamingApi.Transmit(): Packet too long: " + packet.GetType());
+                    return;
                 }
+                if (userId == 0)
+                {
+                    Log.Error("StreamingApi.Transmit(): UserId is not set. Check your config.json file 'job-user-id' property.");
+                    return;
+                }
+                if (apiToken == "")
+                {
+                    Log.Error("StreamingApi.Transmit(): API Access token not set. Check your config.json file 'api-access-token' property.");
+                    return;
+                }
+
+                var request = new RestRequest();
+                request.AddParameter("uid", userId);
+                request.AddParameter("token", apiToken);
+                request.AddParameter("tx", tx);
+                Client.ExecuteAsyncPost(request, (response, handle) =>
+                {
+                    try
+                    {
+                        var result = JsonConvert.DeserializeObject<Response>(response.Content);
+                        if (result.Type == "error")
+                        {
+                            Log.Error(new Exception(result.Message), "PacketType: " + packet.Type);
+                        }
+                    }
+                    catch
+                    {
+                        Log.Error("StreamingApi.Client.ExecuteAsyncPost(): Error deserializing JSON content.");
+                    }
+                }, "POST");
             }
             catch (Exception err)
             {

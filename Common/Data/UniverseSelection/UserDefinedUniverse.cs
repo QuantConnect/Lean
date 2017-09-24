@@ -118,7 +118,8 @@ namespace QuantConnect.Data.UniverseSelection
                     break;
                 
                 case SecurityType.Option:
-                    sid = SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, ticker, market, 0, 0, 0);
+                    var underlying = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, ticker, market);
+                    sid = SecurityIdentifier.GenerateOption(SecurityIdentifier.DefaultDate, underlying, market, 0, 0, 0);
                     break;
                 
                 case SecurityType.Forex:
@@ -129,8 +130,15 @@ namespace QuantConnect.Data.UniverseSelection
                     sid = SecurityIdentifier.GenerateCfd(ticker, market);
                     break;
 
-                case SecurityType.Commodity:
                 case SecurityType.Future:
+                    sid = SecurityIdentifier.GenerateFuture(SecurityIdentifier.DefaultDate, ticker, market);
+                    break;
+
+                case SecurityType.Crypto:
+                    sid = SecurityIdentifier.GenerateCrypto(ticker, market);
+                    break;
+
+                case SecurityType.Commodity:
                 default:
                     throw new NotImplementedException("The specified security type is not implemented yet: " + securityType);
             }
@@ -197,7 +205,7 @@ namespace QuantConnect.Data.UniverseSelection
                     yield return dateTime;
                     first = false;
                 }
-                if (exchangeHours.IsOpen(dateTime, dateTime + Interval, Configuration.ExtendedMarketHours))
+                else if (exchangeHours.IsOpen(dateTime, dateTime + Interval, Configuration.ExtendedMarketHours))
                 {
                     yield return dateTime;
                 }

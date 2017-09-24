@@ -14,7 +14,9 @@
 */
 
 using System;
+using System.Linq;
 using QuantConnect.Data.Market;
+using QuantConnect.Logging;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Orders.Fills
@@ -44,7 +46,7 @@ namespace QuantConnect.Orders.Fills
             if (!IsExchangeOpen(asset)) return fill;
 
             //Order [fill]price for a market order model is the current security price
-            fill.FillPrice = asset.Price;
+            fill.FillPrice = GetPrices(asset, order.Direction).Current;
             fill.Status = OrderStatus.Filled;
 
             //Calculate the model slippage: e.g. 0.01c
@@ -92,9 +94,7 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             //Get the range of prices in the last bar:
-            decimal minimumPrice;
-            decimal maximumPrice;
-            DataMinMaxPrices(asset, out minimumPrice, out maximumPrice);
+            var prices = GetPrices(asset, order.Direction);
 
             //Calculate the model slippage: e.g. 0.01c
             var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
@@ -104,21 +104,21 @@ namespace QuantConnect.Orders.Fills
             {
                 case OrderDirection.Sell:
                     //-> 1.1 Sell Stop: If Price below setpoint, Sell:
-                    if (minimumPrice < order.StopPrice)
+                    if (prices.Low < order.StopPrice)
                     {
                         fill.Status = OrderStatus.Filled;
                         // Assuming worse case scenario fill - fill at lowest of the stop & asset price.
-                        fill.FillPrice = Math.Min(order.StopPrice, asset.Price - slip); 
+                        fill.FillPrice = Math.Min(order.StopPrice, prices.Current - slip); 
                     }
                     break;
 
                 case OrderDirection.Buy:
                     //-> 1.2 Buy Stop: If Price Above Setpoint, Buy:
-                    if (maximumPrice > order.StopPrice)
+                    if (prices.High > order.StopPrice)
                     {
                         fill.Status = OrderStatus.Filled;
                         // Assuming worse case scenario fill - fill at highest of the stop & asset price.
-                        fill.FillPrice = Math.Max(order.StopPrice, asset.Price + slip);
+                        fill.FillPrice = Math.Max(order.StopPrice, prices.Current + slip);
                     }
                     break;
             }
@@ -158,16 +158,14 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             //Get the range of prices in the last bar:
-            decimal minimumPrice;
-            decimal maximumPrice;
-            DataMinMaxPrices(asset, out minimumPrice, out maximumPrice);
+            var prices = GetPrices(asset, order.Direction);
 
             //Check if the Stop Order was filled: opposite to a limit order
             switch (order.Direction)
             {
                 case OrderDirection.Buy:
                     //-> 1.2 Buy Stop: If Price Above Setpoint, Buy:
-                    if (maximumPrice > order.StopPrice || order.StopTriggered)
+                    if (prices.High > order.StopPrice || order.StopTriggered)
                     {
                         order.StopTriggered = true;
 
@@ -183,7 +181,7 @@ namespace QuantConnect.Orders.Fills
 
                 case OrderDirection.Sell:
                     //-> 1.1 Sell Stop: If Price below setpoint, Sell:
-                    if (minimumPrice < order.StopPrice || order.StopTriggered)
+                    if (prices.Low < order.StopPrice || order.StopTriggered)
                     {
                         order.StopTriggered = true;
 
@@ -226,32 +224,30 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             //Get the range of prices in the last bar:
-            decimal minimumPrice;
-            decimal maximumPrice;
-            DataMinMaxPrices(asset, out minimumPrice, out maximumPrice);
+            var prices = GetPrices(asset, order.Direction);
 
             //-> Valid Live/Model Order: 
             switch (order.Direction)
             {
                 case OrderDirection.Buy:
                     //Buy limit seeks lowest price
-                    if (minimumPrice < order.LimitPrice)
+                    if (prices.Low < order.LimitPrice)
                     {
                         //Set order fill:
                         fill.Status = OrderStatus.Filled;
                         // fill at the worse price this bar or the limit price, this allows far out of the money limits
                         // to be executed properly
-                        fill.FillPrice = Math.Min(maximumPrice, order.LimitPrice);
+                        fill.FillPrice = Math.Min(prices.High, order.LimitPrice);
                     }
                     break;
                 case OrderDirection.Sell:
                     //Sell limit seeks highest price possible
-                    if (maximumPrice > order.LimitPrice)
+                    if (prices.High > order.LimitPrice)
                     {
                         fill.Status = OrderStatus.Filled;
                         // fill at the worse price this bar or the limit price, this allows far out of the money limits
                         // to be executed properly
-                        fill.FillPrice = Math.Max(minimumPrice, order.LimitPrice);
+                        fill.FillPrice = Math.Max(prices.Low, order.LimitPrice);
                     }
                     break;
             }
@@ -299,7 +295,7 @@ namespace QuantConnect.Orders.Fills
             // make sure the exchange is open before filling
             if (!IsExchangeOpen(asset)) return fill;
 
-            fill.FillPrice = asset.Open;
+            fill.FillPrice = GetPrices(asset, order.Direction).Open;
             fill.Status = OrderStatus.Filled;
 
             //Calculate the model slippage: e.g. 0.01c
@@ -348,7 +344,7 @@ namespace QuantConnect.Orders.Fills
                 return fill;
             }
 
-            fill.FillPrice = asset.Close;
+            fill.FillPrice = GetPrices(asset, order.Direction).Close;
             fill.Status = OrderStatus.Filled;
 
             //Calculate the model slippage: e.g. 0.01c
@@ -379,23 +375,60 @@ namespace QuantConnect.Orders.Fills
         /// Get the minimum and maximum price for this security in the last bar:
         /// </summary>
         /// <param name="asset">Security asset we're checking</param>
-        /// <param name="minimumPrice">Minimum price in the last data bar</param>
-        /// <param name="maximumPrice">Minimum price in the last data bar</param>
-        public virtual void DataMinMaxPrices(Security asset, out decimal minimumPrice, out decimal maximumPrice)
+        /// <param name="direction">The order direction, decides whether to pick bid or ask</param>
+        private Prices GetPrices(Security asset, OrderDirection direction)
         {
-            var marketData = asset.GetLastData();
+            var low = asset.Low;
+            var high = asset.High;
+            var open = asset.Open;
+            var close = asset.Close;
+            var current = asset.Price;
 
-            var tradeBar = marketData as TradeBar;
-            if (tradeBar != null)
+            if (direction == OrderDirection.Hold)
             {
-                minimumPrice = tradeBar.Low;
-                maximumPrice = tradeBar.High;
+                return new Prices(current, open, high, low, close);
             }
-            else
+
+            // Only fill with data types we are subscribed to
+            var subscriptionTypes = asset.Subscriptions.Select(x => x.Type).ToList();
+
+            // Tick
+            var tick = asset.Cache.GetData<Tick>();
+            if (subscriptionTypes.Contains(typeof(Tick)) && tick != null)
             {
-                minimumPrice = marketData.Value;
-                maximumPrice = marketData.Value;
+                var price = direction == OrderDirection.Sell ? tick.BidPrice : tick.AskPrice;
+                if (price != 0m)
+                {
+                    return new Prices(price, 0, 0, 0, 0);
+                }
+
+                // If the ask/bid spreads are not available for ticks, try the price
+                price = tick.Price;
+                if (price != 0m)
+                {
+                    return new Prices(price, 0, 0, 0, 0);
+                }
             }
+
+            // Quote
+            var quoteBar = asset.Cache.GetData<QuoteBar>();
+            if (subscriptionTypes.Contains(typeof(QuoteBar)) && quoteBar != null)
+            {
+                var bar = direction == OrderDirection.Sell ? quoteBar.Bid : quoteBar.Ask;
+                if (bar != null)
+                {
+                    return new Prices(bar);
+                }
+            }
+
+            // Trade
+            var tradeBar = asset.Cache.GetData<TradeBar>();
+            if (subscriptionTypes.Contains(typeof(TradeBar)) && tradeBar != null)
+            {
+                return new Prices(tradeBar);
+            }
+
+            return new Prices(current, open, high, low, close);
         }
 
         /// <summary>
@@ -413,6 +446,29 @@ namespace QuantConnect.Orders.Fills
                 }
             }
             return true;
+        }
+
+        private class Prices
+        {
+            public readonly decimal Current;
+            public readonly decimal Open;
+            public readonly decimal High;
+            public readonly decimal Low;
+            public readonly decimal Close;
+
+            public Prices(IBar bar)
+                : this(bar.Close, bar.Open, bar.High, bar.Low, bar.Close)
+            {
+            }
+
+            public Prices(decimal current, decimal open, decimal high, decimal low, decimal close)
+            {
+                Current = current;
+                Open = open == 0 ? current : open;
+                High = high == 0 ? current : high;
+                Low = low == 0 ? current : low;
+                Close = close == 0 ? current : close;
+            }
         }
     }
 }

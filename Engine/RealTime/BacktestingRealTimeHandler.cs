@@ -22,6 +22,7 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Scheduling;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.RealTime
 {
@@ -58,7 +59,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             Add(ScheduledEventFactory.EveryAlgorithmEndOfDay(_algorithm, _resultHandler, _algorithm.StartDate, _algorithm.EndDate, ScheduledEvent.AlgorithmEndOfDayDelta));
 
             // set up the events for each security to fire every tradeable date before market close
-            foreach (var security in _algorithm.Securities.Values.Where(x => !x.SubscriptionDataConfig.IsInternalFeed))
+            foreach (var security in _algorithm.Securities.Values.Where(x => x.IsInternalFeed()))
             {
                 Add(ScheduledEventFactory.EverySecurityEndOfDay(_algorithm, _resultHandler, security, algorithm.StartDate, _algorithm.EndDate, ScheduledEvent.SecurityEndOfDayDelta));
             }
@@ -118,6 +119,22 @@ namespace QuantConnect.Lean.Engine.RealTime
             foreach (var scheduledEvent in _scheduledEvents)//.OrderBy(x => x.Value.NextEventUtcTime))
             {
                 scheduledEvent.Value.Scan(time);
+            }
+        }
+
+        /// <summary>
+        /// Scan for past events that didn't fire because there was no data at the scheduled time.
+        /// </summary>
+        /// <param name="time">Current time.</param>
+        public void ScanPastEvents(DateTime time)
+        {
+            foreach (var scheduledEvent in _scheduledEvents)
+            {
+                while (scheduledEvent.Value.NextEventUtcTime < time)
+                {
+                    _algorithm.SetDateTime(scheduledEvent.Value.NextEventUtcTime);
+                    scheduledEvent.Value.Scan(scheduledEvent.Value.NextEventUtcTime);
+                }
             }
         }
 

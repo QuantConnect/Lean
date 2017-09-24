@@ -73,36 +73,40 @@ namespace QuantConnect
             withinCustomLimits = withinCustomLimits ?? (() => null);
 
             var message = "";
+            var emaPeriod = 60d;
+            var memoryUsed = 0L;
             var end = DateTime.Now + timeSpan;
             var memoryLogger = DateTime.Now + TimeSpan.FromMinutes(1);
 
             //Convert to bytes
             memoryCap *= 1024 * 1024;
+            var spikeLimit = memoryCap*2;
 
             //Launch task
             var task = Task.Factory.StartNew(codeBlock, CancellationTokenSource.Token);
 
             while (!task.IsCompleted && DateTime.Now < end)
             {
-                var memoryUsed = GC.GetTotalMemory(false);
+                // if over 80% allocation force GC then sample
+                var sample = Convert.ToDouble(GC.GetTotalMemory(memoryUsed > memoryCap * 0.8));
 
-                if (memoryUsed > memoryCap)
+                // find the EMA of the memory used to prevent spikes killing stategy
+                memoryUsed = Convert.ToInt64((emaPeriod-1)/emaPeriod * memoryUsed + (1/emaPeriod)*sample);
+
+                // if the rolling EMA > cap; or the spike is more than 2x the allocation.
+                if (memoryUsed > memoryCap || sample > spikeLimit)
                 {
-                    if (GC.GetTotalMemory(true) > memoryCap)
-                    {
-                        message = "Execution Security Error: Memory Usage Maxed Out - " + Math.Round(Convert.ToDouble(memoryCap / (1024 * 1024))) + "MB max.";
-                        break;
-                    }
+                    message = "Execution Security Error: Memory Usage Maxed Out - " + PrettyFormatRam(memoryCap) + "MB max, with last sample of " + PrettyFormatRam((long)sample) + "MB.";
+                    break;
                 }
 
                 if (DateTime.Now > memoryLogger)
                 {
-                    if (memoryUsed > (memoryCap * 0.8))
+                    if (memoryUsed > memoryCap * 0.8)
                     {
-                        memoryUsed = GC.GetTotalMemory(true);
-                        Log.Error("Execution Security Error: Memory usage over 80% capacity.");
+                        Log.Error("Execution Security Error: Memory usage over 80% capacity. Sampled at {0}", sample);
                     }
-                    Log.Trace(DateTime.Now.ToString("u") + " Isolator.ExecuteWithTimeLimit(): Used: " + Math.Round(Convert.ToDouble(memoryUsed / (1024 * 1024))));
+                    Log.Trace("{0} Isolator.ExecuteWithTimeLimit(): Used: {1} Sample: {2}", DateTime.Now.ToString("u"), PrettyFormatRam(memoryUsed), PrettyFormatRam((long)sample));
                     memoryLogger = DateTime.Now.AddMinutes(1);
                 }
 
@@ -114,7 +118,7 @@ namespace QuantConnect
                     break;
                 }
 
-                Thread.Sleep(100);
+                Thread.Sleep(1000);
             }
 
             if (task.IsCompleted == false && message == "")
@@ -139,9 +143,19 @@ namespace QuantConnect
         /// <param name="codeBlock">Action codeblock to execute</param>
         /// <param name="memoryCap">Maximum memory allocation, default 1024Mb</param>
         /// <returns>True if algorithm exited successfully, false if cancelled because it exceeded limits.</returns>
-        public bool ExecuteWithTimeLimit(TimeSpan timeSpan, Action codeBlock, long memoryCap = 1024)
+        public bool ExecuteWithTimeLimit(TimeSpan timeSpan, Action codeBlock, long memoryCap)
         {
             return ExecuteWithTimeLimit(timeSpan, null, codeBlock, memoryCap);
+        }
+
+        /// <summary>
+        /// Convert the bytes to a MB in double format for string display
+        /// </summary>
+        /// <param name="ramInBytes"></param>
+        /// <returns></returns>
+        private static double PrettyFormatRam(long ramInBytes)
+        {
+            return Math.Round(Convert.ToDouble(ramInBytes/(1024*1024)));
         }
     }
 }

@@ -14,6 +14,9 @@
 */
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using Newtonsoft.Json;
 using QuantConnect.Util;
 
 namespace QuantConnect.Data
@@ -185,7 +188,7 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="lastTrade">The price of the last trade</param>
         /// <param name="tradeSize">The quantity traded</param>
-        public void UpdateTrade(decimal lastTrade, long tradeSize)
+        public void UpdateTrade(decimal lastTrade, decimal tradeSize)
         {
             Update(lastTrade, 0, 0, tradeSize, 0, 0);
         }
@@ -197,7 +200,7 @@ namespace QuantConnect.Data
         /// <param name="bidSize">The current bid size</param>
         /// <param name="askPrice">The current ask price</param>
         /// <param name="askSize">The current ask size</param>
-        public void UpdateQuote(decimal bidPrice, long bidSize, decimal askPrice, long askSize)
+        public void UpdateQuote(decimal bidPrice, decimal bidSize, decimal askPrice, decimal askSize)
         {
             Update(0, bidPrice, askPrice, 0, bidSize, askSize);
         }
@@ -207,7 +210,7 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="bidPrice">The current bid price</param>
         /// <param name="bidSize">The current bid size</param>
-        public void UpdateBid(decimal bidPrice, long bidSize)
+        public void UpdateBid(decimal bidPrice, decimal bidSize)
         {
             Update(0, bidPrice, 0, 0, bidSize, 0);
         }
@@ -217,7 +220,7 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="askPrice">The current ask price</param>
         /// <param name="askSize">The current ask size</param>
-        public void UpdateAsk(decimal askPrice, long askSize)
+        public void UpdateAsk(decimal askPrice, decimal askSize)
         {
             Update(0, 0, askPrice, 0, 0, askSize);
         }
@@ -301,5 +304,34 @@ namespace QuantConnect.Data
         {
             throw new InvalidOperationException("Please implement GetSource(SubscriptionDataConfig, DateTime, bool) on your custom data type: " + GetType().Name);
         }
+
+        /// <summary>
+        /// Deserialize the message from the data server
+        /// </summary>
+        /// <param name="serialized">The data server's message</param>
+        /// <returns>An enumerable of base data, if unsuccessful, returns an empty enumerable</returns>
+        public static IEnumerable<BaseData> DeserializeMessage(string serialized)
+        {
+            var deserialized = JsonConvert.DeserializeObject(serialized, JsonSerializerSettings);
+
+            var enumerable = deserialized as IEnumerable<BaseData>;
+            if (enumerable != null)
+            {
+                return enumerable;
+            }
+
+            var data = deserialized as BaseData;
+            if (data != null)
+            {
+                return new[] { data };
+            }
+
+            return Enumerable.Empty<BaseData>();
+        }
+
+        private static readonly JsonSerializerSettings JsonSerializerSettings = new JsonSerializerSettings
+        {
+            TypeNameHandling = TypeNameHandling.All
+        };
     }
 }

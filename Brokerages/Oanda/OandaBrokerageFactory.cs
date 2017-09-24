@@ -57,7 +57,8 @@ namespace QuantConnect.Brokerages.Oanda
                 {
                     { "oanda-environment", Config.Get("oanda-environment") },
                     { "oanda-access-token", Config.Get("oanda-access-token") },
-                    { "oanda-account-id", Config.Get("oanda-account-id") }
+                    { "oanda-account-id", Config.Get("oanda-account-id") },
+                    { "oanda-agent", Config.Get("oanda-agent", OandaRestApiBase.OandaAgentDefaultValue) }
                 };
             }
         }
@@ -83,7 +84,8 @@ namespace QuantConnect.Brokerages.Oanda
             // read values from the brokerage data
             var environment = Read<Environment>(job.BrokerageData, "oanda-environment", errors);
             var accessToken = Read<string>(job.BrokerageData, "oanda-access-token", errors);
-            var accountId = Read<int>(job.BrokerageData, "oanda-account-id", errors);
+            var accountId = Read<string>(job.BrokerageData, "oanda-account-id", errors);
+            var agent = Read<string>(job.BrokerageData, "oanda-agent", errors);
 
             if (errors.Count != 0)
             {
@@ -91,7 +93,7 @@ namespace QuantConnect.Brokerages.Oanda
                 throw new Exception(string.Join(System.Environment.NewLine, errors));
             }
 
-            var brokerage = new OandaBrokerage(algorithm.Transactions, algorithm.Portfolio, environment, accessToken, accountId);
+            var brokerage = new OandaBrokerage(algorithm.Transactions, algorithm.Portfolio, environment, accessToken, accountId, agent);
             Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
 
             return brokerage;

@@ -34,6 +34,11 @@ namespace QuantConnect.Logging
         public string Message;
 
         /// <summary>
+        /// Descriptor of the message type.
+        /// </summary>
+        public LogType MessageType;
+
+        /// <summary>
         /// Create a default log message with the current time.
         /// </summary>
         /// <param name="message"></param>
@@ -41,6 +46,7 @@ namespace QuantConnect.Logging
         {
             Time = DateTime.UtcNow;
             Message = message;
+            MessageType = LogType.Trace;
         }
 
         /// <summary>
@@ -48,10 +54,21 @@ namespace QuantConnect.Logging
         /// </summary>
         /// <param name="message">Message for log</param>
         /// <param name="time">Time of the message</param>
-        public LogEntry(string message, DateTime time)
+        /// <param name="type">Type of the log entry</param>
+        public LogEntry(string message, DateTime time, LogType type = LogType.Trace)
         {
             Time = time.ToUniversalTime();
             Message = message;
+            MessageType = type;
+        }
+
+        /// <summary>
+        /// Helper override on the log entry.
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return string.Format("{0} {1} {2}", Time.ToString("o"), MessageType, Message);
         }
     }
 }

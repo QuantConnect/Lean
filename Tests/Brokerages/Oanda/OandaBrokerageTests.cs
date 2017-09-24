@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using NUnit.Framework;
@@ -38,7 +37,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         {
             var environment = Config.Get("oanda-environment").ConvertTo<Environment>();
             var accessToken = Config.Get("oanda-access-token");
-            var accountId = Config.Get("oanda-account-id").ConvertTo<int>();
+            var accountId = Config.Get("oanda-account-id");
 
             return new OandaBrokerage(orderProvider, securityProvider, environment, accessToken, accountId);
         }
@@ -81,8 +80,8 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         protected override decimal GetAskPrice(Symbol symbol)
         {
             var oanda = (OandaBrokerage) Brokerage;
-            var quotes = oanda.GetRates(new List<string> { new OandaSymbolMapper().GetBrokerageSymbol(symbol) });
-            return (decimal)quotes[0].ask;
+            var quote = oanda.GetRates(new OandaSymbolMapper().GetBrokerageSymbol(symbol));
+            return quote.AskPrice;
         }
 
         [Test]
@@ -90,10 +89,10 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         {
             var oanda = (OandaBrokerage)Brokerage;
             var symbol = Symbol;
-            var quotes = oanda.GetRates(new List<string> { new OandaSymbolMapper().GetBrokerageSymbol(symbol) });
+            var quote = oanda.GetRates(new OandaSymbolMapper().GetBrokerageSymbol(symbol));
 
             // Buy Limit order below market
-            var limitPrice = Convert.ToDecimal(quotes[0].bid - 0.5);
+            var limitPrice = quote.BidPrice - 0.5m;
             var order = new LimitOrder(symbol, 1, limitPrice, DateTime.Now);
             Assert.IsTrue(oanda.PlaceOrder(order));
 
@@ -101,7 +100,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
             Assert.IsTrue(oanda.UpdateOrder(order));
 
             // move Buy Limit order above market
-            order.LimitPrice = Convert.ToDecimal(quotes[0].ask + 0.5);
+            order.LimitPrice = quote.AskPrice + 0.5m;
             Assert.IsTrue(oanda.UpdateOrder(order));
         }
 
@@ -110,25 +109,25 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         {
             var oanda = (OandaBrokerage)Brokerage;
             var symbol = Symbol;
-            var quotes = oanda.GetRates(new List<string> { new OandaSymbolMapper().GetBrokerageSymbol(symbol) });
+            var quote = oanda.GetRates(new OandaSymbolMapper().GetBrokerageSymbol(symbol));
 
             // Buy StopMarket order below market
-            var price = Convert.ToDecimal(quotes[0].bid - 0.5);
+            var price = quote.BidPrice - 0.5m;
             var order = new StopMarketOrder(symbol, 1, price, DateTime.Now);
             Assert.IsTrue(oanda.PlaceOrder(order));
 
             // Buy StopMarket order above market
-            price = Convert.ToDecimal(quotes[0].ask + 0.5);
+            price = quote.AskPrice + 0.5m;
             order = new StopMarketOrder(symbol, 1, price, DateTime.Now);
             Assert.IsTrue(oanda.PlaceOrder(order));
 
             // Sell StopMarket order below market
-            price = Convert.ToDecimal(quotes[0].bid - 0.5);
+            price = quote.BidPrice - 0.5m;
             order = new StopMarketOrder(symbol, -1, price, DateTime.Now);
             Assert.IsTrue(oanda.PlaceOrder(order));
 
             // Sell StopMarket order above market
-            price = Convert.ToDecimal(quotes[0].ask + 0.5);
+            price = quote.AskPrice + 0.5m;
             order = new StopMarketOrder(symbol, -1, price, DateTime.Now);
             Assert.IsTrue(oanda.PlaceOrder(order));
         }
@@ -138,28 +137,28 @@ namespace QuantConnect.Tests.Brokerages.Oanda
         {
             var oanda = (OandaBrokerage) Brokerage;
             var symbol = Symbol;
-            var quotes = oanda.GetRates(new List<string> {new OandaSymbolMapper().GetBrokerageSymbol(symbol)});
+            var quote = oanda.GetRates(new OandaSymbolMapper().GetBrokerageSymbol(symbol));
 
             // Buy StopLimit order below market (Oanda accepts this order but cancels it immediately)
-            var stopPrice = Convert.ToDecimal(quotes[0].bid - 0.5);
+            var stopPrice = quote.BidPrice - 0.5m;
             var limitPrice = stopPrice + 0.0005m;
             var order = new StopLimitOrder(symbol, 1, stopPrice, limitPrice, DateTime.Now);
             Assert.IsTrue(oanda.PlaceOrder(order));
 
             // Buy StopLimit order above market
-            stopPrice = Convert.ToDecimal(quotes[0].ask + 0.5);
+            stopPrice = quote.AskPrice + 0.5m;
             limitPrice = stopPrice + 0.0005m;
             order = new StopLimitOrder(symbol, 1, stopPrice, limitPrice, DateTime.Now);
             Assert.IsTrue(oanda.PlaceOrder(order));
 
             // Sell StopLimit order below market
-            stopPrice = Convert.ToDecimal(quotes[0].bid - 0.5);
+            stopPrice = quote.BidPrice - 0.5m;
             limitPrice = stopPrice - 0.0005m;
             order = new StopLimitOrder(symbol, -1, stopPrice, limitPrice, DateTime.Now);
             Assert.IsTrue(oanda.PlaceOrder(order));
 
             // Sell StopLimit order above market (Oanda accepts this order but cancels it immediately)
-            stopPrice = Convert.ToDecimal(quotes[0].ask + 0.5);
+            stopPrice = quote.AskPrice + 0.5m;
             limitPrice = stopPrice - 0.0005m;
             order = new StopLimitOrder(symbol, -1, stopPrice, limitPrice, DateTime.Now);
             Assert.IsTrue(oanda.PlaceOrder(order));

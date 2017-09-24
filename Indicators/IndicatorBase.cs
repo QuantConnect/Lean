@@ -20,19 +20,12 @@ using QuantConnect.Data;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// Event handler type for the IndicatorBase.Updated event
-    /// </summary>
-    /// <param name="sender">The indicator that fired the event</param>
-    /// <param name="updated">The new piece of data produced by the indicator</param>
-    public delegate void IndicatorUpdatedHandler(object sender, IndicatorDataPoint updated);
-
-    /// <summary>
     /// Provides a base type for all indicators
     /// </summary>
     /// <typeparam name="T">The type of data input into this indicator</typeparam>
     [DebuggerDisplay("{ToDetailedString()}")]
-    public abstract partial class IndicatorBase<T> : IComparable<IndicatorBase<T>>, IComparable
-        where T : BaseData
+    public abstract partial class IndicatorBase<T> : IIndicator<T>
+        where T : IBaseData
     {
         /// <summary>the most recent input that was given to this indicator</summary>
         private T _previousInput;
@@ -110,7 +103,7 @@ namespace QuantConnect.Indicators
         public virtual void Reset()
         {
             Samples = 0;
-            _previousInput = null;
+            _previousInput = default(T);
             Current = new IndicatorDataPoint(DateTime.MinValue, default(decimal));
         }
 
@@ -121,7 +114,7 @@ namespace QuantConnect.Indicators
         /// A value that indicates the relative order of the objects being compared. The return value has the following meanings: Value Meaning Less than zero This object is less than the <paramref name="other"/> parameter.Zero This object is equal to <paramref name="other"/>. Greater than zero This object is greater than <paramref name="other"/>. 
         /// </returns>
         /// <param name="other">An object to compare with this object.</param>
-        public int CompareTo(IndicatorBase<T> other)
+        public int CompareTo(IIndicator<T> other)
         {
             if (ReferenceEquals(other, null))
             {

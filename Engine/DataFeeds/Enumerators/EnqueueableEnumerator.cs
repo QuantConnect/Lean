@@ -19,7 +19,6 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
-using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -34,9 +33,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private T _current;
         private T _lastEnqueued;
         private volatile bool _end;
+        private volatile bool _disposed;
 
         private readonly int _timeout;
-        private readonly ReaderWriterLockSlim _lock;
+        private readonly object _lock = new object();
         private readonly BlockingCollection<T> _blockingCollection;
 
         /// <summary>
@@ -44,7 +44,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         public int Count
         {
-            get { return _blockingCollection.Count; }
+            get
+            {
+                lock (_lock)
+                {
+                    if (_end) return 0;
+                    return _blockingCollection.Count;
+                }
+            }
         }
 
         /// <summary>
@@ -56,13 +63,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         }
 
         /// <summary>
+        /// Returns true if the enumerator has finished and will not accept any more data
+        /// </summary>
+        public bool HasFinished
+        {
+            get { return _end || _disposed; }
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="EnqueueableEnumerator{T}"/> class
         /// </summary>
         /// <param name="blocking">Specifies whether or not to use the blocking behavior</param>
         public EnqueueableEnumerator(bool blocking = false)
         {
             _blockingCollection = new BlockingCollection<T>();
-            _lock = new ReaderWriterLockSlim();
             _timeout = blocking ? Timeout.Infinite : 0;
         }
 
@@ -72,9 +86,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="data">The data to be enqueued</param>
         public void Enqueue(T data)
         {
-            if (_end) return;
-            _blockingCollection.Add(data);
-            _lastEnqueued = data;
+            lock (_lock)
+            {
+                if (_end) return;
+                _blockingCollection.Add(data);
+                _lastEnqueued = data;
+            }
         }
 
         /// <summary>
@@ -83,9 +100,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         public void Stop()
         {
-            // no more items can be added, so no need to wait anymore
-            _end = true;
-            _blockingCollection.CompleteAdding();
+            lock (_lock)
+            {
+                if (_end) return;
+                // no more items can be added, so no need to wait anymore
+                _blockingCollection.CompleteAdding();
+                _end = true;
+            }
         }
 
         /// <summary>
@@ -150,9 +171,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-            Stop();
-            if (_blockingCollection != null) _blockingCollection.Dispose();
-            if (_lock != null) _lock.Dispose();
+            lock (_lock)
+            {
+                if (_disposed) return;
+                Stop();
+                if (_blockingCollection != null) _blockingCollection.Dispose();
+                _disposed = true;
+            }
         }
     }
 }

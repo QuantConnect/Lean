@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Interfaces;
@@ -24,7 +23,7 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Scheduling;
-using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.RealTime
 {
@@ -83,7 +82,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             Add(ScheduledEventFactory.EveryAlgorithmEndOfDay(_algorithm, _resultHandler, todayInAlgorithmTimeZone, Time.EndOfTime, ScheduledEvent.AlgorithmEndOfDayDelta, DateTime.UtcNow));
 
             // add end of trading day events for each security
-            foreach (var security in _algorithm.Securities.Values.Where(x => !x.SubscriptionDataConfig.IsInternalFeed))
+            foreach (var security in _algorithm.Securities.Values.Where(x => x.IsInternalFeed()))
             {
                 // assumes security.Exchange has been updated with today's hours via RefreshMarketHoursToday
                 Add(ScheduledEventFactory.EverySecurityEndOfDay(_algorithm, _resultHandler, security, todayInAlgorithmTimeZone, Time.EndOfTime, ScheduledEvent.SecurityEndOfDayDelta, DateTime.UtcNow));
@@ -147,8 +146,8 @@ namespace QuantConnect.Lean.Engine.RealTime
                 var marketHours = _api.MarketToday(date, security.Symbol);
                 security.Exchange.SetMarketHours(marketHours, date.DayOfWeek);
                 var localMarketHours = security.Exchange.Hours.MarketHours[date.DayOfWeek];
-                Log.Trace(string.Format("LiveTradingRealTimeHandler.SetupEvents({0}): Market hours set: Symbol: {1} {2}",
-                        security.Type, security.Symbol, localMarketHours));
+                Log.Trace(string.Format("LiveTradingRealTimeHandler.RefreshMarketHoursToday({0}): Market hours set: Symbol: {1} {2} ({3})",
+                        security.Type, security.Symbol, localMarketHours, security.Exchange.Hours.TimeZone));
             }
         }
 
@@ -184,6 +183,16 @@ namespace QuantConnect.Lean.Engine.RealTime
         {
             // in live mode we use current time for our time keeping
             // this method is used by backtesting to set time based on the data
+        }
+
+        /// <summary>
+        /// Scan for past events that didn't fire because there was no data at the scheduled time.
+        /// </summary>
+        /// <param name="time">Current time.</param>
+        public void ScanPastEvents(DateTime time)
+        {
+            // in live mode we use current time for our time keeping
+            // this method is used by backtesting to scan for past events based on the data
         }
 
         /// <summary>

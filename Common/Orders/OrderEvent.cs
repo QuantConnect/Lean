@@ -14,6 +14,7 @@
 */
 
 using System;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Orders
 {
@@ -53,14 +54,19 @@ namespace QuantConnect.Orders
         public decimal FillPrice;
 
         /// <summary>
+        /// Currency for the fill price
+        /// </summary>
+        public string FillPriceCurrency;
+
+        /// <summary>
         /// Number of shares of the order that was filled in this event.
         /// </summary>
-        public int FillQuantity;
+        public decimal FillQuantity;
 
         /// <summary>
         /// Public Property Absolute Getter of Quantity -Filled
         /// </summary>
-        public int AbsoluteFillQuantity 
+        public decimal AbsoluteFillQuantity 
         {
             get 
             {
@@ -82,6 +88,11 @@ namespace QuantConnect.Orders
         public string Message;
 
         /// <summary>
+        /// True if the order event is an assignment
+        /// </summary>
+        public bool IsAssignment;
+
+        /// <summary>
         /// Order Event Constructor.
         /// </summary>
         /// <param name="orderId">Id of the parent order</param>
@@ -93,7 +104,7 @@ namespace QuantConnect.Orders
         /// <param name="fillQuantity">Fill quantity</param>
         /// <param name="orderFee">The order fee</param>
         /// <param name="message">Message from the exchange</param>
-        public OrderEvent(int orderId, Symbol symbol, DateTime utcTime, OrderStatus status, OrderDirection direction, decimal fillPrice, int fillQuantity, decimal orderFee, string message = "")
+        public OrderEvent(int orderId, Symbol symbol, DateTime utcTime, OrderStatus status, OrderDirection direction, decimal fillPrice, decimal fillQuantity, decimal orderFee, string message = "")
         {
             OrderId = orderId;
             Symbol = symbol;
@@ -101,9 +112,11 @@ namespace QuantConnect.Orders
             Status = status;
             Direction = direction;
             FillPrice = fillPrice;
+            FillPriceCurrency = string.Empty;
             FillQuantity = fillQuantity;
             OrderFee = Math.Abs(orderFee);
             Message = message;
+            IsAssignment = false;
         }
 
         /// <summary>
@@ -123,10 +136,12 @@ namespace QuantConnect.Orders
             //Initialize to zero, manually set fill quantity
             FillQuantity = 0;
             FillPrice = 0;
+            FillPriceCurrency = order.PriceCurrency;
 
             UtcTime = utcTime;
             OrderFee = Math.Abs(orderFee);
             Message = message;
+            IsAssignment = false;
         }
 
         /// <summary>
@@ -139,12 +154,18 @@ namespace QuantConnect.Orders
         public override string ToString()
         {
             var message = FillQuantity == 0 
-                ? string.Format("OrderID: {0} Symbol: {1} Status: {2}", OrderId, Symbol, Status) 
-                : string.Format("OrderID: {0} Symbol: {1} Status: {2} Quantity: {3} FillPrice: {4}", OrderId, Symbol, Status, FillQuantity, FillPrice, OrderFee);
+                ? string.Format("Time: {0} OrderID: {1} Symbol: {2} Status: {3}", UtcTime, OrderId, Symbol.Value, Status) 
+                : string.Format("Time: {0} OrderID: {1} Symbol: {2} Status: {3} Quantity: {4} FillPrice: {5} {6}", UtcTime, OrderId, Symbol.Value, Status, FillQuantity, FillPrice, FillPriceCurrency);
 
             // attach the order fee so it ends up in logs properly
-            if (OrderFee != 0m) message += message + " OrderFee: " + OrderFee;
-            
+            if (OrderFee != 0m) message += string.Format(" OrderFee: {0} {1}", OrderFee, CashBook.AccountCurrency);
+
+            // add message from brokerage
+            if (!string.IsNullOrEmpty(Message))
+            {
+                message += string.Format(" Message: {0}", Message);
+            } 
+
             return message;
         }
 

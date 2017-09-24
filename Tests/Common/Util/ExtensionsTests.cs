@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Securities;
@@ -105,6 +106,22 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         [Test]
+        public void ConvertsDecimalFromStringWithExtraWhiteSpace()
+        {
+            const string input = " 123.45678 ";
+            var value = input.ToDecimal();
+            Assert.AreEqual(123.45678m, value);
+        }
+
+        [Test]
+        public void ConvertsDecimalFromIntStringWithExtraWhiteSpace()
+        {
+            const string input = " 12345678 ";
+            var value = input.ToDecimal();
+            Assert.AreEqual(12345678m, value);
+        }
+
+        [Test]
         public void ConvertsZeroDecimalFromString()
         {
             const string input = "0.45678";
@@ -121,6 +138,70 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         [Test]
+        public void ConvertsZeroDecimalValueFromString()
+        {
+            const string input = "0";
+            var value = input.ToDecimal();
+            Assert.AreEqual(0m, value);
+        }
+
+        [Test]
+        public void ConvertsEmptyDecimalValueFromString()
+        {
+            const string input = "";
+            var value = input.ToDecimal();
+            Assert.AreEqual(0m, value);
+        }
+
+        [Test]
+        public void ConvertsNegativeDecimalFromString()
+        {
+            const string input = "-123.45678";
+            var value = input.ToDecimal();
+            Assert.AreEqual(-123.45678m, value);
+        }
+
+        [Test]
+        public void ConvertsNegativeDecimalFromStringWithExtraWhiteSpace()
+        {
+            const string input = " -123.45678 ";
+            var value = input.ToDecimal();
+            Assert.AreEqual(-123.45678m, value);
+        }
+
+        [Test]
+        public void ConvertsNegativeDecimalFromIntStringWithExtraWhiteSpace()
+        {
+            const string input = " -12345678 ";
+            var value = input.ToDecimal();
+            Assert.AreEqual(-12345678m, value);
+        }
+
+        [Test]
+        public void ConvertsNegativeZeroDecimalFromString()
+        {
+            const string input = "-0.45678";
+            var value = input.ToDecimal();
+            Assert.AreEqual(-0.45678m, value);
+        }
+
+        [Test]
+        public void ConvertsNegavtiveOneNumberDecimalFromString()
+        {
+            const string input = "-1.45678";
+            var value = input.ToDecimal();
+            Assert.AreEqual(-1.45678m, value);
+        }
+
+        [Test]
+        public void ConvertsNegativeZeroDecimalValueFromString()
+        {
+            const string input = "-0";
+            var value = input.ToDecimal();
+            Assert.AreEqual(-0m, value);
+        }
+        
+        [Test]
         public void ConvertsTimeSpanFromString()
         {
             const string input = "16:00";
@@ -135,6 +216,63 @@ namespace QuantConnect.Tests.Common.Util
             var input = JsonConvert.SerializeObject(expected);
             var actual = input.ConvertTo<Dictionary<string, int>>();
             CollectionAssert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void DictionaryAddsItemToExistsList()
+        {
+            const int key = 0;
+            var list = new List<int> {1, 2};
+            var dictionary = new Dictionary<int, List<int>> {{key, list}};
+            Extensions.Add(dictionary, key, 3);
+            Assert.AreEqual(3, list.Count);
+            Assert.AreEqual(3, list[2]);
+        }
+
+        [Test]
+        public void DictionaryAddCreatesNewList()
+        {
+            const int key = 0;
+            var dictionary = new Dictionary<int, List<int>>();
+            Extensions.Add(dictionary, key, 1);
+            Assert.IsTrue(dictionary.ContainsKey(key));
+            var list = dictionary[key];
+            Assert.AreEqual(1, list.Count);
+            Assert.AreEqual(1, list[0]);
+        }
+
+        [Test]
+        public void SafeDecimalCasts()
+        {
+            var input = 2d;
+            var output = input.SafeDecimalCast();
+            Assert.AreEqual(2m, output);
+        }
+
+        [Test]
+        public void SafeDecimalCastRespectsUpperBound()
+        {
+            var input = (double) decimal.MaxValue;
+            var output = input.SafeDecimalCast();
+            Assert.AreEqual(decimal.MaxValue, output);
+        }
+
+        [Test]
+        public void SafeDecimalCastRespectsLowerBound()
+        {
+            var input = (double) decimal.MinValue;
+            var output = input.SafeDecimalCast();
+            Assert.AreEqual(decimal.MinValue, output);
+        }
+
+        [Test]
+        [TestCase(1.200, "1.2")]
+        [TestCase(1200, "1200")]
+        [TestCase(123.456, "123.456")]
+        public void NormalizeDecimalReturnsNoTrailingZeros(decimal input, string expectedOutput)
+        {
+            var output = input.Normalize();
+            Assert.AreEqual(expectedOutput, output.ToString(CultureInfo.InvariantCulture));
         }
 
         private class Super<T>

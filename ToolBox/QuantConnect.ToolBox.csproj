@@ -9,9 +9,10 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>QuantConnect.ToolBox</RootNamespace>
     <AssemblyName>QuantConnect.ToolBox</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <LangVersion>5</LangVersion>
+    <LangVersion>6</LangVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -22,6 +23,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>6</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -31,11 +33,18 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>6</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>QuantConnect.ToolBox.CryptoiqDownloader.Program</StartupObject>
+    <StartupObject>QuantConnect.ToolBox.OandaDownloader.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="DotNetZip, Version=1.10.1.0, Culture=neutral, PublicKeyToken=6583c7c814667745, processorArchitecture=MSIL">
+      <HintPath>..\packages\DotNetZip.1.10.1\lib\net20\DotNetZip.dll</HintPath>
+    </Reference>
+    <Reference Include="EngineIoClientDotNet, Version=0.9.22.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\EngineIoClientDotNet.0.9.22\lib\net45\EngineIoClientDotNet.dll</HintPath>
+    </Reference>
     <Reference Include="IKVM.AWT.WinForms">
       <HintPath>..\packages\IKVM-WithExes.7.3.4830.1\tools\IKVM.AWT.WinForms.dll</HintPath>
     </Reference>
@@ -114,16 +123,11 @@
     <Reference Include="IKVM.Runtime.JNI">
       <HintPath>..\packages\IKVM-WithExes.7.3.4830.1\tools\IKVM.Runtime.JNI.dll</HintPath>
     </Reference>
-    <Reference Include="Ionic.Zip">
-      <HintPath>..\packages\DotNetZip.1.9.3\lib\net20\Ionic.Zip.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="NodaTime, Version=1.3.0.0, Culture=neutral, PublicKeyToken=4226afe0d9b296d1, processorArchitecture=MSIL">
-      <HintPath>..\packages\NodaTime.1.3.1\lib\net35-Client\NodaTime.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\NodaTime.1.3.4\lib\net35-Client\NodaTime.dll</HintPath>
     </Reference>
     <Reference Include="QuantConnect.Fxcm">
       <HintPath>..\Brokerages\Fxcm\QuantConnect.Fxcm.dll</HintPath>
@@ -131,18 +135,31 @@
     <Reference Include="SevenZipSharp">
       <HintPath>..\packages\SevenZipSharp.0.64\lib\SevenZipSharp.dll</HintPath>
     </Reference>
+    <Reference Include="SocketIoClientDotNet, Version=0.9.13.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\SocketIoClientDotNet.0.9.13\lib\net45\SocketIoClientDotNet.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="WebSocket4Net, Version=0.14.1.0, Culture=neutral, PublicKeyToken=eb4e154b696bf72a, processorArchitecture=MSIL">
+      <HintPath>..\packages\WebSocket4Net.0.14.1\lib\net45\WebSocket4Net.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsParser.cs" />
+    <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesConverter.cs" />
+    <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesProcessor.cs" />
+    <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesReader.cs" />
+    <Compile Include="AlgoSeekFuturesConverter\Program.cs" />
+    <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsConverter.cs" />
+    <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsProcessor.cs" />
+    <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsReader.cs" />
     <Compile Include="AlgoSeekOptionsConverter\Program.cs" />
     <Compile Include="Bz2StreamProvider.cs" />
     <Compile Include="CoarseUniverseGenerator\Program.cs" />
@@ -153,26 +170,38 @@
     <Compile Include="DukascopyDownloader\DukascopyDataDownloader.cs" />
     <Compile Include="DukascopyDownloader\DukascopySymbolMapper.cs" />
     <Compile Include="DukascopyDownloader\Program.cs" />
+    <Compile Include="FactorFileGenerator.cs" />
     <Compile Include="FileStreamProvider.cs" />
     <Compile Include="FilteredDataProcessor.cs" />
+    <Compile Include="ForexVolumeDownloader\FxcmVolumeWriter.cs" />
+    <Compile Include="ForexVolumeDownloader\FxcmVolumeDownloader.cs" />
+    <Compile Include="ForexVolumeDownloader\Program.cs" />
     <Compile Include="FxcmDownloader\FxcmDataDownloader.cs" />
     <Compile Include="FxcmDownloader\Program.cs" />
     <Compile Include="GoogleDownloader\GoogleDataDownloader.cs" />
     <Compile Include="GoogleDownloader\Program.cs" />
     <Compile Include="IDataProcessor.cs" />
+    <Compile Include="IEX\IEXDataQueueHandler.cs" />
+    <Compile Include="IQFeed\IQFeedDataQueueHandler.cs" />
+    <Compile Include="IQFeed\IQFeedDataQueueUniverseProvider.cs" />
+    <Compile Include="IQFeed\IQ\DataStructures.cs" />
+    <Compile Include="IQFeed\IQ\IQAdminSocketClient.cs" />
+    <Compile Include="IQFeed\IQ\IQConnect.cs" />
+    <Compile Include="IQFeed\IQ\IQCredentials.cs" />
+    <Compile Include="IQFeed\IQ\IQLevel1Client.cs" />
+    <Compile Include="IQFeed\IQ\IQLookupHistorySymbolClient.cs" />
+    <Compile Include="IQFeed\IQ\IQLookupTableClient.cs" />
+    <Compile Include="IQFeed\IQ\IQSocket.cs" />
+    <Compile Include="IQFeed\IQ\SocketClient.cs" />
     <Compile Include="IStreamParser.cs" />
     <Compile Include="IStreamProvider.cs" />
-    <Compile Include="LeanDataPathComponents.cs" />
+    <Compile Include="LazyStreamWriter.cs" />
+    <Compile Include="LeanDataReader.cs" />
     <Compile Include="LeanDataWriter.cs" />
     <Compile Include="LeanInstrument.cs" />
     <Compile Include="LeanParser.cs" />
+    <Compile Include="NseMarketDataConverter\Program.cs" />
     <Compile Include="OandaDownloader\OandaDataDownloader.cs" />
-    <Compile Include="OandaDownloader\OandaRestLibrary\Credentials.cs" />
-    <Compile Include="OandaDownloader\OandaRestLibrary\Candle.cs" />
-    <Compile Include="OandaDownloader\OandaRestLibrary\CandlesResponse.cs" />
-    <Compile Include="OandaDownloader\OandaRestLibrary\CandlesRequest.cs" />
-    <Compile Include="OandaDownloader\OandaRestLibrary\Request.cs" />
-    <Compile Include="OandaDownloader\OandaRestLibrary\Instrument.cs" />
     <Compile Include="OandaDownloader\Program.cs" />
     <Compile Include="PipeDataProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -181,20 +210,31 @@
     <Compile Include="QuantQuoteConverter\Program.cs" />
     <Compile Include="IDataDownloader.cs" />
     <Compile Include="RawFileProcessor.cs" />
-    <Compile Include="YahooDownloader\Program.cs" />
-    <Compile Include="YahooDownloader\YahooDataDownloader.cs" />
     <Compile Include="CsvDataProcessor.cs" />
+    <Compile Include="YahooDownloader\Historical.cs" />
+    <Compile Include="YahooDownloader\Program.cs" />
+    <Compile Include="YahooDownloader\Token.cs" />
+    <Compile Include="YahooDownloader\YahooDataDownloader.cs" />
     <Compile Include="ZipStreamProvider.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="AlgoSeekFuturesConverter\AlgoSeek.US.Futures.PriceMultipliers.1.1.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="app.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="CoarseUniverseGenerator\config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="IQFeed\IQFeed-symbol-map.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <None Include="instruments_oanda.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -214,6 +254,10 @@
       <Project>{0aeb4ea3-28c8-476e-89fd-926f06590b4c}</Project>
       <Name>QuantConnect.Configuration</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Engine\QuantConnect.Lean.Engine.csproj">
+      <Project>{12156f46-d07e-4e3d-ad2b-7409e82ab62f}</Project>
+      <Name>QuantConnect.Lean.Engine</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj">
       <Project>{01911409-86be-4e7d-9947-df714138610d}</Project>
       <Name>QuantConnect.Logging</Name>
@@ -221,7 +265,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="instruments_dukascopy.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -229,7 +273,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="instruments_fxcm.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup />

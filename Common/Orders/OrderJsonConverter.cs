@@ -20,6 +20,7 @@ using Newtonsoft.Json.Linq;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Util;
+using QuantConnect.Brokerages;
 
 namespace QuantConnect.Orders
 {
@@ -93,18 +94,31 @@ namespace QuantConnect.Orders
 
             // populate common order properties
             order.Id = jObject["Id"].Value<int>();
-            order.Quantity = jObject["Quantity"].Value<int>();
             order.Status = (OrderStatus) jObject["Status"].Value<int>();
             order.Time = jObject["Time"].Value<DateTime>();
             order.Tag = jObject["Tag"].Value<string>();
-            order.Quantity = jObject["Quantity"].Value<int>();
+
+            try { order.Quantity = jObject["Quantity"].Value<int>(); }
+            catch { order.Quantity = jObject["Quantity"].Value<decimal>(); }
+
             order.Price = jObject["Price"].Value<decimal>();
             var securityType = (SecurityType) jObject["SecurityType"].Value<int>();
             order.BrokerId = jObject["BrokerId"].Select(x => x.Value<string>()).ToList();
             order.ContingentId = jObject["ContingentId"].Value<int>();
 
-            var market = Market.USA;
-            if (securityType == SecurityType.Forex) market = Market.FXCM;
+            string market = Market.USA;
+
+            //does data have market?
+            var suppliedMarket = jObject.SelectTokens("Symbol.ID.Market");
+            if (suppliedMarket.Any())
+            {
+                market = suppliedMarket.Single().Value<string>();
+            }
+            else
+            {
+                //no data, use default                
+                new DefaultBrokerageModel().DefaultMarkets.TryGetValue(securityType, out market);
+            }
 
             if (jObject.SelectTokens("Symbol.ID").Any())
             {
@@ -125,7 +139,7 @@ namespace QuantConnect.Orders
             }
             return order;
         }
-        
+
         /// <summary>
         /// Creates an order of the correct type
         /// </summary>
@@ -163,6 +177,10 @@ namespace QuantConnect.Orders
 
                 case OrderType.MarketOnClose:
                     order = new MarketOnCloseOrder();
+                    break;
+
+                case OrderType.OptionExercise:
+                    order = new OptionExerciseOrder();
                     break;
 
                 default:
