@@ -77,7 +77,7 @@ sudo apt-get update && sudo apt-get install -y nuget python-pip
 - Restore NuGet packages then compile:
 ```
 nuget restore QuantConnect.Lean.sln
-xbuild
+xbuild QuantConnect.Lean.sln
 ```
 If you get: "Error initializing task Fsc: Not registered task Fsc." -> `sudo apt-get upgrade mono-complete`
 
