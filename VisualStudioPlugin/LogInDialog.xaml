@@ -24,12 +24,12 @@
              WindowStartupLocation="CenterScreen"
         Title="Log in to QuantConnect" Height="238.493" Width="412.196" ResizeMode="NoResize">
     <Grid>
-        <PasswordBox x:Name="accessTokenBox" HorizontalAlignment="Left" VerticalAlignment="Top" Width="265" Margin="22,119,0,0" Height="22" TabIndex="2" KeyDown="inputField_KeyDown"/>
-        <TextBox x:Name="userIdBox" HorizontalAlignment="Left" VerticalAlignment="Top" Width="265" Margin="22,61,0,0" TabIndex="1" Height="22" KeyDown="inputField_KeyDown"/>
-        <Label x:Name="userIdLabel" Content="User id" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="22,30,0,0"/>
-        <Label x:Name="accessTokenLabel" Content="Access token" HorizontalAlignment="Left" Margin="22,88,0,0" VerticalAlignment="Top"/>
-        <Button x:Name="logInButton" Content="Log in" HorizontalAlignment="Left" VerticalAlignment="Top" Width="74" Margin="22,162,0,0" Height="24" Click="LogIn_Click" TabIndex="3"/>
-        <Button x:Name="logOutButton" Content="Cancel" HorizontalAlignment="Left" VerticalAlignment="Top" Width="74" Margin="155,162,0,0" Height="24" Click="LogOut_Click" TabIndex="4"/>
+        <PasswordBox x:Name="accessTokenBox" HorizontalAlignment="Left" VerticalAlignment="Top" Width="265" Margin="21,111,0,0" Height="22" TabIndex="2" KeyDown="inputField_KeyDown"/>
+        <TextBox x:Name="userIdBox" HorizontalAlignment="Left" VerticalAlignment="Top" Width="265" Margin="21,53,0,0" TabIndex="1" Height="22" KeyDown="inputField_KeyDown"/>
+        <Label x:Name="userIdLabel" Content="User id" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="21,22,0,0"/>
+        <Label x:Name="accessTokenLabel" Content="Access token" HorizontalAlignment="Left" Margin="21,80,0,0" VerticalAlignment="Top"/>
+        <Button x:Name="logInButton" Content="Log in" HorizontalAlignment="Left" VerticalAlignment="Top" Width="74" Margin="24,154,0,0" Height="24" Click="LogIn_Click" TabIndex="3"/>
+        <Button x:Name="logOutButton" Content="Cancel" HorizontalAlignment="Left" VerticalAlignment="Top" Width="74" Margin="157,154,0,0" Height="24" Click="LogOut_Click" TabIndex="4"/>
 
     </Grid>
 </platformUi:DialogWindow>
