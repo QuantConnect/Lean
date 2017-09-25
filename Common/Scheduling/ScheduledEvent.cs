@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -228,15 +228,46 @@ namespace QuantConnect.Scheduling
         /// <param name="triggerTime">The event's time in UTC</param>
         protected void OnEventFired(DateTime triggerTime)
         {
-            // don't fire the event if we're turned off
-            if (!Enabled) return;
-
-            if (_callback != null)
+            try
             {
-                _callback(_name, _orderedEventUtcTimes.Current);
+                // don't fire the event if we're turned off
+                if (!Enabled) return;
+
+                if (_callback != null)
+                {
+                    _callback(_name, _orderedEventUtcTimes.Current);
+                }
+                var handler = EventFired;
+                if (handler != null) handler(_name, triggerTime);
             }
-            var handler = EventFired;
-            if (handler != null) handler(_name, triggerTime);
+            catch (Exception ex)
+            {
+                Log.Error($"ScheduledEvent.Scan(): Exception was thrown in OnEventFired: {ex}");
+
+                // This scheduled event failed, so don't repeat the same event
+                _needsMoveNext = true;
+                throw new ScheduledEventException(ex.ToString());
+            }
+        }
+    }
+
+    /// <summary>
+    /// Throw this if there is an exception in the callback function of the scheduled event
+    /// </summary>
+    public class ScheduledEventException : Exception
+    {
+        /// <summary>
+        /// Exception message
+        /// </summary>
+        public string ScheduledEventExceptionMessage { get; }
+
+        /// <summary>
+        /// ScheduledEventException constructor
+        /// </summary>
+        /// <param name="exceptionMessage">The exception as a string</param>
+        public ScheduledEventException(string exceptionMessage) : base(exceptionMessage)
+        {
+            ScheduledEventExceptionMessage = exceptionMessage;
         }
     }
 }
