@@ -242,6 +242,8 @@ namespace QuantConnect.Scheduling
             }
             catch (Exception ex)
             {
+                Log.Error($"ScheduledEvent.Scan(): Exception was thrown in OnEventFired: {ex}");
+
                 // This scheduled event failed, so don't repeat the same event
                 _needsMoveNext = true;
                 throw new ScheduledEventException(ex.ToString());
@@ -263,7 +265,7 @@ namespace QuantConnect.Scheduling
         /// ScheduledEventException constructor
         /// </summary>
         /// <param name="exceptionMessage">The exception as a string</param>
-        public ScheduledEventException(string exceptionMessage)
+        public ScheduledEventException(string exceptionMessage) : base(exceptionMessage)
         {
             ScheduledEventExceptionMessage = exceptionMessage;
         }
