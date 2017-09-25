@@ -108,30 +108,33 @@ namespace QuantConnect.Lean.Engine.RealTime
             // continue thread until cancellation is requested
             while (!_cancellationTokenSource.IsCancellationRequested)
             {
-                try
+
+                var time = DateTime.UtcNow;
+
+                // pause until the next second
+                var nextSecond = time.RoundUp(TimeSpan.FromSeconds(1));
+                var delay = Convert.ToInt32((nextSecond - time).TotalMilliseconds);
+                Thread.Sleep(delay < 0 ? 1 : delay);
+
+                // poke each event to see if it should fire
+                foreach (var scheduledEvent in _scheduledEvents)
                 {
-                    var time = DateTime.UtcNow;
-
-                    // pause until the next second
-                    var nextSecond = time.RoundUp(TimeSpan.FromSeconds(1));
-                    var delay = Convert.ToInt32((nextSecond - time).TotalMilliseconds);
-                    Thread.Sleep(delay < 0 ? 1 : delay);
-
-                    // poke each event to see if it should fire
-                    foreach (var scheduledEvent in _scheduledEvents)
+                    try
                     {
                         scheduledEvent.Value.Scan(time);
                     }
-                }
-                catch (ScheduledEventException scheduledEventException)
-                {
-                    var errorMessage = $"LiveTradingRealTimeHandler: There was an error thrown in the scheduled event: {scheduledEventException.ScheduledEventExceptionMessage}";
-                    Log.Error(errorMessage);
-                    _resultHandler.ErrorMessage(errorMessage);
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err);
+                    catch (ScheduledEventException scheduledEventException)
+                    {
+                        var errorMessage = $"LiveTradingRealTimeHandler.Run(): There was an error in a scheduled event {scheduledEvent.Key}. The error was {scheduledEventException}";
+
+                        Log.Error(errorMessage);
+
+                        _resultHandler.RuntimeError(errorMessage);
+
+                        // Errors in scheduled event should be treated as runtime error
+                        // Runtime errors should end Lean execution
+                        _algorithm.RunTimeError = new Exception(errorMessage);
+                    }
                 }
             }
 
