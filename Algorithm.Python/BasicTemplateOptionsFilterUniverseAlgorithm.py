@@ -56,7 +56,7 @@ class BasicTemplateOptionsFilterUniverseAlgorithm(QCAlgorithm):
             sorted_contracts = sorted(chain, key = lambda x:x.Strike, reverse = True)
             # find the second call strike under market price expiring today
             contracts = [i for i in sorted_contracts if i.Right ==  OptionRight.Call
-                                                    and i.Expiry == Self.Time.date()
+                                                    and i.Expiry == self.Time.date()
                                                     and i.Strike == chain.Underlying.Price]
             # if found, trade it
             if len(contracts) == 0: continue
