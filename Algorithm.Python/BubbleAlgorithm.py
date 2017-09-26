@@ -37,7 +37,6 @@ import json
 ### </summary>
 ### <meta name="tag" content="strategy example" />
 ### <meta name="tag" content="custom data" />
-
 class BubbleAlgorithm(QCAlgorithm):
 
     def Initialize(self):
@@ -50,9 +49,26 @@ class BubbleAlgorithm(QCAlgorithm):
         self._newLow, self._currCape = None, None
         self._counter, self._counter2 = 0, 0
         self._c, self._cCopy = np.empty([4]), np.empty([4])
-        #self._symbols.append("FB"), self._symbols.append("LNKD"),self._symbols.append("GRPN"), self._symbols.append("TWTR")
         self._symbols.append("SPY")
+        # add CAPE data
         self.AddData(Cape, "CAPE")
+        
+        # Present Social Media Stocks:
+        # self._symbols.append("FB"), self._symbols.append("LNKD"),self._symbols.append("GRPN"), self._symbols.append("TWTR")
+        # self.SetStartDate(2011, 1, 1)
+        # self.SetEndDate(2014, 12, 1)
+        
+        # 2008 Financials
+        # self._symbols.append("C"), self._symbols.append("AIG"), self._symbols.append("BAC"), self._symbols.append("HBOS")
+        # self.SetStartDate(2003, 1, 1)
+        # self.SetEndDate(2011, 1, 1)
+        
+        # 2000 Dot.com
+        # self._symbols.append("IPET"), self._symbols.append("WBVN"), self._symbols.append("GCTY")
+        # self.SetStartDate(1998, 1, 1)
+        # self.SetEndDate(2000, 1, 1)
+        
+        
         for stock in self._symbols:
             self.AddSecurity(SecurityType.Equity, stock, Resolution.Minute)
             self._macd = self.MACD(stock, 12, 26, 9, MovingAverageType.Exponential, Resolution.Daily)
@@ -60,9 +76,9 @@ class BubbleAlgorithm(QCAlgorithm):
             self._rsi = self.RSI(stock, 14, MovingAverageType.Exponential, Resolution.Daily)
             self._rsiDic[stock] = self._rsi
         
-    ### <summary>
-    ### Trying to find if current Cape is the lowest Cape in three months to indicate selling period
-    ### </summary>
+    # <summary>
+    # Trying to find if current Cape is the lowest Cape in three months to indicate selling period
+    # </summary>
     def OnData(self, data):
         
         if self._currCape and self._newLow is not None:   
@@ -128,19 +144,19 @@ class BubbleAlgorithm(QCAlgorithm):
         if self._newLow:
             self.Debug("New Low has been hit on " + str(self.Time))
 
-    ### <summary>
-    ### Buy this symbol
-    ### </summary>
+    # <summary>
+    # Buy this symbol
+    # </summary>
     def BuyStock(self,symbol):
         s = self.Securities[symbol].Holdings
         if self._macdDic[symbol].Current.Value>0:
             self.SetHoldings(symbol, 1)
             self.Debug("Purchasing: " + str(symbol) + "   MACD: " + str(self._macdDic[symbol]) + "   RSI: " + str(self._rsiDic[symbol])
                     + "   Price: " + str(round(self.Securities[symbol].Price, 2)) + "   Quantity: " + str(s.Quantity))
-    ### <summary>
-    ### Sell this symbol
-    ### </summary>
-    ### <param name="symbol"></param>  
+    # <summary>
+    # Sell this symbol
+    # </summary>
+    # <param name="symbol"></param>  
     def SellStock(self,symbol):
         s = self.Securities[symbol].Holdings
         if s.Quantity > 0 and self._macdDic[symbol].Current.Value < 0:
@@ -148,40 +164,39 @@ class BubbleAlgorithm(QCAlgorithm):
             self.Debug("Selling: " + str(symbol) + " at sell MACD: " + str(self._macdDic[symbol]) + "   RSI: " + str(self._rsiDic[symbol])
                     + "   Price: " + str(round(self.Securities[symbol].Price, 2)) + "   Profit from sale: " + str(s.LastTradeProfit))
 
-### <summary>
-### CAPE Ratio for SP500 PE Ratio for avg inflation adjusted earnings for previous ten years
-### Custom Data from DropBox
-### Original Data from: http://www.econ.yale.edu/~shiller/data.htm
-### </summary>
-
+# <summary>
+# CAPE Ratio for SP500 PE Ratio for avg inflation adjusted earnings for previous ten years
+# Custom Data from DropBox
+# Original Data from: http://www.econ.yale.edu/~shiller/data.htm
+# </summary>
 class Cape(PythonData):
     
-    ### <summary>
-    ### Return the URL string source of the file. This will be converted to a stream
-    ### </summary>
-    ### <param name="config">Configuration object</param>
-    ### <param name="date">Date of this source file</param>
-    ### <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
-    ### <returns>String URL of source file.</returns>
+    # <summary>
+    # Return the URL string source of the file. This will be converted to a stream
+    # </summary>
+    # <param name="config">Configuration object</param>
+    # <param name="date">Date of this source file</param>
+    # <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
+    # <returns>String URL of source file.</returns>
 
     def GetSource(self, config, date, isLiveMode):
         # Remember to add the "?dl=1" for dropbox links
         return SubscriptionDataSource("https://www.dropbox.com/s/ggt6blmib54q36e/CAPE.csv?dl=1", SubscriptionTransportMedium.RemoteFile)
     
     
-    ### <summary>
-    ### Reader Method :: using set of arguements we specify read out type. Enumerate
-    ### until the end of the data stream or file. E.g. Read CSV file line by line and convert
-    ### into data types.
-    ### </summary>
-    ### <returns>BaseData type set by Subscription Method.</returns>
-    ### <param name="config">Config.</param>
-    ### <param name="line">Line.</param>
-    ### <param name="date">Date.</param>
-    ### <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
+    # <summary>
+    # Reader Method :: using set of arguements we specify read out type. Enumerate
+    # until the end of the data stream or file. E.g. Read CSV file line by line and convert
+    # into data types.
+    # </summary>
+    # <returns>BaseData type set by Subscription Method.</returns>
+    # <param name="config">Config.</param>
+    # <param name="line">Line.</param>
+    # <param name="date">Date.</param>
+    # <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
     
     def Reader(self, config, line, date, isLiveMode):
-        # if not (line.strip() and line[0].isdigit()): return None
+        if not (line.strip() and line[0].isdigit()): return None
     
         # New Nifty object
         index = Cape()
