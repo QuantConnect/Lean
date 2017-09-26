@@ -88,6 +88,9 @@
     <None Include="RegressionChannelAlgorithm.py" />
     <None Include="OptionChainProviderAlgorithm.py" />
     <None Include="BubbleAlgorithm.py" />
+    <None Include="OptionRenameRegressionAlgorithm.py" />
+    <None Include="OptionExerciseAssignRegressionAlgorithm.py" />
+    <None Include="OptionOpenInterestRegressionAlgorithm.py" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="AddRemoveSecurityRegressionAlgorithm.py">
