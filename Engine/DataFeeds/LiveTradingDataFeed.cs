@@ -653,10 +653,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // each time we exhaust we'll new up this enumerator stack
                 var refresher = new RefreshEnumerator<BaseDataCollection>(() =>
                 {
-                    var sourceProvider = (BaseData)Activator.CreateInstance(config.Type);
+                    var objectActivator = ObjectActivator.GetActivator(config.Type);
+                    var sourceProvider = (BaseData)objectActivator.Invoke(new object[] { config.Type });
                     var dateInDataTimeZone = DateTime.UtcNow.ConvertFromUtc(config.DataTimeZone).Date;
                     var source = sourceProvider.GetSource(config, dateInDataTimeZone, true);
-                    var factory = SubscriptionDataSourceReader.ForSource(source, _dataCacheProvider, config, dateInDataTimeZone, false);
+                    var factory = SubscriptionDataSourceReader.ForSource(source, _dataCacheProvider, config, dateInDataTimeZone, true);
                     var factorEnumerator = factory.Read(source).GetEnumerator();
                     var fastForward = new FastForwardEnumerator(factorEnumerator, _timeProvider, request.Security.Exchange.TimeZone, config.Increment);
                     var frontierAware = new FrontierAwareEnumerator(fastForward, _frontierTimeProvider, tzOffsetProvider);
