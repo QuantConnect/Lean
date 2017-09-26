@@ -87,6 +87,7 @@
     <None Include="FuturesMomentumAlgorithm.py" />
     <None Include="RegressionChannelAlgorithm.py" />
     <None Include="OptionChainProviderAlgorithm.py" />
+    <None Include="BubbleAlgorithm.py" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="AddRemoveSecurityRegressionAlgorithm.py">
