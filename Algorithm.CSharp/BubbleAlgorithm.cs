@@ -131,13 +131,13 @@ namespace QuantConnect.Algorithm.CSharp
                         //During market hours, stock is trading, and sufficient cash
                         if (Securities[stock].Holdings.Quantity == 0 && _rsiDic[stock] < 70
                             && Securities[stock].Price != 0 && Portfolio.Cash > Securities[stock].Price * 100
-                            && Time.Hour == 9 && Time.Minute == 30)
+                            && Time.Hour == 9 && Time.Minute == 31)
                         {
                             Buy(stock);
                         }
                         //Utilize RSI for overbought territories and liquidate that stock
                         if (_rsiDic[stock] > 70 && Securities[stock].Holdings.Quantity > 0
-                                && Time.Hour == 9 && Time.Minute == 30)
+                                && Time.Hour == 9 && Time.Minute == 31)
                         {
                             Sell(stock);
                         }
@@ -152,14 +152,14 @@ namespace QuantConnect.Algorithm.CSharp
 
                         //Sell stock based on MACD
                         if (Securities[stock].Holdings.Quantity > 0 && _rsiDic[stock] > 30
-                            && Time.Hour == 9 && Time.Minute == 30)
+                            && Time.Hour == 9 && Time.Minute == 31)
                         {
                             Sell(stock);
                         }
                         //Utilize RSI and MACD to understand oversold territories
                         else if (Securities[stock].Holdings.Quantity == 0 && _rsiDic[stock] < 30
                             && Securities[stock].Price != 0 && Portfolio.Cash > Securities[stock].Price * 100
-                            && Time.Hour == 9 && Time.Minute == 30)
+                            && Time.Hour == 9 && Time.Minute == 31)
                         {
                             Buy(stock);
                         }

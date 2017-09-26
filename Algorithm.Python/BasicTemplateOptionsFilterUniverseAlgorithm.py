@@ -32,7 +32,7 @@ from datetime import timedelta
 class BasicTemplateOptionsFilterUniverseAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        self.SetStartDate(2015, 12, 24)
+        self.SetStartDate(2015, 12, 16)
         self.SetEndDate(2015, 12, 24)
         self.SetCash(100000)
 
@@ -52,15 +52,15 @@ class BasicTemplateOptionsFilterUniverseAlgorithm(QCAlgorithm):
         for kvp in slice.OptionChains:
             if kvp.Key != self.symbol: continue
             chain = kvp.Value
-            # sorted the contracts by their strike price
-            sorted_contracts = sorted(chain, key = lambda x:x.Strike, reverse = True)
-            # find the second call strike under market price expiring today
-            contracts = [i for i in sorted_contracts if i.Right ==  OptionRight.Call
-                                                    and i.Expiry == self.Time.date()
-                                                    and i.Strike == chain.Underlying.Price]
+            # find the call options expiring today
+            contracts = [i for i in chain if i.Right ==  OptionRight.Call and i.Expiry.date() == self.Time.date()]
+            # sorted the contracts by their strike, find the second strike under market price 
+            sorted_contracts = [i for i in sorted(contracts, key = lambda x:x.Strike, reverse = True) if i.Strike < chain.Underlying.Price]
             # if found, trade it
-            if len(contracts) == 0: continue
-            self.MarketOrder(contracts[1].Symbol, 1)
+            if len(sorted_contracts) == 0: 
+                self.Log("No call contracts expiring today")
+                return
+            self.MarketOrder(sorted_contracts[1].Symbol, 1)
 
     def OnOrderEvent(self, orderEvent):
         # Order fill event handler. On an order fill update the resulting information is passed to this method.
