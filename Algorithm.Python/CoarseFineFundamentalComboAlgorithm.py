@@ -58,14 +58,7 @@ class CoarseFineFundamentalComboAlgorithm(QCAlgorithm):
         sortedByDollarVolume = sorted(coarse, key=lambda x: x.DollarVolume, reverse=True)
 
         # return the symbol objects of the top entries from our sorted collection
-        top5 = sortedByDollarVolume[:self.__numberOfSymbols]
-
-        # we need to return only the symbol objects
-        list = List[Symbol](len(top5))
-        for x in top5:
-            list.Add(x.Symbol)
-
-        return list
+        return [ x.Symbol for x in sortedByDollarVolume[:self.__numberOfSymbols] ]
 
     # sort the data by P/E ratio and take the top 'NumberOfSymbolsFine'
     def FineSelectionFunction(self, fine):
@@ -73,14 +66,7 @@ class CoarseFineFundamentalComboAlgorithm(QCAlgorithm):
         sortedByPeRatio = sorted(fine, key=lambda x: x.ValuationRatios.PERatio, reverse=True)
 
         # take the top entries from our sorted collection
-        topFine = sortedByPeRatio[:self.__numberOfSymbolsFine]
-
-        list = List[Symbol](len(topFine))
-        for x in topFine:
-            list.Add(x.Symbol)
-
-        return list
-
+        return [ x.Symbol for x in sortedByPeRatio[:self.__numberOfSymbolsFine] ]
 
     def OnData(self, data):
         # if we have no changes, do nothing
