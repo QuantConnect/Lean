@@ -49,8 +49,12 @@ class DropboxBaseDataUniverseSelectionAlgorithm(QCAlgorithm):
         
         self.AddUniverse(StockDataSource, "my-stock-data-source", self.stockDataSource)
     
-    def stockDataSource(self, data):        
-        return [ item for sublist in data for item in sublist["Symbols"] ]
+    def stockDataSource(self, data):
+        list = []
+        for item in data:
+            for symbol in item["Symbols"]:
+                list.append(symbol)
+        return list
 
     def OnData(self, slice):
 
