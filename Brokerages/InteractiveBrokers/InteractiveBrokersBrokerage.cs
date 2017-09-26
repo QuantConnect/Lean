@@ -566,6 +566,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                         throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): DownloadAccount failed.");
                     }
 
+                    // enable detailed logging
+                    _client.ClientSocket.setServerLogLevel(5);
+
                     break;
                 }
                 catch (Exception err)
