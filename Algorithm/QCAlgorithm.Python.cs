@@ -160,6 +160,115 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new universe and adds it to the algorithm. This will use the default universe settings
+        /// specified via the <see cref="UniverseSettings"/> property. This universe will use the defaults
+        /// of SecurityType.Equity, Resolution.Daily, Market.USA, and UniverseSettings
+        /// </summary>
+        /// <param name="T">The data type</param>
+        /// <param name="name">A unique name for this universe</param>
+        /// <param name="selector">Function delegate that performs selection on the universe data</param>
+        public void AddUniverse(PyObject T, string name, PyObject selector)
+        {
+            AddUniverse(CreateType(T), SecurityType.Equity, name, Resolution.Daily, Market.USA, UniverseSettings, selector);
+        }
+
+        /// <summary>
+        /// Creates a new universe and adds it to the algorithm. This will use the default universe settings
+        /// specified via the <see cref="UniverseSettings"/> property. This universe will use the defaults
+        /// of SecurityType.Equity, Market.USA and UniverseSettings
+        /// </summary>
+        /// <param name="T">The data type</param>
+        /// <param name="name">A unique name for this universe</param>
+        /// <param name="resolution">The epected resolution of the universe data</param>
+        /// <param name="selector">Function delegate that performs selection on the universe data</param>
+        public void AddUniverse(PyObject T, string name, Resolution resolution, PyObject selector)
+        {
+            AddUniverse(CreateType(T), SecurityType.Equity, name, resolution, Market.USA, UniverseSettings, selector);
+        }
+
+        /// <summary>
+        /// Creates a new universe and adds it to the algorithm. This will use the default universe settings
+        /// specified via the <see cref="UniverseSettings"/> property. This universe will use the defaults
+        /// of SecurityType.Equity, and Market.USA
+        /// </summary>
+        /// <param name="T">The data type</param>
+        /// <param name="name">A unique name for this universe</param>
+        /// <param name="resolution">The epected resolution of the universe data</param>
+        /// <param name="universeSettings">The settings used for securities added by this universe</param>
+        /// <param name="selector">Function delegate that performs selection on the universe data</param>
+        public void AddUniverse(PyObject T, string name, Resolution resolution, UniverseSettings universeSettings, PyObject selector)
+        {
+            AddUniverse(CreateType(T), SecurityType.Equity, name, resolution, Market.USA, universeSettings, selector);
+        }
+
+        /// <summary>
+        /// Creates a new universe and adds it to the algorithm. This will use the default universe settings
+        /// specified via the <see cref="UniverseSettings"/> property. This universe will use the defaults
+        /// of SecurityType.Equity, Resolution.Daily, and Market.USA
+        /// </summary>
+        /// <param name="T">The data type</param>
+        /// <param name="name">A unique name for this universe</param>
+        /// <param name="universeSettings">The settings used for securities added by this universe</param>
+        /// <param name="selector">Function delegate that performs selection on the universe data</param>
+        public void AddUniverse(PyObject T, string name, UniverseSettings universeSettings, PyObject selector)
+        {
+            AddUniverse(CreateType(T), SecurityType.Equity, name, Resolution.Daily, Market.USA, universeSettings, selector);
+        }
+
+        /// <summary>
+        /// Creates a new universe and adds it to the algorithm. This will use the default universe settings
+        /// specified via the <see cref="UniverseSettings"/> property.
+        /// </summary>
+        /// <param name="T">The data type</param>
+        /// <param name="securityType">The security type the universe produces</param>
+        /// <param name="name">A unique name for this universe</param>
+        /// <param name="resolution">The epected resolution of the universe data</param>
+        /// <param name="market">The market for selected symbols</param>
+        /// <param name="selector">Function delegate that performs selection on the universe data</param>
+        public void AddUniverse(PyObject T, SecurityType securityType, string name, Resolution resolution, string market, PyObject selector)
+        {
+            AddUniverse(CreateType(T), securityType, name, resolution, market, UniverseSettings, selector);
+        }
+
+        /// <summary>
+        /// Creates a new universe and adds it to the algorithm
+        /// </summary>
+        /// <param name="T">The data type</param>
+        /// <param name="securityType">The security type the universe produces</param>
+        /// <param name="name">A unique name for this universe</param>
+        /// <param name="resolution">The epected resolution of the universe data</param>
+        /// <param name="market">The market for selected symbols</param>
+        /// <param name="universeSettings">The subscription settings to use for newly created subscriptions</param>
+        /// <param name="selector">Function delegate that performs selection on the universe data</param>
+        public void AddUniverse(PyObject T, SecurityType securityType, string name, Resolution resolution, string market, UniverseSettings universeSettings, PyObject selector)
+        {
+            AddUniverse(CreateType(T), securityType, name, resolution, market, universeSettings, selector);
+        }
+
+        /// <summary>
+        /// Creates a new universe and adds it to the algorithm
+        /// </summary>
+        /// <param name="dataType">The data type</param>
+        /// <param name="securityType">The security type the universe produces</param>
+        /// <param name="name">A unique name for this universe</param>
+        /// <param name="resolution">The epected resolution of the universe data</param>
+        /// <param name="market">The market for selected symbols</param>
+        /// <param name="universeSettings">The subscription settings to use for newly created subscriptions</param>
+        /// <param name="pySelector">Function delegate that performs selection on the universe data</param>
+        public void AddUniverse(Type dataType, SecurityType securityType, string name, Resolution resolution, string market, UniverseSettings universeSettings, PyObject pySelector)
+        {
+            var marketHoursDbEntry = _marketHoursDatabase.GetEntry(market, name, securityType);
+            var dataTimeZone = marketHoursDbEntry.DataTimeZone;
+            var exchangeTimeZone = marketHoursDbEntry.ExchangeHours.TimeZone;
+            var symbol = QuantConnect.Symbol.Create(name, securityType, market);
+            var config = new SubscriptionDataConfig(dataType, symbol, resolution, dataTimeZone, exchangeTimeZone, false, false, true, true, isFilteredSubscription: false);
+
+            var selector = ToFunc<IEnumerable<IBaseData>, object[]>(pySelector);
+
+            AddUniverse(new FuncUniverse(config, universeSettings, SecurityInitializer, d => selector(d).Select(x => QuantConnect.Symbol.Create((string)x, securityType, market))));
+        }
+
+        /// <summary>
         /// Registers the consolidator to receive automatic updates as well as configures the indicator to receive updates
         /// from the consolidator.
         /// </summary>

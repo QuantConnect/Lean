@@ -38,6 +38,7 @@
     <Compile Include="DataConsolidationAlgorithm.py" />
     <Compile Include="DelistingEventsAlgorithm.py" />
     <Compile Include="DividendAlgorithm.py" />
+    <Compile Include="DropboxBaseDataUniverseSelectionAlgorithm.py" />
     <Compile Include="EmaCrossUniverseSelectionAlgorithm.py" />
     <Compile Include="ETFGlobalRotationAlgorithm.py" />
     <Compile Include="HistoryAndWarmupRegressionAlgorithm.py" />
