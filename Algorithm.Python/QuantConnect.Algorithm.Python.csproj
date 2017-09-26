@@ -36,6 +36,7 @@
     <LangVersion>6</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="CustomDataUniverseAlgorithm.py" />
     <Content Include="DropboxBaseDataUniverseSelectionAlgorithm.py" />
     <Content Include="MarginCallEventsAlgorithm.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

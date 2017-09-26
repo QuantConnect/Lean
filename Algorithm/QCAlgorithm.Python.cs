@@ -265,7 +265,8 @@ namespace QuantConnect.Algorithm
 
             var selector = ToFunc<IEnumerable<IBaseData>, object[]>(pySelector);
 
-            AddUniverse(new FuncUniverse(config, universeSettings, SecurityInitializer, d => selector(d).Select(x => QuantConnect.Symbol.Create((string)x, securityType, market))));
+            AddUniverse(new FuncUniverse(config, universeSettings, SecurityInitializer, d => selector(d)
+                .Select(x => x is Symbol ? (Symbol)x : QuantConnect.Symbol.Create((string)x, securityType, market))));
         }
 
         /// <summary>
