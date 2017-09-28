@@ -102,8 +102,8 @@ namespace QuantConnect.Algorithm
         /// <param name="pycoarse">Defines an initial coarse selection</param>
         public void AddUniverse(PyObject pycoarse)
         {
-            var coarse = ToFunc<IEnumerable<CoarseFundamental>, Symbol>(pycoarse);
-            AddUniverse(coarse);
+            var coarse = ToFunc<IEnumerable<CoarseFundamental>, object[]>(pycoarse);
+            AddUniverse(c => coarse(c).Select(x => (Symbol)x));
         }
 
         /// <summary>
@@ -114,9 +114,9 @@ namespace QuantConnect.Algorithm
         /// <param name="pyfine">Defines a more detailed selection with access to more data</param>
         public void AddUniverse(PyObject pycoarse, PyObject pyfine)
         {
-            var coarse = ToFunc<IEnumerable<CoarseFundamental>, Symbol>(pycoarse);
-            var fine = ToFunc< IEnumerable<FineFundamental>, Symbol>(pyfine);
-            AddUniverse(coarse, fine);
+            var coarse = ToFunc<IEnumerable<CoarseFundamental>, object[]>(pycoarse);
+            var fine = ToFunc<IEnumerable<FineFundamental>, object[]>(pyfine);
+            AddUniverse(c => coarse(c).Select(x => (Symbol)x), f => fine(f).Select(x => (Symbol)x));
         }
 
         /// <summary>
@@ -128,8 +128,8 @@ namespace QuantConnect.Algorithm
         /// <param name="pySelector">Function delegate that accepts a DateTime and returns a collection of string symbols</param>
         public void AddUniverse(string name, Resolution resolution, PyObject pySelector)
         {
-            var selector = ToFunc<DateTime, string>(pySelector);
-            AddUniverse(name, resolution, selector);
+            var selector = ToFunc<DateTime, object[]>(pySelector);
+            AddUniverse(name, resolution, d => selector(d).Select(x => (string)x));
         }
 
         /// <summary>
@@ -140,8 +140,8 @@ namespace QuantConnect.Algorithm
         /// <param name="pySelector">Function delegate that accepts a DateTime and returns a collection of string symbols</param>
         public void AddUniverse(string name, PyObject pySelector)
         {
-            var selector = ToFunc<DateTime, string>(pySelector);
-            AddUniverse(name, selector);
+            var selector = ToFunc<DateTime, object[]>(pySelector);
+            AddUniverse(name, d => selector(d).Select(x => (string)x));
         }
 
         /// <summary>
@@ -155,8 +155,118 @@ namespace QuantConnect.Algorithm
         /// <param name="pySelector">Function delegate that accepts a DateTime and returns a collection of string symbols</param>
         public void AddUniverse(SecurityType securityType, string name, Resolution resolution, string market, UniverseSettings universeSettings, PyObject pySelector)
         {
-            var selector = ToFunc<DateTime, string>(pySelector);
-            AddUniverse(securityType, name, resolution, market, universeSettings, selector);
+            var selector = ToFunc<DateTime, object[]>(pySelector);
+            AddUniverse(securityType, name, resolution, market, universeSettings, d => selector(d).Select(x => (string)x));
+        }
+
+        /// <summary>
+        /// Creates a new universe and adds it to the algorithm. This will use the default universe settings
+        /// specified via the <see cref="UniverseSettings"/> property. This universe will use the defaults
+        /// of SecurityType.Equity, Resolution.Daily, Market.USA, and UniverseSettings
+        /// </summary>
+        /// <param name="T">The data type</param>
+        /// <param name="name">A unique name for this universe</param>
+        /// <param name="selector">Function delegate that performs selection on the universe data</param>
+        public void AddUniverse(PyObject T, string name, PyObject selector)
+        {
+            AddUniverse(CreateType(T), SecurityType.Equity, name, Resolution.Daily, Market.USA, UniverseSettings, selector);
+        }
+
+        /// <summary>
+        /// Creates a new universe and adds it to the algorithm. This will use the default universe settings
+        /// specified via the <see cref="UniverseSettings"/> property. This universe will use the defaults
+        /// of SecurityType.Equity, Market.USA and UniverseSettings
+        /// </summary>
+        /// <param name="T">The data type</param>
+        /// <param name="name">A unique name for this universe</param>
+        /// <param name="resolution">The epected resolution of the universe data</param>
+        /// <param name="selector">Function delegate that performs selection on the universe data</param>
+        public void AddUniverse(PyObject T, string name, Resolution resolution, PyObject selector)
+        {
+            AddUniverse(CreateType(T), SecurityType.Equity, name, resolution, Market.USA, UniverseSettings, selector);
+        }
+
+        /// <summary>
+        /// Creates a new universe and adds it to the algorithm. This will use the default universe settings
+        /// specified via the <see cref="UniverseSettings"/> property. This universe will use the defaults
+        /// of SecurityType.Equity, and Market.USA
+        /// </summary>
+        /// <param name="T">The data type</param>
+        /// <param name="name">A unique name for this universe</param>
+        /// <param name="resolution">The epected resolution of the universe data</param>
+        /// <param name="universeSettings">The settings used for securities added by this universe</param>
+        /// <param name="selector">Function delegate that performs selection on the universe data</param>
+        public void AddUniverse(PyObject T, string name, Resolution resolution, UniverseSettings universeSettings, PyObject selector)
+        {
+            AddUniverse(CreateType(T), SecurityType.Equity, name, resolution, Market.USA, universeSettings, selector);
+        }
+
+        /// <summary>
+        /// Creates a new universe and adds it to the algorithm. This will use the default universe settings
+        /// specified via the <see cref="UniverseSettings"/> property. This universe will use the defaults
+        /// of SecurityType.Equity, Resolution.Daily, and Market.USA
+        /// </summary>
+        /// <param name="T">The data type</param>
+        /// <param name="name">A unique name for this universe</param>
+        /// <param name="universeSettings">The settings used for securities added by this universe</param>
+        /// <param name="selector">Function delegate that performs selection on the universe data</param>
+        public void AddUniverse(PyObject T, string name, UniverseSettings universeSettings, PyObject selector)
+        {
+            AddUniverse(CreateType(T), SecurityType.Equity, name, Resolution.Daily, Market.USA, universeSettings, selector);
+        }
+
+        /// <summary>
+        /// Creates a new universe and adds it to the algorithm. This will use the default universe settings
+        /// specified via the <see cref="UniverseSettings"/> property.
+        /// </summary>
+        /// <param name="T">The data type</param>
+        /// <param name="securityType">The security type the universe produces</param>
+        /// <param name="name">A unique name for this universe</param>
+        /// <param name="resolution">The epected resolution of the universe data</param>
+        /// <param name="market">The market for selected symbols</param>
+        /// <param name="selector">Function delegate that performs selection on the universe data</param>
+        public void AddUniverse(PyObject T, SecurityType securityType, string name, Resolution resolution, string market, PyObject selector)
+        {
+            AddUniverse(CreateType(T), securityType, name, resolution, market, UniverseSettings, selector);
+        }
+
+        /// <summary>
+        /// Creates a new universe and adds it to the algorithm
+        /// </summary>
+        /// <param name="T">The data type</param>
+        /// <param name="securityType">The security type the universe produces</param>
+        /// <param name="name">A unique name for this universe</param>
+        /// <param name="resolution">The epected resolution of the universe data</param>
+        /// <param name="market">The market for selected symbols</param>
+        /// <param name="universeSettings">The subscription settings to use for newly created subscriptions</param>
+        /// <param name="selector">Function delegate that performs selection on the universe data</param>
+        public void AddUniverse(PyObject T, SecurityType securityType, string name, Resolution resolution, string market, UniverseSettings universeSettings, PyObject selector)
+        {
+            AddUniverse(CreateType(T), securityType, name, resolution, market, universeSettings, selector);
+        }
+
+        /// <summary>
+        /// Creates a new universe and adds it to the algorithm
+        /// </summary>
+        /// <param name="dataType">The data type</param>
+        /// <param name="securityType">The security type the universe produces</param>
+        /// <param name="name">A unique name for this universe</param>
+        /// <param name="resolution">The epected resolution of the universe data</param>
+        /// <param name="market">The market for selected symbols</param>
+        /// <param name="universeSettings">The subscription settings to use for newly created subscriptions</param>
+        /// <param name="pySelector">Function delegate that performs selection on the universe data</param>
+        public void AddUniverse(Type dataType, SecurityType securityType, string name, Resolution resolution, string market, UniverseSettings universeSettings, PyObject pySelector)
+        {
+            var marketHoursDbEntry = _marketHoursDatabase.GetEntry(market, name, securityType);
+            var dataTimeZone = marketHoursDbEntry.DataTimeZone;
+            var exchangeTimeZone = marketHoursDbEntry.ExchangeHours.TimeZone;
+            var symbol = QuantConnect.Symbol.Create(name, securityType, market);
+            var config = new SubscriptionDataConfig(dataType, symbol, resolution, dataTimeZone, exchangeTimeZone, false, false, true, true, isFilteredSubscription: false);
+
+            var selector = ToFunc<IEnumerable<IBaseData>, object[]>(pySelector);
+
+            AddUniverse(new FuncUniverse(config, universeSettings, SecurityInitializer, d => selector(d)
+                .Select(x => x is Symbol ? (Symbol)x : QuantConnect.Symbol.Create((string)x, securityType, market))));
         }
 
         /// <summary>
@@ -403,7 +513,6 @@ namespace QuantConnect.Algorithm
         /// Gets the symbols/string from a PyObject
         /// </summary>
         /// <param name="pyObject">PyObject containing symbols</param>
-        /// <param name="isEquity"></param>
         /// <returns>List of symbols</returns>
         public List<Symbol> GetSymbolsFromPyObject(PyObject pyObject)
         {
@@ -465,26 +574,19 @@ namespace QuantConnect.Algorithm
         /// <typeparam name="TSecond">The output type</typeparam>
         /// <param name="pyObject">The python method</param>
         /// <returns>A <see cref="System.Func{T, TResult}"/> that encapsulates the python method</returns>
-        private Func<T, IEnumerable<TSecond>> ToFunc<T, TSecond>(PyObject pyObject)
+        private Func<T, TSecond> ToFunc<T, TSecond>(PyObject pyObject)
         {
             var testMod =
                "from clr import AddReference\n" +
                "AddReference(\"System\")\n" +
-               "AddReference(\"System.Collections\")\n" +
-               "AddReference(\"QuantConnect.Common\")\n" +
                "from System import Func\n" +
-               "from System.Collections.Generic import IEnumerable\n" +
-               "from QuantConnect import Symbol\n" +
-               "from QuantConnect.Data.Fundamental import FineFundamental\n" +
-               "from QuantConnect.Data.UniverseSelection import CoarseFundamental\n" +
                "def to_func(pyobject, in_type, out_type):\n" +
-               "    return Func[in_type, IEnumerable[out_type]](pyobject)";
+               "    return Func[in_type, out_type](pyobject)";
 
             using (Py.GIL())
             {
                 dynamic toFunc = PythonEngine.ModuleFromString("x", testMod).GetAttr("to_func");
-                return toFunc(pyObject, typeof(T), typeof(TSecond))
-                    .AsManagedObject(typeof(Func<T, IEnumerable<TSecond>>));
+                return toFunc(pyObject, typeof(T), typeof(TSecond)).AsManagedObject(typeof(Func<T, TSecond>));
             }
         }
     }

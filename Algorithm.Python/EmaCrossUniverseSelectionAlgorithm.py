@@ -71,13 +71,11 @@ class EmaCrossUniverseSelectionAlgorithm(QCAlgorithm):
         # Sorts the values of the dict: we want those with greater difference between the moving averages
         values.sort(key=lambda x: x.scale, reverse=True)
 
-        # we need to return only the symbol objects
-        list = List[Symbol]()
         for x in values[:self.coarse_count]:
             self.Log('symbol: ' + str(x.symbol.Value) + '  scale: ' + str(x.scale))
-            list.Add(x.symbol)
-
-        return list
+        
+        # we need to return only the symbol objects
+        return [ x.symbol for x in values[:self.coarse_count] ]
 
     # this event fires whenever we have changes to our universe
     def OnSecuritiesChanged(self, changes):
