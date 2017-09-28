@@ -149,7 +149,10 @@
     <Compile Include="Brokerages\DefaultBrokerageMessageHandler.cs" />
     <Compile Include="Brokerages\DefaultBrokerageModel.cs" />
     <Compile Include="Brokerages\FxcmBrokerageModel.cs" />
+    <Compile Include="Python\SlippageModelPythonWrapper.cs" />
+    <Compile Include="Python\FillModelPythonWrapper.cs" />
     <Compile Include="Python\PandasConverter.cs" />
+    <Compile Include="Python\FeeModelPythonWrapper.cs" />
     <Compile Include="Securities\IBaseCurrencySymbol.cs" />
     <Compile Include="Securities\Option\EmptyOptionChainProvider.cs" />
     <Compile Include="Interfaces\IOptionChainProvider.cs" />

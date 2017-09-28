@@ -37,6 +37,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="CustomDataUniverseAlgorithm.py" />
+    <Content Include="CustomModelsAlgorithm.py" />
     <Content Include="DropboxBaseDataUniverseSelectionAlgorithm.py" />
     <Content Include="MarginCallEventsAlgorithm.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

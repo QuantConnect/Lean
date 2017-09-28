@@ -36,16 +36,16 @@ namespace QuantConnect.Algorithm.CSharp
     public class CustomModelsAlgorithm : QCAlgorithm
     {
         private Security _security;
-        private readonly Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+        private Symbol _spy;
 
         public override void Initialize()
         {
-            SetStartDate(2012, 01, 01);
-            SetEndDate(2012, 02, 01);
-            AddSecurity(SecurityType.Equity, "SPY", Resolution.Hour);
+            SetStartDate(2013, 10, 01);
+            SetEndDate(2013, 10, 31);
+            _security = AddEquity("SPY", Resolution.Hour);
+            _spy = _security.Symbol;
 
             // set our models
-            _security = Securities[_spy];
             _security.FeeModel = new CustomFeeModel(this);
             _security.FillModel = new CustomFillModel(this);
             _security.SlippageModel = new CustomSlippageModel(this);
