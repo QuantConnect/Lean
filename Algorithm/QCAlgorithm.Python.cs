@@ -510,6 +510,66 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Sets the fee model for securities
+        /// </summary>
+        /// <param name="model">Model that represents a fee model</param>
+        /// <param name="security">Security that will use the fee model, if null, sets the model to all securities</param>
+        public void SetFeeModel(PyObject model, Security security = null)
+        {
+            if (security != null)
+            {
+                security.FeeModel = new FeeModelPythonWrapper(model);
+            }
+            else
+            {
+                foreach (var sec in Securities.Values)
+                {
+                    sec.FeeModel = new FeeModelPythonWrapper(model);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Sets the fill model for securities
+        /// </summary>
+        /// <param name="model">Model that represents a fill model</param>
+        /// <param name="security">Security that will use the fill model, if null, sets the model to all securities</param>
+        public void SetFillModel(PyObject model, Security security = null)
+        {
+            if (security != null)
+            {
+                security.FillModel = new FillModelPythonWrapper(model);
+            }
+            else
+            {
+                foreach (var sec in Securities.Values)
+                {
+                    sec.FillModel = new FillModelPythonWrapper(model);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Sets the slippage model for securities
+        /// </summary>
+        /// <param name="model">Model that represents a slippage model</param>
+        /// <param name="security">Security that will use the slippage model, if null, sets the model to all securities</param>
+        public void SetSlippageModel(PyObject model, Security security = null)
+        {
+            if (security != null)
+            {
+                security.SlippageModel = new SlippageModelPythonWrapper(model);
+            }
+            else
+            {
+                foreach (var sec in Securities.Values)
+                {
+                    sec.SlippageModel = new SlippageModelPythonWrapper(model);
+                }
+            }
+        }
+
+        /// <summary>
         /// Gets the symbols/string from a PyObject
         /// </summary>
         /// <param name="pyObject">PyObject containing symbols</param>
