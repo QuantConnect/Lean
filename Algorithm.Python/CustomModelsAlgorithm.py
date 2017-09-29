@@ -45,9 +45,9 @@ class CustomModelsAlgorithm(QCAlgorithm):
         self.spy = self.security.Symbol
 
         # set our models
-        self.SetFeeModel(CustomFeeModel(self), self.security)
-        self.SetFillModel(CustomFillModel(self), self.security)
-        self.SetSlippageModel(CustomSlippageModel(self), self.security)
+        self.security.SetFeeModel(CustomFeeModel(self))
+        self.security.SetFillModel(CustomFillModel(self))
+        self.security.SetSlippageModel(CustomSlippageModel(self))
 
         
     def OnData(self, data):

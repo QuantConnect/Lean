@@ -46,9 +46,9 @@ namespace QuantConnect.Algorithm.CSharp
             _spy = _security.Symbol;
 
             // set our models
-            _security.FeeModel = new CustomFeeModel(this);
-            _security.FillModel = new CustomFillModel(this);
-            _security.SlippageModel = new CustomSlippageModel(this);
+            _security.SetFeeModel(new CustomFeeModel(this));
+            _security.SetFillModel(new CustomFillModel(this));
+            _security.SetSlippageModel(new CustomSlippageModel(this));
         }
 
         public void OnData(TradeBars data)
