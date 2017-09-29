@@ -1,5 +1,5 @@
 #
-#	LEAN Foundation Docker Container 20170912
+#	LEAN Foundation Docker Container 20170929
 #	Cross platform deployment for multiple brokerages	
 #	Intended to be used in conjunction with DockerfileLeanAlgorithm. This is just the foundation common OS+Dependencies required.
 #
@@ -57,8 +57,8 @@ RUN echo "deb http://download.mono-project.com/repo/debian wheezy/snapshots/4.6.
 
 # Install Python.NET
 # Have to add env TZ=UTC. See https://github.com/dotnet/coreclr/issues/602
-RUN env TZ=UTC nuget install QuantConnect.pythonnet -Version 1.0.4.8 \
-    && cp QuantConnect.pythonnet.1.0.4.8/lib/Python.Runtime.dll /usr/lib
+RUN env TZ=UTC nuget install QuantConnect.pythonnet -Version 1.0.5 \
+    && cp QuantConnect.pythonnet.1.0.5/lib/Python.Runtime.dll /usr/lib
 	
 RUN ln -s /usr/lib/x86_64-linux-gnu/libpython2.7.so /usr/lib/libpython27.so
 
@@ -69,7 +69,7 @@ RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz \
     && ./configure --prefix=/usr \
     && make \
     && make install \ 
-    && pip install TA-lib
+    && pip install TA-lib \
     && cd ..
 
 # Install R
