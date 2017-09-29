@@ -96,7 +96,7 @@ class UpdateOrderRegressionAlgorithm(QCAlgorithm):
                 if len(ticket.UpdateRequests) == 0 and ticket.Status is not OrderStatus.Filled:
                     self.Log("TICKET:: {0}".format(ticket))
                     updateOrderFields = UpdateOrderFields()
-                    updateOrderFields.Quantity = ticket.Quantity + copysign(self.delta_quantity, self.quantity)
+                    updateOrderFields.Quantity = ticket.Quantity + d.Decimal(copysign(self.delta_quantity, self.quantity))
                     updateOrderFields.Tag = "Change quantity: {0}".format(self.Time)
                     ticket.Update(updateOrderFields)
 

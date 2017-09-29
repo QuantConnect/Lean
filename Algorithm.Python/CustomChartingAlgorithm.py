@@ -61,13 +61,12 @@ class CustomChartingAlgorithm(QCAlgorithm):
 
         self.fastMA = 0
         self.slowMA = 0
+        self.lastPrice = 0
         self.resample = datetime.min
         self.resamplePeriod = (self.EndDate - self.StartDate) / 2000
 
     def OnData(self, slice):
-        if slice["SPY"] is None:
-            self.lastPrice = 0
-            return
+        if slice["SPY"] is None: return
 
         self.lastPrice = slice["SPY"].Close
         if self.fastMA == 0: self.fastMA = self.lastPrice
