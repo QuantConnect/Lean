@@ -32,7 +32,7 @@ from datetime import datetime, timedelta
 ### <meta name="tag" content="quandl" />
 ### <meta name="tag" content="custom data" />
 ### <meta name="tag" content="futures" />
-class QCUQuandlFutures(QCAlgorithm):
+class QuandlFuturesDataAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         ''' Initialize the data and resolution you require for your strategy '''

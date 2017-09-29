@@ -44,9 +44,7 @@ class UserDefinedUniverseAlgorithm(QCAlgorithm):
 
 	def selection(self, time):
 		index = time.hour%len(self.symbols)
-		list = List[String]()
-		list.Add(self.symbols[index])
-		return list
+		return self.symbols[index]
 
 	def OnData(self, slice):
 		pass
