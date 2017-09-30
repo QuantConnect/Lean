@@ -35,6 +35,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
     public class GDAXBrokerageTests
     {
 
+        #region Declarations
         GDAXBrokerage _unit;
         Mock<IWebSocket> _wss = new Mock<IWebSocket>();
         Mock<IRestClient> _rest = new Mock<IRestClient>();
@@ -50,6 +51,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         const string _brokerId = "d0c5340b-6d6c-49d9-b567-48c4bfca13d2";
         const string _matchBrokerId = "132fb6ae-456b-4654-b4e0-d681ac05cea1";
         AccountType _accountType = AccountType.Margin;
+        #endregion
 
         [SetUp()]
         public void Setup()
@@ -79,6 +81,14 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             });
 
             _algo.Setup(a => a.BrokerageModel.AccountType).Returns(_accountType);
+            var rateMock = new Mock<IRestClient>();
+            _unit.RateClient = rateMock.Object;
+            rateMock.Setup(r => r.Execute(It.IsAny<IRestRequest>())).Returns(new RestResponse
+            {
+                Content = @"{""base"":""USD"",""date"":""2001-01-01"",""rates"":{""GBP"":1.234 }}",
+                StatusCode = HttpStatusCode.OK
+            });
+
         }
 
         private void SetupResponse(string body, HttpStatusCode httpStatus = HttpStatusCode.OK)
@@ -341,7 +351,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
             StringAssert.Contains(expected, actual);
 
-            Assert.AreEqual(2, _unit.Ticks.Count());
+            Assert.AreEqual(3, _unit.Ticks.Count());
             Assert.AreEqual(333.98, _unit.Ticks.First().BidPrice);
             Assert.AreEqual(333.99, _unit.Ticks.First().AskPrice);
             Assert.AreEqual(333.985, _unit.Ticks.First().Price);
@@ -383,7 +393,10 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         [Test]
         public void PollTickTest()
         {
+            _unit.PollTick(Symbol.Create("GBPUSD", SecurityType.Crypto, Market.GDAX));
+            Thread.Sleep(1000);
+            Assert.AreEqual(1.234m, _unit.Ticks.First().Price);
         }
 
-        }
+    }
 }

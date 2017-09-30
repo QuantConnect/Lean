@@ -292,6 +292,11 @@ namespace QuantConnect.Brokerages.GDAX
                     {
                         list.Add(new Securities.Cash(item.Currency, item.Balance, 1));
                     }
+                    else if (new[] {"GBP", "EUR" }.Contains(item.Currency))
+                    {
+                        var rate = GetConversionRate(item.Currency);
+                        list.Add(new Securities.Cash(item.Currency.ToUpper(), item.Balance, rate));
+                    }
                     else
                     {
                         var tick = GetTick(Symbol.Create(item.Currency + "USD", SecurityType.Crypto, Market.GDAX));

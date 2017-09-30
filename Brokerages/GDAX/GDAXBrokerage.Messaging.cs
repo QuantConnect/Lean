@@ -50,6 +50,10 @@ namespace QuantConnect.Brokerages.GDAX
         private IAlgorithm _algorithm;
         private static string[] _channelNames = new string[] { "heartbeat", "ticker", "user", "matches" };
         private CancellationTokenSource _canceller = new CancellationTokenSource();
+        /// <summary>
+        /// Rest client used to call missing conversion rates
+        /// </summary>
+        public IRestClient RateClient { get; set; }
         #endregion
 
         /// <summary>
@@ -69,6 +73,7 @@ namespace QuantConnect.Brokerages.GDAX
             _passPhrase = passPhrase;
             _wssUrl = wssUrl;
             _algorithm = algorithm;
+            RateClient = new RestClient("http://api.fixer.io/latest?base=usd");
         }
 
         /// <summary>
@@ -108,7 +113,7 @@ namespace QuantConnect.Brokerages.GDAX
                     OrderMatch(e.Message);
                     return;
                 }
-                else if (raw.Type == "open" || raw.Type == "change" | raw.Type == "received" | raw.Type == "subscriptions")
+                else if (raw.Type == "open" || raw.Type == "change" || raw.Type == "received" || raw.Type == "subscriptions" || raw.Type == "last_match")
                 {
                     //known messages we don't need to handle or log 
                     return;
@@ -264,8 +269,15 @@ namespace QuantConnect.Brokerages.GDAX
 
             foreach (var item in symbols)
             {
+                if (item.Value.Contains("UNIVERSE")) continue;
 
-                if (IsValidForSubscribe(item))
+                if (!IsSubscribeAvailable(item))
+                {
+                    //todo: refactor this outside brokerage
+                    //alternative service: http://openexchangerates.org/latest.json
+                    PollTick(item);
+                }
+                else
                 {
                     this.ChannelList[item.Value] = new Channel { Name = item.Value, Symbol = item.Value };
 
@@ -287,12 +299,6 @@ namespace QuantConnect.Brokerages.GDAX
 
                         this.Ticks.Add(updating);
                     }
-                }
-                //todo: added for production testing
-                //http://openexchangerates.org/latest.json
-                else if (!item.Value.Contains("UNIVERSE"))
-                {
-                    PollTick(item, new RestClient("http://api.fixer.io/latest?base=usd"));
                 }
             }
 
@@ -335,33 +341,23 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         /// <param name="symbol"></param>
         /// <param name="client"></param>
-        public void PollTick(Symbol symbol, IRestClient client)
+        public void PollTick(Symbol symbol)
         {
 
             int delay = 36000000;
             var token = _canceller.Token;
             var listener = Task.Factory.StartNew(() =>
             {
-
                 Log.Trace("PollLatestTick: " + "Started polling for ticks: " + symbol.Value.ToString());
                 while (true)
                 {
-                    var response = client.Get(new RestSharp.RestRequest());
-                    if (response.StatusCode != System.Net.HttpStatusCode.OK)
-                    {
-                        Log.Error("PollTick: error returned from conversion rate service.");
-                        return;
-                    }
-
-                    var raw = JsonConvert.DeserializeObject<JObject>(response.Content);
-                    var currency = symbol.Value.Replace("USD", "");
-                    var parsing = raw.SelectToken("rates." + currency);
+                    var rate = GetConversionRate(symbol.Value.Replace("USD", ""));
 
                     lock (_tickLocker)
                     {
                         var latest = new Tick
                         {
-                            Value = parsing.Value<decimal>(),
+                            Value = rate,
                             Time = DateTime.UtcNow,
                             Symbol = symbol
                         };
@@ -375,7 +371,22 @@ namespace QuantConnect.Brokerages.GDAX
             }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 
-        private bool IsValidForSubscribe(Symbol symbol)
+        private decimal GetConversionRate(string currency)
+        {
+            var response = RateClient.Execute(new RestSharp.RestRequest(Method.GET));
+            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            {
+                Log.Error("GetConversionRate: error returned from conversion rate service.");
+                return 0;
+            }
+
+            var raw = JsonConvert.DeserializeObject<JObject>(response.Content);
+            var parsing = raw.SelectToken("rates." + currency);
+
+            return parsing.Value<decimal>();
+        }
+
+        private bool IsSubscribeAvailable(Symbol symbol)
         {
             return Regex.IsMatch(symbol.Value, _symbolMatching);
         }
