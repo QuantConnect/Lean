@@ -130,8 +130,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             _wss.Verify();
         }
 
-        [TestCase(5.23512)]
-        [TestCase(6.1)]
+        [TestCase(-5.23512)]
         [TestCase(99)]
         public void OnMessageFillTest(decimal expectedQuantity)
         {
@@ -157,7 +156,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
                 actualQuantity += e.AbsoluteFillQuantity;
 
                 Assert.AreEqual(actualQuantity != orderQuantity ? Orders.OrderStatus.PartiallyFilled : Orders.OrderStatus.Filled, e.Status);
-                Assert.AreEqual(5.23512m, actualQuantity);
+                Assert.AreEqual(expectedQuantity, e.FillQuantity);
                 Assert.AreEqual(0.01m, Math.Round(actualFee, 8));
                 raised.Set();
             };

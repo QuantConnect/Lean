@@ -151,7 +151,7 @@ namespace QuantConnect.Brokerages.GDAX
             (
                 cached.First().Key, symbol, message.Time, status,
                 message.Side == "sell" ? OrderDirection.Sell : OrderDirection.Buy,
-                message.Price, message.Size,
+                message.Price, message.Side == "sell" ? -message.Size : message.Size,
                 GetFee(cached.First().Value), "GDAX Match Event"
             );
 
@@ -192,7 +192,7 @@ namespace QuantConnect.Brokerages.GDAX
             (
                 cached.First().Key, ConvertProductId(message.ProductId), message.Time, OrderStatus.Filled,
                 message.Side == "sell" ? OrderDirection.Sell : OrderDirection.Buy,
-                message.Price, split.TotalQuantity(),
+                message.Price, message.Side == "sell" ? -split.TotalQuantity() : split.TotalQuantity(),
                 GetFee(cached.First().Value), "GDAX Fill Event"
             );
 
