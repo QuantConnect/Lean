@@ -19,7 +19,7 @@ namespace QuantConnect.Tests.ToolBox
     ///     - Data is correctly saved.
     ///     - Lean can read the saved data.
     /// </summary>
-    [TestFixture]
+    [TestFixture, Ignore("FXCM API goes down on weekends")]
     public class FxcmVolumeDownloaderTest
     {
         private string _dataDirectory;
