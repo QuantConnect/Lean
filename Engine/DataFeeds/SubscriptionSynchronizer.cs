@@ -97,7 +97,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // we want bars rounded using their subscription times, we make a clone
                         // so we don't interfere with the enumerator's internal logic
                         var clone = subscription.Current.Clone(subscription.Current.IsFillForward);
-                        clone.Time = clone.Time.ExchangeRoundDown(configuration.Increment, subscription.Security.Exchange.Hours, configuration.ExtendedMarketHours);
+                        clone.Time = clone.Time.ExchangeRoundDownInTimeZone(configuration.Increment, subscription.Security.Exchange.Hours, configuration.DataTimeZone, configuration.ExtendedMarketHours);
 
                         packet.Add(clone);
 
