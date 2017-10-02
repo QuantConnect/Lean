@@ -525,6 +525,30 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Extension method to round a datetime down by a timespan interval until it's
+        /// within the specified exchange's open hours. The rounding is performed in the
+        /// specified time zone
+        /// </summary>
+        /// <param name="dateTime">Time to be rounded down</param>
+        /// <param name="interval">Timespan interval to round to.</param>
+        /// <param name="exchangeHours">The exchange hours to determine open times</param>
+        /// <param name="roundingTimeZone">The time zone to perform the rounding in</param>
+        /// <param name="extendedMarket">True for extended market hours, otherwise false</param>
+        /// <returns>Rounded datetime</returns>
+        public static DateTime ExchangeRoundDownInTimeZone(this DateTime dateTime, TimeSpan interval, SecurityExchangeHours exchangeHours, DateTimeZone roundingTimeZone, bool extendedMarket)
+        {
+            // can't round against a zero interval
+            if (interval == TimeSpan.Zero) return dateTime;
+
+            var rounded = dateTime.RoundDownInTimeZone(interval, exchangeHours.TimeZone, roundingTimeZone);
+            while (!exchangeHours.IsOpen(rounded, rounded + interval, extendedMarket))
+            {
+                rounded = (rounded - interval).RoundDownInTimeZone(interval, exchangeHours.TimeZone, roundingTimeZone);
+            }
+            return rounded;
+        }
+
+        /// <summary>
         /// Extension method to round a datetime to the nearest unit timespan.
         /// </summary>
         /// <param name="datetime">Datetime object we're rounding.</param>

@@ -79,6 +79,18 @@ namespace QuantConnect.Tests.Common.Util
             var expected = time.Date;
             var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, null, SecurityType.Equity);
             var exchangeRounded = time.ExchangeRoundDown(Time.OneDay, hours, false);
+            Assert.AreEqual(expected, exchangeRounded);
+        }
+
+        [Test]
+        public void ExchangeRoundDownInTimeZoneSkipsWeekends()
+        {
+            // moment before EST market open in UTC (time + one day)
+            var time = new DateTime(2017, 10, 01, 9, 29, 59).ConvertToUtc(TimeZones.NewYork);
+            var expected = new DateTime(2017, 09, 29).ConvertFromUtc(TimeZones.NewYork);
+            var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, null, SecurityType.Equity);
+            var exchangeRounded = time.ExchangeRoundDownInTimeZone(Time.OneDay, hours, TimeZones.Utc, false);
+            Assert.AreEqual(expected, exchangeRounded);
         }
 
         [Test]
