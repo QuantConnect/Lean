@@ -508,7 +508,17 @@ namespace QuantConnect.Algorithm
 
             return _converter.GetDataFrame(History(symbols, start, end, resolution));
         }
-        
+
+        /// <summary>
+        /// Sets the brokerage to emulate in backtesting or paper trading.
+        /// This can be used to set a custom brokerage model.
+        /// </summary>
+        /// <param name="model">The brokerage model to use</param>
+        public void SetBrokerageModel(PyObject model)
+        {
+            SetBrokerageModel(new BrokerageModelPythonWrapper(model));
+        }
+
         /// <summary>
         /// Gets the symbols/string from a PyObject
         /// </summary>

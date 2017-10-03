@@ -36,6 +36,7 @@
     <LangVersion>6</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="BrokerageModelAlgorithm.py" />
     <Content Include="CustomDataUniverseAlgorithm.py" />
     <Content Include="CustomModelsAlgorithm.py" />
     <Content Include="DropboxBaseDataUniverseSelectionAlgorithm.py" />
