@@ -165,8 +165,7 @@ namespace QuantConnect.Algorithm.CSharp
                 try
                 {
                     coin = JsonConvert.DeserializeObject<Bitcoin>(line);
-                    coin.EndTime = DateTime.UtcNow;
-                    coin.Time = coin.EndTime - config.Increment;
+                    coin.EndTime = DateTime.UtcNow.ConvertFromUtc(config.ExchangeTimeZone);
                     coin.Value = coin.Close;
                 }
                 catch { /* Do nothing, possible error in json decoding */ }
