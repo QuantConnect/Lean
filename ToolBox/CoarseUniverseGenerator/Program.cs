@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,7 +37,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         /// stage serves to cull the set using coarse filters, such as price, market, and dollar volume.
         /// Later we'll support full fundamental data such as ratios and financial statements, and these
         /// would be run AFTER the initial coarse filter
-        /// 
+        ///
         /// The files are generated from LEAN formatted daily trade bar equity files
         /// </summary>
         /// <param name="args">Unused argument</param>
@@ -213,12 +213,6 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                     ZipFile zip;
                     using (var reader = Compression.Unzip(file, out zip))
                     {
-                        // 30 period EMA constant
-                        const decimal k = 2m / (30 + 1);
-
-                        var seeded = false;
-                        var runningAverageVolume = 0m;
-
                         var checkedForMapFile = false;
 
                         symbols++;
@@ -228,7 +222,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                             //20150625.csv
                             var csv = line.Split(',');
                             var date = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture);
-                            
+
                             // spin past old data
                             if (date < startDate) continue;
 
@@ -246,14 +240,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                             var close = decimal.Parse(csv[4])/scaleFactor;
                             var volume = long.Parse(csv[5]);
 
-                            // compute the current volume EMA for dollar volume calculations
-                            runningAverageVolume = seeded
-                                ? volume*k + runningAverageVolume*(1 - k)
-                                : volume;
-
-                            seeded = true;
-
-                            var dollarVolume = close * runningAverageVolume;
+                            var dollarVolume = close * volume;
 
                             var coarseFile = Path.Combine(coarseFolder, date.ToString("yyyyMMdd") + ".csv");
                             dates.Add(date);
