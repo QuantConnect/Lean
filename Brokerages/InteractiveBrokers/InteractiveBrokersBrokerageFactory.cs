@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -52,6 +52,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 data.Add("ib-password", Config.Get("ib-password"));
                 data.Add("ib-trading-mode", Config.Get("ib-trading-mode"));
                 data.Add("ib-agent-description", Config.Get("ib-agent-description"));
+                data.Add("ib-financial-advisor", Config.Get("ib-financial-advisor"));
                 return data;
             }
         }
@@ -86,6 +87,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var password = Read<string>(job.BrokerageData, "ib-password", errors);
             var tradingMode = Read<string>(job.BrokerageData, "ib-trading-mode", errors);
             var agentDescription = Read<string>(job.BrokerageData, "ib-agent-description", errors);
+            var financialAdvisor = Read<bool>(job.BrokerageData, "ib-financial-advisor", errors);
 
             if (errors.Count != 0)
             {
@@ -101,7 +103,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // launch the IB gateway
             InteractiveBrokersGatewayRunner.Start(ibControllerDirectory, twsDirectory, userId, password, tradingMode, useTws);
 
-            var ib = new InteractiveBrokersBrokerage(algorithm, algorithm.Transactions, algorithm.Portfolio, account, host, port, agentDescription);
+            var ib = new InteractiveBrokersBrokerage(algorithm, algorithm.Transactions, algorithm.Portfolio, account, host, port, agentDescription, financialAdvisor);
             Composer.Instance.AddPart<IDataQueueHandler>(ib);
 
             return ib;
