@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -35,6 +36,7 @@ using Order = QuantConnect.Orders.Order;
 using IB = QuantConnect.Brokerages.InteractiveBrokers.Client;
 using IBApi;
 using NodaTime;
+using QuantConnect.Brokerages.InteractiveBrokers.FinancialAdvisor;
 using Bar = QuantConnect.Data.Market.Bar;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
@@ -63,6 +65,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly ISecurityProvider _securityProvider;
         private readonly IB.InteractiveBrokersClient _client;
         private readonly string _agentDescription;
+        private readonly bool _financialAdvisor;
 
         private Thread _messageProcessingThread;
         private readonly AutoResetEvent _resetEventRestartGateway = new AutoResetEvent(false);
@@ -113,6 +116,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly Dictionary<int, DateTime> _subscriptionTimes = new Dictionary<int, DateTime>();
         private readonly TimeSpan _minimumTimespanBeforeUnsubscribe = TimeSpan.FromMilliseconds(500);
 
+        // Financial Advisor configuration data
+        private List<AccountAlias> _accountAliases;
+        private List<AccountGroup> _accountGroups;
+        private List<AccountProfile> _accountProfiles;
+
         /// <summary>
         /// Returns true if we're currently connected to the broker
         /// </summary>
@@ -142,7 +150,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Config.Get("ib-account"),
                 Config.Get("ib-host", "LOCALHOST"),
                 Config.GetInt("ib-port", 4001),
-                Config.GetValue("ib-agent-description", IB.AgentDescription.Individual)
+                Config.GetValue("ib-agent-description", IB.AgentDescription.Individual),
+                Config.GetBool("ib-financial-advisor")
                 )
         {
         }
@@ -162,7 +171,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 account,
                 Config.Get("ib-host", "LOCALHOST"),
                 Config.GetInt("ib-port", 4001),
-                Config.GetValue("ib-agent-description", IB.AgentDescription.Individual)
+                Config.GetValue("ib-agent-description", IB.AgentDescription.Individual),
+                Config.GetBool("ib-financial-advisor")
                 )
         {
         }
@@ -177,7 +187,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="host">host name or IP address of the machine where TWS is running. Leave blank to connect to the local host.</param>
         /// <param name="port">must match the port specified in TWS on the Configure&gt;API&gt;Socket Port field.</param>
         /// <param name="agentDescription">Used for Rule 80A describes the type of trader.</param>
-        public InteractiveBrokersBrokerage(IAlgorithm algorithm, IOrderProvider orderProvider, ISecurityProvider securityProvider, string account, string host, int port, string agentDescription = IB.AgentDescription.Individual)
+        /// <param name="financialAdvisor">true if the user is a financial advisor</param>
+        public InteractiveBrokersBrokerage(IAlgorithm algorithm, IOrderProvider orderProvider, ISecurityProvider securityProvider, string account, string host, int port, string agentDescription = IB.AgentDescription.Individual, bool financialAdvisor = false)
             : base("Interactive Brokers Brokerage")
         {
             _algorithm = algorithm;
@@ -188,6 +199,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _port = port;
             _clientId = IncrementClientId();
             _agentDescription = agentDescription;
+            _financialAdvisor = financialAdvisor;
+
             _client = new IB.InteractiveBrokersClient(_signal);
 
             // set up event handlers
@@ -551,19 +564,31 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                     if (!_client.Connected) throw new Exception("InteractiveBrokersBrokerage.Connect(): Connection returned but was not in connected state.");
 
-                    if (!DownloadAccount())
+                    if (_financialAdvisor)
                     {
-                        Log.Trace("InteractiveBrokersBrokerage.Connect(): DownloadAccount failed. Operation took longer than 15 seconds.");
-
-                        Disconnect();
-
-                        if (attempt++ < maxAttempts)
+                        if (!DownloadFinancialAdvisorConfiguration())
                         {
-                            Thread.Sleep(1000);
-                            continue;
-                        }
+                            Disconnect();
 
-                        throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): DownloadAccount failed.");
+                            throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): DownloadFinancialAdvisorConfiguration failed.");
+                        }
+                    }
+                    else
+                    {
+                        if (!DownloadAccount())
+                        {
+                            Log.Trace("InteractiveBrokersBrokerage.Connect(): DownloadAccount failed. Operation took longer than 15 seconds.");
+
+                            Disconnect();
+
+                            if (attempt++ < maxAttempts)
+                            {
+                                Thread.Sleep(1000);
+                                continue;
+                            }
+
+                            throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): DownloadAccount failed.");
+                        }
                     }
 
                     // enable detailed logging
@@ -602,6 +627,93 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     throw;
                 }
             }
+        }
+
+        /// <summary>
+        /// Downloads the financial advisor configuration information.
+        /// This method is called upon successful connection.
+        /// </summary>
+        private bool DownloadFinancialAdvisorConfiguration()
+        {
+            var faResetEvent = new AutoResetEvent(false);
+
+            var xmlGroups = string.Empty;
+            var xmlProfiles = string.Empty;
+            var xmlAliases = string.Empty;
+
+            EventHandler<IB.ReceiveFaEventArgs> handler = (sender, e) =>
+            {
+                switch (e.FaDataType)
+                {
+                    case Constants.FaAliases:
+                        xmlAliases = e.FaXmlData;
+                        break;
+
+                    case Constants.FaGroups:
+                        xmlGroups = e.FaXmlData;
+                        break;
+
+                    case Constants.FaProfiles:
+                        xmlProfiles = e.FaXmlData;
+                        break;
+                }
+
+                faResetEvent.Set();
+            };
+
+            _client.ReceiveFa += handler;
+
+            // request FA Aliases
+            Log.Trace("InteractiveBrokersBrokerage.DownloadFinancialAdvisorConfiguration(): requesting FA Aliases");
+            _client.ClientSocket.requestFA(Constants.FaAliases);
+            if (!faResetEvent.WaitOne(2000))
+            {
+                Log.Trace("InteractiveBrokersBrokerage.DownloadFinancialAdvisorConfiguration(): Download FA Aliases failed. Operation took longer than 2 seconds.");
+                return false;
+            }
+            Log.Trace(xmlAliases);
+
+            // request FA Groups
+            Log.Trace("InteractiveBrokersBrokerage.DownloadFinancialAdvisorConfiguration(): requesting FA Groups");
+            _client.ClientSocket.requestFA(Constants.FaGroups);
+            if (!faResetEvent.WaitOne(2000))
+            {
+                Log.Trace("InteractiveBrokersBrokerage.DownloadFinancialAdvisorConfiguration(): Download FA Groups failed. Operation took longer than 2 seconds.");
+                return false;
+            }
+            Log.Trace(xmlGroups);
+
+            // request FA Profiles
+            Log.Trace("InteractiveBrokersBrokerage.DownloadFinancialAdvisorConfiguration(): requesting FA Profiles");
+            _client.ClientSocket.requestFA(Constants.FaProfiles);
+            if (!faResetEvent.WaitOne(2000))
+            {
+                Log.Trace("InteractiveBrokersBrokerage.DownloadFinancialAdvisorConfiguration(): Download FA Profiles failed. Operation took longer than 2 seconds.");
+                return false;
+            }
+            Log.Trace(xmlProfiles);
+
+            _client.ReceiveFa -= handler;
+
+            var serializer = new XmlSerializer(typeof(List<AccountAlias>), new XmlRootAttribute("ListOfAccountAliases"));
+            using (var stringReader = new StringReader(xmlAliases))
+            {
+                _accountAliases = (List<AccountAlias>)serializer.Deserialize(stringReader);
+            }
+
+            serializer = new XmlSerializer(typeof(List<AccountGroup>), new XmlRootAttribute("ListOfGroups"));
+            using (var stringReader = new StringReader(xmlGroups))
+            {
+                _accountGroups = (List<AccountGroup>)serializer.Deserialize(stringReader);
+            }
+
+            serializer = new XmlSerializer(typeof(List<AccountProfile>), new XmlRootAttribute("ListOfAllocationProfiles"));
+            using (var stringReader = new StringReader(xmlProfiles))
+            {
+                _accountProfiles = (List<AccountProfile>)serializer.Deserialize(stringReader);
+            }
+
+            return true;
         }
 
         /// <summary>

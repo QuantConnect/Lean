@@ -263,6 +263,10 @@
     <Compile Include="InteractiveBrokers\Client\ScannerParametersEventArgs.cs" />
     <Compile Include="InteractiveBrokers\Client\ScannerDataEventArgs.cs" />
     <Compile Include="InteractiveBrokers\Client\UpdatePortfolioEventArgs.cs" />
+    <Compile Include="InteractiveBrokers\FinancialAdvisor\Allocation.cs" />
+    <Compile Include="InteractiveBrokers\FinancialAdvisor\AccountProfile.cs" />
+    <Compile Include="InteractiveBrokers\FinancialAdvisor\AccountGroup.cs" />
+    <Compile Include="InteractiveBrokers\FinancialAdvisor\AccountAlias.cs" />
     <Compile Include="InteractiveBrokers\HistoricalDataType.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerage.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerageFactory.cs" />
