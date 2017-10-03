@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,13 +15,15 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
+using QuantConnect.Securities.Forex;
 using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
@@ -33,7 +35,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void FillsForwardMidDay()
         {
             var dataResolution = Time.OneMinute;
-            
+
             var reference = new DateTime(2015, 6, 25, 9, 30, 0);
             var data = Enumerable.Range(0, 2).Select(x => new TradeBar
             {
@@ -46,7 +48,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var exchange = new EquityExchange();
             var isExtendedMarketHours = false;
             var fillForwardResolution = TimeSpan.FromMinutes(1);
-            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(fillForwardResolution), isExtendedMarketHours, data.Last().EndTime, dataResolution);
+            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(fillForwardResolution), isExtendedMarketHours, data.Last().EndTime, dataResolution, exchange.TimeZone);
 
             // 9:31
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -67,7 +69,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(reference.AddMinutes(3), fillForwardEnumerator.Current.EndTime);
             Assert.AreEqual(1, fillForwardEnumerator.Current.Value);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
-            
+
             Assert.IsFalse(fillForwardEnumerator.MoveNext());
         }
 
@@ -95,7 +97,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var exchange = new EquityExchange();
             var isExtendedMarketHours = false;
-            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(TimeSpan.FromMinutes(1)), isExtendedMarketHours, data.Last().EndTime, dataResolution);
+            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(TimeSpan.FromMinutes(1)), isExtendedMarketHours, data.Last().EndTime, dataResolution, exchange.TimeZone);
 
             // 9:29
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -152,7 +154,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var exchange = new EquityExchange();
             const bool isExtendedMarketHours = false;
-            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(TimeSpan.FromSeconds(1)), isExtendedMarketHours, data.Last().EndTime, dataResolution);
+            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(TimeSpan.FromSeconds(1)), isExtendedMarketHours, data.Last().EndTime, dataResolution, exchange.TimeZone);
 
             // 8:40:00
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -196,7 +198,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var exchange = new EquityExchange();
             var isExtendedMarketHours = false;
-            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(TimeSpan.FromMinutes(1)), isExtendedMarketHours, reference.AddMinutes(3), dataResolution);
+            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(TimeSpan.FromMinutes(1)), isExtendedMarketHours, reference.AddMinutes(3), dataResolution, exchange.TimeZone);
 
             // 3:58
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -241,7 +243,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var exchange = new EquityExchange();
             var isExtendedMarketHours = false;
-            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(TimeSpan.FromMinutes(1)), isExtendedMarketHours, reference.AddMinutes(3), dataResolution);
+            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(TimeSpan.FromMinutes(1)), isExtendedMarketHours, reference.AddMinutes(3), dataResolution, exchange.TimeZone);
 
             // 3:58
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -285,7 +287,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var exchange = new EquityExchange();
             var isExtendedMarketHours = false;
-            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(TimeSpan.FromMinutes(1)), isExtendedMarketHours, reference.Date.AddHours(16), dataResolution);
+            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(TimeSpan.FromMinutes(1)), isExtendedMarketHours, reference.Date.AddHours(16), dataResolution, exchange.TimeZone);
 
             // 3:58
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -336,7 +338,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var exchange = new EquityExchange();
             bool isExtendedMarketHours = false;
-            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(TimeSpan.FromHours(1)), isExtendedMarketHours, end, dataResolution);
+            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(TimeSpan.FromHours(1)), isExtendedMarketHours, end, dataResolution, exchange.TimeZone);
 
             // 3:00
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -375,7 +377,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Time = reference,
                     Value = 0,
                     Period = dataResolution
-                }, 
+                },
                 new TradeBar
                 {
                     Time = reference.AddHours(3),
@@ -393,7 +395,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var exchange = new EquityExchange();
             bool isExtendedMarketHours = false;
-            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(TimeSpan.FromHours(1)), isExtendedMarketHours, end, dataResolution);
+            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(TimeSpan.FromHours(1)), isExtendedMarketHours, end, dataResolution, exchange.TimeZone);
 
             // 3:00
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -442,7 +444,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var exchange = new EquityExchange();
             bool isExtendedMarketHours = false;
-            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(TimeSpan.FromHours(1)), isExtendedMarketHours, data.Last().EndTime, dataResolution);
+            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(TimeSpan.FromHours(1)), isExtendedMarketHours, data.Last().EndTime, dataResolution, exchange.TimeZone);
 
             // 12:00am
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -506,7 +508,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(1, fillForwardEnumerator.Current.Value);
             Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
             Assert.AreEqual(dataResolution, fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
-            
+
             Assert.IsFalse(fillForwardEnumerator.MoveNext());
         }
 
@@ -526,7 +528,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var exchange = new EquityExchange();
             bool isExtendedMarketHours = false;
-            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(TimeSpan.FromDays(1)), isExtendedMarketHours, data.Last().EndTime.AddDays(1), dataResolution);
+            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(TimeSpan.FromDays(1)), isExtendedMarketHours, data.Last().EndTime.AddDays(1), dataResolution, exchange.TimeZone);
 
             // 6/25
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -583,7 +585,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var exchange = new EquityExchange();
             bool isExtendedMarketHours = false;
             var ffResolution = TimeSpan.FromMinutes(30);
-            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(ffResolution), isExtendedMarketHours, data.Last().EndTime, dataResolution);
+            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(ffResolution), isExtendedMarketHours, data.Last().EndTime, dataResolution, exchange.TimeZone);
 
             // 3:00
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -629,7 +631,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var exchange = new EquityExchange();
             bool isExtendedMarketHours = false;
             var ffResolution = TimeSpan.FromMinutes(15);
-            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(ffResolution), isExtendedMarketHours, data.Last().EndTime, dataResolution);
+            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(ffResolution), isExtendedMarketHours, data.Last().EndTime, dataResolution, exchange.TimeZone);
 
             // 12:00
             Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -669,7 +671,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var exchange = new EquityExchange();
             bool isExtendedMarketHours = false;
             var ffResolution = TimeSpan.FromHours(1);
-            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(ffResolution), isExtendedMarketHours, data.Last().EndTime, dataResolution);
+            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(ffResolution), isExtendedMarketHours, data.Last().EndTime, dataResolution, exchange.TimeZone);
 
             int dailyBars = 0;
             int hourlyBars = 0;
@@ -691,6 +693,53 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             // we expect 6 days worth of ff hourly bars at 7 bars a day
             Assert.AreEqual(42, hourlyBars);
+        }
+
+        [Test]
+        public void OandaFillsForwardDailyForexOnWeekends()
+        {
+            var dailyBarsEmitted = 0;
+            var fillForwardBars = new List<BaseData>();
+
+            // 3 QuoteBars as they would be read from the EURUSD oanda daily file by QuoteBar.Reader()
+            // The conversion from dataTimeZone to exchangeTimeZone has been done by hand
+            // dataTimeZone == UTC
+            /*
+                20120719 00:00,1.22769,1.2324,1.22286,1.22759,0,1.22781,1.23253,1.22298,1.22771,0
+                20120720 00:00,1.22757,1.22823,1.21435,1.21542,0,1.22769,1.22835,1.21449,1.21592,0
+                20120722 00:00,1.21542,1.21542,1.21037,1.21271,0,1.21592,1.21592,1.21087,1.21283,0
+                20120723 00:00,1.21273,1.21444,1.20669,1.21238,0,1.21285,1.21454,1.20685,1.21249,0
+             */
+            var data = new BaseData[]
+            {
+                // fri 7/20
+                new QuoteBar{Value = 0, Time =  new DateTime(2012, 7, 19, 20, 0, 0), Period = Time.OneDay},
+                // sunday 7/22
+                new QuoteBar{Value = 1, Time = new DateTime(2012, 7, 21, 20, 0, 0), Period = Time.OneDay},
+                // monday 7/23
+                new QuoteBar{Value = 2, Time = new DateTime(2012, 7, 22, 20, 0, 0), Period = Time.OneDay},
+            }.ToList();
+            var enumerator = data.GetEnumerator();
+
+            var market = Market.Oanda;
+            var symbol = Symbol.Create("EURUSD", SecurityType.Forex, market);
+
+            var marketHours = MarketHoursDatabase.FromDataFolder();
+            var exchange = new ForexExchange(marketHours.GetExchangeHours(market, symbol, SecurityType.Forex));
+
+            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(TimeSpan.FromDays(1)), false, data.Last().EndTime, Time.OneDay, TimeZones.Utc);
+
+            while (fillForwardEnumerator.MoveNext())
+            {
+                fillForwardBars.Add(fillForwardEnumerator.Current);
+                Console.WriteLine(fillForwardEnumerator.Current.Time.DayOfWeek + " " + fillForwardEnumerator.Current.Time + " - " + fillForwardEnumerator.Current.EndTime.DayOfWeek + " " + fillForwardEnumerator.Current.EndTime);
+                dailyBarsEmitted++;
+            }
+
+            Assert.AreEqual(3, dailyBarsEmitted);
+            Assert.AreEqual(new DateTime(2012, 7, 19, 20, 0, 0), fillForwardBars[0].Time);
+            Assert.AreEqual(new DateTime(2012, 7, 21, 20, 0, 0), fillForwardBars[1].Time);
+            Assert.AreEqual(new DateTime(2012, 7, 22, 20, 0, 0), fillForwardBars[2].Time);
         }
     }
 }
