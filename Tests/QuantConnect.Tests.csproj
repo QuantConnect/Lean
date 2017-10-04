@@ -236,6 +236,7 @@
     <Compile Include="Engine\DataFeeds\Enumerators\OptionChainUniverseDataCollectionAggregatorEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\QuoteBarFillForwardEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\RateLimitEnumeratorTests.cs" />
+    <Compile Include="Engine\DataFeeds\Enumerators\RefreshEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\SynchronizingEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\TradeBarBuilderEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\FileSystemDataFeedTests.cs" />
