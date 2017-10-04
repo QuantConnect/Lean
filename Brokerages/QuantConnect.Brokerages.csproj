@@ -267,7 +267,9 @@
     <Compile Include="InteractiveBrokers\FinancialAdvisor\AccountProfile.cs" />
     <Compile Include="InteractiveBrokers\FinancialAdvisor\AccountGroup.cs" />
     <Compile Include="InteractiveBrokers\FinancialAdvisor\AccountAlias.cs" />
+    <Compile Include="InteractiveBrokers\FinancialAdvisor\FinancialAdvisorConfiguration.cs" />
     <Compile Include="InteractiveBrokers\HistoricalDataType.cs" />
+    <Compile Include="InteractiveBrokers\InteractiveBrokersAccountData.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerage.cs" />
     <Compile Include="InteractiveBrokers\InteractiveBrokersBrokerageFactory.cs" />
     <Compile Include="InteractiveBrokers\Client\InteractiveBrokersClient.cs" />
