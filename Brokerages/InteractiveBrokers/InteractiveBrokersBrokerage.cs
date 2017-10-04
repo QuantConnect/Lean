@@ -22,7 +22,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml.Serialization;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -36,7 +35,6 @@ using Order = QuantConnect.Orders.Order;
 using IB = QuantConnect.Brokerages.InteractiveBrokers.Client;
 using IBApi;
 using NodaTime;
-using QuantConnect.Brokerages.InteractiveBrokers.FinancialAdvisor;
 using Bar = QuantConnect.Data.Market.Bar;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
@@ -80,11 +78,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         // tracks remaining quantity for orders waiting to be filled completely (updated on partial fills)
         private readonly Dictionary<int, int> _orderFills = new Dictionary<int, int>();
 
+        // holds account properties, cash balances and holdings for the account
+        private readonly InteractiveBrokersAccountData _accountData = new InteractiveBrokersAccountData();
+
         private readonly object _sync = new object();
-        private readonly ConcurrentDictionary<string, decimal> _cashBalances = new ConcurrentDictionary<string, decimal>();
-        private readonly ConcurrentDictionary<string, string> _accountProperties = new ConcurrentDictionary<string, string>();
-        // number of shares per symbol
-        private readonly ConcurrentDictionary<string, Holding> _accountHoldings = new ConcurrentDictionary<string, Holding>();
 
         private readonly ConcurrentDictionary<string, ContractDetails> _contractDetails = new ConcurrentDictionary<string, ContractDetails>();
 
@@ -116,11 +113,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly Dictionary<int, DateTime> _subscriptionTimes = new Dictionary<int, DateTime>();
         private readonly TimeSpan _minimumTimespanBeforeUnsubscribe = TimeSpan.FromMilliseconds(500);
 
-        // Financial Advisor configuration data
-        private List<AccountAlias> _accountAliases;
-        private List<AccountGroup> _accountGroups;
-        private List<AccountProfile> _accountProfiles;
-
         /// <summary>
         /// Returns true if we're currently connected to the broker
         /// </summary>
@@ -138,6 +130,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         ///     ib-host (optional, defaults to LOCALHOST)
         ///     ib-port (optional, defaults to 4001)
         ///     ib-agent-description (optional, defaults to Individual)
+        ///     ib-financial-advisor (optional, defaults to False)
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="orderProvider">An instance of IOrderProvider used to fetch Order objects by brokerage ID</param>
@@ -389,7 +382,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             CheckIbGateway();
 
-            var holdings = _accountHoldings.Select(x => ObjectActivator.Clone(x.Value)).Where(x => x.Quantity != 0).ToList();
+            var holdings = _accountData.AccountHoldings.Select(x => ObjectActivator.Clone(x.Value)).Where(x => x.Quantity != 0).ToList();
 
             // fire up tasks to resolve the conversion rates so we can do them in parallel
             var tasks = holdings.Select(local =>
@@ -426,7 +419,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             CheckIbGateway();
 
-            return _cashBalances.Select(x => new Cash(x.Key, x.Value, GetUsdConversion(x.Key))).ToList();
+            return _accountData.CashBalances.Select(x => new Cash(x.Key, x.Value, GetUsdConversion(x.Key))).ToList();
         }
 
         /// <summary>
@@ -489,9 +482,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             if (IsConnected) return;
 
-            // we're going to receive fresh values for both of these collections, so clear them
-            _accountHoldings.Clear();
-            _accountProperties.Clear();
+            // we're going to receive fresh values for all account data, so we clear all
+            _accountData.Clear();
 
             var attempt = 1;
             const int maxAttempts = 5;
@@ -566,7 +558,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                     if (_financialAdvisor)
                     {
-                        if (!DownloadFinancialAdvisorConfiguration())
+                        if (!DownloadFinancialAdvisorAccount())
                         {
                             Disconnect();
 
@@ -575,7 +567,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     }
                     else
                     {
-                        if (!DownloadAccount())
+                        if (!DownloadAccount(_account))
                         {
                             Log.Trace("InteractiveBrokersBrokerage.Connect(): DownloadAccount failed. Operation took longer than 15 seconds.");
 
@@ -633,85 +625,19 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// Downloads the financial advisor configuration information.
         /// This method is called upon successful connection.
         /// </summary>
-        private bool DownloadFinancialAdvisorConfiguration()
+        private bool DownloadFinancialAdvisorAccount()
         {
-            var faResetEvent = new AutoResetEvent(false);
-
-            var xmlGroups = string.Empty;
-            var xmlProfiles = string.Empty;
-            var xmlAliases = string.Empty;
-
-            EventHandler<IB.ReceiveFaEventArgs> handler = (sender, e) =>
-            {
-                switch (e.FaDataType)
-                {
-                    case Constants.FaAliases:
-                        xmlAliases = e.FaXmlData;
-                        break;
-
-                    case Constants.FaGroups:
-                        xmlGroups = e.FaXmlData;
-                        break;
-
-                    case Constants.FaProfiles:
-                        xmlProfiles = e.FaXmlData;
-                        break;
-                }
-
-                faResetEvent.Set();
-            };
-
-            _client.ReceiveFa += handler;
-
-            // request FA Aliases
-            Log.Trace("InteractiveBrokersBrokerage.DownloadFinancialAdvisorConfiguration(): requesting FA Aliases");
-            _client.ClientSocket.requestFA(Constants.FaAliases);
-            if (!faResetEvent.WaitOne(2000))
-            {
-                Log.Trace("InteractiveBrokersBrokerage.DownloadFinancialAdvisorConfiguration(): Download FA Aliases failed. Operation took longer than 2 seconds.");
+            if (!_accountData.FinancialAdvisorConfiguration.Load(_client))
                 return false;
-            }
-            Log.Trace(xmlAliases);
 
-            // request FA Groups
-            Log.Trace("InteractiveBrokersBrokerage.DownloadFinancialAdvisorConfiguration(): requesting FA Groups");
-            _client.ClientSocket.requestFA(Constants.FaGroups);
-            if (!faResetEvent.WaitOne(2000))
-            {
-                Log.Trace("InteractiveBrokersBrokerage.DownloadFinancialAdvisorConfiguration(): Download FA Groups failed. Operation took longer than 2 seconds.");
-                return false;
-            }
-            Log.Trace(xmlGroups);
+            // Only one account can be subscribed at a time.
+            // With Financial Advisory (FA) account structures there is an alternative way of
+            // specifying the account code such that information is returned for 'All' sub accounts.
+            // This is done by appending the letter 'A' to the end of the account number
+            // https://interactivebrokers.github.io/tws-api/account_updates.html#gsc.tab=0
 
-            // request FA Profiles
-            Log.Trace("InteractiveBrokersBrokerage.DownloadFinancialAdvisorConfiguration(): requesting FA Profiles");
-            _client.ClientSocket.requestFA(Constants.FaProfiles);
-            if (!faResetEvent.WaitOne(2000))
-            {
-                Log.Trace("InteractiveBrokersBrokerage.DownloadFinancialAdvisorConfiguration(): Download FA Profiles failed. Operation took longer than 2 seconds.");
-                return false;
-            }
-            Log.Trace(xmlProfiles);
-
-            _client.ReceiveFa -= handler;
-
-            var serializer = new XmlSerializer(typeof(List<AccountAlias>), new XmlRootAttribute("ListOfAccountAliases"));
-            using (var stringReader = new StringReader(xmlAliases))
-            {
-                _accountAliases = (List<AccountAlias>)serializer.Deserialize(stringReader);
-            }
-
-            serializer = new XmlSerializer(typeof(List<AccountGroup>), new XmlRootAttribute("ListOfGroups"));
-            using (var stringReader = new StringReader(xmlGroups))
-            {
-                _accountGroups = (List<AccountGroup>)serializer.Deserialize(stringReader);
-            }
-
-            serializer = new XmlSerializer(typeof(List<AccountProfile>), new XmlRootAttribute("ListOfAllocationProfiles"));
-            using (var stringReader = new StringReader(xmlProfiles))
-            {
-                _accountProfiles = (List<AccountProfile>)serializer.Deserialize(stringReader);
-            }
+            // subscribe to the FA account
+            DownloadAccount(_accountData.FinancialAdvisorConfiguration.MasterAccount + "A");
 
             return true;
         }
@@ -720,7 +646,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// Downloads the account information and subscribes to account updates.
         /// This method is called upon successful connection.
         /// </summary>
-        private bool DownloadAccount()
+        private bool DownloadAccount(string account)
         {
             // define our event handler, this acts as stop to make sure when we leave Connect we have downloaded the full account
             EventHandler<IB.AccountDownloadEndEventArgs> clientOnAccountDownloadEnd = (sender, args) =>
@@ -741,7 +667,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.UpdateAccountValue += clientOnUpdateAccountValue;
 
             // first we won't subscribe, wait for this to finish, below we'll subscribe for continuous updates
-            _client.ClientSocket.reqAccountUpdates(true, _account);
+            _client.ClientSocket.reqAccountUpdates(true, account);
 
             // wait to see the first account value update
             firstAccountUpdateReceived.WaitOne(2500);
@@ -799,14 +725,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _messagingRateLimiter.Dispose();
 
             _ctsRestartGateway.Cancel(false);
-        }
-
-        /// <summary>
-        /// Gets the raw account values sent from IB
-        /// </summary>
-        public Dictionary<string, string> GetAccountValues()
-        {
-            return new Dictionary<string, string>(_accountProperties);
         }
 
         /// <summary>
@@ -1352,17 +1270,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private void HandleUpdateAccountValue(object sender, IB.UpdateAccountValueEventArgs e)
         {
-            //https://www.interactivebrokers.com/en/software/api/apiguide/activex/updateaccountvalue.htm
-
             try
             {
-                _accountProperties[e.Currency + ":" + e.Key] = e.Value;
+                _accountData.AccountProperties[e.Currency + ":" + e.Key] = e.Value;
 
                 // we want to capture if the user's cash changes so we can reflect it in the algorithm
                 if (e.Key == AccountValueKeys.CashBalance && e.Currency != "BASE")
                 {
                     var cashBalance = decimal.Parse(e.Value, CultureInfo.InvariantCulture);
-                    _cashBalances.AddOrUpdate(e.Currency, cashBalance);
+                    _accountData.CashBalances.AddOrUpdate(e.Currency, cashBalance);
+
                     OnAccountChanged(new AccountEvent(e.Currency, cashBalance));
                 }
             }
@@ -1575,7 +1492,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             _accountHoldingsResetEvent.Reset();
             var holding = CreateHolding(e);
-            _accountHoldings[holding.Symbol.Value] = holding;
+            _accountData.AccountHoldings[holding.Symbol.Value] = holding;
         }
 
         /// <summary>
