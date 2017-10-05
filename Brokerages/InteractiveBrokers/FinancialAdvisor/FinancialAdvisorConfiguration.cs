@@ -32,8 +32,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.FinancialAdvisor
     {
         // Financial Advisor configuration data
         private List<AccountAlias> _accountAliases = new List<AccountAlias>();
-        private List<AccountGroup> _accountGroups = new List<AccountGroup>();
-        private List<AccountProfile> _accountProfiles = new List<AccountProfile>();
+        private List<Group> _accountGroups = new List<Group>();
+        private List<AllocationProfile> _allocationProfiles = new List<AllocationProfile>();
 
         /// <summary>
         /// The financial advisor master account code
@@ -57,7 +57,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.FinancialAdvisor
 
             _accountAliases.Clear();
             _accountGroups.Clear();
-            _accountProfiles.Clear();
+            _allocationProfiles.Clear();
         }
 
         /// <summary>
@@ -132,18 +132,18 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.FinancialAdvisor
                 Log.Trace("InteractiveBrokersBrokerage.DownloadFinancialAdvisorConfiguration(): FA Aliases found: " + _accountAliases.Count);
             }
 
-            serializer = new XmlSerializer(typeof(List<AccountGroup>), new XmlRootAttribute("ListOfGroups"));
+            serializer = new XmlSerializer(typeof(List<Group>), new XmlRootAttribute("ListOfGroups"));
             using (var stringReader = new StringReader(xmlGroups))
             {
-                _accountGroups = (List<AccountGroup>)serializer.Deserialize(stringReader);
+                _accountGroups = (List<Group>)serializer.Deserialize(stringReader);
                 Log.Trace("InteractiveBrokersBrokerage.DownloadFinancialAdvisorConfiguration(): FA Groups found: " + _accountGroups.Count);
             }
 
-            serializer = new XmlSerializer(typeof(List<AccountProfile>), new XmlRootAttribute("ListOfAllocationProfiles"));
+            serializer = new XmlSerializer(typeof(List<AllocationProfile>), new XmlRootAttribute("ListOfAllocationProfiles"));
             using (var stringReader = new StringReader(xmlProfiles))
             {
-                _accountProfiles = (List<AccountProfile>)serializer.Deserialize(stringReader);
-                Log.Trace("InteractiveBrokersBrokerage.DownloadFinancialAdvisorConfiguration(): FA Profiles found: " + _accountProfiles.Count);
+                _allocationProfiles = (List<AllocationProfile>)serializer.Deserialize(stringReader);
+                Log.Trace("InteractiveBrokersBrokerage.DownloadFinancialAdvisorConfiguration(): FA Profiles found: " + _allocationProfiles.Count);
             }
 
             // save the master account code

@@ -19,26 +19,21 @@ using System.Xml.Serialization;
 namespace QuantConnect.Brokerages.InteractiveBrokers.FinancialAdvisor
 {
     /// <summary>
-    /// Represents an allocation profile
+    /// Represents a group of accounts
     /// </summary>
-    public class AccountProfile
+    public class Group
     {
         /// <summary>
-        /// The name of the profile
+        /// The name of the group
         /// </summary>
         [XmlElement("name")]
         public string Name { get; set; }
 
         /// <summary>
-        /// The type of the profile
+        /// The list of accounts in the group
         /// </summary>
-        [XmlElement("type")]
-        public string Type { get; set; }
-
-        /// <summary>
-        /// The alias for the account
-        /// </summary>
-        [XmlElement("ListOfAllocations")]
-        public List<Allocation> Allocations { get; set; }
+        [XmlArray("ListOfAccts")]
+        [XmlArrayItem("String")]
+        public List<string> Accounts { get; set; }
     }
 }
