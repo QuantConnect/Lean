@@ -44,6 +44,7 @@
     <Compile Include="DropboxBaseDataUniverseSelectionAlgorithm.py" />
     <Compile Include="EmaCrossUniverseSelectionAlgorithm.py" />
     <Compile Include="ETFGlobalRotationAlgorithm.py" />
+    <Compile Include="FilteredIdentityAlgorithm.py" />
     <Compile Include="HistoryAndWarmupRegressionAlgorithm.py" />
     <Compile Include="LimitFillRegressionAlgorithm.py" />
     <Compile Include="MACDTrendAlgorithm.py" />

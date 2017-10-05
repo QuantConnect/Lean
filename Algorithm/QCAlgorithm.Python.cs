@@ -462,6 +462,61 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new FilteredIdentity indicator for the symbol The indicator will be automatically
+        /// updated on the symbol's subscription resolution
+        /// </summary>
+        /// <param name="symbol">The symbol whose values we want as an indicator</param>
+        /// <param name="selector">Selects a value from the BaseData, if null defaults to the .Value property (x => x.Value)</param>
+        /// <param name="filter">Filters the IBaseData send into the indicator, if null defaults to true (x => true) which means no filter</param>
+        /// <param name="fieldName">The name of the field being selected</param>
+        /// <returns>A new FilteredIdentity indicator for the specified symbol and selector</returns>
+        public FilteredIdentity FilteredIdentity(Symbol symbol, PyObject selector = null, PyObject filter = null, string fieldName = null)
+        {
+            var resolution = GetSubscription(symbol).Resolution;
+            return FilteredIdentity(symbol, resolution, selector, filter, fieldName);
+        }
+
+        /// <summary>
+        /// Creates a new FilteredIdentity indicator for the symbol The indicator will be automatically
+        /// updated on the symbol's subscription resolution
+        /// </summary>
+        /// <param name="symbol">The symbol whose values we want as an indicator</param>
+        /// <param name="resolution">The desired resolution of the data</param>
+        /// <param name="selector">Selects a value from the BaseData, if null defaults to the .Value property (x => x.Value)</param>
+        /// <param name="filter">Filters the IBaseData send into the indicator, if null defaults to true (x => true) which means no filter</param>
+        /// <param name="fieldName">The name of the field being selected</param>
+        /// <returns>A new FilteredIdentity indicator for the specified symbol and selector</returns>
+        public FilteredIdentity FilteredIdentity(Symbol symbol, Resolution resolution, PyObject selector = null, PyObject filter = null, string fieldName = null)
+        {
+            var name = CreateIndicatorName(symbol, fieldName ?? "close", resolution);
+            var pyselector = ToFunc<IBaseData, IBaseDataBar>(selector);
+            var pyfilter = ToFunc<IBaseData, bool>(filter);
+            var filteredIdentity = new FilteredIdentity(name, pyfilter);
+            RegisterIndicator(symbol, filteredIdentity, resolution, pyselector);
+            return filteredIdentity;
+        }
+
+        /// <summary>
+        /// Creates a new FilteredIdentity indicator for the symbol The indicator will be automatically
+        /// updated on the symbol's subscription resolution
+        /// </summary>
+        /// <param name="symbol">The symbol whose values we want as an indicator</param>
+        /// <param name="resolution">The desired resolution of the data</param>
+        /// <param name="selector">Selects a value from the BaseData, if null defaults to the .Value property (x => x.Value)</param>
+        /// <param name="filter">Filters the IBaseData send into the indicator, if null defaults to true (x => true) which means no filter</param>
+        /// <param name="fieldName">The name of the field being selected</param>
+        /// <returns>A new FilteredIdentity indicator for the specified symbol and selector</returns>
+        public FilteredIdentity FilteredIdentity(Symbol symbol, TimeSpan resolution, PyObject selector = null, PyObject filter = null, string fieldName = null)
+        {
+            var name = string.Format("{0}({1}_{2})", symbol, fieldName ?? "close", resolution);
+            var pyselector = ToFunc<IBaseData, IBaseDataBar>(selector);
+            var pyfilter = ToFunc<IBaseData, bool>(filter);
+            var filteredIdentity = new FilteredIdentity(name, pyfilter);
+            RegisterIndicator(symbol, filteredIdentity, ResolveConsolidator(symbol, resolution), pyselector);
+            return filteredIdentity;
+        }
+
+        /// <summary>
         /// Gets the historical data for the specified symbol. The exact number of bars will be returned. 
         /// The symbol must exist in the Securities collection.
         /// </summary>
@@ -595,6 +650,7 @@ namespace QuantConnect.Algorithm
 
             using (Py.GIL())
             {
+                if (!pyObject.IsCallable()) return null;
                 dynamic toFunc = PythonEngine.ModuleFromString("x", testMod).GetAttr("to_func");
                 return toFunc(pyObject, typeof(T), typeof(TSecond)).AsManagedObject(typeof(Func<T, TSecond>));
             }
