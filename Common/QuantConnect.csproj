@@ -149,6 +149,8 @@
     <Compile Include="Brokerages\DefaultBrokerageMessageHandler.cs" />
     <Compile Include="Brokerages\DefaultBrokerageModel.cs" />
     <Compile Include="Brokerages\FxcmBrokerageModel.cs" />
+    <Compile Include="Orders\OrderFinancialAdvisorProperties.cs" />
+    <Compile Include="Orders\OrderProperties.cs" />
     <Compile Include="Brokerages\GDAXBrokerageModel.cs" />
     <Compile Include="Python\BrokerageModelPythonWrapper.cs" />
     <Compile Include="Python\SecurityInitializerPythonWrapper.cs" />
