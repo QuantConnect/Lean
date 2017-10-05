@@ -90,6 +90,12 @@ If you get other errors that lead to the failure of your building, please refer 
 cd Lean/Launcher/bin/Debug
 mono ./QuantConnect.Lean.Launcher.exe
 ```
+- Interactive Brokers set up details
+
+Make sure you fix the `ib-tws-dir` and `ib-controller-dir` fields in the `config.json` file with the actual paths to the TWS and the IBController folders respectively.
+
+If after all you still receive connection refuse error, try changing the `ib-port` field in the `config.json` file from 4002 to 4001.
+
 ### Windows
 
 - Install [Visual Studio](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx)
