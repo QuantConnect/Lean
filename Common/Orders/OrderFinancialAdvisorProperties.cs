@@ -33,6 +33,7 @@ namespace QuantConnect.Orders
 
         /// <summary>
         /// The method for the account group order
+        /// Supported methods are: EqualQuantity, NetLiq, AvailableEquity, PctChange
         /// </summary>
         public string Method { get; set; }
 
