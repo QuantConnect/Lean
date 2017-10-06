@@ -46,5 +46,13 @@ namespace QuantConnect.Orders
         /// The allocation profile to be used for the order
         /// </summary>
         public string Profile { get; set; }
+
+        /// <summary>
+        /// Returns a new instance clone of this object
+        /// </summary>
+        public OrderFinancialAdvisorProperties Clone()
+        {
+            return (OrderFinancialAdvisorProperties)MemberwiseClone();
+        }
     }
 }
