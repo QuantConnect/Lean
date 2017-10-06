@@ -55,9 +55,10 @@ class BasicTemplateOptionsAlgorithm(QCAlgorithm):
             chain = kvp.Value
 
             # we sort the contracts to find at the money (ATM) contract with farthest expiration
-            contracts = sorted(sorted(chain, \
+            contracts = sorted(sorted(sorted(chain, \
                 key = lambda x: abs(chain.Underlying.Price - x.Strike)), \
-                key = lambda x: x.Expiry, reverse=True)
+                key = lambda x: x.Expiry, reverse=True), \
+                key = lambda x: x.Right, reverse=True)
 
             # if found, trade it
             if len(contracts) == 0: continue

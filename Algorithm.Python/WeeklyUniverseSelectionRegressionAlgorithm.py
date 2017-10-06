@@ -13,16 +13,13 @@
 
 from clr import AddReference
 AddReference("System.Core")
-AddReference("System.Collections")
 AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Algorithm")
 
 from System import *
-from System.Collections.Generic import List
 from QuantConnect import *
 from QuantConnect.Algorithm import QCAlgorithm
 from QuantConnect.Data.UniverseSelection import *
-import numpy as np
 
 ### <summary>
 ### Regression algorithm to test universe additions and removals with open positions
@@ -34,35 +31,33 @@ class WeeklyUniverseSelectionRegressionAlgorithm(QCAlgorithm):
         self.SetCash(100000)
         self.SetStartDate(2013,10,1)
         self.SetEndDate(2013,10,31)
-        self.UniverseSettings.Resolution = Resolution.Daily
+
+        self.ibm = Symbol.Create("IBM", SecurityType.Equity, Market.USA)
+
+        self.UniverseSettings.Resolution = Resolution.Hour
         self.AddUniverse(self.CoarseSelectionFunction)
 
     def CoarseSelectionFunction(self, coarse):
-        # select IBM once a week
-        list = List[Symbol]()
-        if self.Time.day % 7 == 0:
-            list.Add(self.AddEquity("IBM").Symbol)
-        return list
+        # select IBM once a week, empty universe the other days
+        return [ self.ibm ] if self.Time.day % 7 == 0 else [ ]
 
     def OnData(self, slice):
-        if self._changes == SecurityChanges.None: return
+        if self.changes == None: return
 
         # liquidate removed securities
-        for security in self._changes.RemovedSecurities:
+        for security in self.changes.RemovedSecurities:
             if security.Invested:
-                self.Log(str(self.Time) + " Liquidate " + str(security.Symbol.Value))
+                self.Log("{} Liquidate {}".format(self.Time, security.Symbol))
                 self.Liquidate(security.Symbol)
 
         # we'll simply go long each security we added to the universe
-        for security in self._changes.AddedSecurities:
+        for security in self.changes.AddedSecurities:
             if not security.Invested:
-                self.Log(str(Time) + " Buy " + str(security.Symbol.Value))
+                self.Log("{} Buy {}".format(self.Time, security.Symbol))
                 self.SetHoldings(security.Symbol, 1)
 
-        self._changes = SecurityChanges.None
+        self.changes = None
 
 
     def OnSecuritiesChanged(self, changes):
-        # Event fired each time the we add/remove securities from the data feed
-        # <param name="changes">Object containing AddedSecurities and RemovedSecurities</param>
-        self._changes = changes
+        self.changes = changes
