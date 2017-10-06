@@ -45,7 +45,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 
         /// <summary>
         /// <see cref = "AlgorithmPythonWrapper"/> constructor.
-        /// Creates and wraps the algorithm written in python.  
+        /// Creates and wraps the algorithm written in python.
         /// </summary>
         /// <param name="module">Python module with the algorithm written in Python</param>
         public AlgorithmPythonWrapper(PyObject module)
@@ -84,7 +84,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                             // Set pandas
                             _baseAlgorithm.SetPandas();
 
-                            return; 
+                            return;
                         }
                     }
                 }
@@ -663,7 +663,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                 }
             }
         }
-        
+
         /// <summary>
         /// Wrapper for <see cref = "IAlgorithm.OnEndOfAlgorithm" /> in Python
         /// </summary>
@@ -709,7 +709,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                 using (Py.GIL())
                 {
                     var pyRequests = _algorithm.OnMarginCall(requests) as PyObject;
-                    
+
                     // If the method does not return or returns a non-iterable PyObject, throw an exception
                     if (pyRequests == null || !pyRequests.IsIterable())
                     {
@@ -736,7 +736,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
             }
             catch (PythonException pythonException)
             {
-                // Pythonnet generated error due to List conversion 
+                // Pythonnet generated error due to List conversion
                 if (pythonException.Message.Equals("TypeError : No method matches given arguments"))
                 {
                     _baseAlgorithm.OnMarginCall(requests);
@@ -947,7 +947,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                 "def OnPythonData(self, data):\n" +
                 "    self.OnData(PythonSlice(data))\n" +
 
-                // PythonSlice class 
+                // PythonSlice class
                 "class PythonSlice(dict):\n" +
                 "    def __init__(self, slice):\n" +
                 "        for data in slice:\n" +
@@ -990,7 +990,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
             {
                 result = (T)pyObject.AsManagedObject(typeof(T));
             }
-            
+
             return type == typeof(T);
         }
 
