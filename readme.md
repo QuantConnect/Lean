@@ -94,7 +94,7 @@ mono ./QuantConnect.Lean.Launcher.exe
 
 Make sure you fix the `ib-tws-dir` and `ib-controller-dir` fields in the `config.json` file with the actual paths to the TWS and the IBController folders respectively.
 
-If after all you still receive connection refuse error, try changing the `ib-port` field in the `config.json` file from 4002 to 4001.
+If after all you still receive connection refuse error, try changing the `ib-port` field in the `config.json` file from 4002 to 4001 to match the settings in your IBGateway/TWS.
 
 ### Windows
 
