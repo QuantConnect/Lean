@@ -519,6 +519,7 @@
     <Compile Include="Util\ParallelRunner.cs" />
     <Compile Include="Util\ParallelRunnerWorker.cs" />
     <Compile Include="Util\ColorJsonConverter.cs" />
+    <Compile Include="Util\PythonUtil.cs" />
     <Compile Include="Util\RateGate.cs" />
     <Compile Include="Util\SecurityExtensions.cs" />
     <Compile Include="Util\SecurityIdentifierJsonConverter.cs" />
