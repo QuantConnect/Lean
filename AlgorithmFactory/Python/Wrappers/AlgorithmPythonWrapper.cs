@@ -235,6 +235,10 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
             {
                 return _baseAlgorithm.Name;
             }
+            set
+            {
+                _baseAlgorithm.Name = value;
+            }
         }
 
         /// <summary>

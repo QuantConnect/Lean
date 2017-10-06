@@ -167,6 +167,8 @@ namespace QuantConnect.Lean.Engine.Setup
                 return false;
             }
 
+            algorithm.Name = job.GetAlgorithmName();
+
             //Make sure the algorithm start date ok.
             if (job.PeriodStart == default(DateTime))
             {

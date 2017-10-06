@@ -149,6 +149,7 @@ namespace QuantConnect.Interfaces
         string Name
         {
             get;
+            set;
         }
 
         /// <summary>

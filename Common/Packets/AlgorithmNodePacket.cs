@@ -145,6 +145,12 @@ namespace QuantConnect.Packets
         [JsonProperty(PropertyName = "sHistoryProvider")]
         public string HistoryProvider = "";
 
-    } // End Node Packet:
-
-} // End of Namespace:
+        /// <summary>
+        /// Gets a unique name for the algorithm defined by this packet
+        /// </summary>
+        public string GetAlgorithmName()
+        {
+            return $"{UserId}-{ProjectId}-{AlgorithmId}";
+        }
+    }
+}

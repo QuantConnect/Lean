@@ -141,6 +141,8 @@ namespace QuantConnect.Lean.Engine.Setup
                 return false;
             }
 
+            algorithm.Name = liveJob.GetAlgorithmName();
+
             // verify the brokerage was specified
             if (string.IsNullOrWhiteSpace(liveJob.Brokerage))
             {
