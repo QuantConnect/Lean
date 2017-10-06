@@ -23,28 +23,42 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.py" />
-    <Compile Include="BrokerageModelAlgorithm.py" />
-    <Compile Include="CustomModelsAlgorithm.py" />
     <Compile Include="BasicTemplateAlgorithm.py" />
+    <Compile Include="BasicTemplateDailyAlgorithm.py" />
     <Compile Include="BasicTemplateFillForwardAlgorithm.py" />
+    <Compile Include="BasicTemplateForexAlgorithm.py" />
     <Compile Include="BasicTemplateFuturesAlgorithm.py" />
     <Compile Include="BasicTemplateFuturesConsolidationAlgorithm.py" />
+    <Compile Include="BasicTemplateFuturesHistoryAlgorithm.py" />
     <Compile Include="BasicTemplateOptionsAlgorithm.py" />
     <Compile Include="BasicTemplateOptionsFilterUniverseAlgorithm.py" />
+    <Compile Include="BasicTemplateOptionsHistoryAlgorithm.py" />
+    <Compile Include="BasicTemplateOptionStrategyAlgorithm.py" />
+    <Compile Include="BasicTemplateOptionTradesAlgorithm.py" />
+    <Compile Include="BrokerageModelAlgorithm.py" />
+    <Compile Include="BubbleAlgorithm.py" />
     <Compile Include="CoarseFineFundamentalComboAlgorithm.py" />
+    <Compile Include="CoarseFineFundamentalRegressionAlgorithm.py" />
+    <Compile Include="CoarseFundamentalTop5Algorithm.py" />
     <Compile Include="CustomBenchmarkAlgorithm.py" />
     <Compile Include="CustomChartingAlgorithm.py" />
     <Compile Include="CustomDataBitcoinAlgorithm.py" />
     <Compile Include="CustomDataNIFTYAlgorithm.py" />
+    <Compile Include="CustomDataRegressionAlgorithm.py" />
+    <Compile Include="CustomDataUniverseAlgorithm.py" />
+    <Compile Include="CustomModelsAlgorithm.py" />
     <Compile Include="DailyAlgorithm.py" />
+    <Compile Include="DailyFxAlgorithm.py" />
     <Compile Include="DataConsolidationAlgorithm.py" />
     <Compile Include="DelistingEventsAlgorithm.py" />
     <Compile Include="DividendAlgorithm.py" />
-    <Compile Include="CustomDataUniverseAlgorithm.py" />
     <Compile Include="DropboxBaseDataUniverseSelectionAlgorithm.py" />
+    <Compile Include="DropboxUniverseSelectionAlgorithm.py" />
     <Compile Include="EmaCrossUniverseSelectionAlgorithm.py" />
     <Compile Include="ETFGlobalRotationAlgorithm.py" />
     <Compile Include="FilteredIdentityAlgorithm.py" />
+    <Compile Include="FractionalQuantityRegressionAlgorithm.py" />
+    <Compile Include="FuturesMomentumAlgorithm.py" />
     <Compile Include="HistoryAndWarmupRegressionAlgorithm.py" />
     <Compile Include="LimitFillRegressionAlgorithm.py" />
     <Compile Include="MACDTrendAlgorithm.py" />
@@ -52,6 +66,10 @@
     <Compile Include="MarginCallEventsAlgorithm.py" />
     <Compile Include="MarketOnOpenOnCloseAlgorithm.py" />
     <Compile Include="MovingAverageCrossAlgorithm.py" />
+    <Compile Include="OptionChainProviderAlgorithm.py" />
+    <Compile Include="OptionExerciseAssignRegressionAlgorithm.py" />
+    <Compile Include="OptionOpenInterestRegressionAlgorithm.py" />
+    <Compile Include="OptionRenameRegressionAlgorithm.py" />
     <Compile Include="OrderTicketDemoAlgorithm.py" />
     <Compile Include="ParameterizedAlgorithm.py" />
     <Compile Include="PythonPackageTestAlgorithm.py" />
@@ -59,6 +77,7 @@
     <Compile Include="QuandlFuturesDataAlgorithm.py" />
     <Compile Include="QuandlImporterAlgorithm.py" />
     <Compile Include="RegressionAlgorithm.py" />
+    <Compile Include="RegressionChannelAlgorithm.py" />
     <Compile Include="RollingWindowAlgorithm.py" />
     <Compile Include="ScheduledEventsAlgorithm.py" />
     <Compile Include="UniverseSelectionRegressionAlgorithm.py" />
@@ -66,6 +85,7 @@
     <Compile Include="UserDefinedUniverseAlgorithm.py" />
     <Compile Include="WarmupAlgorithm.py" />
     <Compile Include="WarmupHistoryAlgorithm.py" />
+    <Compile Include="WeeklyUniverseSelectionRegressionAlgorithm.py" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
