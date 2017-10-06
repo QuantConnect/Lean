@@ -21,7 +21,7 @@ from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
-from datetime import datetime
+from datetime import datetime, timedelta
 
 ### <summary>
 ### This regression algorithm tests option exercise and assignment functionality
@@ -33,45 +33,47 @@ class OptionExerciseAssignRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         
-        self.SetCash(25000)
+        self.SetCash(100000)
         self.SetStartDate(2015,12,24)
         self.SetEndDate(2015,12,24)
         equity = self.AddEquity("GOOG")
         option = self.AddOption("GOOG")
-        Underlying = equity.Symbol
-        self.OptionSymbol = option.Symbol
+        
         # set our strike/expiry filter for this option chain
-        option.SetFilter(-2, 2, TimeSpan.Zero, TimeSpan.FromDays(10))
-        self.SetBenchmark(Underlying)
+        option.SetFilter(self.UniverseFunc)
+        
+        self.SetBenchmark(equity.Symbol)
+        self.OptionSymbol = option.Symbol
         self._assignedOption = False
     
-
-    ''' Event - v3.0 DATA EVENT HANDLER: (Pattern) Basic template for user to override 
-        for receiving all subscription data in a single event 
-        <param name="slice">The current slice of data keyed by symbol string</param> '''
 
     def OnData(self, slice):
         if self.Portfolio.Invested: return
         for kvp in slice.OptionChains:
             chain = kvp.Value
             # find the call options expiring today
-            contracts = [i for i in chain if i.Right ==  OptionRight.Call and 
-                                            i.Expiry.date() == self.Time.date()]
-
+            contracts = filter(lambda x:
+                               x.Expiry.date() == self.Time.date() and
+                               x.Strike < chain.Underlying.Price and
+                               x.Right ==  OptionRight.Call, chain)
+            
             # sorted the contracts by their strikes, find the second strike under market price 
-            sorted_contracts = [i for i in sorted(contracts, key = lambda x:x.Strike, reverse = True) 
-                                        if i.Strike < chain.Underlying.Price]
+            sorted_contracts = sorted(contracts, key = lambda x: x.Strike, reverse = True)[:2];
 
             if sorted_contracts:
                 self.MarketOrder(sorted_contracts[0].Symbol, 1)
                 self.MarketOrder(sorted_contracts[1].Symbol, -1)
-                
 
-    ''' Order fill event handler. On an order fill update the resulting information is passed to this method.
-        <param name="orderEvent">Order event details containing details of the events</param> '''
-    
+
+    # set our strike/expiry filter for this option chain
+    def UniverseFunc(self, universe):
+        return universe.IncludeWeeklys().Strikes(-2, 2).Expiration(timedelta(0), timedelta(10))
+
+
     def OnOrderEvent(self, orderEvent):
         self.Log(str(orderEvent))
+
+
     def OnAssignmentOrderEvent(self, assignmentEvent):
         self.Log(str(assignmentEvent))
         self._assignedOption = True
