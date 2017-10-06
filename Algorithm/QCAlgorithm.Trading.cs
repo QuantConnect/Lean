@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm
@@ -212,7 +211,7 @@ namespace QuantConnect.Algorithm
                 return mooTicket;
             }
 
-            var request = CreateSubmitOrderRequest(OrderType.Market, security, quantity, tag);
+            var request = CreateSubmitOrderRequest(OrderType.Market, security, quantity, tag, DefaultOrderProperties.Clone());
 
             // If warming up, do not submit
             if (IsWarmingUp)
@@ -273,7 +272,7 @@ namespace QuantConnect.Algorithm
         public OrderTicket MarketOnOpenOrder(Symbol symbol, decimal quantity, string tag = "")
         {
             var security = Securities[symbol];
-            var request = CreateSubmitOrderRequest(OrderType.MarketOnOpen, security, quantity, tag);
+            var request = CreateSubmitOrderRequest(OrderType.MarketOnOpen, security, quantity, tag, DefaultOrderProperties.Clone());
             var response = PreOrderChecks(request);
             if (response.IsError)
             {
@@ -317,7 +316,7 @@ namespace QuantConnect.Algorithm
         public OrderTicket MarketOnCloseOrder(Symbol symbol, decimal quantity, string tag = "")
         {
             var security = Securities[symbol];
-            var request = CreateSubmitOrderRequest(OrderType.MarketOnClose, security, quantity, tag);
+            var request = CreateSubmitOrderRequest(OrderType.MarketOnClose, security, quantity, tag, DefaultOrderProperties.Clone());
             var response = PreOrderChecks(request);
             if (response.IsError)
             {
@@ -364,7 +363,7 @@ namespace QuantConnect.Algorithm
         public OrderTicket LimitOrder(Symbol symbol, decimal quantity, decimal limitPrice, string tag = "")
         {
             var security = Securities[symbol];
-            var request = CreateSubmitOrderRequest(OrderType.Limit, security, quantity, tag, limitPrice: limitPrice);
+            var request = CreateSubmitOrderRequest(OrderType.Limit, security, quantity, tag, limitPrice: limitPrice, properties: DefaultOrderProperties.Clone());
             var response = PreOrderChecks(request);
             if (response.IsError)
             {
@@ -411,7 +410,7 @@ namespace QuantConnect.Algorithm
         public OrderTicket StopMarketOrder(Symbol symbol, decimal quantity, decimal stopPrice, string tag = "")
         {
             var security = Securities[symbol];
-            var request = CreateSubmitOrderRequest(OrderType.StopMarket, security, quantity, tag, stopPrice: stopPrice);
+            var request = CreateSubmitOrderRequest(OrderType.StopMarket, security, quantity, tag, stopPrice: stopPrice, properties: DefaultOrderProperties.Clone());
             var response = PreOrderChecks(request);
             if (response.IsError)
             {
@@ -461,7 +460,7 @@ namespace QuantConnect.Algorithm
         public OrderTicket StopLimitOrder(Symbol symbol, decimal quantity, decimal stopPrice, decimal limitPrice, string tag = "")
         {
             var security = Securities[symbol];
-            var request = CreateSubmitOrderRequest(OrderType.StopLimit, security, quantity, tag, stopPrice: stopPrice, limitPrice: limitPrice);
+            var request = CreateSubmitOrderRequest(OrderType.StopLimit, security, quantity, tag, stopPrice: stopPrice, limitPrice: limitPrice, properties: DefaultOrderProperties.Clone());
             var response = PreOrderChecks(request);
             if (response.IsError)
             {
@@ -483,7 +482,7 @@ namespace QuantConnect.Algorithm
         {
             var option = (Option)Securities[optionSymbol];
 
-            var request = CreateSubmitOrderRequest(OrderType.OptionExercise, option, quantity, tag);
+            var request = CreateSubmitOrderRequest(OrderType.OptionExercise, option, quantity, tag, DefaultOrderProperties.Clone());
 
             // If warming up, do not submit
             if (IsWarmingUp)
@@ -535,7 +534,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        ///  Issue an order/trade for buying/selling an option strategy 
+        ///  Issue an order/trade for buying/selling an option strategy
         /// </summary>
         /// <param name="strategy">Specification of the strategy to trade</param>
         /// <param name="quantity">Quantity of the strategy to trade</param>
@@ -619,7 +618,7 @@ namespace QuantConnect.Algorithm
 
 
         /// <summary>
-        /// Perform preorder checks to ensure we have sufficient capital, 
+        /// Perform preorder checks to ensure we have sufficient capital,
         /// the market is open, and we haven't exceeded maximum realistic orders per day.
         /// </summary>
         /// <returns>OrderResponse. If no error, order request is submitted.</returns>
@@ -634,14 +633,14 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Perform preorder checks to ensure we have sufficient capital, 
+        /// Perform preorder checks to ensure we have sufficient capital,
         /// the market is open, and we haven't exceeded maximum realistic orders per day.
         /// </summary>
         /// <returns>OrderResponse. If no error, order request is submitted.</returns>
         private OrderResponse PreOrderChecksImpl(SubmitOrderRequest request)
         {
-            //Most order methods use security objects; so this isn't really used. 
-            // todo: Left here for now but should review 
+            //Most order methods use security objects; so this isn't really used.
+            // todo: Left here for now but should review
             Security security;
             if (!Securities.TryGetValue(request.Symbol, out security))
             {
@@ -725,7 +724,7 @@ namespace QuantConnect.Algorithm
 
                 if (security.Holdings.IsShort)
                     return OrderResponse.Error(request, OrderResponseErrorCode.UnsupportedRequestType, "The security with symbol '" + request.Symbol.ToString() + "' has a short option position. Only long option positions are exercisable.");
-                
+
                 if (request.Quantity > security.Holdings.Quantity)
                     return OrderResponse.Error(request, OrderResponseErrorCode.UnsupportedRequestType, "Cannot exercise more contracts of '" + request.Symbol.ToString() + "' than is currently available in the portfolio. ");
 
@@ -922,8 +921,8 @@ namespace QuantConnect.Algorithm
         /// Calculate the order quantity to achieve target-percent holdings.
         /// </summary>
         /// <param name="symbol">Security object we're asking for</param>
-        /// <param name="target">Target percentag holdings, this is an unlevered value, so 
-        /// if you have 2x leverage and request 100% holdings, it will utilize half of the 
+        /// <param name="target">Target percentag holdings, this is an unlevered value, so
+        /// if you have 2x leverage and request 100% holdings, it will utilize half of the
         /// available margin</param>
         /// <returns>Order quantity to achieve this percentage</returns>
         public decimal CalculateOrderQuantity(Symbol symbol, decimal target)
@@ -1005,7 +1004,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Obsolete implementation of Order method accepting a OrderType. This was deprecated since it 
+        /// Obsolete implementation of Order method accepting a OrderType. This was deprecated since it
         /// was impossible to generate other orders via this method. Any calls to this method will always default to a Market Order.
         /// </summary>
         /// <param name="symbol">Symbol we want to purchase</param>
@@ -1021,7 +1020,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Obsolete method for placing orders. 
+        /// Obsolete method for placing orders.
         /// </summary>
         /// <param name="symbol"></param>
         /// <param name="quantity"></param>
@@ -1060,9 +1059,9 @@ namespace QuantConnect.Algorithm
             return exchangeHours.IsOpen(time, false);
         }
 
-        private SubmitOrderRequest CreateSubmitOrderRequest(OrderType orderType, Security security, decimal quantity, string tag, decimal stopPrice = 0m, decimal limitPrice = 0m)
+        private SubmitOrderRequest CreateSubmitOrderRequest(OrderType orderType, Security security, decimal quantity, string tag, OrderProperties properties, decimal stopPrice = 0m, decimal limitPrice = 0m)
         {
-            return new SubmitOrderRequest(orderType, security.Type, security.Symbol, quantity, stopPrice, limitPrice, UtcTime, tag);
+            return new SubmitOrderRequest(orderType, security.Type, security.Symbol, quantity, stopPrice, limitPrice, UtcTime, tag, properties);
         }
     }
 }

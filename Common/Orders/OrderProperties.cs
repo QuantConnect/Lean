@@ -25,5 +25,16 @@ namespace QuantConnect.Orders
         /// These properties are currently used only by the Interactive Brokers brokerage.
         /// </summary>
         public OrderFinancialAdvisorProperties FinancialAdvisorProperties { get; set; } = new OrderFinancialAdvisorProperties();
+
+        /// <summary>
+        /// Returns a new instance clone of this object
+        /// </summary>
+        public OrderProperties Clone()
+        {
+            return new OrderProperties
+            {
+                FinancialAdvisorProperties = FinancialAdvisorProperties.Clone()
+            };
+        }
     }
 }

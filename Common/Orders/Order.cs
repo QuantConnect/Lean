@@ -88,7 +88,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Additional properties of the order
         /// </summary>
-        public OrderProperties Properties { get; internal set; } = new OrderProperties();
+        public OrderProperties Properties { get; private set; }
 
         /// <summary>
         /// The symbol's security type
@@ -147,6 +147,7 @@ namespace QuantConnect.Orders
             BrokerId = new List<string>();
             ContingentId = 0;
             DurationValue = DateTime.MaxValue;
+            Properties = new OrderProperties();
         }
 
         /// <summary>
@@ -156,7 +157,8 @@ namespace QuantConnect.Orders
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
         /// <param name="time">Time the order was placed</param>
         /// <param name="tag">User defined data tag for this order</param>
-        protected Order(Symbol symbol, decimal quantity, DateTime time, string tag = "")
+        /// <param name="properties">The order properties for this order</param>
+        protected Order(Symbol symbol, decimal quantity, DateTime time, string tag = "", OrderProperties properties = null)
         {
             Time = time;
             Price = 0;
@@ -169,6 +171,7 @@ namespace QuantConnect.Orders
             BrokerId = new List<string>();
             ContingentId = 0;
             DurationValue = DateTime.MaxValue;
+            Properties = properties ?? new OrderProperties();
         }
 
         /// <summary>
@@ -246,6 +249,7 @@ namespace QuantConnect.Orders
             order.Status = Status;
             order.Symbol = Symbol;
             order.Tag = Tag;
+            order.Properties = order.Properties.Clone();
         }
 
         /// <summary>
@@ -259,25 +263,25 @@ namespace QuantConnect.Orders
             switch (request.OrderType)
             {
                 case OrderType.Market:
-                    order = new MarketOrder(request.Symbol, request.Quantity, request.Time, request.Tag);
+                    order = new MarketOrder(request.Symbol, request.Quantity, request.Time, request.Tag, request.OrderProperties);
                     break;
                 case OrderType.Limit:
-                    order = new LimitOrder(request.Symbol, request.Quantity, request.LimitPrice, request.Time, request.Tag);
+                    order = new LimitOrder(request.Symbol, request.Quantity, request.LimitPrice, request.Time, request.Tag, request.OrderProperties);
                     break;
                 case OrderType.StopMarket:
-                    order = new StopMarketOrder(request.Symbol, request.Quantity, request.StopPrice, request.Time, request.Tag);
+                    order = new StopMarketOrder(request.Symbol, request.Quantity, request.StopPrice, request.Time, request.Tag, request.OrderProperties);
                     break;
                 case OrderType.StopLimit:
-                    order = new StopLimitOrder(request.Symbol, request.Quantity, request.StopPrice, request.LimitPrice, request.Time, request.Tag);
+                    order = new StopLimitOrder(request.Symbol, request.Quantity, request.StopPrice, request.LimitPrice, request.Time, request.Tag, request.OrderProperties);
                     break;
                 case OrderType.MarketOnOpen:
-                    order = new MarketOnOpenOrder(request.Symbol, request.Quantity, request.Time, request.Tag);
+                    order = new MarketOnOpenOrder(request.Symbol, request.Quantity, request.Time, request.Tag, request.OrderProperties);
                     break;
                 case OrderType.MarketOnClose:
-                    order = new MarketOnCloseOrder(request.Symbol, request.Quantity, request.Time, request.Tag);
+                    order = new MarketOnCloseOrder(request.Symbol, request.Quantity, request.Time, request.Tag, request.OrderProperties);
                     break;
                 case OrderType.OptionExercise:
-                    order = new OptionExerciseOrder(request.Symbol, request.Quantity, request.Time, request.Tag);
+                    order = new OptionExerciseOrder(request.Symbol, request.Quantity, request.Time, request.Tag, request.OrderProperties);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

@@ -926,7 +926,8 @@ namespace QuantConnect
                 stopPrice,
                 limitPrice,
                 order.Time,
-                order.Tag);
+                order.Tag,
+                order.Properties);
 
             submitOrderRequest.SetOrderId(order.Id);
 

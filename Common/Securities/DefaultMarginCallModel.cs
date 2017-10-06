@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,15 +33,22 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the portfolio that margin calls will be transacted against
         /// </summary>
-        protected SecurityPortfolioManager Portfolio { get; private set; }
+        protected SecurityPortfolioManager Portfolio { get; }
+
+        /// <summary>
+        /// Gets the default order properties to be used in margin call orders
+        /// </summary>
+        protected OrderProperties DefaultOrderProperties { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultMarginCallModel"/> class
         /// </summary>
         /// <param name="portfolio">The portfolio object to receive margin calls</param>
-        public DefaultMarginCallModel(SecurityPortfolioManager portfolio)
+        /// <param name="defaultOrderProperties">The default order properties to be used in margin call orders</param>
+        public DefaultMarginCallModel(SecurityPortfolioManager portfolio, OrderProperties defaultOrderProperties)
         {
             Portfolio = portfolio;
+            DefaultOrderProperties = defaultOrderProperties;
         }
 
         /// <summary>
@@ -89,7 +96,7 @@ namespace QuantConnect.Securities
                 quantity *= -1;
             }
 
-            return new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, quantity, 0, 0, security.LocalTime.ConvertToUtc(security.Exchange.TimeZone), "Margin Call");
+            return new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, quantity, 0, 0, security.LocalTime.ConvertToUtc(security.Exchange.TimeZone), "Margin Call", DefaultOrderProperties.Clone());
         }
 
         /// <summary>
