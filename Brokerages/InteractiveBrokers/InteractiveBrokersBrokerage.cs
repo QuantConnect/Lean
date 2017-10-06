@@ -1536,6 +1536,36 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 ibOrder.AuxPrice = Convert.ToDouble(RoundPrice(stopLimitOrder.StopPrice, minTick));
             }
 
+            // add financial advisor properties
+            if (IsFinancialAdvisor)
+            {
+                // https://interactivebrokers.github.io/tws-api/financial_advisor.html#gsc.tab=0
+
+                if (!string.IsNullOrWhiteSpace(order.Properties.FinancialAdvisorProperties.Account))
+                {
+                    // order for a single managed account
+                    ibOrder.Account = order.Properties.FinancialAdvisorProperties.Account;
+                }
+                else if (!string.IsNullOrWhiteSpace(order.Properties.FinancialAdvisorProperties.Profile))
+                {
+                    // order for an account profile
+                    ibOrder.FaProfile = order.Properties.FinancialAdvisorProperties.Profile;
+
+                }
+                else if (!string.IsNullOrWhiteSpace(order.Properties.FinancialAdvisorProperties.Group))
+                {
+                    // order for an account group
+                    ibOrder.FaGroup = order.Properties.FinancialAdvisorProperties.Group;
+                    ibOrder.FaMethod = order.Properties.FinancialAdvisorProperties.Method;
+
+                    if (ibOrder.FaMethod == "PctChange")
+                    {
+                        ibOrder.FaPercentage = order.Properties.FinancialAdvisorProperties.Percentage.ToString();
+                        ibOrder.TotalQuantity = 0;
+                    }
+                }
+            }
+
             // not yet supported
             //ibOrder.ParentId =
             //ibOrder.OcaGroup =
