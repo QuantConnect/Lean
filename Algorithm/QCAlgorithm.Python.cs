@@ -28,6 +28,7 @@ using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Data.Fundamental;
 using System.Linq;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm
 {
@@ -102,7 +103,7 @@ namespace QuantConnect.Algorithm
         /// <param name="pycoarse">Defines an initial coarse selection</param>
         public void AddUniverse(PyObject pycoarse)
         {
-            var coarse = ToFunc<IEnumerable<CoarseFundamental>, object[]>(pycoarse);
+            var coarse = PythonUtil.ToFunc<IEnumerable<CoarseFundamental>, object[]>(pycoarse);
             AddUniverse(c => coarse(c).Select(x => (Symbol)x));
         }
 
@@ -114,8 +115,8 @@ namespace QuantConnect.Algorithm
         /// <param name="pyfine">Defines a more detailed selection with access to more data</param>
         public void AddUniverse(PyObject pycoarse, PyObject pyfine)
         {
-            var coarse = ToFunc<IEnumerable<CoarseFundamental>, object[]>(pycoarse);
-            var fine = ToFunc<IEnumerable<FineFundamental>, object[]>(pyfine);
+            var coarse = PythonUtil.ToFunc<IEnumerable<CoarseFundamental>, object[]>(pycoarse);
+            var fine = PythonUtil.ToFunc<IEnumerable<FineFundamental>, object[]>(pyfine);
             AddUniverse(c => coarse(c).Select(x => (Symbol)x), f => fine(f).Select(x => (Symbol)x));
         }
 
@@ -128,7 +129,7 @@ namespace QuantConnect.Algorithm
         /// <param name="pySelector">Function delegate that accepts a DateTime and returns a collection of string symbols</param>
         public void AddUniverse(string name, Resolution resolution, PyObject pySelector)
         {
-            var selector = ToFunc<DateTime, object[]>(pySelector);
+            var selector = PythonUtil.ToFunc<DateTime, object[]>(pySelector);
             AddUniverse(name, resolution, d => selector(d).Select(x => (string)x));
         }
 
@@ -140,7 +141,7 @@ namespace QuantConnect.Algorithm
         /// <param name="pySelector">Function delegate that accepts a DateTime and returns a collection of string symbols</param>
         public void AddUniverse(string name, PyObject pySelector)
         {
-            var selector = ToFunc<DateTime, object[]>(pySelector);
+            var selector = PythonUtil.ToFunc<DateTime, object[]>(pySelector);
             AddUniverse(name, d => selector(d).Select(x => (string)x));
         }
 
@@ -155,7 +156,7 @@ namespace QuantConnect.Algorithm
         /// <param name="pySelector">Function delegate that accepts a DateTime and returns a collection of string symbols</param>
         public void AddUniverse(SecurityType securityType, string name, Resolution resolution, string market, UniverseSettings universeSettings, PyObject pySelector)
         {
-            var selector = ToFunc<DateTime, object[]>(pySelector);
+            var selector = PythonUtil.ToFunc<DateTime, object[]>(pySelector);
             AddUniverse(securityType, name, resolution, market, universeSettings, d => selector(d).Select(x => (string)x));
         }
 
@@ -263,7 +264,7 @@ namespace QuantConnect.Algorithm
             var symbol = QuantConnect.Symbol.Create(name, securityType, market);
             var config = new SubscriptionDataConfig(dataType, symbol, resolution, dataTimeZone, exchangeTimeZone, false, false, true, true, isFilteredSubscription: false);
 
-            var selector = ToFunc<IEnumerable<IBaseData>, object[]>(pySelector);
+            var selector = PythonUtil.ToFunc<IEnumerable<IBaseData>, object[]>(pySelector);
 
             AddUniverse(new FuncUniverse(config, universeSettings, SecurityInitializer, d => selector(d)
                 .Select(x => x is Symbol ? (Symbol)x : QuantConnect.Symbol.Create((string)x, securityType, market))));
@@ -489,8 +490,8 @@ namespace QuantConnect.Algorithm
         public FilteredIdentity FilteredIdentity(Symbol symbol, Resolution resolution, PyObject selector = null, PyObject filter = null, string fieldName = null)
         {
             var name = CreateIndicatorName(symbol, fieldName ?? "close", resolution);
-            var pyselector = ToFunc<IBaseData, IBaseDataBar>(selector);
-            var pyfilter = ToFunc<IBaseData, bool>(filter);
+            var pyselector = PythonUtil.ToFunc<IBaseData, IBaseDataBar>(selector);
+            var pyfilter = PythonUtil.ToFunc<IBaseData, bool>(filter);
             var filteredIdentity = new FilteredIdentity(name, pyfilter);
             RegisterIndicator(symbol, filteredIdentity, resolution, pyselector);
             return filteredIdentity;
@@ -509,8 +510,8 @@ namespace QuantConnect.Algorithm
         public FilteredIdentity FilteredIdentity(Symbol symbol, TimeSpan resolution, PyObject selector = null, PyObject filter = null, string fieldName = null)
         {
             var name = string.Format("{0}({1}_{2})", symbol, fieldName ?? "close", resolution);
-            var pyselector = ToFunc<IBaseData, IBaseDataBar>(selector);
-            var pyfilter = ToFunc<IBaseData, bool>(filter);
+            var pyselector = PythonUtil.ToFunc<IBaseData, IBaseDataBar>(selector);
+            var pyfilter = PythonUtil.ToFunc<IBaseData, bool>(filter);
             var filteredIdentity = new FilteredIdentity(name, pyfilter);
             RegisterIndicator(symbol, filteredIdentity, ResolveConsolidator(symbol, resolution), pyselector);
             return filteredIdentity;
@@ -629,30 +630,6 @@ namespace QuantConnect.Algorithm
                         // If the type has IsAuthCodeSet member, it is a PythonQuandl
                         type.HasAttr("IsAuthCodeSet") ? typeof(PythonQuandl) : typeof(PythonData))
                     .CreateType();
-            }
-        }
-
-        /// <summary>
-        /// Encapsulates a python method with a <see cref="System.Func{T, TResult}"/>
-        /// </summary>
-        /// <typeparam name="T">The data type</typeparam>
-        /// <typeparam name="TSecond">The output type</typeparam>
-        /// <param name="pyObject">The python method</param>
-        /// <returns>A <see cref="System.Func{T, TResult}"/> that encapsulates the python method</returns>
-        private Func<T, TSecond> ToFunc<T, TSecond>(PyObject pyObject)
-        {
-            var testMod =
-               "from clr import AddReference\n" +
-               "AddReference(\"System\")\n" +
-               "from System import Func\n" +
-               "def to_func(pyobject, in_type, out_type):\n" +
-               "    return Func[in_type, out_type](pyobject)";
-
-            using (Py.GIL())
-            {
-                if (!pyObject.IsCallable()) return null;
-                dynamic toFunc = PythonEngine.ModuleFromString("x", testMod).GetAttr("to_func");
-                return toFunc(pyObject, typeof(T), typeof(TSecond)).AsManagedObject(typeof(Func<T, TSecond>));
             }
         }
     }
