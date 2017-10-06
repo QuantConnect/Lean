@@ -52,7 +52,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 data.Add("ib-password", Config.Get("ib-password"));
                 data.Add("ib-trading-mode", Config.Get("ib-trading-mode"));
                 data.Add("ib-agent-description", Config.Get("ib-agent-description"));
-                data.Add("ib-financial-advisor", Config.Get("ib-financial-advisor"));
                 return data;
             }
         }
@@ -87,7 +86,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var password = Read<string>(job.BrokerageData, "ib-password", errors);
             var tradingMode = Read<string>(job.BrokerageData, "ib-trading-mode", errors);
             var agentDescription = Read<string>(job.BrokerageData, "ib-agent-description", errors);
-            var financialAdvisor = Read<bool>(job.BrokerageData, "ib-financial-advisor", errors);
 
             if (errors.Count != 0)
             {
@@ -103,7 +101,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // launch the IB gateway
             InteractiveBrokersGatewayRunner.Start(ibControllerDirectory, twsDirectory, userId, password, tradingMode, useTws);
 
-            var ib = new InteractiveBrokersBrokerage(algorithm, algorithm.Transactions, algorithm.Portfolio, account, host, port, agentDescription, financialAdvisor);
+            var ib = new InteractiveBrokersBrokerage(algorithm, algorithm.Transactions, algorithm.Portfolio, account, host, port, agentDescription);
             Composer.Instance.AddPart<IDataQueueHandler>(ib);
 
             return ib;
