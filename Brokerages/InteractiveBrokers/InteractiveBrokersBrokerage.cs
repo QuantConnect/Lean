@@ -63,7 +63,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly ISecurityProvider _securityProvider;
         private readonly IB.InteractiveBrokersClient _client;
         private readonly string _agentDescription;
-        private readonly bool _financialAdvisor;
 
         private Thread _messageProcessingThread;
         private readonly AutoResetEvent _resetEventRestartGateway = new AutoResetEvent(false);
@@ -125,12 +124,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
+        /// Returns true if the connected user is a financial advisor
+        /// </summary>
+        public bool IsFinancialAdvisor => _account.Contains("F");
+
+        /// <summary>
         /// Creates a new InteractiveBrokersBrokerage using values from configuration:
         ///     ib-account (required)
         ///     ib-host (optional, defaults to LOCALHOST)
         ///     ib-port (optional, defaults to 4001)
         ///     ib-agent-description (optional, defaults to Individual)
-        ///     ib-financial-advisor (optional, defaults to False)
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="orderProvider">An instance of IOrderProvider used to fetch Order objects by brokerage ID</param>
@@ -143,8 +146,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Config.Get("ib-account"),
                 Config.Get("ib-host", "LOCALHOST"),
                 Config.GetInt("ib-port", 4001),
-                Config.GetValue("ib-agent-description", IB.AgentDescription.Individual),
-                Config.GetBool("ib-financial-advisor")
+                Config.GetValue("ib-agent-description", IB.AgentDescription.Individual)
                 )
         {
         }
@@ -164,8 +166,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 account,
                 Config.Get("ib-host", "LOCALHOST"),
                 Config.GetInt("ib-port", 4001),
-                Config.GetValue("ib-agent-description", IB.AgentDescription.Individual),
-                Config.GetBool("ib-financial-advisor")
+                Config.GetValue("ib-agent-description", IB.AgentDescription.Individual)
                 )
         {
         }
@@ -180,8 +181,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="host">host name or IP address of the machine where TWS is running. Leave blank to connect to the local host.</param>
         /// <param name="port">must match the port specified in TWS on the Configure&gt;API&gt;Socket Port field.</param>
         /// <param name="agentDescription">Used for Rule 80A describes the type of trader.</param>
-        /// <param name="financialAdvisor">true if the user is a financial advisor</param>
-        public InteractiveBrokersBrokerage(IAlgorithm algorithm, IOrderProvider orderProvider, ISecurityProvider securityProvider, string account, string host, int port, string agentDescription = IB.AgentDescription.Individual, bool financialAdvisor = false)
+        public InteractiveBrokersBrokerage(IAlgorithm algorithm, IOrderProvider orderProvider, ISecurityProvider securityProvider, string account, string host, int port, string agentDescription = IB.AgentDescription.Individual)
             : base("Interactive Brokers Brokerage")
         {
             _algorithm = algorithm;
@@ -192,7 +192,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _port = port;
             _clientId = IncrementClientId();
             _agentDescription = agentDescription;
-            _financialAdvisor = financialAdvisor;
 
             _client = new IB.InteractiveBrokersClient(_signal);
 
@@ -556,9 +555,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                     if (!_client.Connected) throw new Exception("InteractiveBrokersBrokerage.Connect(): Connection returned but was not in connected state.");
 
-                    if (_financialAdvisor)
+                    if (IsFinancialAdvisor)
                     {
-                        if (!DownloadFinancialAdvisorAccount())
+                        if (!DownloadFinancialAdvisorAccount(_account))
                         {
                             Disconnect();
 
@@ -625,7 +624,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// Downloads the financial advisor configuration information.
         /// This method is called upon successful connection.
         /// </summary>
-        private bool DownloadFinancialAdvisorAccount()
+        private bool DownloadFinancialAdvisorAccount(string account)
         {
             if (!_accountData.FinancialAdvisorConfiguration.Load(_client))
                 return false;
@@ -637,7 +636,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // https://interactivebrokers.github.io/tws-api/account_updates.html#gsc.tab=0
 
             // subscribe to the FA account
-            DownloadAccount(_accountData.FinancialAdvisorConfiguration.MasterAccount + "A");
+            DownloadAccount(account + "A");
 
             return true;
         }

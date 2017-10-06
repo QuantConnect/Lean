@@ -64,7 +64,6 @@
   "ib-tws-dir": "C:\\Jts",
   "ib-trading-mode": "paper",
   "ib-controller-dir": "C:\\IBController",
-  "ib-financial-advisor": false,
 
   // tradier configuration
   "tradier-account-id": "",
