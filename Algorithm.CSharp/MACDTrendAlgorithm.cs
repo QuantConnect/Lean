@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
             AddSecurity(SecurityType.Equity, _symbol, Resolution.Daily);
 
             // define our daily macd(12,26) with a 9 day signal
-            _macd = MACD(_symbol, 9, 26, 9, MovingAverageType.Exponential, Resolution.Daily);
+            _macd = MACD(_symbol, 12, 26, 9, MovingAverageType.Exponential, Resolution.Daily);
         }
 
         /// <summary>
