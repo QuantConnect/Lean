@@ -741,7 +741,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
             catch (PythonException pythonException)
             {
                 // Pythonnet generated error due to List conversion
-                if (pythonException.Message.Equals("TypeError : No method matches given arguments"))
+                if (pythonException.Message.Contains("TypeError : No method matches given arguments"))
                 {
                     _baseAlgorithm.OnMarginCall(requests);
                 }
