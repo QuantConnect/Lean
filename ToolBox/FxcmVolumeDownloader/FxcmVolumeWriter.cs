@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -11,8 +9,12 @@ namespace QuantConnect.ToolBox
 {
     public class FxcmVolumeWriter
     {
+        #region Fields
+
         private readonly Resolution _resolution;
         private readonly Symbol _symbol;
+
+        #endregion
 
         public string FolderPath { get; }
 
@@ -49,25 +51,13 @@ namespace QuantConnect.ToolBox
             }
         }
 
+        #region Private Methods
+
         private IEnumerable<BaseData> ReadActualDataAndAppendNewData(IEnumerable<BaseData> data)
         {
             // Read the actual data
             var zipFilePath = Path.Combine(FolderPath, _symbol.Value.ToLower() + "_volume.zip");
-            var actualDataString = Compression.ReadLines(zipFilePath);
-            var actualData = new List<FxcmVolume>();
-            foreach (var line in actualDataString)
-            {
-                var obs = line.Split(',');
-                var time = DateTime.ParseExact(obs[0], "yyyyMMdd HH:mm", CultureInfo.InvariantCulture);
-                actualData.Add(new FxcmVolume
-                {
-                    DataType = MarketDataType.Base,
-                    Symbol = _symbol,
-                    Time = time,
-                    Value = long.Parse(obs[1]),
-                    Transactions = int.Parse(obs[2])
-                });
-            }
+            var actualData = FxcmVolumeAuxiliaryMethods.GetFxcmVolumeFromZip(zipFilePath);
             return actualData.Concat(data);
         }
 
@@ -87,10 +77,10 @@ namespace QuantConnect.ToolBox
             var csvFilePath = Path.Combine(FolderPath, filename + ".csv");
             var zipFilePath = csvFilePath.Replace(".csv", ".zip");
 
+            if (File.Exists(zipFilePath)) File.Delete(zipFilePath);
             File.WriteAllText(csvFilePath, data_to_save);
             // Write out this data string to a zip file
-            if (File.Exists(zipFilePath)) File.Delete(zipFilePath);
-            Compression.Zip(csvFilePath, filename);
+            Compression.Zip(csvFilePath, Path.GetFileName(csvFilePath));
         }
 
         private void WriteMinuteData(IEnumerable<BaseData> data)
@@ -113,5 +103,7 @@ namespace QuantConnect.ToolBox
                 sb.Clear();
             }
         }
+
+        #endregion
     }
 }

@@ -10,11 +10,6 @@ namespace QuantConnect.ToolBox.FxcmVolumeDownload
         private static void Main(string[] args)
         {
             var isUpdate = false;
-            // TODO:clean after debugging
-#if DEBUG
-            args = new[] {"update"};
-#endif
-
             if (args.Length == 1)
             {
                 if (args[0] == "all" || args[0] == "update")
@@ -72,10 +67,7 @@ namespace QuantConnect.ToolBox.FxcmVolumeDownload
                 var endDate = DateTime.ParseExact(args[3], "yyyyMMdd", CultureInfo.InvariantCulture);
 
                 // Load settings from config.json
-
-                // TODO: toClean 
-                //var dataDirectory = Config.Get("data-directory", "../../../Data");
-                var dataDirectory = "C:\\Users\\jjd\\Desktop\\TestingFXCMVolScript";
+                var dataDirectory = Config.Get("data-directory", "../../../Data");
 
                 var downloader = new FxcmVolumeDownloader(dataDirectory);
                 foreach (var ticker in tickers)

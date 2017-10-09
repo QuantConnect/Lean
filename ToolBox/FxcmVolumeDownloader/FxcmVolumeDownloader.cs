@@ -48,6 +48,8 @@ namespace QuantConnect.ToolBox
             AUDJPY = 17
         }
 
+        #region Fields
+
         /// <summary>
         ///     The request base URL.
         /// </summary>
@@ -75,6 +77,8 @@ namespace QuantConnect.ToolBox
         /// </summary>
         private readonly int[] _volumeIdx = {26, 28, 30, 32};
 
+        #endregion
+
         /// <summary>
         ///     Initializes a new instance of the <see cref="FxcmVolumeDownloader" /> class.
         /// </summary>
@@ -83,6 +87,8 @@ namespace QuantConnect.ToolBox
         {
             _dataDirectory = dataDirectory;
         }
+
+        #region Public Methods
 
         /// <summary>
         ///     Get historical data enumerable for a single symbol, type and resolution given this start and end time (in UTC).
@@ -141,7 +147,7 @@ namespace QuantConnect.ToolBox
 
             if (update)
             {
-                var updatedStartDate = GetLastAvailableDateOfData(symbol, resolution, writer.FolderPath);
+                var updatedStartDate = FxcmVolumeAuxiliaryMethods.GetLastAvailableDateOfData(symbol, resolution, writer.FolderPath);
                 if (updatedStartDate == null) return;
 
                 intermediateStartDate = ((DateTime) updatedStartDate).AddDays(value: -1);
@@ -183,6 +189,10 @@ namespace QuantConnect.ToolBox
 
             writer.Write(data, update);
         }
+
+        #endregion
+
+        #region Private Methods
 
         /// <summary>
         ///     Gets the FXCM identifier from a FOREX pair symbol.
@@ -231,37 +241,10 @@ namespace QuantConnect.ToolBox
                     break;
 
                 default:
-                    throw new ArgumentOutOfRangeException("resolution", resolution,
+                    throw new ArgumentOutOfRangeException(nameof(resolution), resolution,
                                                           "tick or second resolution are not supported for Forex Volume.");
             }
             return interval;
-        }
-
-        private DateTime? GetLastAvailableDateOfData(Symbol symbol, Resolution resolution, string folderPath)
-        {
-            DateTime? lastAvailableDate = null;
-            if (!Directory.Exists(folderPath)) return lastAvailableDate;
-            switch (resolution)
-            {
-                case Resolution.Daily:
-                case Resolution.Hour:
-                    var expectedFilePath = Path.Combine(folderPath,
-                                                        string.Format("{0}_volume.zip", symbol.Value.ToLower()));
-                    if (File.Exists(expectedFilePath))
-                    {
-                        var lastStrDate = Compression
-                            .ReadLines(expectedFilePath).Last().Split(',').First().Substring(startIndex: 0, length: 8);
-                        lastAvailableDate = DateTime.ParseExact(lastStrDate, "yyyyMMdd", CultureInfo.InvariantCulture);
-                    }
-                    break;
-                case Resolution.Minute:
-                    var lastFileDate = Directory
-                        .GetFiles(folderPath, "*_volume.zip").OrderBy(f => f).Last()
-                        .Substring(startIndex: 0, length: 8);
-                    lastAvailableDate = DateTime.ParseExact(lastFileDate, "yyyyMMdd", CultureInfo.InvariantCulture);
-                    break;
-            }
-            return lastAvailableDate;
         }
 
         /// <summary>
@@ -302,5 +285,7 @@ namespace QuantConnect.ToolBox
             // Removes the HTML head and tail.
             return lines.Skip(count: 2).Take(lines.Length - 4).ToArray();
         }
+
+        #endregion
     }
 }
