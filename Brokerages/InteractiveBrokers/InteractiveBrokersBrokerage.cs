@@ -559,9 +559,17 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     {
                         if (!DownloadFinancialAdvisorAccount(_account))
                         {
+                            Log.Trace("InteractiveBrokersBrokerage.Connect(): DownloadFinancialAdvisorAccount failed.");
+
                             Disconnect();
 
-                            throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): DownloadFinancialAdvisorConfiguration failed.");
+                            if (attempt++ < maxAttempts)
+                            {
+                                Thread.Sleep(1000);
+                                continue;
+                            }
+
+                            throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): DownloadFinancialAdvisorAccount failed.");
                         }
                     }
                     else
