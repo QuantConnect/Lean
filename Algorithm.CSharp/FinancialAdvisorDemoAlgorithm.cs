@@ -19,8 +19,7 @@ using QuantConnect.Orders;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Basic template algorithm simply initializes the date range and cash. This is a skeleton
-    /// framework you can use for designing an algorithm.
+    /// This algorithm demonstrates how to submit orders to a Financial Advisor account group, allocation profile or a single managed account.
     /// </summary>
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="using quantconnect" />
@@ -44,7 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
             // The default order properties can be set here to choose the FA settings
             // to be automatically used in any order submission method (such as SetHoldings, Buy, Sell and Order)
 
-            // Uset a default FA Account Group with an Allocation Method
+            // Use a default FA Account Group with an Allocation Method
             DefaultOrderProperties.FinancialAdvisorProperties = new OrderFinancialAdvisorProperties
             {
                 // account group created manually in IB/TWS

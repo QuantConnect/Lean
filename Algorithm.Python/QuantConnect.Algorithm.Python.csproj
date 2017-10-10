@@ -79,6 +79,7 @@
     <None Include="EmaCrossUniverseSelectionAlgorithm.py" />
     <None Include="ETFGlobalRotationAlgorithm.py" />
     <None Include="FilteredIdentityAlgorithm.py" />
+    <None Include="FinancialAdvisorDemoAlgorithm.py" />
     <None Include="FractionalQuantityRegressionAlgorithm.py" />
     <None Include="FuturesMomentumAlgorithm.py" />
     <None Include="HistoryAndWarmupRegressionAlgorithm.py" />
