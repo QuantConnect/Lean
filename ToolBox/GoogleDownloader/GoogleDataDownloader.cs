@@ -32,7 +32,7 @@ namespace QuantConnect.ToolBox.GoogleDownloader
         // q = SYMBOL
         // startdate = Mon+D%2C+YYYY, e.g. Jan+1%2C+2005
         // enddate = Mon+D%2C+YYYY, e.g. Sep+29%2C+2016
-        private const string UrlPrototypeDaily = @"http://www.google.com/finance/historical?q={0}&startdate={1}&enddate={2}&output=csv";
+        private const string UrlPrototypeDaily = @"https://finance.google.com/finance/historical?q={0}&startdate={1}&enddate={2}&output=csv";
         private enum ConvertMonths
         {
             Jan = 1,
@@ -122,7 +122,7 @@ namespace QuantConnect.ToolBox.GoogleDownloader
         // p = period in days
         // ts = start time
         // Strangely Google forces CHLO format instead of normal OHLC.
-        private const string UrlPrototypeMinuteOrHour = @"http://www.google.com/finance/getprices?q={0}&i={1}&p={2}d&f=d,c,h,l,o,v&ts={3}";
+        private const string UrlPrototypeMinuteOrHour = @"https://finance.google.com/finance/getprices?q={0}&i={1}&p={2}d&f=d,c,h,l,o,v&ts={3}";
 
         private IEnumerable<BaseData> GetMinuteOrHour(Symbol symbol, Resolution resolution, DateTime startUtc, DateTime endUtc)
         {
