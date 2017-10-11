@@ -80,10 +80,15 @@ namespace QuantConnect.Orders
         /// </summary>
         public OrderDuration Duration { get; internal set; }
 
-        /// <summary>
-        /// Tag the order with some custom data
-        /// </summary>
-        public string Tag { get; internal set; }
+		/// <summary>
+		/// Good till date(time) - The date and time until the order will be active. The order will be automatically canceled by the exchange after this date/time.
+		/// </summary>
+		public DateTime GoodTillDate { get; set; }
+
+		/// <summary>
+		/// Tag the order with some custom data
+		/// </summary>
+		public string Tag { get; internal set; }
 
         /// <summary>
         /// The symbol's security type

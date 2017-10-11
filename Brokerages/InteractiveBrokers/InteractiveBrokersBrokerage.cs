@@ -1483,12 +1483,20 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Tif = IB.TimeInForce.GoodTillCancel,
                 Transmit = true,
                 Rule80A = _agentDescription
-            };
+			};
 
             if (order.Type == OrderType.MarketOnOpen)
             {
                 ibOrder.Tif = IB.TimeInForce.MarketOnOpen;
             }
+
+			if (order.GoodTillDate != null)
+			{
+				// works only when TimeInForce is set to GTD
+				ibOrder.Tif = IB.TimeInForce.GoodTillDate;
+				// expected date format: YYYYMMDD hh:mm:ss (optional time zone)
+				ibOrder.GoodTillDate = order.GoodTillDate.ToString("yyyyMMdd HH:mm:ss");
+			}
 
             var limitOrder = order as LimitOrder;
             var stopMarketOrder = order as StopMarketOrder;
@@ -1676,6 +1684,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     throw new InvalidEnumArgumentException("direction", (int) direction, typeof (OrderDirection));
             }
         }
+
 
         /// <summary>
         /// Maps OrderType enum
