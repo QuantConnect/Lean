@@ -74,8 +74,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly ManualResetEvent _waitForNextValidId = new ManualResetEvent(false);
         private readonly ManualResetEvent _accountHoldingsResetEvent = new ManualResetEvent(false);
 
-        // tracks remaining quantity for orders waiting to be filled completely (updated on partial fills)
-        private readonly Dictionary<int, int> _orderFills = new Dictionary<int, int>();
+        // tracks executions before commission reports, map: execId -> execution
+        private readonly ConcurrentDictionary<string, Execution> _orderExecutions = new ConcurrentDictionary<string, Execution>();
 
         // holds account properties, cash balances and holdings for the account
         private readonly InteractiveBrokersAccountData _accountData = new InteractiveBrokersAccountData();
@@ -200,6 +200,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.OrderStatus += HandleOrderStatusUpdates;
             _client.UpdateAccountValue += HandleUpdateAccountValue;
             _client.ExecutionDetails += HandleExecutionDetails;
+            _client.CommissionReport += HandleCommissionReport;
             _client.Error += HandleError;
             _client.TickPrice += HandleTickPrice;
             _client.TickSize += HandleTickSize;
@@ -1329,39 +1330,30 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 if (status == OrderStatus.Filled || status == OrderStatus.PartiallyFilled)
                 {
-                    var currentQuantityFilled = Convert.ToInt32(update.Filled);
-                    var totalQuantityFilled = Convert.ToInt32(order.AbsoluteQuantity - update.Remaining);
-                    var remainingQuantity = update.Remaining;
-                    var price = Convert.ToDecimal(update.LastFillPrice);
-
-                    if (!IsFillAlreadyHandled(order, update.OrderId, remainingQuantity))
-                    {
-                        HandleFill(order, currentQuantityFilled, totalQuantityFilled, remainingQuantity, price, status);
-                    }
+                    // fill events will be only processed in HandleExecutionDetails and HandleCommissionReports
+                    return;
                 }
-                else
+
+                // IB likes to duplicate/triplicate some events, so we fire non-fill events only if status changed
+                if (status != order.Status)
                 {
-                    // IB likes to duplicate/triplicate some events, so we fire non-fill events only if status changed
-                    if (status != order.Status)
+                    if (order.Status.IsClosed())
                     {
-                        if (order.Status.IsClosed())
+                        // if the order is already in a closed state, we ignore the event
+                        Log.Trace("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): ignoring update in closed state - order.Status: " + order.Status + ", status: " + status);
+                    }
+                    else if (order.Status == OrderStatus.PartiallyFilled && (status == OrderStatus.New || status == OrderStatus.Submitted))
+                    {
+                        // if we receive a New or Submitted event when already partially filled, we ignore it
+                        Log.Trace("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): ignoring status " + status + " after partial fills");
+                    }
+                    else
+                    {
+                        // fire the event
+                        OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Interactive Brokers Order Event")
                         {
-                            // if the order is already in a closed state, we ignore the event
-                            Log.Trace("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): ignoring update in closed state - order.Status: " + order.Status + ", status: " + status);
-                        }
-                        else if (order.Status == OrderStatus.PartiallyFilled && (status == OrderStatus.New || status == OrderStatus.Submitted))
-                        {
-                            // if we receive a New or Submitted event when already partially filled, we ignore it
-                            Log.Trace("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): ignoring status " + status + " after partial fills");
-                        }
-                        else
-                        {
-                            // fire the event
-                            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Interactive Brokers Order Event")
-                            {
-                                Status = status
-                            });
-                        }
+                            Status = status
+                        });
                     }
                 }
             }
@@ -1404,18 +1396,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     return;
                 }
 
-                var currentQuantityFilled = Convert.ToInt32(executionDetails.Execution.Shares);
-                var totalQuantityFilled = Convert.ToInt32(executionDetails.Execution.CumQty);
-                var remainingQuantity = Convert.ToInt32(order.AbsoluteQuantity - totalQuantityFilled);
-                var price = Convert.ToDecimal(executionDetails.Execution.Price);
+                // save execution in dictionary and wait for commission report,
+                // so we can fire the order event for the fill (or partial fill) with the actual IB fees
 
-                // set order status based on remaining quantity
-                var status = remainingQuantity > 0 ? OrderStatus.PartiallyFilled : OrderStatus.Filled;
-
-                if (!IsFillAlreadyHandled(order, executionDetails.Execution.OrderId, remainingQuantity))
-                {
-                    HandleFill(order, currentQuantityFilled, totalQuantityFilled, remainingQuantity, price, status);
-                }
+                _orderExecutions[executionDetails.Execution.ExecId] = executionDetails.Execution;
             }
             catch (Exception err)
             {
@@ -1424,72 +1408,66 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
-        /// Processes the current fill and fires the order event
-        /// </summary>
-        private void HandleFill(Order order, int currentQuantityFilled, int totalQuantityFilled, int remainingQuantity, decimal price, OrderStatus status)
-        {
-            // apply order fees on the first fill event
-            // TODO: What about partial filled orders that get cancelled?
-            var orderFee = 0m;
-            if (currentQuantityFilled == totalQuantityFilled)
-            {
-                var security = _securityProvider.GetSecurity(order.Symbol);
-                orderFee = security.FeeModel.GetOrderFee(security, order);
-            }
-
-            // mark sells as negative quantities
-            var fillQuantity = order.Direction == OrderDirection.Buy ? currentQuantityFilled : -currentQuantityFilled;
-            order.PriceCurrency = _securityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
-            var orderEvent = new OrderEvent(order, DateTime.UtcNow, orderFee, "Interactive Brokers Order Fill Event")
-            {
-                Status = status,
-                FillPrice = price,
-                FillQuantity = fillQuantity
-            };
-            if (remainingQuantity != 0)
-            {
-                orderEvent.Message += " - " + remainingQuantity + " remaining";
-            }
-
-            // fire the order fill event
-            OnOrderEvent(orderEvent);
-        }
-
-        /// <summary>
-        /// Checks if the current fill has already been processed
+        /// Handle commission report events from IB
         /// </summary>
         /// <remarks>
-        /// We receive fill events in both IB OrderStatusUpdates and ExecutionDetail callbacks,
-        /// so this function needs to check if it has been called for the same fill
+        /// This method matches commission reports with previously saved executions and fires the OrderEvents.
         /// </remarks>
-        private bool IsFillAlreadyHandled(Order order, int orderId, int newRemainingQuantity)
+        private void HandleCommissionReport(object sender, IB.CommissionReportEventArgs e)
         {
-            // ignore calls after the order is filled
-            if (order.Status == OrderStatus.Filled)
-                return true;
-
-            int previousRemainingQuantity;
-            if (_orderFills.TryGetValue(orderId, out previousRemainingQuantity))
+            try
             {
-                if (newRemainingQuantity >= previousRemainingQuantity)
+                Log.Trace("InteractiveBrokersBrokerage.HandleCommissionReport(): " + e);
+
+                Execution execution;
+                if (!_orderExecutions.TryGetValue(e.CommissionReport.ExecId, out execution))
                 {
-                    // fill already processed
-                    return true;
+                    Log.Error("InteractiveBrokersBrokerage.HandleCommissionReport(): execution not found: " + e.CommissionReport.ExecId);
+                    return;
                 }
-            }
 
-            if (newRemainingQuantity > 0)
-            {
-                // still a partial fill, update the remaining quantity for the order
-                _orderFills[orderId] = newRemainingQuantity;
-            }
-            else
-            {
-                // order filled, no need to track it anymore
-                _orderFills.Remove(orderId);
-            }
+                var order = _orderProvider.GetOrderByBrokerageId(execution.OrderId);
+                if (order == null)
+                {
+                    Log.Error("InteractiveBrokersBrokerage.HandleExecutionDetails(): Unable to locate order with BrokerageID " + execution.OrderId);
+                    return;
+                }
 
-            return false;
+                if (order.Status != OrderStatus.Filled)
+                {
+                    var currentQuantityFilled = Convert.ToInt32(execution.Shares);
+                    var totalQuantityFilled = Convert.ToInt32(execution.CumQty);
+                    var remainingQuantity = Convert.ToInt32(order.AbsoluteQuantity - totalQuantityFilled);
+                    var price = Convert.ToDecimal(execution.Price);
+                    var orderFee = Convert.ToDecimal(e.CommissionReport.Commission);
+
+                    // set order status based on remaining quantity
+                    var status = remainingQuantity > 0 ? OrderStatus.PartiallyFilled : OrderStatus.Filled;
+
+                    // mark sells as negative quantities
+                    var fillQuantity = order.Direction == OrderDirection.Buy ? currentQuantityFilled : -currentQuantityFilled;
+                    order.PriceCurrency = _securityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
+                    var orderEvent = new OrderEvent(order, DateTime.UtcNow, orderFee, "Interactive Brokers Order Fill Event")
+                    {
+                        Status = status,
+                        FillPrice = price,
+                        FillQuantity = fillQuantity
+                    };
+                    if (remainingQuantity != 0)
+                    {
+                        orderEvent.Message += " - " + remainingQuantity + " remaining";
+                    }
+
+                    // fire the order fill event
+                    OnOrderEvent(orderEvent);
+                }
+
+                _orderExecutions.TryRemove(e.CommissionReport.ExecId, out execution);
+            }
+            catch (Exception err)
+            {
+                Log.Error("InteractiveBrokersBrokerage.HandleCommissionReport(): " + err);
+            }
         }
 
         /// <summary>
