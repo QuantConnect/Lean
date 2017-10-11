@@ -81,7 +81,8 @@ namespace QuantConnect.Orders
         public OrderDuration Duration { get; internal set; }
 
         /// <summary>
-        /// Good till date(time) - The date and time until the order will be active. The order will be automatically canceled by the exchange after this date/time.
+        /// Good till date(time) - The date and time until the order will be active. The order
+		/// will be automatically canceled by the exchange after this date/time.
         /// </summary>
         public DateTime GoodTillDate { get; set; }
 
