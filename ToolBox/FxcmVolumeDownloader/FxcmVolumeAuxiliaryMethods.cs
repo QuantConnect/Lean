@@ -68,7 +68,7 @@ namespace QuantConnect.ToolBox
                         var lastStrDate = ReadZipFileData(expectedFilePath).Last()     // last observation                       
                                                                            .First()    // first string (date)
                                                                            .Substring(startIndex: 0, length: 8);
-                        lastAvailableDate = DateTime.ParseExact(lastStrDate, "yyyyMMdd", CultureInfo.InvariantCulture);
+                        lastAvailableDate = DateTime.ParseExact(lastStrDate, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
                     }
                     break;
                 case Resolution.Minute:
@@ -80,7 +80,7 @@ namespace QuantConnect.ToolBox
                     {
                         lastFileDate = Path.GetFileNameWithoutExtension(lastFileDate)
                                            .Substring(startIndex: 0, length: 8);
-                        lastAvailableDate = DateTime.ParseExact(lastFileDate, "yyyyMMdd", CultureInfo.InvariantCulture);
+                        lastAvailableDate = DateTime.ParseExact(lastFileDate, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
                     }
                     break;
             }
