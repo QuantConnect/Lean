@@ -127,6 +127,11 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Gets the extra brokerage specific paramaters for live trading
+        /// </summary>
+        public OrderExtras Extras { get; internal set; }
+
+        /// <summary>
         /// Added a default constructor for JSON Deserialization:
         /// </summary>
         protected Order()
@@ -142,6 +147,7 @@ namespace QuantConnect.Orders
             BrokerId = new List<string>();
             ContingentId = 0;
             DurationValue = DateTime.MaxValue;
+            Extras = new OrderExtras();
         }
 
         /// <summary>
@@ -151,7 +157,8 @@ namespace QuantConnect.Orders
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
         /// <param name="time">Time the order was placed</param>
         /// <param name="tag">User defined data tag for this order</param>
-        protected Order(Symbol symbol, decimal quantity, DateTime time, string tag = "")
+        /// <param name="extras">Extra brokerage specific paramaters for live trading</param>
+        protected Order(Symbol symbol, decimal quantity, DateTime time, string tag = "", OrderExtras extras = null)
         {
             Time = time;
             Price = 0;
@@ -164,6 +171,7 @@ namespace QuantConnect.Orders
             BrokerId = new List<string>();
             ContingentId = 0;
             DurationValue = DateTime.MaxValue;
+            Extras = extras ?? new OrderExtras();
         }
 
         /// <summary>
@@ -241,6 +249,7 @@ namespace QuantConnect.Orders
             order.Status = Status;
             order.Symbol = Symbol;
             order.Tag = Tag;
+            order.Extras = Extras;
         }
 
         /// <summary>
@@ -254,10 +263,10 @@ namespace QuantConnect.Orders
             switch (request.OrderType)
             {
                 case OrderType.Market:
-                    order = new MarketOrder(request.Symbol, request.Quantity, request.Time, request.Tag);
+                    order = new MarketOrder(request.Symbol, request.Quantity, request.Time, request.Tag, request.Extras);
                     break;
                 case OrderType.Limit:
-                    order = new LimitOrder(request.Symbol, request.Quantity, request.LimitPrice, request.Time, request.Tag);
+                    order = new LimitOrder(request.Symbol, request.Quantity, request.LimitPrice, request.Time, request.Tag, request.Extras);
                     break;
                 case OrderType.StopMarket:
                     order = new StopMarketOrder(request.Symbol, request.Quantity, request.StopPrice, request.Time, request.Tag);

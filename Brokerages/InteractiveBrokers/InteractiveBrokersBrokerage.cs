@@ -37,6 +37,7 @@ using IBApi;
 using NodaTime;
 using Bar = QuantConnect.Data.Market.Bar;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
+using Extras = QuantConnect.Orders.OrderExtras.IBExtras;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
@@ -1467,6 +1468,61 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
+        /// Convert OrderAlgorithm setting into respective string to be used for Interactive Brokers order API
+        /// </summary>
+        private string ConvertOrderAlgorithm(Extras.OrderAlgorithm algorithm)
+        {
+            switch (algorithm)
+            {
+                case Extras.OrderAlgorithm.None:
+                    return null;
+                case Extras.OrderAlgorithm.AdaptiveAlgo:
+                    return "AdaptiveAlgo";
+                case Extras.OrderAlgorithm.ArrivalPrice:
+                    return "ArrivalPx";
+                case Extras.OrderAlgorithm.ClosePrice:
+                    return "ClosePx";
+                case Extras.OrderAlgorithm.DarkIce:
+                    return "DarkIce";
+                case Extras.OrderAlgorithm.AccumulateDistribute:
+                    return "AD";
+                case Extras.OrderAlgorithm.PercentageOfVolume:
+                    return "PctVol";
+                case Extras.OrderAlgorithm.TWAP:
+                    return "Twap";
+                case Extras.OrderAlgorithm.PriceVariantPercentageOfVolumeStrategy:
+                    return "PctVolPx";
+                case Extras.OrderAlgorithm.SizeVariantPercentageOfVolumeStrategy:
+                    return "PctVolSz";
+                case Extras.OrderAlgorithm.TimeVariantPercentageOfVolumeStrategy:
+                    return "PctVolTm";
+                case Extras.OrderAlgorithm.VWAP:
+                    return "Vwap";
+                case Extras.OrderAlgorithm.BalanceImpactRisk:
+                    return "BalanceImpactRisk";
+                case Extras.OrderAlgorithm.MinimiseImpact:
+                    return "MinimiseImpact";
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Converts an AlgoParams List to a TagValue list to be used in Interactive Brokers order API
+        /// </summary>
+        /// <remarks>
+        /// Is there a better way to do this?
+        /// </remarks>
+        private List<TagValue> ConvertAlgoParams(List<Extras.Parameter> algoparams)
+        {
+            List<TagValue> output = new List<TagValue>();
+            foreach (Extras.Parameter n in algoparams)
+            {
+                output.Add(new TagValue(n.Tag, n.Value));
+            }
+            return output;
+        }
+
+        /// <summary>
         /// Converts a QC order to an IB order
         /// </summary>
         private IBApi.Order ConvertOrder(Order order, Contract contract, int ibOrderId)
@@ -1482,17 +1538,20 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 AllOrNone = false,
                 Tif = IB.TimeInForce.GoodTillCancel,
                 Transmit = true,
-                Rule80A = _agentDescription
-            };
+                Rule80A = _agentDescription,
+                AlgoStrategy = ConvertOrderAlgorithm(order.Extras.InteractiveBrokers.Algorithm),
+                AlgoParams = ConvertAlgoParams(order.Extras.InteractiveBrokers.AlgoParams)
+            };        
 
             if (order.Type == OrderType.MarketOnOpen)
             {
                 ibOrder.Tif = IB.TimeInForce.MarketOnOpen;
             }
-
+            
             var limitOrder = order as LimitOrder;
             var stopMarketOrder = order as StopMarketOrder;
             var stopLimitOrder = order as StopLimitOrder;
+
             if (limitOrder != null)
             {
                 ibOrder.LmtPrice = Convert.ToDouble(RoundPrice(limitOrder.LimitPrice, GetMinTick(contract)));

@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Orders
 {
@@ -79,6 +80,15 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Gets the extra brokerage specific paramaters for live trading
+        /// </summary>
+        public OrderExtras Extras
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="SubmitOrderRequest"/> class.
         /// The <see cref="OrderRequest.OrderId"/> will default to <see cref="OrderResponseErrorCode.UnableToFindOrder"/>
         /// </summary>
@@ -90,7 +100,8 @@ namespace QuantConnect.Orders
         /// <param name="limitPrice">The limit price for limit orders, non-limit orders this value is ignored</param>
         /// <param name="time">The time this request was created</param>
         /// <param name="tag">A custom tag for this request</param>
-        public SubmitOrderRequest(OrderType orderType, SecurityType securityType, Symbol symbol, decimal quantity, decimal stopPrice, decimal limitPrice, DateTime time, string tag)
+        /// <param name="extras">Extra brokerage specific paramaters for live trading</param>
+        public SubmitOrderRequest(OrderType orderType, SecurityType securityType, Symbol symbol, decimal quantity, decimal stopPrice, decimal limitPrice, DateTime time, string tag, OrderExtras extras = null)
             : base(time, (int)OrderResponseErrorCode.UnableToFindOrder, tag)
         {
             SecurityType = securityType;
@@ -99,6 +110,7 @@ namespace QuantConnect.Orders
             Quantity = quantity;
             LimitPrice = limitPrice;
             StopPrice = stopPrice;
+            Extras = extras ?? new OrderExtras();
         }
 
         /// <summary>
