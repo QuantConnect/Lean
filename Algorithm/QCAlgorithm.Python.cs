@@ -566,6 +566,25 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Sets the specified function as the benchmark, this function provides the value of
+        /// the benchmark at each date/time requested
+        /// </summary>
+        /// <param name="benchmark">The benchmark producing function</param>
+        public void SetBenchmark(PyObject benchmark)
+        {
+            using (Py.GIL())
+            {
+                var pyBenchmark = PythonUtil.ToFunc<DateTime, decimal>(benchmark);
+                if (pyBenchmark != null)
+                {
+                    SetBenchmark(pyBenchmark);
+                    return;
+                }
+                SetBenchmark((Symbol)benchmark.AsManagedObject(typeof(Symbol)));
+            }
+        }
+
+        /// <summary>
         /// Sets the brokerage to emulate in backtesting or paper trading.
         /// This can be used to set a custom brokerage model.
         /// </summary>

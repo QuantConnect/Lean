@@ -76,7 +76,11 @@ namespace QuantConnect.Util
         {
             using (Py.GIL())
             {
-                if (!pyObject.IsCallable()) return null;
+                int count = 0;
+                if (!TryGetArgLength(pyObject, out count) || count != 1)
+                {
+                    return null;
+                }
                 dynamic method = GetModule().GetAttr("to_func");
                 return method(pyObject, typeof(T1), typeof(T2)).AsManagedObject(typeof(Func<T1, T2>));
             }
