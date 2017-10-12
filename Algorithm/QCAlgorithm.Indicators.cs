@@ -319,7 +319,7 @@ namespace QuantConnect.Algorithm
         /// <param name="period">The period over which to compute the DPO</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
-        /// <returns>A new registerd DetrendedPriceOscillator indicator for the requested symbol over the specified period</returns>
+        /// <returns>A new registered DetrendedPriceOscillator indicator for the requested symbol over the specified period</returns>
         public DetrendedPriceOscillator DPO(Symbol symbol, int period, Resolution? resolution = null,
                                             Func<IBaseData, decimal> selector = null)
         {

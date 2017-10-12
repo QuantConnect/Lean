@@ -74,7 +74,7 @@ namespace QuantConnect.Indicators
         {
             _priceLag.Update(input);
             _sma.Update(input);
-            return IsReady ? _priceLag - _sma : decimal.Zero;
+            return _priceLag - _sma;
         }
     }
 }
