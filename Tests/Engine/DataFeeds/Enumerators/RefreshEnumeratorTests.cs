@@ -53,6 +53,18 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         }
 
         [Test]
+        public void UnderlyingEnumeratorDisposed_WhenUnderlyingEnumeratorReturnsFalse()
+        {
+            var fakeEnumerator = new Mock<IEnumerator<int?>>();
+            fakeEnumerator.Setup(e => e.MoveNext()).Returns(false);
+            fakeEnumerator.Setup(e => e.Dispose()).Verifiable();
+            var refresher = new RefreshEnumerator<int?>(() => fakeEnumerator.Object);
+            refresher.MoveNext();
+
+            fakeEnumerator.Verify(enumerator => enumerator.Dispose(), Times.Once);
+        }
+
+        [Test]
         public void DisposeCallsUnderlyingDispose()
         {
             var fakeEnumerator = new Mock<IEnumerator<int?>>();
