@@ -272,12 +272,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var data = new List<DataFeedPacket>();
                     foreach (var subscription in Subscriptions)
                     {
-                        var packet = new DataFeedPacket(subscription.Security, subscription.Configuration);
+                        var config = subscription.Configuration;
+                        var packet = new DataFeedPacket(subscription.Security, config);
 
                         // dequeue data that is time stamped at or before this frontier
                         while (subscription.MoveNext() && subscription.Current != null)
                         {
-                            packet.Add(subscription.Current);
+                            var clone = subscription.Current.Clone(subscription.Current.IsFillForward);
+                            clone.Time = clone.Time.RoundDownInTimeZone(config.Increment, config.ExchangeTimeZone, config.DataTimeZone);
+                            packet.Add(clone);
                         }
 
                         // if we have data, add it to be added to the bridge
@@ -296,7 +299,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                             // assume that if the first item is a base data collection then the enumerator handled the aggregation,
                             // otherwise, load all the the data into a new collection instance
-                            var collection = packet.Data[0] as BaseDataCollection ?? new BaseDataCollection(_frontierUtc, subscription.Configuration.Symbol, packet.Data);
+                            var collection = packet.Data[0] as BaseDataCollection ?? new BaseDataCollection(_frontierUtc, config.Symbol, packet.Data);
 
                             _changes += _universeSelection.ApplyUniverseSelection(universe, _frontierUtc, collection);
                         }
