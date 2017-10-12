@@ -14,14 +14,12 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Indicators")
 AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
-from QuantConnect.Indicators import *
-from datetime import datetime, timedelta
+
 
 ### <summary>
 ### Regression test for consistency of hour data over a reverse split event in US equities.
@@ -36,7 +34,7 @@ class HourReverseSplitRegressionAlgorithm(QCAlgorithm):
         self.SetCash(100000)
         self.symbol = self.AddEquity("VXX", Resolution.Hour).Symbol
     
-    def OnData(self, tradeBars):
-        if tradeBars.HasData:
-            if (not self.Portfolio.Invested) and self.Time.date() == self.EndDate.date():
-                self.Buy(self.symbol, 1)
+    def OnData(self, slice):
+        if slice.Bars.Count == 0: return
+        if (not self.Portfolio.Invested) and self.Time.date() == self.EndDate.date():
+            self.Buy(self.symbol, 1)
