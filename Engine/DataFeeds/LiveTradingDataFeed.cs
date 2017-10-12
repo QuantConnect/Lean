@@ -433,7 +433,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // At Second and Minute resolution, it will refresh every second and minute respectively
                     // At Hour and Daily resolutions, it will refresh every 30 minutes
                     var minimumTimeBetweenCalls = Math.Min(request.Configuration.Increment.Ticks, TimeSpan.FromMinutes(30).Ticks);
-                    var rateLimit = new RateLimitEnumerator(refresher, _timeProvider, TimeSpan.FromTicks(minimumTimeBetweenCalls));
+                    var rateLimit = new RateLimitEnumerator<BaseData>(refresher, _timeProvider, TimeSpan.FromTicks(minimumTimeBetweenCalls));
                     _customExchange.AddEnumerator(request.Configuration.Symbol, rateLimit);
 
                     var enqueable = new EnqueueableEnumerator<BaseData>();
@@ -666,7 +666,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 // rate limit the refreshing of the stack to the requested interval
                 var minimumTimeBetweenCalls = Math.Min(config.Increment.Ticks, TimeSpan.FromMinutes(30).Ticks);
-                var rateLimit = new RateLimitEnumerator(refresher, _timeProvider, TimeSpan.FromTicks(minimumTimeBetweenCalls));
+                var rateLimit = new RateLimitEnumerator<BaseData>(refresher, _timeProvider, TimeSpan.FromTicks(minimumTimeBetweenCalls));
                 var enqueueable = new EnqueueableEnumerator<BaseData>();
                 _customExchange.AddEnumerator(new EnumeratorHandler(config.Symbol, rateLimit, enqueueable));
                 enumerator = enqueueable;
