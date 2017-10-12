@@ -25,27 +25,109 @@ namespace QuantConnect.Util
     public class PythonUtil
     {
         /// <summary>
-        /// Encapsulates a python method with a <see cref="System.Func{T, TResult}"/>
+        /// Encapsulates a python method with a <see cref="System.Action{T1}"/>
         /// </summary>
-        /// <typeparam name="T">The data type</typeparam>
-        /// <typeparam name="TSecond">The output type</typeparam>
+        /// <typeparam name="T1">The input type</typeparam>
         /// <param name="pyObject">The python method</param>
-        /// <returns>A <see cref="System.Func{T, TResult}"/> that encapsulates the python method</returns>
-        public static Func<T, TSecond> ToFunc<T, TSecond>(PyObject pyObject)
+        /// <returns>A <see cref="System.Action{T1}"/> that encapsulates the python method</returns>
+        public static Action<T1> ToAction<T1>(PyObject pyObject)
         {
-            var testMod =
-               "from clr import AddReference\n" +
-               "AddReference(\"System\")\n" +
-               "from System import Func\n" +
-               "def to_func(pyobject, in_type, out_type):\n" +
-               "    return Func[in_type, out_type](pyobject)";
+            using (Py.GIL())
+            {
+                int count = 0;
+                if (!TryGetArgLength(pyObject, out count) || count != 1)
+                {
+                    return null;
+                }
+                dynamic method = GetModule().GetAttr("to_action1");
+                return method(pyObject, typeof(T1)).AsManagedObject(typeof(Action<T1>));
+            }
+        }
 
+        /// <summary>
+        /// Encapsulates a python method with a <see cref="System.Action{T1, T2}"/>
+        /// </summary>
+        /// <typeparam name="T1">The first input type</typeparam>
+        /// <typeparam name="T2">The second input type type</typeparam>
+        /// <param name="pyObject">The python method</param>
+        /// <returns>A <see cref="System.Action{T1, T2}"/> that encapsulates the python method</returns>
+        public static Action<T1, T2> ToAction<T1, T2>(PyObject pyObject)
+        {
+            using (Py.GIL())
+            {
+                int count = 0;
+                if (!TryGetArgLength(pyObject, out count) || count != 2)
+                {
+                    return null;
+                }
+                dynamic method = GetModule().GetAttr("to_action2");
+                return method(pyObject, typeof(T1), typeof(T2)).AsManagedObject(typeof(Action<T1, T2>));
+            }
+        }
+
+        /// <summary>
+        /// Encapsulates a python method with a <see cref="System.Func{T1, T2}"/>
+        /// </summary>
+        /// <typeparam name="T1">The data type</typeparam>
+        /// <typeparam name="T2">The output type</typeparam>
+        /// <param name="pyObject">The python method</param>
+        /// <returns>A <see cref="System.Func{T1, T2}"/> that encapsulates the python method</returns>
+        public static Func<T1, T2> ToFunc<T1, T2>(PyObject pyObject)
+        {
             using (Py.GIL())
             {
                 if (!pyObject.IsCallable()) return null;
-                dynamic toFunc = PythonEngine.ModuleFromString("x", testMod).GetAttr("to_func");
-                return toFunc(pyObject, typeof(T), typeof(TSecond)).AsManagedObject(typeof(Func<T, TSecond>));
+                dynamic method = GetModule().GetAttr("to_func");
+                return method(pyObject, typeof(T1), typeof(T2)).AsManagedObject(typeof(Func<T1, T2>));
             }
+        }
+
+        /// <summary>
+        /// Try to get the length of arguments of a method
+        /// </summary>
+        /// <param name="pyObject">Object representing a method</param>
+        /// <param name="length">Lenght of arguments</param>
+        /// <returns>True if pyObject is a method</returns>
+        private static bool TryGetArgLength(PyObject pyObject, out int length)
+        {
+            using (Py.GIL())
+            {
+                dynamic inspect = Py.Import("inspect");
+
+                if (inspect.isfunction(pyObject))
+                {
+                    var args = inspect.getargspec(pyObject).args;
+                    length = new PyList(args).Length();
+                    return true;
+                }
+
+                if (inspect.ismethod(pyObject))
+                {
+                    var args = inspect.getargspec(pyObject).args;
+                    length = new PyList(args).Length() - 1;
+                    return true;
+                }
+            }
+            length = 0;
+            return false;
+        }
+
+        /// <summary>
+        /// Creates a python module with utils methods 
+        /// </summary>
+        /// <returns>PyObject with a python module</returns>
+        private static PyObject GetModule()
+        {
+            return PythonEngine.ModuleFromString("x",
+                "from clr import AddReference\n" +
+                "AddReference(\"System\")\n" +
+                "from System import Action, Func\n" +
+                "def to_action1(pyobject, t1):\n" +
+                "    return Action[t1](pyobject)\n" +
+                "def to_action2(pyobject, t1, t2):\n" +
+                "    return Action[t1, t2](pyobject)\n" +
+                "def to_func(pyobject, t1, t2):\n" +
+                "    return Func[t1, t2](pyobject)");
         }
     }
 }

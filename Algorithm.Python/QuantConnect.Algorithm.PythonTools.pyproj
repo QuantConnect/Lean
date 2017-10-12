@@ -47,6 +47,7 @@
     <Compile Include="CustomDataRegressionAlgorithm.py" />
     <Compile Include="CustomDataUniverseAlgorithm.py" />
     <Compile Include="CustomModelsAlgorithm.py" />
+    <Compile Include="CustomSecurityInitializerAlgorithm.py" />
     <Compile Include="DailyAlgorithm.py" />
     <Compile Include="DailyFxAlgorithm.py" />
     <Compile Include="DataConsolidationAlgorithm.py" />

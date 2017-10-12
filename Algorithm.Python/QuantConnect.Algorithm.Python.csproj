@@ -133,6 +133,9 @@
       <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.1\lib\Python.Runtime.dll</HintPath>
     </Reference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="CustomSecurityInitializerAlgorithm.py" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent Condition="'$(OS)' == 'Windows_NT' ">

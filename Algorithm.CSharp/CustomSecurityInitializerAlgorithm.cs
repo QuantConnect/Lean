@@ -36,8 +36,8 @@ namespace QuantConnect.Algorithm.CSharp
             SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage);
             SetSecurityInitializer(new CustomSecurityInitializer(BrokerageModel, new FuncSecuritySeeder(GetLastKnownPrice), DataNormalizationMode.Raw));
 
-            SetStartDate(2012, 01, 01);
-            SetEndDate(2013, 01, 01);
+            SetStartDate(2013, 10, 01);
+            SetEndDate(2013, 11, 01);
 
             AddSecurity(SecurityType.Equity, "SPY", Resolution.Hour);
         }

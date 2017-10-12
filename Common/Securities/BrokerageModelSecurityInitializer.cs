@@ -34,6 +34,15 @@ namespace QuantConnect.Securities
         /// Initializes a new instance of the <see cref="BrokerageModelSecurityInitializer"/> class
         /// for the specified algorithm
         /// </summary>
+        public BrokerageModelSecurityInitializer()
+        {
+
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BrokerageModelSecurityInitializer"/> class
+        /// for the specified algorithm
+        /// </summary>
         /// <param name="brokerageModel">The brokerage model used to initialize the security models</param>
         /// <param name="securitySeeder">An <see cref="ISecuritySeeder"/> used to seed the initial price of the security</param>
         public BrokerageModelSecurityInitializer(IBrokerageModel brokerageModel, ISecuritySeeder securitySeeder)

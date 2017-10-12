@@ -576,6 +576,29 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Sets the security initializer function, used to initialize/configure securities after creation
+        /// </summary>
+        /// <param name="securityInitializer">The security initializer function or class</param>
+        public void SetSecurityInitializer(PyObject securityInitializer)
+        {
+            var securityInitializer1 = PythonUtil.ToAction<Security>(securityInitializer);
+            if (securityInitializer1 != null)
+            {
+                SetSecurityInitializer(securityInitializer1);
+                return;
+            }
+
+            var securityInitializer2 = PythonUtil.ToAction<Security, bool>(securityInitializer);
+            if (securityInitializer2 != null)
+            {
+                SetSecurityInitializer(securityInitializer2);
+                return;
+            }
+
+            SetSecurityInitializer(new SecurityInitializerPythonWrapper(securityInitializer));
+        }
+
+        /// <summary>
         /// Gets the symbols/string from a PyObject
         /// </summary>
         /// <param name="pyObject">PyObject containing symbols</param>
