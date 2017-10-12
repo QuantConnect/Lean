@@ -1106,7 +1106,7 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio.SetCash(150000);
 
             var mock = new Mock<IOrderProcessor>();
-            var request = new Mock<Orders.SubmitOrderRequest>(null, null, null, null, null, null, null, null);
+            var request = new Mock<Orders.SubmitOrderRequest>(null, null, null, null, null, null, null, null, null, null);
             mock.Setup(m => m.Process(It.IsAny<Orders.OrderRequest>())).Returns(new Orders.OrderTicket(null, request.Object));
             algo.Transactions.SetOrderProcessor(mock.Object);
 
