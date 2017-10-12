@@ -125,6 +125,16 @@ namespace QuantConnect.Orders
         {
             get { return Quantity * Price; }
         }
+        
+        /// <summary>
+        /// Gets the Interactive Brokers algorithm for the order
+        /// </summary>
+        public OrderAlgorithm Algorithm { get; internal set; }
+
+        /// <summary>
+        /// Gets the Interactive Brokers algorithm parameters for the order
+        /// </summary>
+        public List<AlgoParams> AlgoParams { get; internal set; }
 
         /// <summary>
         /// Added a default constructor for JSON Deserialization:
@@ -142,6 +152,8 @@ namespace QuantConnect.Orders
             BrokerId = new List<string>();
             ContingentId = 0;
             DurationValue = DateTime.MaxValue;
+            Algorithm = OrderAlgorithm.None;
+            AlgoParams = new List<AlgoParams>();
         }
 
         /// <summary>
@@ -151,7 +163,9 @@ namespace QuantConnect.Orders
         /// <param name="quantity">Quantity of the asset we're seeking to trade</param>
         /// <param name="time">Time the order was placed</param>
         /// <param name="tag">User defined data tag for this order</param>
-        protected Order(Symbol symbol, decimal quantity, DateTime time, string tag = "")
+        /// <param name="algorithm">Interactive Brokers algorithm to trade with</param>
+        /// <param name="algoparams">Parameters for an Interactive Brokers Algorithm order</param>
+        protected Order(Symbol symbol, decimal quantity, DateTime time, string tag = "", OrderAlgorithm algorithm = OrderAlgorithm.None, List<AlgoParams> algoparams = null)
         {
             Time = time;
             Price = 0;
@@ -164,6 +178,8 @@ namespace QuantConnect.Orders
             BrokerId = new List<string>();
             ContingentId = 0;
             DurationValue = DateTime.MaxValue;
+            Algorithm = algorithm;
+            AlgoParams = algoparams ?? new List<AlgoParams>();
         }
 
         /// <summary>
@@ -241,6 +257,8 @@ namespace QuantConnect.Orders
             order.Status = Status;
             order.Symbol = Symbol;
             order.Tag = Tag;
+            order.Algorithm = Algorithm;
+            order.AlgoParams = AlgoParams;
         }
 
         /// <summary>
@@ -254,10 +272,10 @@ namespace QuantConnect.Orders
             switch (request.OrderType)
             {
                 case OrderType.Market:
-                    order = new MarketOrder(request.Symbol, request.Quantity, request.Time, request.Tag);
+                    order = new MarketOrder(request.Symbol, request.Quantity, request.Time, request.Tag, request.Algorithm, request.AlgoParams);
                     break;
                 case OrderType.Limit:
-                    order = new LimitOrder(request.Symbol, request.Quantity, request.LimitPrice, request.Time, request.Tag);
+                    order = new LimitOrder(request.Symbol, request.Quantity, request.LimitPrice, request.Time, request.Tag, request.Algorithm, request.AlgoParams);
                     break;
                 case OrderType.StopMarket:
                     order = new StopMarketOrder(request.Symbol, request.Quantity, request.StopPrice, request.Time, request.Tag);

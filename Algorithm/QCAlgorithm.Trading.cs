@@ -155,10 +155,12 @@ namespace QuantConnect.Algorithm
         /// <param name="quantity">Number of shares to request.</param>
         /// <param name="asynchronous">Send the order asynchrously (false). Otherwise we'll block until it fills</param>
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
-        /// <seealso cref="MarketOrder(Symbol, decimal, bool, string)"/>
-        public OrderTicket Order(Symbol symbol, decimal quantity, bool asynchronous = false, string tag = "")
+        /// <param name="algorithm">Interactive Brokers algorithm to trade with</param>
+        /// <param name="algoparams">Parameters for an Interactive Brokers Algorithm order</param>
+        /// <seealso cref="MarketOrder(QuantConnect.Symbol, decimal, bool, string, OrderAlgorithm, List{AlgoParams})/>"/>
+        public OrderTicket Order(Symbol symbol, decimal quantity, bool asynchronous = false, string tag = "", OrderAlgorithm algorithm = OrderAlgorithm.None, List<AlgoParams> algoparams = null)
         {
-            return MarketOrder(symbol, quantity, asynchronous, tag);
+            return MarketOrder(symbol, quantity, asynchronous, tag, algorithm, algoparams);
         }
 
         /// <summary>
@@ -168,10 +170,12 @@ namespace QuantConnect.Algorithm
         /// <param name="quantity">Number of shares to request.</param>
         /// <param name="asynchronous">Send the order asynchrously (false). Otherwise we'll block until it fills</param>
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
+        /// <param name="algorithm">Interactive Brokers algorithm to trade with</param>
+        /// <param name="algoparams">Parameters for an Interactive Brokers Algorithm order</param>
         /// <returns>int Order id</returns>
-        public OrderTicket MarketOrder(Symbol symbol, int quantity, bool asynchronous = false, string tag = "")
+        public OrderTicket MarketOrder(Symbol symbol, int quantity, bool asynchronous = false, string tag = "", OrderAlgorithm algorithm = OrderAlgorithm.None, List<AlgoParams> algoparams = null)
         {
-            return MarketOrder(symbol, (decimal)quantity, asynchronous, tag);
+            return MarketOrder(symbol, (decimal)quantity, asynchronous, tag, algorithm, algoparams);
         }
 
         /// <summary>
@@ -181,10 +185,12 @@ namespace QuantConnect.Algorithm
         /// <param name="quantity">Number of shares to request.</param>
         /// <param name="asynchronous">Send the order asynchrously (false). Otherwise we'll block until it fills</param>
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
+        /// <param name="algorithm">Interactive Brokers algorithm to trade with</param>
+        /// <param name="algoparams">Parameters for an Interactive Brokers Algorithm order</param>
         /// <returns>int Order id</returns>
-        public OrderTicket MarketOrder(Symbol symbol, double quantity, bool asynchronous = false, string tag = "")
+        public OrderTicket MarketOrder(Symbol symbol, double quantity, bool asynchronous = false, string tag = "", OrderAlgorithm algorithm = OrderAlgorithm.None, List<AlgoParams> algoparams = null)
         {
-            return MarketOrder(symbol, (decimal)quantity, asynchronous, tag);
+            return MarketOrder(symbol, (decimal)quantity, asynchronous, tag, algorithm, algoparams);
         }
 
         /// <summary>
@@ -194,8 +200,10 @@ namespace QuantConnect.Algorithm
         /// <param name="quantity">Number of shares to request.</param>
         /// <param name="asynchronous">Send the order asynchrously (false). Otherwise we'll block until it fills</param>
         /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
+        /// <param name="algorithm">Interactive Brokers algorithm to trade with</param>
+        /// <param name="algoparams">Parameters for an Interactive Brokers Algorithm order</param>
         /// <returns>int Order id</returns>
-        public OrderTicket MarketOrder(Symbol symbol, decimal quantity, bool asynchronous = false, string tag = "")
+        public OrderTicket MarketOrder(Symbol symbol, decimal quantity, bool asynchronous = false, string tag = "", OrderAlgorithm algorithm = OrderAlgorithm.None, List<AlgoParams> algoparams = null)
         {
             var security = Securities[symbol];
 
@@ -212,7 +220,7 @@ namespace QuantConnect.Algorithm
                 return mooTicket;
             }
 
-            var request = CreateSubmitOrderRequest(OrderType.Market, security, quantity, tag);
+            var request = CreateSubmitOrderRequest(OrderType.Market, security, quantity, tag, 0, 0, algorithm, algoparams);
 
             // If warming up, do not submit
             if (IsWarmingUp)
@@ -725,7 +733,7 @@ namespace QuantConnect.Algorithm
 
                 if (security.Holdings.IsShort)
                     return OrderResponse.Error(request, OrderResponseErrorCode.UnsupportedRequestType, "The security with symbol '" + request.Symbol.ToString() + "' has a short option position. Only long option positions are exercisable.");
-                
+
                 if (request.Quantity > security.Holdings.Quantity)
                     return OrderResponse.Error(request, OrderResponseErrorCode.UnsupportedRequestType, "Cannot exercise more contracts of '" + request.Symbol.ToString() + "' than is currently available in the portfolio. ");
 
@@ -832,10 +840,13 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">string symbol we wish to hold</param>
         /// <param name="percentage">double percentage of holdings desired</param>
         /// <param name="liquidateExistingHoldings">liquidate existing holdings if neccessary to hold this stock</param>
+        /// <param name="tag">Tag the order with a short string.</param>
+        /// <param name="algorithm">Interactive Brokers algorithm to trade with</param>
+        /// <param name="algoparams">Parameters for an Interactive Brokers Algorithm order</param>
         /// <seealso cref="MarketOrder"/>
-        public void SetHoldings(Symbol symbol, double percentage, bool liquidateExistingHoldings = false)
+        public void SetHoldings(Symbol symbol, double percentage, bool liquidateExistingHoldings = false, string tag = "", OrderAlgorithm algorithm = OrderAlgorithm.None, List<AlgoParams> algoparams = null)
         {
-            SetHoldings(symbol, (decimal)percentage, liquidateExistingHoldings);
+            SetHoldings(symbol, (decimal)percentage, liquidateExistingHoldings, tag, algorithm, algoparams);
         }
 
         /// <summary>
@@ -845,10 +856,12 @@ namespace QuantConnect.Algorithm
         /// <param name="percentage">float percentage of holdings desired</param>
         /// <param name="liquidateExistingHoldings">bool liquidate existing holdings if neccessary to hold this stock</param>
         /// <param name="tag">Tag the order with a short string.</param>
+        /// <param name="algorithm">Interactive Brokers algorithm to trade with</param>
+        /// <param name="algoparams">Parameters for an Interactive Brokers Algorithm order</param>
         /// <seealso cref="MarketOrder"/>
-        public void SetHoldings(Symbol symbol, float percentage, bool liquidateExistingHoldings = false, string tag = "")
+        public void SetHoldings(Symbol symbol, float percentage, bool liquidateExistingHoldings = false, string tag = "", OrderAlgorithm algorithm = OrderAlgorithm.None, List<AlgoParams> algoparams = null)
         {
-            SetHoldings(symbol, (decimal)percentage, liquidateExistingHoldings, tag);
+            SetHoldings(symbol, (decimal)percentage, liquidateExistingHoldings, tag, algorithm, algoparams);
         }
 
         /// <summary>
@@ -858,10 +871,12 @@ namespace QuantConnect.Algorithm
         /// <param name="percentage">float percentage of holdings desired</param>
         /// <param name="liquidateExistingHoldings">bool liquidate existing holdings if neccessary to hold this stock</param>
         /// <param name="tag">Tag the order with a short string.</param>
+        /// <param name="algorithm">Interactive Brokers algorithm to trade with</param>
+        /// <param name="algoparams">Parameters for an Interactive Brokers Algorithm order</param>
         /// <seealso cref="MarketOrder"/>
-        public void SetHoldings(Symbol symbol, int percentage, bool liquidateExistingHoldings = false, string tag = "")
+        public void SetHoldings(Symbol symbol, int percentage, bool liquidateExistingHoldings = false, string tag = "", OrderAlgorithm algorithm = OrderAlgorithm.None, List<AlgoParams> algoparams = null)
         {
-            SetHoldings(symbol, (decimal)percentage, liquidateExistingHoldings, tag);
+            SetHoldings(symbol, (decimal)percentage, liquidateExistingHoldings, tag, algorithm, algoparams);
         }
 
         /// <summary>
@@ -873,8 +888,10 @@ namespace QuantConnect.Algorithm
         /// <param name="percentage">decimal fraction of portfolio to set stock</param>
         /// <param name="liquidateExistingHoldings">bool flag to clean all existing holdings before setting new faction.</param>
         /// <param name="tag">Tag the order with a short string.</param>
+        /// <param name="algorithm">Interactive Brokers algorithm to trade with</param>
+        /// <param name="algoparams">Parameters for an Interactive Brokers Algorithm order</param>
         /// <seealso cref="MarketOrder"/>
-        public void SetHoldings(Symbol symbol, decimal percentage, bool liquidateExistingHoldings = false, string tag = "")
+        public void SetHoldings(Symbol symbol, decimal percentage, bool liquidateExistingHoldings = false, string tag = "", OrderAlgorithm algorithm = OrderAlgorithm.None, List<AlgoParams> algoparams = null)
         {
             //Initialize Requirements:
             Security security;
@@ -894,7 +911,8 @@ namespace QuantConnect.Algorithm
                     if (holdingSymbol != symbol && holdings.AbsoluteQuantity > 0)
                     {
                         //Go through all existing holdings [synchronously], market order the inverse quantity:
-                        Order(holdingSymbol, -holdings.Quantity, false, tag);
+                        //May take a long time synchronously if using an algorithm, food for thought
+                        Order(holdingSymbol, -holdings.Quantity, false, tag, algorithm, algoparams);
                     }
                 }
             }
@@ -903,7 +921,8 @@ namespace QuantConnect.Algorithm
             var quantity = CalculateOrderQuantity(symbol, percentage);
             if (Math.Abs(quantity) > 0)
             {
-                MarketOrder(symbol, quantity, false, tag);
+                //May take a long time synchronously if using an algorithm, food for thought
+                MarketOrder(symbol, quantity, false, tag, algorithm, algoparams);
             }
         }
 
@@ -1060,9 +1079,10 @@ namespace QuantConnect.Algorithm
             return exchangeHours.IsOpen(time, false);
         }
 
-        private SubmitOrderRequest CreateSubmitOrderRequest(OrderType orderType, Security security, decimal quantity, string tag, decimal stopPrice = 0m, decimal limitPrice = 0m)
+        private SubmitOrderRequest CreateSubmitOrderRequest(OrderType orderType, Security security, decimal quantity, string tag, decimal stopPrice = 0m, decimal limitPrice = 0m, OrderAlgorithm algorithm = OrderAlgorithm.None, List<AlgoParams> algoparams = null)
         {
-            return new SubmitOrderRequest(orderType, security.Type, security.Symbol, quantity, stopPrice, limitPrice, UtcTime, tag);
+            return new SubmitOrderRequest(orderType, security.Type, security.Symbol, quantity, stopPrice, limitPrice, UtcTime, tag, algorithm, algoparams);
         }
+
     }
 }

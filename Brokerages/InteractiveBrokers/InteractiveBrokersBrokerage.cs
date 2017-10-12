@@ -1467,6 +1467,61 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
+        /// Convert OrderAlgorithm setting into respective string to be used for Interactive Brokers order API
+        /// </summary>
+        private string ConvertOrderAlgorithm(OrderAlgorithm algorithm)
+        {
+            switch (algorithm)
+            {
+                case OrderAlgorithm.None:
+                    return null;
+                case OrderAlgorithm.AdaptiveAlgo:
+                    return "AdaptiveAlgo";
+                case OrderAlgorithm.ArrivalPrice:
+                    return "ArrivalPx";
+                case OrderAlgorithm.ClosePrice:
+                    return "ClosePx";
+                case OrderAlgorithm.DarkIce:
+                    return "DarkIce";
+                case OrderAlgorithm.AccumulateDistribute:
+                    return "AD";
+                case OrderAlgorithm.PercentageOfVolume:
+                    return "PctVol";
+                case OrderAlgorithm.TWAP:
+                    return "Twap";
+                case OrderAlgorithm.PriceVariantPercentageOfVolumeStrategy:
+                    return "PctVolPx";
+                case OrderAlgorithm.SizeVariantPercentageOfVolumeStrategy:
+                    return "PctVolSz";
+                case OrderAlgorithm.TimeVariantPercentageOfVolumeStrategy:
+                    return "PctVolTm";
+                case OrderAlgorithm.VWAP:
+                    return "Vwap";
+                case OrderAlgorithm.BalanceImpactRisk:
+                    return "BalanceImpactRisk";
+                case OrderAlgorithm.MinimiseImpact:
+                    return "MinimiseImpact";
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Converts an AlgoParams List to a TagValue list to be used in Interactive Brokers order API
+        /// </summary>
+        /// <remarks>
+        /// Is there a better way to do this?
+        /// </remarks>
+        private List<TagValue> ConvertAlgoParams(List<AlgoParams> algoparams)
+        {
+            List<TagValue> output = new List<TagValue>();
+            foreach (AlgoParams n in algoparams)
+            {
+                output.Add(new TagValue(n.Tag, n.Value));
+            }
+            return output;
+        }
+
+        /// <summary>
         /// Converts a QC order to an IB order
         /// </summary>
         private IBApi.Order ConvertOrder(Order order, Contract contract, int ibOrderId)
@@ -1482,17 +1537,20 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 AllOrNone = false,
                 Tif = IB.TimeInForce.GoodTillCancel,
                 Transmit = true,
-                Rule80A = _agentDescription
-            };
+                Rule80A = _agentDescription,
+                AlgoStrategy = ConvertOrderAlgorithm(order.Algorithm),
+                AlgoParams = ConvertAlgoParams(order.AlgoParams)
+            };        
 
             if (order.Type == OrderType.MarketOnOpen)
             {
                 ibOrder.Tif = IB.TimeInForce.MarketOnOpen;
             }
-
+            
             var limitOrder = order as LimitOrder;
             var stopMarketOrder = order as StopMarketOrder;
             var stopLimitOrder = order as StopLimitOrder;
+
             if (limitOrder != null)
             {
                 ibOrder.LmtPrice = Convert.ToDouble(RoundPrice(limitOrder.LimitPrice, GetMinTick(contract)));

@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Orders
 {
@@ -79,6 +80,23 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Gets the Interactive Brokers algorithm for the order
+        /// </summary>
+        public OrderAlgorithm Algorithm
+        {
+            get; private set;
+        }
+
+        /// <summary>
+        /// Gets the Interactive Brokers algorithm parameters for the order
+        /// </summary>
+        public List<AlgoParams> AlgoParams
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="SubmitOrderRequest"/> class.
         /// The <see cref="OrderRequest.OrderId"/> will default to <see cref="OrderResponseErrorCode.UnableToFindOrder"/>
         /// </summary>
@@ -90,7 +108,9 @@ namespace QuantConnect.Orders
         /// <param name="limitPrice">The limit price for limit orders, non-limit orders this value is ignored</param>
         /// <param name="time">The time this request was created</param>
         /// <param name="tag">A custom tag for this request</param>
-        public SubmitOrderRequest(OrderType orderType, SecurityType securityType, Symbol symbol, decimal quantity, decimal stopPrice, decimal limitPrice, DateTime time, string tag)
+        /// <param name="algorithm">Interactive Brokers algorithm to trade with</param>
+        /// <param name="algoParams">Parameters for an Interactive Brokers Algorithm order</param>
+        public SubmitOrderRequest(OrderType orderType, SecurityType securityType, Symbol symbol, decimal quantity, decimal stopPrice, decimal limitPrice, DateTime time, string tag, OrderAlgorithm algorithm = OrderAlgorithm.None, List<AlgoParams> algoParams = null)
             : base(time, (int)OrderResponseErrorCode.UnableToFindOrder, tag)
         {
             SecurityType = securityType;
@@ -99,6 +119,8 @@ namespace QuantConnect.Orders
             Quantity = quantity;
             LimitPrice = limitPrice;
             StopPrice = stopPrice;
+            Algorithm = algorithm;
+            AlgoParams = algoParams ?? new List<AlgoParams>();
         }
 
         /// <summary>

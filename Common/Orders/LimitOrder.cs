@@ -15,6 +15,7 @@
 
 using System;
 using QuantConnect.Securities;
+using System.Collections.Generic;
 
 namespace QuantConnect.Orders
 {
@@ -51,8 +52,10 @@ namespace QuantConnect.Orders
         /// <param name="time">Time the order was placed</param>
         /// <param name="limitPrice">Price the order should be filled at if a limit order</param>
         /// <param name="tag">User defined data tag for this order</param>
-        public LimitOrder(Symbol symbol, decimal quantity, decimal limitPrice, DateTime time, string tag = "")
-            : base(symbol, quantity, time, tag)
+        /// <param name="algorithm">Interactive Brokers algorithm to trade with</param>
+        /// <param name="algoparams">Parameters for an Interactive Brokers Algorithm order</param>
+        public LimitOrder(Symbol symbol, decimal quantity, decimal limitPrice, DateTime time, string tag = "", OrderAlgorithm algorithm = OrderAlgorithm.None, List<AlgoParams> algoparams = null)
+            : base(symbol, quantity, time, tag, algorithm, algoparams)
         {
             LimitPrice = limitPrice;
 

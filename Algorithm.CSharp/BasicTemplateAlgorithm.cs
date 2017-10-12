@@ -14,6 +14,8 @@
 */
 
 using QuantConnect.Data;
+using System.Collections.Generic;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -55,7 +57,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                SetHoldings(_spy, 1);
+                //SetHoldings(_spy, 1);
+                List<AlgoParams> AlgoParams = new List<AlgoParams>();
+                AlgoParams.Add(new AlgoParams("adaptivePriority", "Normal"));
+                SetHoldings(_spy, 1, false, "", OrderAlgorithm.AdaptiveAlgo, AlgoParams);
+                //MarketOrder(_spy, 100, true, "", OrderAlgorithm.AdaptiveAlgo, AlgoParams);
                 Debug("Purchased Stock");
             }
         }
