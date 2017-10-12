@@ -417,24 +417,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         Quandl.SetAuthCode(Config.Get("quandl-auth-token"));
                     }
 
-                    // each time we exhaust we'll new up this enumerator stack
-                    var refresher = new RefreshEnumerator<BaseData>(() =>
-                    {
-                        var dateInDataTimeZone = DateTime.UtcNow.ConvertFromUtc(request.Configuration.DataTimeZone).Date;
-                        var enumeratorFactory = new BaseDataSubscriptionEnumeratorFactory(true, r => new[] { dateInDataTimeZone });
-                        var factoryReadEnumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
-                        var maximumDataAge = TimeSpan.FromTicks(Math.Max(request.Configuration.Increment.Ticks, TimeSpan.FromSeconds(5).Ticks));
-                        var fastForward = new FastForwardEnumerator(factoryReadEnumerator, _timeProvider, request.Security.Exchange.TimeZone, maximumDataAge);
-                        return new FrontierAwareEnumerator(fastForward, _frontierTimeProvider, timeZoneOffsetProvider);
-                    });
+                    var factory = new LiveCustomDataSubscriptionEnumeratorFactory(_timeProvider);
+                    var enumeratorStack = factory.CreateEnumerator(request, _dataProvider);
 
-                    // rate limit the refreshing of the stack to the requested interval
-                    // At Tick resolution, it will refresh at full speed
-                    // At Second and Minute resolution, it will refresh every second and minute respectively
-                    // At Hour and Daily resolutions, it will refresh every 30 minutes
-                    var minimumTimeBetweenCalls = Math.Min(request.Configuration.Increment.Ticks, TimeSpan.FromMinutes(30).Ticks);
-                    var rateLimit = new RateLimitEnumerator<BaseData>(refresher, _timeProvider, TimeSpan.FromTicks(minimumTimeBetweenCalls));
-                    _customExchange.AddEnumerator(request.Configuration.Symbol, rateLimit);
+                    _customExchange.AddEnumerator(request.Configuration.Symbol, enumeratorStack);
 
                     var enqueable = new EnqueueableEnumerator<BaseData>();
                     _customExchange.SetDataHandler(request.Configuration.Symbol, data =>
