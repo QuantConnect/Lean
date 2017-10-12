@@ -26,14 +26,13 @@ from QuantConnect.Algorithm import *
 ### </summary>
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="regression test" />
-class HourSplitRegressionAlgorithm(QCAlgorithm):
+class HourReverseSplitRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        self.SetStartDate(2005, 2, 25)
-        self. SetEndDate(2005, 2, 28)
+        self.SetStartDate(2013, 11, 7)
+        self. SetEndDate(2013, 11, 8)
         self.SetCash(100000)
-        
-        self.symbol = self.AddEquity("AAPL", Resolution.Hour).Symbol
+        self.symbol = self.AddEquity("VXX", Resolution.Hour).Symbol
     
     def OnData(self, slice):
         if slice.Bars.Count == 0: return
