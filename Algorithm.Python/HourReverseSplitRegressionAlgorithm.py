@@ -32,6 +32,8 @@ class HourReverseSplitRegressionAlgorithm(QCAlgorithm):
         self.SetStartDate(2013, 11, 7)
         self. SetEndDate(2013, 11, 8)
         self.SetCash(100000)
+        self.SetBenchmark(lambda x: 0)
+
         self.symbol = self.AddEquity("VXX", Resolution.Hour).Symbol
     
     def OnData(self, slice):

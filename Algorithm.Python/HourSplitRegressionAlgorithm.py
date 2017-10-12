@@ -32,7 +32,8 @@ class HourSplitRegressionAlgorithm(QCAlgorithm):
         self.SetStartDate(2005, 2, 25)
         self. SetEndDate(2005, 2, 28)
         self.SetCash(100000)
-        
+        self.SetBenchmark(lambda x: 0)
+
         self.symbol = self.AddEquity("AAPL", Resolution.Hour).Symbol
     
     def OnData(self, slice):
