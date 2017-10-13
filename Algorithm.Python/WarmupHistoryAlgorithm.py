@@ -57,9 +57,8 @@ class WarmupHistoryAlgorithm(QCAlgorithm):
         self.Log(str(history.loc["NZDUSD"].tail()))
 
         for index, row in history.loc["EURUSD"].iterrows():
-            datapoint = IndicatorDataPoint(index, row["close"])
-            self.fast.Update(datapoint)
-            self.slow.Update(datapoint)
+            self.fast.Update(index, row["close"])
+            self.slow.Update(index, row["close"])
 
         self.Log("FAST {0} READY. Samples: {1}".format("IS" if self.fast.IsReady else "IS NOT", self.fast.Samples))
         self.Log("SLOW {0} READY. Samples: {1}".format("IS" if self.slow.IsReady else "IS NOT", self.slow.Samples))
