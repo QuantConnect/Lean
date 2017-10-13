@@ -1442,7 +1442,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Execution execution;
                 if (!_orderExecutions.TryGetValue(e.CommissionReport.ExecId, out execution))
                 {
-                    // save execution in dictionary and wait for execution event
+                    // save commission in dictionary and wait for execution event
                     _commissionReports[e.CommissionReport.ExecId] = e.CommissionReport;
                     return;
                 }
