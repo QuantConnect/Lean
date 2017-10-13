@@ -76,6 +76,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         // tracks executions before commission reports, map: execId -> execution
         private readonly ConcurrentDictionary<string, Execution> _orderExecutions = new ConcurrentDictionary<string, Execution>();
+        // tracks commission reports before executions, map: execId -> commission report
+        private readonly ConcurrentDictionary<string, CommissionReport> _commissionReports = new ConcurrentDictionary<string, CommissionReport>();
 
         // holds account properties, cash balances and holdings for the account
         private readonly InteractiveBrokersAccountData _accountData = new InteractiveBrokersAccountData();
@@ -1396,10 +1398,28 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     return;
                 }
 
-                // save execution in dictionary and wait for commission report,
-                // so we can fire the order event for the fill (or partial fill) with the actual IB fees
+                // For financial advisor orders, we first receive executions and commission reports for the master order,
+                // followed by executions and commission reports for all allocations.
+                // We don't want to emit fills for these allocation events,
+                // so we ignore events received after the order is completely filled or
+                // executions for allocations which are already included in the master execution.
 
-                _orderExecutions[executionDetails.Execution.ExecId] = executionDetails.Execution;
+                CommissionReport commissionReport;
+                if (_commissionReports.TryGetValue(executionDetails.Execution.ExecId, out commissionReport))
+                {
+                    if (CanEmitFill(order, executionDetails.Execution))
+                    {
+                        // we have both execution and commission report, emit the fill
+                        EmitOrderFill(order, executionDetails.Execution, commissionReport);
+                    }
+
+                    _commissionReports.TryRemove(commissionReport.ExecId, out commissionReport);
+                }
+                else
+                {
+                    // save execution in dictionary and wait for commission report
+                    _orderExecutions[executionDetails.Execution.ExecId] = executionDetails.Execution;
+                }
             }
             catch (Exception err)
             {
@@ -1422,7 +1442,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Execution execution;
                 if (!_orderExecutions.TryGetValue(e.CommissionReport.ExecId, out execution))
                 {
-                    Log.Error("InteractiveBrokersBrokerage.HandleCommissionReport(): execution not found: " + e.CommissionReport.ExecId);
+                    // save execution in dictionary and wait for execution event
+                    _commissionReports[e.CommissionReport.ExecId] = e.CommissionReport;
                     return;
                 }
 
@@ -1433,41 +1454,68 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     return;
                 }
 
-                if (order.Status != OrderStatus.Filled)
+                if (CanEmitFill(order, execution))
                 {
-                    var currentQuantityFilled = Convert.ToInt32(execution.Shares);
-                    var totalQuantityFilled = Convert.ToInt32(execution.CumQty);
-                    var remainingQuantity = Convert.ToInt32(order.AbsoluteQuantity - totalQuantityFilled);
-                    var price = Convert.ToDecimal(execution.Price);
-                    var orderFee = Convert.ToDecimal(e.CommissionReport.Commission);
-
-                    // set order status based on remaining quantity
-                    var status = remainingQuantity > 0 ? OrderStatus.PartiallyFilled : OrderStatus.Filled;
-
-                    // mark sells as negative quantities
-                    var fillQuantity = order.Direction == OrderDirection.Buy ? currentQuantityFilled : -currentQuantityFilled;
-                    order.PriceCurrency = _securityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
-                    var orderEvent = new OrderEvent(order, DateTime.UtcNow, orderFee, "Interactive Brokers Order Fill Event")
-                    {
-                        Status = status,
-                        FillPrice = price,
-                        FillQuantity = fillQuantity
-                    };
-                    if (remainingQuantity != 0)
-                    {
-                        orderEvent.Message += " - " + remainingQuantity + " remaining";
-                    }
-
-                    // fire the order fill event
-                    OnOrderEvent(orderEvent);
+                    // we have both execution and commission report, emit the fill
+                    EmitOrderFill(order, execution, e.CommissionReport);
                 }
 
+                // always remove previous execution
                 _orderExecutions.TryRemove(e.CommissionReport.ExecId, out execution);
             }
             catch (Exception err)
             {
                 Log.Error("InteractiveBrokersBrokerage.HandleCommissionReport(): " + err);
             }
+        }
+
+        /// <summary>
+        /// Decide which fills should be emitted, accounting for different types of Financial Advisor orders
+        /// </summary>
+        private bool CanEmitFill(Order order, Execution execution)
+        {
+            return order.Status != OrderStatus.Filled &&
+
+                // non-FA orders
+                (!IsFinancialAdvisor ||
+
+                // FA master orders for groups/profiles
+                string.IsNullOrWhiteSpace(order.Properties.FinancialAdvisorProperties.Account) && execution.AcctNumber == _account ||
+
+                // FA orders for single managed accounts
+                !string.IsNullOrWhiteSpace(order.Properties.FinancialAdvisorProperties.Account) && execution.AcctNumber == order.Properties.FinancialAdvisorProperties.Account);
+        }
+
+        /// <summary>
+        /// Emits an order fill (or partial fill) including the actual IB commission paid
+        /// </summary>
+        private void EmitOrderFill(Order order, Execution execution, CommissionReport commissionReport)
+        {
+            var currentQuantityFilled = Convert.ToInt32(execution.Shares);
+            var totalQuantityFilled = Convert.ToInt32(execution.CumQty);
+            var remainingQuantity = Convert.ToInt32(order.AbsoluteQuantity - totalQuantityFilled);
+            var price = Convert.ToDecimal(execution.Price);
+            var orderFee = Convert.ToDecimal(commissionReport.Commission);
+
+            // set order status based on remaining quantity
+            var status = remainingQuantity > 0 ? OrderStatus.PartiallyFilled : OrderStatus.Filled;
+
+            // mark sells as negative quantities
+            var fillQuantity = order.Direction == OrderDirection.Buy ? currentQuantityFilled : -currentQuantityFilled;
+            order.PriceCurrency = _securityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
+            var orderEvent = new OrderEvent(order, DateTime.UtcNow, orderFee, "Interactive Brokers Order Fill Event")
+            {
+                Status = status,
+                FillPrice = price,
+                FillQuantity = fillQuantity
+            };
+            if (remainingQuantity != 0)
+            {
+                orderEvent.Message += " - " + remainingQuantity + " remaining";
+            }
+
+            // fire the order fill event
+            OnOrderEvent(orderEvent);
         }
 
         /// <summary>
