@@ -27,19 +27,6 @@ namespace QuantConnect.Indicators
     public static class IndicatorExtensions
     {
         /// <summary>
-        /// Updates the state of this indicator with the given value and returns true
-        /// if this indicator is ready, false otherwise
-        /// </summary>
-        /// <param name="indicator">The indicator to be updated</param>
-        /// <param name="time">The time associated with the value</param>
-        /// <param name="value">The value to use to update this indicator</param>
-        /// <returns>True if this indicator is ready, false otherwise</returns>
-        public static bool Update(this IndicatorBase<IndicatorDataPoint> indicator, DateTime time, decimal value)
-        {
-            return indicator.Update(new IndicatorDataPoint(time, value));
-        }
-
-        /// <summary>
         /// Configures the second indicator to receive automatic updates from the first by attaching an event handler
         /// to first.DataConsolidated
         /// </summary>
