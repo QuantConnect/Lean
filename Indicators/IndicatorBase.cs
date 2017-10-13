@@ -108,7 +108,7 @@ namespace QuantConnect.Indicators
         {
             if (typeof(T) == typeof(IndicatorDataPoint))
             {
-                return Update((T)Activator.CreateInstance(typeof(T), new object[] { time, value }));
+                return Update((T)(object)new IndicatorDataPoint(time, value));
             }
             else
             {
