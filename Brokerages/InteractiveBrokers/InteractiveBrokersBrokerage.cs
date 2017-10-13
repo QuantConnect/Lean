@@ -77,11 +77,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         // tracks remaining quantity for orders waiting to be filled completely (updated on partial fills)
         private readonly Dictionary<int, int> _orderFills = new Dictionary<int, int>();
 
+        // holds account properties, cash balances and holdings for the account
+        private readonly InteractiveBrokersAccountData _accountData = new InteractiveBrokersAccountData();
+
         private readonly object _sync = new object();
-        private readonly ConcurrentDictionary<string, decimal> _cashBalances = new ConcurrentDictionary<string, decimal>();
-        private readonly ConcurrentDictionary<string, string> _accountProperties = new ConcurrentDictionary<string, string>();
-        // number of shares per symbol
-        private readonly ConcurrentDictionary<string, Holding> _accountHoldings = new ConcurrentDictionary<string, Holding>();
 
         private readonly ConcurrentDictionary<string, ContractDetails> _contractDetails = new ConcurrentDictionary<string, ContractDetails>();
 
@@ -123,6 +122,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 return _client != null && _client.Connected && !_disconnected1100Fired;
             }
         }
+
+        /// <summary>
+        /// Returns true if the connected user is a financial advisor
+        /// </summary>
+        public bool IsFinancialAdvisor => _account.Contains("F");
 
         /// <summary>
         /// Creates a new InteractiveBrokersBrokerage using values from configuration:
@@ -188,6 +192,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _port = port;
             _clientId = IncrementClientId();
             _agentDescription = agentDescription;
+
             _client = new IB.InteractiveBrokersClient(_signal);
 
             // set up event handlers
@@ -376,7 +381,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             CheckIbGateway();
 
-            var holdings = _accountHoldings.Select(x => ObjectActivator.Clone(x.Value)).Where(x => x.Quantity != 0).ToList();
+            var holdings = _accountData.AccountHoldings.Select(x => ObjectActivator.Clone(x.Value)).Where(x => x.Quantity != 0).ToList();
 
             // fire up tasks to resolve the conversion rates so we can do them in parallel
             var tasks = holdings.Select(local =>
@@ -413,7 +418,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             CheckIbGateway();
 
-            return _cashBalances.Select(x => new Cash(x.Key, x.Value, GetUsdConversion(x.Key))).ToList();
+            return _accountData.CashBalances.Select(x => new Cash(x.Key, x.Value, GetUsdConversion(x.Key))).ToList();
         }
 
         /// <summary>
@@ -476,9 +481,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             if (IsConnected) return;
 
-            // we're going to receive fresh values for both of these collections, so clear them
-            _accountHoldings.Clear();
-            _accountProperties.Clear();
+            // we're going to receive fresh values for all account data, so we clear all
+            _accountData.Clear();
 
             var attempt = 1;
             const int maxAttempts = 5;
@@ -551,19 +555,39 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                     if (!_client.Connected) throw new Exception("InteractiveBrokersBrokerage.Connect(): Connection returned but was not in connected state.");
 
-                    if (!DownloadAccount())
+                    if (IsFinancialAdvisor)
                     {
-                        Log.Trace("InteractiveBrokersBrokerage.Connect(): DownloadAccount failed. Operation took longer than 15 seconds.");
-
-                        Disconnect();
-
-                        if (attempt++ < maxAttempts)
+                        if (!DownloadFinancialAdvisorAccount(_account))
                         {
-                            Thread.Sleep(1000);
-                            continue;
-                        }
+                            Log.Trace("InteractiveBrokersBrokerage.Connect(): DownloadFinancialAdvisorAccount failed.");
 
-                        throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): DownloadAccount failed.");
+                            Disconnect();
+
+                            if (attempt++ < maxAttempts)
+                            {
+                                Thread.Sleep(1000);
+                                continue;
+                            }
+
+                            throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): DownloadFinancialAdvisorAccount failed.");
+                        }
+                    }
+                    else
+                    {
+                        if (!DownloadAccount(_account))
+                        {
+                            Log.Trace("InteractiveBrokersBrokerage.Connect(): DownloadAccount failed. Operation took longer than 15 seconds.");
+
+                            Disconnect();
+
+                            if (attempt++ < maxAttempts)
+                            {
+                                Thread.Sleep(1000);
+                                continue;
+                            }
+
+                            throw new TimeoutException("InteractiveBrokersBrokerage.Connect(): DownloadAccount failed.");
+                        }
                     }
 
                     // enable detailed logging
@@ -605,10 +629,31 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
+        /// Downloads the financial advisor configuration information.
+        /// This method is called upon successful connection.
+        /// </summary>
+        private bool DownloadFinancialAdvisorAccount(string account)
+        {
+            if (!_accountData.FinancialAdvisorConfiguration.Load(_client))
+                return false;
+
+            // Only one account can be subscribed at a time.
+            // With Financial Advisory (FA) account structures there is an alternative way of
+            // specifying the account code such that information is returned for 'All' sub accounts.
+            // This is done by appending the letter 'A' to the end of the account number
+            // https://interactivebrokers.github.io/tws-api/account_updates.html#gsc.tab=0
+
+            // subscribe to the FA account
+            DownloadAccount(account + "A");
+
+            return true;
+        }
+
+        /// <summary>
         /// Downloads the account information and subscribes to account updates.
         /// This method is called upon successful connection.
         /// </summary>
-        private bool DownloadAccount()
+        private bool DownloadAccount(string account)
         {
             // define our event handler, this acts as stop to make sure when we leave Connect we have downloaded the full account
             EventHandler<IB.AccountDownloadEndEventArgs> clientOnAccountDownloadEnd = (sender, args) =>
@@ -629,7 +674,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.UpdateAccountValue += clientOnUpdateAccountValue;
 
             // first we won't subscribe, wait for this to finish, below we'll subscribe for continuous updates
-            _client.ClientSocket.reqAccountUpdates(true, _account);
+            _client.ClientSocket.reqAccountUpdates(true, account);
 
             // wait to see the first account value update
             firstAccountUpdateReceived.WaitOne(2500);
@@ -687,14 +732,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _messagingRateLimiter.Dispose();
 
             _ctsRestartGateway.Cancel(false);
-        }
-
-        /// <summary>
-        /// Gets the raw account values sent from IB
-        /// </summary>
-        public Dictionary<string, string> GetAccountValues()
-        {
-            return new Dictionary<string, string>(_accountProperties);
         }
 
         /// <summary>
@@ -1240,17 +1277,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private void HandleUpdateAccountValue(object sender, IB.UpdateAccountValueEventArgs e)
         {
-            //https://www.interactivebrokers.com/en/software/api/apiguide/activex/updateaccountvalue.htm
-
             try
             {
-                _accountProperties[e.Currency + ":" + e.Key] = e.Value;
+                _accountData.AccountProperties[e.Currency + ":" + e.Key] = e.Value;
 
                 // we want to capture if the user's cash changes so we can reflect it in the algorithm
                 if (e.Key == AccountValueKeys.CashBalance && e.Currency != "BASE")
                 {
                     var cashBalance = decimal.Parse(e.Value, CultureInfo.InvariantCulture);
-                    _cashBalances.AddOrUpdate(e.Currency, cashBalance);
+                    _accountData.CashBalances.AddOrUpdate(e.Currency, cashBalance);
+
                     OnAccountChanged(new AccountEvent(e.Currency, cashBalance));
                 }
             }
@@ -1463,7 +1499,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             _accountHoldingsResetEvent.Reset();
             var holding = CreateHolding(e);
-            _accountHoldings[holding.Symbol.Value] = holding;
+            _accountData.AccountHoldings[holding.Symbol.Value] = holding;
         }
 
         /// <summary>
@@ -1506,6 +1542,36 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 var minTick = GetMinTick(contract);
                 ibOrder.LmtPrice = Convert.ToDouble(RoundPrice(stopLimitOrder.LimitPrice, minTick));
                 ibOrder.AuxPrice = Convert.ToDouble(RoundPrice(stopLimitOrder.StopPrice, minTick));
+            }
+
+            // add financial advisor properties
+            if (IsFinancialAdvisor)
+            {
+                // https://interactivebrokers.github.io/tws-api/financial_advisor.html#gsc.tab=0
+
+                if (!string.IsNullOrWhiteSpace(order.Properties.FinancialAdvisorProperties.Account))
+                {
+                    // order for a single managed account
+                    ibOrder.Account = order.Properties.FinancialAdvisorProperties.Account;
+                }
+                else if (!string.IsNullOrWhiteSpace(order.Properties.FinancialAdvisorProperties.Profile))
+                {
+                    // order for an account profile
+                    ibOrder.FaProfile = order.Properties.FinancialAdvisorProperties.Profile;
+
+                }
+                else if (!string.IsNullOrWhiteSpace(order.Properties.FinancialAdvisorProperties.Group))
+                {
+                    // order for an account group
+                    ibOrder.FaGroup = order.Properties.FinancialAdvisorProperties.Group;
+                    ibOrder.FaMethod = order.Properties.FinancialAdvisorProperties.Method;
+
+                    if (ibOrder.FaMethod == "PctChange")
+                    {
+                        ibOrder.FaPercentage = order.Properties.FinancialAdvisorProperties.Percentage.ToString();
+                        ibOrder.TotalQuantity = 0;
+                    }
+                }
             }
 
             // not yet supported
