@@ -1477,7 +1477,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 case Extras.OrderAlgorithm.None:
                     return null;
                 case Extras.OrderAlgorithm.AdaptiveAlgo:
-                    return "AdaptiveAlgo";
+                    return "Adaptive";
                 case Extras.OrderAlgorithm.ArrivalPrice:
                     return "ArrivalPx";
                 case Extras.OrderAlgorithm.ClosePrice:
