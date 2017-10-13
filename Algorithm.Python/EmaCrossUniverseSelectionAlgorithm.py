@@ -99,9 +99,7 @@ class SymbolData(object):
         self.scale = 0
 
     def update(self, time, value):
-        datapoint = IndicatorDataPoint(time, value)
-
-        if self.fast.Update(datapoint) and self.slow.Update(datapoint):
+        if self.fast.Update(time, value) and self.slow.Update(time, value):
             fast = self.fast.Current.Value
             slow = self.slow.Current.Value
             self.is_uptrend = fast > slow * self.tolerance
