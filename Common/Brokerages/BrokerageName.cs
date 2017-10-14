@@ -54,6 +54,12 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Transaction and submit/execution rules will use bitfinex models
         /// </summary>
-        Bitfinex
+        Bitfinex,
+
+        /// <summary>
+        /// Transaction and submit/execution rules will use gdax models
+        /// </summary>
+        GDAX = 12
+
     }
 }

@@ -26,12 +26,12 @@ namespace QuantConnect.Tests.Brokerages
         {
         }
 
-        public override Order CreateShortOrder(int quantity)
+        public override Order CreateShortOrder(decimal quantity)
         {
             return new MarketOrder(Symbol, -Math.Abs(quantity), DateTime.Now);
         }
 
-        public override Order CreateLongOrder(int quantity)
+        public override Order CreateLongOrder(decimal quantity)
         {
             return new MarketOrder(Symbol, Math.Abs(quantity), DateTime.Now);
         }
