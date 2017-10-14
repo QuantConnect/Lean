@@ -25,8 +25,10 @@ using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Interfaces;
 using QuantConnect.Data.Market;
+using QuantConnect.Python;
+using Python.Runtime;
 
-namespace QuantConnect.Securities 
+namespace QuantConnect.Securities
 {
     /// <summary>
     /// A base vehicle properties class for providing a common interface to all assets in QuantConnect.
@@ -668,6 +670,60 @@ namespace QuantConnect.Securities
             {
                 subscription.DataNormalizationMode = mode;
             }
+        }
+
+        /// <summary>
+        /// Sets the fee model
+        /// </summary>
+        /// <param name="feelModel">Model that represents a fee model</param>
+        public void SetFeeModel(IFeeModel feelModel)
+        {
+            FeeModel = feelModel;
+        }
+
+        /// <summary>
+        /// Sets the fee model
+        /// </summary>
+        /// <param name="feelModel">Model that represents a fee model</param>
+        public void SetFeeModel(PyObject feelModel)
+        {
+            FeeModel = new FeeModelPythonWrapper(feelModel);
+        }
+
+        /// <summary>
+        /// Sets the fill model
+        /// </summary>
+        /// <param name="fillModel">Model that represents a fill model</param>
+        public void SetFillModel(IFillModel fillModel)
+        {
+            FillModel = fillModel;
+        }
+
+        /// <summary>
+        /// Sets the fill model
+        /// </summary>
+        /// <param name="fillModel">Model that represents a fill model</param>
+        public void SetFillModel(PyObject fillModel)
+        {
+            FillModel = new FillModelPythonWrapper(fillModel);
+        }
+
+        /// <summary>
+        /// Sets the slippage model
+        /// </summary>
+        /// <param name="slippageModel">Model that represents a slippage model</param>
+        public void SetSlippageModel(ISlippageModel slippageModel)
+        {
+            SlippageModel = slippageModel;
+        }
+
+        /// <summary>
+        /// Sets the slippage model
+        /// </summary>
+        /// <param name="slippageModel">Model that represents a slippage model</param>
+        public void SetSlippageModel(PyObject slippageModel)
+        {
+            SlippageModel = new SlippageModelPythonWrapper(slippageModel);
         }
 
         /// <summary>

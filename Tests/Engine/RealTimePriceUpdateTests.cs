@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
-using QuantConnect.Algorithm.Examples;
+using QuantConnect.Algorithm;
 using QuantConnect.Brokerages;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -42,12 +42,21 @@ namespace QuantConnect.Tests.Engine
                 DataQueueHandler = "LiveDataQueue"
             };
 
-            var algo = new BenchmarkAlgorithm();
+            var algo = new TestAlgorithm();
 
             _liveTradingDataFeed.Initialize(algo, jobPacket, new LiveTradingResultHandler(), new LocalDiskMapFileProvider(), null, new DefaultDataProvider());
 
             algo.Initialize();
         }
+
+        /// <summary>
+        /// Test algorithm which doesn't consume any feeds for simple testing.
+        /// </summary>
+        private class TestAlgorithm : QCAlgorithm
+        {
+            public override void Initialize() { SetBenchmark(time => 0); }
+        }
+
 
         [TestFixtureTearDown]
         public void TearDown()
@@ -88,7 +97,7 @@ namespace QuantConnect.Tests.Engine
 
         class TimeZoneOffsetProviderNeverOpen : TimeZoneOffsetProvider
         {
-            public TimeZoneOffsetProviderNeverOpen() 
+            public TimeZoneOffsetProviderNeverOpen()
                 : base(TimeZones.NewYork, DateTime.Parse("1/1/2016"), DateTime.Parse("1/1/2018"))
             {
             }

@@ -34,7 +34,7 @@ namespace QuantConnect
         /// Daily and hourly time format
         public const string TwelveCharacter = "yyyyMMdd HH:mm";
         /// JSON Format Date Representation
-        public static string JsonFormat = "yyyy-MM-ddThh:mm:ss";
+        public static string JsonFormat = "yyyy-MM-ddTHH:mm:ss";
         /// MySQL Format Date Representation
         public const string DB = "yyyy-MM-dd HH:mm:ss";
         /// QuantConnect UX Date Representation
@@ -74,10 +74,10 @@ namespace QuantConnect
         /// Current market conversion rate into the account currency
         public decimal ConversionRate;
 
-        /// Current market value of the holding 
+        /// Current market value of the holding
         public decimal MarketValue;
 
-        /// Current unrealized P/L of the holding 
+        /// Current unrealized P/L of the holding
         public decimal UnrealizedPnL;
 
         /// Create a new default holding:
@@ -240,7 +240,12 @@ namespace QuantConnect
         /// <summary>
         /// Hobbyist User with Included 512mb Server.
         /// </summary>
-        Hobbyist
+        Hobbyist,
+
+        /// <summary>
+        /// Professional plan for financial advisors
+        /// </summary>
+        Professional
     }
 
 
@@ -377,7 +382,7 @@ namespace QuantConnect
     }
 
     /// <summary>
-    /// Types of tick data 
+    /// Types of tick data
     /// </summary>
     /// <remarks>QuantConnect currently only has trade, quote, open interest tick data.</remarks>
     public enum TickType
@@ -385,7 +390,7 @@ namespace QuantConnect
         /// Trade type tick object.
         Trade,
         /// Quote type tick object.
-        Quote, 
+        Quote,
         /// Open Interest type tick object (for options, futures)
         OpenInterest
     }
@@ -457,15 +462,15 @@ namespace QuantConnect
     }
 
     /// <summary>
-    /// Specifies the type of settlement in derivative deals 
+    /// Specifies the type of settlement in derivative deals
     /// </summary>
     public enum SettlementType
     {
         /// <summary>
-        /// Physical delivery of the underlying security 
+        /// Physical delivery of the underlying security
         /// </summary>
-        PhysicalDelivery, 
-        
+        PhysicalDelivery,
+
         /// <summary>
         /// Cash is paid/received on settlement
         /// </summary>

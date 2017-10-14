@@ -17,9 +17,8 @@ namespace QuantConnect.Tests.ToolBox
     /// The rationality is to test the main functionalities:
     ///     - Data is correctly parsed.
     ///     - Data is correctly saved.
-    ///     - Lean can read the saved data.
     /// </summary>
-    [TestFixture]
+    [TestFixture, Ignore("FXCM API goes down on weekends")]
     public class FxcmVolumeDownloaderTest
     {
         private string _dataDirectory;
@@ -110,7 +109,7 @@ namespace QuantConnect.Tests.ToolBox
                 Assert.True(File.Exists(Path.Combine(expectedFolder, expectedFilename)));
             }
 
-            var actualdata = ReadZipFolderData(expectedFolder);
+            var actualdata = FxcmVolumeAuxiliaryMethods.ReadZipFolderData(expectedFolder);
             Assert.AreEqual(expectedData.Length, actualdata.Count);
 
             var lines = actualdata.Count;
@@ -149,39 +148,9 @@ namespace QuantConnect.Tests.ToolBox
             _downloader.Run(_eurusd, resolution, startDate, endDate);
             // Assert
             var outputFile = Path.Combine(_dataDirectory, "forex/fxcm/hour/eurusd_volume.zip");
-            var observationsCount = ReadZipFileData(outputFile).Count;
+            var observationsCount = FxcmVolumeAuxiliaryMethods.ReadZipFileData(outputFile).Count;
             // 3 years x 52 weeks x 5 days x 24 hours = 18720 hours at least.
             Assert.True(observationsCount >= 18720, string.Format("Actual observations: {0}", observationsCount));
         }
-
-        #region Auxiliary Methods
-
-        private List<string[]> ReadZipFolderData(string outputFolder)
-        {
-            var actualdata = new List<string[]>();
-            var files = Directory.GetFiles(outputFolder, "*.zip");
-            foreach (var file in files)
-            {
-                actualdata.AddRange(ReadZipFileData(file));
-            }
-            return actualdata;
-        }
-
-        private List<string[]> ReadZipFileData(string dataZipFile)
-        {
-            var actualdata = new List<string[]>();
-            ZipFile zipFile;
-            using (var unzipped = QuantConnect.Compression.Unzip(dataZipFile, out zipFile))
-            {
-                string line;
-                while ((line = unzipped.ReadLine()) != null)
-                {
-                    actualdata.Add(line.Split(','));
-                }
-            }
-            return actualdata;
-        }
-
-        #endregion Auxiliary Methods
     }
 }

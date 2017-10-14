@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,14 +19,14 @@ using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 
-namespace QuantConnect.Algorithm.Examples
+namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Constructs a displaced moving average ribbon and buys when all are lined up, liquidates when they all line down
     /// Ribbons are great for visualizing trends
     ///   Signals are generated when they all line up in a paricular direction
-    ///     A buy signal is when the values of the indicators are increasing (from slowest to fastest)
-    ///     A sell signal is when the values of the indicators are decreasing (from slowest to fastest)
+    ///     A buy signal is when the values of the indicators are increasing (from slowest to fastest).
+    ///     A sell signal is when the values of the indicators are decreasing (from slowest to fastest).
     /// </summary>
     public class DisplacedMovingAverageRibbon : QCAlgorithm
     {
@@ -36,6 +36,8 @@ namespace QuantConnect.Algorithm.Examples
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
+        /// <meta name="tag" content="charting" />
+        /// <meta name="tag" content="plotting indicators" />
         /// <seealso cref="QCAlgorithm.SetStartDate(System.DateTime)"/>
         /// <seealso cref="QCAlgorithm.SetEndDate(System.DateTime)"/>
         /// <seealso cref="QCAlgorithm.SetCash(decimal)"/>
@@ -46,9 +48,9 @@ namespace QuantConnect.Algorithm.Examples
 
             AddSecurity(SecurityType.Equity, "SPY", Resolution.Minute);
 
-            int count = 6;
-            int offset = 5;
-            int period = 15;
+            const int count = 6;
+            const int offset = 5;
+            const int period = 15;
 
             // define our sma as the base of the ribbon
             var sma = new SimpleMovingAverage(period);

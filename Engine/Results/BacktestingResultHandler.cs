@@ -744,7 +744,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="status">Status enum value.</param>
         /// <param name="message">Additional optional status message.</param>
         /// <remarks>In backtesting we do not send the algorithm status updates.</remarks>
-        public void SendStatusUpdate(AlgorithmStatus status, string message = "")
+        public virtual void SendStatusUpdate(AlgorithmStatus status, string message = "")
         {
             //NOP. Don't send status for backtests
         }
@@ -797,6 +797,8 @@ namespace QuantConnect.Lean.Engine.Results
         /// <remarks>Prime candidate for putting into a base class. Is identical across all result handlers.</remarks>
         public void ProcessSynchronousEvents(bool forceProcess = false)
         {
+            if (_algorithm == null) return;
+
             var time = _algorithm.UtcTime;
 
             if (time > _nextSample || forceProcess)

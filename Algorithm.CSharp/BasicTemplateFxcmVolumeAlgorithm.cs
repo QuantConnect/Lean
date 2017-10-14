@@ -21,14 +21,18 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    ///     Basic template algorithm simply initializes the date range and cash
+    ///  Example demonstrating importing custom forex volume data to use with your algorithm from FXCM.
     /// </summary>
+    /// <meta name="tag" content="using data" />
+    /// <meta name="tag" content="custom data" />
+    /// <meta name="tag" content="history" />
+    /// <meta name="tag" content="forex" />
     public class BasicTemplateFxcmVolumeAlgorithm : QCAlgorithm
     {
-        private readonly Identity volume = new Identity("volIdentity");
         private Symbol EURUSD;
         private CompositeIndicator<IndicatorDataPoint> fastVWMA;
         private CompositeIndicator<IndicatorDataPoint> slowVWMA;
+        private readonly Identity volume = new Identity("volIdentity");
 
         /// <summary>
         ///     Initialize the data and resolution required, as well as the cash and start-end dates for your algorithm. All
@@ -36,10 +40,11 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(year: 2014, month: 05, day: 07); //Set Start Date
-            SetEndDate(year: 2014, month: 05, day: 15); //Set End Date
-            SetCash(startingCash: 100000); //Set Strategy Cash
-            // Find more symbols here: http://quantconnect.com/data
+            SetStartDate(2014, 05, 07);     //Set Start Date
+            SetEndDate(2014, 05, 15);       //Set End Date
+            SetCash(100000);                //Set Strategy Cash
+
+            // Find more symbols here: https://www.quantconnect.com/data
             EURUSD = AddForex("EURUSD", Resolution.Minute, Market.FXCM).Symbol;
 
             AddData<FxcmVolume>("EURUSD", Resolution.Minute, DateTimeZone.Utc);
@@ -49,7 +54,7 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        ///     OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)

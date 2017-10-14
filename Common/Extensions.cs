@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,12 +29,12 @@ using QuantConnect.Orders;
 using QuantConnect.Securities;
 using Timer = System.Timers.Timer;
 
-namespace QuantConnect 
+namespace QuantConnect
 {
     /// <summary>
     /// Extensions function collections - group all static extensions functions here.
     /// </summary>
-    public static class Extensions 
+    public static class Extensions
     {
         /// <summary>
         /// Extension to move one element from list from A to position B.
@@ -56,7 +56,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="str">String to convert to bytes.</param>
         /// <returns>Byte array</returns>
-        public static byte[] GetBytes(this string str) 
+        public static byte[] GetBytes(this string str)
         {
             var bytes = new byte[str.Length * sizeof(char)];
             Buffer.BlockCopy(str.ToCharArray(), 0, bytes, 0, bytes.Length);
@@ -69,7 +69,7 @@ namespace QuantConnect
         /// <remarks>Small risk of race condition if a producer is adding to the list.</remarks>
         /// <typeparam name="T">Queue type</typeparam>
         /// <param name="queue">queue object</param>
-        public static void Clear<T>(this ConcurrentQueue<T> queue) 
+        public static void Clear<T>(this ConcurrentQueue<T> queue)
         {
             T item;
             while (queue.TryDequeue(out item)) {
@@ -95,7 +95,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="str">String we want to MD5 encode.</param>
         /// <returns>MD5 hash of a string</returns>
-        public static string ToMD5(this string str) 
+        public static string ToMD5(this string str)
         {
             var builder = new StringBuilder();
             using (var md5Hash = MD5.Create())
@@ -124,7 +124,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Extension method to automatically set the update value to same as "add" value for TryAddUpdate. 
+        /// Extension method to automatically set the update value to same as "add" value for TryAddUpdate.
         /// This makes the API similar for traditional and concurrent dictionaries.
         /// </summary>
         /// <typeparam name="K">Key type for dictionary</typeparam>
@@ -138,7 +138,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Extension method to automatically add/update lazy values in concurrent dictionary. 
+        /// Extension method to automatically add/update lazy values in concurrent dictionary.
         /// </summary>
         /// <typeparam name="TKey">Key type for dictionary</typeparam>
         /// <typeparam name="TValue">Value type for dictonary</typeparam>
@@ -239,7 +239,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Extension method for faster string to decimal conversion. 
+        /// Extension method for faster string to decimal conversion.
         /// </summary>
         /// <param name="str">String to be converted to positive decimal value</param>
         /// <remarks>
@@ -290,7 +290,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Extension method for faster string to Int32 conversion. 
+        /// Extension method for faster string to Int32 conversion.
         /// </summary>
         /// <param name="str">String to be converted to positive Int32 value</param>
         /// <remarks>Method makes some assuptions - always numbers, no "signs" +,- etc.</remarks>
@@ -306,7 +306,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Extension method for faster string to Int64 conversion. 
+        /// Extension method for faster string to Int64 conversion.
         /// </summary>
         /// <param name="str">String to be converted to positive Int64 value</param>
         /// <remarks>Method makes some assuptions - always numbers, no "signs" +,- etc.</remarks>
@@ -346,7 +346,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Breaks the specified string into csv components, works correctly with commas in data fields 
+        /// Breaks the specified string into csv components, works correctly with commas in data fields
         /// </summary>
         /// <param name="str">The string to be broken into csv</param>
         /// <param name="size">The expected size of the output list</param>
@@ -423,7 +423,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="str">String to convert to stream</param>
         /// <returns>Stream instance</returns>
-        public static Stream ToStream(this string str) 
+        public static Stream ToStream(this string str)
         {
             var stream = new MemoryStream();
             var writer = new StreamWriter(stream);
@@ -440,7 +440,7 @@ namespace QuantConnect
         /// <param name="roundingInterval">Rounding Unit</param>
         /// <param name="roundingType">Rounding method</param>
         /// <returns>Rounded timespan</returns>
-        public static TimeSpan Round(this TimeSpan time, TimeSpan roundingInterval, MidpointRounding roundingType) 
+        public static TimeSpan Round(this TimeSpan time, TimeSpan roundingInterval, MidpointRounding roundingType)
         {
             if (roundingInterval == TimeSpan.Zero)
             {
@@ -456,7 +456,7 @@ namespace QuantConnect
             );
         }
 
-        
+
         /// <summary>
         /// Extension method to round timespan to nearest timespan period.
         /// </summary>
@@ -485,6 +485,21 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Rounds the specified date time in the specified time zone
+        /// </summary>
+        /// <param name="dateTime">Date time to be rounded</param>
+        /// <param name="roundingInterval">Timespan rounding period</param>
+        /// <param name="sourceTimeZone">Time zone of the date time</param>
+        /// <param name="roundingTimeZone">Time zone in which the rounding is performed</param>
+        /// <returns>The rounded date time in the source time zone</returns>
+        public static DateTime RoundDownInTimeZone(this DateTime dateTime, TimeSpan roundingInterval, DateTimeZone sourceTimeZone, DateTimeZone roundingTimeZone)
+        {
+            var dateTimeInRoundingTimeZone = dateTime.ConvertTo(sourceTimeZone, roundingTimeZone);
+            var roundedDateTimeInRoundingTimeZone = dateTimeInRoundingTimeZone.RoundDown(roundingInterval);
+            return roundedDateTimeInRoundingTimeZone.ConvertTo(roundingTimeZone, sourceTimeZone);
+        }
+
+        /// <summary>
         /// Extension method to round a datetime down by a timespan interval until it's
         /// within the specified exchange's open hours. This works by first rounding down
         /// the specified time using the interval, then producing a bar between that
@@ -510,12 +525,36 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Extension method to round a datetime down by a timespan interval until it's
+        /// within the specified exchange's open hours. The rounding is performed in the
+        /// specified time zone
+        /// </summary>
+        /// <param name="dateTime">Time to be rounded down</param>
+        /// <param name="interval">Timespan interval to round to.</param>
+        /// <param name="exchangeHours">The exchange hours to determine open times</param>
+        /// <param name="roundingTimeZone">The time zone to perform the rounding in</param>
+        /// <param name="extendedMarket">True for extended market hours, otherwise false</param>
+        /// <returns>Rounded datetime</returns>
+        public static DateTime ExchangeRoundDownInTimeZone(this DateTime dateTime, TimeSpan interval, SecurityExchangeHours exchangeHours, DateTimeZone roundingTimeZone, bool extendedMarket)
+        {
+            // can't round against a zero interval
+            if (interval == TimeSpan.Zero) return dateTime;
+
+            var rounded = dateTime.RoundDownInTimeZone(interval, exchangeHours.TimeZone, roundingTimeZone);
+            while (!exchangeHours.IsOpen(rounded, rounded + interval, extendedMarket))
+            {
+                rounded = (rounded - interval).RoundDownInTimeZone(interval, exchangeHours.TimeZone, roundingTimeZone);
+            }
+            return rounded;
+        }
+
+        /// <summary>
         /// Extension method to round a datetime to the nearest unit timespan.
         /// </summary>
         /// <param name="datetime">Datetime object we're rounding.</param>
-        /// <param name="roundingInterval">Timespan rounding period.s</param>
+        /// <param name="roundingInterval">Timespan rounding period.</param>
         /// <returns>Rounded datetime</returns>
-        public static DateTime Round(this DateTime datetime, TimeSpan roundingInterval) 
+        public static DateTime Round(this DateTime datetime, TimeSpan roundingInterval)
         {
             return new DateTime((datetime - DateTime.MinValue).Round(roundingInterval).Ticks);
         }
@@ -552,7 +591,7 @@ namespace QuantConnect
             {
                 return from.AtStrictly(LocalDateTime.FromDateTime(time)).WithZone(to).ToDateTimeUnspecified();
             }
-            
+
             return from.AtLeniently(LocalDateTime.FromDateTime(time)).WithZone(to).ToDateTimeUnspecified();
         }
 
@@ -757,7 +796,7 @@ namespace QuantConnect
         /// <summary>
         /// Blocks the current thread until the current <see cref="T:System.Threading.WaitHandle"/> is set, using a <see cref="T:System.TimeSpan"/> to measure the time interval, while observing a <see cref="T:System.Threading.CancellationToken"/>.
         /// </summary>
-        /// 
+        ///
         /// <returns>
         /// true if the <see cref="T:System.Threading.WaitHandle"/> was set; otherwise, false.
         /// </returns>
@@ -775,7 +814,7 @@ namespace QuantConnect
         /// <summary>
         /// Blocks the current thread until the current <see cref="T:System.Threading.WaitHandle"/> is set, using a 32-bit signed integer to measure the time interval, while observing a <see cref="T:System.Threading.CancellationToken"/>.
         /// </summary>
-        /// 
+        ///
         /// <returns>
         /// true if the <see cref="T:System.Threading.WaitHandle"/> was set; otherwise, false.
         /// </returns>

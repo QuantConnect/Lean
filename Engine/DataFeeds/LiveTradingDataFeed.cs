@@ -512,7 +512,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     UpdateFillForwardResolution(subscriptionConfigs);
 
-                    enumerator = new LiveFillForwardEnumerator(_frontierTimeProvider, enumerator, request.Security.Exchange, _fillForwardResolution, request.Configuration.ExtendedMarketHours, localEndTime, request.Configuration.Increment);
+                    enumerator = new LiveFillForwardEnumerator(_frontierTimeProvider, enumerator, request.Security.Exchange, _fillForwardResolution, request.Configuration.ExtendedMarketHours, localEndTime, request.Configuration.Increment, request.Configuration.DataTimeZone);
                 }
 
                 // define market hours and user filters to incoming data
@@ -617,7 +617,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     UpdateFillForwardResolution(subscriptionConfigs);
 
-                    return new LiveFillForwardEnumerator(_frontierTimeProvider, input, request.Security.Exchange, _fillForwardResolution, request.Configuration.ExtendedMarketHours, localEndTime, request.Configuration.Increment);
+                    return new LiveFillForwardEnumerator(_frontierTimeProvider, input, request.Security.Exchange, _fillForwardResolution, request.Configuration.ExtendedMarketHours, localEndTime, request.Configuration.Increment, request.Configuration.DataTimeZone);
                 };
 
                 var symbolUniverse = _dataQueueHandler as IDataQueueUniverseProvider;
@@ -653,10 +653,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // each time we exhaust we'll new up this enumerator stack
                 var refresher = new RefreshEnumerator<BaseDataCollection>(() =>
                 {
-                    var sourceProvider = (BaseData)Activator.CreateInstance(config.Type);
+                    var objectActivator = ObjectActivator.GetActivator(config.Type);
+                    var sourceProvider = (BaseData)objectActivator.Invoke(new object[] { config.Type });
                     var dateInDataTimeZone = DateTime.UtcNow.ConvertFromUtc(config.DataTimeZone).Date;
                     var source = sourceProvider.GetSource(config, dateInDataTimeZone, true);
-                    var factory = SubscriptionDataSourceReader.ForSource(source, _dataCacheProvider, config, dateInDataTimeZone, false);
+                    var factory = SubscriptionDataSourceReader.ForSource(source, _dataCacheProvider, config, dateInDataTimeZone, true);
                     var factorEnumerator = factory.Read(source).GetEnumerator();
                     var fastForward = new FastForwardEnumerator(factorEnumerator, _timeProvider, request.Security.Exchange.TimeZone, config.Increment);
                     var frontierAware = new FrontierAwareEnumerator(fastForward, _frontierTimeProvider, tzOffsetProvider);

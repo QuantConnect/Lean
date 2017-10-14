@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,11 +39,11 @@ namespace QuantConnect.Algorithm.CSharp
             var security = AddSecurity(SecurityType.Crypto, "BTCUSD", Resolution.Daily, Market.GDAX, false, 3.3m, true);
             var con = new QuoteBarConsolidator(1);
             SubscriptionManager.AddConsolidator("BTCUSD", con);
-            con.DataConsolidated += con_DataConsolidated;
+            con.DataConsolidated += DataConsolidated;
             SetBenchmark(security.Symbol);
         }
 
-        void con_DataConsolidated(object sender, QuoteBar e)
+        private void DataConsolidated(object sender, QuoteBar e)
         {
             var quantity = Math.Truncate(Portfolio.Cash / Math.Abs(e.Value + 1));
             if (!Portfolio.Invested)

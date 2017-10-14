@@ -32,9 +32,9 @@ QuantConnect Python Algorithm Project:
 
 3.2 Prepare Python.Runtime.dll. This is needed to run Python algorithms in LEAN.
 
-3.2.1 Delete the existing files in \Lean\packages\QuantConnect.pythonnet.1.0.4.4\lib
+3.2.1 Delete the existing files in \Lean\packages\QuantConnect.pythonnet.1.0.5.1\lib
 
-3.2.2 Using windows you'll need to copy the \Lean\packages\QuantConnect.pythonnet.1.0.4.4\build\*Python.Runtime.win* file into the ..\lib\ directory and rename it to Python.Runtime.dll.
+3.2.2 Using windows you'll need to copy the \Lean\packages\QuantConnect.pythonnet.1.0.5.1\build\*Python.Runtime.win* file into the ..\lib\ directory and rename it to Python.Runtime.dll.
 
 **4 Run LEAN:**
 
@@ -88,9 +88,9 @@ $ sudo easy-install pip
 
 3.2 Prepare Python.Runtime.dll. This is needed to run Python algorithms in LEAN.
 
-3.2.1 Delete the existing files in \Lean\packages\QuantConnect.pythonnet.1.0.4.4\lib
+3.2.1 Delete the existing files in \Lean\packages\QuantConnect.pythonnet.1.0.5.1\lib
 
-3.2.2 Using macOS you'll need to copy the \Lean\packages\QuantConnect.pythonnet.1.0.4.4\build\*Python.Runtime.mac* file into the ..\lib\ directory and rename it to Python.Runtime.dll.
+3.2.2 Using macOS you'll need to copy the \Lean\packages\QuantConnect.pythonnet.1.0.5.1\build\*Python.Runtime.mac* file into the ..\lib\ directory and rename it to Python.Runtime.dll.
 
 **4 Run LEAN:**
 
@@ -105,7 +105,9 @@ $ sudo easy-install pip
 "algorithm-location": "../../../Algorithm.Python/BasicTemplateAlgorithm.py",
 ```
 
-4.2.1 You should see the same result of 4.1.1. 
+4.2.1 You should see the same result of 4.1.1.
+
+4.2.2 If there is an issue with the dll, please use *Python.Runtime.mac4* in 3.2.2 and rebuild the solution. 
 
 
 ### Linux
@@ -120,3 +122,34 @@ $ sudo easy-install pip
 "algorithm-location": "../../../Algorithm.Python/BasicTemplateAlgorithm.py",
 ```
 1.2.1 You should see the same result of 1.1.
+
+___
+#### Python.Runtime.dll compilation
+Lean users do **not** need to compile Python.Runtime.dll. The information below is targeted to developers who wish to improve it. 
+
+Download [QuantConnect/pythonnet](https://github.com/QuantConnect/pythonnet/) github clone or downloading the zip. If downloading the zip - unzip to a local pathway.
+
+**Note:** QuantConnect's version of pythonnet is an enhanced of [pythonnet](https://github.com/pythonnet/pythonnet) with support to System.Decimal and System.DateTime.
+
+Below we can find the compilation flags that create a suitable Python.Runtime.dll for each operating system.
+
+**Windows**
+```
+msbuild pythonnet.sln /nologo /v:quiet /t:Clean;Rebuild /p:Platform=x64 /p:PythonInteropFile="interop27.cs" /p:Configuration=ReleaseWin /p:DefineConstants="PYTHON27,PYTHON2,UCS2"
+```
+
+**macOS UCS2**
+```
+msbuild pythonnet.sln /nologo /v:quiet /t:Clean;Rebuild /p:Platform=x64 /p:PythonInteropFile="interop27.cs" /p:Configuration=ReleaseMono /p:DefineConstants="PYTHON27,PYTHON2,UCS2,MONO_OSX"
+```
+
+**macOS UCS4**
+```
+msbuild pythonnet.sln /nologo /v:quiet /t:Clean;Rebuild /p:Platform=x64 /p:PythonInteropFile="interop27.cs" /p:Configuration=ReleaseMono /p:DefineConstants="PYTHON27,PYTHON2,UCS4,MONO_OSX"
+```
+
+
+**Linux**
+```
+msbuild pythonnet.sln /nologo /v:quiet /t:Clean;Rebuild /p:Platform=x64 /p:PythonInteropFile="interop27.cs" /p:Configuration=ReleaseMono /p:DefineConstants="PYTHON27,PYTHON2,UCS4,MONO_LINUX"
+```

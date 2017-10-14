@@ -14,6 +14,8 @@ Lean Engine is an open-source fully managed C# algorithmic trading engine built 
 
 ## System Overview ##
 
+![alt tag](Documentation/2-Overview-Detailed.jpg)
+
 Lean outsourced key infrastructure management to plugins. The most important plugins are:
 
  - **Result Processing**
@@ -70,12 +72,12 @@ sudo apt-get install -y binutils mono-complete ca-certificates-mono referenceass
 ```
 - Install Nuget and Python
 ```
-sudo apt-get update && apt-get install -y nuget python-pip
+sudo apt-get update && sudo apt-get install -y nuget python-pip
 ```
 - Restore NuGet packages then compile:
 ```
 nuget restore QuantConnect.Lean.sln
-xbuild
+xbuild QuantConnect.Lean.sln
 ```
 If you get: "Error initializing task Fsc: Not registered task Fsc." -> `sudo apt-get upgrade mono-complete`
 
@@ -88,6 +90,12 @@ If you get other errors that lead to the failure of your building, please refer 
 cd Lean/Launcher/bin/Debug
 mono ./QuantConnect.Lean.Launcher.exe
 ```
+- Interactive Brokers set up details
+
+Make sure you fix the `ib-tws-dir` and `ib-controller-dir` fields in the `config.json` file with the actual paths to the TWS and the IBController folders respectively.
+
+If after all you still receive connection refuse error, try changing the `ib-port` field in the `config.json` file from 4002 to 4001 to match the settings in your IBGateway/TWS.
+
 ### Windows
 
 - Install [Visual Studio](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx)
@@ -132,6 +140,8 @@ The mailing list for the project can be found on [Google Groups][6]
 ## Contributors and Pull Requests ##
 
 Contributions are warmly very welcomed but we ask you read the existing code to see how it is formatted, commented and ensure contributions match the existing style. All code submissions must include accompanying tests. Please see the [contributor guide lines][7].
+
+All accepted pull requests will get a 2mo free Prime subscription on QuantConnect. Once your pull-request has been merged write to us at support@quantconnect.com with a link to your PR to claim your free live trading. QC <3 Open Source.
 
 ## Build Status ##
 <img src="https://travis-ci.org/QuantConnect/Lean.svg?branch=master">

@@ -19,6 +19,8 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Orders.OptionExercise;
+using Python.Runtime;
+using QuantConnect.Util;
 
 namespace QuantConnect.Securities.Option
 {
@@ -330,6 +332,16 @@ namespace QuantConnect.Securities.Option
                 var result = universeFunc(optionUniverse);
                 return result.ApplyOptionTypesFilter();
             });
+        }
+
+        /// <summary>
+        /// Sets the <see cref="ContractFilter"/> to a new universe selection function
+        /// </summary>
+        /// <param name="universeFunc">new universe selection function</param>
+        public void SetFilter(PyObject universeFunc)
+        {
+            var pyUniverseFunc = PythonUtil.ToFunc<OptionFilterUniverse, OptionFilterUniverse>(universeFunc);
+            SetFilter(pyUniverseFunc);
         }
 
         /// <summary>

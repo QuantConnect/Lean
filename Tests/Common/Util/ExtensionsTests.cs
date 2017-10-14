@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -79,6 +79,18 @@ namespace QuantConnect.Tests.Common.Util
             var expected = time.Date;
             var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, null, SecurityType.Equity);
             var exchangeRounded = time.ExchangeRoundDown(Time.OneDay, hours, false);
+            Assert.AreEqual(expected, exchangeRounded);
+        }
+
+        [Test]
+        public void ExchangeRoundDownInTimeZoneSkipsWeekends()
+        {
+            // moment before EST market open in UTC (time + one day)
+            var time = new DateTime(2017, 10, 01, 9, 29, 59).ConvertToUtc(TimeZones.NewYork);
+            var expected = new DateTime(2017, 09, 29).ConvertFromUtc(TimeZones.NewYork);
+            var hours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, null, SecurityType.Equity);
+            var exchangeRounded = time.ExchangeRoundDownInTimeZone(Time.OneDay, hours, TimeZones.Utc, false);
+            Assert.AreEqual(expected, exchangeRounded);
         }
 
         [Test]
@@ -200,7 +212,7 @@ namespace QuantConnect.Tests.Common.Util
             var value = input.ToDecimal();
             Assert.AreEqual(-0m, value);
         }
-        
+
         [Test]
         public void ConvertsTimeSpanFromString()
         {
@@ -273,6 +285,16 @@ namespace QuantConnect.Tests.Common.Util
         {
             var output = input.Normalize();
             Assert.AreEqual(expectedOutput, output.ToString(CultureInfo.InvariantCulture));
+        }
+
+        [Test]
+        public void RoundsDownInTimeZone()
+        {
+            var dataTimeZone = TimeZones.Utc;
+            var exchangeTimeZone = TimeZones.EasternStandard;
+            var time = new DateTime(2000, 01, 01).ConvertTo(dataTimeZone, exchangeTimeZone);
+            var roundedTime = time.RoundDownInTimeZone(Time.OneDay, exchangeTimeZone, dataTimeZone);
+            Assert.AreEqual(time, roundedTime);
         }
 
         private class Super<T>

@@ -93,7 +93,7 @@ namespace QuantConnect.Data.Custom
                 _isInitialized = true;
                 foreach (var propertyName in csv)
                 {
-                    var property = propertyName.TrimStart().TrimEnd();
+                    var property = propertyName.Trim();
                     // should we remove property names like Time?
                     // do we need to alias the Time??
                     data.SetProperty(property, 0m);
