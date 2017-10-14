@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AbsolutePriceOscillator.cs" />
+    <Compile Include="AccelerationBands.cs" />
     <Compile Include="AccumulationDistribution.cs" />
     <Compile Include="AccumulationDistributionOscillator.cs" />
     <Compile Include="ArnaudLegouxMovingAverage.cs" />
@@ -120,11 +121,13 @@
     <Compile Include="CandlestickPatterns\Doji.cs" />
     <Compile Include="CandlestickPatterns\TwoCrows.cs" />
     <Compile Include="ChandeMomentumOscillator.cs" />
+    <Compile Include="DetrendedPriceOscillator.cs" />
     <Compile Include="DonchianChannel.cs" />
     <Compile Include="DoubleExponentialMovingAverage.cs" />
     <Compile Include="FractalAdaptiveMovingAverage.cs" />
     <Compile Include="FilteredIdentity.cs" />
     <Compile Include="HullMovingAverage.cs" />
+    <Compile Include="MassIndex.cs" />
     <Compile Include="RegressionChannel.cs" />
     <Compile Include="SwissArmyKnife.cs" />
     <Compile Include="TradeBarIndicator.cs" />

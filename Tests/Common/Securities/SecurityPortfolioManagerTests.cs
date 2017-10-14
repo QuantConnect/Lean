@@ -402,7 +402,6 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsFalse(sufficientCapital);
         }
 
-
         [Test]
         public void BuyingSellingFuturesDoesntAddToCash()
         {
@@ -545,6 +544,30 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(998, portfolio.Cash);
             Assert.AreEqual(100, portfolio.CashBook["EUR"].Amount);
             Assert.AreEqual(888, portfolio.CashBook["USD"].Amount);
+        }
+
+        [Test]
+        public void CryptoFillUpdatesCashCorrectly()
+        {
+            var securities = new SecurityManager(TimeKeeper);
+            var transactions = new SecurityTransactionManager(securities);
+            var portfolio = new SecurityPortfolioManager(securities, transactions);
+            portfolio.SetCash(10000);
+            portfolio.CashBook.Add("BTC", 0, 4000.01m);
+
+            securities.Add(Symbols.BTCUSD, new QuantConnect.Securities.Crypto.Crypto(SecurityExchangeHours, portfolio.CashBook["USD"], CreateTradeBarDataConfig(SecurityType.Crypto, 
+                Symbols.BTCUSD), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
+            var security = securities[Symbols.BTCUSD];
+            Assert.AreEqual(0, security.Holdings.Quantity);
+            Assert.AreEqual(10000, portfolio.Cash);
+
+            var orderFee = security.FeeModel.GetOrderFee(security, new MarketOrder(Symbols.BTCUSD, 2, DateTime.MinValue));
+            var fill = new OrderEvent(1, Symbols.BTCUSD, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Buy, 4000.01m, 2, orderFee);
+            portfolio.ProcessFill(fill);
+            Assert.AreEqual(2, security.Holdings.Quantity);
+            Assert.AreEqual(10000, portfolio.Cash);
+            Assert.AreEqual(2, portfolio.CashBook["BTC"].Amount);
+            Assert.AreEqual(1999.98, portfolio.CashBook["USD"].Amount);
         }
 
         [Test]
@@ -709,7 +732,6 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsFalse(sufficientCapital);
         }
 
-
         [Test]
         public void FullExerciseCallAddsUnderlyingPositionReducesCash()
         {
@@ -727,11 +749,11 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.SetCash(192 * 100); 
 
             securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
-            securities.Add(Symbols.SPY_C_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency))));
-            securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 100);
+            securities.Add(Symbols.SPY_C_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), GetOptionSymbolProperties(Symbols.SPY_C_192_Feb19_2016)));
+            securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 1);
             securities[Symbols.SPY].SetMarketPrice(new Tick { Value = 200 });
 
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, 100, 0, 0, securities.UtcTime, ""));
+            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, 1, 0, 0, securities.UtcTime, ""));
             var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
@@ -769,7 +791,7 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.SetCash(0);
 
             securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
-            securities.Add(Symbols.SPY_C_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency))));
+            securities.Add(Symbols.SPY_C_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), GetOptionSymbolProperties(Symbols.SPY_C_192_Feb19_2016)));
             securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 100);
             securities[Symbols.SPY].SetMarketPrice(new Tick { Value = 20 });
 
@@ -810,7 +832,7 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.SetCash(0);
 
             securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
-            securities.Add(Symbols.SPY_P_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_P_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency))));
+            securities.Add(Symbols.SPY_P_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_P_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), GetOptionSymbolProperties(Symbols.SPY_P_192_Feb19_2016)));
             securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, 100);
             securities[Symbols.SPY].SetMarketPrice(new Tick { Value = 2000 });
 
@@ -852,10 +874,10 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.SetCash(0); 
 
             securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
-            securities.Add(Symbols.SPY_P_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_P_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency))));
-            securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, 100);
+            securities.Add(Symbols.SPY_P_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_P_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), GetOptionSymbolProperties(Symbols.SPY_P_192_Feb19_2016)));
+            securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, 1);
 
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, 100, 0, 0, securities.UtcTime, ""));
+            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, 1, 0, 0, securities.UtcTime, ""));
             var option = (Option)securities[Symbols.SPY_P_192_Feb19_2016];
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
@@ -878,7 +900,6 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(0, securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity);
         }
 
-
         [Test]
         public void PartialExerciseCallAddsUnderlyingPositionReducesCash()
         {
@@ -893,14 +914,14 @@ namespace QuantConnect.Tests.Common.Securities
             transactions.SetOrderProcessor(transactionHandler);
 
             // Adding cash: strike price times number of shares
-            portfolio.SetCash(192 * 50); 
+            portfolio.SetCash(192 * 100); 
 
             securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
-            securities.Add(Symbols.SPY_C_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency))));
-            securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 100);
+            securities.Add(Symbols.SPY_C_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), GetOptionSymbolProperties(Symbols.SPY_C_192_Feb19_2016)));
+            securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 2);
             securities[Symbols.SPY].SetMarketPrice(new Tick { Value = 200 });
 
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, 50, 0, 0, securities.UtcTime, ""));
+            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, 1, 0, 0, securities.UtcTime, ""));
             var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
@@ -915,11 +936,11 @@ namespace QuantConnect.Tests.Common.Securities
             // now we have long position in SPY with average price equal to strike
             var newUnderlyingHoldings = securities[Symbols.SPY].Holdings;
             Assert.AreEqual(0, portfolio.Cash);
-            Assert.AreEqual(50, newUnderlyingHoldings.Quantity);
+            Assert.AreEqual(100, newUnderlyingHoldings.Quantity);
             Assert.AreEqual(192.0, newUnderlyingHoldings.AveragePrice);
 
             // and call option position still has some value
-            Assert.AreEqual(50, securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity);
+            Assert.AreEqual(1, securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity);
         }
 
         [Test]
@@ -937,11 +958,11 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.SetCash(0); 
 
             securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
-            securities.Add(Symbols.SPY_C_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency))));
-            securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, -100);
+            securities.Add(Symbols.SPY_C_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), GetOptionSymbolProperties(Symbols.SPY_C_192_Feb19_2016)));
+            securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, -1);
             securities[Symbols.SPY].SetMarketPrice(new Tick { Value = 200 });
 
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -100, 0, 0, securities.UtcTime, ""));
+            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -1, 0, 0, securities.UtcTime, ""));
             var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
@@ -986,10 +1007,10 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.SetCash(192 * 100);
 
             securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
-            securities.Add(Symbols.SPY_P_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_P_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency))));
-            securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, -100);
+            securities.Add(Symbols.SPY_P_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_P_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), GetOptionSymbolProperties(Symbols.SPY_P_192_Feb19_2016)));
+            securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, -1);
 
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -100, 0, 0, securities.UtcTime, ""));
+            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -1, 0, 0, securities.UtcTime, ""));
             var option = (Option)securities[Symbols.SPY_P_192_Feb19_2016];
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
@@ -1028,13 +1049,13 @@ namespace QuantConnect.Tests.Common.Securities
             transactions.SetOrderProcessor(transactionHandler);
 
             // Adding cash: strike price times number of shares
-            portfolio.SetCash(192 * 50);
+            portfolio.SetCash(192 * 100);
 
             securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
-            securities.Add(Symbols.SPY_P_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_P_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency))));
-            securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, -100);
+            securities.Add(Symbols.SPY_P_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_P_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), GetOptionSymbolProperties(Symbols.SPY_P_192_Feb19_2016)));
+            securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, -2);
 
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -50, 0, 0, securities.UtcTime, ""));
+            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -1, 0, 0, securities.UtcTime, ""));
             var option = (Option)securities[Symbols.SPY_P_192_Feb19_2016];
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
@@ -1053,11 +1074,11 @@ namespace QuantConnect.Tests.Common.Securities
             // now we have long position in SPY with average price equal to strike
             var newUnderlyingHoldings = securities[Symbols.SPY].Holdings;
             Assert.AreEqual(0, portfolio.Cash);
-            Assert.AreEqual(50, newUnderlyingHoldings.Quantity);
+            Assert.AreEqual(100, newUnderlyingHoldings.Quantity);
             Assert.AreEqual(192.0, newUnderlyingHoldings.AveragePrice);
 
             // and short put option position still exists in the portfolio
-            Assert.AreEqual(-50, securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity);
+            Assert.AreEqual(-1, securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity);
         }
 
         [Test]
@@ -1076,11 +1097,11 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.SetCash(0);
 
             securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
-            securities.Add(Symbols.SPY_C_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency))));
+            securities.Add(Symbols.SPY_C_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), GetOptionSymbolProperties(Symbols.SPY_C_192_Feb19_2016)));
             securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 195 });
-            securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 100);
+            securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 1);
 
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, 100, 0, 0, securities.UtcTime, ""));
+            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, 1, 0, 0, securities.UtcTime, ""));
             var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
@@ -1117,7 +1138,7 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.SetCash(0);
 
             securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
-            securities.Add(Symbols.SPY_C_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency))));
+            securities.Add(Symbols.SPY_C_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), GetOptionSymbolProperties(Symbols.SPY_C_192_Feb19_2016)));
             securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 190 });
             securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 100);
 
@@ -1157,11 +1178,11 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.SetCash(0);
 
             securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
-            securities.Add(Symbols.SPY_P_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_P_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency))));
+            securities.Add(Symbols.SPY_P_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_P_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), GetOptionSymbolProperties(Symbols.SPY_P_192_Feb19_2016)));
             securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 189 });
-            securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, 100);
+            securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, 1);
 
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, 100, 0, 0, securities.UtcTime, ""));
+            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, 1, 0, 0, securities.UtcTime, ""));
             var option = (Option)securities[Symbols.SPY_P_192_Feb19_2016];
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
@@ -1182,7 +1203,6 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(0, securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity);
         }
 
-
         [Test]
         public void ComputeMarginProperlyOnOptionExercise()
         {
@@ -1199,7 +1219,7 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.SetCash(1000);
 
             securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
-            securities.Add(Symbols.SPY_C_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency))));
+            securities.Add(Symbols.SPY_C_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), GetOptionSymbolProperties(Symbols.SPY_C_192_Feb19_2016)));
             securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 195 });
             securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 10);
 
@@ -1241,7 +1261,7 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.SetCash(1000);
 
             securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
-            securities.Add(Symbols.SPY_C_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency))));
+            securities.Add(Symbols.SPY_C_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), GetOptionSymbolProperties(Symbols.SPY_C_192_Feb19_2016)));
             securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 195 });
             securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, -10);
 
@@ -1267,7 +1287,6 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsTrue(sufficientCapital);
         }
 
-
         [Test]
         public void PartialExerciseCashSettledCallAddsSomeCash()
         {
@@ -1283,11 +1302,11 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.SetCash(0);
 
             securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
-            securities.Add(Symbols.SPY_C_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency))));
+            securities.Add(Symbols.SPY_C_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), GetOptionSymbolProperties(Symbols.SPY_C_192_Feb19_2016)));
             securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 195 });
-            securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 100);
+            securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, 2);
 
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, 50, 0, 0, securities.UtcTime, ""));
+            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, 1, 0, 0, securities.UtcTime, ""));
             var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
@@ -1301,11 +1320,11 @@ namespace QuantConnect.Tests.Common.Securities
             }
 
             // (underlying price - strike price) times number of shares
-            Assert.AreEqual((195 - 192) * 50, portfolio.Cash);
+            Assert.AreEqual((195 - 192) * 100, portfolio.Cash);
             Assert.AreEqual(0, securities[Symbols.SPY].Holdings.Quantity);
 
             // and call option position still has some value
-            Assert.AreEqual(50, securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity);
+            Assert.AreEqual(1, securities[Symbols.SPY_C_192_Feb19_2016].Holdings.Quantity);
         }
 
         [Test]
@@ -1325,11 +1344,11 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.SetCash((195 - 192) * 100);
 
             securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
-            securities.Add(Symbols.SPY_C_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency))));
+            securities.Add(Symbols.SPY_C_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), GetOptionSymbolProperties(Symbols.SPY_C_192_Feb19_2016)));
             securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 195 });
-            securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, -100);
+            securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, -1);
 
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -100, 0, 0, securities.UtcTime, ""));
+            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016, -1, 0, 0, securities.UtcTime, ""));
             var option = (Option)securities[Symbols.SPY_C_192_Feb19_2016];
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
@@ -1369,7 +1388,7 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.SetCash(0);
 
             securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
-            securities.Add(Symbols.SPY_C_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency))));
+            securities.Add(Symbols.SPY_C_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_C_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), GetOptionSymbolProperties(Symbols.SPY_C_192_Feb19_2016)));
             securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 10 });
             securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1, -100);
 
@@ -1415,11 +1434,11 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.SetCash((192 - 189) * 100);
 
             securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
-            securities.Add(Symbols.SPY_P_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_P_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency))));
+            securities.Add(Symbols.SPY_P_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_P_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), GetOptionSymbolProperties(Symbols.SPY_P_192_Feb19_2016)));
             securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 189 });
-            securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, -100);
+            securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, -1);
 
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -100, 0, 0, securities.UtcTime, ""));
+            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -1, 0, 0, securities.UtcTime, ""));
             var option = (Option)securities[Symbols.SPY_P_192_Feb19_2016];
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
@@ -1458,14 +1477,14 @@ namespace QuantConnect.Tests.Common.Securities
             transactions.SetOrderProcessor(transactionHandler);
 
             // (strike price - underlying price) times number of shares
-            portfolio.SetCash((192 - 189) * 50);
+            portfolio.SetCash((192 - 189) * 100);
 
             securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
-            securities.Add(Symbols.SPY_P_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_P_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency))));
+            securities.Add(Symbols.SPY_P_192_Feb19_2016, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY_P_192_Feb19_2016), new Cash(CashBook.AccountCurrency, 0, 1m), GetOptionSymbolProperties(Symbols.SPY_P_192_Feb19_2016)));
             securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 189 });
-            securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, -100);
+            securities[Symbols.SPY_P_192_Feb19_2016].Holdings.SetHoldings(1, -2);
 
-            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -50, 0, 0, securities.UtcTime, ""));
+            transactions.AddOrder(new SubmitOrderRequest(OrderType.OptionExercise, SecurityType.Option, Symbols.SPY_P_192_Feb19_2016, -1, 0, 0, securities.UtcTime, ""));
             var option = (Option)securities[Symbols.SPY_P_192_Feb19_2016];
             var order = (OptionExerciseOrder)transactions.GetOrders(x => true).First();
             option.Underlying = securities[Symbols.SPY];
@@ -1486,7 +1505,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(0, securities[Symbols.SPY].Holdings.Quantity);
 
             // and short put option position still exists in the portfolio
-            Assert.AreEqual(-50, securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity);
+            Assert.AreEqual(-1, securities[Symbols.SPY_P_192_Feb19_2016].Holdings.Quantity);
         }
 
         private SubscriptionDataConfig CreateTradeBarDataConfig(SecurityType type, Symbol symbol)
@@ -1497,9 +1516,16 @@ namespace QuantConnect.Tests.Common.Securities
                 return new SubscriptionDataConfig(typeof (TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true);
             if (type == SecurityType.Future)
                 return new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true);
+            if (type == SecurityType.Crypto)
+                return new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true);
             throw new NotImplementedException(type.ToString());
         }
-        
+
+        private static OptionSymbolProperties GetOptionSymbolProperties(Symbol symbol)
+        {
+            return new OptionSymbolProperties(SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, CashBook.AccountCurrency));
+        }
+
         private static TimeKeeper TimeKeeper
         {
             get { return new TimeKeeper(DateTime.Now, new[] { TimeZones.NewYork }); }

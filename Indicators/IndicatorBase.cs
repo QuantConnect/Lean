@@ -98,6 +98,25 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
+        /// Updates the state of this indicator with the given value and returns true
+        /// if this indicator is ready, false otherwise
+        /// </summary>
+        /// <param name="time">The time associated with the value</param>
+        /// <param name="value">The value to use to update this indicator</param>
+        /// <returns>True if this indicator is ready, false otherwise</returns>
+        public bool Update(DateTime time, decimal value)
+        {
+            if (typeof(T) == typeof(IndicatorDataPoint))
+            {
+                return Update((T)(object)new IndicatorDataPoint(time, value));
+            }
+            else
+            {
+                throw new NotSupportedException(string.Format("{0} does not support Update(DateTime, decimal) method overload. Use Update({1}) instead.", GetType().Name, typeof(T).Name));
+            }
+        }
+
+        /// <summary>
         /// Resets this indicator to its initial state
         /// </summary>
         public virtual void Reset()

@@ -25,10 +25,13 @@ namespace QuantConnect.Tests.Common.Orders
     [TestFixture]
     public class OrderJsonConverterTests
     {
-        [Test]
-        public void DeserializesMarketOrder()
+
+        [TestCase(Symbols.SymbolsKey.SPY)]
+        [TestCase(Symbols.SymbolsKey.EURUSD)]
+        [TestCase(Symbols.SymbolsKey.BTCUSD)]
+        public void DeserializesMarketOrder(Symbols.SymbolsKey key)
         {
-            var expected = new MarketOrder(Symbols.SPY, 100, new DateTime(2015, 11, 23, 17, 15, 37), "now")
+            var expected = new MarketOrder(Symbols.Lookup(key), 100, new DateTime(2015, 11, 23, 17, 15, 37), "now")
             {
                 Id = 12345,
                 Price = 209.03m,
@@ -39,10 +42,12 @@ namespace QuantConnect.Tests.Common.Orders
             TestOrderType(expected);
         }
 
-        [Test]
-        public void DeserializesMarketOnOpenOrder()
+        [TestCase(Symbols.SymbolsKey.SPY)]
+        [TestCase(Symbols.SymbolsKey.EURUSD)]
+        [TestCase(Symbols.SymbolsKey.BTCUSD)]
+        public void DeserializesMarketOnOpenOrder(Symbols.SymbolsKey key)
         {
-            var expected = new MarketOnOpenOrder(Symbols.SPY, 100, new DateTime(2015, 11, 23, 17, 15, 37), "now")
+            var expected = new MarketOnOpenOrder(Symbols.Lookup(key), 100, new DateTime(2015, 11, 23, 17, 15, 37), "now")
             {
                 Id = 12345,
                 Price = 209.03m,
@@ -53,10 +58,12 @@ namespace QuantConnect.Tests.Common.Orders
             TestOrderType(expected);
         }
 
-        [Test]
-        public void DeserializesMarketOnCloseOrder()
+        [TestCase(Symbols.SymbolsKey.SPY)]
+        [TestCase(Symbols.SymbolsKey.EURUSD)]
+        [TestCase(Symbols.SymbolsKey.BTCUSD)]
+        public void DeserializesMarketOnCloseOrder(Symbols.SymbolsKey key)
         {
-            var expected = new MarketOnCloseOrder(Symbols.SPY, 100, new DateTime(2015, 11, 23, 17, 15, 37), "now")
+            var expected = new MarketOnCloseOrder(Symbols.Lookup(key), 100, new DateTime(2015, 11, 23, 17, 15, 37), "now")
             {
                 Id = 12345,
                 Price = 209.03m,
@@ -67,10 +74,12 @@ namespace QuantConnect.Tests.Common.Orders
             TestOrderType(expected);
         }
 
-        [Test]
-        public void DeserializesLimitOrder()
+        [TestCase(Symbols.SymbolsKey.SPY)]
+        [TestCase(Symbols.SymbolsKey.EURUSD)]
+        [TestCase(Symbols.SymbolsKey.BTCUSD)]
+        public void DeserializesLimitOrder(Symbols.SymbolsKey key)
         {
-            var expected = new LimitOrder(Symbols.SPY, 100, 210.10m, new DateTime(2015, 11, 23, 17, 15, 37), "now")
+            var expected = new LimitOrder(Symbols.Lookup(key), 100, 210.10m, new DateTime(2015, 11, 23, 17, 15, 37), "now")
             {
                 Id = 12345,
                 Price = 209.03m,
@@ -83,10 +92,12 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(expected.LimitPrice, actual.LimitPrice);
         }
 
-        [Test]
-        public void DeserializesStopMarketOrder()
+        [TestCase(Symbols.SymbolsKey.SPY)]
+        [TestCase(Symbols.SymbolsKey.EURUSD)]
+        [TestCase(Symbols.SymbolsKey.BTCUSD)]
+        public void DeserializesStopMarketOrder(Symbols.SymbolsKey key)
         {
-            var expected = new StopMarketOrder(Symbols.SPY, 100, 210.10m, new DateTime(2015, 11, 23, 17, 15, 37), "now")
+            var expected = new StopMarketOrder(Symbols.Lookup(key), 100, 210.10m, new DateTime(2015, 11, 23, 17, 15, 37), "now")
             {
                 Id = 12345,
                 Price = 209.03m,
@@ -99,10 +110,12 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(expected.StopPrice, actual.StopPrice);
         }
 
-        [Test]
-        public void DeserializesStopLimitOrder()
+        [TestCase(Symbols.SymbolsKey.SPY)]
+        [TestCase(Symbols.SymbolsKey.EURUSD)]
+        [TestCase(Symbols.SymbolsKey.BTCUSD)]
+        public void DeserializesStopLimitOrder(Symbols.SymbolsKey key)
         {
-            var expected = new StopLimitOrder(Symbols.SPY, 100, 210.10m, 200.23m, new DateTime(2015, 11, 23, 17, 15, 37), "now")
+            var expected = new StopLimitOrder(Symbols.Lookup(key), 100, 210.10m, 200.23m, new DateTime(2015, 11, 23, 17, 15, 37), "now")
             {
                 Id = 12345,
                 Price = 209.03m,
@@ -157,6 +170,7 @@ namespace QuantConnect.Tests.Common.Orders
             var actual = order.Symbol;
 
             Assert.AreEqual(Symbols.SPY, actual);
+            Assert.AreEqual(Market.USA, actual.ID.Market);
         }
 
         [Test]
@@ -186,6 +200,7 @@ namespace QuantConnect.Tests.Common.Orders
 
             var order = JsonConvert.DeserializeObject<Order>(json);
             Assert.IsInstanceOf<MarketOrder>(order);
+            Assert.AreEqual(Market.USA, order.Symbol.ID.Market);
 
         }
 
@@ -213,6 +228,7 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(expected.Type, actual.Type);
             Assert.AreEqual(expected.Value, actual.Value);
             Assert.AreEqual(expected.Quantity, actual.Quantity);
+            Assert.AreEqual(expected.Symbol.ID.Market, actual.Symbol.ID.Market);
 
             return (T) actual;
         }

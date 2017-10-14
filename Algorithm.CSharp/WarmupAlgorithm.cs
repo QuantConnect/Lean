@@ -1,16 +1,37 @@
-﻿using System;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 using QuantConnect.Data;
 using QuantConnect.Indicators;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// Demonstration algorthm for the Warm Up feature with basic indicators.
+    /// </summary>
+    /// <meta name="tag" content="indicators" />
+    /// <meta name="tag" content="warm up" />
+    /// <meta name="tag" content="history and warm up" />
+    /// <meta name="tag" content="using data" />
     public class WarmupAlgorithm : QCAlgorithm
     {
-        private bool first = true;
-        private const string symbol = "SPY";
+        private bool _first = true;
+        private string _symbol = "SPY";
         private const int FastPeriod = 60;
         private const int SlowPeriod = 3600;
-        private ExponentialMovingAverage fast, slow;
+        private ExponentialMovingAverage _fast, _slow;
 
         public override void Initialize()
         {
@@ -18,10 +39,10 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 11);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
-            AddSecurity(SecurityType.Equity, symbol, Resolution.Second);
+            AddSecurity(SecurityType.Equity, _symbol, Resolution.Second);
 
-            fast = EMA(symbol, FastPeriod);
-            slow = EMA(symbol, SlowPeriod);
+            _fast = EMA(_symbol, FastPeriod);
+            _slow = EMA(_symbol, SlowPeriod);
 
             SetWarmup(SlowPeriod);
         }
@@ -31,19 +52,19 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            if (first && !IsWarmingUp)
+            if (_first && !IsWarmingUp)
             {
-                first = false;
-                Console.WriteLine("Fast: " + fast.Samples);
-                Console.WriteLine("Slow: " + slow.Samples);
+                _first = false;
+                Debug("Fast: " + _fast.Samples);
+                Debug("Slow: " + _slow.Samples);
             }
-            if (fast > slow)
+            if (_fast > _slow)
             {
-                SetHoldings(symbol, 1);
+                SetHoldings(_symbol, 1);
             }
             else
             {
-                SetHoldings(symbol, -1);
+                SetHoldings(_symbol, -1);
             }
         }
     }

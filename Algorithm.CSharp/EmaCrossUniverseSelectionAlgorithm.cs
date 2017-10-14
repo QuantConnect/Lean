@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,6 +26,10 @@ namespace QuantConnect.Algorithm.CSharp
     /// In this algorithm we demonstrate how to perform some technical analysis as
     /// part of your coarse fundamental universe selection
     /// </summary>
+    /// <meta name="tag" content="using data" />
+    /// <meta name="tag" content="indicators" />
+    /// <meta name="tag" content="universes" />
+    /// <meta name="tag" content="coarse universes" />
     public class EmaCrossUniverseSelectionAlgorithm : QCAlgorithm
     {
         // tolerance to prevent bouncing
@@ -85,7 +89,7 @@ namespace QuantConnect.Algorithm.CSharp
                         // only pick symbols who have their 50 day ema over their 100 day ema
                         where avg.Fast > avg.Slow*(1 + Tolerance)
                         // prefer symbols with a larger delta by percentage between the two averages
-                        orderby avg.ScaledDelta descending 
+                        orderby avg.ScaledDelta descending
                         // we only need to return the symbol and return 'Count' symbols
                         select cf.Symbol).Take(Count);
             });

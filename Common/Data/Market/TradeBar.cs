@@ -202,6 +202,7 @@ namespace QuantConnect.Data.Market
 
                     //FOREX has a different data file format:
                     case SecurityType.Forex:
+                    case SecurityType.Crypto:
                         return ParseForex<TradeBar>(config, line, date);
 
                     case SecurityType.Cfd:
@@ -212,6 +213,7 @@ namespace QuantConnect.Data.Market
 
                     case SecurityType.Future:
                         return ParseFuture(config, line, date);
+
                 }
             }
             catch (Exception err)
@@ -235,6 +237,7 @@ namespace QuantConnect.Data.Market
                     return ParseEquity(config, line, baseDate);
 
                 case SecurityType.Forex:
+                case SecurityType.Crypto:
                     return ParseForex(config, line, baseDate);
 
                 case SecurityType.Cfd:

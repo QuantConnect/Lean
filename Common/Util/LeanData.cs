@@ -76,22 +76,26 @@ namespace QuantConnect.Util
 
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
+                case SecurityType.Crypto:
                     switch (resolution)
                     {
                         case Resolution.Tick:
-                            var tick = (Tick) data;
+                            var tick = data as Tick;
+                            if (tick == null) throw new NullReferenceException("tick");
                             return ToCsv(milliseconds, tick.BidPrice, tick.AskPrice);
 
                         case Resolution.Second:
                         case Resolution.Minute:
-                            var bar = (QuoteBar) data;
+                            var bar = data as QuoteBar;
+                            if (bar == null) throw new NullReferenceException("bar");
                             return ToCsv(milliseconds,
                                 ToNonScaledCsv(bar.Bid), bar.LastBidSize,
                                 ToNonScaledCsv(bar.Ask), bar.LastAskSize);
 
                         case Resolution.Hour:
                         case Resolution.Daily:
-                            var bigBar = (QuoteBar) data;
+                            var bigBar = data as QuoteBar;
+                            if (bigBar == null) throw new NullReferenceException("big bar");
                             return ToCsv(longTime,
                                 ToNonScaledCsv(bigBar.Bid), bigBar.LastBidSize,
                                 ToNonScaledCsv(bigBar.Ask), bigBar.LastAskSize);
@@ -238,6 +242,9 @@ namespace QuantConnect.Util
                             throw new ArgumentOutOfRangeException("resolution", resolution, null);
                     }
                     break;
+
+                default:
+                    throw new ArgumentOutOfRangeException("securityType", securityType, null);
             }
 
             throw new NotImplementedException("LeanData.GenerateLine has not yet been implemented for security type: " + securityType + " at resolution: " + resolution);
@@ -310,6 +317,7 @@ namespace QuantConnect.Util
                 case SecurityType.Equity:
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
+                case SecurityType.Crypto:
                     return !isHourOrDaily ? Path.Combine(directory, symbol.Value.ToLower()) : directory;
 
                 case SecurityType.Option:
@@ -373,6 +381,7 @@ namespace QuantConnect.Util
                 case SecurityType.Equity:
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
+                case SecurityType.Crypto:
                     if (resolution == Resolution.Tick && symbol.SecurityType == SecurityType.Equity)
                     {
                         return string.Format("{0}_{1}_{2}_{3}.csv",
@@ -450,9 +459,9 @@ namespace QuantConnect.Util
         /// </summary>
         public static string GenerateZipEntryName(string symbol, SecurityType securityType, DateTime date, Resolution resolution, TickType dataType = TickType.Trade)
         {
-            if (securityType != SecurityType.Base && securityType != SecurityType.Equity && securityType != SecurityType.Forex && securityType != SecurityType.Cfd)
+            if (securityType != SecurityType.Base && securityType != SecurityType.Equity && securityType != SecurityType.Forex && securityType != SecurityType.Cfd && securityType != SecurityType.Crypto)
             {
-                throw new NotImplementedException("This method only implements base, equity, forex and cfd security type.");
+                throw new NotImplementedException("This method only implements base, equity, forex, crypto and cfd security type.");
             }
 
             symbol = symbol.ToLower();
@@ -463,7 +472,7 @@ namespace QuantConnect.Util
             }
 
             //All fx is quote data.
-            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
+            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd || securityType == SecurityType.Crypto)
             {
                 dataType = TickType.Quote;
             }
@@ -486,6 +495,7 @@ namespace QuantConnect.Util
                 case SecurityType.Equity:
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
+                case SecurityType.Crypto:
                     if (isHourOrDaily)
                     {
                         return string.Format("{0}.zip", 
@@ -543,7 +553,7 @@ namespace QuantConnect.Util
             }
 
             var zipFileName = date.ToString(DateFormat.EightCharacter);
-            tickType = tickType ?? (securityType == SecurityType.Forex || securityType == SecurityType.Cfd ? TickType.Quote : TickType.Trade);
+            tickType = tickType ?? (securityType == SecurityType.Forex || securityType == SecurityType.Cfd || securityType == SecurityType.Crypto ? TickType.Quote : TickType.Trade);
             var suffix = string.Format("_{0}.zip", tickType.Value.ToLower());
             return zipFileName + suffix;
         }
@@ -555,7 +565,7 @@ namespace QuantConnect.Util
         /// <returns>The most common tick type for the specified security type</returns>
         public static TickType GetCommonTickType(SecurityType securityType)
         {
-            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
+            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd || securityType == SecurityType.Crypto)
             {
                 return TickType.Quote;
             }
@@ -695,7 +705,7 @@ namespace QuantConnect.Util
             }
             if (type == typeof(Tick))
             {
-                if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
+                if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd || securityType == SecurityType.Crypto)
                 {
                     return TickType.Quote;
                 }

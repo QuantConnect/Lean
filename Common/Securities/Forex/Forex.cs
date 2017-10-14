@@ -25,7 +25,7 @@ namespace QuantConnect.Securities.Forex
     /// FOREX Security Object Implementation for FOREX Assets
     /// </summary>
     /// <seealso cref="Security"/>
-    public class Forex : Security
+    public class Forex : Security, IBaseCurrencySymbol
     {
         /// <summary>
         /// Constructor for the forex security

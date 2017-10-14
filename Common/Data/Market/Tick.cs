@@ -243,6 +243,7 @@ namespace QuantConnect.Data.Market
 
                     case SecurityType.Forex:
                     case SecurityType.Cfd:
+                    case SecurityType.Crypto:
                     {
                         var csv = line.ToCsv(3);
                         Symbol = config.Symbol;

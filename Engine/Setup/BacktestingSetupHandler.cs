@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -46,9 +46,9 @@ namespace QuantConnect.Lean.Engine.Setup
         /// Internal errors list from running the setup proceedures.
         /// </summary>
         public List<string> Errors
-        { 
-            get; 
-            set; 
+        {
+            get;
+            set;
         }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <remarks>Maximum runtime is a formula based on the number and resolution of symbols requested, and the days backtesting</remarks>
         public TimeSpan MaximumRuntime
         {
-            get 
+            get
             {
                 return _maxRuntime;
             }
@@ -70,7 +70,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <seealso cref="QCAlgorithm.SetCash(decimal)"/>
         public decimal StartingPortfolioValue
         {
-            get 
+            get
             {
                 return _startingCaptial;
             }
@@ -94,7 +94,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <remarks>To stop algorithm flooding the backtesting system with hundreds of megabytes of order data we limit it to 100 per day</remarks>
         public int MaxOrders
         {
-            get 
+            get
             {
                 return _maxOrders;
             }
@@ -103,7 +103,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <summary>
         /// Initialize the backtest setup handler.
         /// </summary>
-        public BacktestingSetupHandler() 
+        public BacktestingSetupHandler()
         {
             Errors = new List<string>();
         }
@@ -166,6 +166,8 @@ namespace QuantConnect.Lean.Engine.Setup
                 Errors.Add("Could not create instance of algorithm");
                 return false;
             }
+
+            algorithm.Name = job.GetAlgorithmName();
 
             //Make sure the algorithm start date ok.
             if (job.PeriodStart == default(DateTime))
@@ -236,7 +238,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
             //Set back to the algorithm,
             algorithm.SetMaximumOrders(_maxOrders);
-            
+
             //Starting date of the algorithm:
             _startingDate = job.PeriodStart;
 
@@ -263,9 +265,9 @@ namespace QuantConnect.Lean.Engine.Setup
         {
             var derivativeSubscriptions = subscriptionManager.Subscriptions
                                         .Where( x => x.Symbol.IsCanonical())
-                                        .Select( x => 
+                                        .Select( x =>
                                         {
-                                            // since number of subscriptions is dynamic and is not known in advance, 
+                                            // since number of subscriptions is dynamic and is not known in advance,
                                             // we assume maximum use of available capacity by the enduser
                                             switch (x.Resolution)
                                             {

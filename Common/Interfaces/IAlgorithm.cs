@@ -121,7 +121,7 @@ namespace QuantConnect.Interfaces
         /// </summary>
         IHistoryProvider HistoryProvider
         {
-            get; 
+            get;
             set;
         }
 
@@ -130,7 +130,7 @@ namespace QuantConnect.Interfaces
         /// </summary>
         AlgorithmStatus Status
         {
-            get; 
+            get;
             set;
         }
 
@@ -149,6 +149,7 @@ namespace QuantConnect.Interfaces
         string Name
         {
             get;
+            set;
         }
 
         /// <summary>
@@ -261,7 +262,7 @@ namespace QuantConnect.Interfaces
         /// the value of the benchmark at a requested date/time
         /// </summary>
         IBenchmark Benchmark
-        { 
+        {
             get;
         }
 
@@ -554,7 +555,7 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="handler">The message handler to use</param>
         void SetBrokerageMessageHandler(IBrokerageMessageHandler handler);
-        
+
         /// <summary>
         /// Set the historical data provider
         /// </summary>

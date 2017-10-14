@@ -1,15 +1,34 @@
-﻿using System.Collections.Generic;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Interfaces;
 
-namespace QuantConnect.Algorithm.Examples
+namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Tick Filter Example
+    /// Demonstration of filtering tick data so easier to use. Tick data has lots of glitchy, spikey data which should be filtered out before usagee.
     /// </summary>
+    /// <meta name="tag" content="filtering" />
+    /// <meta name="tag" content="tick data" />
+    /// <meta name="tag" content="using data" />
+    /// <meta name="tag" content="ticks event" />
     public class TickDataFilteringAlgorithm : QCAlgorithm
     {
         /// <summary>
@@ -48,7 +67,7 @@ namespace QuantConnect.Algorithm.Examples
         }
     }
     /// <summary>
-    /// Exchange filter class 
+    /// Exchange filter class
     /// </summary>
     public class ExchangeDataFilter : ISecurityDataFilter
     {
@@ -70,7 +89,7 @@ namespace QuantConnect.Algorithm.Examples
         public static class MarketCodesFilter
         {
             /// US Market Codes
-            public static Dictionary<string, string> US = new Dictionary<string, string>() 
+            public static Dictionary<string, string> US = new Dictionary<string, string>()
             {
                 {"A", "American Stock Exchange"},
                 {"B", "Boston Stock Exchange"},
@@ -93,7 +112,7 @@ namespace QuantConnect.Algorithm.Examples
             };
 
             /// Canada Market Short Codes:
-            public static Dictionary<string, string> Canada = new Dictionary<string, string>() 
+            public static Dictionary<string, string> Canada = new Dictionary<string, string>()
             {
                 {"T", "Toronto"},
                 {"V", "Venture"}
@@ -102,7 +121,7 @@ namespace QuantConnect.Algorithm.Examples
             /// <summary>
             /// Select allowed exchanges for this filter: e.g. top 4
             /// </summary>
-            public static List<string> AllowedExchanges = new List<string>() { 
+            public static List<string> AllowedExchanges = new List<string>() {
                 "P",    //NYSE ARCA - SPY PRIMARY EXCHANGE
                         //https://www.google.com/finance?q=NYSEARCA%3ASPY&ei=XcA2VKCSLs228waMhYCIBg
             };

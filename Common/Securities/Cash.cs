@@ -149,7 +149,8 @@ namespace QuantConnect.Securities
             // we require a subscription that converts this into the base currency
             string normal = Symbol + CashBook.AccountCurrency;
             string invert = CashBook.AccountCurrency + Symbol;
-            foreach (var config in subscriptions.Subscriptions.Where(config => config.SecurityType == SecurityType.Forex || config.SecurityType == SecurityType.Cfd))
+            foreach (var config in subscriptions.Subscriptions.Where(config => config.SecurityType == SecurityType.Forex || config.SecurityType == SecurityType.Cfd ||
+            config.SecurityType == SecurityType.Crypto))
             {
                 if (config.Symbol.Value == normal)
                 {
@@ -179,7 +180,7 @@ namespace QuantConnect.Securities
             var currencyPairs = Currencies.CurrencyPairs.Select(x =>
             {
                 // allow XAU or XAG to be used as quote currencies, but pairs including them are CFDs
-                var securityType = Symbol.StartsWith("X") ? SecurityType.Cfd : SecurityType.Forex;
+                var securityType = Symbol.StartsWith("XAU") || Symbol.StartsWith("XAG") ? SecurityType.Cfd : SecurityType.Forex;
                 var market = string.Empty;
                 if (!markets.TryGetValue(securityType, out market))
                 {
@@ -204,13 +205,17 @@ namespace QuantConnect.Securities
                     var marketHoursDbEntry = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType);
                     var exchangeHours = marketHoursDbEntry.ExchangeHours;
                     // set this as an internal feed so that the data doesn't get sent into the algorithm's OnData events
-                    var config = subscriptions.Add(objectType, symbol, minimumResolution, marketHoursDbEntry.DataTimeZone, exchangeHours.TimeZone, false, true, false, true);
+                    var config = subscriptions.Add(objectType, TickType.Quote, symbol, minimumResolution, marketHoursDbEntry.DataTimeZone, exchangeHours.TimeZone, false, true, false, true);
                     SecuritySymbol = config.Symbol;
 
                     Security security;
                     if (securityType == SecurityType.Cfd)
                     {
                         security = new Cfd.Cfd(exchangeHours, quoteCash, config, symbolProperties);
+                    }
+                    else if (securityType == SecurityType.Crypto)
+                    {
+                        security = new Crypto.Crypto(exchangeHours, quoteCash, config, symbolProperties);
                     }
                     else
                     {

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Data.Auxiliary;
@@ -36,14 +35,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
         private readonly MapFileResolver _mapFileResolver;
         private readonly IFactorFileProvider _factorFileProvider;
+        private readonly bool _isLiveMode;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseDataSubscriptionEnumeratorFactory"/> class
         /// </summary>
+        /// <param name="isLiveMode">True for live mode, false otherwise</param>
+        /// <param name="mapFileResolver">Used for resolving the correct map files</param>
+        /// <param name="factorFileProvider">Used for getting factor files</param>
         /// <param name="tradableDaysProvider">Function used to provide the tradable dates to be enumerator.
         /// Specify null to default to <see cref="SubscriptionRequest.TradableDays"/></param>
-        public BaseDataSubscriptionEnumeratorFactory(MapFileResolver mapFileResolver, IFactorFileProvider factorFileProvider, Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null)
+        public BaseDataSubscriptionEnumeratorFactory(bool isLiveMode, MapFileResolver mapFileResolver, IFactorFileProvider factorFileProvider, Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null)
         {
+            _isLiveMode = isLiveMode;
             _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
             _mapFileResolver = mapFileResolver;
             _factorFileProvider = factorFileProvider;
@@ -52,10 +56,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseDataSubscriptionEnumeratorFactory"/> class
         /// </summary>
+        /// <param name="isLiveMode">True for live mode, false otherwise</param>
         /// <param name="tradableDaysProvider">Function used to provide the tradable dates to be enumerator.
         /// Specify null to default to <see cref="SubscriptionRequest.TradableDays"/></param>
-        public BaseDataSubscriptionEnumeratorFactory(Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null)
+        public BaseDataSubscriptionEnumeratorFactory(bool isLiveMode, Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null)
         {
+            _isLiveMode = isLiveMode;
             _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
         }
 
@@ -67,7 +73,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <returns>An enumerator reading the subscription request</returns>
         public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataProvider dataProvider)
         {
-
             var sourceFactory = (BaseData)ObjectActivator.GetActivator(request.Configuration.Type).Invoke(new object[] { request.Configuration.Type });
 
             _dataCacheProvider = new SingleEntryDataCacheProvider(dataProvider);
@@ -76,9 +81,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             {
                 var currentSymbol = request.Configuration.MappedSymbol;
                 request.Configuration.MappedSymbol = GetMappedSymbol(request, date);
-                var source = sourceFactory.GetSource(request.Configuration, date, false);
+                var source = sourceFactory.GetSource(request.Configuration, date, _isLiveMode);
                 request.Configuration.MappedSymbol = currentSymbol;
-                var factory = SubscriptionDataSourceReader.ForSource(source, _dataCacheProvider, request.Configuration, date, false);
+                var factory = SubscriptionDataSourceReader.ForSource(source, _dataCacheProvider, request.Configuration, date, _isLiveMode);
                 var entriesForDate = factory.Read(source);
                 foreach(var entry in entriesForDate)
                 {
@@ -86,6 +91,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 }
             }
         }
+
         private string GetMappedSymbol(SubscriptionRequest request, DateTime date)
         {
             var config = request.Configuration;
