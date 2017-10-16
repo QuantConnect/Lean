@@ -14,6 +14,7 @@
 */
 
 using System;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Orders
@@ -52,7 +53,7 @@ namespace QuantConnect.Orders
         /// <param name="limitPrice">Price the order should be filled at if a limit order</param>
         /// <param name="tag">User defined data tag for this order</param>
         /// <param name="properties">The order properties for this order</param>
-        public LimitOrder(Symbol symbol, decimal quantity, decimal limitPrice, DateTime time, string tag = "", OrderProperties properties = null)
+        public LimitOrder(Symbol symbol, decimal quantity, decimal limitPrice, DateTime time, string tag = "", IOrderProperties properties = null)
             : base(symbol, quantity, time, tag, properties)
         {
             LimitPrice = limitPrice;

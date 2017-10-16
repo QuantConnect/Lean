@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Orders
@@ -88,7 +89,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Additional properties of the order
         /// </summary>
-        public OrderProperties Properties { get; private set; }
+        public IOrderProperties Properties { get; private set; }
 
         /// <summary>
         /// The symbol's security type
@@ -147,7 +148,7 @@ namespace QuantConnect.Orders
             BrokerId = new List<string>();
             ContingentId = 0;
             DurationValue = DateTime.MaxValue;
-            Properties = new OrderProperties();
+            Properties = null;
         }
 
         /// <summary>
@@ -158,7 +159,7 @@ namespace QuantConnect.Orders
         /// <param name="time">Time the order was placed</param>
         /// <param name="tag">User defined data tag for this order</param>
         /// <param name="properties">The order properties for this order</param>
-        protected Order(Symbol symbol, decimal quantity, DateTime time, string tag = "", OrderProperties properties = null)
+        protected Order(Symbol symbol, decimal quantity, DateTime time, string tag = "", IOrderProperties properties = null)
         {
             Time = time;
             Price = 0;
@@ -171,7 +172,7 @@ namespace QuantConnect.Orders
             BrokerId = new List<string>();
             ContingentId = 0;
             DurationValue = DateTime.MaxValue;
-            Properties = properties ?? new OrderProperties();
+            Properties = properties;
         }
 
         /// <summary>

@@ -14,6 +14,7 @@
 */
 
 using System;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Orders
 {
@@ -81,7 +82,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Gets the order properties for this request
         /// </summary>
-        public OrderProperties OrderProperties
+        public IOrderProperties OrderProperties
         {
             get; private set;
         }
@@ -99,7 +100,7 @@ namespace QuantConnect.Orders
         /// <param name="time">The time this request was created</param>
         /// <param name="tag">A custom tag for this request</param>
         /// <param name="properties">The order properties for this request</param>
-        public SubmitOrderRequest(OrderType orderType, SecurityType securityType, Symbol symbol, decimal quantity, decimal stopPrice, decimal limitPrice, DateTime time, string tag, OrderProperties properties = null)
+        public SubmitOrderRequest(OrderType orderType, SecurityType securityType, Symbol symbol, decimal quantity, decimal stopPrice, decimal limitPrice, DateTime time, string tag, IOrderProperties properties = null)
             : base(time, (int)OrderResponseErrorCode.UnableToFindOrder, tag)
         {
             SecurityType = securityType;
@@ -108,7 +109,7 @@ namespace QuantConnect.Orders
             Quantity = quantity;
             LimitPrice = limitPrice;
             StopPrice = stopPrice;
-            OrderProperties = properties ?? new OrderProperties();
+            OrderProperties = properties;
         }
 
         /// <summary>
