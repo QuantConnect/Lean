@@ -639,25 +639,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating custom universe: " + config.Symbol.ToString());
 
-                // each time we exhaust we'll new up this enumerator stack
-                var refresher = new RefreshEnumerator<BaseDataCollection>(() =>
-                {
-                    var objectActivator = ObjectActivator.GetActivator(config.Type);
-                    var sourceProvider = (BaseData)objectActivator.Invoke(new object[] { config.Type });
-                    var dateInDataTimeZone = DateTime.UtcNow.ConvertFromUtc(config.DataTimeZone).Date;
-                    var source = sourceProvider.GetSource(config, dateInDataTimeZone, true);
-                    var factory = SubscriptionDataSourceReader.ForSource(source, _dataCacheProvider, config, dateInDataTimeZone, true);
-                    var factorEnumerator = factory.Read(source).GetEnumerator();
-                    var fastForward = new FastForwardEnumerator(factorEnumerator, _timeProvider, request.Security.Exchange.TimeZone, config.Increment);
-                    var frontierAware = new FrontierAwareEnumerator(fastForward, _frontierTimeProvider, tzOffsetProvider);
-                    return new BaseDataCollectionAggregatorEnumerator(frontierAware, config.Symbol);
-                });
+                var factory = new LiveCustomDataSubscriptionEnumeratorFactory(_timeProvider);
+                var enumeratorStack = factory.CreateEnumerator(request, _dataProvider);
+                enumerator = new BaseDataCollectionAggregatorEnumerator(enumeratorStack, config.Symbol);
 
-                // rate limit the refreshing of the stack to the requested interval
-                var minimumTimeBetweenCalls = Math.Min(config.Increment.Ticks, TimeSpan.FromMinutes(30).Ticks);
-                var rateLimit = new RateLimitEnumerator<BaseData>(refresher, _timeProvider, TimeSpan.FromTicks(minimumTimeBetweenCalls));
                 var enqueueable = new EnqueueableEnumerator<BaseData>();
-                _customExchange.AddEnumerator(new EnumeratorHandler(config.Symbol, rateLimit, enqueueable));
+                _customExchange.AddEnumerator(new EnumeratorHandler(config.Symbol, enumerator, enqueueable));
                 enumerator = enqueueable;
             }
 
