@@ -195,6 +195,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _clientId = IncrementClientId();
             _agentDescription = agentDescription;
 
+            Log.Trace($"InteractiveBrokersBrokerage.InteractiveBrokersBrokerage(): Host: {host}, Port: {port}, Account: {account}, AgentDescription: {agentDescription}");
+
             _client = new IB.InteractiveBrokersClient(_signal);
 
             // set up event handlers
