@@ -433,7 +433,7 @@ namespace QuantConnect.Algorithm
         /// <returns>A single <see cref="BaseData"/> object with the last known price</returns>
         public BaseData GetLastKnownPrice(Security security)
         {
-            if (security.Symbol.IsCanonical())
+            if (security.Symbol.IsCanonical() || HistoryProvider == null)
             {
                 return null;
             }
