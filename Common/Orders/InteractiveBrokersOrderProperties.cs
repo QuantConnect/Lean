@@ -13,46 +13,47 @@
  * limitations under the License.
 */
 
+using QuantConnect.Interfaces;
+
 namespace QuantConnect.Orders
 {
     /// <summary>
-    /// Represents optional order properties used by financial advisors.
-    /// These properties are currently used only by the Interactive Brokers brokerage.
+    /// Contains additional properties and settings for an order submitted to Interactive Brokers
     /// </summary>
-    public class OrderFinancialAdvisorProperties
+    public class InteractiveBrokersOrderProperties : IOrderProperties
     {
         /// <summary>
-        /// The linked account for which to submit the order
+        /// The linked account for which to submit the order (only used by Financial Advisors)
         /// </summary>
         public string Account { get; set; }
 
         /// <summary>
-        /// The account group for the order
+        /// The account group for the order (only used by Financial Advisors)
         /// </summary>
-        public string Group { get; set; }
+        public string FaGroup { get; set; }
 
         /// <summary>
-        /// The allocation method for the account group order
+        /// The allocation method for the account group order (only used by Financial Advisors)
         /// Supported allocation methods are: EqualQuantity, NetLiq, AvailableEquity, PctChange
         /// </summary>
-        public string Method { get; set; }
+        public string FaMethod { get; set; }
 
         /// <summary>
-        /// The percentage for the percent change method
+        /// The percentage for the percent change method (only used by Financial Advisors)
         /// </summary>
-        public int Percentage { get; set; }
+        public int FaPercentage { get; set; }
 
         /// <summary>
-        /// The allocation profile to be used for the order
+        /// The allocation profile to be used for the order (only used by Financial Advisors)
         /// </summary>
-        public string Profile { get; set; }
+        public string FaProfile { get; set; }
 
         /// <summary>
         /// Returns a new instance clone of this object
         /// </summary>
-        public OrderFinancialAdvisorProperties Clone()
+        public IOrderProperties Clone()
         {
-            return (OrderFinancialAdvisorProperties)MemberwiseClone();
+            return (InteractiveBrokersOrderProperties)MemberwiseClone();
         }
     }
 }

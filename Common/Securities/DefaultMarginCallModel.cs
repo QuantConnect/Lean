@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Securities
@@ -38,14 +39,14 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the default order properties to be used in margin call orders
         /// </summary>
-        protected OrderProperties DefaultOrderProperties { get; }
+        protected IOrderProperties DefaultOrderProperties { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultMarginCallModel"/> class
         /// </summary>
         /// <param name="portfolio">The portfolio object to receive margin calls</param>
         /// <param name="defaultOrderProperties">The default order properties to be used in margin call orders</param>
-        public DefaultMarginCallModel(SecurityPortfolioManager portfolio, OrderProperties defaultOrderProperties)
+        public DefaultMarginCallModel(SecurityPortfolioManager portfolio, IOrderProperties defaultOrderProperties)
         {
             Portfolio = portfolio;
             DefaultOrderProperties = defaultOrderProperties;
@@ -96,7 +97,7 @@ namespace QuantConnect.Securities
                 quantity *= -1;
             }
 
-            return new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, quantity, 0, 0, security.LocalTime.ConvertToUtc(security.Exchange.TimeZone), "Margin Call", DefaultOrderProperties.Clone());
+            return new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, quantity, 0, 0, security.LocalTime.ConvertToUtc(security.Exchange.TimeZone), "Margin Call", DefaultOrderProperties?.Clone());
         }
 
         /// <summary>

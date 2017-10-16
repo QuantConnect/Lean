@@ -1474,16 +1474,23 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         private bool CanEmitFill(Order order, Execution execution)
         {
-            return order.Status != OrderStatus.Filled &&
+            if (order.Status == OrderStatus.Filled)
+                return false;
 
-                // non-FA orders
-                (!IsFinancialAdvisor ||
+            // non-FA orders
+            if (!IsFinancialAdvisor)
+                return true;
 
+            var orderProperties = order.Properties as InteractiveBrokersOrderProperties;
+            if (orderProperties == null)
+                return true;
+
+            return
                 // FA master orders for groups/profiles
-                string.IsNullOrWhiteSpace(order.Properties.FinancialAdvisorProperties.Account) && execution.AcctNumber == _account ||
+                string.IsNullOrWhiteSpace(orderProperties.Account) && execution.AcctNumber == _account ||
 
                 // FA orders for single managed accounts
-                !string.IsNullOrWhiteSpace(order.Properties.FinancialAdvisorProperties.Account) && execution.AcctNumber == order.Properties.FinancialAdvisorProperties.Account);
+                !string.IsNullOrWhiteSpace(orderProperties.Account) && execution.AcctNumber == orderProperties.Account;
         }
 
         /// <summary>
@@ -1575,27 +1582,31 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 // https://interactivebrokers.github.io/tws-api/financial_advisor.html#gsc.tab=0
 
-                if (!string.IsNullOrWhiteSpace(order.Properties.FinancialAdvisorProperties.Account))
+                var orderProperties = order.Properties as InteractiveBrokersOrderProperties;
+                if (orderProperties != null)
                 {
-                    // order for a single managed account
-                    ibOrder.Account = order.Properties.FinancialAdvisorProperties.Account;
-                }
-                else if (!string.IsNullOrWhiteSpace(order.Properties.FinancialAdvisorProperties.Profile))
-                {
-                    // order for an account profile
-                    ibOrder.FaProfile = order.Properties.FinancialAdvisorProperties.Profile;
-
-                }
-                else if (!string.IsNullOrWhiteSpace(order.Properties.FinancialAdvisorProperties.Group))
-                {
-                    // order for an account group
-                    ibOrder.FaGroup = order.Properties.FinancialAdvisorProperties.Group;
-                    ibOrder.FaMethod = order.Properties.FinancialAdvisorProperties.Method;
-
-                    if (ibOrder.FaMethod == "PctChange")
+                    if (!string.IsNullOrWhiteSpace(orderProperties.Account))
                     {
-                        ibOrder.FaPercentage = order.Properties.FinancialAdvisorProperties.Percentage.ToString();
-                        ibOrder.TotalQuantity = 0;
+                        // order for a single managed account
+                        ibOrder.Account = orderProperties.Account;
+                    }
+                    else if (!string.IsNullOrWhiteSpace(orderProperties.FaProfile))
+                    {
+                        // order for an account profile
+                        ibOrder.FaProfile = orderProperties.FaProfile;
+
+                    }
+                    else if (!string.IsNullOrWhiteSpace(orderProperties.FaGroup))
+                    {
+                        // order for an account group
+                        ibOrder.FaGroup = orderProperties.FaGroup;
+                        ibOrder.FaMethod = orderProperties.FaMethod;
+
+                        if (ibOrder.FaMethod == "PctChange")
+                        {
+                            ibOrder.FaPercentage = orderProperties.FaPercentage.ToString();
+                            ibOrder.TotalQuantity = 0;
+                        }
                     }
                 }
             }

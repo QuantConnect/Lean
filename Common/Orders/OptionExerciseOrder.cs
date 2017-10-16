@@ -14,6 +14,7 @@
 */
 
 using System;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 
@@ -40,7 +41,7 @@ namespace QuantConnect.Orders
         /// <param name="time">Time the order was placed</param>
         /// <param name="tag">User defined data tag for this order</param>
         /// <param name="properties">The order properties for this order</param>
-        public OptionExerciseOrder(Symbol symbol, decimal quantity, DateTime time, string tag = "", OrderProperties properties = null)
+        public OptionExerciseOrder(Symbol symbol, decimal quantity, DateTime time, string tag = "", IOrderProperties properties = null)
             : base(symbol, quantity, time, tag, properties)
         {
             Price = Symbol.ID.StrikePrice;
