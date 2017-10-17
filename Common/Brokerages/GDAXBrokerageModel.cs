@@ -45,7 +45,11 @@ namespace QuantConnect.Brokerages
         public GDAXBrokerageModel(AccountType accountType = AccountType.Margin)
             : base(accountType)
         {
-
+            if (accountType == AccountType.Margin)
+            {
+                new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, 
+                    "It is recommend to use a cash account. Margin trading is currently in pre-Alpha. Use at your own risk and please report any issues encountered.");
+            }
         }
 
         /// <summary>

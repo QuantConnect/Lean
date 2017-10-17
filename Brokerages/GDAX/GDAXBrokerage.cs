@@ -75,8 +75,7 @@ namespace QuantConnect.Brokerages.GDAX
 
                 if (raw == null || raw.id == null)
                 {
-                    Log.Error("GDAXBrokerage.PlaceOrder: Error parsing response from place order");
-
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (int)response.StatusCode, "GDAXBrokerage.PlaceOrder: Error parsing response from place order: " + response.Content));
                     return false;
                 }
 
@@ -105,14 +104,15 @@ namespace QuantConnect.Brokerages.GDAX
                     CachedOrderIDs.TryRemove(order.Id, out outOrder);
                 }
 
-                Log.Trace("GDAXBrokerage.PlaceOrder: Order completed successfully orderid:" + order.Id.ToString());
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, "GDAXBrokerage.PlaceOrder: Order completed successfully orderid:" + order.Id.ToString()));
                 return true;
 
             }
 
             OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Invalid });
-            Log.Trace("GDAXBrokerage.PlaceOrder: Order failed Order Id: " + order.Id + " timestamp:" + order.Time + " quantity: " + order.Quantity.ToString()
-                + " content:" + response.Content);
+
+            string message = $"GDAXBrokerage.PlaceOrder: Order failed Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity.ToString()} content: {response.Content}";
+            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, message));
             return false;
 
         }
@@ -134,7 +134,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// <returns></returns>
         public override bool CancelOrder(Orders.Order order)
         {
-            List<bool> success = new List<bool>();
+            var success = new List<bool>();
 
             foreach (var id in order.BrokerId)
             {
@@ -190,7 +190,8 @@ namespace QuantConnect.Brokerages.GDAX
                         }
                         else
                         {
-                            Log.Error("GDAXBrokerage.GetOpenOrders: Unsupported order type returned from brokerage" + item.Type);
+                            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (int)response.StatusCode, 
+                                "GDAXBrokerage.GetOpenOrders: Unsupported order type returned from brokerage: " + item.Type));
                             continue;
                         }
 
@@ -324,7 +325,7 @@ namespace QuantConnect.Brokerages.GDAX
         #endregion
 
         /// <summary>
-        /// Reteives the fee for a given order
+        /// Retreives the fee for a given order
         /// </summary>
         /// <param name="order"></param>
         /// <returns></returns>
