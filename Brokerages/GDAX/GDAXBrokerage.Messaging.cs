@@ -101,7 +101,7 @@ namespace QuantConnect.Brokerages.GDAX
                 else if (raw.Type == "error")
                 {
                     var error = JsonConvert.DeserializeObject<Messages.Error>(e.Message, JsonSettings);
-                    Log.Error("GDAXBrokerage.OnMessage: " + error.Message + " " + error.Reason);
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"GDAXBrokerage.OnMessage: {error.Message} {error.Reason}"));
                 }
                 else if (raw.Type == "done")
                 {
@@ -119,11 +119,11 @@ namespace QuantConnect.Brokerages.GDAX
                     return;
                 }
 
-                Log.Trace("GDAXWebsocketsBrokerage.OnMessage: " + e.Message);
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, ("GDAXWebsocketsBrokerage.OnMessage: Unexpected message format: " + e.Message)));
             }
             catch (Exception ex)
             {
-                Log.Error(ex, string.Format("Parsing wss message failed. Data: {0}", e.Message));
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"Parsing wss message failed. Data: {e.Message} Exception: {ex.ToString()}"));
                 throw;
             }
         }
@@ -183,7 +183,8 @@ namespace QuantConnect.Brokerages.GDAX
                 return;
             }
 
-            Log.Error("GDAXWebsocketsBrokerage.OrderDone: Encountered done message prior to match filling order brokerId:" + message.OrderId + ", orderId:" + cached.FirstOrDefault().Key);
+            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, 
+                $"GDAXWebsocketsBrokerage.OrderDone: Encountered done message prior to match filling order brokerId: {message.OrderId} orderId: {cached.FirstOrDefault().Key}"));
 
             var split = this.FillSplit[cached.First().Key];
 
@@ -332,7 +333,7 @@ namespace QuantConnect.Brokerages.GDAX
             WebSocket.Send(json);
 
 
-            Log.Trace("Subscribe: Sent subcribe.");
+            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, "GDAXBrokerage.Subscribe: Sent subcribe."));
 
         }
 
@@ -340,7 +341,6 @@ namespace QuantConnect.Brokerages.GDAX
         /// Poll for new tick to refresh conversion rate of non-USD denomination
         /// </summary>
         /// <param name="symbol"></param>
-        /// <param name="client"></param>
         public void PollTick(Symbol symbol)
         {
 
@@ -348,7 +348,7 @@ namespace QuantConnect.Brokerages.GDAX
             var token = _canceller.Token;
             var listener = Task.Factory.StartNew(() =>
             {
-                Log.Trace("PollLatestTick: " + "Started polling for ticks: " + symbol.Value.ToString());
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, $"GDAXBrokerage.PollLatestTick: started polling for ticks: {symbol.Value.ToString()}"));
                 while (true)
                 {
                     var rate = GetConversionRate(symbol.Value.Replace("USD", ""));
@@ -367,7 +367,7 @@ namespace QuantConnect.Brokerages.GDAX
                     Thread.Sleep(delay);
                     if (token.IsCancellationRequested) break;
                 }
-                Log.Trace("PollLatestTick: " + "Stopped polling for ticks: " + symbol.Value.ToString());
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, $"PollLatestTick: stopped polling for ticks: {symbol.Value.ToString()}"));
             }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 
@@ -376,7 +376,7 @@ namespace QuantConnect.Brokerages.GDAX
             var response = RateClient.Execute(new RestSharp.RestRequest(Method.GET));
             if (response.StatusCode != System.Net.HttpStatusCode.OK)
             {
-                Log.Error("GetConversionRate: error returned from conversion rate service.");
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (int)response.StatusCode, "GetConversionRate: error returned from conversion rate service."));
                 return 0;
             }
 

@@ -113,7 +113,7 @@ namespace QuantConnect.Brokerages.GDAX
                 return "stop";
             }
 
-            throw new Exception("GDAXBrokerage.ConvertOrderType: Unsupported order type:" + orderType.ToString());
+            throw new NotSupportedException("GDAXBrokerage.ConvertOrderType: Unsupported order type:" + orderType.ToString());
         }
 
         /// <summary>
