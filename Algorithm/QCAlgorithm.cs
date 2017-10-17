@@ -783,7 +783,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Option assignment event handler. On an option assignment event for short legs the resulting information is passed to this method.
+        /// Brokerage message event handler. This method is called for all types of brokerage messages.
         /// </summary>
         /// <param name="assignmentEvent">Option exercise event details containing details of the assignment</param>
         /// <remarks>This method can be called asynchronously and so should only be used by seasoned C# experts. Ensure you use proper locks on thread-unsafe objects</remarks>
@@ -793,7 +793,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Brokerage message event handler. This method is called for all types of brokerage messages.
+        /// Option assignment event handler. On an option assignment event for short legs the resulting information is passed to this method.
         /// </summary>
         public virtual void OnBrokerageMessage(BrokerageMessageEvent messageEvent)
         {
@@ -1639,7 +1639,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Added another method for logging if user guessed.
+        /// Method for creating an entry in the log to debug your algorithm.
         /// </summary>
         /// <param name="message">String message to log.</param>
         /// <seealso cref="Debug"/>
@@ -1651,7 +1651,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Send a string error message to the Console.
+        /// Method for creating an entry in the log to debug your algorithm.
         /// </summary>
         /// <param name="message">Message to display in errors grid</param>
         /// <seealso cref="Debug"/>
@@ -1664,7 +1664,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Send a string error message to the Console.
+        /// Method for creating an entry in the log to debug your algorithm.
         /// </summary>
         /// <param name="error">Exception object captured from a try catch loop</param>
         /// <seealso cref="Debug"/>

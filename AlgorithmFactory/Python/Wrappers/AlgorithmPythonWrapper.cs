@@ -539,7 +539,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
-        /// Wrapper for <see cref = "IAlgorithm.Error" /> in Python
+        /// Method for creating an entry in the log to debug your algorithm
         /// </summary>
         /// <param name="message"></param>
         public void Error(string message)
@@ -548,7 +548,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
-        /// Wrapper for <see cref = "IAlgorithm.GetChartUpdates" /> in Python
+        /// Method for creating an entry in the log to debug your algorithm
         /// </summary>
         /// <param name="clearChartData"></param>
         /// <returns></returns>
@@ -567,7 +567,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
-        /// Wrapper for <see cref = "IAlgorithm.GetParameter" /> in Python
+        /// Set live mode state of the algorithm run: Public setter for the algorithm property LiveMode.
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
@@ -577,7 +577,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
-        /// Wrapper for <see cref = "IAlgorithm.GetWarmupHistoryRequests" /> in Python
+        /// Sets the parameters from the dictionary
         /// </summary>
         /// <returns></returns>
         public IEnumerable<HistoryRequest> GetWarmupHistoryRequests()
@@ -608,7 +608,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
-        /// Wrapper for <see cref = "IAlgorithm.Log" /> in Python
+        /// Method takes a symbol passed as a string and sells asset or liquidates entire portfolio if no argument is passed.
         /// </summary>
         /// <param name="message"></param>
         public void Log(string message)
@@ -617,7 +617,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
-        /// Wrapper for <see cref = "IAlgorithm.OnBrokerageDisconnect" /> in Python
+        /// Method for creating an entry in the log to debug your algorithm
         /// </summary>
         public void OnBrokerageDisconnect()
         {
@@ -628,7 +628,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
-        /// Wrapper for <see cref = "IAlgorithm.OnBrokerageMessage" /> in Python
+        /// Method for creating an entry in the log to debug your algorithm
         /// </summary>
         /// <param name="messageEvent"></param>
         public void OnBrokerageMessage(BrokerageMessageEvent messageEvent)
@@ -640,7 +640,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
-        /// Wrapper for <see cref = "IAlgorithm.OnBrokerageReconnect" /> in Python
+        /// Brokerage disconnected event handler. This method is called when the brokerage connection is lost.
         /// </summary>
         public void OnBrokerageReconnect()
         {
@@ -651,7 +651,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
-        /// Wrapper for <see cref = "IAlgorithm.OnData" /> in Python
+        /// Update the internal algorithm time frontier.
         /// </summary>
         public void OnData(Slice slice)
         {
@@ -669,7 +669,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
-        /// Wrapper for <see cref = "IAlgorithm.OnEndOfAlgorithm" /> in Python
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
         public void OnEndOfAlgorithm()
         {
@@ -680,7 +680,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
-        /// Wrapper for <see cref = "IAlgorithm.OnEndOfDay()" /> in Python
+        /// Order fill event handler. On an order fill update the resulting information is passed to this method.
         /// </summary>
         public void OnEndOfDay()
         {
@@ -691,7 +691,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
-        /// Wrapper for <see cref = "IAlgorithm.OnEndOfDay(Symbol)" /> in Python
+        /// End of a trading day event handler. This method is called at the end of the algorithm day (or multiple times if trading multiple assets).
         /// </summary>
         /// <param name="symbol"></param>
         public void OnEndOfDay(Symbol symbol)
@@ -703,7 +703,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
-        /// Wrapper for <see cref = "IAlgorithm.OnMarginCall" /> in Python
+        /// End of algorithm run event handler. This method is called at the end of a backtest or live trading operation. Intended for closing out logs.
         /// </summary>
         /// <param name="requests"></param>
         public void OnMarginCall(List<SubmitOrderRequest> requests)
@@ -754,7 +754,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
-        /// Wrapper for <see cref = "IAlgorithm.OnMarginCallWarning" /> in Python
+        /// Margin call warning event handler. This method is called when Portfolio.MarginRemaining is under 5% of your Portfolio.TotalPortfolioValue.
         /// </summary>
         public void OnMarginCallWarning()
         {
@@ -765,7 +765,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
-        /// Wrapper for <see cref = "IAlgorithm.OnOrderEvent" /> in Python
+        /// End of a trading day event handler. This method is called at the end of the algorithm day (or multiple times if trading multiple assets).
         /// </summary>
         /// <param name="newEvent"></param>
         public void OnOrderEvent(OrderEvent newEvent)
@@ -777,7 +777,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
-        /// Wrapper for <see cref = "IAlgorithm.OnAssignmentOrderEvent" /> in Python
+        ///  Brokerage message event handler. This method is called for all types of brokerage messages.
         /// </summary>
         /// <param name="newEvent"></param>
         public void OnAssignmentOrderEvent(OrderEvent newEvent)
@@ -789,7 +789,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
-        /// Wrapper for <see cref = "IAlgorithm.OnSecuritiesChanged" /> in Python
+        /// Option assignment event handler. On an option assignment event for short legs the resulting information is passed to this method.
         /// </summary>
         /// <param name="changes"></param>
         public void OnSecuritiesChanged(SecurityChanges changes)
