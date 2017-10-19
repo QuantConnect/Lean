@@ -32,7 +32,7 @@ namespace QuantConnect.Tests.ToolBox
             _cfd = Symbol.Create("BCOUSD", SecurityType.Cfd, Market.Oanda);
             _equity = Symbol.Create("spy", SecurityType.Equity, Market.USA);
             _date = DateTime.Parse("3/16/2017 12:00:00 PM", CultureInfo.InvariantCulture);
-            _crypto = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Bitfinex);
+            _crypto = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX);
         }
 
         private List<Tick> GetTicks(Symbol sym)

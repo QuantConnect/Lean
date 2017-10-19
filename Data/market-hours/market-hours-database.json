@@ -357,7 +357,127 @@
         "12/24/2015": "13:00:00"
       }
     },
-
+    
+    
+    "Equity-au-[*]": {
+      "dataTimeZone": "Australia/Sydney",
+      "exchangeTimeZone": "Australia/Sydney",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "07:00:00",
+          "end": "10:00:00",
+          "state": "premarket"
+        },
+        {
+          "start": "10:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "16:00:00",
+          "end": "19:00:00",
+          "state": "postmarket"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "07:00:00",
+          "end": "10:00:00",
+          "state": "premarket"
+        },
+        {
+          "start": "10:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "16:00:00",
+          "end": "19:00:00",
+          "state": "postmarket"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "07:00:00",
+          "end": "10:00:00",
+          "state": "premarket"
+        },
+        {
+          "start": "10:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "16:00:00",
+          "end": "19:00:00",
+          "state": "postmarket"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "07:00:00",
+          "end": "10:00:00",
+          "state": "premarket"
+        },
+        {
+          "start": "10:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "16:00:00",
+          "end": "19:00:00",
+          "state": "postmarket"
+        }
+      ],
+      "friday": [
+        {
+          "start": "07:00:00",
+          "end": "10:00:00",
+          "state": "premarket"
+        },
+        {
+          "start": "10:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "16:00:00",
+          "end": "19:00:00",
+          "state": "postmarket"
+        }
+      ],
+      "saturday": [],
+      "holidays": [
+        "1/1/1998",
+        "1/1/1999",
+        "1/1/2001",
+        "1/1/2002",
+        "1/1/2003",
+        "1/1/2004",
+        "1/2/2006",
+        "1/1/2007",
+        "1/1/2008",
+        "1/1/2009",
+        "1/1/2010",
+        "1/1/2011",
+        "1/1/2013",
+        "1/1/2014",
+        "1/1/2015",
+        "1/1/2016",
+        "1/2/2017",
+        "1/1/2018",
+        "1/1/2019",
+        "1/1/2020",
+        "1/1/2021",
+        "1/1/2022"
+      ],
+      "earlyCloses": {
+      }
+    },
+    
+    
     "Future-usa-[*]": {
       "dataTimeZone": "America/Chicago",
       "exchangeTimeZone": "America/Chicago",
@@ -10227,7 +10347,7 @@
         "4/14/2017"
       ]
     },
-    "Crypto-bitfinex-[*]": {
+    "Crypto-gdax-[*]": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "UTC",
       "sunday": [

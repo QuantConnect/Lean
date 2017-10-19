@@ -103,7 +103,7 @@ namespace QuantConnect.Tests
 
         private static Symbol CreateCryptoSymbol(string symbol)
         {
-            return Symbol.Create(symbol, SecurityType.Crypto, Market.Bitfinex);
+            return Symbol.Create(symbol, SecurityType.Crypto, Market.GDAX);
         }
 
     }
