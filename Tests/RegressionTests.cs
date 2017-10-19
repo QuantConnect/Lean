@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -364,25 +364,25 @@ namespace QuantConnect.Tests
 
             var macdTrendAlgorithmStatistics = new Dictionary<string, string>
             {
-                {"Total Trades", "127"},
-                {"Average Win", "3.65%"},
-                {"Average Loss", "-2.38%"},
-                {"Compounding Annual Return", "2.295%"},
-                {"Drawdown", "31.900%"},
-                {"Expectancy", "0.209"},
-                {"Net Profit", "28.377%"},
-                {"Sharpe Ratio", "0.226"},
-                {"Loss Rate", "52%"},
-                {"Win Rate", "48%"},
-                {"Profit-Loss Ratio", "1.54"},
-                {"Alpha", "-0.006"},
-                {"Beta", "0.394"},
-                {"Annual Standard Deviation", "0.108"},
-                {"Annual Variance", "0.012"},
-                {"Information Ratio", "-0.392"},
-                {"Tracking Error", "0.135"},
-                {"Treynor Ratio", "0.062"},
-                {"Total Fees", "$604.31"},
+                {"Total Trades", "84"},
+                {"Average Win", "4.79%"},
+                {"Average Loss", "-4.17%"},
+                {"Compounding Annual Return", "2.967%"},
+                {"Drawdown", "34.800%"},
+                {"Expectancy", "0.228"},
+                {"Net Profit", "37.970%"},
+                {"Sharpe Ratio", "0.27"},
+                {"Loss Rate", "43%"},
+                {"Win Rate", "57%"},
+                {"Profit-Loss Ratio", "1.15"},
+                {"Alpha", "-0.002"},
+                {"Beta", "0.411"},
+                {"Annual Standard Deviation", "0.112"},
+                {"Annual Variance", "0.013"},
+                {"Information Ratio", "-0.352"},
+                {"Tracking Error", "0.134"},
+                {"Treynor Ratio", "0.073"},
+                {"Total Fees", "$420.57"},
             };
 
             var optionSplitRegressionAlgorithmStatistics = new Dictionary<string, string>
@@ -591,7 +591,7 @@ namespace QuantConnect.Tests
                 {"Treynor Ratio", "0"},
                 {"Total Fees", "$1.00"}
             };
-            
+
             var fractionalQuantityRegressionStatistics = new Dictionary<string, string>
             {
                 {"Total Trades", "6"},
