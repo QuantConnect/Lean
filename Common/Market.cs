@@ -121,7 +121,7 @@ namespace QuantConnect
         public const string GDAX = "gdax";
         
         /// <summary>
-        /// AU
+        /// Australia
         /// </summary>
         public const string AU = "au";
 
