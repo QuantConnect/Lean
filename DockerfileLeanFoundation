@@ -41,10 +41,10 @@ RUN \
 
 # Install IB Controller: Installs to ~/IBController
 RUN \
-    wget http://data.quantconnect.com/interactive/IBController-QuantConnect-3.2.0.zip && \
-    unzip IBController-QuantConnect-3.2.0.zip -d ~/IBController && \
+    wget http://data.quantconnect.com/interactive/IBController-QuantConnect-3.2.0.2.zip && \
+    unzip IBController-QuantConnect-3.2.0.2.zip -d ~/IBController && \
     chmod -R 777 ~/IBController && \
-    rm IBController-QuantConnect-3.2.0.zip
+    rm IBController-QuantConnect-3.2.0.2.zip
 
 # Mono C# for LEAN:
 # From https://github.com/mono/docker/blob/master/
