@@ -355,6 +355,7 @@ namespace QuantConnect.Data.Market
 
             // Currently QC only has BTCUSD Gdax data
             // QC does have Bitfinex data so hack it to point to Bitfinex
+            // TODO: once GDAX LTC, ETH data has been obtained, remove this logic
             if (config.Symbol.SecurityType == SecurityType.Crypto && config.Symbol.Value != "BTCUSD")
             {
                 Log.Trace($"Tick.Reader(): Setting source of data to Bitfinex instead of {config.Symbol.ID.Market} data.");
