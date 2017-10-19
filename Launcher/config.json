@@ -6,7 +6,7 @@
   // two predefined environments, 'backtesting' and 'live', feel free
   // to add more!
 
-  "environment": "backtesting", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
+  "environment": "live-interactive", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
 
   // algorithm class selector
   "algorithm-type-name": "BasicTemplateAlgorithm",
@@ -54,11 +54,11 @@
   "live-data-port": 8020,
 
   // interactive brokers configuration
-  "ib-account": "",
-  "ib-user-name": "",
-  "ib-password": "",
+  "ib-account": "DF825975",
+  "ib-user-name": "micha6860",
+  "ib-password": "ALDsrVW6aG",
   "ib-host": "127.0.0.1",
-  "ib-port": "4002",
+  "ib-port": "4001",
   "ib-agent-description": "Individual",
   "ib-use-tws": false,
   "ib-tws-dir": "C:\\Jts",
