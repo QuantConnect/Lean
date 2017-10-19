@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -115,7 +115,7 @@ namespace QuantConnect.Data.Market
         /// Cloner constructor for fill forward engine implementation. Clone the original tick into this new tick:
         /// </summary>
         /// <param name="original">Original tick we're cloning</param>
-        public Tick(Tick original) 
+        public Tick(Tick original)
         {
             Symbol = original.Symbol;
             Time = new DateTime(original.Time.Ticks);
@@ -152,7 +152,7 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Initializer for a last-trade equity tick with bid or ask prices. 
+        /// Initializer for a last-trade equity tick with bid or ask prices.
         /// </summary>
         /// <param name="time">Full date and time</param>
         /// <param name="symbol">Underlying equity security symbol</param>
@@ -332,7 +332,7 @@ namespace QuantConnect.Data.Market
                 // currently ticks don't come through the reader function
                 return new Tick();
             }
-            
+
             return new Tick(config, line, date);
         }
 
@@ -352,6 +352,16 @@ namespace QuantConnect.Data.Market
             }
 
             var source = LeanData.GenerateZipFilePath(Globals.DataFolder, config.Symbol, date, config.Resolution, config.TickType);
+
+            // Currently QC only has BTCUSD Gdax data
+            // QC does have Bitfinex data so hack it to point to Bitfinex
+            if (config.Symbol.SecurityType == SecurityType.Crypto && config.Symbol.Value != "BTCUSD")
+            {
+                Log.Trace($"Tick.Reader(): Setting source of data to Bitfinex instead of {config.Symbol.ID.Market} data.");
+                var bitfinexConfig = new SubscriptionDataConfig(config, symbol: Symbol.Create(config.Symbol.Value, SecurityType.Crypto, QuantConnect.Market.Bitfinex));
+                source = LeanData.GenerateZipFilePath(Globals.DataFolder, bitfinexConfig.Symbol, date, bitfinexConfig.Resolution, bitfinexConfig.TickType);
+            }
+
             if (config.SecurityType == SecurityType.Option ||
                 config.SecurityType == SecurityType.Future)
             {

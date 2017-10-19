@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,7 +22,7 @@ using QuantConnect.Util;
 namespace QuantConnect.Data.Market
 {
     /// <summary>
-    /// TradeBar class for second and minute resolution data: 
+    /// TradeBar class for second and minute resolution data:
     /// An OHLC implementation of the QuantConnect BaseData class with parameters for candles.
     /// </summary>
     public class TradeBar : BaseData, IBaseDataBar
@@ -98,7 +98,7 @@ namespace QuantConnect.Data.Market
         public override DateTime EndTime
         {
             get { return Time + Period; }
-            set { Period = value - Time; } 
+            set { Period = value - Time; }
         }
 
         /// <summary>
@@ -126,7 +126,7 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Cloner constructor for implementing fill forward. 
+        /// Cloner constructor for implementing fill forward.
         /// Return a new instance with the same values as this original.
         /// </summary>
         /// <param name="original">Original tradebar object we seek to clone</param>
@@ -179,7 +179,7 @@ namespace QuantConnect.Data.Market
         /// <param name="date">Date of this reader request</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>Enumerable iterator for returning each line of the required data.</returns>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode) 
+        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
             //Handle end of file:
             if (line == null)
@@ -511,6 +511,16 @@ namespace QuantConnect.Data.Market
             }
 
             var source = LeanData.GenerateZipFilePath(Globals.DataFolder, config.Symbol, date, config.Resolution, config.TickType);
+
+            // Currently QC only has BTCUSD Gdax data
+            // QC does have Bitfinex data so hack it to point to Bitfinex
+            if (config.Symbol.SecurityType == SecurityType.Crypto && config.Symbol.Value != "BTCUSD")
+            {
+                Log.Trace($"TradeBar.Reader(): Setting source of data to Bitfinex instead of {config.Symbol.ID.Market}.");
+                var bitfinexConfig = new SubscriptionDataConfig(config, symbol: Symbol.Create(config.Symbol.Value, SecurityType.Crypto, QuantConnect.Market.Bitfinex));
+                source = LeanData.GenerateZipFilePath(Globals.DataFolder, bitfinexConfig.Symbol, date, bitfinexConfig.Resolution, bitfinexConfig.TickType);
+            }
+
             if (config.SecurityType == SecurityType.Option ||
                 config.SecurityType == SecurityType.Future)
             {

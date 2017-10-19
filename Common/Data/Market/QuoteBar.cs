@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,7 @@ using QuantConnect.Util;
 namespace QuantConnect.Data.Market
 {
     /// <summary>
-    /// QuoteBar class for second and minute resolution data: 
+    /// QuoteBar class for second and minute resolution data:
     /// An OHLC implementation of the QuantConnect BaseData class with parameters for candles.
     /// </summary>
     public class QuoteBar : BaseData, IBaseDataBar
@@ -33,7 +33,7 @@ namespace QuantConnect.Data.Market
         /// Average bid size
         /// </summary>
         public decimal LastBidSize { get; set; }
-        
+
         /// <summary>
         /// Average ask size
         /// </summary>
@@ -246,11 +246,11 @@ namespace QuantConnect.Data.Market
             if (Ask == null && askPrice != 0) Ask = new Bar();
             if (Ask != null) Ask.Update(askPrice);
 
-            if (bidSize > 0) 
+            if (bidSize > 0)
             {
                 LastBidSize = bidSize;
             }
-            
+
             if (askSize > 0)
             {
                 LastAskSize = askSize;
@@ -297,7 +297,7 @@ namespace QuantConnect.Data.Market
 
                         case SecurityType.Future:
                             return ParseFuture(config, line, date);
-                        
+
                     }
                 }
 
@@ -306,7 +306,7 @@ namespace QuantConnect.Data.Market
             }
             catch (Exception err)
             {
-                Log.Error("QuoteBar.Reader(): Error parsing line: '{0}', Symbol: {1}, SecurityType: {2}, Resolution: {3}, Date: {4}, Message: {5}", 
+                Log.Error("QuoteBar.Reader(): Error parsing line: '{0}', Symbol: {1}, SecurityType: {2}, Resolution: {3}, Date: {4}, Message: {5}",
                     line, config.Symbol.Value, config.SecurityType, config.Resolution, date.ToString("yyyy-MM-dd"), err);
             }
 
@@ -447,7 +447,7 @@ namespace QuantConnect.Data.Market
         private QuoteBar ParseQuote(SubscriptionDataConfig config, DateTime date, string line, bool useScaleFactor)
         {
             var scaleFactor = useScaleFactor
-                              ? _scaleFactor 
+                              ? _scaleFactor
                               : 1;
 
             var quoteBar = new QuoteBar
@@ -523,6 +523,16 @@ namespace QuantConnect.Data.Market
             }
 
             var source = LeanData.GenerateZipFilePath(Globals.DataFolder, config.Symbol, date, config.Resolution, config.TickType);
+
+            // Currently QC only has BTCUSD Gdax data
+            // QC does have Bitfinex data so hack it to point to Bitfinex
+            if (config.Symbol.SecurityType == SecurityType.Crypto && config.Symbol.Value != "BTCUSD")
+            {
+                Log.Trace($"QuoteBar.Reader(): Setting source of data to Bitfinex instead of {config.Symbol.ID.Market} data.");
+                var bitfinexConfig = new SubscriptionDataConfig(config, symbol: Symbol.Create(config.Symbol.Value, SecurityType.Crypto, QuantConnect.Market.Bitfinex));
+                source = LeanData.GenerateZipFilePath(Globals.DataFolder, bitfinexConfig.Symbol, date, bitfinexConfig.Resolution, bitfinexConfig.TickType);
+            }
+
             if (config.SecurityType == SecurityType.Option ||
                 config.SecurityType == SecurityType.Future)
             {
