@@ -42,7 +42,9 @@ namespace QuantConnect.Algorithm.CSharp
             // Futures Resolution: Tick, Second, Minute
             // Options Resolution: Minute Only.
             AddEquity("BHP", Resolution.Daily);
-
+            
+            SetBenchmark(dt => 1m);
+            
             // There are other assets with similar methods. See "Selecting Options" etc for more details.
             // AddFuture, AddForex, AddCfd, AddOption
         }
