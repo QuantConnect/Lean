@@ -433,7 +433,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
-        /// Wrapper for <see cref = "IAlgorithm.TimeZone" /> in Python
+        /// Method that returns current date/time in UTC.
         /// </summary>
         public DateTimeZone TimeZone
         {
@@ -669,7 +669,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
-        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// Method that handles each new data point that is pumped into the algorithm.
         /// </summary>
         public void OnEndOfAlgorithm()
         {
@@ -691,7 +691,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
-        /// End of a trading day event handler. This method is called at the end of the algorithm day (or multiple times if trading multiple assets).
+        ///Method is an event handler that will perform a specified action at the end.(End of day is based on asset security is trading) 
         /// </summary>
         /// <param name="symbol"></param>
         public void OnEndOfDay(Symbol symbol)
@@ -754,7 +754,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
-        /// Margin call warning event handler. This method is called when Portfolio.MarginRemaining is under 5% of your Portfolio.TotalPortfolioValue.
+        /// Wrapper for <see cref = "IAlgorithm.OnEndOfDay(Symbol)" /> in Python
         /// </summary>
         public void OnMarginCallWarning()
         {
@@ -765,7 +765,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
-        /// End of a trading day event handler. This method is called at the end of the algorithm day (or multiple times if trading multiple assets).
+        /// This method sends a warning message to notify when Portfolio.MarginRemaining is under 5% of your Portfolio.TotalPortfolioValue
         /// </summary>
         /// <param name="newEvent"></param>
         public void OnOrderEvent(OrderEvent newEvent)
