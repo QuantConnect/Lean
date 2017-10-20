@@ -180,7 +180,8 @@ namespace QuantConnect.Data.Custom
             _previousContent = content;
 
             // clean old entries from memory
-            var oldEntries = _previous.Where(kvp => kvp.Value.DisplayDate.UtcDateTime < date.Date).ToList();
+            var clearingDate = date.Date.AddDays(-2);
+            var oldEntries = _previous.Where(kvp => kvp.Value.DisplayDate.UtcDateTime.Date < clearingDate).ToList();
             oldEntries.ForEach(oe => _previous.Remove(oe.Key));
 
             var dailyfxList = JsonConvert.DeserializeObject<List<DailyFx>>(content, _jsonSerializerSettings);
