@@ -3,15 +3,10 @@ using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using RestSharp;
-using SuperSocket.ClientEngine;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using WebSocket4Net;
 
 namespace QuantConnect.Brokerages
 {
@@ -24,7 +19,7 @@ namespace QuantConnect.Brokerages
 
         #region Declarations
         /// <summary>
-        /// The list of queued ticks 
+        /// The list of queued ticks
         /// </summary>
         public List<Tick> Ticks = new List<Tick>();
         /// <summary>
@@ -93,15 +88,15 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public abstract void OnMessage(object sender, MessageReceivedEventArgs e);
+        public abstract void OnMessage(object sender, WebSocketMessage e);
 
         /// <summary>
         /// Creates wss connection, monitors for disconnection and re-connects when necessary
         /// </summary>
         public override void Connect()
         {
-            WebSocket.OnMessage += OnMessage;
-            WebSocket.OnError += OnError;
+            WebSocket.Message += OnMessage;
+            WebSocket.Error += OnError;
 
             WebSocket.Connect();
             Wait(_connectionTimeout, () => WebSocket.IsOpen);
@@ -189,7 +184,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void OnError(object sender, ErrorEventArgs e)
+        public void OnError(object sender, WebSocketError e)
         {
             Log.Debug(e.Exception.ToString());
         }
@@ -201,7 +196,7 @@ namespace QuantConnect.Brokerages
         {
             var subscribed = GetSubscribed();
 
-            WebSocket.OnError -= this.OnError;
+            WebSocket.Error -= this.OnError;
             try
             {
                 //try to clean up state
@@ -218,7 +213,7 @@ namespace QuantConnect.Brokerages
             }
             finally
             {
-                WebSocket.OnError += this.OnError;
+                WebSocket.Error += this.OnError;
                 this.Subscribe(null, subscribed);
             }
         }

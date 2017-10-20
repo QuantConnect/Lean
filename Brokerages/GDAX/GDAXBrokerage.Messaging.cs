@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,21 +16,15 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
-using QuantConnect.Logging;
 using QuantConnect.Orders;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using QuantConnect.Securities;
-using QuantConnect.Data;
 using QuantConnect.Packets;
 using System.Threading;
 using RestSharp;
-using WebSocket4Net;
 using System.Text.RegularExpressions;
 
 namespace QuantConnect.Brokerages.GDAX
@@ -81,7 +75,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public override void OnMessage(object sender, MessageReceivedEventArgs e)
+        public override void OnMessage(object sender, WebSocketMessage e)
         {
             try
             {
@@ -115,7 +109,7 @@ namespace QuantConnect.Brokerages.GDAX
                 }
                 else if (raw.Type == "open" || raw.Type == "change" || raw.Type == "received" || raw.Type == "subscriptions" || raw.Type == "last_match")
                 {
-                    //known messages we don't need to handle or log 
+                    //known messages we don't need to handle or log
                     return;
                 }
 
@@ -183,7 +177,7 @@ namespace QuantConnect.Brokerages.GDAX
                 return;
             }
 
-            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, 
+            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1,
                 $"GDAXWebsocketsBrokerage.OrderDone: Encountered done message prior to match filling order brokerId: {message.OrderId} orderId: {cached.FirstOrDefault().Key}"));
 
             var split = this.FillSplit[cached.First().Key];
@@ -237,7 +231,7 @@ namespace QuantConnect.Brokerages.GDAX
                     Time = DateTime.UtcNow,
                     Symbol = symbol,
                     TickType = TickType.Quote,
-                    //todo: tick volume                          
+                    //todo: tick volume
                 };
 
                 this.Ticks.Add(updating);
@@ -295,7 +289,7 @@ namespace QuantConnect.Brokerages.GDAX
                             Time = DateTime.UtcNow,
                             Symbol = item,
                             TickType = TickType.Quote
-                            //todo: tick volume                          
+                            //todo: tick volume
                         };
 
                         this.Ticks.Add(updating);
