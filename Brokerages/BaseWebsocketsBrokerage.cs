@@ -197,6 +197,13 @@ namespace QuantConnect.Brokerages
         /// </summary>
         protected virtual void Reconnect()
         {
+            if (WebSocket.IsOpen)
+            {
+                // connection is still good
+                LastHeartbeatUtcTime = DateTime.UtcNow;
+                return;
+            }
+
             Log.Trace($"BaseWebsocketsBrokerage(): Reconnecting... IsConnected: {IsConnected}");
             var subscribed = GetSubscribed();
 
