@@ -97,6 +97,7 @@ namespace QuantConnect.Brokerages
         {
             WebSocket.Message += OnMessage;
             WebSocket.Error += OnError;
+            WebSocket.Open += delegate { Log.Trace($"BaseWebSocketsBrokerage.Connect(): Connection Opened. IsConnected: {IsConnected}"); };
 
             Log.Trace("BaseWebSocketsBrokerage.Connect(): Connecting...");
             WebSocket.Connect();
