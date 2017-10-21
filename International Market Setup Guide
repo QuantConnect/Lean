@@ -1,0 +1,11 @@
+#Work in Progress
+
+This is a walkthrough that demonstrates how to add support for trading Austalian equities to the Lean project. These are the same steps I followed when configuring this repository to work on Australian equities.
+
+Our goal is to run Lean to trade Australian equities within the Australian equity market. To do this we must do the following:
+
+1) Set up an Australian equity Market -- add to Market.cs, set market hours/holidays, etc
+
+2) Set the currency of Lean to the currency of the base currency of the equities you wish to trade
+
+3) Pipe in data; different for backtesting and live.
