@@ -69,6 +69,7 @@ namespace QuantConnect.Brokerages.GDAX
         public GDAXBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm)
             : base(wssUrl, websocket, restClient, apiKey, apiSecret, Market.GDAX, "GDAX")
         {
+            throw new Exception("GDAX currently under maintenance and will be back online Monday 23rd October 2017");
             FillSplit = new ConcurrentDictionary<long, GDAXFill>();
             _passPhrase = passPhrase;
             _wssUrl = wssUrl;
