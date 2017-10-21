@@ -93,6 +93,7 @@ namespace QuantConnect.Brokerages.GDAX
 
                 if (order.Type == OrderType.Market)
                 {
+                    Logging.Log.Trace("GDAXBrokerage.PlaceOrder(Market): Response: " + response.Content);
                     OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, (decimal) raw.FillFees, "GDAX Order Event")
                     {
                         Status = OrderStatus.Filled,
