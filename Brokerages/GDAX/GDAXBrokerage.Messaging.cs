@@ -26,6 +26,7 @@ using QuantConnect.Packets;
 using System.Threading;
 using RestSharp;
 using System.Text.RegularExpressions;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Brokerages.GDAX
 {
@@ -128,9 +129,11 @@ namespace QuantConnect.Brokerages.GDAX
             var cached = CachedOrderIDs.Where(o => o.Value.BrokerId.Contains(message.MakerOrderId) || o.Value.BrokerId.Contains(message.TakerOrderId));
 
             var symbol = ConvertProductId(message.ProductId);
+            Log.Trace($"GDAXBrokerage.OrderMatch(): Match event for {message.ProductId} Data:{Environment.NewLine}{data}");
 
             if (!cached.Any())
             {
+                Log.Trace("GDAXBrokerage.Messaging.OrderMatch(): No match found");
                 return;
             }
 
@@ -161,11 +164,13 @@ namespace QuantConnect.Brokerages.GDAX
 
         private void OrderDone(string data)
         {
+            Log.Trace($"GDAXBrokerage.Messaging.OrderDone(): Order completed with data {data}");
             var message = JsonConvert.DeserializeObject<Messages.Done>(data, JsonSettings);
 
             //if we don't exit now, will result in fill message
             if (message.Reason == "canceled" || message.RemainingSize > 0)
             {
+                Log.Trace($"GDAXBrokerage.Messaging.OrderDone(): Order cancelled. Remaining {message.RemainingSize}");
                 return;
             }
 
@@ -174,6 +179,7 @@ namespace QuantConnect.Brokerages.GDAX
 
             if (!cached.Any() || cached.Single().Value.Status == OrderStatus.Filled)
             {
+                Log.Trace($"GDAXBrokerage.Messaging.OrderDone(): Order could not locate order in cache with order id {message.OrderId}");
                 return;
             }
 
