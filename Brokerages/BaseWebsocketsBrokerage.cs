@@ -150,11 +150,12 @@ namespace QuantConnect.Brokerages
                                         {
                                             Reconnect();
                                         }
-                                        catch (Exception)
+                                        catch (Exception err)
                                         {
                                             // double the interval between attempts (capped to 1 minute)
                                             nextReconnectionAttemptSeconds = Math.Min(nextReconnectionAttemptSeconds * 2, 60);
                                             nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
+                                            Log.Error(err);
                                         }
                                     }
                                 }
