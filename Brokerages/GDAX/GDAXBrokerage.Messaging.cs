@@ -86,15 +86,18 @@ namespace QuantConnect.Brokerages.GDAX
 
                 if (raw.Type == "heartbeat")
                 {
+                    Log.Trace("GDAXBrokerage.OnMessage.heartbeat()");
                     return;
                 }
                 else if (raw.Type == "ticker")
                 {
+                    //Log.Trace($"GDAXBrokerage.OnMessage.ticker(): Data: {Environment.NewLine}{e.Message}");
                     EmitTick(e.Message);
                     return;
                 }
                 else if (raw.Type == "error")
                 {
+                    Log.Error($"GDAXBrokerage.OnMessage.error(): Data: {Environment.NewLine}{e.Message}");
                     var error = JsonConvert.DeserializeObject<Messages.Error>(e.Message, JsonSettings);
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"GDAXBrokerage.OnMessage: {error.Message} {error.Reason}"));
                 }
