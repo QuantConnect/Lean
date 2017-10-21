@@ -65,15 +65,15 @@ namespace QuantConnect.Brokerages.GDAX
 
             if (response.StatusCode == System.Net.HttpStatusCode.OK && response.Content != null)
             {
-                dynamic raw = JsonConvert.DeserializeObject<dynamic>(response.Content);
+                var raw = JsonConvert.DeserializeObject<Messages.Order>(response.Content);
 
-                if (raw == null || raw.id == null)
+                if (raw == null || raw.Id == null)
                 {
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (int)response.StatusCode, "GDAXBrokerage.PlaceOrder: Error parsing response from place order: " + response.Content));
                     return false;
                 }
 
-                string brokerId = raw.id;
+                var brokerId = raw.Id;
                 if (CachedOrderIDs.ContainsKey(order.Id))
                 {
                     CachedOrderIDs[order.Id].BrokerId.Add(brokerId);
@@ -93,7 +93,12 @@ namespace QuantConnect.Brokerages.GDAX
 
                 if (order.Type == OrderType.Market)
                 {
-                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, (decimal)raw.fill_fees, "GDAX Order Event") { Status = OrderStatus.Filled });
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, (decimal) raw.FillFees, "GDAX Order Event")
+                    {
+                        Status = OrderStatus.Filled,
+                        FillPrice = raw.FilledSize,
+                        FillQuantity = raw.ExecutedValue / raw.FilledSize
+                    });
                     Orders.Order outOrder = null;
                     CachedOrderIDs.TryRemove(order.Id, out outOrder);
                 }
