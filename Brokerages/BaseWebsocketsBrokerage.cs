@@ -118,6 +118,10 @@ namespace QuantConnect.Brokerages
                 {
                     while (!_cancellationTokenSource.IsCancellationRequested)
                     {
+                        if (WebSocket.IsOpen)
+                        {
+                            LastHeartbeatUtcTime = DateTime.UtcNow;
+                        }
 
                         TimeSpan elapsed;
                         lock (_lockerConnectionMonitor)
