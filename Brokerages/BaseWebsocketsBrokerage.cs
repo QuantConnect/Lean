@@ -127,10 +127,19 @@ namespace QuantConnect.Brokerages
 
                         if (!_connectionLost && elapsed > TimeSpan.FromSeconds(_heartbeatTimeout))
                         {
-                            _connectionLost = true;
-                            nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
 
-                            OnMessage(BrokerageMessageEvent.Disconnected("Connection with server lost. This could be because of internet connectivity issues."));
+                            if (WebSocket.IsOpen)
+                            {
+                                // connection is still good
+                                LastHeartbeatUtcTime = DateTime.UtcNow;
+                            }
+                            else
+                            {
+                                _connectionLost = true;
+                                nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
+
+                                OnMessage(BrokerageMessageEvent.Disconnected("Connection with server lost. This could be because of internet connectivity issues."));
+                            }
                         }
                         else if (_connectionLost)
                         {
