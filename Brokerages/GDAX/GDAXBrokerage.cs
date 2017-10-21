@@ -264,6 +264,10 @@ namespace QuantConnect.Brokerages.GDAX
                 }
 
             }
+            else
+            {
+                Logging.Log.Error("GDAXBrokerage.GetAccountHoldings(): Null response.");
+            }
             return list;
         }
 
