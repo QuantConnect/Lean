@@ -24,7 +24,6 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class WebSocketWrapper : IWebSocket
     {
-        private Timer timer;
         private WebSocket wrapped;
         private string _url;
 
@@ -41,8 +40,6 @@ namespace QuantConnect.Brokerages
 
             _url = url;
             wrapped = new WebSocket(url);
-            timer = new Timer(_ => wrapped.Ping());
-            timer.Change(TimeSpan.FromSeconds(15), TimeSpan.FromSeconds(15));
 
             wrapped.OnOpen += (sender, args) => OnOpen();
             wrapped.OnMessage += (sender, args) => OnMessage(new WebSocketMessage(args.Data));
