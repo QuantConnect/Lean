@@ -14,7 +14,7 @@ Lean Engine is an open-source fully managed C# algorithmic trading engine built 
 
 ## System Overview ##
 
-![alt tag](Documentation/2-Overview-Detailed.jpg)
+![alt tag](Documentation/2-Overview-Detailed-New.png)
 
 Lean outsourced key infrastructure management to plugins. The most important plugins are:
 
