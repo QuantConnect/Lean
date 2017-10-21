@@ -98,6 +98,7 @@ namespace QuantConnect.Brokerages
             WebSocket.Message += OnMessage;
             WebSocket.Error += OnError;
 
+            Log.Trace("BaseWebSocketsBrokerage.Connect(): Connecting...");
             WebSocket.Connect();
             Wait(_connectionTimeout, () => WebSocket.IsOpen);
 
@@ -186,7 +187,7 @@ namespace QuantConnect.Brokerages
         /// <param name="e"></param>
         public void OnError(object sender, WebSocketError e)
         {
-            Log.Debug(e.Exception.ToString());
+            Log.Error(e.Exception, "WebSocketsBrokerage Web Exception:  ");
         }
 
         /// <summary>
@@ -194,6 +195,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         protected virtual void Reconnect()
         {
+            Log.Trace($"BaseWebsocketsBrokerage(): Reconnecting... IsConnected: {IsConnected}");
             var subscribed = GetSubscribed();
 
             WebSocket.Error -= this.OnError;
