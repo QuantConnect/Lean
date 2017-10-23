@@ -65,7 +65,7 @@ namespace QuantConnect.Algorithm.CSharp
             else if (Portfolio["BTCUSD"].Quantity == quantity + 0.09m)
             {
                 //should fail
-                Order("BTCUSD", 0.001);
+                Order("BTCUSD", 0.000000001);
 
                 SetHoldings("BTCUSD", -2.0m);
                 SetHoldings("BTCUSD", 2.0m);
