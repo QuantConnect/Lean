@@ -109,6 +109,24 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
+            if (security.Type != SecurityType.Crypto)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    "This model does not support " + security.Type + " security type."
+                );
+
+                return false;
+            }
+
+            if (order.Type != OrderType.Limit && order.Type != OrderType.Market && order.Type != OrderType.StopMarket)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    "This model does not support " + order.Type + " order type."
+                );
+
+                return false;
+            }
+
             return base.CanSubmitOrder(security, order, out message);
         }
 

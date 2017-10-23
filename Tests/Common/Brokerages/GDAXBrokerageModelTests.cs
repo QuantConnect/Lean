@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -44,9 +45,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         {
             BrokerageMessageEvent message;
             var order = new Mock<QuantConnect.Orders.Order>();
-            // Order quantity must be greater than 0.01
-            // Order brokerageId is under test
-            order.Object.Quantity = 0.01m;
+            order.Object.Quantity = 10.0m;
 
             if (isUpdate)
             {
@@ -66,6 +65,36 @@ namespace QuantConnect.Tests.Common.Brokerages
             order.Object.Quantity = orderQuantity;
 
             Assert.AreEqual(isValidOrderQuantity, _unit.CanSubmitOrder(GDAXTestsHelpers.GetSecurity(), order.Object, out message));
+        }
+
+        [TestCase(SecurityType.Crypto, true)]
+        [TestCase(SecurityType.Option, false)]
+        [TestCase(SecurityType.Cfd, false)]
+        [TestCase(SecurityType.Forex, false)]
+        [TestCase(SecurityType.Future, false)]
+        [TestCase(SecurityType.Equity, false)]
+        public void CanOnlySubmitCryptoOrders(SecurityType securityType, bool isValidSecurityType)
+        {
+            BrokerageMessageEvent message;
+            var order = new Mock<QuantConnect.Orders.Order>();
+            order.Object.Quantity = 10.0m;
+
+            Assert.AreEqual(isValidSecurityType, _unit.CanSubmitOrder(GDAXTestsHelpers.GetSecurity(1.0m, securityType), order.Object, out message));
+        }
+
+        [TestCase(OrderType.Market, true)]
+        [TestCase(OrderType.Limit, true)]
+        [TestCase(OrderType.MarketOnClose, false)]
+        [TestCase(OrderType.MarketOnOpen, false)]
+        [TestCase(OrderType.StopLimit, false)]
+        [TestCase(OrderType.StopMarket, true)]
+        public void CanSubmit_CertainOrderTypes(OrderType orderType, bool isValidOrderType)
+        {
+            BrokerageMessageEvent message;
+            var security = GDAXTestsHelpers.GetSecurity();
+            var order = Order.CreateOrder(new SubmitOrderRequest(orderType, SecurityType.Crypto, security.Symbol, 10.0m, 1.0m, 10.0m, DateTime.Now, "Test Order"));
+
+            Assert.AreEqual(isValidOrderType, _unit.CanSubmitOrder(security, order, out message));
         }
     }
 }
