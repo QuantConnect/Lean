@@ -102,6 +102,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         protected virtual void OnMessage(WebSocketMessage e)
         {
+            Logging.Log.Trace("WebSocketWrapper.OnMessage(): " + e.Message);
             Message?.Invoke(this, e);
         }
 
@@ -111,6 +112,7 @@ namespace QuantConnect.Brokerages
         /// <param name="e"></param>
         protected virtual void OnError(WebSocketError e)
         {
+            Logging.Log.Error(e.Exception, "WebSocketWrapper.OnError(): " + e.Message);
             Error?.Invoke(this, e);
         }
 
@@ -119,6 +121,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         protected virtual void OnOpen()
         {
+            Logging.Log.Trace($"WebSocketWrapper.OnOpen(): Connection opened({IsOpen}: {_url}");
             Open?.Invoke(this, EventArgs.Empty);
         }
     }
