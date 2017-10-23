@@ -31,7 +31,7 @@ using System.Threading;
 namespace QuantConnect.Tests.Brokerages.GDAX
 {
 
-    [TestFixture()]
+    [TestFixture, Ignore("These tests are ignored while gdax is under maintenance. REMOVE [Ignore] WHEN GDAX IS READY FOR PRODUCTION")]
     public class GDAXBrokerageTests
     {
 
