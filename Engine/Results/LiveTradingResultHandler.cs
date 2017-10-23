@@ -330,7 +330,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                     // since we're sending multiple packets, let's do it async and forget about it
                     // chart data can get big so let's break them up into groups
-                    var splitPackets = SplitPackets(deltaCharts, deltaOrders, holdings, deltaStatistics, runtimeStatistics, serverStatistics);
+                    var splitPackets = SplitPackets(deltaCharts, deltaOrders, holdings, _algorithm.Portfolio.CashBook, deltaStatistics, runtimeStatistics, serverStatistics);
 
                     foreach (var liveResultPacket in splitPackets)
                     {
@@ -439,6 +439,7 @@ namespace QuantConnect.Lean.Engine.Results
         private IEnumerable<LiveResultPacket> SplitPackets(Dictionary<string, Chart> deltaCharts,
             Dictionary<int, Order> deltaOrders,
             Dictionary<string, Holding> holdings,
+            CashBook cashbook,
             Dictionary<string, string> deltaStatistics,
             Dictionary<string, string> runtimeStatistics,
             Dictionary<string, string> serverStatistics)
@@ -483,7 +484,7 @@ namespace QuantConnect.Lean.Engine.Results
             var packets = new[]
             {
                 new LiveResultPacket(_job, new LiveResult {Orders = deltaOrders}),
-                new LiveResultPacket(_job, new LiveResult {Holdings = holdings}),
+                new LiveResultPacket(_job, new LiveResult {Holdings = holdings, Cash = cashbook}),
                 new LiveResultPacket(_job, new LiveResult
                 {
                     Statistics = deltaStatistics,
