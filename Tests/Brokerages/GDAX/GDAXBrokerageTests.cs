@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -196,31 +196,14 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             };
             SetupResponse(JsonConvert.SerializeObject(response), httpStatus);
 
-            bool? hasFilled = null;
-
-            if (orderType == OrderType.Market && httpStatus == HttpStatusCode.OK)
-            {
-                hasFilled = false;
-            }
-
-            ManualResetEvent raised = new ManualResetEvent(false);
             _unit.OrderStatusChanged += (s, e) =>
             {
-                if (orderType == OrderType.Market && e.Status == OrderStatus.Filled)
+                Assert.AreEqual(status, e.Status);
+                if (orderId != null)
                 {
-                    hasFilled = true;
-                    Assert.AreEqual(0.11, e.OrderFee);
-                }
-                else
-                {
-                    Assert.AreEqual(status, e.Status);
-                    if (orderId != null)
-                    {
-                        Assert.AreEqual("BTCUSD", e.Symbol.Value);
-                        Assert.That((quantity > 0 && e.Direction == Orders.OrderDirection.Buy) || (quantity < 0 && e.Direction == Orders.OrderDirection.Sell));
-                        Assert.IsTrue(orderId == null || _unit.CachedOrderIDs.SelectMany(c => c.Value.BrokerId.Where(b => b == _brokerId)).Any());
-                    }
-                    raised.Set();
+                    Assert.AreEqual("BTCUSD", e.Symbol.Value);
+                    Assert.That((quantity > 0 && e.Direction == Orders.OrderDirection.Buy) || (quantity < 0 && e.Direction == Orders.OrderDirection.Sell));
+                    Assert.IsTrue(orderId == null || _unit.CachedOrderIDs.SelectMany(c => c.Value.BrokerId.Where(b => b == _brokerId)).Any());
                 }
             };
 
@@ -241,8 +224,6 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             bool actual = _unit.PlaceOrder(order);
 
             Assert.IsTrue(actual || (orderId == null && !actual));
-            Assert.IsTrue(hasFilled ?? true);
-            Assert.IsTrue(raised.WaitOne(1000));
         }
 
         [Test()]

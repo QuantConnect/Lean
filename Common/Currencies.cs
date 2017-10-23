@@ -270,6 +270,7 @@ namespace QuantConnect
             {"HKD", "$"},
             {"SGD", "$"},
             {"XAG", "Ag"},
+            {"XAU", "Au"},
             {"CNH", "¥"},
             {"CNY", "¥"},
             {"CZK", "Kč"},
@@ -284,7 +285,11 @@ namespace QuantConnect
             {"THB", "฿"},
             {"TRY", "₺"},
             {"TWD", "NT$"},
-            {"ZAR", "R"}
+            {"ZAR", "R"},
+
+            {"BTC", "฿"},
+            {"LTC", "Ł"},
+            {"ETH", "Ether"}
         };
 
         /// <summary>
