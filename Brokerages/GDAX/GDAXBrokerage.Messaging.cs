@@ -40,11 +40,13 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         public ConcurrentDictionary<long, GDAXFill> FillSplit { get; set; }
         private string _passPhrase;
-        private string _wssUrl;
         private const string _symbolMatching = "ETH|LTC|BTC";
         private IAlgorithm _algorithm;
         private static string[] _channelNames = new string[] { "heartbeat", "ticker", "user", "matches" };
         private CancellationTokenSource _canceller = new CancellationTokenSource();
+        private ConcurrentQueue<WebSocketMessage> _messageBuffer = new ConcurrentQueue<WebSocketMessage>();
+        private volatile bool _streamLocked;
+
         /// <summary>
         /// Rest client used to call missing conversion rates
         /// </summary>
@@ -64,12 +66,36 @@ namespace QuantConnect.Brokerages.GDAX
         public GDAXBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm)
             : base(wssUrl, websocket, restClient, apiKey, apiSecret, Market.GDAX, "GDAX")
         {
-            throw new Exception("GDAX currently under maintenance and will be back online Monday 23rd October 2017");
             FillSplit = new ConcurrentDictionary<long, GDAXFill>();
             _passPhrase = passPhrase;
-            _wssUrl = wssUrl;
             _algorithm = algorithm;
             RateClient = new RestClient("http://api.fixer.io/latest?base=usd");
+        }
+
+        /// <summary>
+        /// Lock the streaming processing while we're sending orders as sometimes they fill before the REST call returns.
+        /// </summary>
+        public void LockStream()
+        {
+            Log.Trace("GDAXBrokerage.Messaging.LockStream(): Locking Stream");
+            _streamLocked = true;
+        }
+
+        /// <summary>
+        /// Unlock stream and process all backed up messages.
+        /// </summary>
+        public void UnlockStream()
+        {
+            Log.Trace("GDAXBrokerage.Messaging.UnlockStream(): Processing Backlog...");
+            while (_messageBuffer.Any())
+            {
+                WebSocketMessage e;
+                _messageBuffer.TryDequeue(out e);
+                OnMessageImpl(this, e);
+            }
+            Log.Trace("GDAXBrokerage.Messaging.UnlockStream(): Stream Unlocked.");
+            // Once dequeued in order; unlock stream.
+            _streamLocked = false;
         }
 
         /// <summary>
@@ -78,6 +104,31 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="sender"></param>
         /// <param name="e"></param>
         public override void OnMessage(object sender, WebSocketMessage e)
+        {
+            // Verify if we're allowed to handle the streaming packet yet; while we're placing an order we delay the
+            // stream processing a touch.
+            try
+            {
+                if (_streamLocked)
+                {
+                    _messageBuffer.Enqueue(e);
+                    return;
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+
+            OnMessageImpl(sender, e);
+        }
+
+        /// <summary>
+        /// Implementation of the OnMessage event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OnMessageImpl(object sender, WebSocketMessage e)
         {
             try
             {
@@ -92,7 +143,6 @@ namespace QuantConnect.Brokerages.GDAX
                 }
                 else if (raw.Type == "ticker")
                 {
-                    //Log.Trace($"GDAXBrokerage.OnMessage.ticker(): Data: {Environment.NewLine}{e.Message}");
                     EmitTick(e.Message);
                     return;
                 }
@@ -141,20 +191,41 @@ namespace QuantConnect.Brokerages.GDAX
                 return;
             }
 
-            var split = this.FillSplit[cached.First().Key];
+            var orderId = cached.First().Key;
+            var orderObj = cached.First().Value;
+
+            if (!FillSplit.ContainsKey(orderId))
+            {
+                FillSplit[orderId] = new GDAXFill(orderObj);
+            }
+
+            var split = this.FillSplit[orderId];
             split.Add(message);
 
             //is this the total order at once? Is this the last split fill?
             var status = Math.Abs(message.Size) == Math.Abs(cached.Single().Value.Quantity) || Math.Abs(split.OrderQuantity) == Math.Abs(split.TotalQuantity())
                 ? OrderStatus.Filled : OrderStatus.PartiallyFilled;
 
+            OrderDirection direction;
+            // Messages are always from the perspective of the market maker. Flip it in cases of a market order.
+            if (orderObj.Type == OrderType.Market)
+            {
+                direction = message.Side == "sell" ? OrderDirection.Buy : OrderDirection.Sell;
+            }
+            else
+            {
+                direction = message.Side == "sell" ? OrderDirection.Sell : OrderDirection.Buy;
+            }
+
             var orderEvent = new OrderEvent
             (
                 cached.First().Key, symbol, message.Time, status,
-                message.Side == "sell" ? OrderDirection.Sell : OrderDirection.Buy,
+                direction,
                 message.Price, message.Side == "sell" ? -message.Size : message.Size,
                 GetFee(cached.First().Value), "GDAX Match Event"
             );
+
+
 
             //if we're filled we won't wait for done event
             if (orderEvent.Status == OrderStatus.Filled)

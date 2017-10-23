@@ -43,6 +43,8 @@ namespace QuantConnect.Brokerages.GDAX
         /// <returns></returns>
         public override bool PlaceOrder(Orders.Order order)
         {
+            LockStream();
+
             var req = new RestRequest("/orders", Method.POST);
 
             dynamic payload = new ExpandoObject();
@@ -70,6 +72,7 @@ namespace QuantConnect.Brokerages.GDAX
                 if (raw == null || raw.Id == null)
                 {
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (int)response.StatusCode, "GDAXBrokerage.PlaceOrder: Error parsing response from place order: " + response.Content));
+                    UnlockStream();
                     return false;
                 }
 
@@ -84,37 +87,23 @@ namespace QuantConnect.Brokerages.GDAX
                     CachedOrderIDs.TryAdd(order.Id, order);
                 }
 
-                if (order.Type != OrderType.Market)
-                {
-                    FillSplit.TryAdd(order.Id, new GDAXFill(order));
-                }
+                // Add fill splits in all cases; we'll need to handle market fills too.
+                FillSplit.TryAdd(order.Id, new GDAXFill(order));
 
+                // Generate submitted event
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Submitted });
 
-                if (order.Type == OrderType.Market)
-                {
-                    Logging.Log.Trace("GDAXBrokerage.PlaceOrder(Market): Response: " + response.Content);
-                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, (decimal) raw.FillFees, "GDAX Order Event")
-                    {
-                        Status = OrderStatus.Filled,
-                        FillPrice = raw.FilledSize,
-                        FillQuantity = raw.ExecutedValue / raw.FilledSize
-                    });
-                    Orders.Order outOrder = null;
-                    CachedOrderIDs.TryRemove(order.Id, out outOrder);
-                }
-
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, "GDAXBrokerage.PlaceOrder: Order completed successfully orderid:" + order.Id.ToString()));
+                UnlockStream();
                 return true;
-
             }
 
             OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Invalid });
 
-            string message = $"GDAXBrokerage.PlaceOrder: Order failed Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity.ToString()} content: {response.Content}";
+            var message = $"GDAXBrokerage.PlaceOrder: Order failed Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {response.Content}";
             OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, message));
+            UnlockStream();
             return false;
-
         }
 
         /// <summary>
@@ -141,7 +130,6 @@ namespace QuantConnect.Brokerages.GDAX
                 var req = new RestRequest("/orders/" + id, Method.DELETE);
                 GetAuthenticationToken(req);
                 var response = RestClient.Execute(req);
-
                 success.Add(response.StatusCode == System.Net.HttpStatusCode.OK);
             }
 
