@@ -220,41 +220,12 @@ namespace QuantConnect.Brokerages.GDAX
         /// <returns></returns>
         public override List<Holding> GetAccountHoldings()
         {
-            var list = new List<Holding>();
-            var cashBalances = GetCashBalance();
-            var accountCurrency = CashBook.AccountCurrency;
-
-            foreach (var cash in cashBalances)
-            {
-                if (cash.Symbol == accountCurrency) continue;
-                var pair = cash.Symbol + accountCurrency;
-
-                decimal conversionRate;
-                if (!pair.EndsWith(accountCurrency, StringComparison.InvariantCultureIgnoreCase))
-                {
-
-                    var baseSymbol = (pair.Substring(0, 3) + accountCurrency).ToLower();
-                    var tick = GetTick(Symbol.Create(baseSymbol, SecurityType.Crypto, Market.GDAX));
-                    conversionRate = tick.Price;
-                }
-                else
-                {
-                    var tick = GetTick(Symbol.Create(pair, SecurityType.Crypto, Market.GDAX));
-                    conversionRate = tick.Price;
-                }
-
-                list.Add(new Holding
-                {
-                    Symbol = Symbol.Create(pair, SecurityType.Crypto, Market.GDAX),
-                    Quantity = cash.Amount,
-                    Type = SecurityType.Crypto,
-                    CurrencySymbol = Currencies.GetCurrencySymbol(accountCurrency),
-                    ConversionRate = conversionRate,
-                    MarketPrice = conversionRate,
-                    AveragePrice = conversionRate
-                });
-            }
-            return list;
+            /*
+             * On launching the algorithm the cash balances are pulled and stored in the cashbook.
+             * There are no pre-existing currency swaps as we don't know the entire historical breakdown that brought us here.
+             * Attempting to figure this out would be growing problem; every new trade would need to be processed.
+             */
+            return new List<Holding>();
         }
 
         /// <summary>
