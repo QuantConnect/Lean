@@ -89,15 +89,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var tradingMode = Read<string>(job.BrokerageData, "ib-trading-mode", errors);
             var agentDescription = Read<string>(job.BrokerageData, "ib-agent-description", errors);
 
-            Log.Trace("InteractiveBrokersBrokerageFactory.CreateBrokerage(): Full brokerage data: " + JsonConvert.SerializeObject(job.BrokerageData));
-
             if (errors.Count != 0)
             {
                 // if we had errors then we can't create the instance
                 throw new Exception(string.Join(Environment.NewLine, errors));
             }
 
-            if (tradingMode == "")
+            if (tradingMode.IsNullOrEmpty())
             {
                 throw new Exception("No trading mode selected. Please select either 'paper' or 'live' trading.");
             }
