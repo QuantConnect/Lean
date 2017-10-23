@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,14 +40,14 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Initializes a new instance of the <see cref="GDAXBrokerageModel"/> class
         /// </summary>
-        /// <param name="accountType">The type of account to be modelled, defaults to 
+        /// <param name="accountType">The type of account to be modelled, defaults to
         /// <see cref="QuantConnect.AccountType.Margin"/></param>
         public GDAXBrokerageModel(AccountType accountType = AccountType.Margin)
             : base(accountType)
         {
             if (accountType == AccountType.Margin)
             {
-                new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, 
+                new BrokerageMessageEvent(BrokerageMessageType.Warning, 0,
                     "It is recommend to use a cash account. Margin trading is currently in pre-Alpha. Use at your own risk and please report any issues encountered.");
             }
         }
@@ -94,10 +94,18 @@ namespace QuantConnect.Brokerages
         /// <param name="message"></param>
         /// <returns></returns>
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
-        {           
+        {
             if (order.BrokerId != null && order.BrokerId.Any())
             {
                 message = _message;
+                return false;
+            }
+
+            if (order.Quantity < 0.01m)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    "The minimum order quantity is 0.01"
+                );
                 return false;
             }
 
