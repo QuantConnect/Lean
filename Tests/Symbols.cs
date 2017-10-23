@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,11 +32,17 @@ namespace QuantConnect.Tests
 
         public static readonly Symbol USDJPY = CreateForexSymbol("USDJPY");
         public static readonly Symbol EURUSD = CreateForexSymbol("EURUSD");
-        public static readonly Symbol BTCUSD = CreateCryptoSymbol("BTCUSD");
         public static readonly Symbol EURGBP = CreateForexSymbol("EURGBP");
         public static readonly Symbol GBPUSD = CreateForexSymbol("GBPUSD");
+        public static readonly Symbol GBPJPY = CreateForexSymbol("GBPJPY");
+
+        public static readonly Symbol BTCUSD = CreateCryptoSymbol("BTCUSD");
+        public static readonly Symbol LTCUSD = CreateCryptoSymbol("LTCUSD");
+        public static readonly Symbol ETHUSD = CreateCryptoSymbol("ETHUSD");
 
         public static readonly Symbol DE10YBEUR = CreateCfdSymbol("DE10YBEUR", Market.FXCM);
+        public static readonly Symbol XAGUSD = CreateCfdSymbol("XAGUSD", Market.FXCM);
+        public static readonly Symbol XAUUSD = CreateCfdSymbol("XAUUSD", Market.FXCM);
 
         public static readonly Symbol SPY_C_192_Feb19_2016 = CreateOptionSymbol("SPY", OptionRight.Call, 192m, new DateTime(2016, 02, 19));
         public static readonly Symbol SPY_P_192_Feb19_2016 = CreateOptionSymbol("SPY", OptionRight.Put, 192m, new DateTime(2016, 02, 19));
