@@ -33,7 +33,10 @@ namespace QuantConnect
         {
             "BTCUSD",
             "LTCUSD",
-            "ETHUSD"
+            "ETHUSD",
+            "BTCEUR",
+            "LTCEUR",
+            "ETHEUR"
         };
 
         /// <summary>
