@@ -130,7 +130,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             _wss.Verify();
         }
 
-        [TestCase(-5.23512)]
+        [TestCase(5.23512)]
         [TestCase(99)]
         public void OnMessageFillTest(decimal expectedQuantity)
         {
@@ -273,7 +273,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             Assert.AreEqual(333.985m, btc.ConversionRate);
         }
 
-        [Test()]
+        [Test(), Ignore("Holdings are now set to 0 swaps at the start of each launch. Not meaningful.")]
         public void GetAccountHoldingsTest()
         {
             SetupResponse(_holdingData);
@@ -282,13 +282,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
             var actual = _unit.GetAccountHoldings();
 
-            Assert.AreEqual(2, actual.Count());
-            Assert.AreEqual(0.005m, actual.First().Quantity);
-            Assert.AreEqual(10m, actual.First().AveragePrice);
-
-            Assert.AreEqual(-0.5m, actual.Last().Quantity);
-            Assert.AreEqual(1000m, actual.Last().AveragePrice);
-
+            Assert.AreEqual(0, actual.Count());
         }
 
         [TestCase(HttpStatusCode.OK, HttpStatusCode.NotFound, false)]

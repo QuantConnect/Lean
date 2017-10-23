@@ -93,7 +93,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(1, securities.Values.Count(x => x.Symbol == Symbols.USDJPY));
         }
 
-        [Test]
+        [Test, Ignore("No longer require subscription for cashbook currencies")]
         [ExpectedException(typeof(InvalidOperationException), MatchType = MessageMatch.Contains, ExpectedMessage = "Please add subscription")]
         public void EnsureCurrencyDataFeedAddsSubscriptionThrowsWhenZeroSubscriptionsPresent()
         {
