@@ -224,8 +224,6 @@ namespace QuantConnect.Brokerages.GDAX
                 GetFee(cached.First().Value), $"GDAX Match Event {direction}"
             );
 
-
-
             //if we're filled we won't wait for done event
             if (orderEvent.Status == OrderStatus.Filled)
             {

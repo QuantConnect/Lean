@@ -221,46 +221,38 @@ namespace QuantConnect.Brokerages.GDAX
         public override List<Holding> GetAccountHoldings()
         {
             var list = new List<Holding>();
+            var cashBalances = GetCashBalance();
+            var accountCurrency = CashBook.AccountCurrency;
 
-            var req = new RestRequest("/orders?status=active", Method.GET);
-            GetAuthenticationToken(req);
-            var response = RestClient.Execute(req);
-            if (response != null)
+            foreach (var cash in cashBalances)
             {
-                foreach (var item in JsonConvert.DeserializeObject<Messages.Order[]>(response.Content))
+                if (cash.Symbol == accountCurrency) continue;
+                var pair = cash.Symbol + accountCurrency;
+
+                decimal conversionRate;
+                if (!pair.EndsWith(accountCurrency, StringComparison.InvariantCultureIgnoreCase))
                 {
 
-                    decimal conversionRate;
-                    if (!item.ProductId.EndsWith("USD", StringComparison.InvariantCultureIgnoreCase))
-                    {
-
-                        var baseSymbol = (item.ProductId.Substring(0, 3) + "USD").ToLower();
-                        var tick = GetTick(Symbol.Create(baseSymbol, SecurityType.Crypto, Market.GDAX));
-                        conversionRate = tick.Price;
-                    }
-                    else
-                    {
-                        var tick = GetTick(ConvertProductId(item.ProductId));
-                        conversionRate = tick.Price;
-                    }
-
-                    list.Add(new Holding
-                    {
-                        Symbol = ConvertProductId(item.ProductId),
-                        Quantity = item.Side == "sell" ? -item.FilledSize : item.FilledSize,
-                        Type = SecurityType.Crypto,
-                        CurrencySymbol = item.ProductId.Substring(0, 3).ToUpper(),
-                        ConversionRate = conversionRate,
-                        MarketPrice = item.Price,
-                        //todo: check this
-                        AveragePrice = item.FilledSize > 0 ? item.ExecutedValue / item.FilledSize : 0
-                    });
+                    var baseSymbol = (pair.Substring(0, 3) + accountCurrency).ToLower();
+                    var tick = GetTick(Symbol.Create(baseSymbol, SecurityType.Crypto, Market.GDAX));
+                    conversionRate = tick.Price;
+                }
+                else
+                {
+                    var tick = GetTick(Symbol.Create(pair, SecurityType.Crypto, Market.GDAX));
+                    conversionRate = tick.Price;
                 }
 
-            }
-            else
-            {
-                Logging.Log.Error("GDAXBrokerage.GetAccountHoldings(): Null response.");
+                list.Add(new Holding
+                {
+                    Symbol = Symbol.Create(pair, SecurityType.Crypto, Market.GDAX),
+                    Quantity = cash.Amount,
+                    Type = SecurityType.Crypto,
+                    CurrencySymbol = Currencies.GetCurrencySymbol(accountCurrency),
+                    ConversionRate = conversionRate,
+                    MarketPrice = conversionRate,
+                    AveragePrice = conversionRate
+                });
             }
             return list;
         }
