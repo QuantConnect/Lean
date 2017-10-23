@@ -235,12 +235,12 @@ namespace QuantConnect.Brokerages.GDAX
                     {
 
                         var baseSymbol = (item.ProductId.Substring(0, 3) + "USD").ToLower();
-                        var tick = this.GetTick(Symbol.Create(baseSymbol, SecurityType.Crypto, Market.GDAX));
+                        var tick = GetTick(Symbol.Create(baseSymbol, SecurityType.Crypto, Market.GDAX));
                         conversionRate = tick.Price;
                     }
                     else
                     {
-                        var tick = this.GetTick(ConvertProductId(item.ProductId));
+                        var tick = GetTick(ConvertProductId(item.ProductId));
                         conversionRate = tick.Price;
                     }
 

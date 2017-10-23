@@ -183,14 +183,13 @@ namespace QuantConnect.Brokerages.GDAX
             var cached = CachedOrderIDs.Where(o => o.Value.BrokerId.Contains(message.MakerOrderId) || o.Value.BrokerId.Contains(message.TakerOrderId));
 
             var symbol = ConvertProductId(message.ProductId);
-            Log.Trace($"GDAXBrokerage.OrderMatch(): Match event for {message.ProductId} Data:{Environment.NewLine}{data}");
 
             if (!cached.Any())
             {
-                Log.Trace("GDAXBrokerage.Messaging.OrderMatch(): No match found");
                 return;
             }
 
+            Log.Trace($"GDAXBrokerage.OrderMatch(): Match: {message.ProductId} {data}");
             var orderId = cached.First().Key;
             var orderObj = cached.First().Value;
 
@@ -199,7 +198,7 @@ namespace QuantConnect.Brokerages.GDAX
                 FillSplit[orderId] = new GDAXFill(orderObj);
             }
 
-            var split = this.FillSplit[orderId];
+            var split = FillSplit[orderId];
             split.Add(message);
 
             //is this the total order at once? Is this the last split fill?
@@ -221,8 +220,8 @@ namespace QuantConnect.Brokerages.GDAX
             (
                 cached.First().Key, symbol, message.Time, status,
                 direction,
-                message.Price, message.Side == "sell" ? -message.Size : message.Size,
-                GetFee(cached.First().Value), "GDAX Match Event"
+                message.Price, direction == OrderDirection.Sell ? -message.Size : message.Size,
+                GetFee(cached.First().Value), $"GDAX Match Event {direction}"
             );
 
 
