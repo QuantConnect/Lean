@@ -141,12 +141,6 @@ namespace QuantConnect.Securities
                 return null;
             }
 
-            //if (subscriptions.Count == 0)
-            //{
-            // Since we now have the market map, we don't need to rely on subscriptions to get market information
-            // throw new InvalidOperationException("Unable to add cash when no subscriptions are present. Please add subscriptions in the Initialize() method.");
-            //}
-
             // we require a subscription that converts this into the base currency
             string normal = Symbol + CashBook.AccountCurrency;
             string invert = CashBook.AccountCurrency + Symbol;

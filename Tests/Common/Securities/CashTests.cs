@@ -93,21 +93,6 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(1, securities.Values.Count(x => x.Symbol == Symbols.USDJPY));
         }
 
-        [Test, Ignore("No longer require subscription for cashbook currencies")]
-        [ExpectedException(typeof(InvalidOperationException), MatchType = MessageMatch.Contains, ExpectedMessage = "Please add subscription")]
-        public void EnsureCurrencyDataFeedAddsSubscriptionThrowsWhenZeroSubscriptionsPresent()
-        {
-            const int quantity = 100;
-            const decimal conversionRate = 1 / 100m;
-            var cash = new Cash("JPY", quantity, conversionRate);
-            var cashBook = new CashBook();
-            cashBook.Add("JPY", cash);
-
-            var securities = new SecurityManager(TimeKeeper);
-            var subscriptions = new SubscriptionManager(AlgorithmSettings, TimeKeeper);
-            cash.EnsureCurrencyDataFeed(securities, subscriptions, MarketHoursDatabase.AlwaysOpen, SymbolPropertiesDatabase.FromDataFolder(), MarketMap, cashBook);
-        }
-
         [Test]
         public void EnsureCurrencyDataFeedsAddsSubscriptionAtMinimumResolution()
         {
