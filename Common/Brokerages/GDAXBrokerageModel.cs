@@ -101,7 +101,7 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (order.Quantity < 0.01m)
+            if (Math.Abs(order.Quantity) < 0.01m)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     "The minimum order quantity is 0.01"
