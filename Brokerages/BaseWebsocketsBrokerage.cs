@@ -76,7 +76,12 @@ namespace QuantConnect.Brokerages
         public BaseWebsocketsBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string market, string name) : base(name)
         {
             WebSocket = websocket;
+
             WebSocket.Initialize(wssUrl);
+
+            WebSocket.Message += OnMessage;
+            WebSocket.Error += OnError;
+
             RestClient = restClient;
             _market = market;
             ApiSecret = apiSecret;
@@ -95,8 +100,8 @@ namespace QuantConnect.Brokerages
         /// </summary>
         public override void Connect()
         {
-            WebSocket.Message += OnMessage;
-            WebSocket.Error += OnError;
+            if (IsConnected)
+                return;
 
             Log.Trace("BaseWebSocketsBrokerage.Connect(): Connecting...");
             WebSocket.Connect();
