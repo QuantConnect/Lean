@@ -213,6 +213,8 @@ namespace QuantConnect.Algorithm
         {
             foreach (var i in indicators)
             {
+                if (i == null) continue;
+
                 // copy loop variable for usage in closure
                 var ilocal = i;
                 i.Updated += (sender, args) =>
@@ -230,6 +232,8 @@ namespace QuantConnect.Algorithm
         {
             foreach (var i in indicators)
             {
+                if (i == null) continue;
+
                 // copy loop variable for usage in closure
                 var ilocal = i;
                 i.Updated += (sender, args) =>
