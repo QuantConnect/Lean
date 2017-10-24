@@ -137,6 +137,9 @@
   <ItemGroup>
     <None Include="CustomSecurityInitializerAlgorithm.py" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="UniverseSelectionDefinitionsAlgorithm.py" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent Condition="'$(OS)' == 'Windows_NT' ">

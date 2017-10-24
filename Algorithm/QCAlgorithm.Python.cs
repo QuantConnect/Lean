@@ -104,7 +104,14 @@ namespace QuantConnect.Algorithm
         public void AddUniverse(PyObject pycoarse)
         {
             var coarse = PythonUtil.ToFunc<IEnumerable<CoarseFundamental>, object[]>(pycoarse);
-            AddUniverse(c => coarse(c).Select(x => (Symbol)x));
+            if (coarse != null)
+            {
+                AddUniverse(c => coarse(c).Select(x => (Symbol)x));
+                return;
+            }
+
+            var type = (Type)pycoarse.GetPythonType().AsManagedObject(typeof(Type));
+            AddUniverse((dynamic)pycoarse.AsManagedObject(type));
         }
 
         /// <summary>
