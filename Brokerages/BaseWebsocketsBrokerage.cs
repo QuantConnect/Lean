@@ -1,17 +1,27 @@
-﻿using Newtonsoft.Json;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using Newtonsoft.Json;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using RestSharp;
-using SuperSocket.ClientEngine;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using WebSocket4Net;
 
 namespace QuantConnect.Brokerages
 {
@@ -24,7 +34,7 @@ namespace QuantConnect.Brokerages
 
         #region Declarations
         /// <summary>
-        /// The list of queued ticks 
+        /// The list of queued ticks
         /// </summary>
         public List<Tick> Ticks = new List<Tick>();
         /// <summary>
@@ -81,7 +91,12 @@ namespace QuantConnect.Brokerages
         public BaseWebsocketsBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string market, string name) : base(name)
         {
             WebSocket = websocket;
+
             WebSocket.Initialize(wssUrl);
+
+            WebSocket.Message += OnMessage;
+            WebSocket.Error += OnError;
+
             RestClient = restClient;
             _market = market;
             ApiSecret = apiSecret;
@@ -93,16 +108,17 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public abstract void OnMessage(object sender, MessageReceivedEventArgs e);
+        public abstract void OnMessage(object sender, WebSocketMessage e);
 
         /// <summary>
         /// Creates wss connection, monitors for disconnection and re-connects when necessary
         /// </summary>
         public override void Connect()
         {
-            WebSocket.OnMessage += OnMessage;
-            WebSocket.OnError += OnError;
+            if (IsConnected)
+                return;
 
+            Log.Trace("BaseWebSocketsBrokerage.Connect(): Connecting...");
             WebSocket.Connect();
             Wait(_connectionTimeout, () => WebSocket.IsOpen);
 
@@ -121,6 +137,10 @@ namespace QuantConnect.Brokerages
                 {
                     while (!_cancellationTokenSource.IsCancellationRequested)
                     {
+                        if (WebSocket.IsOpen)
+                        {
+                            LastHeartbeatUtcTime = DateTime.UtcNow;
+                        }
 
                         TimeSpan elapsed;
                         lock (_lockerConnectionMonitor)
@@ -130,10 +150,19 @@ namespace QuantConnect.Brokerages
 
                         if (!_connectionLost && elapsed > TimeSpan.FromSeconds(_heartbeatTimeout))
                         {
-                            _connectionLost = true;
-                            nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
 
-                            OnMessage(BrokerageMessageEvent.Disconnected("Connection with server lost. This could be because of internet connectivity issues."));
+                            if (WebSocket.IsOpen)
+                            {
+                                // connection is still good
+                                LastHeartbeatUtcTime = DateTime.UtcNow;
+                            }
+                            else
+                            {
+                                _connectionLost = true;
+                                nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
+
+                                OnMessage(BrokerageMessageEvent.Disconnected("Connection with server lost. This could be because of internet connectivity issues."));
+                            }
                         }
                         else if (_connectionLost)
                         {
@@ -154,11 +183,12 @@ namespace QuantConnect.Brokerages
                                         {
                                             Reconnect();
                                         }
-                                        catch (Exception)
+                                        catch (Exception err)
                                         {
                                             // double the interval between attempts (capped to 1 minute)
                                             nextReconnectionAttemptSeconds = Math.Min(nextReconnectionAttemptSeconds * 2, 60);
                                             nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
+                                            Log.Error(err);
                                         }
                                     }
                                 }
@@ -189,9 +219,9 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void OnError(object sender, ErrorEventArgs e)
+        public void OnError(object sender, WebSocketError e)
         {
-            Log.Debug(e.Exception.ToString());
+            Log.Error(e.Exception, "WebSocketsBrokerage Web Exception:  ");
         }
 
         /// <summary>
@@ -199,9 +229,17 @@ namespace QuantConnect.Brokerages
         /// </summary>
         protected virtual void Reconnect()
         {
+            if (WebSocket.IsOpen)
+            {
+                // connection is still good
+                LastHeartbeatUtcTime = DateTime.UtcNow;
+                return;
+            }
+
+            Log.Trace($"BaseWebsocketsBrokerage(): Reconnecting... IsConnected: {IsConnected}");
             var subscribed = GetSubscribed();
 
-            WebSocket.OnError -= this.OnError;
+            WebSocket.Error -= this.OnError;
             try
             {
                 //try to clean up state
@@ -218,7 +256,7 @@ namespace QuantConnect.Brokerages
             }
             finally
             {
-                WebSocket.OnError += this.OnError;
+                WebSocket.Error += this.OnError;
                 this.Subscribe(null, subscribed);
             }
         }

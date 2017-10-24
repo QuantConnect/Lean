@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,9 +13,7 @@
  * limitations under the License.
 */
 using Newtonsoft.Json;
-using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using RestSharp;
@@ -23,10 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
-using WebSocket4Net;
 
 namespace QuantConnect.Brokerages.GDAX
 {
@@ -49,6 +43,8 @@ namespace QuantConnect.Brokerages.GDAX
         /// <returns></returns>
         public override bool PlaceOrder(Orders.Order order)
         {
+            LockStream();
+
             var req = new RestRequest("/orders", Method.POST);
 
             dynamic payload = new ExpandoObject();
@@ -71,15 +67,16 @@ namespace QuantConnect.Brokerages.GDAX
 
             if (response.StatusCode == System.Net.HttpStatusCode.OK && response.Content != null)
             {
-                dynamic raw = JsonConvert.DeserializeObject<dynamic>(response.Content);
+                var raw = JsonConvert.DeserializeObject<Messages.Order>(response.Content);
 
-                if (raw == null || raw.id == null)
+                if (raw == null || raw.Id == null)
                 {
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (int)response.StatusCode, "GDAXBrokerage.PlaceOrder: Error parsing response from place order: " + response.Content));
+                    UnlockStream();
                     return false;
                 }
 
-                string brokerId = raw.id;
+                var brokerId = raw.Id;
                 if (CachedOrderIDs.ContainsKey(order.Id))
                 {
                     CachedOrderIDs[order.Id].BrokerId.Add(brokerId);
@@ -90,31 +87,23 @@ namespace QuantConnect.Brokerages.GDAX
                     CachedOrderIDs.TryAdd(order.Id, order);
                 }
 
-                if (order.Type != OrderType.Market)
-                {
-                    FillSplit.TryAdd(order.Id, new GDAXFill(order));
-                }
+                // Add fill splits in all cases; we'll need to handle market fills too.
+                FillSplit.TryAdd(order.Id, new GDAXFill(order));
 
+                // Generate submitted event
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Submitted });
 
-                if (order.Type == OrderType.Market)
-                {
-                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, (decimal)raw.fill_fees, "GDAX Order Event") { Status = OrderStatus.Filled });
-                    Orders.Order outOrder = null;
-                    CachedOrderIDs.TryRemove(order.Id, out outOrder);
-                }
-
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, "GDAXBrokerage.PlaceOrder: Order completed successfully orderid:" + order.Id.ToString()));
+                UnlockStream();
                 return true;
-
             }
 
             OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "GDAX Order Event") { Status = OrderStatus.Invalid });
 
-            string message = $"GDAXBrokerage.PlaceOrder: Order failed Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity.ToString()} content: {response.Content}";
+            var message = $"GDAXBrokerage.PlaceOrder: Order failed Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {response.Content}";
             OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, message));
+            UnlockStream();
             return false;
-
         }
 
         /// <summary>
@@ -141,7 +130,6 @@ namespace QuantConnect.Brokerages.GDAX
                 var req = new RestRequest("/orders/" + id, Method.DELETE);
                 GetAuthenticationToken(req);
                 var response = RestClient.Execute(req);
-
                 success.Add(response.StatusCode == System.Net.HttpStatusCode.OK);
             }
 
@@ -190,7 +178,7 @@ namespace QuantConnect.Brokerages.GDAX
                         }
                         else
                         {
-                            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (int)response.StatusCode, 
+                            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (int)response.StatusCode,
                                 "GDAXBrokerage.GetOpenOrders: Unsupported order type returned from brokerage: " + item.Type));
                             continue;
                         }
@@ -232,45 +220,12 @@ namespace QuantConnect.Brokerages.GDAX
         /// <returns></returns>
         public override List<Holding> GetAccountHoldings()
         {
-            var list = new List<Holding>();
-
-            var req = new RestRequest("/orders?status=active", Method.GET);
-            GetAuthenticationToken(req);
-            var response = RestClient.Execute(req);
-            if (response != null)
-            {
-                foreach (var item in JsonConvert.DeserializeObject<Messages.Order[]>(response.Content))
-                {
-
-                    decimal conversionRate;
-                    if (!item.ProductId.EndsWith("USD", StringComparison.InvariantCultureIgnoreCase))
-                    {
-
-                        var baseSymbol = (item.ProductId.Substring(0, 3) + "USD").ToLower();
-                        var tick = this.GetTick(Symbol.Create(baseSymbol, SecurityType.Crypto, Market.GDAX));
-                        conversionRate = tick.Price;
-                    }
-                    else
-                    {
-                        var tick = this.GetTick(ConvertProductId(item.ProductId));
-                        conversionRate = tick.Price;
-                    }
-
-                    list.Add(new Holding
-                    {
-                        Symbol = ConvertProductId(item.ProductId),
-                        Quantity = item.Side == "sell" ? -item.FilledSize : item.FilledSize,
-                        Type = SecurityType.Crypto,
-                        CurrencySymbol = item.ProductId.Substring(0, 3).ToUpper(),
-                        ConversionRate = conversionRate,
-                        MarketPrice = item.Price,
-                        //todo: check this
-                        AveragePrice = item.FilledSize > 0 ? item.ExecutedValue / item.FilledSize : 0
-                    });
-                }
-
-            }
-            return list;
+            /*
+             * On launching the algorithm the cash balances are pulled and stored in the cashbook.
+             * There are no pre-existing currency swaps as we don't know the entire historical breakdown that brought us here.
+             * Attempting to figure this out would be growing problem; every new trade would need to be processed.
+             */
+            return new List<Holding>();
         }
 
         /// <summary>

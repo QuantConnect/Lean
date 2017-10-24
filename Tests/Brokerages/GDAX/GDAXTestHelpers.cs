@@ -3,8 +3,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using System.Collections.Generic;
-using System.Reflection;
-using WebSocket4Net;
+using QuantConnect.Brokerages;
 
 namespace QuantConnect.Tests.Brokerages.GDAX
 {
@@ -13,13 +12,13 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
         public static Security GetSecurity(decimal price = 1m, SecurityType securityType = SecurityType.Crypto)
         {
-            return new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.Utc), CreateConfig(securityType), new Cash(CashBook.AccountCurrency, 1000, price),
-                new SymbolProperties("BTCUSD", CashBook.AccountCurrency, 1, 1, 0.01m));
+              return new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.Utc), CreateConfig(securityType), new Cash(CashBook.AccountCurrency, 1000, price),
+              new SymbolProperties("BTCUSD", CashBook.AccountCurrency, 1, 1, 0.01m));
         }
 
         private static SubscriptionDataConfig CreateConfig(SecurityType securityType = SecurityType.Crypto)
         {
-            return new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create("BTCUSD", securityType, Market.GDAX), Resolution.Minute, TimeZones.Utc, TimeZones.Utc,
+                return new SubscriptionDataConfig(typeof(TradeBar), Symbol.Create("BTCUSD", securityType, Market.GDAX), Resolution.Minute, TimeZones.Utc, TimeZones.Utc,
                 false, true, false);
         }
 
@@ -32,12 +31,9 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             unit.FillSplit.TryAdd(id, new GDAXFill(order));
         }
 
-        public static MessageReceivedEventArgs GetArgs(string json)
+        public static WebSocketMessage GetArgs(string json)
         {
-            MessageReceivedEventArgs args = new MessageReceivedEventArgs(json);
-
-            return args;
+            return new WebSocketMessage(json);
         }
-
     }
 }
