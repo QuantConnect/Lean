@@ -488,10 +488,16 @@ namespace QuantConnect
         public AlgorithmControl()
         {
             // default to true, API can override
+            Initialized = false;
             HasSubscribers = true;
             Status = AlgorithmStatus.Running;
             ChartSubscription = "Strategy Equity";
         }
+
+        /// <summary>
+        /// Register this control packet as not defaults.
+        /// </summary>
+        public bool Initialized;
 
         /// <summary>
         /// Current run status of the algorithm id.
