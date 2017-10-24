@@ -102,7 +102,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         protected virtual void OnMessage(WebSocketMessage e)
         {
-            Logging.Log.Trace("WebSocketWrapper.OnMessage(): " + e.Message);
+            //Logging.Log.Trace("WebSocketWrapper.OnMessage(): " + e.Message);
             Message?.Invoke(this, e);
         }
 
