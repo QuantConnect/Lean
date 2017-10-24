@@ -381,6 +381,7 @@
     <None Include="TestData\CashTestingStrategy.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="Python\Indicators\IndicatorExtensionsTests.py" />
     <Content Include="TestData\FuturesExpiryFunctionsTestData.xml">
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
