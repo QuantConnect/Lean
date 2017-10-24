@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -69,12 +69,17 @@ namespace QuantConnect.Brokerages.GDAX
         public GDAXBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm)
             : base(wssUrl, websocket, restClient, apiKey, apiSecret, Market.GDAX, "GDAX")
         {
-            throw new Exception("GDAX currently under maintenance and will be back online Monday 23rd October 2017");
             FillSplit = new ConcurrentDictionary<long, GDAXFill>();
             _passPhrase = passPhrase;
             _wssUrl = wssUrl;
             _algorithm = algorithm;
             RateClient = new RestClient("http://api.fixer.io/latest?base=usd");
+
+            WebSocket.Open += (sender, args) =>
+            {
+                var tickers = new[] {"LTCUSD", "LTCEUR", "LTCBTC", "BTCUSD", "BTCEUR", "BTCGBP", "ETHBTC", "ETHUSD", "ETHEUR"};
+                Subscribe(null, tickers.Select(ticker => Symbol.Create(ticker, SecurityType.Crypto, Market.GDAX)));
+            };
         }
 
         /// <summary>
@@ -116,7 +121,7 @@ namespace QuantConnect.Brokerages.GDAX
                 }
                 else if (raw.Type == "open" || raw.Type == "change" || raw.Type == "received" || raw.Type == "subscriptions" || raw.Type == "last_match")
                 {
-                    //known messages we don't need to handle or log 
+                    //known messages we don't need to handle or log
                     return;
                 }
 
@@ -184,7 +189,7 @@ namespace QuantConnect.Brokerages.GDAX
                 return;
             }
 
-            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1, 
+            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Information, -1,
                 $"GDAXWebsocketsBrokerage.OrderDone: Encountered done message prior to match filling order brokerId: {message.OrderId} orderId: {cached.FirstOrDefault().Key}"));
 
             var split = this.FillSplit[cached.First().Key];
@@ -238,7 +243,7 @@ namespace QuantConnect.Brokerages.GDAX
                     Time = DateTime.UtcNow,
                     Symbol = symbol,
                     TickType = TickType.Quote,
-                    //todo: tick volume                          
+                    //todo: tick volume
                 };
 
                 this.Ticks.Add(updating);
@@ -296,7 +301,7 @@ namespace QuantConnect.Brokerages.GDAX
                             Time = DateTime.UtcNow,
                             Symbol = item,
                             TickType = TickType.Quote
-                            //todo: tick volume                          
+                            //todo: tick volume
                         };
 
                         this.Ticks.Add(updating);
