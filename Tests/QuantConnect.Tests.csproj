@@ -214,6 +214,7 @@
     <Compile Include="Common\Util\ColorJsonConverterTests.cs" />
     <Compile Include="Common\Util\DisposableExtensionsTests.cs" />
     <Compile Include="Common\Util\FactorFileGeneratorTests.cs" />
+    <Compile Include="Common\Util\LeanDataCryptoTests.cs" />
     <Compile Include="Common\Util\LeanDataPathComponentsTests.cs" />
     <Compile Include="Common\Util\LeanDataTests.cs" />
     <Compile Include="Common\Util\LinqExtensionsTests.cs" />
