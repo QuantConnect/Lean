@@ -70,6 +70,12 @@ namespace QuantConnect.Brokerages.GDAX
             _passPhrase = passPhrase;
             _algorithm = algorithm;
             RateClient = new RestClient("http://api.fixer.io/latest?base=usd");
+
+            WebSocket.Open += (sender, args) =>
+            {
+                var tickers = new[] {"LTCUSD", "LTCEUR", "LTCBTC", "BTCUSD", "BTCEUR", "BTCGBP", "ETHBTC", "ETHUSD", "ETHEUR"};
+                Subscribe(null, tickers.Select(ticker => Symbol.Create(ticker, SecurityType.Crypto, Market.GDAX)));
+            };
         }
 
         /// <summary>
