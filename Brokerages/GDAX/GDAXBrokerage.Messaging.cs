@@ -150,7 +150,7 @@ namespace QuantConnect.Brokerages.GDAX
                 }
                 else if (raw.Type == "ticker")
                 {
-                    EmitTick(e.Message);
+                    EmitQuoteTick(e.Message);
                     return;
                 }
                 else if (raw.Type == "error")
@@ -187,6 +187,9 @@ namespace QuantConnect.Brokerages.GDAX
         private void OrderMatch(string data)
         {
             var message = JsonConvert.DeserializeObject<Messages.Matched>(data, JsonSettings);
+
+            EmitTradeTick(message);
+
             var cached = CachedOrderIDs.Where(o => o.Value.BrokerId.Contains(message.MakerOrderId) || o.Value.BrokerId.Contains(message.TakerOrderId));
 
             var symbol = ConvertProductId(message.ProductId);
@@ -296,10 +299,10 @@ namespace QuantConnect.Brokerages.GDAX
         }
 
         /// <summary>
-        /// Converts a ticker message and emits data as a new tick
+        /// Converts a ticker message and emits data as a new quote tick
         /// </summary>
         /// <param name="data"></param>
-        private void EmitTick(string data)
+        private void EmitQuoteTick(string data)
         {
             var message = JsonConvert.DeserializeObject<Messages.Ticker>(data, JsonSettings);
 
@@ -307,7 +310,7 @@ namespace QuantConnect.Brokerages.GDAX
 
             lock (_tickLocker)
             {
-                var updating = new Tick
+                var tick = new Tick
                 {
                     AskPrice = message.BestAsk,
                     BidPrice = message.BestBid,
@@ -318,26 +321,34 @@ namespace QuantConnect.Brokerages.GDAX
                     //todo: tick volume
                 };
 
-                Ticks.Add(updating);
+                Ticks.Add(tick);
+            }
+        }
 
-                if (message.LastSize != 0)
+        /// <summary>
+        /// Emits a new trade tick from a match message
+        /// </summary>
+        private void EmitTradeTick(Messages.Matched message)
+        {
+            var symbol = ConvertProductId(message.ProductId);
+
+            lock (_tickLocker)
+            {
+                lock (_tickLocker)
                 {
-                    lock (_tickLocker)
+                    var tick = new Tick
                     {
-                        var last = new Tick
-                        {
-                            Value = message.Price,
-                            Time = DateTime.UtcNow,
-                            Symbol = symbol,
-                            TickType = TickType.Trade,
-                            Quantity = message.LastSize,
-                            TradeDirection = message.Side == "sell"
-                                ? Tick.TickTradeDirection.Sell
-                                : Tick.TickTradeDirection.Buy
-                        };
+                        Value = message.Price,
+                        Time = DateTime.UtcNow,
+                        Symbol = symbol,
+                        TickType = TickType.Trade,
+                        Quantity = message.Size,
+                        TradeDirection = message.Side == "buy"
+                            ? Tick.TickTradeDirection.Sell
+                            : Tick.TickTradeDirection.Buy
+                    };
 
-                        Ticks.Add(last);
-                    }
+                    Ticks.Add(tick);
                 }
             }
         }
