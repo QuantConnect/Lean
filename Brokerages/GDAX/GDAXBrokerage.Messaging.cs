@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Data.Market;
@@ -300,14 +301,13 @@ namespace QuantConnect.Brokerages.GDAX
         /// <param name="data"></param>
         private void EmitTick(string data)
         {
-
             var message = JsonConvert.DeserializeObject<Messages.Ticker>(data, JsonSettings);
 
             var symbol = ConvertProductId(message.ProductId);
 
             lock (_tickLocker)
             {
-                Tick updating = new Tick
+                var updating = new Tick
                 {
                     AskPrice = message.BestAsk,
                     BidPrice = message.BestBid,
@@ -318,23 +318,28 @@ namespace QuantConnect.Brokerages.GDAX
                     //todo: tick volume
                 };
 
-                this.Ticks.Add(updating);
+                Ticks.Add(updating);
 
-                lock (_tickLocker)
+                if (message.LastSize != 0)
                 {
-                    Tick last = new Tick
+                    lock (_tickLocker)
                     {
-                        Value = message.Price,
-                        Time = DateTime.UtcNow,
-                        Symbol = symbol,
-                        TickType = TickType.Trade,
-                        Quantity = message.Side == "sell" ? -message.LastSize : message.LastSize
-                    };
+                        var last = new Tick
+                        {
+                            Value = message.Price,
+                            Time = DateTime.UtcNow,
+                            Symbol = symbol,
+                            TickType = TickType.Trade,
+                            Quantity = message.LastSize,
+                            TradeDirection = message.Side == "sell"
+                                ? Tick.TickTradeDirection.Sell
+                                : Tick.TickTradeDirection.Buy
+                        };
 
-                    this.Ticks.Add(last);
+                        Ticks.Add(last);
+                    }
                 }
             }
-
         }
 
         #region IDataQueueHandler

@@ -27,6 +27,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Tests.Brokerages.GDAX
 {
@@ -362,6 +363,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             Assert.AreEqual("BTCUSD", actual.Symbol.Value);
             Assert.AreEqual(4388.01m, actual.Price);
             Assert.AreEqual(0.03m, actual.Quantity);
+            Assert.AreEqual(Tick.TickTradeDirection.Buy, actual.TradeDirection);
         }
 
         [Test]
