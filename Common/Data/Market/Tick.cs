@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,6 +27,27 @@ namespace QuantConnect.Data.Market
     public class Tick : BaseData
     {
         /// <summary>
+        /// Direction of a Trade Tick
+        /// </summary>
+        public enum TickTradeDirection
+        {
+            /// <summary>
+            /// The trade direction can not be determined
+            /// </summary>
+            Unknown,
+
+            /// <summary>
+            /// The trade is a Buy trade (at the ask price)
+            /// </summary>
+            Buy,
+
+            /// <summary>
+            /// The trade is a Sell trade (at the bid price)
+            /// </summary>
+            Sell
+        }
+
+        /// <summary>
         /// Type of the Tick: Trade or Quote.
         /// </summary>
         public TickType TickType = TickType.Trade;
@@ -34,55 +55,54 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Quantity exchanged in a trade.
         /// </summary>
-        public decimal Quantity = 0;
+        public decimal Quantity;
 
         /// <summary>
         /// Exchange we are executing on. String short code expanded in the MarketCodes.US global dictionary
         /// </summary>
-        public string Exchange = "";
+        public string Exchange = string.Empty;
 
         /// <summary>
         /// Sale condition for the tick.
         /// </summary>
-        public string SaleCondition = "";
+        public string SaleCondition = string.Empty;
 
         /// <summary>
         /// Bool whether this is a suspicious tick
         /// </summary>
-        public bool Suspicious = false;
+        public bool Suspicious;
 
         /// <summary>
         /// Bid Price for Tick
         /// </summary>
         /// <remarks>QuantConnect does not currently have quote data but was designed to handle ticks and quotes</remarks>
-        public decimal BidPrice = 0;
+        public decimal BidPrice;
 
         /// <summary>
         /// Asking price for the Tick quote.
         /// </summary>
         /// <remarks>QuantConnect does not currently have quote data but was designed to handle ticks and quotes</remarks>
-        public decimal AskPrice = 0;
+        public decimal AskPrice;
 
         /// <summary>
         /// Alias for "Value" - the last sale for this asset.
         /// </summary>
-        public decimal LastPrice
-        {
-            get
-            {
-                return Value;
-            }
-        }
+        public decimal LastPrice => Value;
 
         /// <summary>
         /// Size of bid quote.
         /// </summary>
-        public decimal BidSize = 0;
+        public decimal BidSize;
 
         /// <summary>
         /// Size of ask quote.
         /// </summary>
-        public decimal AskSize = 0;
+        public decimal AskSize;
+
+        /// <summary>
+        /// Direction of a Trade Tick
+        /// </summary>
+        public TickTradeDirection TradeDirection = TickTradeDirection.Unknown;
 
         //In Base Class: Alias of Closing:
         //public decimal Price;
@@ -115,7 +135,7 @@ namespace QuantConnect.Data.Market
         /// Cloner constructor for fill forward engine implementation. Clone the original tick into this new tick:
         /// </summary>
         /// <param name="original">Original tick we're cloning</param>
-        public Tick(Tick original) 
+        public Tick(Tick original)
         {
             Symbol = original.Symbol;
             Time = new DateTime(original.Time.Ticks);
@@ -130,6 +150,7 @@ namespace QuantConnect.Data.Market
             TickType = original.TickType;
             BidSize = original.BidSize;
             AskSize = original.AskSize;
+            TradeDirection = original.TradeDirection;
         }
 
         /// <summary>
@@ -152,7 +173,7 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Initializer for a last-trade equity tick with bid or ask prices. 
+        /// Initializer for a last-trade equity tick with bid or ask prices.
         /// </summary>
         /// <param name="time">Full date and time</param>
         /// <param name="symbol">Underlying equity security symbol</param>
@@ -332,7 +353,7 @@ namespace QuantConnect.Data.Market
                 // currently ticks don't come through the reader function
                 return new Tick();
             }
-            
+
             return new Tick(config, line, date);
         }
 
