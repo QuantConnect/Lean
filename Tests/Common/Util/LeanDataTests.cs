@@ -334,16 +334,16 @@ namespace QuantConnect.Tests.Common.Util
                 new LeanDataTestParameters(Symbols.DE10YBEUR, date, Resolution.Daily, TickType.Quote, "de10ybeur.zip", "de10ybeur.csv", "cfd/fxcm/daily"),
 
                 // Crypto - trades
-                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Tick, TickType.Trade, "20160217_trade.zip", "20160217_btcusd_Trade_Tick.csv", "crypto/gdax/tick/btcusd"),
+                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Tick, TickType.Trade, "20160217_trade.zip", "20160217_btcusd_tick_trade.csv", "crypto/gdax/tick/btcusd"),
                 new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Second, TickType.Trade, "20160217_trade.zip", "20160217_btcusd_second_trade.csv", "crypto/gdax/second/btcusd"),
                 new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Minute, TickType.Trade, "20160217_trade.zip", "20160217_btcusd_minute_trade.csv", "crypto/gdax/minute/btcusd"),
                 new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Hour, TickType.Trade, "btcusd.zip", "btcusd_trade.csv", "crypto/gdax/hour"),
                 new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Daily, TickType.Trade, "btcusd.zip", "btcusd_trade.csv", "crypto/gdax/daily"),
 
                 // Crypto -quotes
-                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Tick, TickType.Quote, "20160217_quote.zip", "20160217_btcusd_tick_quote.csv", "crypto/gdax/tick/de10ybeur"),
-                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Second, TickType.Quote, "20160217_quote.zip", "20160217_btcusd_second_quote.csv", "crypto/gdax/second/de10ybeur"),
-                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Minute, TickType.Quote, "20160217_quote.zip", "20160217_btcusd_minute_quote.csv", "crypto/gdax/minute/de10ybeur"),
+                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Tick, TickType.Quote, "20160217_quote.zip", "20160217_btcusd_tick_quote.csv", "crypto/gdax/tick/btcusd"),
+                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Second, TickType.Quote, "20160217_quote.zip", "20160217_btcusd_second_quote.csv", "crypto/gdax/second/btcusd"),
+                new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Minute, TickType.Quote, "20160217_quote.zip", "20160217_btcusd_minute_quote.csv", "crypto/gdax/minute/btcusd"),
                 new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Hour, TickType.Quote, "btcusd.zip", "btcusd_quote.csv", "crypto/gdax/hour"),
                 new LeanDataTestParameters(Symbols.BTCUSD, date, Resolution.Daily, TickType.Quote, "btcusd.zip", "btcusd_quote.csv", "crypto/gdax/daily"),
 
@@ -405,9 +405,9 @@ namespace QuantConnect.Tests.Common.Util
                     "34200000,1,2,3,4,5,6,7,8,9,10"),
                 new LeanDataLineTestParameters(new QuoteBar(time.Date, Symbols.BTCUSD, new Bar(1, 2, 3, 4), 5, new Bar(6, 7, 8, 9), 10, TimeSpan.FromDays(1)), SecurityType.Crypto, Resolution.Daily,
                     "20160218 00:00,1,2,3,4,5,6,7,8,9,10"),
-                new LeanDataLineTestParameters(new Tick(time, Symbols.BTCUSD, 0, 1, 3) {Value = 2m, TickType = TickType.Quote, BidSize = 2, AskSize = 4, Exchange = "GDAX", Suspicious = true}, SecurityType.Crypto, Resolution.Tick,
-                    "34200000,1,3"),
-                new LeanDataLineTestParameters(new Tick {Time = time, Symbol = Symbols.BTCUSD, Value = 1, Quantity = 2,TickType = TickType.Trade, Exchange = "GDAX", SaleCondition = "SC", Suspicious = true}, SecurityType.Crypto, Resolution.Tick,
+                new LeanDataLineTestParameters(new Tick(time, Symbols.BTCUSD, 0, 1, 3) {Value = 2m, TickType = TickType.Quote, BidSize = 2, AskSize = 4, Exchange = "gdax", Suspicious = false, Quantity = 5}, SecurityType.Crypto, Resolution.Tick,
+                    "34200000,1,2,3,4,5"),
+                new LeanDataLineTestParameters(new Tick {Time = time, Symbol = Symbols.BTCUSD, Value = 1, Quantity = 2,TickType = TickType.Trade, Exchange = "gdax", Suspicious = false}, SecurityType.Crypto, Resolution.Tick,
                     "34200000,1,2"),
                 new LeanDataLineTestParameters(new TradeBar(time, Symbols.BTCUSD, 1, 2, 3, 4, 5, TimeSpan.FromMinutes(1)), SecurityType.Crypto, Resolution.Minute,
                     "34200000,1,2,3,4,5"),

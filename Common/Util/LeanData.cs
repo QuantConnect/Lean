@@ -87,7 +87,7 @@ namespace QuantConnect.Util
                             }
                             if (tick.TickType == TickType.Quote)
                             {
-                                return ToCsv(milliseconds, tick.BidPrice, tick.BidSize, tick.AskPrice, tick.AskSize);
+                                return ToCsv(milliseconds, tick.BidPrice, tick.BidSize, tick.AskPrice, tick.AskSize, tick.Quantity);
                             }
                             throw new ArgumentException("Cryto tick could not be created");
                         case Resolution.Second:
@@ -102,7 +102,7 @@ namespace QuantConnect.Util
                             var tradeBar = data as TradeBar;
                             if (tradeBar != null)
                             {
-                                return ToCsv(longTime, tradeBar.Open, tradeBar.High, tradeBar.Low, tradeBar.Close, tradeBar.Volume);
+                                return ToCsv(milliseconds, tradeBar.Open, tradeBar.High, tradeBar.Low, tradeBar.Close, tradeBar.Volume);
                             }
                             throw new NullReferenceException("Cryto minute/second bar could not be created");
 
@@ -434,7 +434,6 @@ namespace QuantConnect.Util
                 case SecurityType.Equity:
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
-                case SecurityType.Crypto:
                     if (resolution == Resolution.Tick && symbol.SecurityType == SecurityType.Equity)
                     {
                         return string.Format("{0}_{1}_{2}_{3}.csv",
@@ -459,6 +458,21 @@ namespace QuantConnect.Util
                         tickType.ToLower()
                         );
 
+                case SecurityType.Crypto:
+                    if (isHourOrDaily)
+                    {
+                        return string.Format("{0}_{1}.csv",
+                            symbol.Value.ToLower(),
+                            tickType.ToLower()
+                        );
+                    }
+
+                    return string.Format("{0}_{1}_{2}_{3}.csv",
+                        formattedDate,
+                        symbol.Value.ToLower(),
+                        resolution.ToLower(),
+                        tickType.ToLower()
+                    );
                 case SecurityType.Option:
                     if (isHourOrDaily)
                     {
