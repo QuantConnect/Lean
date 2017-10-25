@@ -2,7 +2,8 @@
 Lean C# Algorithmic Trading Engine
 =========
 
-[![Join the chat at https://www.quantconnect.com/slack](https://cdn.quantconnect.com/lean/i/slack-sm.png)](https://www.quantconnect.com/slack) &nbsp;&nbsp;&nbsp;&nbsp; <img src="https://travis-ci.org/QuantConnect/Lean.svg?branch=master"> 
+[![Join the chat at https://www.quantconnect.com/slack](https://cdn.quantconnect.com/lean/i/slack-sm.png)](https://www.quantconnect.com/slack) &nbsp;&nbsp;&nbsp;&nbsp;
+[![Build Status](https://travis-ci.org/QuantConnect/Lean.svg?branch=feature%2Fremove-web-socket-4-net)](https://travis-ci.org/QuantConnect/Lean)
 
 [Lean Home - lean.quantconnect.com][1] | [Documentation][2] | [Download Zip][3]
 
@@ -142,9 +143,6 @@ The mailing list for the project can be found on [Google Groups][6]
 Contributions are warmly very welcomed but we ask you read the existing code to see how it is formatted, commented and ensure contributions match the existing style. All code submissions must include accompanying tests. Please see the [contributor guide lines][7].
 
 All accepted pull requests will get a 2mo free Prime subscription on QuantConnect. Once your pull-request has been merged write to us at support@quantconnect.com with a link to your PR to claim your free live trading. QC <3 Open Source.
-
-## Build Status ##
-<img src="https://travis-ci.org/QuantConnect/Lean.svg?branch=master">
 
 ## Acknowledgements ##
 
