@@ -87,7 +87,7 @@ namespace QuantConnect.Util
                             }
                             if (tick.TickType == TickType.Quote)
                             {
-                                return ToCsv(milliseconds, tick.BidPrice, tick.BidSize, tick.AskPrice, tick.AskSize, tick.Quantity);
+                                return ToCsv(milliseconds, tick.BidPrice, tick.BidSize, tick.AskPrice, tick.AskSize);
                             }
                             throw new ArgumentException("Cryto tick could not be created");
                         case Resolution.Second:
@@ -412,10 +412,6 @@ namespace QuantConnect.Util
         public static string GenerateRelativeZipFilePath(string symbol, SecurityType securityType, string market, DateTime date, Resolution resolution)
         {
             var directory = Path.Combine(securityType.ToLower(), market.ToLower(), resolution.ToLower());
-            if (resolution != Resolution.Daily && resolution != Resolution.Hour)
-            {
-                directory = Path.Combine(directory, symbol.ToLower());
-            }
 
             return Path.Combine(directory, GenerateZipFileName(symbol, securityType, date, resolution));
         }
@@ -539,7 +535,7 @@ namespace QuantConnect.Util
             }
 
             //All fx is quote data.
-            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd || securityType == SecurityType.Crypto)
+            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
             {
                 dataType = TickType.Quote;
             }
@@ -631,7 +627,7 @@ namespace QuantConnect.Util
             }
 
             var zipFileName = date.ToString(DateFormat.EightCharacter);
-            tickType = tickType ?? (securityType == SecurityType.Forex || securityType == SecurityType.Cfd || securityType == SecurityType.Crypto ? TickType.Quote : TickType.Trade);
+            tickType = tickType ?? (securityType == SecurityType.Forex || securityType == SecurityType.Cfd ? TickType.Quote : TickType.Trade);
             var suffix = string.Format("_{0}.zip", tickType.Value.ToLower());
             return zipFileName + suffix;
         }

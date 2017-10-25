@@ -278,7 +278,6 @@ namespace QuantConnect.Data.Market
                             BidSize = csv[2].ToDecimal();
                             AskPrice = csv[3].ToDecimal();
                             AskSize = csv[4].ToDecimal();
-                            Quantity = csv[5].ToDecimal();
                             Value = (BidPrice + AskPrice) / 2;
                         }
                         break;
