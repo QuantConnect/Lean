@@ -562,7 +562,6 @@ namespace QuantConnect.Util
                 case SecurityType.Equity:
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
-                case SecurityType.Crypto:
                     if (isHourOrDaily)
                     {
                         return string.Format("{0}.zip",
@@ -574,7 +573,19 @@ namespace QuantConnect.Util
                         formattedDate,
                         tickTypeString
                         );
+                case SecurityType.Crypto:
+                    if (isHourOrDaily)
+                    {
+                        return string.Format("{0}_{1}.zip",
+                            symbol.Value.ToLower(),
+                            tickTypeString
+                        );
+                    }
 
+                    return string.Format("{0}_{1}.zip",
+                        formattedDate,
+                        tickTypeString
+                    );
                 case SecurityType.Option:
                     if (isHourOrDaily)
                     {
