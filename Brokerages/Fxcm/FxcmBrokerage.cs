@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,6 +24,7 @@ using com.fxcm.external.api.util;
 using com.fxcm.fix;
 using com.fxcm.fix.pretrade;
 using com.fxcm.fix.trade;
+using com.fxcm.messaging.util;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
@@ -166,6 +167,7 @@ namespace QuantConnect.Brokerages.Fxcm
 
             // create local login properties
             var loginProperties = new FXCMLoginProperties(_userName, _password, _terminal, _server);
+            loginProperties.addProperty(IConnectionManager.APP_INFO, "QuantConnect");
 
             // log in
             try
@@ -333,7 +335,7 @@ namespace QuantConnect.Brokerages.Fxcm
         }
 
         /// <summary>
-        /// Gets all open orders on the account. 
+        /// Gets all open orders on the account.
         /// NOTE: The order objects returned do not have QC order IDs.
         /// </summary>
         /// <returns>The open orders returned from FXCM</returns>

@@ -122,7 +122,7 @@ namespace QuantConnect.Tests.Common.Securities
 
         [TestCase("EURUSD", SecurityType.Forex, Market.FXCM)]
         [TestCase("EURUSD", SecurityType.Forex, Market.Oanda)]
-        [TestCase("BTCUSD", SecurityType.Crypto, Market.Bitfinex)]
+        [TestCase("BTCUSD", SecurityType.Crypto, Market.GDAX)]
         public void SecurityManagerCanCreate_ForexOrCrypto_WithCorrectSubscriptions(string ticker, SecurityType type, string market)
         {
             var symbol = Symbol.Create(ticker, type, market);

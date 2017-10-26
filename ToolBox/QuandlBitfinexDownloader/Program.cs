@@ -37,11 +37,10 @@ namespace QuantConnect.ToolBox.QuandlBitfinexDownloader
             {
                 // Load settings from config.json
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
-                var scaleFactor = Config.GetInt("bitfinex-scale-factor", 100);
 
                 // Create an instance of the downloader
                 const string market = Market.Bitfinex;
-                var downloader = new QuandlBitfinexDownloader(args[1], scaleFactor);
+                var downloader = new QuandlBitfinexDownloader(args[1]);
 
                 // Download the data
                 var symbol = Symbol.Create("BTCUSD", SecurityType.Forex, market);

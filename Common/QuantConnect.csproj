@@ -151,7 +151,9 @@
     <Compile Include="Brokerages\FxcmBrokerageModel.cs" />
     <Compile Include="Orders\InteractiveBrokersOrderProperties.cs" />
     <Compile Include="Interfaces\IOrderProperties.cs" />
+    <Compile Include="Brokerages\GDAXBrokerageModel.cs" />
     <Compile Include="Python\BrokerageModelPythonWrapper.cs" />
+    <Compile Include="Python\SecurityInitializerPythonWrapper.cs" />
     <Compile Include="Python\SlippageModelPythonWrapper.cs" />
     <Compile Include="Python\FillModelPythonWrapper.cs" />
     <Compile Include="Python\PandasConverter.cs" />
@@ -285,6 +287,7 @@
     <Compile Include="Notifications\NotificationManager.cs" />
     <Compile Include="Orders\CancelOrderRequest.cs" />
     <Compile Include="Orders\Fees\ConstantFeeModel.cs" />
+    <Compile Include="Orders\Fees\GDAXFeeModel.cs" />
     <Compile Include="Orders\Fees\InteractiveBrokersFeeModel.cs" />
     <Compile Include="Orders\Fees\FxcmFeeModel.cs" />
     <Compile Include="Orders\Fees\IFeeModel.cs" />
@@ -509,6 +512,7 @@
     <Compile Include="Util\CircularQueue.cs" />
     <Compile Include="Util\Composer.cs" />
     <Compile Include="Util\DisposableExtensions.cs" />
+    <Compile Include="Util\EnumeratorExtensions.cs" />
     <Compile Include="Util\ExpressionBuilder.cs" />
     <Compile Include="Util\FixedSizeQueue.cs" />
     <Compile Include="Util\FixedSizeHashQueue.cs" />

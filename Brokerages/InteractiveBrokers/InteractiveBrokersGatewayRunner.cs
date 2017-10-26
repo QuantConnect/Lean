@@ -84,7 +84,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 var file = OS.IsWindows ? batchFilename : bashFilename;
                 var arguments = string.Format("{0} {1} {2} {3} {4} {5} {6}", file, ibControllerDirectory, twsDirectory, userId, password, useTwsSwitch, tradingMode);
 
-                Log.Trace("InteractiveBrokersGatewayRunner.Start(): Launching IBController for user " + userId + "...");
+                Log.Trace($"InteractiveBrokersGatewayRunner.Start(): Launching IBController: {file} {ibControllerDirectory} {twsDirectory} {userId} XXX {useTwsSwitch} {tradingMode}");
 
                 var processStartInfo = OS.IsWindows ? new ProcessStartInfo("cmd.exe", "/C " + arguments) : new ProcessStartInfo("bash", arguments);
 

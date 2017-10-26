@@ -98,13 +98,8 @@ namespace QuantConnect.Indicators
         /// <param name="right">The right indidcator for the 'composoer'</param>
         /// <param name="composer">Function used to compose the left and right indicators</param>
         public CompositeIndicator(IndicatorBase<T> left, IndicatorBase<T> right, IndicatorComposer composer)
-            : base(string.Format("COMPOSE({0},{1})", left.Name, right.Name))
-        {
-            _composer = composer;
-            Left = left;
-            Right = right;
-            ConfigureEventHandlers();
-        }
+            : this(string.Format("COMPOSE({0},{1})", left.Name, right.Name), left, right, composer)
+        { }
 
         /// <summary>
         /// Computes the next value of this indicator from the given state

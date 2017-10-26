@@ -272,12 +272,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var data = new List<DataFeedPacket>();
                     foreach (var subscription in Subscriptions)
                     {
-                        var packet = new DataFeedPacket(subscription.Security, subscription.Configuration);
+                        var config = subscription.Configuration;
+                        var packet = new DataFeedPacket(subscription.Security, config);
 
                         // dequeue data that is time stamped at or before this frontier
                         while (subscription.MoveNext() && subscription.Current != null)
                         {
-                            packet.Add(subscription.Current);
+                            var clone = subscription.Current.Clone(subscription.Current.IsFillForward);
+                            clone.Time = clone.Time.RoundDownInTimeZone(config.Increment, config.ExchangeTimeZone, config.DataTimeZone);
+                            packet.Add(clone);
                         }
 
                         // if we have data, add it to be added to the bridge
@@ -296,7 +299,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                             // assume that if the first item is a base data collection then the enumerator handled the aggregation,
                             // otherwise, load all the the data into a new collection instance
-                            var collection = packet.Data[0] as BaseDataCollection ?? new BaseDataCollection(_frontierUtc, subscription.Configuration.Symbol, packet.Data);
+                            var collection = packet.Data[0] as BaseDataCollection ?? new BaseDataCollection(_frontierUtc, config.Symbol, packet.Data);
 
                             _changes += _universeSelection.ApplyUniverseSelection(universe, _frontierUtc, collection);
                         }
@@ -417,24 +420,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         Quandl.SetAuthCode(Config.Get("quandl-auth-token"));
                     }
 
-                    // each time we exhaust we'll new up this enumerator stack
-                    var refresher = new RefreshEnumerator<BaseData>(() =>
-                    {
-                        var dateInDataTimeZone = DateTime.UtcNow.ConvertFromUtc(request.Configuration.DataTimeZone).Date;
-                        var enumeratorFactory = new BaseDataSubscriptionEnumeratorFactory(true, r => new[] { dateInDataTimeZone });
-                        var factoryReadEnumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
-                        var maximumDataAge = TimeSpan.FromTicks(Math.Max(request.Configuration.Increment.Ticks, TimeSpan.FromSeconds(5).Ticks));
-                        var fastForward = new FastForwardEnumerator(factoryReadEnumerator, _timeProvider, request.Security.Exchange.TimeZone, maximumDataAge);
-                        return new FrontierAwareEnumerator(fastForward, _frontierTimeProvider, timeZoneOffsetProvider);
-                    });
+                    var factory = new LiveCustomDataSubscriptionEnumeratorFactory(_timeProvider);
+                    var enumeratorStack = factory.CreateEnumerator(request, _dataProvider);
 
-                    // rate limit the refreshing of the stack to the requested interval
-                    // At Tick resolution, it will refresh at full speed
-                    // At Second and Minute resolution, it will refresh every second and minute respectively
-                    // At Hour and Daily resolutions, it will refresh every 30 minutes
-                    var minimumTimeBetweenCalls = Math.Min(request.Configuration.Increment.Ticks, TimeSpan.FromMinutes(30).Ticks);
-                    var rateLimit = new RateLimitEnumerator(refresher, _timeProvider, TimeSpan.FromTicks(minimumTimeBetweenCalls));
-                    _customExchange.AddEnumerator(request.Configuration.Symbol, rateLimit);
+                    _customExchange.AddEnumerator(request.Configuration.Symbol, enumeratorStack);
 
                     var enqueable = new EnqueueableEnumerator<BaseData>();
                     _customExchange.SetDataHandler(request.Configuration.Symbol, data =>
@@ -650,25 +639,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating custom universe: " + config.Symbol.ToString());
 
-                // each time we exhaust we'll new up this enumerator stack
-                var refresher = new RefreshEnumerator<BaseDataCollection>(() =>
-                {
-                    var objectActivator = ObjectActivator.GetActivator(config.Type);
-                    var sourceProvider = (BaseData)objectActivator.Invoke(new object[] { config.Type });
-                    var dateInDataTimeZone = DateTime.UtcNow.ConvertFromUtc(config.DataTimeZone).Date;
-                    var source = sourceProvider.GetSource(config, dateInDataTimeZone, true);
-                    var factory = SubscriptionDataSourceReader.ForSource(source, _dataCacheProvider, config, dateInDataTimeZone, true);
-                    var factorEnumerator = factory.Read(source).GetEnumerator();
-                    var fastForward = new FastForwardEnumerator(factorEnumerator, _timeProvider, request.Security.Exchange.TimeZone, config.Increment);
-                    var frontierAware = new FrontierAwareEnumerator(fastForward, _frontierTimeProvider, tzOffsetProvider);
-                    return new BaseDataCollectionAggregatorEnumerator(frontierAware, config.Symbol);
-                });
+                var factory = new LiveCustomDataSubscriptionEnumeratorFactory(_timeProvider);
+                var enumeratorStack = factory.CreateEnumerator(request, _dataProvider);
+                enumerator = new BaseDataCollectionAggregatorEnumerator(enumeratorStack, config.Symbol);
 
-                // rate limit the refreshing of the stack to the requested interval
-                var minimumTimeBetweenCalls = Math.Min(config.Increment.Ticks, TimeSpan.FromMinutes(30).Ticks);
-                var rateLimit = new RateLimitEnumerator(refresher, _timeProvider, TimeSpan.FromTicks(minimumTimeBetweenCalls));
                 var enqueueable = new EnqueueableEnumerator<BaseData>();
-                _customExchange.AddEnumerator(new EnumeratorHandler(config.Symbol, rateLimit, enqueueable));
+                _customExchange.AddEnumerator(new EnumeratorHandler(config.Symbol, enumerator, enqueueable));
                 enumerator = enqueueable;
             }
 

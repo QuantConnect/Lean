@@ -19,6 +19,8 @@ using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 using QuantConnect.Util;
+using QuantConnect.Logging;
+using Newtonsoft.Json;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
@@ -93,7 +95,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 throw new Exception(string.Join(Environment.NewLine, errors));
             }
 
-            if (tradingMode == "")
+            if (tradingMode.IsNullOrEmpty())
             {
                 throw new Exception("No trading mode selected. Please select either 'paper' or 'live' trading.");
             }

@@ -114,6 +114,7 @@
     <None Include="OptionSplitRegressionAlgorithm.py" />
     <None Include="OptionChainConsistencyRegressionAlgorithm.py" />
     <None Include="HourSplitRegressionAlgorithm.py" />
+    <None Include="HourReverseSplitRegressionAlgorithm.py" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">
@@ -133,6 +134,12 @@
     <Reference Include="Python.Runtime, Version=2.4.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.1\lib\Python.Runtime.dll</HintPath>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CustomSecurityInitializerAlgorithm.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="UniverseSelectionDefinitionsAlgorithm.py" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

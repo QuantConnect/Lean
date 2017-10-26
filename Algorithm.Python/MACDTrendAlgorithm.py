@@ -41,7 +41,7 @@ class MACDTrendAlgorithm(QCAlgorithm):
         self.AddEquity("SPY", Resolution.Daily)
 
         # define our daily macd(12,26) with a 9 day signal
-        self.__macd = self.MACD("SPY", 9, 26, 9, MovingAverageType.Exponential, Resolution.Daily)
+        self.__macd = self.MACD("SPY", 12, 26, 9, MovingAverageType.Exponential, Resolution.Daily)
         self.__previous = datetime.min
         self.PlotIndicator("MACD", True, self.__macd, self.__macd.Signal)
         self.PlotIndicator("SPY", self.__macd.Fast, self.__macd.Slow)
