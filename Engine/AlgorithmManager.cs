@@ -49,7 +49,7 @@ namespace QuantConnect.Lean.Engine
         private readonly object _lock = new object();
         private string _algorithmId = "";
         private DateTime _currentTimeStepTime;
-        private readonly TimeSpan _timeLoopMaximum = TimeSpan.FromMinutes(Config.GetDouble("algorithm-manager-time-loop-maximum", 10));
+        private readonly TimeSpan _timeLoopMaximum = TimeSpan.FromMinutes(Config.GetDouble("algorithm-manager-time-loop-maximum", 20));
         private long _dataPointCount;
 
         /// <summary>

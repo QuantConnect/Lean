@@ -15,6 +15,7 @@
 
 using System;
 using QuantConnect.Data;
+using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 
@@ -31,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class IndicatorSuiteAlgorithm : QCAlgorithm
     {
         private string _symbol = "SPY";
-        private string _customSymbol = "BTC";
+        private string _customSymbol = "WIKI/FB";
         private Indicators _indicators;
         private Indicators _selectorIndicators;
         private IndicatorBase<IndicatorDataPoint> _ratio;
@@ -57,7 +58,7 @@ namespace QuantConnect.Algorithm.CSharp
             AddSecurity(SecurityType.Equity, _symbol, Resolution.Daily);
 
             //Add the Custom Data:
-            AddData<Bitcoin>("BTC");
+            AddData<Quandl>(_customSymbol);
 
             //Set up default Indicators, these indicators are defined on the Value property of incoming data (except ATR and AROON which use the full TradeBar object)
             _indicators = new Indicators
@@ -121,8 +122,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Custom data event handler:
         /// </summary>
-        /// <param name="data">Bitcoin - dictionary of TradeBarlike Bars of Bitcoin Data</param>
-        public void OnData(Bitcoin data)
+        /// <param name="data">Quandl - dictionary Bars of Quandl Data</param>
+        public void OnData(Quandl data)
         {
         }
 
@@ -169,13 +170,14 @@ namespace QuantConnect.Algorithm.CSharp
 
             Plot("AROON", _indicators.AROON.AroonUp, _indicators.AROON.AroonDown);
 
-            Plot("MOM", _indicators.MOM);
-            Plot("MOMP", _indicators.MOMP);
+            // The following Plot method calls are commented out because of the 10 series limit for backtests
+            //Plot("MOM", _indicators.MOM);
+            //Plot("MOMP", _indicators.MOMP);
 
-            Plot("MACD", "Price", _price);
-            Plot("MACD", _indicators.MACD.Fast, _indicators.MACD.Slow, _indicators.MACD.Signal);
+            //Plot("MACD", "Price", _price);
+            //Plot("MACD", _indicators.MACD.Fast, _indicators.MACD.Slow, _indicators.MACD.Signal);
 
-            Plot("Averages", _indicators.EMA, _indicators.SMA);
+            //Plot("Averages", _indicators.EMA, _indicators.SMA);
         }
 
         /// <summary>

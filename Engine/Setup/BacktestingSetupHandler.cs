@@ -28,7 +28,9 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.Setup
 {
@@ -214,7 +216,7 @@ namespace QuantConnect.Lean.Engine.Setup
             algorithm.PostInitialize();
 
             //Calculate the max runtime for the strategy
-            _maxRuntime = GetMaximumRuntime(job.PeriodStart, job.PeriodFinish, algorithm.SubscriptionManager, baseJob.Controls);
+            _maxRuntime = GetMaximumRuntime(job.PeriodStart, job.PeriodFinish, algorithm.SubscriptionManager, algorithm.UniverseManager, baseJob.Controls);
 
             // Python takes forever; lets give it 10x longer to finish.
             if (job.Language == Language.Python)
@@ -259,33 +261,24 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="start">State date of the algorithm</param>
         /// <param name="finish">End date of the algorithm</param>
         /// <param name="subscriptionManager">Subscription Manager</param>
+        /// <param name="universeManager">Universe manager containing configured universes</param>
         /// <param name="controls">Job controls instance</param>
         /// <returns>Timespan maximum run period</returns>
-        private TimeSpan GetMaximumRuntime(DateTime start, DateTime finish, SubscriptionManager subscriptionManager, Controls controls)
+        private TimeSpan GetMaximumRuntime(DateTime start, DateTime finish, SubscriptionManager subscriptionManager, UniverseManager universeManager, Controls controls)
         {
+            // option/futures chain subscriptions
             var derivativeSubscriptions = subscriptionManager.Subscriptions
-                                        .Where( x => x.Symbol.IsCanonical())
-                                        .Select( x =>
-                                        {
-                                            // since number of subscriptions is dynamic and is not known in advance,
-                                            // we assume maximum use of available capacity by the enduser
-                                            switch (x.Resolution)
-                                            {
-                                                case Resolution.Tick:
-                                                    return controls.TickLimit;
-                                                case Resolution.Second:
-                                                    return controls.SecondLimit;
-                                                default:
-                                                    return controls.MinuteLimit;
-                                            }
-                                        })
-                                        .Sum();
+                .Where(x => x.Symbol.IsCanonical())
+                .Select(x => controls.GetLimit(x.Resolution))
+                .Sum();
 
-            var otherSubscriptions = subscriptionManager.Subscriptions
-                                        .Where(x => !x.Symbol.IsCanonical())
-                                        .Count();
+            // universe coarse/fine/custom subscriptions
+            var universeSubscriptions = universeManager.Values
+                // use max limit for universes without explicitly added securities
+                .Select(u => u.Members.Count == 0 ? controls.GetLimit(u.UniverseSettings.Resolution) : u.Members.Count)
+                .Sum();
 
-            var subscriptionCount = otherSubscriptions + derivativeSubscriptions;
+            var subscriptionCount = derivativeSubscriptions + universeSubscriptions;
 
             double maxRunTime = 0;
             var jobDays = (finish - start).TotalDays;

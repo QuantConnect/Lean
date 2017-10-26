@@ -6,7 +6,7 @@
   // two predefined environments, 'backtesting' and 'live', feel free
   // to add more!
 
-  "environment": "backtesting", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
+  "environment": "live-interactive", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
 
   // algorithm class selector
   "algorithm-type-name": "BasicTemplateAlgorithm",
@@ -54,11 +54,11 @@
   "live-data-port": 8020,
 
   // interactive brokers configuration
-  "ib-account": "",
-  "ib-user-name": "",
-  "ib-password": "",
+  "ib-account": "DF825975",
+  "ib-user-name": "micha6860",
+  "ib-password": "ALDsrVW6aG",
   "ib-host": "127.0.0.1",
-  "ib-port": "4002",
+  "ib-port": "4001",
   "ib-agent-description": "Individual",
   "ib-use-tws": false,
   "ib-tws-dir": "C:\\Jts",
@@ -90,6 +90,11 @@
   "iqfeed-password": "",
   "iqfeed-productName": "",
   "iqfeed-version": "1.0",
+
+  // gdax configuration
+  "gdax-api-secret": "",
+  "gdax-api-key": "",
+  "gdax-passphrase": "",
 
   // Required to access data from Quandl
   // To get your access token go to https://www.quandl.com/account/api
@@ -243,6 +248,21 @@
       "log-handler": "QuantConnect.Logging.QueueLogHandler",
       "desktop-http-port": "1234",
       "desktop-exe": "../../../UserInterface/bin/Release/QuantConnect.Views.exe"
-    }
+    },
+
+      "live-gdax": {
+      "live-mode": true,
+
+      // real brokerage implementations require the BrokerageTransactionHandler
+      "live-mode-brokerage": "GDAXBrokerage",
+      "data-queue-handler": "GDAXBrokerage",
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+      "history-provider": "BrokerageHistoryProvider"
+    },
+
   }
 }

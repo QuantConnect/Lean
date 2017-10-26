@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Data;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -26,37 +27,54 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="trading and orders" />
     public class BasicTemplateAlgorithm : QCAlgorithm
     {
-        private Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+        private Symbol _symbol;
 
-        /// <summary>
-        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
-        /// </summary>
         public override void Initialize()
         {
             SetStartDate(2013, 10, 07);  //Set Start Date
             SetEndDate(2013, 10, 11);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
+            SetBenchmark(x => 0);
 
-            // Find more symbols here: http://quantconnect.com/data
-            // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
-            // Futures Resolution: Tick, Second, Minute
-            // Options Resolution: Minute Only.
-            AddEquity("SPY", Resolution.Minute);
+            //_symbol = AddEquity("SPY", Resolution.Second).Symbol;
+            _symbol = AddForex("EURUSD", Resolution.Minute).Symbol;
 
-            // There are other assets with similar methods. See "Selecting Options" etc for more details.
-            // AddFuture, AddForex, AddCfd, AddOption
+            // The default order properties can be set here to choose the FA settings
+            // to be automatically used in any order submission method (such as SetHoldings, Buy, Sell and Order)
+
+            // Use a default FA Account Group with an Allocation Method
+            DefaultOrderProperties = new InteractiveBrokersOrderProperties
+            {
+                // account group created manually in IB/TWS
+                FaGroup = "TestGroupEQ",
+                // supported allocation methods are: EqualQuantity, NetLiq, AvailableEquity, PctChange
+                FaMethod = "EqualQuantity"
+            };
+
+            // set a default FA Allocation Profile
+            //DefaultOrderProperties = new InteractiveBrokersOrderProperties
+            //{
+            //    // allocation profile created manually in IB/TWS
+            //    FaProfile = "TestProfileP"
+            //};
+
+            // send all orders to a single managed account
+            //DefaultOrderProperties = new InteractiveBrokersOrderProperties
+            //{
+            //    // a sub-account linked to the Financial Advisor master account
+            //    Account = "DU123456"
+            //};
         }
 
-        /// <summary>
-        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
+        private bool _done;
         public override void OnData(Slice data)
         {
-            if (!Portfolio.Invested)
+            if (!_done)
             {
-                SetHoldings(_spy, 1);
-                Debug("Purchased Stock");
+                // when logged into IB as a Financial Advisor, this call will use order properties
+                // set in the DefaultOrderProperties property of QCAlgorithm
+                Sell(_symbol, 10000);
+                _done = true;
             }
         }
     }

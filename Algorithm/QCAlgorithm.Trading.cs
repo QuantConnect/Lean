@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
@@ -211,7 +212,7 @@ namespace QuantConnect.Algorithm
                 return mooTicket;
             }
 
-            var request = CreateSubmitOrderRequest(OrderType.Market, security, quantity, tag, DefaultOrderProperties.Clone());
+            var request = CreateSubmitOrderRequest(OrderType.Market, security, quantity, tag, DefaultOrderProperties?.Clone());
 
             // If warming up, do not submit
             if (IsWarmingUp)
@@ -272,7 +273,7 @@ namespace QuantConnect.Algorithm
         public OrderTicket MarketOnOpenOrder(Symbol symbol, decimal quantity, string tag = "")
         {
             var security = Securities[symbol];
-            var request = CreateSubmitOrderRequest(OrderType.MarketOnOpen, security, quantity, tag, DefaultOrderProperties.Clone());
+            var request = CreateSubmitOrderRequest(OrderType.MarketOnOpen, security, quantity, tag, DefaultOrderProperties?.Clone());
             var response = PreOrderChecks(request);
             if (response.IsError)
             {
@@ -316,7 +317,7 @@ namespace QuantConnect.Algorithm
         public OrderTicket MarketOnCloseOrder(Symbol symbol, decimal quantity, string tag = "")
         {
             var security = Securities[symbol];
-            var request = CreateSubmitOrderRequest(OrderType.MarketOnClose, security, quantity, tag, DefaultOrderProperties.Clone());
+            var request = CreateSubmitOrderRequest(OrderType.MarketOnClose, security, quantity, tag, DefaultOrderProperties?.Clone());
             var response = PreOrderChecks(request);
             if (response.IsError)
             {
@@ -363,7 +364,7 @@ namespace QuantConnect.Algorithm
         public OrderTicket LimitOrder(Symbol symbol, decimal quantity, decimal limitPrice, string tag = "")
         {
             var security = Securities[symbol];
-            var request = CreateSubmitOrderRequest(OrderType.Limit, security, quantity, tag, limitPrice: limitPrice, properties: DefaultOrderProperties.Clone());
+            var request = CreateSubmitOrderRequest(OrderType.Limit, security, quantity, tag, limitPrice: limitPrice, properties: DefaultOrderProperties?.Clone());
             var response = PreOrderChecks(request);
             if (response.IsError)
             {
@@ -410,7 +411,7 @@ namespace QuantConnect.Algorithm
         public OrderTicket StopMarketOrder(Symbol symbol, decimal quantity, decimal stopPrice, string tag = "")
         {
             var security = Securities[symbol];
-            var request = CreateSubmitOrderRequest(OrderType.StopMarket, security, quantity, tag, stopPrice: stopPrice, properties: DefaultOrderProperties.Clone());
+            var request = CreateSubmitOrderRequest(OrderType.StopMarket, security, quantity, tag, stopPrice: stopPrice, properties: DefaultOrderProperties?.Clone());
             var response = PreOrderChecks(request);
             if (response.IsError)
             {
@@ -460,7 +461,7 @@ namespace QuantConnect.Algorithm
         public OrderTicket StopLimitOrder(Symbol symbol, decimal quantity, decimal stopPrice, decimal limitPrice, string tag = "")
         {
             var security = Securities[symbol];
-            var request = CreateSubmitOrderRequest(OrderType.StopLimit, security, quantity, tag, stopPrice: stopPrice, limitPrice: limitPrice, properties: DefaultOrderProperties.Clone());
+            var request = CreateSubmitOrderRequest(OrderType.StopLimit, security, quantity, tag, stopPrice: stopPrice, limitPrice: limitPrice, properties: DefaultOrderProperties?.Clone());
             var response = PreOrderChecks(request);
             if (response.IsError)
             {
@@ -482,7 +483,7 @@ namespace QuantConnect.Algorithm
         {
             var option = (Option)Securities[optionSymbol];
 
-            var request = CreateSubmitOrderRequest(OrderType.OptionExercise, option, quantity, tag, DefaultOrderProperties.Clone());
+            var request = CreateSubmitOrderRequest(OrderType.OptionExercise, option, quantity, tag, DefaultOrderProperties?.Clone());
 
             // If warming up, do not submit
             if (IsWarmingUp)
@@ -1059,7 +1060,7 @@ namespace QuantConnect.Algorithm
             return exchangeHours.IsOpen(time, false);
         }
 
-        private SubmitOrderRequest CreateSubmitOrderRequest(OrderType orderType, Security security, decimal quantity, string tag, OrderProperties properties, decimal stopPrice = 0m, decimal limitPrice = 0m)
+        private SubmitOrderRequest CreateSubmitOrderRequest(OrderType orderType, Security security, decimal quantity, string tag, IOrderProperties properties, decimal stopPrice = 0m, decimal limitPrice = 0m)
         {
             return new SubmitOrderRequest(orderType, security.Type, security.Symbol, quantity, stopPrice, limitPrice, UtcTime, tag, properties);
         }

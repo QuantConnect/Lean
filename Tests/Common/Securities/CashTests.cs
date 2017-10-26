@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,6 +22,7 @@ using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -90,21 +91,6 @@ namespace QuantConnect.Tests.Common.Securities
             cash.EnsureCurrencyDataFeed(securities, subscriptions, MarketHoursDatabase.AlwaysOpen, SymbolPropertiesDatabase.FromDataFolder(), MarketMap, cashBook);
             Assert.AreEqual(1, subscriptions.Subscriptions.Count(x => x.Symbol == Symbols.USDJPY));
             Assert.AreEqual(1, securities.Values.Count(x => x.Symbol == Symbols.USDJPY));
-        }
-
-        [Test]
-        [ExpectedException(typeof(InvalidOperationException), MatchType = MessageMatch.Contains, ExpectedMessage = "Please add subscription")]
-        public void EnsureCurrencyDataFeedAddsSubscriptionThrowsWhenZeroSubscriptionsPresent()
-        {
-            const int quantity = 100;
-            const decimal conversionRate = 1 / 100m;
-            var cash = new Cash("JPY", quantity, conversionRate);
-            var cashBook = new CashBook();
-            cashBook.Add("JPY", cash);
-
-            var securities = new SecurityManager(TimeKeeper);
-            var subscriptions = new SubscriptionManager(AlgorithmSettings, TimeKeeper);
-            cash.EnsureCurrencyDataFeed(securities, subscriptions, MarketHoursDatabase.AlwaysOpen, SymbolPropertiesDatabase.FromDataFolder(), MarketMap, cashBook);
         }
 
         [Test]
@@ -186,6 +172,36 @@ namespace QuantConnect.Tests.Common.Securities
             cashGBP.EnsureCurrencyDataFeed(securities, subscriptions, MarketHoursDatabase.AlwaysOpen, SymbolPropertiesDatabase.FromDataFolder(), MarketMap, cashBook);
             var config2 = subscriptions.Subscriptions.Single(x => x.Symbol == Symbols.GBPUSD);
             Assert.IsTrue(config2.IsInternalFeed);
+        }
+
+        [Test]
+        public void EnsureCurrencyDataFeedForCryptoCurrency()
+        {
+            var book = new CashBook
+            {
+                {"USD", new Cash("USD", 100, 1) },
+                {"BTC", new Cash("BTC", 100, 6000) },
+                {"LTC", new Cash("LTC", 100, 55) },
+                {"ETH", new Cash("ETH", 100, 290) },
+                {"EUR", new Cash("EUR", 100, 1.2m) },
+                {"JPY", new Cash("JPY", 100, 0.0088m) },
+                {"XAG", new Cash("XAG", 100, 1275) },
+                {"XAU", new Cash("XAU", 100, 17) }
+            };
+
+            var subscriptions = new SubscriptionManager(AlgorithmSettings, TimeKeeper);
+            var securities = new SecurityManager(TimeKeeper);
+
+            book.EnsureCurrencyDataFeeds(securities, subscriptions, MarketHoursDatabase.AlwaysOpen, SymbolPropertiesDatabase.FromDataFolder(), MarketMap);
+
+            var symbols = subscriptions.Subscriptions.Select(sdc => sdc.Symbol).ToHashSet();
+
+            Assert.IsTrue(symbols.Contains(Symbols.BTCUSD));
+            Assert.IsTrue(symbols.Contains(Symbols.LTCUSD));
+            Assert.IsTrue(symbols.Contains(Symbols.ETHUSD));
+            Assert.IsTrue(symbols.Contains(Symbols.EURUSD));
+            Assert.IsTrue(symbols.Contains(Symbols.XAGUSD));
+            Assert.IsTrue(symbols.Contains(Symbols.XAUUSD));
         }
 
         [Test]

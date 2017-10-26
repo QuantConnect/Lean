@@ -31,12 +31,12 @@ namespace QuantConnect.Tests.Brokerages
             _lowLimit = lowLimit;
         }
 
-        public override Order CreateShortOrder(int quantity)
+        public override Order CreateShortOrder(decimal quantity)
         {
             return new StopLimitOrder(Symbol, -Math.Abs(quantity), _lowLimit, _highLimit, DateTime.Now);
         }
 
-        public override Order CreateLongOrder(int quantity)
+        public override Order CreateLongOrder(decimal quantity)
         {
             return new StopLimitOrder(Symbol, Math.Abs(quantity), _highLimit, _lowLimit, DateTime.Now);
         }

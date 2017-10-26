@@ -16,6 +16,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -61,6 +62,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             }
             else
             {
+                _enumerator.DisposeSafely();
+
                 _enumerator = null;
                 _current = default(T);
             }

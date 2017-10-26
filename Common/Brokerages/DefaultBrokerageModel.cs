@@ -44,7 +44,7 @@ namespace QuantConnect.Brokerages
             {SecurityType.Future, Market.USA},
             {SecurityType.Forex, Market.FXCM},
             {SecurityType.Cfd, Market.FXCM},
-            {SecurityType.Crypto, Market.Bitfinex}
+            {SecurityType.Crypto, Market.GDAX}
         }.ToReadOnlyDictionary();
 
         /// <summary>
@@ -145,7 +145,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="security">The security's whose leverage we seek</param>
         /// <returns>The leverage for the specified security</returns>
-        public decimal GetLeverage(Security security)
+        public virtual decimal GetLeverage(Security security)
         {
             if (AccountType == AccountType.Cash)
             {

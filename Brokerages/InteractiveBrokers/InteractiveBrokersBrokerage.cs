@@ -74,8 +74,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly ManualResetEvent _waitForNextValidId = new ManualResetEvent(false);
         private readonly ManualResetEvent _accountHoldingsResetEvent = new ManualResetEvent(false);
 
-        // tracks remaining quantity for orders waiting to be filled completely (updated on partial fills)
-        private readonly Dictionary<int, int> _orderFills = new Dictionary<int, int>();
+        // tracks executions before commission reports, map: execId -> execution
+        private readonly ConcurrentDictionary<string, Execution> _orderExecutions = new ConcurrentDictionary<string, Execution>();
+        // tracks commission reports before executions, map: execId -> commission report
+        private readonly ConcurrentDictionary<string, CommissionReport> _commissionReports = new ConcurrentDictionary<string, CommissionReport>();
 
         // holds account properties, cash balances and holdings for the account
         private readonly InteractiveBrokersAccountData _accountData = new InteractiveBrokersAccountData();
@@ -193,6 +195,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _clientId = IncrementClientId();
             _agentDescription = agentDescription;
 
+            Log.Trace($"InteractiveBrokersBrokerage.InteractiveBrokersBrokerage(): Host: {host}, Port: {port}, Account: {account}, AgentDescription: {agentDescription}");
+
             _client = new IB.InteractiveBrokersClient(_signal);
 
             // set up event handlers
@@ -200,6 +204,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _client.OrderStatus += HandleOrderStatusUpdates;
             _client.UpdateAccountValue += HandleUpdateAccountValue;
             _client.ExecutionDetails += HandleExecutionDetails;
+            _client.CommissionReport += HandleCommissionReport;
             _client.Error += HandleError;
             _client.TickPrice += HandleTickPrice;
             _client.TickSize += HandleTickSize;
@@ -1329,39 +1334,30 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 if (status == OrderStatus.Filled || status == OrderStatus.PartiallyFilled)
                 {
-                    var currentQuantityFilled = Convert.ToInt32(update.Filled);
-                    var totalQuantityFilled = Convert.ToInt32(order.AbsoluteQuantity - update.Remaining);
-                    var remainingQuantity = update.Remaining;
-                    var price = Convert.ToDecimal(update.LastFillPrice);
-
-                    if (!IsFillAlreadyHandled(order, update.OrderId, remainingQuantity))
-                    {
-                        HandleFill(order, currentQuantityFilled, totalQuantityFilled, remainingQuantity, price, status);
-                    }
+                    // fill events will be only processed in HandleExecutionDetails and HandleCommissionReports
+                    return;
                 }
-                else
+
+                // IB likes to duplicate/triplicate some events, so we fire non-fill events only if status changed
+                if (status != order.Status)
                 {
-                    // IB likes to duplicate/triplicate some events, so we fire non-fill events only if status changed
-                    if (status != order.Status)
+                    if (order.Status.IsClosed())
                     {
-                        if (order.Status.IsClosed())
+                        // if the order is already in a closed state, we ignore the event
+                        Log.Trace("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): ignoring update in closed state - order.Status: " + order.Status + ", status: " + status);
+                    }
+                    else if (order.Status == OrderStatus.PartiallyFilled && (status == OrderStatus.New || status == OrderStatus.Submitted))
+                    {
+                        // if we receive a New or Submitted event when already partially filled, we ignore it
+                        Log.Trace("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): ignoring status " + status + " after partial fills");
+                    }
+                    else
+                    {
+                        // fire the event
+                        OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Interactive Brokers Order Event")
                         {
-                            // if the order is already in a closed state, we ignore the event
-                            Log.Trace("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): ignoring update in closed state - order.Status: " + order.Status + ", status: " + status);
-                        }
-                        else if (order.Status == OrderStatus.PartiallyFilled && (status == OrderStatus.New || status == OrderStatus.Submitted))
-                        {
-                            // if we receive a New or Submitted event when already partially filled, we ignore it
-                            Log.Trace("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): ignoring status " + status + " after partial fills");
-                        }
-                        else
-                        {
-                            // fire the event
-                            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Interactive Brokers Order Event")
-                            {
-                                Status = status
-                            });
-                        }
+                            Status = status
+                        });
                     }
                 }
             }
@@ -1404,17 +1400,27 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     return;
                 }
 
-                var currentQuantityFilled = Convert.ToInt32(executionDetails.Execution.Shares);
-                var totalQuantityFilled = Convert.ToInt32(executionDetails.Execution.CumQty);
-                var remainingQuantity = Convert.ToInt32(order.AbsoluteQuantity - totalQuantityFilled);
-                var price = Convert.ToDecimal(executionDetails.Execution.Price);
+                // For financial advisor orders, we first receive executions and commission reports for the master order,
+                // followed by executions and commission reports for all allocations.
+                // We don't want to emit fills for these allocation events,
+                // so we ignore events received after the order is completely filled or
+                // executions for allocations which are already included in the master execution.
 
-                // set order status based on remaining quantity
-                var status = remainingQuantity > 0 ? OrderStatus.PartiallyFilled : OrderStatus.Filled;
-
-                if (!IsFillAlreadyHandled(order, executionDetails.Execution.OrderId, remainingQuantity))
+                CommissionReport commissionReport;
+                if (_commissionReports.TryGetValue(executionDetails.Execution.ExecId, out commissionReport))
                 {
-                    HandleFill(order, currentQuantityFilled, totalQuantityFilled, remainingQuantity, price, status);
+                    if (CanEmitFill(order, executionDetails.Execution))
+                    {
+                        // we have both execution and commission report, emit the fill
+                        EmitOrderFill(order, executionDetails.Execution, commissionReport);
+                    }
+
+                    _commissionReports.TryRemove(commissionReport.ExecId, out commissionReport);
+                }
+                else
+                {
+                    // save execution in dictionary and wait for commission report
+                    _orderExecutions[executionDetails.Execution.ExecId] = executionDetails.Execution;
                 }
             }
             catch (Exception err)
@@ -1424,18 +1430,84 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
-        /// Processes the current fill and fires the order event
+        /// Handle commission report events from IB
         /// </summary>
-        private void HandleFill(Order order, int currentQuantityFilled, int totalQuantityFilled, int remainingQuantity, decimal price, OrderStatus status)
+        /// <remarks>
+        /// This method matches commission reports with previously saved executions and fires the OrderEvents.
+        /// </remarks>
+        private void HandleCommissionReport(object sender, IB.CommissionReportEventArgs e)
         {
-            // apply order fees on the first fill event
-            // TODO: What about partial filled orders that get cancelled?
-            var orderFee = 0m;
-            if (currentQuantityFilled == totalQuantityFilled)
+            try
             {
-                var security = _securityProvider.GetSecurity(order.Symbol);
-                orderFee = security.FeeModel.GetOrderFee(security, order);
+                Log.Trace("InteractiveBrokersBrokerage.HandleCommissionReport(): " + e);
+
+                Execution execution;
+                if (!_orderExecutions.TryGetValue(e.CommissionReport.ExecId, out execution))
+                {
+                    // save commission in dictionary and wait for execution event
+                    _commissionReports[e.CommissionReport.ExecId] = e.CommissionReport;
+                    return;
+                }
+
+                var order = _orderProvider.GetOrderByBrokerageId(execution.OrderId);
+                if (order == null)
+                {
+                    Log.Error("InteractiveBrokersBrokerage.HandleExecutionDetails(): Unable to locate order with BrokerageID " + execution.OrderId);
+                    return;
+                }
+
+                if (CanEmitFill(order, execution))
+                {
+                    // we have both execution and commission report, emit the fill
+                    EmitOrderFill(order, execution, e.CommissionReport);
+                }
+
+                // always remove previous execution
+                _orderExecutions.TryRemove(e.CommissionReport.ExecId, out execution);
             }
+            catch (Exception err)
+            {
+                Log.Error("InteractiveBrokersBrokerage.HandleCommissionReport(): " + err);
+            }
+        }
+
+        /// <summary>
+        /// Decide which fills should be emitted, accounting for different types of Financial Advisor orders
+        /// </summary>
+        private bool CanEmitFill(Order order, Execution execution)
+        {
+            if (order.Status == OrderStatus.Filled)
+                return false;
+
+            // non-FA orders
+            if (!IsFinancialAdvisor)
+                return true;
+
+            var orderProperties = order.Properties as InteractiveBrokersOrderProperties;
+            if (orderProperties == null)
+                return true;
+
+            return
+                // FA master orders for groups/profiles
+                string.IsNullOrWhiteSpace(orderProperties.Account) && execution.AcctNumber == _account ||
+
+                // FA orders for single managed accounts
+                !string.IsNullOrWhiteSpace(orderProperties.Account) && execution.AcctNumber == orderProperties.Account;
+        }
+
+        /// <summary>
+        /// Emits an order fill (or partial fill) including the actual IB commission paid
+        /// </summary>
+        private void EmitOrderFill(Order order, Execution execution, CommissionReport commissionReport)
+        {
+            var currentQuantityFilled = Convert.ToInt32(execution.Shares);
+            var totalQuantityFilled = Convert.ToInt32(execution.CumQty);
+            var remainingQuantity = Convert.ToInt32(order.AbsoluteQuantity - totalQuantityFilled);
+            var price = Convert.ToDecimal(execution.Price);
+            var orderFee = Convert.ToDecimal(commissionReport.Commission);
+
+            // set order status based on remaining quantity
+            var status = remainingQuantity > 0 ? OrderStatus.PartiallyFilled : OrderStatus.Filled;
 
             // mark sells as negative quantities
             var fillQuantity = order.Direction == OrderDirection.Buy ? currentQuantityFilled : -currentQuantityFilled;
@@ -1453,43 +1525,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             // fire the order fill event
             OnOrderEvent(orderEvent);
-        }
-
-        /// <summary>
-        /// Checks if the current fill has already been processed
-        /// </summary>
-        /// <remarks>
-        /// We receive fill events in both IB OrderStatusUpdates and ExecutionDetail callbacks,
-        /// so this function needs to check if it has been called for the same fill
-        /// </remarks>
-        private bool IsFillAlreadyHandled(Order order, int orderId, int newRemainingQuantity)
-        {
-            // ignore calls after the order is filled
-            if (order.Status == OrderStatus.Filled)
-                return true;
-
-            int previousRemainingQuantity;
-            if (_orderFills.TryGetValue(orderId, out previousRemainingQuantity))
-            {
-                if (newRemainingQuantity >= previousRemainingQuantity)
-                {
-                    // fill already processed
-                    return true;
-                }
-            }
-
-            if (newRemainingQuantity > 0)
-            {
-                // still a partial fill, update the remaining quantity for the order
-                _orderFills[orderId] = newRemainingQuantity;
-            }
-            else
-            {
-                // order filled, no need to track it anymore
-                _orderFills.Remove(orderId);
-            }
-
-            return false;
         }
 
         /// <summary>
@@ -1549,27 +1584,31 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 // https://interactivebrokers.github.io/tws-api/financial_advisor.html#gsc.tab=0
 
-                if (!string.IsNullOrWhiteSpace(order.Properties.FinancialAdvisorProperties.Account))
+                var orderProperties = order.Properties as InteractiveBrokersOrderProperties;
+                if (orderProperties != null)
                 {
-                    // order for a single managed account
-                    ibOrder.Account = order.Properties.FinancialAdvisorProperties.Account;
-                }
-                else if (!string.IsNullOrWhiteSpace(order.Properties.FinancialAdvisorProperties.Profile))
-                {
-                    // order for an account profile
-                    ibOrder.FaProfile = order.Properties.FinancialAdvisorProperties.Profile;
-
-                }
-                else if (!string.IsNullOrWhiteSpace(order.Properties.FinancialAdvisorProperties.Group))
-                {
-                    // order for an account group
-                    ibOrder.FaGroup = order.Properties.FinancialAdvisorProperties.Group;
-                    ibOrder.FaMethod = order.Properties.FinancialAdvisorProperties.Method;
-
-                    if (ibOrder.FaMethod == "PctChange")
+                    if (!string.IsNullOrWhiteSpace(orderProperties.Account))
                     {
-                        ibOrder.FaPercentage = order.Properties.FinancialAdvisorProperties.Percentage.ToString();
-                        ibOrder.TotalQuantity = 0;
+                        // order for a single managed account
+                        ibOrder.Account = orderProperties.Account;
+                    }
+                    else if (!string.IsNullOrWhiteSpace(orderProperties.FaProfile))
+                    {
+                        // order for an account profile
+                        ibOrder.FaProfile = orderProperties.FaProfile;
+
+                    }
+                    else if (!string.IsNullOrWhiteSpace(orderProperties.FaGroup))
+                    {
+                        // order for an account group
+                        ibOrder.FaGroup = orderProperties.FaGroup;
+                        ibOrder.FaMethod = orderProperties.FaMethod;
+
+                        if (ibOrder.FaMethod == "PctChange")
+                        {
+                            ibOrder.FaPercentage = orderProperties.FaPercentage.ToString();
+                            ibOrder.TotalQuantity = 0;
+                        }
                     }
                 }
             }

@@ -44,23 +44,23 @@ namespace QuantConnect.Algorithm.CSharp
             // to be automatically used in any order submission method (such as SetHoldings, Buy, Sell and Order)
 
             // Use a default FA Account Group with an Allocation Method
-            DefaultOrderProperties.FinancialAdvisorProperties = new OrderFinancialAdvisorProperties
+            DefaultOrderProperties = new InteractiveBrokersOrderProperties
             {
                 // account group created manually in IB/TWS
-                Group = "TestGroupEQ",
+                FaGroup = "TestGroupEQ",
                 // supported allocation methods are: EqualQuantity, NetLiq, AvailableEquity, PctChange
-                Method = "EqualQuantity"
+                FaMethod = "EqualQuantity"
             };
 
             // set a default FA Allocation Profile
-            //DefaultOrderProperties.FinancialAdvisorProperties = new OrderFinancialAdvisorProperties
+            //DefaultOrderProperties = new InteractiveBrokersOrderProperties
             //{
             //    // allocation profile created manually in IB/TWS
-            //    Profile = "TestProfileP"
+            //    FaProfile = "TestProfileP"
             //};
 
             // send all orders to a single managed account
-            //DefaultOrderProperties.FinancialAdvisorProperties = new OrderFinancialAdvisorProperties
+            //DefaultOrderProperties = new InteractiveBrokersOrderProperties
             //{
             //    // a sub-account linked to the Financial Advisor master account
             //    Account = "DU123456"

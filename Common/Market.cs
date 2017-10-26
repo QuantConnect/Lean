@@ -43,7 +43,8 @@ namespace QuantConnect
             Tuple.Create(CBOT, 8),
             Tuple.Create(ICE, 9),
             Tuple.Create(CBOE, 10),
-            Tuple.Create(NSE,11)
+            Tuple.Create(NSE, 11),
+            Tuple.Create(GDAX, 12)
         };
 
         static Market()
@@ -112,6 +113,11 @@ namespace QuantConnect
         /// NSE
         /// </summary>
         public const string NSE = "nse";
+
+        /// <summary>
+        /// GDAX
+        /// </summary>
+        public const string GDAX = "gdax";
 
         /// <summary>
         /// Adds the specified market to the map of available markets with the specified identifier.

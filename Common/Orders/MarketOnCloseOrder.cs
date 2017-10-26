@@ -14,6 +14,7 @@
 */
 
 using System;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Orders
@@ -46,7 +47,7 @@ namespace QuantConnect.Orders
         /// <param name="time">The current time</param>
         /// <param name="tag">A user defined tag for the order</param>
         /// <param name="properties">The order properties for this order</param>
-        public MarketOnCloseOrder(Symbol symbol, decimal quantity, DateTime time, string tag = "", OrderProperties properties = null)
+        public MarketOnCloseOrder(Symbol symbol, decimal quantity, DateTime time, string tag = "", IOrderProperties properties = null)
             : base(symbol, quantity, time, tag, properties)
         {
         }

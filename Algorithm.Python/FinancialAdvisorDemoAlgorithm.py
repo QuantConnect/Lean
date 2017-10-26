@@ -42,21 +42,21 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
         # to be automatically used in any order submission method (such as SetHoldings, Buy, Sell and Order)
 
         # Use a default FA Account Group with an Allocation Method
-        DefaultOrderProperties.FinancialAdvisorProperties = OrderFinancialAdvisorProperties()
+        DefaultOrderProperties = InteractiveBrokersOrderProperties()
         # account group created manually in IB/TWS
-        DefaultOrderProperties.FinancialAdvisorProperties.Group = "TestGroupEQ"
+        DefaultOrderProperties.FaGroup = "TestGroupEQ"
         # supported allocation methods are: EqualQuantity, NetLiq, AvailableEquity, PctChange
-        DefaultOrderProperties.FinancialAdvisorProperties.Method = "EqualQuantity"
+        DefaultOrderProperties.FaMethod = "EqualQuantity"
 
         # set a default FA Allocation Profile
-        # DefaultOrderProperties.FinancialAdvisorProperties = OrderFinancialAdvisorProperties()
+        # DefaultOrderProperties = InteractiveBrokersOrderProperties()
         # allocation profile created manually in IB/TWS
-        # DefaultOrderProperties.FinancialAdvisorProperties.Profile = "TestProfileP"
+        # DefaultOrderProperties.FaProfile = "TestProfileP"
 
         # send all orders to a single managed account
-        # DefaultOrderProperties.FinancialAdvisorProperties = OrderFinancialAdvisorProperties()
+        # DefaultOrderProperties = InteractiveBrokersOrderProperties()
         # a sub-account linked to the Financial Advisor master account
-        # DefaultOrderProperties.FinancialAdvisorProperties.Account = "DU123456"
+        # DefaultOrderProperties.Account = "DU123456"
 
     def OnData(self, data):
         # OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.

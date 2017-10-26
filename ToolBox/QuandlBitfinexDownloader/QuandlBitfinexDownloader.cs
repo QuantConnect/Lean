@@ -27,17 +27,15 @@ namespace QuantConnect.ToolBox.QuandlBitfinexDownloader
     public class QuandlBitfinexDownloader : IDataDownloader
     {
         private readonly string _apiKey;
-        private readonly decimal _scaleFactor;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="QuandlBitfinexDownloader"/> class
         /// </summary>
         /// <param name="apiKey">The quandl api key</param>
         /// <param name="scaleFactor">Scale factor used to scale the data, useful for changing the BTC units</param>
-        public QuandlBitfinexDownloader(string apiKey, int scaleFactor = 100)
+        public QuandlBitfinexDownloader(string apiKey)
         {
             _apiKey = apiKey;
-            _scaleFactor = scaleFactor;
         }
 
         /// <summary>
@@ -75,12 +73,12 @@ namespace QuantConnect.ToolBox.QuandlBitfinexDownloader
                     var bar = new TradeBar
                     {
                         Time = DateTime.Parse(line[0]),
-                        Open = decimal.Parse(line[1])/_scaleFactor,
-                        High = decimal.Parse(line[2])/_scaleFactor,
-                        Low = decimal.Parse(line[3])/_scaleFactor,
-                        Close = decimal.Parse(line[4])/_scaleFactor,
-                        Value = decimal.Parse(line[7])/_scaleFactor,
-                        Volume = (long) (decimal.Parse(line[5])*_scaleFactor),
+                        Open = decimal.Parse(line[1]),
+                        High = decimal.Parse(line[2]),
+                        Low = decimal.Parse(line[3]),
+                        Close = decimal.Parse(line[4]),
+                        Value = decimal.Parse(line[7]),
+                        Volume = (long) (decimal.Parse(line[5])),
                         Symbol = symbol,
                         DataType = MarketDataType.TradeBar,
                         Period = Time.OneDay

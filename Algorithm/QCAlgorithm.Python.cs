@@ -104,7 +104,14 @@ namespace QuantConnect.Algorithm
         public void AddUniverse(PyObject pycoarse)
         {
             var coarse = PythonUtil.ToFunc<IEnumerable<CoarseFundamental>, object[]>(pycoarse);
-            AddUniverse(c => coarse(c).Select(x => (Symbol)x));
+            if (coarse != null)
+            {
+                AddUniverse(c => coarse(c).Select(x => (Symbol)x));
+                return;
+            }
+
+            var type = (Type)pycoarse.GetPythonType().AsManagedObject(typeof(Type));
+            AddUniverse((dynamic)pycoarse.AsManagedObject(type));
         }
 
         /// <summary>
@@ -417,49 +424,19 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Automatically plots each indicator when a new value is available
         /// </summary>
-        public void PlotIndicator(string chart, Indicator first, Indicator second = null, Indicator third = null, Indicator fourth = null)
+        public void PlotIndicator(string chart, PyObject first, PyObject second = null, PyObject third = null, PyObject fourth = null)
         {
-            PlotIndicator(chart, new[] { first, second, third, fourth }.Where(x => x != null).ToArray());
+            var array = GetIndicatorArray(first, second, third, fourth);
+            PlotIndicator(chart, array[0], array[1], array[2], array[3]);
         }
 
         /// <summary>
         /// Automatically plots each indicator when a new value is available
         /// </summary>
-        public void PlotIndicator(string chart, BarIndicator first, BarIndicator second = null, BarIndicator third = null, BarIndicator fourth = null)
+        public void PlotIndicator(string chart, bool waitForReady, PyObject first, PyObject second = null, PyObject third = null, PyObject fourth = null)
         {
-            PlotIndicator(chart, new[] { first, second, third, fourth }.Where(x => x != null).ToArray());
-        }
-
-        /// <summary>
-        /// Automatically plots each indicator when a new value is available
-        /// </summary>
-        public void PlotIndicator(string chart, TradeBarIndicator first, TradeBarIndicator second = null, TradeBarIndicator third = null, TradeBarIndicator fourth = null)
-        {
-            PlotIndicator(chart, new[] { first, second, third, fourth }.Where(x => x != null).ToArray());
-        }
-
-        /// <summary>
-        /// Automatically plots each indicator when a new value is available, optionally waiting for indicator.IsReady to return true
-        /// </summary>
-        public void PlotIndicator(string chart, bool waitForReady, Indicator first, Indicator second = null, Indicator third = null, Indicator fourth = null)
-        {
-            PlotIndicator(chart, waitForReady, new[] { first, second, third, fourth }.Where(x => x != null).ToArray());
-        }
-
-        /// <summary>
-        /// Automatically plots each indicator when a new value is available, optionally waiting for indicator.IsReady to return true
-        /// </summary>
-        public void PlotIndicator(string chart, bool waitForReady, BarIndicator first, BarIndicator second = null, BarIndicator third = null, BarIndicator fourth = null)
-        {
-            PlotIndicator(chart, waitForReady, new[] { first, second, third, fourth }.Where(x => x != null).ToArray());
-        }
-
-        /// <summary>
-        /// Automatically plots each indicator when a new value is available, optionally waiting for indicator.IsReady to return true
-        /// </summary>
-        public void PlotIndicator(string chart, bool waitForReady, TradeBarIndicator first, TradeBarIndicator second = null, TradeBarIndicator third = null, TradeBarIndicator fourth = null)
-        {
-            PlotIndicator(chart, waitForReady, new[] { first, second, third, fourth }.Where(x => x != null).ToArray());
+            var array = GetIndicatorArray(first, second, third, fourth);
+            PlotIndicator(chart, waitForReady, array[0], array[1], array[2], array[3]);
         }
 
         /// <summary>
@@ -566,6 +543,25 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Sets the specified function as the benchmark, this function provides the value of
+        /// the benchmark at each date/time requested
+        /// </summary>
+        /// <param name="benchmark">The benchmark producing function</param>
+        public void SetBenchmark(PyObject benchmark)
+        {
+            using (Py.GIL())
+            {
+                var pyBenchmark = PythonUtil.ToFunc<DateTime, decimal>(benchmark);
+                if (pyBenchmark != null)
+                {
+                    SetBenchmark(pyBenchmark);
+                    return;
+                }
+                SetBenchmark((Symbol)benchmark.AsManagedObject(typeof(Symbol)));
+            }
+        }
+
+        /// <summary>
         /// Sets the brokerage to emulate in backtesting or paper trading.
         /// This can be used to set a custom brokerage model.
         /// </summary>
@@ -573,6 +569,29 @@ namespace QuantConnect.Algorithm
         public void SetBrokerageModel(PyObject model)
         {
             SetBrokerageModel(new BrokerageModelPythonWrapper(model));
+        }
+
+        /// <summary>
+        /// Sets the security initializer function, used to initialize/configure securities after creation
+        /// </summary>
+        /// <param name="securityInitializer">The security initializer function or class</param>
+        public void SetSecurityInitializer(PyObject securityInitializer)
+        {
+            var securityInitializer1 = PythonUtil.ToAction<Security>(securityInitializer);
+            if (securityInitializer1 != null)
+            {
+                SetSecurityInitializer(securityInitializer1);
+                return;
+            }
+
+            var securityInitializer2 = PythonUtil.ToAction<Security, bool>(securityInitializer);
+            if (securityInitializer2 != null)
+            {
+                SetSecurityInitializer(securityInitializer2);
+                return;
+            }
+
+            SetSecurityInitializer(new SecurityInitializerPythonWrapper(securityInitializer));
         }
 
         /// <summary>
@@ -605,6 +624,48 @@ namespace QuantConnect.Algorithm
                     symbols.Add(symbol);
                 }
                 return symbols.Count == 0 ? null : symbols;
+            }
+        }
+
+        /// <summary>
+        /// Gets indicator base type
+        /// </summary>
+        /// <param name="type">Indicator type</param>
+        /// <returns>Indicator base type</returns>
+        private Type GetIndicatorBaseType(Type type)
+        {
+            if (type.BaseType == typeof(object))
+            {
+                return type;
+            }
+            return GetIndicatorBaseType(type.BaseType);
+        }
+
+        /// <summary>
+        /// Converts the sequence of PyObject objects into an array of dynamic objects that represent indicators of the same type
+        /// </summary>
+        /// <returns>Array of dynamic objects with indicator</returns>
+        private dynamic[] GetIndicatorArray(PyObject first, PyObject second = null, PyObject third = null, PyObject fourth = null)
+        {
+            using (Py.GIL())
+            {
+                var array = new[] { first, second, third, fourth }
+                    .Select(x =>
+                    {
+                        if (x == null) return null;
+                        var type = (Type)x.GetPythonType().AsManagedObject(typeof(Type));
+                        return (dynamic)x.AsManagedObject(type);
+
+                    }).ToArray();
+
+                var types = array.Where(x => x != null).Select(x => GetIndicatorBaseType(x.GetType())).Distinct();
+
+                if (types.Count() > 1)
+                {
+                    throw new Exception("QCAlgorithm.GetIndicatorArray(). All indicators must be of the same type: data point, bar or tradebar.");
+                }
+
+                return array;
             }
         }
 
