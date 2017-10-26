@@ -110,7 +110,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         continue;
                     }
 
-                    yield return instances;
+                    if (_isLiveMode)
+                    {
+                        yield return instances;
+                    }
+                    else
+                    {
+                        foreach (var instance in instances.Data)
+                        {
+                            yield return instance;
+                        }
+                    }
                 }
             }
             finally
