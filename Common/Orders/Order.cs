@@ -250,7 +250,7 @@ namespace QuantConnect.Orders
             order.Status = Status;
             order.Symbol = Symbol;
             order.Tag = Tag;
-            order.Properties = Properties.Clone();
+            order.Properties = Properties?.Clone();
         }
 
         /// <summary>
