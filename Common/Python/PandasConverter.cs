@@ -61,116 +61,43 @@ namespace QuantConnect.Python
         /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
         public PyObject GetDataFrame(IEnumerable<Slice> data)
         {
-            var symbols = data.SelectMany(x => x.Keys).Distinct().OrderBy(x => x.Value);
+            var sliceDataDict = new Dictionary<Symbol, PandasData>();
 
-            // If data contains derivatives and its underlying, 
-            // we get the underlying to exclude it from the dataframe 
-            Symbol underlying = null;
-            var derivatives = symbols.Where(x => x.HasUnderlying);
-            if (derivatives.Count() > 0)
+            foreach (var slice in data)
             {
-                underlying = derivatives.First().Underlying;
+                foreach (var baseData in slice.Values)
+                {
+                    if (!sliceDataDict.ContainsKey(baseData.Symbol))
+                    {
+                        sliceDataDict.Add(baseData.Symbol, new PandasData(baseData));
+                    }
+                    sliceDataDict[baseData.Symbol].Add(baseData);
+                }
             }
-            
+
+            var maxLevels = sliceDataDict.Max(x => x.Value.Levels);
+
             using (Py.GIL())
             {
-                var dataFrame = _pandas.DataFrame();
-
-                foreach (var symbol in symbols)
-                {
-                    if (symbol == underlying)
-                    {
-                        continue;
-                    }
-
-                    var items = new PyObject[]
-                    {
-                        dataFrame,
-                        GetDataFrame(data.Get<QuoteBar>(symbol)),
-                        GetDataFrame(data.Get<TradeBar>(symbol))
-                    };
-
-                    dataFrame = _pandas.concat(new PyList(items));
-                }
-
-                return dataFrame;
+                var dataFrames = sliceDataDict.Select(x => x.Value.ToPandasDataFrame(_pandas, maxLevels));
+                return _pandas.concat(dataFrames.ToArray());
             }
         }
 
         /// <summary>
-        /// Converts an enumerable of <see cref="IBaseDataBar"/> in a pandas.DataFrame
+        /// Converts an enumerable of <see cref="IBaseData"/> in a pandas.DataFrame
         /// </summary>
         /// <param name="data">Enumerable of <see cref="Slice"/></param>
         /// <returns><see cref="PyObject"/> containing a pandas.DataFrame</returns>
         public PyObject GetDataFrame<T>(IEnumerable<T> data)
-            where T : IBaseDataBar
+            where T : IBaseData
         {
-            if (data.Count() == 0)
+            var sliceData = new PandasData(data.FirstOrDefault());
+            foreach (var baseData in data)
             {
-                return _pandas.DataFrame();
+                sliceData.Add(baseData);
             }
-
-            using (Py.GIL())
-            {
-                var index = CreateIndex(data.First().Symbol, data.Select(x => x.Time));
-
-                var pyDict = new PyDict();
-                
-                pyDict.SetItem("low", _pandas.Series(data.Select(x => (double)x.Low).ToList(), index));
-                pyDict.SetItem("open", _pandas.Series(data.Select(x => (double)x.Open).ToList(), index));
-                pyDict.SetItem("high", _pandas.Series(data.Select(x => (double)x.High).ToList(), index));
-                pyDict.SetItem("close", _pandas.Series(data.Select(x => (double)x.Close).ToList(), index));
-
-                if (typeof(T) == typeof(TradeBar))
-                {
-                    Func<IBaseDataBar, double> getVolume = x => { var bar = x as TradeBar; return (double)bar.Volume; };
-                    pyDict.SetItem("volume", _pandas.Series(data.Select(x => getVolume(x)).ToList(), index));
-                }
-
-                if (typeof(T) == typeof(QuoteBar))
-                {
-                    Func<IBaseDataBar, QuoteBar> toQuoteBar = x => x as QuoteBar;                   
-                    pyDict.SetItem("askopen", _pandas.Series(data.Select(x => { return toQuoteBar(x).Ask == null ? double.NaN : (double)toQuoteBar(x).Ask.Open; }).ToList(), index));
-                    pyDict.SetItem("bidopen", _pandas.Series(data.Select(x => { return toQuoteBar(x).Bid == null ? double.NaN : (double)toQuoteBar(x).Bid.Open; }).ToList(), index));
-                    pyDict.SetItem("askhigh", _pandas.Series(data.Select(x => { return toQuoteBar(x).Ask == null ? double.NaN : (double)toQuoteBar(x).Ask.High; }).ToList(), index));
-                    pyDict.SetItem("bidhigh", _pandas.Series(data.Select(x => { return toQuoteBar(x).Bid == null ? double.NaN : (double)toQuoteBar(x).Bid.High; }).ToList(), index));
-                    pyDict.SetItem("asklow", _pandas.Series(data.Select(x => { return toQuoteBar(x).Ask == null ? double.NaN : (double)toQuoteBar(x).Ask.Low; }).ToList(), index));
-                    pyDict.SetItem("bidlow", _pandas.Series(data.Select(x => { return toQuoteBar(x).Bid == null ? double.NaN : (double)toQuoteBar(x).Bid.Low; }).ToList(), index));
-                    pyDict.SetItem("askclose", _pandas.Series(data.Select(x => { return toQuoteBar(x).Ask == null ? double.NaN : (double)toQuoteBar(x).Ask.Close; }).ToList(), index));
-                    pyDict.SetItem("bidclose", _pandas.Series(data.Select(x => { return toQuoteBar(x).Bid == null ? double.NaN : (double)toQuoteBar(x).Bid.Close; }).ToList(), index));
-                    pyDict.SetItem("asksize", _pandas.Series(data.Select(x => (double)toQuoteBar(x).LastAskSize).ToList(), index));
-                    pyDict.SetItem("bidsize", _pandas.Series(data.Select(x => (double)toQuoteBar(x).LastBidSize).ToList(), index));
-                }
-
-                return _pandas.DataFrame(pyDict);
-            }
-        }
-
-        /// <summary>
-        /// Creates the index of pandas.Series
-        /// </summary>
-        /// <param name="symbol"><see cref="Symbol"/> of the security</param>
-        /// <param name="time">Time series axis</param>
-        /// <returns><see cref="PyObject"/> containing a pandas.MultiIndex</returns>
-        private PyObject CreateIndex(Symbol symbol, IEnumerable<DateTime> time)
-        {
-            var value = (symbol.HasUnderlying ? symbol.Value : symbol.ToString()).ToPython();
-            var tuples = time.Select(x => new PyTuple(new PyObject[] { value, x.ToPython() }));
-            var names = "symbol,time";
-
-            if (symbol.SecurityType == SecurityType.Future)
-            {
-                tuples = time.Select(x => new PyTuple(new PyObject[] { symbol.ID.Date.ToPython(), value, x.ToPython() }));
-                names = "expiry," + names;
-            }
-
-            if (symbol.SecurityType == SecurityType.Option)
-            {
-                tuples = time.Select(x => new PyTuple(new PyObject[] { symbol.ID.Date.ToPython(), symbol.ID.StrikePrice.ToPython(), symbol.ID.OptionRight.ToString().ToPython(), value, x.ToPython() }));
-                names = "expiry,strike,type," + names;
-            }
-
-            return _pandas.MultiIndex.from_tuples(tuples.ToArray(), names: names.Split(','));
+            return sliceData.ToPandasDataFrame(_pandas);
         }
 
         /// <summary>
@@ -204,6 +131,201 @@ namespace QuantConnect.Python
             return _pandas == null
                 ? "pandas module was not imported."
                 : _pandas.Repr();
+        }
+    }
+
+    /// <summary>
+    /// Organizes a list of data to create pandas.DataFrames 
+    /// </summary>
+    public class PandasData
+    {
+        private Symbol _symbol;
+        private List<DateTime> _timeIndex;
+        private Dictionary<string, List<double>> _series;
+
+        /// <summary>
+        /// Implied levels of a multi index pandas.Series (depends on the security type)
+        /// </summary>
+        public int Levels
+        {
+            get
+            {
+                var levels = 2;
+                if (_symbol.SecurityType == SecurityType.Future) levels += 1;
+                if (_symbol.SecurityType == SecurityType.Option) levels += 3;
+                return levels;
+            }
+        }
+
+        /// <summary>
+        /// Initializes an instance of <see cref="PandasData"/> with a sample <see cref="IBaseData"/> object
+        /// </summary>
+        /// <param name="baseData"><see cref="IBaseData"/> object that contains information to be saved in an instance of <see cref="PandasData"/></param>
+        public PandasData(IBaseData baseData)
+        {
+            var columns = "open,high,low,close";
+
+            if (baseData is TradeBar)
+            {
+                columns += ",volume";
+            }
+            else if (baseData is QuoteBar)
+            {
+                columns += ",askopen,askhigh,asklow,askclose,asksize,bidopen,bidhigh,bidlow,bidclose,bidsize";
+            }
+            else if (baseData is DynamicData)
+            {
+                columns = "value," + string.Join(",", ((DynamicData)baseData).GetStorageDictionary().Keys);
+            }
+
+            _series = columns.Split(',').ToDictionary(k => k, v => new List<double>());
+            _symbol = baseData.Symbol;
+            _timeIndex = new List<DateTime>();
+        }
+
+        /// <summary>
+        /// Adds an object to the end of the lists
+        /// </summary>
+        /// <param name="baseData"><see cref="IBaseData"/> object that contains information to be saved in an instance of <see cref="PandasData"/></param>
+        public void Add(IBaseData baseData)
+        {
+            _timeIndex.Add(baseData.Time);
+
+            var bar = baseData as IBaseDataBar;
+            if (bar != null)
+            {
+                _series["open"].Add((double)bar.Open);
+                _series["high"].Add((double)bar.High);
+                _series["low"].Add((double)bar.Low);
+                _series["close"].Add((double)bar.Close);
+
+                var tradeBar = bar as TradeBar;
+                if (tradeBar != null)
+                {
+                    _series["volume"].Add((double)tradeBar.Volume);
+                }
+
+                var quoteBar = bar as QuoteBar;
+                if (quoteBar != null)
+                {
+                    _series["asksize"].Add((double)quoteBar.LastAskSize);
+                    _series["bidsize"].Add((double)quoteBar.LastBidSize);
+
+                    if (quoteBar.Ask != null)
+                    {
+                        _series["askopen"].Add((double)quoteBar.Ask.Open);
+                        _series["askhigh"].Add((double)quoteBar.Ask.High);
+                        _series["asklow"].Add((double)quoteBar.Ask.Low);
+                        _series["askclose"].Add((double)quoteBar.Ask.Close);
+                    }
+                    else
+                    {
+                        _series["askopen"].Add(double.NaN);
+                        _series["askhigh"].Add(double.NaN);
+                        _series["asklow"].Add(double.NaN);
+                        _series["askclose"].Add(double.NaN);
+                    }
+
+                    if (quoteBar.Bid != null)
+                    {
+                        _series["bidopen"].Add((double)quoteBar.Bid.Open);
+                        _series["bidhigh"].Add((double)quoteBar.Bid.High);
+                        _series["bidlow"].Add((double)quoteBar.Bid.Low);
+                        _series["bidclose"].Add((double)quoteBar.Bid.Close);
+                    }
+                    else
+                    {
+                        _series["bidopen"].Add(double.NaN);
+                        _series["bidhigh"].Add(double.NaN);
+                        _series["bidlow"].Add(double.NaN);
+                        _series["bidclose"].Add(double.NaN);
+                    }
+                }
+            }
+
+            var data = baseData as DynamicData;
+            if (data != null)
+            {
+                foreach (var kvp in data.GetStorageDictionary())
+                {
+                    _series[kvp.Key].Add(Convert.ToDouble(kvp.Value));
+                }
+                _series["value"].Add((double)data.Value);
+            }
+        }
+
+        /// <summary>
+        /// Get the pandas.DataFrame of the current <see cref="PandasData"/> state 
+        /// </summary>
+        /// <param name="pandas">pandas module</param>
+        /// <param name="levels">Number of levels of the multi index</param>
+        /// <returns>pandas.DataFrame object</returns>
+        public PyObject ToPandasDataFrame(dynamic pandas, int levels = 2)
+        {
+            var seriesDict = GetPandasSeries(pandas, levels);
+            using (Py.GIL())
+            {
+                var pyDict = new PyDict();
+                foreach (var series in seriesDict)
+                {
+                    pyDict.SetItem(series.Key, series.Value);
+                }
+                return pandas.DataFrame(pyDict);
+            }
+        }
+
+        /// <summary>
+        /// Get the pandas.Series of the current <see cref="PandasData"/> state 
+        /// </summary>
+        /// <param name="pandas">pandas module</param>
+        /// <param name="levels">Number of levels of the multi index</param>
+        /// <returns>Dictionary keyed by column name where values are pandas.Series objects</returns>
+        private Dictionary<string, dynamic> GetPandasSeries(dynamic pandas, int levels = 2)
+        {
+            var pyObjectArray = new PyObject[levels];
+            pyObjectArray[levels - 2] = _symbol.ToString().ToPython();
+
+            if (_symbol.SecurityType == SecurityType.Future)
+            {
+                pyObjectArray[0] = _symbol.ID.Date.ToPython();
+                pyObjectArray[1] = _symbol.Value.ToPython();
+            }
+            if (_symbol.SecurityType == SecurityType.Option)
+            {
+                pyObjectArray[0] = _symbol.ID.Date.ToPython();
+                pyObjectArray[1] = _symbol.ID.StrikePrice.ToPython();
+                pyObjectArray[2] = _symbol.ID.OptionRight.ToString().ToPython();
+                pyObjectArray[3] = _symbol.Value.ToPython();
+            }
+
+            // Set null to python empty string
+            for (var i = 0; i < levels - 1; i++)
+            {
+                if (pyObjectArray[i] == null)
+                {
+                    pyObjectArray[i] = new PyString(string.Empty);
+                }
+            }
+
+            // Create the index labels
+            var names = "symbol,time";
+            if (levels == 3) names = "expiry,symbol,time";
+            if (levels == 5) names = "expiry,strike,type,symbol,time";
+
+            using (Py.GIL())
+            {
+                // Create a pandas multi index
+                var tuples = _timeIndex.Select(x =>
+                {
+                    pyObjectArray[levels - 1] = x.ToPython();
+                    return new PyTuple(pyObjectArray);
+                }).ToArray();
+
+                var index = pandas.MultiIndex.from_tuples(tuples, names: names.Split(','));
+
+                // Returns a dictionary keyed by column name where values are pandas.Series objects
+                return _series.ToDictionary(k => k.Key, v => pandas.Series(v.Value, index));
+            }
         }
     }
 }
