@@ -412,6 +412,10 @@ namespace QuantConnect.Util
         public static string GenerateRelativeZipFilePath(string symbol, SecurityType securityType, string market, DateTime date, Resolution resolution)
         {
             var directory = Path.Combine(securityType.ToLower(), market.ToLower(), resolution.ToLower());
+            if (resolution != Resolution.Daily && resolution != Resolution.Hour)
+            {
+                directory = Path.Combine(directory, symbol.ToLower());
+            }
 
             return Path.Combine(directory, GenerateZipFileName(symbol, securityType, date, resolution));
         }

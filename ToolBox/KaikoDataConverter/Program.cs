@@ -88,6 +88,9 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
 
                 foreach (var tickDateFile in Directory.EnumerateFiles(symbolDirectoryInfo.FullName))
                 {
+                    // There are both trade and quote files in directory - we only want one type
+                    if (!tickDateFile.Contains(tickType.ToLower())) continue;
+
                     var consolidators = GetDataAggregatorsForTickType(tickType);
                     var reader = GetLeanDataTickReader(symbol, tickType, tickDateFile);
 
