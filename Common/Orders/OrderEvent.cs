@@ -23,6 +23,10 @@ namespace QuantConnect.Orders
     /// </summary>
     public class OrderEvent
     {
+        private decimal orderFee;
+        private decimal fillPrice;
+        private decimal fillQuantity;
+
         /// <summary>
         /// Id of the order this event comes from.
         /// </summary>
@@ -46,12 +50,20 @@ namespace QuantConnect.Orders
         /// <summary>
         /// The fee associated with the order (always positive value).
         /// </summary>
-        public decimal OrderFee { get; set; }
+        public decimal OrderFee
+        {
+            get { return orderFee; }
+            set { orderFee = value.Normalize(); }
+        }
 
         /// <summary>
         /// Fill price information about the order
         /// </summary>
-        public decimal FillPrice { get; set; }
+        public decimal FillPrice
+        {
+            get { return fillPrice; }
+            set { fillPrice = value.Normalize(); }
+        }
 
         /// <summary>
         /// Currency for the fill price
@@ -61,7 +73,11 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Number of shares of the order that was filled in this event.
         /// </summary>
-        public decimal FillQuantity { get; set; }
+        public decimal FillQuantity
+        {
+            get { return fillQuantity; }
+            set { fillQuantity = value.Normalize(); }
+        }
 
         /// <summary>
         /// Public Property Absolute Getter of Quantity -Filled
@@ -155,7 +171,7 @@ namespace QuantConnect.Orders
         {
             var message = FillQuantity == 0
                 ? string.Format("Time: {0} OrderID: {1} Symbol: {2} Status: {3}", UtcTime, OrderId, Symbol.Value, Status)
-                : string.Format("Time: {0} OrderID: {1} Symbol: {2} Status: {3} Quantity: {4} FillPrice: {5} {6}", UtcTime, OrderId, Symbol.Value, Status, FillQuantity, FillPrice, FillPriceCurrency);
+                : string.Format("Time: {0} OrderID: {1} Symbol: {2} Status: {3} Quantity: {4} FillPrice: {5} {6}", UtcTime, OrderId, Symbol.Value, Status, FillQuantity, FillPrice.SmartRounding(), FillPriceCurrency);
 
             // attach the order fee so it ends up in logs properly
             if (OrderFee != 0m) message += string.Format(" OrderFee: {0} {1}", OrderFee, CashBook.AccountCurrency);

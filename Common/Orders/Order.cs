@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,7 +23,7 @@ namespace QuantConnect.Orders
     /// <summary>
     /// Order struct for placing new trade
     /// </summary>
-    public abstract class Order 
+    public abstract class Order
     {
         /// <summary>
         /// Order ID.
@@ -48,7 +48,11 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Price of the Order.
         /// </summary>
-        public decimal Price { get; internal set; }
+        public decimal Price
+        {
+            get { return price; }
+            internal set { price = value.Normalize(); }
+        }
 
         /// <summary>
         /// Currency for the order price
@@ -63,7 +67,11 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Number of shares to execute.
         /// </summary>
-        public decimal Quantity { get; internal set; }
+        public decimal Quantity
+        {
+            get { return quantity; }
+            internal set { quantity = value.Normalize(); }
+        }
 
         /// <summary>
         /// Order Type
@@ -93,15 +101,15 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Order Direction Property based off Quantity.
         /// </summary>
-        public OrderDirection Direction 
+        public OrderDirection Direction
         {
-            get 
+            get
             {
-                if (Quantity > 0) 
+                if (Quantity > 0)
                 {
                     return OrderDirection.Buy;
-                } 
-                if (Quantity < 0) 
+                }
+                if (Quantity < 0)
                 {
                     return OrderDirection.Sell;
                 }
@@ -290,5 +298,8 @@ namespace QuantConnect.Orders
         /// Order Expiry on a specific UTC time.
         /// </summary>
         public DateTime DurationValue;
+
+        private decimal quantity;
+        private decimal price;
     }
 }
