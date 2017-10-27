@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,35 +13,32 @@
  * limitations under the License.
 */
 
-using System;
-using IBApi;
+using System.Collections.Generic;
+using System.Xml.Serialization;
 
-namespace QuantConnect.Brokerages.InteractiveBrokers.Client
+namespace QuantConnect.Brokerages.InteractiveBrokers.FinancialAdvisor
 {
     /// <summary>
-    /// Event arguments class for the <see cref="InteractiveBrokersClient.CommissionReport"/> event
+    /// Represents an allocation profile
     /// </summary>
-    public sealed class CommissionReportEventArgs : EventArgs
+    public class AllocationProfile
     {
         /// <summary>
-        /// The structure that contains commission details.
+        /// The name of the profile
         /// </summary>
-        public CommissionReport CommissionReport { get; }
+        [XmlElement("name")]
+        public string Name { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CommissionReportEventArgs"/> class
+        /// The type of the profile
         /// </summary>
-        public CommissionReportEventArgs(CommissionReport commissionReport)
-        {
-            CommissionReport = commissionReport;
-        }
+        [XmlElement("type")]
+        public string Type { get; set; }
 
         /// <summary>
-        /// Returns a string that represents the current object.
+        /// The list of allocations in the profile
         /// </summary>
-        public override string ToString()
-        {
-            return $"ExecId: {CommissionReport.ExecId}, Commission: {CommissionReport.Commission}, Currency: {CommissionReport.Currency}";
-        }
+        [XmlArray("ListOfAllocations")]
+        public List<Allocation> Allocations { get; set; }
     }
 }
