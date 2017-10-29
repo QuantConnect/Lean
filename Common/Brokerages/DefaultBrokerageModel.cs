@@ -38,8 +38,8 @@ namespace QuantConnect.Brokerages
         /// </summary>
         public static readonly IReadOnlyDictionary<SecurityType, string> DefaultMarketMap = new Dictionary<SecurityType, string>
         {
-            {SecurityType.Base, Market.USA},
-            {SecurityType.Equity, Market.USA},
+            {SecurityType.Base, Market.AU},
+            {SecurityType.Equity, Market.AU},
             {SecurityType.Option, Market.USA},
             {SecurityType.Future, Market.USA},
             {SecurityType.Forex, Market.FXCM},

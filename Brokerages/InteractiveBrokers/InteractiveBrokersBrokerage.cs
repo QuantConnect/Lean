@@ -413,7 +413,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             CheckIbGateway();
 
-            return _cashBalances.Select(x => new Cash(x.Key, x.Value, GetUsdConversion(x.Key))).ToList();
+            return _cashBalances.Select(x => new Cash(x.Key, x.Value, System.Convert.ToDecimal(1.00))).ToList();
         }
 
         /// <summary>

@@ -24,16 +24,16 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="using quantconnect" />
     /// <meta name="tag" content="trading and orders" />
-    public class BasicTemplateAlgorithm : QCAlgorithm
+    public class AustralianEquityBasicTemplateAlgorithm : QCAlgorithm
     {
-        private Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+        private Symbol _bhp = QuantConnect.Symbol.Create("BHP", SecurityType.Equity, Market.AU);
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);  //Set Start Date
+            SetStartDate(2011, 10, 07);  //Set Start Date
             SetEndDate(2013, 10, 11);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
 
@@ -41,8 +41,10 @@ namespace QuantConnect.Algorithm.CSharp
             // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
             // Futures Resolution: Tick, Second, Minute
             // Options Resolution: Minute Only.
-            AddEquity("SPY", Resolution.Minute);
-
+            AddEquity("BHP", Resolution.Daily);
+            
+            SetBenchmark(dt => 1m);
+            
             // There are other assets with similar methods. See "Selecting Options" etc for more details.
             // AddFuture, AddForex, AddCfd, AddOption
         }
@@ -55,7 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                SetHoldings(_spy, 1);
+                SetHoldings(_bhp, 1);
                 Debug("Purchased Stock");
             }
         }
